@@ -55,7 +55,6 @@ namespace Hdlc {
 class Encoder
 {
 public:
-
     /**
      * This class defines a write iterator into a buffer used by Encoder.
      *
@@ -64,7 +63,6 @@ public:
     class BufferWriteIterator
     {
     public:
-
         /**
          * This method writes a byte to the buffer and updates the iterator (if space is available).
          *
@@ -86,11 +84,10 @@ public:
         bool CanWrite(uint16_t aWriteLength) const;
 
     protected:
+        BufferWriteIterator(void); ///< Protected constructor to ensure no direct instantiation.
 
-        BufferWriteIterator(void);   ///< Protected constructor to ensure no direct instantiation.
-
-        uint8_t  *mWritePointer;     ///< A pointer to current write position in the buffer.
-        uint16_t  mRemainingLength;  ///< Number of remaining bytes available to write.
+        uint8_t *mWritePointer;    ///< A pointer to current write position in the buffer.
+        uint16_t mRemainingLength; ///< Number of remaining bytes available to write.
     };
 
     /**
@@ -192,8 +189,11 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler,
-            void *aContext);
+    Decoder(uint8_t *    aOutBuf,
+            uint16_t     aOutLength,
+            FrameHandler aFrameHandler,
+            ErrorHandler aErrorHandler,
+            void *       aContext);
 
     /**
      * This method streams bytes into the decoder.
@@ -215,7 +215,7 @@ private:
 
     FrameHandler mFrameHandler;
     ErrorHandler mErrorHandler;
-    void *mContext;
+    void *       mContext;
 
     uint8_t *mOutBuf;
     uint16_t mOutOffset;
@@ -224,7 +224,7 @@ private:
     uint16_t mFcs;
 };
 
-}  // namespace Hdlc
-}  // namespace ot
+} // namespace Hdlc
+} // namespace ot
 
-#endif  // HDLC_HPP_
+#endif // HDLC_HPP_

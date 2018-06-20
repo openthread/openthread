@@ -53,10 +53,12 @@ namespace Ncp {
 // MARK: Property Handler Jump Tables and Methods
 // ----------------------------------------------------------------------------
 
-#define NCP_GET_PROP_HANDLER_ENTRY(name)                 { SPINEL_PROP_##name, &NcpBase::GetPropertyHandler_##name }
+#define NCP_GET_PROP_HANDLER_ENTRY(name)                        \
+    {                                                           \
+        SPINEL_PROP_##name, &NcpBase::GetPropertyHandler_##name \
+    }
 
-const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
-{
+const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] = {
     NCP_GET_PROP_HANDLER_ENTRY(CAPS),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_ASSERT),
     NCP_GET_PROP_HANDLER_ENTRY(DEBUG_TEST_WATCHDOG),
@@ -258,10 +260,12 @@ const NcpBase::PropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 #endif
 };
 
-#define NCP_SET_PROP_HANDLER_ENTRY(name)  { SPINEL_PROP_##name, &NcpBase::SetPropertyHandler_##name }
+#define NCP_SET_PROP_HANDLER_ENTRY(name)                        \
+    {                                                           \
+        SPINEL_PROP_##name, &NcpBase::SetPropertyHandler_##name \
+    }
 
-const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
-{
+const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] = {
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_SET_PROP_HANDLER_ENTRY(MAC_15_4_SADDR),
     NCP_SET_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_ENABLED),
@@ -360,10 +364,12 @@ const NcpBase::PropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 #endif // #if OPENTHREAD_FTD
 };
 
-#define NCP_INSERT_PROP_HANDLER_ENTRY(name)  { SPINEL_PROP_##name, &NcpBase::InsertPropertyHandler_##name }
+#define NCP_INSERT_PROP_HANDLER_ENTRY(name)                        \
+    {                                                              \
+        SPINEL_PROP_##name, &NcpBase::InsertPropertyHandler_##name \
+    }
 
-const NcpBase::PropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
-{
+const NcpBase::PropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] = {
     NCP_INSERT_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_INSERT_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
@@ -390,10 +396,12 @@ const NcpBase::PropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 #endif // OPENTHREAD_FTD
 };
 
-#define NCP_REMOVE_PROP_HANDLER_ENTRY(name)  { SPINEL_PROP_##name, &NcpBase::RemovePropertyHandler_##name }
+#define NCP_REMOVE_PROP_HANDLER_ENTRY(name)                        \
+    {                                                              \
+        SPINEL_PROP_##name, &NcpBase::RemovePropertyHandler_##name \
+    }
 
-const NcpBase::PropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
-{
+const NcpBase::PropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] = {
     NCP_REMOVE_PROP_HANDLER_ENTRY(UNSOL_UPDATE_FILTER),
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     NCP_REMOVE_PROP_HANDLER_ENTRY(MAC_SRC_MATCH_SHORT_ADDRESSES),
@@ -545,58 +553,65 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason aReason)
 
 NcpBase *NcpBase::sNcpInstance = NULL;
 
-NcpBase::NcpBase(Instance *aInstance):
-    mInstance(aInstance),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
-    mEncoder(mTxFrameBuffer),
-    mDecoder(),
-    mHostPowerStateInProgress(false),
-    mLastStatus(SPINEL_STATUS_OK),
-    mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
-    mChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
-    mScanPeriod(200), // ms
-    mDiscoveryScanJoinerFlag(false),
-    mDiscoveryScanEnableFiltering(false),
-    mDiscoveryScanPanId(0xffff),
-    mUpdateChangedPropsTask(*aInstance, &NcpBase::UpdateChangedProps, this),
-    mThreadChangedFlags(0),
-    mChangedPropsSet(),
-    mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
-    mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag),
-    mHostPowerStateHeader(0),
+NcpBase::NcpBase(Instance *aInstance)
+    : mInstance(aInstance)
+    , mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
+    , mEncoder(mTxFrameBuffer)
+    , mDecoder()
+    , mHostPowerStateInProgress(false)
+    , mLastStatus(SPINEL_STATUS_OK)
+    , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
+    , mChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
+    , mScanPeriod(200)
+    , // ms
+    mDiscoveryScanJoinerFlag(false)
+    , mDiscoveryScanEnableFiltering(false)
+    , mDiscoveryScanPanId(0xffff)
+    , mUpdateChangedPropsTask(*aInstance, &NcpBase::UpdateChangedProps, this)
+    , mThreadChangedFlags(0)
+    , mChangedPropsSet()
+    , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
+    , mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag)
+    , mHostPowerStateHeader(0)
+    ,
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-    mAllowPeekDelegate(NULL),
-    mAllowPokeDelegate(NULL),
+    mAllowPeekDelegate(NULL)
+    , mAllowPokeDelegate(NULL)
+    ,
 #endif
-    mNextExpectedTid(0),
-    mResponseQueueHead(0),
-    mResponseQueueTail(0),
-    mAllowLocalNetworkDataChange(false),
-    mRequireJoinExistingNetwork(false),
-    mIsRawStreamEnabled(false),
-    mDisableStreamWrite(false),
-    mShouldEmitChildTableUpdate(false),
+    mNextExpectedTid(0)
+    , mResponseQueueHead(0)
+    , mResponseQueueTail(0)
+    , mAllowLocalNetworkDataChange(false)
+    , mRequireJoinExistingNetwork(false)
+    , mIsRawStreamEnabled(false)
+    , mDisableStreamWrite(false)
+    , mShouldEmitChildTableUpdate(false)
+    ,
 #if OPENTHREAD_FTD
-    mPreferredRouteId(0),
+    mPreferredRouteId(0)
+    ,
 #endif
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    mCurTransmitTID(0),
-    mCurScanChannel(kInvalidScanChannel),
-    mSrcMatchEnabled(false),
+    mCurTransmitTID(0)
+    , mCurScanChannel(kInvalidScanChannel)
+    , mSrcMatchEnabled(false)
+    ,
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    mInboundSecureIpFrameCounter(0),
-    mInboundInsecureIpFrameCounter(0),
-    mOutboundSecureIpFrameCounter(0),
-    mOutboundInsecureIpFrameCounter(0),
-    mDroppedOutboundIpFrameCounter(0),
-    mDroppedInboundIpFrameCounter(0),
+    mInboundSecureIpFrameCounter(0)
+    , mInboundInsecureIpFrameCounter(0)
+    , mOutboundSecureIpFrameCounter(0)
+    , mOutboundInsecureIpFrameCounter(0)
+    , mDroppedOutboundIpFrameCounter(0)
+    , mDroppedInboundIpFrameCounter(0)
+    ,
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-    mFramingErrorCounter(0),
-    mRxSpinelFrameCounter(0),
-    mRxSpinelOutOfOrderTidCounter(0),
-    mTxSpinelFrameCounter(0),
-    mDidInitialUpdates(false)
+    mFramingErrorCounter(0)
+    , mRxSpinelFrameCounter(0)
+    , mRxSpinelOutOfOrderTidCounter(0)
+    , mTxSpinelFrameCounter(0)
+    , mDidInitialUpdates(false)
 {
     assert(mInstance != NULL);
 
@@ -621,7 +636,7 @@ NcpBase::NcpBase(Instance *aInstance):
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_LEGACY
     mLegacyNodeDidJoin = false;
-    mLegacyHandlers = NULL;
+    mLegacyHandlers    = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
     memset(&mLegacyLastJoinedNode, 0, sizeof(mLegacyLastJoinedNode));
 #endif
@@ -646,9 +661,9 @@ NcpFrameBuffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
 
 void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t header = 0;
-    spinel_tid_t tid = 0;
+    otError      error  = OT_ERROR_NONE;
+    uint8_t      header = 0;
+    spinel_tid_t tid    = 0;
 
     mDisableStreamWrite = true;
 
@@ -656,7 +671,7 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
     mDecoder.Init(aBuf, aBufLength);
 
     // Receiving any message from the host has the side effect of transitioning the host power state to online.
-    mHostPowerState = SPINEL_HOST_POWER_STATE_ONLINE;
+    mHostPowerState           = SPINEL_HOST_POWER_STATE_ONLINE;
     mHostPowerStateInProgress = false;
 
     // Skip if there is no header byte to read or this isn't a spinel frame.
@@ -707,8 +722,10 @@ exit:
     mDisableStreamWrite = false;
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
-                                              NcpFrameBuffer::Priority aPriority, NcpFrameBuffer *aNcpBuffer)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+                                              NcpFrameBuffer::FrameTag aFrameTag,
+                                              NcpFrameBuffer::Priority aPriority,
+                                              NcpFrameBuffer *         aNcpBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpBuffer);
     OT_UNUSED_VARIABLE(aPriority);
@@ -750,11 +767,10 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag
 
         if (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
         {
-            mHostPowerReplyFrameTag = GetLastOutboundFrameTag();
+            mHostPowerReplyFrameTag   = GetLastOutboundFrameTag();
             mHostPowerStateInProgress = true;
         }
     }
-
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -788,8 +804,8 @@ void NcpBase::IncrementFrameErrorCounter(void)
 
 otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    otError           error  = OT_ERROR_NONE;
+    uint8_t           header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
     spinel_prop_key_t streamPropKey;
 
     if (aStreamId == 0)
@@ -865,7 +881,6 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
 
     switch (aLogRegion)
     {
-
     case OT_LOG_REGION_API:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_API;
         break;
@@ -936,7 +951,7 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
 
 void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogString)
 {
-    otError error = OT_ERROR_NONE;
+    otError error  = OT_ERROR_NONE;
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
     VerifyOrExit(!mDisableStreamWrite);
@@ -985,8 +1000,8 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
 
 void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 {
-    uint16_t flags = 0;
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    uint16_t flags  = 0;
+    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
     if (!mIsRawStreamEnabled)
     {
@@ -1006,15 +1021,15 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
     SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
 
     // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi));  // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));           // Noise floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));        // Flags
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
 
-    SuccessOrExit(mEncoder.OpenStruct());              // PHY-data
+    SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
     // Empty for now
     SuccessOrExit(mEncoder.CloseStruct());
 
-    SuccessOrExit(mEncoder.OpenStruct());              // Vendor-data
+    SuccessOrExit(mEncoder.OpenStruct()); // Vendor-data
     // Empty for now
     SuccessOrExit(mEncoder.CloseStruct());
 
@@ -1040,8 +1055,8 @@ uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
 
 otError NcpBase::PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGetResponse, unsigned int aKeyOrStatus)
 {
-    otError error = OT_ERROR_NONE;
-    spinel_tid_t tid = SPINEL_HEADER_GET_TID(aHeader);
+    otError        error = OT_ERROR_NONE;
+    spinel_tid_t   tid   = SPINEL_HEADER_GET_TID(aHeader);
     ResponseEntry *entry;
 
     if (tid == 0)
@@ -1094,10 +1109,10 @@ otError NcpBase::PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGe
 
     entry = &mResponseQueue[GetWrappedResponseQueueIndex(mResponseQueueTail)];
 
-    entry->mTid = tid;
-    entry->mIsInUse = true;
-    entry->mIsLastStatus = aIsLastStatus;
-    entry->mIsGetResponse = aIsGetResponse;
+    entry->mTid             = tid;
+    entry->mIsInUse         = true;
+    entry->mIsLastStatus    = aIsLastStatus;
+    entry->mIsGetResponse   = aIsGetResponse;
     entry->mPropKeyOrStatus = aKeyOrStatus;
 
     mResponseQueueTail++;
@@ -1169,8 +1184,8 @@ void NcpBase::UpdateChangedProps(Tasklet &aTasklet)
 
 void NcpBase::UpdateChangedProps(void)
 {
-    uint8_t numEntries;
-    spinel_prop_key_t propKey;
+    uint8_t                       numEntries;
+    spinel_prop_key_t             propKey;
     const ChangedPropsSet::Entry *entry;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -1221,7 +1236,7 @@ exit:
 
 otError NcpBase::HandleCommand(uint8_t aHeader)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     unsigned int command;
 
     SuccessOrExit(error = mDecoder.ReadUintPacked(command));
@@ -1289,8 +1304,9 @@ exit:
 // MARK: Property Get/Set/Insert/Remove Commands
 // ----------------------------------------------------------------------------
 
-NcpBase::PropertyHandler NcpBase::FindPropertyHandler(spinel_prop_key_t aKey, const PropertyHandlerEntry *aTableEntry,
-                                                      size_t aTableLen)
+NcpBase::PropertyHandler NcpBase::FindPropertyHandler(spinel_prop_key_t           aKey,
+                                                      const PropertyHandlerEntry *aTableEntry,
+                                                      size_t                      aTableLen)
 {
     PropertyHandler handler = NULL;
 
@@ -1320,7 +1336,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-   return FindPropertyHandler(aKey, mInsertPropertyHandlerTable, OT_ARRAY_LENGTH(mInsertPropertyHandlerTable));
+    return FindPropertyHandler(aKey, mInsertPropertyHandlerTable, OT_ARRAY_LENGTH(mInsertPropertyHandlerTable));
 }
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
@@ -1368,13 +1384,13 @@ exit:
 
 otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey)
 {
-    otError error = OT_ERROR_NONE;
+    otError         error   = OT_ERROR_NONE;
     PropertyHandler handler = FindSetPropertyHandler(aKey);
 
     if (handler != NULL)
     {
         mDisableStreamWrite = false;
-        error = (this->*handler)();
+        error               = (this->*handler)();
         mDisableStreamWrite = true;
     }
     else
@@ -1390,7 +1406,7 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
         if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
         {
             mDisableStreamWrite = false;
-            error = VendorSetPropertyHandler(aKey);
+            error               = VendorSetPropertyHandler(aKey);
             mDisableStreamWrite = true;
 
             // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates
@@ -1421,21 +1437,21 @@ exit:
 
 otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_key_t aKey, unsigned int aCommand)
 {
-    otError error = OT_ERROR_NONE;
-    PropertyHandler handler = NULL;
-    unsigned int responseCommand = 0;
-    const uint8_t *valuePtr;
-    uint16_t valueLen;
+    otError         error           = OT_ERROR_NONE;
+    PropertyHandler handler         = NULL;
+    unsigned int    responseCommand = 0;
+    const uint8_t * valuePtr;
+    uint16_t        valueLen;
 
     switch (aCommand)
     {
     case SPINEL_CMD_PROP_VALUE_INSERT:
-        handler = FindInsertPropertyHandler(aKey);
+        handler         = FindInsertPropertyHandler(aKey);
         responseCommand = SPINEL_CMD_PROP_VALUE_INSERTED;
         break;
 
     case SPINEL_CMD_PROP_VALUE_REMOVE:
-        handler = FindRemovePropertyHandler(aKey);
+        handler         = FindRemovePropertyHandler(aKey);
         responseCommand = SPINEL_CMD_PROP_VALUE_REMOVED;
         break;
 
@@ -1500,7 +1516,7 @@ exit:
 
 otError NcpBase::WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aPropKey, bool aIsGetResponse)
 {
-    otError error = OT_ERROR_NONE;
+    otError         error   = OT_ERROR_NONE;
     PropertyHandler handler = FindGetPropertyHandler(aPropKey);
 
     if (handler != NULL)
@@ -1545,9 +1561,11 @@ exit:
     return error;
 }
 
-otError NcpBase::WritePropertyValueInsertedRemovedFrame(uint8_t aHeader, unsigned int aResponseCommand,
-                                                        spinel_prop_key_t aPropKey, const uint8_t *aValuePtr,
-                                                        uint16_t aValueLen)
+otError NcpBase::WritePropertyValueInsertedRemovedFrame(uint8_t           aHeader,
+                                                        unsigned int      aResponseCommand,
+                                                        spinel_prop_key_t aPropKey,
+                                                        const uint8_t *   aValuePtr,
+                                                        uint16_t          aValueLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1600,7 +1618,7 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 
 otError NcpBase::CommandHandler_PROP_VALUE_update(uint8_t aHeader, unsigned int aCommand)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error   = OT_ERROR_NONE;
     unsigned int propKey = 0;
 
     error = mDecoder.ReadUintPacked(propKey);
@@ -1634,8 +1652,8 @@ exit:
 
 otError NcpBase::CommandHandler_PEEK(uint8_t aHeader)
 {
-    otError parseError = OT_ERROR_NONE;
-    otError responseError = OT_ERROR_NONE;
+    otError  parseError    = OT_ERROR_NONE;
+    otError  responseError = OT_ERROR_NONE;
     uint32_t address;
     uint16_t count;
 
@@ -1666,11 +1684,11 @@ exit:
 
 otError NcpBase::CommandHandler_POKE(uint8_t aHeader)
 {
-    otError parseError = OT_ERROR_NONE;
-    uint32_t address;
-    uint16_t count;
+    otError        parseError = OT_ERROR_NONE;
+    uint32_t       address;
+    uint16_t       count;
     const uint8_t *dataPtr = NULL;
-    uint16_t dataLen;
+    uint16_t       dataLen;
 
     SuccessOrExit(parseError = mDecoder.ReadUint32(address));
     SuccessOrExit(parseError = mDecoder.ReadUint16(count));
@@ -1692,10 +1710,9 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
-
-// ----------------------------------------------------------------------------
-// MARK: Individual Property Getters and Setters
-// ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // MARK: Individual Property Getters and Setters
+    // ----------------------------------------------------------------------------
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -1703,7 +1720,7 @@ otError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader)
 {
     const char *string = NULL;
     const char *output = NULL;
-    otError error = OT_ERROR_NONE;
+    otError     error  = OT_ERROR_NONE;
 
     error = mDecoder.ReadUtf8(string);
 
@@ -1725,9 +1742,9 @@ exit:
 otError NcpBase::GetPropertyHandler_PHY_ENABLED(void)
 {
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-        return mEncoder.WriteBool(otLinkRawIsEnabled(mInstance));
+    return mEncoder.WriteBool(otLinkRawIsEnabled(mInstance));
 #else
-        return mEncoder.WriteBool(false);
+    return mEncoder.WriteBool(false);
 #endif
 }
 
@@ -1739,7 +1756,7 @@ otError NcpBase::GetPropertyHandler_PHY_CHAN(void)
 otError NcpBase::SetPropertyHandler_PHY_CHAN(void)
 {
     unsigned int channel = 0;
-    otError error = OT_ERROR_NONE;
+    otError      error   = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUintPacked(channel));
 
@@ -1764,15 +1781,13 @@ exit:
 
 otError NcpBase::GetPropertyHandler_MAC_PROMISCUOUS_MODE(void)
 {
-   return mEncoder.WriteUint8(otPlatRadioGetPromiscuous(mInstance)
-                        ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
-                        : SPINEL_MAC_PROMISCUOUS_MODE_OFF
-                    );
+    return mEncoder.WriteUint8(otPlatRadioGetPromiscuous(mInstance) ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
+                                                                    : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
 }
 
 otError NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE(void)
 {
-    uint8_t mode = 0;
+    uint8_t mode  = 0;
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint8(mode));
@@ -1805,7 +1820,7 @@ otError NcpBase::GetPropertyHandler_MAC_15_4_PANID(void)
 otError NcpBase::SetPropertyHandler_MAC_15_4_PANID(void)
 {
     uint16_t panid;
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint16(panid));
 
@@ -1823,7 +1838,7 @@ otError NcpBase::GetPropertyHandler_MAC_15_4_LADDR(void)
 otError NcpBase::SetPropertyHandler_MAC_15_4_LADDR(void)
 {
     const otExtAddress *extAddress;
-    otError error = OT_ERROR_NONE;
+    otError             error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
 
@@ -1845,8 +1860,8 @@ otError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(void)
 
 otError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(void)
 {
-    bool enabled = false;
-    otError error = OT_ERROR_NONE;
+    bool    enabled = false;
+    otError error   = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
@@ -1874,8 +1889,8 @@ exit:
 
 otError NcpBase::GetPropertyHandler_UNSOL_UPDATE_FILTER(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t numEntries;
+    otError                       error = OT_ERROR_NONE;
+    uint8_t                       numEntries;
     const ChangedPropsSet::Entry *entry;
 
     entry = mChangedPropsSet.GetSupportedEntries(numEntries);
@@ -1895,7 +1910,7 @@ exit:
 otError NcpBase::SetPropertyHandler_UNSOL_UPDATE_FILTER(void)
 {
     unsigned int propKey;
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
 
     // First clear the current filter.
     mChangedPropsSet.ClearFilter();
@@ -1923,7 +1938,7 @@ exit:
 
 otError NcpBase::InsertPropertyHandler_UNSOL_UPDATE_FILTER(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     unsigned int propKey;
 
     SuccessOrExit(error = mDecoder.ReadUintPacked(propKey));
@@ -1936,7 +1951,7 @@ exit:
 
 otError NcpBase::RemovePropertyHandler_UNSOL_UPDATE_FILTER(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     unsigned int propKey;
 
     SuccessOrExit(error = mDecoder.ReadUintPacked(propKey));
@@ -1970,7 +1985,7 @@ otError NcpBase::GetPropertyHandler_INTERFACE_TYPE(void)
 
 otError NcpBase::GetPropertyHandler_VENDOR_ID(void)
 {
-    return mEncoder.WriteUintPacked(0);   // Vendor ID. Zero for unknown.
+    return mEncoder.WriteUintPacked(0); // Vendor ID. Zero for unknown.
 }
 
 otError NcpBase::GetPropertyHandler_CAPS(void)
@@ -2082,9 +2097,9 @@ otError NcpBase::GetPropertyHandler_MCU_POWER_STATE(void)
 
 otError NcpBase::SetPropertyHandler_MCU_POWER_STATE(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError             error = OT_ERROR_NONE;
     otPlatMcuPowerState powerState;
-    uint8_t state;
+    uint8_t             state;
 
     SuccessOrExit(error = mDecoder.ReadUint8(state));
 
@@ -2251,8 +2266,8 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader)
 
 otError NcpBase::GetPropertyHandler_UNSOL_UPDATE_LIST(void)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t numEntries;
+    otError                       error = OT_ERROR_NONE;
+    uint8_t                       numEntries;
     const ChangedPropsSet::Entry *entry;
 
     entry = mChangedPropsSet.GetSupportedEntries(numEntries);
@@ -2276,7 +2291,7 @@ otError NcpBase::GetPropertyHandler_PHY_RX_SENSITIVITY(void)
 
 otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
 {
-    int8_t power;
+    int8_t  power;
     otError error;
 
     error = otPlatRadioGetTransmitPower(mInstance, &power);
@@ -2295,8 +2310,8 @@ otError NcpBase::GetPropertyHandler_PHY_TX_POWER(void)
 
 otError NcpBase::SetPropertyHandler_PHY_TX_POWER(void)
 {
-    int8_t txPower = 0;
-    otError error = OT_ERROR_NONE;
+    int8_t  txPower = 0;
+    otError error   = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadInt8(txPower));
     error = otPlatRadioSetTransmitPower(mInstance, txPower);
@@ -2314,9 +2329,7 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(void)
     // In such a case we return `false` as the
     // property value to indicate this.
 
-    OT_UNREACHABLE_CODE(
-        return mEncoder.WriteBool(false);
-    )
+    OT_UNREACHABLE_CODE(return mEncoder.WriteBool(false);)
 }
 
 otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
@@ -2324,9 +2337,7 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_WATCHDOG(void)
     while (true)
         ;
 
-    OT_UNREACHABLE_CODE(
-        return OT_ERROR_NONE;
-    )
+    OT_UNREACHABLE_CODE(return OT_ERROR_NONE;)
 }
 
 otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
@@ -2336,9 +2347,9 @@ otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
 
 otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(void)
 {
-    uint8_t spinelNcpLogLevel = 0;
+    uint8_t    spinelNcpLogLevel = 0;
     otLogLevel logLevel;
-    otError error = OT_ERROR_NONE;
+    otError    error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint8(spinelNcpLogLevel));
 
@@ -2381,8 +2392,8 @@ exit:
     return error;
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
 // ----------------------------------------------------------------------------
 // MARK: Peek/Poke delegate API
@@ -2417,8 +2428,8 @@ otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDele
 
 otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 {
-    otError error  = OT_ERROR_INVALID_STATE;
-    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
+    otError           error = OT_ERROR_INVALID_STATE;
+    ot::Ncp::NcpBase *ncp   = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {
@@ -2431,7 +2442,7 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
-    int charsWritten;
+    int  charsWritten;
 
     if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, aArgs)) > 0)
     {
@@ -2451,8 +2462,8 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 
 extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    va_list args;
-    char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
+    va_list           args;
+    char              logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     va_start(args, aFormat);

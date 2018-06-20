@@ -126,8 +126,8 @@ otError SpinelEncoder::WriteUint32(uint32_t aUint32)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >>  0) & 0xff));
-    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >>  8) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >> 0) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >> 8) & 0xff));
     SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >> 16) & 0xff));
     SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint32 >> 24) & 0xff));
 
@@ -139,8 +139,8 @@ otError SpinelEncoder::WriteUint64(uint64_t aUint64)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >>  0) & 0xff));
-    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >>  8) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 0) & 0xff));
+    SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 8) & 0xff));
     SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 16) & 0xff));
     SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 24) & 0xff));
     SuccessOrExit(error = mNcpBuffer.InFrameFeedByte((aUint64 >> 32) & 0xff));
@@ -154,7 +154,7 @@ exit:
 
 otError SpinelEncoder::WriteUintPacked(unsigned int aUint)
 {
-    uint8_t buffer[6];
+    uint8_t        buffer[6];
     spinel_ssize_t len;
 
     len = spinel_packed_uint_encode(buffer, sizeof(buffer), aUint);
@@ -176,7 +176,7 @@ exit:
 otError SpinelEncoder::WriteUtf8(const char *aUtf8)
 {
     otError error;
-    size_t len = strlen(aUtf8);
+    size_t  len = strlen(aUtf8);
 
     if (len >= 0xffff)
     {
@@ -209,9 +209,9 @@ exit:
 
 otError SpinelEncoder::CloseStruct(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t len;
-    uint8_t buffer[sizeof(uint16_t)];
+    uint8_t  buffer[sizeof(uint16_t)];
 
     VerifyOrExit(mNumOpenStructs > 0, error = OT_ERROR_INVALID_STATE);
 
@@ -246,7 +246,7 @@ otError SpinelEncoder::ResetToSaved(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error =  mNcpBuffer.InFrameReset(mSavedPosition));
+    SuccessOrExit(error = mNcpBuffer.InFrameReset(mSavedPosition));
     mNumOpenStructs = mSavedNumOpenStructs;
 
 exit:
@@ -255,10 +255,10 @@ exit:
 
 otError SpinelEncoder::WritePacked(const char *aPackFormat, ...)
 {
-    uint8_t buf[kPackFormatBufferSize];
-    otError error = OT_ERROR_NONE;
+    uint8_t        buf[kPackFormatBufferSize];
+    otError        error = OT_ERROR_NONE;
     spinel_ssize_t packedLen;
-    va_list args;
+    va_list        args;
 
     va_start(args, aPackFormat);
 
@@ -275,8 +275,8 @@ exit:
 
 otError SpinelEncoder::WriteVPacked(const char *aPackFormat, va_list aArgs)
 {
-    uint8_t buf[kPackFormatBufferSize];
-    otError error = OT_ERROR_NONE;
+    uint8_t        buf[kPackFormatBufferSize];
+    otError        error = OT_ERROR_NONE;
     spinel_ssize_t packedLen;
 
     packedLen = spinel_datatype_vpack(buf, sizeof(buf), aPackFormat, aArgs);
@@ -288,5 +288,5 @@ exit:
     return error;
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
