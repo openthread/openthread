@@ -884,7 +884,7 @@ public:
      *                          for AES CCM computation.
      *
      */
-    void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
+    static void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
 
 private:
     enum
@@ -931,7 +931,11 @@ private:
      */
     void ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm);
 
-    void    GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
+    static void GenerateNonce(const ExtAddress &aAddress,
+                              uint32_t          aFrameCounter,
+                              uint8_t           aSecurityLevel,
+                              uint8_t *         aNonce);
+
     otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
