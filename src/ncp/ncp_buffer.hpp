@@ -53,8 +53,8 @@ namespace Ncp {
 class NcpFrameBuffer
 {
     friend class SpinelEncoder;
-public:
 
+public:
     /**
      * Defines the priority of a frame. High priority frames are read before low priority frames. Within same priority
      * level FIFO order is preserved.
@@ -62,8 +62,8 @@ public:
      */
     enum Priority
     {
-        kPriorityLow  = 0,              //< Indicates low/normal priority for a frame.
-        kPriorityHigh = 1,              //< Indicates high priority for a frame.
+        kPriorityLow  = 0, //< Indicates low/normal priority for a frame.
+        kPriorityHigh = 1, //< Indicates high priority for a frame.
     };
 
     /**
@@ -92,11 +92,15 @@ public:
          * The constructor for a `WritePosition` object.
          *
          */
-        WritePosition(void): mPosition(0), mSegmentHead(0) { }
+        WritePosition(void)
+            : mPosition(0)
+            , mSegmentHead(0)
+        {
+        }
 
     private:
-        uint8_t *mPosition;           //< Pointer into buffer corresponding to saved write position.
-        uint8_t *mSegmentHead;        //< Pointer to segment head.
+        uint8_t *mPosition;    //< Pointer into buffer corresponding to saved write position.
+        uint8_t *mSegmentHead; //< Pointer to segment head.
 
         friend class NcpFrameBuffer;
     };
@@ -442,7 +446,6 @@ public:
     FrameTag OutFrameGetTag(void);
 
 private:
-
     /*
      * `NcpFrameBuffer` Implementation
      * -------------------------------
@@ -566,91 +569,91 @@ private:
 
     enum
     {
-        kReadByteAfterFrameHasEnded        = 0,          // Value returned by ReadByte() when frame has ended.
-        kMessageReadBufferSize             = 16,         // Size of message buffer array `mMessageBuffer`.
-        kUnknownFrameLength                = 0xffff,     // Value used when frame length is unknown.
-        kSegmentHeaderSize                 = 2,          // Length of the segment header.
-        kSegmentHeaderLengthMask           = 0x3fff,     // Bit mask to get the length from the segment header
-        kMaxSegments                       = 10,         // Max number of segments allowed in a frame
+        kReadByteAfterFrameHasEnded = 0,      // Value returned by ReadByte() when frame has ended.
+        kMessageReadBufferSize      = 16,     // Size of message buffer array `mMessageBuffer`.
+        kUnknownFrameLength         = 0xffff, // Value used when frame length is unknown.
+        kSegmentHeaderSize          = 2,      // Length of the segment header.
+        kSegmentHeaderLengthMask    = 0x3fff, // Bit mask to get the length from the segment header
+        kMaxSegments                = 10,     // Max number of segments allowed in a frame
 
-        kSegmentHeaderNoFlag               = 0,          // No flags are set.
-        kSegmentHeaderNewFrameFlag         = (1 << 15),  // Indicates that this segment starts a new frame.
-        kSegmentHeaderMessageIndicatorFlag = (1 << 14),  // Indicates this segment ends with a Message.
+        kSegmentHeaderNoFlag               = 0,         // No flags are set.
+        kSegmentHeaderNewFrameFlag         = (1 << 15), // Indicates that this segment starts a new frame.
+        kSegmentHeaderMessageIndicatorFlag = (1 << 14), // Indicates this segment ends with a Message.
 
-        kNumPrios                          = (kPriorityHigh + 1), // Number of priorities.
+        kNumPrios = (kPriorityHigh + 1), // Number of priorities.
     };
 
     enum ReadState
     {
-        kReadStateNotActive,                             // No current prepared output frame.
-        kReadStateInSegment,                             // In middle of a data segment while reading current frame.
-        kReadStateInMessage,                             // In middle of a message while reading current frame.
-        kReadStateDone,                                  // Current output frame is read fully.
+        kReadStateNotActive, // No current prepared output frame.
+        kReadStateInSegment, // In middle of a data segment while reading current frame.
+        kReadStateInMessage, // In middle of a message while reading current frame.
+        kReadStateDone,      // Current output frame is read fully.
     };
 
     enum Direction
     {
-        kForward                           = kPriorityLow,
-        kBackward                          = kPriorityHigh,
+        kForward  = kPriorityLow,
+        kBackward = kPriorityHigh,
         kUnknown,
     };
 
-    uint8_t *       GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction aDirection) const;
-    uint16_t        GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direction aDirection) const;
+    uint8_t *GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction aDirection) const;
+    uint16_t GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direction aDirection) const;
 
-    uint16_t        ReadUint16At(uint8_t *aBufPtr, Direction aDirection);
-    void            WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection);
+    uint16_t ReadUint16At(uint8_t *aBufPtr, Direction aDirection);
+    void     WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection);
 
-    bool            HasFrame(Priority aPriority) const;
-    void            UpdateReadWriteStartPointers(void);
+    bool HasFrame(Priority aPriority) const;
+    void UpdateReadWriteStartPointers(void);
 
-    otError         InFrameAppend(uint8_t aByte);
-    otError         InFrameBeginSegment(void);
-    void            InFrameEndSegment(uint16_t aSegmentHeaderFlags);
-    void            InFrameDiscard(void);
-    bool            InFrameIsWriting(Priority aPriority) const;
+    otError InFrameAppend(uint8_t aByte);
+    otError InFrameBeginSegment(void);
+    void    InFrameEndSegment(uint16_t aSegmentHeaderFlags);
+    void    InFrameDiscard(void);
+    bool    InFrameIsWriting(Priority aPriority) const;
 
-    void            OutFrameSelectReadDirection(void);
-    otError         OutFramePrepareSegment(void);
-    void            OutFrameMoveToNextSegment(void);
-    otError         OutFramePrepareMessage(void);
-    otError         OutFrameFillMessageBuffer(void);
+    void    OutFrameSelectReadDirection(void);
+    otError OutFramePrepareSegment(void);
+    void    OutFrameMoveToNextSegment(void);
+    otError OutFramePrepareMessage(void);
+    otError OutFrameFillMessageBuffer(void);
 
-    uint8_t * const  mBuffer;                    // Pointer to the buffer used to store the data.
-    uint8_t * const  mBufferEnd;                 // Points to after the end of buffer.
-    const uint16_t   mBufferLength;              // Length of the the buffer.
+    uint8_t *const mBuffer;       // Pointer to the buffer used to store the data.
+    uint8_t *const mBufferEnd;    // Points to after the end of buffer.
+    const uint16_t mBufferLength; // Length of the the buffer.
 
-    BufferCallback   mFrameAddedCallback;        // Callback to signal when a new frame is added
-    void *           mFrameAddedContext;         // Context passed to `mFrameAddedCallback`.
-    BufferCallback   mFrameRemovedCallback;      // Callback to signal when a frame is removed.
-    void *           mFrameRemovedContext;       // Context passed to `mFrameRemovedCallback`.
+    BufferCallback mFrameAddedCallback;   // Callback to signal when a new frame is added
+    void *         mFrameAddedContext;    // Context passed to `mFrameAddedCallback`.
+    BufferCallback mFrameRemovedCallback; // Callback to signal when a frame is removed.
+    void *         mFrameRemovedContext;  // Context passed to `mFrameRemovedCallback`.
 
-    otMessageQueue   mMessageQueue[kNumPrios];   // Main message queues.
+    otMessageQueue mMessageQueue[kNumPrios]; // Main message queues.
 
-    Direction        mWriteDirection;            // Direction (priority) for current frame being read.
-    otMessageQueue   mWriteFrameMessageQueue;    // Message queue for the current frame being written.
-    uint8_t *        mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
-    uint8_t *        mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
-    uint8_t *        mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
-    FrameTag         mWriteFrameTag;             // Tag associated with last successfully written frame.
+    Direction      mWriteDirection;             // Direction (priority) for current frame being read.
+    otMessageQueue mWriteFrameMessageQueue;     // Message queue for the current frame being written.
+    uint8_t *      mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
+    uint8_t *      mWriteSegmentHead;           // Pointer to start of current segment in the frame being written.
+    uint8_t *      mWriteSegmentTail;           // Pointer to end of current segment in the frame being written.
+    FrameTag       mWriteFrameTag;              // Tag associated with last successfully written frame.
 
-    Direction        mReadDirection;             // Direction (priority) for current frame being read.
-    ReadState        mReadState;                 // Read state.
-    uint16_t         mReadFrameLength;           // Length of current frame being read.
+    Direction mReadDirection;   // Direction (priority) for current frame being read.
+    ReadState mReadState;       // Read state.
+    uint16_t  mReadFrameLength; // Length of current frame being read.
 
-    uint8_t *        mReadFrameStart[kNumPrios]; // Pointer to start of current frame being read.
-    uint8_t *        mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
-    uint8_t *        mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
-    uint8_t *        mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
+    uint8_t *mReadFrameStart[kNumPrios]; // Pointer to start of current frame being read.
+    uint8_t *mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
+    uint8_t *mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
+    uint8_t *mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    otMessage *      mReadMessage;               // Current Message in the frame being read.
-    uint16_t         mReadMessageOffset;         // Offset within current message being read.
+    otMessage *mReadMessage;       // Current Message in the frame being read.
+    uint16_t   mReadMessageOffset; // Offset within current message being read.
 
-    uint8_t          mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
-    uint8_t *        mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
+    uint8_t  mMessageBuffer[kMessageReadBufferSize]; // Buffer to hold part of current message being read.
+    uint8_t *mReadMessageTail;                       // Pointer to end of current part in mMessageBuffer.
 };
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
-#endif  // NCP_FRAME_BUFFER_HPP_
+#endif // NCP_FRAME_BUFFER_HPP_
