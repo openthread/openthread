@@ -97,6 +97,7 @@ void MleRouter::HandlePartitionChange(void)
 
     netif.GetAddressResolver().Clear();
     netif.GetCoap().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this);
+    mRouterTable.Clear();
 }
 
 bool MleRouter::IsRouterRoleEnabled(void) const
@@ -168,6 +169,8 @@ otError MleRouter::BecomeLeader(void)
     ThreadNetif &netif = GetNetif();
     otError      error = OT_ERROR_NONE;
     Router *     router;
+    uint32_t     partitionId;
+    uint8_t      leaderId;
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_LEADER, error = OT_ERROR_NONE);
@@ -175,26 +178,22 @@ otError MleRouter::BecomeLeader(void)
 
     mRouterTable.Clear();
 
-    router = IsRouterIdValid(mPreviousRouterId) ? mRouterTable.Allocate(mPreviousRouterId) : mRouterTable.Allocate();
-    VerifyOrExit(router != NULL, error = OT_ERROR_NO_BUFS);
+    partitionId = mFixedLeaderPartitionId ? mFixedLeaderPartitionId : Random::GetUint32();
 
-    SetRouterId(router->GetRouterId());
+    leaderId = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId : Random::GetUint8InRange(0, kMaxRouterId + 1);
 
+    SetLeaderData(partitionId, mLeaderWeight, leaderId);
+
+    router = mRouterTable.Allocate(leaderId);
+    assert(router != NULL);
+
+    SetRouterId(leaderId);
     router->SetExtAddress(netif.GetMac().GetExtAddress());
-
-    if (mFixedLeaderPartitionId != 0)
-    {
-        SetLeaderData(mFixedLeaderPartitionId, mLeaderWeight, mRouterId);
-    }
-    else
-    {
-        SetLeaderData(Random::GetUint32(), mLeaderWeight, mRouterId);
-    }
 
     netif.GetNetworkDataLeader().Reset();
     netif.GetLeader().SetEmptyCommissionerData();
 
-    SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
+    SuccessOrExit(error = SetStateLeader(GetRloc16(leaderId)));
 
 exit:
     return error;
@@ -211,7 +210,6 @@ void MleRouter::StopLeader(void)
     mAdvertiseTimer.Stop();
     netif.GetNetworkDataLeader().Stop();
     netif.UnsubscribeAllRoutersMulticast();
-    HandlePartitionChange();
 }
 
 otError MleRouter::HandleDetachStart(void)
@@ -878,6 +876,11 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         VerifyOrExit(address16.IsValid(), error = OT_ERROR_PARSE);
         VerifyOrExit(GetRloc16() == address16.GetRloc16(), error = OT_ERROR_DROP);
 
+        // Leader Data
+        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
+        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+        SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+
         // Route
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
         VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
@@ -885,11 +888,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != NULL);
-
-        // Leader Data
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
-        SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
         if (mLeaderData.GetLeaderRouterId() == GetRouterId(GetRloc16()))
         {
