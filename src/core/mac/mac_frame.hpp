@@ -935,6 +935,22 @@ public:
     void SetIsCcaEnabled(bool aIsCcaEnabled) { mInfo.mTxInfo.mIsCcaEnabled = aIsCcaEnabled; }
 
     /**
+     * This method returns the key used for frame encryption and authentication (AES CCM).
+     *
+     * @returns The pointer to the key.
+     *
+     */
+    const uint8_t *GetAesKey(void) const { return mInfo.mTxInfo.mAesKey; }
+
+    /**
+     * This method sets the key used for frame encryption and authentication (AES CCM).
+     *
+     * @param[in]  aAesKey  The pointer to the key.
+     *
+     */
+    void SetAesKey(const uint8_t *aAesKey) { mInfo.mTxInfo.mAesKey = aAesKey; }
+
+    /**
      * This method returns the IEEE 802.15.4 PSDU length.
      *
      * @returns The IEEE 802.15.4 PSDU length.
