@@ -324,6 +324,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     (void)aInstance;
 
+    otError result = OT_ERROR_NONE;
+
     aFrame->mPsdu[-1] = aFrame->mLength;
 
     nrf_802154_channel_set(aFrame->mChannel);
@@ -334,13 +336,20 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
-        nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
+        if (!nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false))
+        {
+            result = OT_ERROR_FAILED;
+        }
     }
 
     clearPendingEvents();
-    otPlatRadioTxStarted(aInstance, aFrame);
 
-    return OT_ERROR_NONE;
+    if (result == OT_ERROR_NONE)
+    {
+        otPlatRadioTxStarted(aInstance, aFrame);
+    }
+
+    return result;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
