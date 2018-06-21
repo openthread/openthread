@@ -876,6 +876,16 @@ public:
      */
     bool IsEnabled(void) { return mEnabled; }
 
+    /**
+     * This method performs AES CCM on the frame which is going to be sent.
+     *
+     * @param[in]  aFrame       A reference to the MAC frame buffer that is going to be sent.
+     * @param[in]  aExtAddress  A pointer to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     *
+     */
+    static void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
+
 private:
     enum
     {
@@ -908,8 +918,24 @@ private:
         kOperationTransmitOutOfBandFrame,
     };
 
-    void    GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
-    void    ProcessTransmitSecurity(Frame &aFrame);
+    /**
+     * This method processes transmit security on the frame which is going to be sent.
+     *
+     * This method prepares the frame, fills Mac auxiliary header, and perform AES CCM immediately in most cases
+     * (depends on @p aProcessAesCcm). If aProcessAesCcm is False, it probably means that some content in the frame
+     * will be updated just before transmission, so AES CCM will be performed after that (before transmission).
+     *
+     * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
+     * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
+     *
+     */
+    void ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm);
+
+    static void GenerateNonce(const ExtAddress &aAddress,
+                              uint32_t          aFrameCounter,
+                              uint8_t           aSecurityLevel,
+                              uint8_t *         aNonce);
+
     otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);

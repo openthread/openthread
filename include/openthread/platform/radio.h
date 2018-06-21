@@ -109,6 +109,7 @@ typedef struct otRadioFrame
             uint8_t mMaxTxAttempts; ///< Max number of transmit attempts for an outbound frame.
             bool    mIsARetx : 1; ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
             bool    mIsCcaEnabled : 1; ///< Set to true if CCA must be enabled for this packet. False otherwise.
+            const uint8_t *mAesKey;    ///< The key used for frame encryption and authentication (AES CCM).
         } mTxInfo;
 
         struct

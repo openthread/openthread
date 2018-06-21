@@ -877,18 +877,36 @@ void Mac::SendBeacon(Frame &aFrame)
     LogBeacon("Sending", *beaconPayload);
 }
 
-void Mac::ProcessTransmitSecurity(Frame &aFrame)
+void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
 {
-    KeyManager &      keyManager   = GetNetif().GetKeyManager();
-    uint32_t          frameCounter = 0;
-    uint8_t           securityLevel;
+    uint32_t       frameCounter = 0;
+    uint8_t        securityLevel;
+    uint8_t        nonce[kNonceSize];
+    uint8_t        tagLength;
+    Crypto::AesCcm aesCcm;
+    otError        error;
+
+    aFrame.GetSecurityLevel(securityLevel);
+    aFrame.GetFrameCounter(frameCounter);
+
+    GenerateNonce(*aExtAddress, frameCounter, securityLevel, nonce);
+
+    aesCcm.SetKey(aFrame.GetAesKey(), 16);
+    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
+
+    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    assert(error == OT_ERROR_NONE);
+
+    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
+    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), true);
+    aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
+}
+
+void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
+{
+    KeyManager &      keyManager = GetNetif().GetKeyManager();
     uint8_t           keyIdMode;
-    uint8_t           nonce[kNonceSize];
-    uint8_t           tagLength;
-    Crypto::AesCcm    aesCcm;
-    const uint8_t *   key        = NULL;
     const ExtAddress *extAddress = NULL;
-    otError           error;
 
     if (aFrame.GetSecurityEnabled() == false)
     {
@@ -900,7 +918,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        key        = keyManager.GetKek();
+        aFrame.SetAesKey(keyManager.GetKek());
         extAddress = &mExtAddress;
 
         if (!aFrame.IsARetransmission())
@@ -912,7 +930,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
         break;
 
     case Frame::kKeyIdMode1:
-        key        = keyManager.GetCurrentMacKey();
+        aFrame.SetAesKey(keyManager.GetCurrentMacKey());
         extAddress = &mExtAddress;
 
         // If the frame is marked as a retransmission, the `Mac::Sender` which
@@ -933,7 +951,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        key                       = sMode2Key;
+        aFrame.SetAesKey(sMode2Key);
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
@@ -947,20 +965,10 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
         break;
     }
 
-    aFrame.GetSecurityLevel(securityLevel);
-    aFrame.GetFrameCounter(frameCounter);
-
-    GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
-
-    aesCcm.SetKey(key, 16);
-    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
-
-    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    assert(error == OT_ERROR_NONE);
-
-    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
-    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), true);
-    aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
+    if (aProcessAesCcm)
+    {
+        ProcessTransmitAesCcm(aFrame, extAddress);
+    }
 
 exit:
     return;
@@ -1135,7 +1143,7 @@ void Mac::BeginTransmit(void)
         if (applyTransmitSecurity)
         {
             // Security Processing
-            ProcessTransmitSecurity(sendFrame);
+            ProcessTransmitSecurity(sendFrame, true);
         }
     }
 
