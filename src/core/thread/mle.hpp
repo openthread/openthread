@@ -987,10 +987,11 @@ public:
     /**
      * This method frees MLE Response message from Delayed Message Queue if any.
      *
-     * @param[in]  aSubType  The message sub-type to remove.
+     * @param[in]  aSubType      The message sub-type to remove.
+     * @param[in]  aDestination  The destination IPv6 address of the message.
      *
      */
-    void RemoveDelayedResponseMessage(uint8_t aSubType);
+    void RemoveDelayedResponseMessage(uint8_t aSubType, const Ip6::Address &aDestination);
 
     /**
      * This method converts a device role into a human-readable string.

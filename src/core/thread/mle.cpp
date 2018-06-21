@@ -1841,7 +1841,7 @@ void Mle::HandleDelayedResponseTimer(void)
     }
 }
 
-void Mle::RemoveDelayedResponseMessage(uint8_t aSubType)
+void Mle::RemoveDelayedResponseMessage(uint8_t aSubType, const Ip6::Address &aDestination)
 {
     Message *             message = mDelayedResponses.GetHead();
     DelayedResponseHeader delayedResponse;
@@ -1850,7 +1850,8 @@ void Mle::RemoveDelayedResponseMessage(uint8_t aSubType)
     {
         delayedResponse.ReadFrom(*message);
 
-        if (message->GetSubType() == aSubType)
+        if (message->GetSubType() == aSubType &&
+            (aDestination.IsMulticast() || delayedResponse.GetDestination() == aDestination))
         {
             mDelayedResponses.Dequeue(*message);
             message->Free();

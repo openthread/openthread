@@ -1911,10 +1911,10 @@ otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChalle
     }
 
     // Remove MLE Parent Responses from Send Message Queue.
-    GetNetif().GetMeshForwarder().RemoveResponseMessages(Message::kSubTypeMleParentResponse);
+    GetNetif().GetMeshForwarder().RemoveResponseMessages(Message::kSubTypeMleParentResponse, destination);
 
     // Remove MLE Parent Response from Delayed Message Queue.
-    RemoveDelayedResponseMessage(Message::kSubTypeMleParentResponse);
+    RemoveDelayedResponseMessage(Message::kSubTypeMleParentResponse, destination);
 
     SuccessOrExit(error = AddDelayedResponse(*message, destination, delay));
 
@@ -3040,10 +3040,10 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     if (aDelay)
     {
         // Remove MLE Data Responses from Send Message Queue.
-        GetNetif().GetMeshForwarder().RemoveResponseMessages(Message::kSubTypeMleDataResponse);
+        GetNetif().GetMeshForwarder().RemoveResponseMessages(Message::kSubTypeMleDataResponse, aDestination);
 
         // Remove multicast MLE Data Response from Delayed Message Queue.
-        RemoveDelayedResponseMessage(Message::kSubTypeMleDataResponse);
+        RemoveDelayedResponseMessage(Message::kSubTypeMleDataResponse, aDestination);
 
         SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
         LogMleMessage("Delay Data Response", aDestination);
