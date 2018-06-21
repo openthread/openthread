@@ -677,7 +677,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
     receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
-    receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mMsec * US_PER_MS;
+    receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
 #endif
 
     PlatformEventSignalPending();
