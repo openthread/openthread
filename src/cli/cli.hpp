@@ -330,7 +330,7 @@ private:
     static void s_HandlePingTimer(Timer &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void OTCALL s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext);
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
@@ -360,9 +360,9 @@ private:
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
 #ifdef OTDLL
-    void HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags);
+    void HandleNetifStateChanged(otInstance *aInstance, otChangedFlags aFlags);
 #else
-    void HandleNetifStateChanged(uint32_t aFlags);
+    void HandleNetifStateChanged(otChangedFlags aFlags);
 #endif
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame);

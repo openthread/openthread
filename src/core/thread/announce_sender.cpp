@@ -196,12 +196,12 @@ void AnnounceSender::Stop(void)
     otLogInfoMle(GetInstance(), "Stopping periodic MLE Announcements tx");
 }
 
-void AnnounceSender::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void AnnounceSender::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<AnnounceSender>().HandleStateChanged(aFlags);
 }
 
-void AnnounceSender::HandleStateChanged(uint32_t aFlags)
+void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
 {
     if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
     {

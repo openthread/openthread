@@ -251,13 +251,20 @@ enum
 };
 
 /**
+ * This type represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`
+ * definitions.
+ *
+ */
+typedef uint32_t otChangedFlags;
+
+/**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
  *
  * @param[in]  aFlags    A bit-field indicating specific state that has changed.  See `OT_CHANGED_*` definitions.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
+typedef void(OTCALL *otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.

@@ -79,11 +79,10 @@ public:
          * This type defines the function pointer which is called to notify of state or configuration changes.
          *
          * @param[in] aCallback    A reference to callback instance.
-         * @param[in] aFlags       A bit-field indicating specific state that has changed. See `OT_CHANGED_<STATE>`
-         *                         definitions in `instance.h`.
+         * @param[in] aFlags       A bit-field indicating specific state or configuration that has changed.
          *
          */
-        typedef void (*Handler)(Callback &aCallback, uint32_t aFlags);
+        typedef void (*Handler)(Callback &aCallback, otChangedFlags aFlags);
 
         /**
          * This constructor initializes a `Callback` instance
@@ -149,22 +148,40 @@ public:
     void RemoveCallback(otStateChangedCallback aCallback, void *aContext);
 
     /**
-     * This method schedules notification of changed flags.
-     *
-     * The @p aFlags are combined (bitwise-or) with other flags that have not been provided in a callback yet.
+     * This method schedules signaling of changed flags.
      *
      * @param[in]  aFlags       A bit-field indicating what configuration or state has changed.
      *
      */
-    void SetFlags(uint32_t aFlags);
+    void Signal(otChangedFlags aFlags);
 
     /**
-     * This method indicates whether or not a state changed callback is pending.
+     * This method schedules signaling of changed flags only if the set of flags has not been signaled before (first
+     * time signal).
      *
-     * @retval TRUE if a state changed callback is pending, FALSE otherwise.
+     * @param[in]  aFlags       A bit-field indicating what configuration or state has changed.
      *
      */
-    bool IsPending(void) const { return (mFlags != 0); }
+    void SignalIfFirst(otChangedFlags aFlags);
+
+    /**
+     * This method indicates whether or not a changed callback is pending.
+     *
+     * @returns TRUE if a state changed callback is pending, FALSE otherwise.
+     *
+     */
+    bool IsPending(void) const { return (mFlagsToSignal != 0); }
+
+    /**
+     * This method indicates whether or not a changed notification for a given set of flags has been signaled before.
+     *
+     * @param[in]  aFlags   A bit-field containing the flag-bits to check.
+     *
+     * @retval TRUE    All flag bits in @p aFlags have been signaled before.
+     * @retval FALSE   At least one flag bit in @p aFlags has not been signaled before.
+     *
+     */
+    bool HasSignaled(otChangedFlags aFlags) const { return (mSignaledFlags & aFlags) == aFlags; }
 
 private:
     enum
@@ -182,10 +199,11 @@ private:
     static void HandleStateChanged(Tasklet &aTasklet);
     void        HandleStateChanged(void);
 
-    void        LogChangedFlags(uint32_t aFlags) const;
-    const char *FlagToString(uint32_t aFlag) const;
+    void        LogChangedFlags(otChangedFlags aFlags) const;
+    const char *FlagToString(otChangedFlags aFlag) const;
 
-    uint32_t         mFlags;
+    otChangedFlags   mFlagsToSignal;
+    otChangedFlags   mSignaledFlags;
     Tasklet          mTask;
     Callback *       mCallbacks;
     ExternalCallback mExternalCallbacks[kMaxExternalHandlers];

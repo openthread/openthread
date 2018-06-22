@@ -653,12 +653,25 @@ public:
     /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
-     * @param[in]  aNetworkName  A pointer to the IEEE 802.15.4 Network Name.
+     * @param[in]  aNetworkName  A pointer to the string. Must be null terminated.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
     otError SetNetworkName(const char *aNetworkName);
+
+    /**
+     * This method sets the IEEE 802.15.4 Network Name.
+     *
+     * @param[in]  aBuffer  A pointer to the char buffer containing the name. Does not need to be null terminated.
+     * @param[in]  aLength  Number of chars in the buffer.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetNetworkName(const char *aBuffer, uint8_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.

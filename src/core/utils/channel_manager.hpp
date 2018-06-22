@@ -273,8 +273,8 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aChangedFlags);
-    void        HandleStateChanged(uint32_t aChangedFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aChangedFlags);
+    void        HandleStateChanged(otChangedFlags aChangedFlags);
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 
