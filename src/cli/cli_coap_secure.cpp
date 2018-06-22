@@ -42,7 +42,7 @@
 #include "coap/coap_secure.hpp"
 
 // header for place your x509 certificate and private key
-#include "x509_cert_key.hpp"
+#include "x509_cert_key_ines.hpp"
 
 #include <mbedtls/debug.h>
 
@@ -248,6 +248,20 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
+    else if (strcmp(argv[0], "resource") == 0)
+    {
+        mResource.mUriPath = mUriPath;
+        mResource.mContext = this;
+        mResource.mHandler = &CoapSecureCli::HandleServerResponse;
+
+        if (argc > 1)
+        {
+            strlcpy(mUriPath, argv[1], kMaxUriLength);
+            SuccessOrExit(error = otCoapSecureAddResource(mInterpreter.mInstance, &mResource));
+        }
+
+        mInterpreter.mServer->OutputFormat("Resource name is '%s': ", mResource.mUriPath);
+    }
     else if (strcmp(argv[0], "disconnect") == 0)
     {
         SuccessOrExit(error = otCoapSecureDisconnect(mInterpreter.mInstance));
@@ -413,7 +427,7 @@ void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMess
             SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
         }
 
-        SuccessOrExit(error = otCoapSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
+        SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }
 
 exit:
@@ -535,11 +549,11 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
-        error = otCoapSecureSendMessage(mInterpreter.mInstance, message, &CoapSecureCli::HandleClientResponse, this);
+        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, &CoapSecureCli::HandleClientResponse, this);
     }
     else
     {
-        error = otCoapSecureSendMessage(mInterpreter.mInstance, message, NULL, NULL);
+        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, NULL, NULL);
     }
 
     mInterpreter.mServer->OutputFormat("Sending coap secure request: ");

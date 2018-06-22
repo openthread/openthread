@@ -143,7 +143,7 @@ otError otCoapSecureStop(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().Stop();
 }
 
-otError otCoapSecureSendMessage(otInstance *          aInstance,
+otError otCoapSecureSendRequest(otInstance *          aInstance,
                                 otMessage *           aMessage,
                                 otCoapResponseHandler aHandler = NULL,
                                 void *                aContext = NULL)
@@ -151,6 +151,35 @@ otError otCoapSecureSendMessage(otInstance *          aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage), aHandler, aContext);
+}
+
+otError otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().AddResource(*static_cast<Coap::Resource *>(aResource));
+}
+
+void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetApplicationCoapSecure().RemoveResource(*static_cast<Coap::Resource *>(aResource));
+}
+
+void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetApplicationCoapSecure().SetDefaultHandler(aHandler, aContext);
+}
+
+otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage),
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
