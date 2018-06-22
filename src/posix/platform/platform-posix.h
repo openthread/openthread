@@ -135,8 +135,11 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
 /**
  * This function initializes the radio service used by OpenThread.
  *
+ * @param[in]  aRadioFile       A pointer to the radio file.
+ * @param[in]  aRadioConfig     A pointer to the radio config.
+ *
  */
-void platformRadioInit(void);
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig);
 
 /**
  * This function shuts down the radio service used by OpenThread.
@@ -168,7 +171,9 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 /**
  * This function performs radio driver processing.
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
 void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet);
@@ -191,6 +196,10 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
 /**
  * This function performs radio driver processing.
+ *
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
  *
  */
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);

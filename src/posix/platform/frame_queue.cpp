@@ -26,9 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file includes implementation of frame queue.
+ */
+
 #include "platform-posix.h"
 
-#include "frame_cache.hpp"
+#include "frame_queue.hpp"
 
 #include <assert.h>
 #include <string.h>
@@ -37,7 +42,7 @@
 
 namespace ot {
 
-otError FrameCache::Push(const uint8_t *aFrame, uint8_t aLength)
+otError FrameQueue::Push(const uint8_t *aFrame, uint8_t aLength)
 {
     otError  error   = OT_ERROR_NONE;
     uint16_t newTail = mTail + aLength + 1;
@@ -74,7 +79,7 @@ exit:
     return error;
 }
 
-void FrameCache::Shift(void)
+void FrameQueue::Shift(void)
 {
     if (mHead != mTail)
     {
@@ -83,7 +88,7 @@ void FrameCache::Shift(void)
     }
 }
 
-const uint8_t *FrameCache::Peek(uint8_t *aFrame, uint8_t &aLength)
+const uint8_t *FrameQueue::Peek(uint8_t *aFrame, uint8_t &aLength)
 {
     const uint8_t *frame = NULL;
     uint16_t       next;
@@ -116,7 +121,7 @@ exit:
 void TestSingle()
 {
     otError        error;
-    ot::FrameCache frameCache;
+    ot::FrameQueue frameQueue;
     uint8_t        length;
     uint8_t        frame[255];
 
@@ -129,10 +134,10 @@ void TestSingle()
     {
         uint8_t        outFrame[255];
         const uint8_t *retFrame = NULL;
-        error                   = frameCache.Push(frame, i);
+        error                   = frameQueue.Push(frame, i);
         assert(OT_ERROR_NONE == error);
-        assert(!frameCache.IsEmpty());
-        retFrame = frameCache.Peek(outFrame, length);
+        assert(!frameQueue.IsEmpty());
+        retFrame = frameQueue.Peek(outFrame, length);
         assert(retFrame != NULL);
         assert(length == i);
 
@@ -141,15 +146,15 @@ void TestSingle()
             assert(retFrame[j] == frame[j]);
         }
 
-        frameCache.Shift();
-        assert(frameCache.IsEmpty());
+        frameQueue.Shift();
+        assert(frameQueue.IsEmpty());
     }
 }
 
 void TestMultiple()
 {
     otError        error;
-    ot::FrameCache frameCache;
+    ot::FrameQueue frameQueue;
     uint8_t        length;
     uint8_t        frame[255];
 
@@ -168,13 +173,13 @@ void TestMultiple()
         int action = rand();
         if (action & 0x01) // push when odd
         {
-            error = frameCache.Push(frame, i);
+            error = frameQueue.Push(frame, i);
             if (error == OT_ERROR_NO_BUFS)
                 continue;
 
             assert(OT_ERROR_NONE == error);
-            assert(!frameCache.IsEmpty());
-            retFrame = frameCache.Peek(outFrame, length);
+            assert(!frameQueue.IsEmpty());
+            retFrame = frameQueue.Peek(outFrame, length);
             assert(retFrame != NULL);
 
             for (size_t j = 0; j < length; ++j)
@@ -184,14 +189,14 @@ void TestMultiple()
         }
         else
         {
-            frameCache.Shift();
+            frameQueue.Shift();
         }
     }
 }
 
 void TestRing()
 {
-    ot::FrameCache frameCache;
+    ot::FrameQueue frameQueue;
     uint8_t        length;
     uint8_t        frame[255];
 
@@ -205,16 +210,16 @@ void TestRing()
         uint8_t        outFrame[255];
         const uint8_t *retFrame = NULL;
 
-        frameCache.Push(frame, sizeof(frame));
+        frameQueue.Push(frame, sizeof(frame));
 
-        retFrame = frameCache.Peek(outFrame, length);
+        retFrame = frameQueue.Peek(outFrame, length);
 
         for (size_t j = 0; j < sizeof(frame); ++j)
         {
             assert(retFrame[j] == frame[j]);
         }
 
-        frameCache.Shift();
+        frameQueue.Shift();
     };
 }
 

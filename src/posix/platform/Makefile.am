@@ -33,50 +33,40 @@ lib_LIBRARIES                             = libopenthread-posix.a
 libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/src/ncp                 \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
     $(NULL)
 
-PLATFORM_SOURCES                          = \
+libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
     diag.c                                  \
-    frame_cache.cpp                         \
-    hdlc.cpp                                \
-    misc.c                                  \
-    ncp_spinel.cpp                          \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart.c                                  \
     flash.c                                 \
+    frame_queue.cpp                         \
+    hdlc.cpp                                \
+    logging.c                               \
+    misc.c                                  \
+    platform.c                              \
+    radio_spinel.cpp                        \
+    random.c                                \
+    settings.cpp                            \
     spi-stubs.c                             \
     spinel.c                                \
-    settings.cpp                            \
-    $(NULL)
-
-libopenthread_posix_a_SOURCES             = \
-    $(PLATFORM_SOURCES)                     \
+    uart.c                                  \
     $(NULL)
 
 noinst_HEADERS                            = \
     flash.h                                 \
-    hdlc.hpp                                \
-    ncp.h                                   \
-    ncp_spinel.hpp                          \
+    frame_queue.hpp                         \
     platform.h                              \
     platform-posix.h                        \
-    spinel.h                                \
+    radio_spinel.hpp                        \
     $(NULL)
 
 PRETTY_FILES                              = \
-    $(PLATFORM_SOURCES)                     \
+    $(libopenthread_posix_a_SOURCES)        \
     $(noinst_HEADERS)                       \
     $(NULL)
-
-Dash                                      = -
-libopenthread_posix_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)

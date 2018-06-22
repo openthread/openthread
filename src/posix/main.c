@@ -27,6 +27,7 @@
  */
 
 #include <assert.h>
+
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
@@ -46,18 +47,6 @@
 
 #include "platform.h"
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    return calloc(aNum, aSize);
-}
-
-void otPlatFree(void *aPtr)
-{
-    free(aPtr);
-}
-#endif
-
 void otTaskletsSignalPending(otInstance *aInstance)
 {
     (void)aInstance;
@@ -67,28 +56,11 @@ int main(int argc, char *argv[])
 {
     otInstance *sInstance;
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    size_t   otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer       = NULL;
-#endif
-
 pseudo_reset:
 
     PlatformInit(argc, argv);
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
     sInstance = otInstanceInitSingle();
-#endif
     assert(sInstance);
 
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
@@ -108,9 +80,6 @@ pseudo_reset:
     }
 
     otInstanceFinalize(sInstance);
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    free(otInstanceBuffer);
-#endif
 
     goto pseudo_reset;
 

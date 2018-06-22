@@ -26,6 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file implements the spi stubs.
+ *
+ */
+
 #include "platform-posix.h"
 
 #include <stdio.h>

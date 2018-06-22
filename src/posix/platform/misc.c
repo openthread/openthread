@@ -28,19 +28,15 @@
 
 #include "platform-posix.h"
 
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "platform.h"
 
-#ifndef _WIN32
 extern int    gArgumentsCount;
 extern char **gArguments;
-#endif
 
 static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
 bool                       gPlatformPseudoResetWasRequested;
@@ -48,10 +44,7 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-#if _WIN32
-// This function does nothing on the Windows platform.
-
-#elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET // if _WIN32
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     gPlatformPseudoResetWasRequested = true;
     sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
 

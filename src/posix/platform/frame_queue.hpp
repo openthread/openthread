@@ -26,31 +26,36 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_FRAME_CACHE_HPP_
-#define OT_FRAME_CACHE_HPP_
+/**
+ * @file
+ *   This file includes definitions for frame queue.
+ */
+
+#ifndef OT_FRAME_QUEUE_HPP_
+#define OT_FRAME_QUEUE_HPP_
 
 #include <stdint.h>
 
 /**
- * @def OPENTHREAD_CONFIG_FRAME_CACHE_SIZE
+ * @def OPENTHREAD_CONFIG_FRAME_QUEUE_SIZE
  *
- * The size of a frame cache in bytes.
+ * The size of a frame queue in bytes.
  *
  */
-#ifndef OPENTHREAD_CONFIG_FRAME_CACHE_SIZE
-#define OPENTHREAD_CONFIG_FRAME_CACHE_SIZE 4096
+#ifndef OPENTHREAD_CONFIG_FRAME_QUEUE_SIZE
+#define OPENTHREAD_CONFIG_FRAME_QUEUE_SIZE 4096
 #endif
 
 namespace ot {
 
-class FrameCache
+class FrameQueue
 {
 public:
     /**
-     * This constructor initializes a frame cache based on ring buffer.
+     * This constructor initializes a frame queue based on ring buffer.
      *
      */
-    FrameCache(void)
+    FrameQueue(void)
         : mHead(0)
         , mTail(0)
     {
@@ -59,8 +64,9 @@ public:
     /**
      * This method checks if the cache is empty.
      *
-     * @retval true     No frames are cached.
-     * @retval false    At least one frame is cached.
+     * @retval true     No frames are queued.
+     * @retval false    At least one frame is queued.
+     *
      */
     bool IsEmpty(void) const { return mHead == mTail; }
 
@@ -71,19 +77,19 @@ public:
     void Shift(void);
 
     /**
-     * This method pushes one frame into the cache.
+     * This method pushes one frame into the queue.
      *
-     * @param[in]   aFrame      A pointer to a spinel frame to be cached.
+     * @param[in]   aFrame      A pointer to a spinel frame to be queued.
      * @param[in]   aLength     Frame length in bytes.
      *
-     * @retval OT_ERROR_NONE    Successfully cached this frame.
+     * @retval OT_ERROR_NONE    Successfully queued this frame.
      * @retval OT_ERROR_NO_BUFS Insufficient memory for this frame.
      *
      */
     otError Push(const uint8_t *aFrame, uint8_t aLength);
 
     /**
-     * This method gets one frame at the head.
+     * This method gets one frame at head.
      *
      * @note aFrame is only used when necessary, always use the returned pointer to access frame data.
      *
@@ -98,10 +104,10 @@ public:
 private:
     enum
     {
-        kCacheSize = OPENTHREAD_CONFIG_FRAME_CACHE_SIZE,
+        kQueueSize = OPENTHREAD_CONFIG_FRAME_QUEUE_SIZE,
     };
 
-    uint8_t  mBuffer[kCacheSize];
+    uint8_t  mBuffer[kQueueSize];
     uint16_t mHead;
     uint16_t mTail;
 };

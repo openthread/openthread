@@ -36,30 +36,23 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef _WIN32
-#include <libgen.h>
 #include <syslog.h>
-#endif
 
 #include <openthread/openthread.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint64_t    NODE_ID     = 0;
-const char *NODE_FILE   = NULL;
-const char *NODE_CONFIG = "";
+uint64_t NODE_ID = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 
-#ifndef _WIN32
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
-#endif
 
 void PrintUsage(const char *aArg0)
 {
@@ -69,9 +62,11 @@ void PrintUsage(const char *aArg0)
 
 void PlatformInit(int aArgCount, char *aArgVector[])
 {
-    int      i;
-    uint32_t speedUpFactor = 1;
-    char *   endptr;
+    int         i;
+    uint32_t    speedUpFactor = 1;
+    char *      endptr;
+    const char *radioFile   = NULL;
+    const char *radioConfig = "";
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -102,22 +97,21 @@ void PlatformInit(int aArgCount, char *aArgVector[])
     {
         PrintUsage(aArgVector[0]);
     }
-    NODE_FILE = aArgVector[i];
+
+    radioFile = aArgVector[i];
     if (i + 1 < aArgCount)
     {
-        NODE_CONFIG = aArgVector[i + 1];
+        radioConfig = aArgVector[i + 1];
     }
 
-#ifndef _WIN32
     openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
-#endif
 
     platformAlarmInit(speedUpFactor);
-    platformRadioInit();
+    platformRadioInit(radioFile, radioConfig);
     platformRandomInit();
 }
 

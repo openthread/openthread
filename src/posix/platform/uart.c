@@ -34,6 +34,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/prctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -42,13 +43,10 @@
 
 #include "code_utils.h"
 
-#ifdef OPENTHREAD_TARGET_LINUX
-#include <sys/prctl.h>
 int   posix_openpt(int oflag);
 int   grantpt(int fildes);
 int   unlockpt(int fd);
 char *ptsname(int fd);
-#endif // OPENTHREAD_TARGET_LINUX
 
 static uint8_t        s_receive_buffer[128];
 static const uint8_t *s_write_buffer;
