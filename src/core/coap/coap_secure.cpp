@@ -232,7 +232,7 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
         netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                              CoapSecure::HandleDtlsSend, this);
+                              CoapSecure::HandleDtlsSend, this, mApplicationCoapSecure);
     }
     else
     {
