@@ -199,6 +199,9 @@ enum
 
 };
 
+/// Convert the advertising interval from [ms] to [ble symbol times].
+#define OT_BLE_MS_TO_TICKS(x)  (((x) * 1000) / OT_BLE_ADV_INTERVAL_UNIT)
+
 /**
  * This enum represents BLE Device Address types.
  *
@@ -322,9 +325,10 @@ typedef struct otPlatBleGapConnParams
  *
  */
 typedef enum otPlatBleUuidType {
-    OT_BLE_UUID_TYPE_16  = 0, ///< UUID represented by 16-bit value.
-    OT_BLE_UUID_TYPE_32  = 1, ///< UUID represented by 32-bit value.
-    OT_BLE_UUID_TYPE_128 = 2, ///< UUID represented by 128-bit value.
+    OT_BLE_UUID_TYPE_NONE = 0, ///< UUID uninitialized value.
+    OT_BLE_UUID_TYPE_16   = 1, ///< UUID represented by 16-bit value.
+    OT_BLE_UUID_TYPE_32   = 2, ///< UUID represented by 32-bit value.
+    OT_BLE_UUID_TYPE_128  = 3, ///< UUID represented by 128-bit value.
 } otPlatBleUuidType;
 
 /**
@@ -369,6 +373,25 @@ typedef struct otPlatBleGattDescriptor
     otPlatBleUuid mUuid;   ///< A UUID value of descriptor.
     uint16_t      mHandle; ///< Descriptor handle.
 } otPlatBleGattDescriptor;
+
+/**
+ * Registration descriptor for a GATT service.
+ *
+ */
+typedef struct otPlatBleGattService
+{
+    /**
+     * Pointer to service UUID; use BLE_UUIDxx_DECLARE macros to declare
+     * proper UUID; NULL if there are no more characteristics in the service.
+     */
+    const otPlatBleUuid mUuid;
+
+    /**
+     * Array of characteristic definitions corresponding to characteristics
+     * belonging to this service.
+     */
+    otPlatBleGattCharacteristic *mCharacteristics;
+} otPlatBleGattService;
 
 /**
  * This structure represents an BLE packet.
@@ -956,6 +979,26 @@ extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint
 otError otPlatBleGattServerServiceRegister(otInstance *aInstance, const otPlatBleUuid *aUuid, uint16_t *aHandle);
 
 /**
+ * Registers a list of GATT Services and their enclosed Characteristics.
+ * The generated handles will be written back into this structure when the
+ * BLE stack is enabled.
+ *
+ * @note This function shall be used only for GATT Server.
+ *
+ * @param[in]   aInstance  The OpenThread instance structure.
+ * @param[in]   aServices  Null terminated array of service structures to register.
+ * @param[out]  aHandle    The start handle of a service.
+ *
+ * @retval ::OT_ERROR_NONE           Service has been successfully registered.
+ * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
+ * @retval ::OT_ERROR_INVALID_ARGS   Invalid service UUID has been provided.
+ * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
+ */
+otError otPlatBleGattServerServicesRegister(otInstance *          aInstance, 
+                                            otPlatBleGattService *aServices, 
+                                            uint16_t *            aHandle);
+
+/**
  * Registers GATT Characteristic with maximum length of 128 octets.
  *
  * @note This function shall be used only for GATT Server.
@@ -1019,6 +1062,19 @@ extern void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, u
  *
  */
 extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an ATT Read Request
+ * packet has been received.
+ *
+ * @note This function shall be used only for GATT Server.
+ *
+ * @param[in] aInstance   The OpenThread instance structure.
+ * @param[in] aHandle     The handle of the attribute to be read.
+ * @param[out] aPacket    A pointer to the packet to be filled with pointers to attribute data to be read.
+ *
+ */
+extern void otPlatBleGattServerOnReadRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an ATT Subscription
