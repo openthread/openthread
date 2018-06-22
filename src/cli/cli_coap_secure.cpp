@@ -42,7 +42,7 @@
 #include "coap/coap_secure.hpp"
 
 // header for place your x509 certificate and private key
-#include "x509_cert_key_ines.hpp"
+#include "x509_cert_key.hpp"
 
 #include <mbedtls/debug.h>
 
@@ -292,6 +292,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
                                            ": interact with coap source from server, ipv6 is not need as client\r\n");
         mInterpreter.mServer->OutputFormat("    >> args:(ipV6_addr_srv), coap_src, con, payload\r\n");
+        mInterpreter.mServer->OutputFormat(">'coaps resource <uri>'                              "
+                                           ": add a coap server resource.\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  "
                                            ": stop dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps stop'                                        "
