@@ -294,12 +294,12 @@ exit:
 
 void Mle::SetRole(otDeviceRole aRole)
 {
-    VerifyOrExit(aRole != mRole);
+    VerifyOrExit(aRole != mRole, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ROLE));
 
     otLogInfoMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
 
     mRole = aRole;
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_ROLE);
+    GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
 
 exit:
     return;
@@ -805,7 +805,7 @@ otError Mle::UpdateLinkLocalAddress(void)
     mLinkLocal64.GetAddress().SetIid(netif.GetMac().GetExtAddress());
     netif.AddUnicastAddress(mLinkLocal64);
 
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_LL_ADDR);
+    GetNotifier().Signal(OT_CHANGED_THREAD_LL_ADDR);
 
     return OT_ERROR_NONE;
 }
@@ -821,6 +821,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 
     if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8) == 0)
     {
+        GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR);
         ExitNow();
     }
 
@@ -872,7 +873,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     }
 
     // Changing the prefix also causes the mesh local address to be different.
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_ML_ADDR);
+    GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
 
 exit:
     return OT_ERROR_NONE;
@@ -922,7 +923,11 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
         GetNetif().GetMle().HandlePartitionChange();
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_PARTITION_ID);
+        GetNotifier().Signal(OT_CHANGED_THREAD_PARTITION_ID);
+    }
+    else
+    {
+        GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_PARTITION_ID);
     }
 
     mLeaderData.SetPartitionId(aPartitionId);
@@ -1374,12 +1379,12 @@ exit:
     return error;
 }
 
-void Mle::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void Mle::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<Mle>().HandleStateChanged(aFlags);
 }
 
-void Mle::HandleStateChanged(uint32_t aFlags)
+void Mle::HandleStateChanged(otChangedFlags aFlags)
 {
     ThreadNetif &netif = GetNetif();
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
@@ -1393,7 +1398,7 @@ void Mle::HandleStateChanged(uint32_t aFlags)
                                OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
             netif.AddUnicastAddress(mMeshLocal64);
-            GetNotifier().SetFlags(OT_CHANGED_THREAD_ML_ADDR);
+            GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
         }
 
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice())

@@ -4517,11 +4517,11 @@ void MleRouter::SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild
     switch (aEvent)
     {
     case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_ADDED);
+        GetNotifier().Signal(OT_CHANGED_THREAD_CHILD_ADDED);
         break;
 
     case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
-        GetNotifier().SetFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
+        GetNotifier().Signal(OT_CHANGED_THREAD_CHILD_REMOVED);
         break;
     }
 }

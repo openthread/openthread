@@ -104,11 +104,12 @@ const uint8_t *KeyManager::GetPSKc(void) const
 
 void KeyManager::SetPSKc(const uint8_t *aPSKc)
 {
-    if (memcmp(mPSKc, aPSKc, sizeof(mPSKc)) != 0)
-    {
-        memcpy(mPSKc, aPSKc, sizeof(mPSKc));
-        GetNotifier().SetFlags(OT_CHANGED_PSKC);
-    }
+    VerifyOrExit(memcmp(mPSKc, aPSKc, sizeof(mPSKc)) != 0, GetNotifier().SignalIfFirst(OT_CHANGED_PSKC));
+    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
+    GetNotifier().Signal(OT_CHANGED_PSKC);
+
+exit:
+    return;
 }
 #endif
 
@@ -123,7 +124,8 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     otError         error = OT_ERROR_NONE;
     Router *        routers;
 
-    VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
+    VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0,
+                 GetNotifier().SignalIfFirst(OT_CHANGED_MASTER_KEY));
 
     mMasterKey   = aKey;
     mKeySequence = 0;
@@ -151,7 +153,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
         iter.GetChild()->SetMleFrameCounter(0);
     }
 
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
+    GetNotifier().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
 
 exit:
     return error;
@@ -178,10 +180,7 @@ otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    if (aKeySequence == mKeySequence)
-    {
-        ExitNow();
-    }
+    VerifyOrExit(aKeySequence != mKeySequence, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
     // Check if the guard timer has expired if key rotation is requested.
     if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
@@ -202,7 +201,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         StartKeyRotationTimer();
     }
 
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    GetNotifier().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;
@@ -260,10 +259,12 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    if (mSecurityPolicyFlags != aSecurityPolicyFlags)
+    Notifier &notifier = GetNotifier();
+
+    if (!notifier.HasSignaled(OT_CHANGED_SECURITY_POLICY) || (mSecurityPolicyFlags != aSecurityPolicyFlags))
     {
         mSecurityPolicyFlags = aSecurityPolicyFlags;
-        GetNotifier().SetFlags(OT_CHANGED_SECURITY_POLICY);
+        notifier.Signal(OT_CHANGED_SECURITY_POLICY);
     }
 }
 

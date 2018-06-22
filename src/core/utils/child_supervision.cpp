@@ -167,12 +167,12 @@ void ChildSupervisor::CheckState(void)
     }
 }
 
-void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
 }
 
-void ChildSupervisor::HandleStateChanged(uint32_t aFlags)
+void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
 {
     if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
     {
