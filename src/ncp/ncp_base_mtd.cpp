@@ -3008,6 +3008,10 @@ void NcpBase::ProcessThreadChangedFlags(void)
             {
                 mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_ON_MESH_NETS);
                 mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_OFF_MESH_ROUTES);
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+                otDhcp6ClientUpdate(mInstance, mDhcpAddresses, OT_ARRAY_LENGTH(mDhcpAddresses), NULL);
+#endif
             }
 
             mThreadChangedFlags &= ~threadFlag;
