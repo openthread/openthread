@@ -146,7 +146,7 @@ exit:
 
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
