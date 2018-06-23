@@ -97,7 +97,7 @@ static bool StateMatchesFilter(Child::State aState, ChildTable::StateFilter aFil
         rval = child.IsStateValidOrAttaching();
         break;
 
-    case ChildTable::kInStateAnyExceptValidOrRestoing:
+    case ChildTable::kInStateAnyExceptValidOrRestoring:
         rval = !child.IsStateValidOrRestoring();
         break;
     }

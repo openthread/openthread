@@ -58,12 +58,12 @@ public:
      */
     enum StateFilter
     {
-        kInStateValid,                    ///< Accept child only in `Child::kStateValid`.
-        kInStateValidOrRestoring,         ///< Accept child with `Child::IsStateValidOrRestoring()` being `true`.
-        kInStateChildIdRequest,           ///< Accept child only in `Child:kStateChildIdRequest`.
-        kInStateValidOrAttaching,         ///< Accept child with `Child::IsStateValidOrAttaching()` being `true`.
-        kInStateAnyExceptInvalid,         ///< Accept child in any state except `Child:kStateInvalid`.
-        kInStateAnyExceptValidOrRestoing, ///< Accept child in any state except `Child::IsStateValidOrRestoring()`.
+        kInStateValid,                     ///< Accept child only in `Child::kStateValid`.
+        kInStateValidOrRestoring,          ///< Accept child with `Child::IsStateValidOrRestoring()` being `true`.
+        kInStateChildIdRequest,            ///< Accept child only in `Child:kStateChildIdRequest`.
+        kInStateValidOrAttaching,          ///< Accept child with `Child::IsStateValidOrAttaching()` being `true`.
+        kInStateAnyExceptInvalid,          ///< Accept child in any state except `Child:kStateInvalid`.
+        kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `Child::IsStateValidOrRestoring()`.
     };
 
     /**

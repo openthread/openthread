@@ -219,7 +219,7 @@ exit:
 
 void MeshForwarder::UpdateIndirectMessages(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoing); !iter.IsDone();
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoring); !iter.IsDone();
          iter.Advance())
     {
         if (iter.GetChild()->GetIndirectMessageCount() == 0)
