@@ -51,11 +51,23 @@ if OPENTHREAD_BUILD_TESTS
 
 AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
-    -I$(top_srcdir)/examples/platforms                                \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_POSIX
+AM_CPPFLAGS                                                        += \
+    -I$(top_srcdir)/examples/platforms                                \
+    $(NULL)
+endif
+
+if OPENTHREAD_ENABLE_POSIX_APP
+AM_CPPFLAGS                                                        += \
+    -DOPENTHREAD_ENABLE_POSIX_APP=1                                   \
+    -I$(top_srcdir)/src/posix/platform                                \
+    $(NULL)
+endif
 
 if OPENTHREAD_ENABLE_NCP
 
@@ -79,6 +91,12 @@ COMMON_LDADD                                                       += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+
+if OPENTHREAD_ENABLE_POSIX_APP
+COMMON_LDADD                                                       += \
+    -lutil
+    $(NULL)
+endif
 
 # Test applications that should be run when the 'check' target is run.
 
@@ -210,10 +228,16 @@ test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
 
 if OPENTHREAD_ENABLE_DIAG
-test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
-                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
-                               $(NULL)
+test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a
 test_diag_SOURCES            = test_diag.cpp
+if OPENTHREAD_ENABLE_POSIX_APP
+test_diag_LDADD             += $(top_builddir)/src/posix/platform/libopenthread-posix.a \
+                               -lutil                                                   \
+                               $(NULL)
+endif
+if OPENTHREAD_EXAMPLES_POSIX
+test_diag_LDADD             += $(top_builddir)/examples/platforms/posix/libopenthread-posix.a
+endif
 endif
 
 PRETTY_FILES                                                        = \

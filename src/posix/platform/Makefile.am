@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2016-2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,45 +28,48 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+lib_LIBRARIES                             = libopenthread-posix.a
 
-DIST_SUBDIRS                            = \
-    core                                  \
-    cli                                   \
-    ncp                                   \
-    diag                                  \
-    posix                                 \
+libopenthread_posix_a_CPPFLAGS            = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/src/ncp                 \
+    -I$(top_srcdir)/src/posix/platform      \
+    -D_GNU_SOURCE                           \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    core                                  \
+libopenthread_posix_a_SOURCES             = \
+    alarm.c                                 \
+    diag.c                                  \
+    flash.c                                 \
+    frame_queue.cpp                         \
+    hdlc.cpp                                \
+    logging.c                               \
+    misc.c                                  \
+    platform.c                              \
+    radio_spinel.cpp                        \
+    random.c                                \
+    settings.cpp                            \
+    spi-stubs.c                             \
+    spinel.c                                \
+    uart.c                                  \
     $(NULL)
 
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
-endif
-
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
-endif
-
-if OPENTHREAD_ENABLE_DIAG
-SUBDIRS                                += diag
-endif
-
-if OPENTHREAD_ENABLE_POSIX_APP
-SUBDIRS                                += posix
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
-    ncp                                   \
-    posix                                 \
+noinst_HEADERS                            = \
+    flash.h                                 \
+    frame_queue.hpp                         \
+    platform.h                              \
+    platform-posix.h                        \
+    radio_spinel.hpp                        \
     $(NULL)
+
+PRETTY_FILES                              = \
+    $(libopenthread_posix_a_SOURCES)        \
+    $(noinst_HEADERS)                       \
+    $(NULL)
+
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                                = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
