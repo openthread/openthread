@@ -124,7 +124,7 @@ void ChildSupervisor::HandleTimer(void)
 {
     VerifyOrExit(mSupervisionInterval != 0);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
