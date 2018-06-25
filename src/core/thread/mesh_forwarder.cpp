@@ -503,6 +503,7 @@ otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
     ThreadNetif &          netif = GetNetif();
     otError                error = OT_ERROR_NONE;
     Lowpan::FragmentHeader fragmentHeader;
+    bool                   nextHeaderCompressed;
 
     SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
 
@@ -515,7 +516,8 @@ otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
     SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
 
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(aIp6Header, aMacSource, aMacDest, aFrame, aFrameLength) > 0,
+    VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(aIp6Header, nextHeaderCompressed, aMacSource, aMacDest, aFrame,
+                                                        aFrameLength) > 0,
                  error = OT_ERROR_PARSE);
 
 exit:

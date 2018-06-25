@@ -247,6 +247,8 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
         ExitNow(error = OT_ERROR_NONE);
     }
     else if (message->GetPriority() == aPriority)
+#else
+    OT_UNUSED_VARIABLE(aPriority);
 #endif
     {
         for (message = mSendQueue.GetHead(); message; message = message->GetNext())
@@ -260,10 +262,6 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
             ExitNow(error = OT_ERROR_NONE);
         }
     }
-
-#ifndef OPENTHREAD_ENABLE_QOS
-    OT_UNUSED_VARIABLE(aPriority);
-#endif
 
 exit:
     return error;

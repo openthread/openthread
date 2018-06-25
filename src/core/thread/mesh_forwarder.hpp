@@ -323,6 +323,7 @@ private:
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
+    void     HandleDiscoverComplete(void);
     Message *FindFragmentMessage(Lowpan::FragmentHeader &aFragmentHeader,
                                  uint8_t                 aFrameLength,
                                  bool                    aLinkSecurityEnabled);
