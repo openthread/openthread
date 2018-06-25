@@ -83,6 +83,24 @@ public:
         void Advance(void);
 
         /**
+         * This method overloads `++` operator (pre-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator
+         * becomes empty (i.e., `GetRouter()` returns `NULL` and `IsDone()` returns `true`).
+         *
+         */
+        void operator++(void) { Advance(); }
+
+        /**
+         * This method overloads `++` operator (post-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator
+         * becomes empty (i.e., `GetRouter()` returns `NULL` and `IsDone()` returns `true`).
+         *
+         */
+        void operator++(int) { Advance(); }
+
+        /**
          * This method gets the entry to which the iterator is currently pointing.
          *
          * @returns A pointer to the current entry, or `NULL` if the iterator is done/empty.
@@ -327,6 +345,8 @@ public:
         void    Reset(void) {}
         bool    IsDone(void) const { return true; }
         void    Advance(void) {}
+        void    operator++(void) {}
+        void    operator++(int) {}
         Router *GetRouter(void) { return NULL; }
     };
 

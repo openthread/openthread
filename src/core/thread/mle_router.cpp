@@ -311,7 +311,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRouterTable.Clear();
 
     // remove children that do not have matching RLOC16
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (GetRouterId(iter.GetChild()->GetRloc16()) != mRouterId)
         {
@@ -352,7 +352,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     netif.GetAddressResolver().Clear();
 
     // remove children that do not have matching RLOC16
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (GetRouterId(iter.GetChild()->GetRloc16()) != mRouterId)
         {
@@ -1482,7 +1482,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
     otLogInfoMle(GetInstance(), "Route table updated");
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router &router = *iter.GetRouter();
 
@@ -1689,7 +1689,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     // update children state
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         Child &  child   = *iter.GetChild();
         uint32_t timeout = 0;
@@ -1726,7 +1726,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     // update router state
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router & router = *iter.GetRouter();
         uint32_t age;
@@ -1933,8 +1933,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // table is timed out and then trying to register its globally unique
         // IPv6 address as the new child.
 
-        for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
-             iter.Advance())
+        for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
         {
             if (iter.GetChild() == &aChild)
             {
@@ -2433,7 +2432,7 @@ void MleRouter::SynchronizeChildNetworkData(void)
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
         Child & child = *iter.GetChild();
         uint8_t version;
@@ -3180,7 +3179,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         context.mContextId = 0xff;
     }
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         child = iter.GetChild();
 
@@ -3384,7 +3383,7 @@ void MleRouter::RestoreChildren(void)
     bool    foundDuplicate = false;
     uint8_t numChildren    = 0;
 
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Child *                    child;
         const Settings::ChildInfo &childInfo = iter.GetChildInfo();
@@ -3431,7 +3430,7 @@ otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         if (iter.GetChildInfo().mRloc16 == aChildRloc16)
         {
@@ -3473,7 +3472,7 @@ otError MleRouter::RefreshStoredChildren(void)
 
     SuccessOrExit(error = GetInstance().GetSettings().DeleteChildInfo());
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         SuccessOrExit(error = StoreChild(iter.GetChild()->GetRloc16()));
     }
@@ -3860,7 +3859,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *          aHeader,
     SendLinkRequest(NULL);
 
     // send child id responses
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateChildIdRequest); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateChildIdRequest); !iter.IsDone(); iter++)
     {
         SendChildIdResponse(*iter.GetChild());
     }
@@ -4136,7 +4135,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router &router = *iter.GetRouter();
         uint8_t linkQuality;
@@ -4243,7 +4242,7 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.ClearRouterIdMask();
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance(), routerCount++)
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++, routerCount++)
     {
         Router &router = *iter.GetRouter();
 
@@ -4320,7 +4319,7 @@ bool MleRouter::HasMinDowngradeNeighborRouters(void)
     uint8_t linkQuality;
     uint8_t routerCount = 0;
 
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router &router = *iter.GetRouter();
 
@@ -4350,7 +4349,7 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
     bool rval = true;
 
     // process local neighbor routers
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router &router           = *iter.GetRouter();
         uint8_t localLinkQuality = 0;
@@ -4435,7 +4434,7 @@ bool MleRouter::HasChildren(void)
 
 void MleRouter::RemoveChildren(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         RemoveNeighbor(*iter.GetChild());
     }
@@ -4480,7 +4479,7 @@ otError MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -4530,7 +4529,7 @@ bool MleRouter::HasSleepyChildrenSubscribed(const Ip6::Address &aAddress)
 {
     bool rval = false;
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 

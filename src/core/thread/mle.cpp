@@ -770,7 +770,12 @@ otError Mle::SetDeviceMode(uint8_t aDeviceMode)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DISABLED:
+        break;
+
     case OT_DEVICE_ROLE_DETACHED:
+        mAttachCounter = 0;
+        SetStateDetached();
+        BecomeChild(kAttachAny);
         break;
 
     case OT_DEVICE_ROLE_CHILD:

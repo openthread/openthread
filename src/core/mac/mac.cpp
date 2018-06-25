@@ -579,7 +579,7 @@ exit:
 
 otError Mac::SetNetworkName(const char *aNetworkName)
 {
-    return SetNetworkName(aNetworkName, static_cast<uint8_t>(strnlen(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1)));
+    return SetNetworkName(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1);
 }
 
 otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)

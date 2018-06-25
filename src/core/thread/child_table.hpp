@@ -125,6 +125,26 @@ public:
         void Advance(void);
 
         /**
+         * This method overloads `++` operator (pre-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
+         * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
+         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
+         *
+         */
+        void operator++(void) { Advance(); }
+
+        /**
+         * This method overloads `++` operator (post-increment) to advance the iterator.
+         *
+         * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
+         * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
+         * `GetChild()` returns `NULL` and `IsDone()` returns `true`).
+         *
+         */
+        void operator++(int) { Advance(); }
+
+        /**
          * This method gets the `Child` entry to which the iterator is currently pointing.
          *
          * @returns A pointer to the `Child` entry, or `NULL` if the iterator is done and/or empty.
@@ -307,6 +327,8 @@ public:
         void   Reset(void) {}
         bool   IsDone(void) const { return true; }
         void   Advance(void) {}
+        void   operator++(void) {}
+        void   operator++(int) {}
         Child *GetChild(void) { return NULL; }
     };
 
