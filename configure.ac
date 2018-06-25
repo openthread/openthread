@@ -374,6 +374,59 @@ NL_ENABLE_TESTS([yes])
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 #
+# Posix App
+#
+
+AC_ARG_ENABLE(
+    [posix-app],
+    [AS_HELP_STRING([--enable-posix-app],[Enable POSIX app(no|ncp|cli|all) @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+        all|both|yes)
+            enable_posix_app=yes
+            OPENTHREAD_ENABLE_POSIX_APP=1
+            OPENTHREAD_ENABLE_POSIX_APP_NCP=1
+            OPENTHREAD_ENABLE_POSIX_APP_CLI=1
+            ;;
+        no)
+            enable_posix_app=no
+            OPENTHREAD_ENABLE_POSIX_APP=0
+            OPENTHREAD_ENABLE_POSIX_APP_NCP=0
+            OPENTHREAD_ENABLE_POSIX_APP_CLI=0
+            ;;
+        ncp)
+            enable_posix_app=yes
+            OPENTHREAD_ENABLE_POSIX_APP=1
+            OPENTHREAD_ENABLE_POSIX_APP_NCP=1
+            OPENTHREAD_ENABLE_POSIX_APP_CLI=0
+            ;;
+        cli)
+            enable_posix_app=yes
+            OPENTHREAD_ENABLE_POSIX_APP=1
+            OPENTHREAD_ENABLE_POSIX_APP_NCP=0
+            OPENTHREAD_ENABLE_POSIX_APP_CLI=1
+            ;;
+        *)
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-posix-app])
+            ;;
+        esac
+    ],
+    [
+     enable_posix_app=no
+     OPENTHREAD_ENABLE_POSIX_APP=0
+     OPENTHREAD_ENABLE_POSIX_APP_NCP=0
+     OPENTHREAD_ENABLE_POSIX_APP_CLI=0])
+
+AC_MSG_CHECKING([posix-app])
+AC_MSG_RESULT(${enable_posix_app})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP],     [test "${OPENTHREAD_ENABLE_POSIX_APP}" == "1"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_NCP], [test "${OPENTHREAD_ENABLE_POSIX_APP_NCP}" == "1"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_CLI], [test "${OPENTHREAD_ENABLE_POSIX_APP_CLI}" == "1"])
+AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP)
+AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP_NCP)
+AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP_CLI)
+
+#
 # CLI Library
 #
 AC_ARG_ENABLE(cli-app,
@@ -413,9 +466,9 @@ AC_ARG_ENABLE(cli-app,
 
 AC_MSG_CHECKING([cli-app modes])
 AC_MSG_RESULT(${enable_cli_app})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI],     [test "${enable_cli_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI],     [test "${enable_cli_app}" == "yes" -o "${OPENTHREAD_ENABLE_POSIX_APP_CLI}" == "1"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli_app_mtd}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli_app_ftd}" == "yes" -o "${OPENTHREAD_ENABLE_POSIX_APP_CLI}" == "1"])
 AC_SUBST(OPENTHREAD_ENABLE_CLI)
 AC_SUBST(OPENTHREAD_ENABLE_CLI_FTD)
 AC_SUBST(OPENTHREAD_ENABLE_CLI_MTD)
@@ -496,9 +549,9 @@ AC_SUBST(OPENTHREAD_ENABLE_NCP_MTD)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_FTD)
 AC_SUBST(OPENTHREAD_ENABLE_NCP_RADIO)
 
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],         [test "${enable_ncp_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],         [test "${enable_ncp_app}" == "yes" -o "${OPENTHREAD_ENABLE_POSIX_APP_NCP}" == "1"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],     [test "${enable_ncp_app_mtd}" == "yes"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],     [test "${enable_ncp_app_ftd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],     [test "${enable_ncp_app_ftd}" == "yes" -o "${OPENTHREAD_ENABLE_POSIX_APP_NCP}" == "1"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_RADIO],   [test "${enable_ncp_app_radio}" == "yes"])
 
 #
@@ -1299,8 +1352,12 @@ AC_ARG_WITH(examples,
         [Specify the examples from one of: none, posix, cc2538, cc2650, cc2652, da15000, efr32, emsk, gp712, kw41z, nrf52840, samr21 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
-
-        none|posix|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52840|samr21)
+        none)
+            ;;
+        posix|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52840|samr21)
+            if test ${enable_posix_app} = "yes"; then
+                AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
+            fi
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -1446,6 +1503,8 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${OPENTHREAD_ENABLE_POSIX_APP}" = "1" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
+
 #
 # Checks for libraries and packages.
 #
@@ -1541,6 +1600,8 @@ src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
 src/diag/Makefile
+src/posix/Makefile
+src/posix/platform/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile

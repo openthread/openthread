@@ -29,6 +29,8 @@
 #include <openthread/diag.h>
 #include <openthread/platform/radio.h>
 
+#include <stdlib.h>
+
 #include "utils/wrap_string.h"
 
 #include "platform.h"
@@ -227,9 +229,12 @@ void TestDiag(void)
         }};
 
     // initialize platform layer
-    int   argc    = 2;
-    char *argv[8] = {(char *)"test_diag", (char *)"1"};
-    PlatformInit(argc, argv);
+#if OPENTHREAD_ENABLE_POSIX_APP
+    char *argv[] = {(char *)"test_diag", getenv("RADIO_DEVICE"), (char *)"1"};
+#else
+    char *argv[] = {(char *)"test_diag", (char *)"1"};
+#endif
+    PlatformInit(sizeof(argv) / sizeof(char *), argv);
 
     // initialize diagnostics module
     otDiagInit(NULL);
