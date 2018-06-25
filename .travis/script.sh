@@ -221,14 +221,14 @@ set -x
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -301,14 +301,14 @@ set -x
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
