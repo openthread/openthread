@@ -245,7 +245,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 

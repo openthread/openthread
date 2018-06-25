@@ -381,6 +381,20 @@ public:
         void Advance(void);
 
         /**
+         * This method overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(void) { Advance(); }
+
+        /**
+         * This method overloads operator `++` (post-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(int) { Advance(); }
+
+        /**
          * This method gets the Child Info corresponding to the current iterator entry in the list.
          *
          * @note This method should be used only if `IsDone()` is returning FALSE indicating that the iterator is

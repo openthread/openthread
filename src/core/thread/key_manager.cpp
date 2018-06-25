@@ -138,7 +138,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     routers->SetMleFrameCounter(0);
 
     // reset router frame counters
-    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter.Advance())
+    for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         iter.GetRouter()->SetKeySequence(0);
         iter.GetRouter()->SetLinkFrameCounter(0);
@@ -146,7 +146,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     }
 
     // reset child frame counters
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         iter.GetChild()->SetKeySequence(0);
         iter.GetChild()->SetLinkFrameCounter(0);

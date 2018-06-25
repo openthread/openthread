@@ -79,7 +79,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                 {
                     // destined for all sleepy children
                     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
-                         iter.Advance())
+                         iter++)
                     {
                         Child &child = *iter.GetChild();
 
@@ -94,7 +94,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                 {
                     // destined for some sleepy children which subscribed the multicast address.
                     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
-                         iter.Advance())
+                         iter++)
                     {
                         Child &child = *iter.GetChild();
 
@@ -222,8 +222,7 @@ exit:
 
 void MeshForwarder::UpdateIndirectMessages(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoing); !iter.IsDone();
-         iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoing); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->GetIndirectMessageCount() == 0)
         {
@@ -351,8 +350,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
-            for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone();
-                 iter.Advance())
+            for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
             {
                 IgnoreReturnValue(RemoveMessageFromSleepyChild(*message, *iter.GetChild()));
             }
@@ -377,7 +375,7 @@ otError MeshForwarder::GetIndirectTransmission(void)
     UpdateIndirectMessages();
 
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring, mIndirectStartingChild);
-         !iter.IsDone(); iter.Advance())
+         !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -592,7 +590,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         // through the children list from this child.
 
         ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring, mIndirectStartingChild);
-        iter.Advance();
+        iter++;
         mIndirectStartingChild = iter.GetChild();
 
         switch (aError)
