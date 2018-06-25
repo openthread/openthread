@@ -1446,7 +1446,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     if (dstAddr.IsBroadcast())
     {
         mBroadcastTransmitCount++;
-        if (mBroadcastTransmitCount < kMaxTransmitNumBroadcast)
+        if (mBroadcastTransmitCount < kTxNumBcast)
         {
             StartCsmaBackoff();
             ExitNow();

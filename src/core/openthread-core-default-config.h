@@ -160,13 +160,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST
+ * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
  *
- * Maximum number of MAC layer transmission for a broadcast frame.
+ * The transmit number of a broadcast frame in MAC layer.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST
-#define OPENTHREAD_CONFIG_MAX_TRANSMIT_NUM_BROADCAST 1
+#ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
+#define OPENTHREAD_CONFIG_TX_NUM_BCAST 1
 #endif
 
 /**
