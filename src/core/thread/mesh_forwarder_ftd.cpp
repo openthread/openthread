@@ -236,27 +236,32 @@ void MeshForwarder::UpdateIndirectMessages(void)
 
 otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
+    Message *message;
 
 #if OPENTHREAD_ENABLE_QOS
-    Message *message = mSendQueue.GetTail();
+    message = mSendQueue.GetTail();
     if (message->GetPriority() > aPriority)
     {
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
     }
-#else
-    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    else if (message->GetPriority() == aPriority)
+#endif
     {
-        if (!message->IsChildPending())
+        for (message = mSendQueue.GetHead(); message; message = message->GetNext())
         {
-            continue;
-        }
+            if (!message->IsChildPending())
+            {
+                continue;
+            }
 
-        RemoveMessage(*message);
-        ExitNow(error = OT_ERROR_NONE);
+            RemoveMessage(*message);
+            ExitNow(error = OT_ERROR_NONE);
+        }
     }
 
+#ifndef OPENTHREAD_ENABLE_QOS
     OT_UNUSED_VARIABLE(aPriority);
 #endif
 
@@ -920,9 +925,9 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         {
             // An IPv6 packet may be fragmented into several fragments by 6Lowpan.
             // The fragments, except the first fragment, don’t carry IPv6 header.
-            // The priority level comes from the DSCP value in IPv6 header. To get the
-            // priority level of the subsequent fragments, routers have to store the
-            // information of the fragments.
+            // Except the Thread control traffic, the priority level comes from the
+            // DSCP value in IPv6 header. To get the priority level of the subsequent
+            // fragments, routers have to store the information of the fragments.
             HandleFragment(aFrame + meshHeader.GetHeaderLength(), aFrameLength - meshHeader.GetHeaderLength(),
                            meshSource, meshDest, aLinkInfo, false);
         }

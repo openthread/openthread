@@ -451,6 +451,49 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     return OT_ERROR_NONE;
 }
 
+otError MeshForwarder::SkipMeshHeader(uint8_t *&aFrame, uint8_t &aFrameLength)
+{
+    otError            error = OT_ERROR_NONE;
+    Lowpan::MeshHeader meshHeader;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader());
+
+    SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
+    aFrame += meshHeader.GetHeaderLength();
+    aFrameLength -= meshHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::SkipFragmentHeader(uint8_t *&aFrame, uint8_t &aFrameLength)
+{
+    otError                error = OT_ERROR_NONE;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader());
+
+    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+    aFrame += fragmentHeader.GetHeaderLength();
+    aFrameLength -= fragmentHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::GetFragmentHeader(uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
                                     uint8_t             aFrameLength,
                                     const Mac::Address &aMacSource,
@@ -459,28 +502,18 @@ otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
 {
     ThreadNetif &          netif = GetNetif();
     otError                error = OT_ERROR_NONE;
-    Lowpan::MeshHeader     meshHeader;
     Lowpan::FragmentHeader fragmentHeader;
 
-    // skip mesh header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
-    {
-        SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
-        aFrame += meshHeader.GetHeaderLength();
-        aFrameLength -= meshHeader.GetHeaderLength();
-    }
+    SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
 
-    // skip fragment header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+        // only the first fragment header followed by an Ipv6 header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-
-        aFrame += fragmentHeader.GetHeaderLength();
-        aFrameLength -= fragmentHeader.GetHeaderLength();
     }
 
-    // only process IPv6 packets
+    SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
     VerifyOrExit(netif.GetLowpan().DecompressBaseHeader(aIp6Header, aMacSource, aMacDest, aFrame, aFrameLength) > 0,
                  error = OT_ERROR_PARSE);
@@ -983,39 +1016,61 @@ otError MeshForwarder::GetFramePriority(uint8_t *               aFrame,
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_ENABLE_QOS
-    Message *              message;
-    Lowpan::MeshHeader     meshHeader;
+    ThreadNetif &          netif          = GetNetif();
+    Message *              message        = NULL;
+    uint16_t               datagramLength = 0;
     Lowpan::FragmentHeader fragmentHeader;
     Ip6::Header            ip6Header;
+    Ip6::UdpHeader         udpHeader;
 
-    // Skip mesh header
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader())
+    SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
+
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
-
-        aFrame += meshHeader.GetHeaderLength();
-        aFrameLength -= meshHeader.GetHeaderLength();
-    }
-
-    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
-    {
-        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
-
-        aFrame += fragmentHeader.GetHeaderLength();
-        aFrameLength -= fragmentHeader.GetHeaderLength();
-
         if (fragmentHeader.GetDatagramOffset() != 0)
         {
+            SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
             message = FindFragmentMessage(fragmentHeader, aFrameLength, aLinkInfo.mLinkSecurity);
             VerifyOrExit(message != NULL, error = OT_ERROR_NOT_FOUND);
+
             aPriority = message->GetPriority();
+            message   = NULL;
             ExitNow();
         }
+
+        datagramLength = fragmentHeader.GetDatagramSize();
     }
 
-    SuccessOrExit(error = GetIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header));
+    SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, Message::kPriorityHigh)) != NULL,
+                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(netif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength),
+                 error = OT_ERROR_PARSE);
+
+    VerifyOrExit(sizeof(ip6Header) == message->Read(0, sizeof(ip6Header), &ip6Header), error = OT_ERROR_PARSE);
     aPriority = GetNetif().GetIp6().DscpToPriority(ip6Header.GetDscp());
+
+    VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp);
+    VerifyOrExit(sizeof(udpHeader) == message->Read(sizeof(ip6Header), sizeof(udpHeader), &udpHeader),
+                 error = OT_ERROR_PARSE);
+
+    // Set the priority level of Thread control traffic to kPriorityHigh
+    if (udpHeader.GetDestinationPort() == Mle::kUdpPort ||
+        udpHeader.GetDestinationPort() == OPENTHREAD_CONFIG_JOINER_UDP_PORT ||
+        udpHeader.GetDestinationPort() == kCoapUdpPort)
+    {
+        aPriority = Message::kPriorityHigh;
+    }
+
 exit:
+
+    if (message != NULL)
+    {
+        message->Free();
+    }
+
 #else
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aFrameLength);
@@ -1389,20 +1444,21 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
         VerifyOrExit(fragmentHeader.GetDatagramSize() >= message->GetOffset() + aFrameLength, error = OT_ERROR_PARSE);
 
-        SuccessOrExit(error = message->SetLength(fragmentHeader.GetDatagramSize()));
+        SuccessOrExit(error = message->SetLength(fragmentHeader.GetDatagramSize(), aReceive ? true : false));
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
         message->SetTimeout(kReassemblyTimeout);
 
-        // copy Fragment
-        message->Write(message->GetOffset(), aFrameLength, aFrame);
-        message->MoveOffset(aFrameLength);
-
         if (aReceive)
         {
+            // copy Fragment
+            message->Write(message->GetOffset(), aFrameLength, aFrame);
+
             // Security Check
             VerifyOrExit(netif.GetIp6Filter().Accept(*message), error = OT_ERROR_DROP);
         }
+
+        message->MoveOffset(aFrameLength);
 
         // Allow re-assembly of only one message at a time on a SED by clearing
         // any remaining fragments in reassembly list upon receiving of a new
@@ -1440,8 +1496,12 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
         VerifyOrExit(message != NULL, error = OT_ERROR_DROP);
 
-        // copy Fragment
-        message->Write(message->GetOffset(), aFrameLength, aFrame);
+        if (aReceive)
+        {
+            // copy Fragment
+            message->Write(message->GetOffset(), aFrameLength, aFrame);
+        }
+
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
     }

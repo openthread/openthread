@@ -261,13 +261,14 @@ public:
     /**
      * This method sets the number of bytes in the message.
      *
-     * @param[in]  aLength  Requested number of bytes in the message.
+     * @param[in]  aLength         Requested number of bytes in the message.
+     * @param[in]  aResizeMessage  TRUE if resize the message, FALSE otherwise.
      *
      * @retval OT_ERROR_NONE     Successfully set the length of the message.
      * @retval OT_ERROR_NO_BUFS  Failed to grow the size of the message because insufficient buffers were available.
      *
      */
-    otError SetLength(uint16_t aLength);
+    otError SetLength(uint16_t aLength, bool aResizeMessage = true);
 
     /**
      * This method returns the number of buffers in the message.
@@ -1234,7 +1235,6 @@ public:
 
     /**
      * This method is used to obtain a new message.
-     * is assigned to the message.
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.

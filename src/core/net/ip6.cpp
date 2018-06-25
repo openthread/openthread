@@ -124,7 +124,7 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
     return dscp;
 }
 
-otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority)
+otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority) const
 {
     otError error = OT_ERROR_NONE;
     Header  header;

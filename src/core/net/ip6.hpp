@@ -126,7 +126,7 @@ public:
      * @returns The IPv6 DSCP value.
      *
      */
-    uint8_t PriorityToDscp(uint8_t aPriority);
+    static uint8_t PriorityToDscp(uint8_t aPriority);
 
     /**
      * This method converts the IPv6 DSCP value to message priority level.
@@ -136,20 +136,20 @@ public:
      * @returns The message priority level.
      *
      */
-    uint8_t DscpToPriority(uint8_t aDscp);
+    static uint8_t DscpToPriority(uint8_t aDscp);
 
     /**
      * This method gets the priority level of the IPv6 datagram
      *
-     * @param[in]  aDatagram     A pointer to an IPv6 datagram.
-     * @param[in]  aDatagramLen  The length of the IPv6 datagram.
-     * @param[in]  aPrority      A reference to the priority level of the IPv6 datagram.
+     * @param[in]   aDatagram     A pointer to an IPv6 datagram.
+     * @param[in]   aDatagramLen  The length of the IPv6 datagram.
+     * @param[out]  aPrority      A reference to the priority level of the IPv6 datagram.
      *
      * @retval OT_ERROR_NONE   Successfully get the priority level.
      * @retval OT_ERROR_PARSE  Malformed IPv6 header.
      *
      */
-    otError GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority);
+    otError GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority) const;
 
     /**
      * This constructor initializes the object.

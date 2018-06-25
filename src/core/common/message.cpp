@@ -104,16 +104,14 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
 {
     Buffer *buffer = NULL;
 
+    SuccessOrExit(ReclaimBuffers(1, aPriority));
+
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
     buffer = static_cast<Buffer *>(otPlatMessagePoolNew(&GetInstance()));
     OT_UNUSED_VARIABLE(aPriority);
 
 #else
-    if (mFreeBuffers == NULL)
-    {
-        ReclaimBuffers(1, aPriority);
-    }
 
     if (mFreeBuffers != NULL)
     {
@@ -130,6 +128,7 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
         otLogInfoMem(GetInstance(), "No available message buffer");
     }
 
+exit:
     return buffer;
 }
 
@@ -301,26 +300,30 @@ exit:
     return next;
 }
 
-otError Message::SetLength(uint16_t aLength)
+otError Message::SetLength(uint16_t aLength, bool aResizeMessage)
 {
     otError  error              = OT_ERROR_NONE;
     uint16_t totalLengthRequest = GetReserved() + aLength;
     uint16_t totalLengthCurrent = GetReserved() + GetLength();
     int      bufs               = 0;
 
-    if (totalLengthRequest > kHeadBufferDataSize)
+    if (aResizeMessage)
     {
-        bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
+        if (totalLengthRequest > kHeadBufferDataSize)
+        {
+            bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
+        }
+
+        if (totalLengthCurrent > kHeadBufferDataSize)
+        {
+            bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
+        }
+
+        SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
+
+        SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     }
 
-    if (totalLengthCurrent > kHeadBufferDataSize)
-    {
-        bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
-    }
-
-    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
-
-    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mBuffer.mHead.mInfo.mLength = aLength;
 
 exit:
