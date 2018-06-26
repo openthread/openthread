@@ -146,9 +146,9 @@ protected:
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogFailure(otError aError, const char *aAction) const;
+    void LogFailure(otError aError, const char *aAction, bool aIsDelete) const;
 #else
-    void LogFailure(otError, const char *) const {}
+    void LogFailure(otError, const char *, bool) const {}
 #endif
 };
 
