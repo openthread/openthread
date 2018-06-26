@@ -102,8 +102,14 @@ typedef struct otRadioFrame
     uint8_t  mChannel;   ///< Channel used to transmit/receive the frame.
     bool     mDidTx : 1; ///< Set to true if this frame sent from the radio. Ignored by radio driver.
 
+    /**
+     * The union of transmit and receive information for a radio frame.
+     */
     union
     {
+        /**
+         * Structure representing radio frame transmit information.
+         */
         struct
         {
             uint8_t mMaxTxAttempts; ///< Max number of transmit attempts for an outbound frame.
@@ -112,6 +118,9 @@ typedef struct otRadioFrame
             const uint8_t *mAesKey;    ///< The key used for frame encryption and authentication (AES CCM).
         } mTxInfo;
 
+        /**
+         * Structure representing radio frame receive information.
+         */
         struct
         {
             int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
