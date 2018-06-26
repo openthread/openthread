@@ -30,6 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                                                                           = libopenthread-da15000.a
 
+# Do not enable -pedantic-errors
+override CFLAGS    := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
 libopenthread_da15000_a_CPPFLAGS                                                        = \
     -I$(top_srcdir)/include                                                               \
     -I$(top_srcdir)/examples/platforms                                                    \
