@@ -47,6 +47,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
+* [networktime](#networktime)
 * [panid](#panid)
 * [parent](#parent)
 * [parentpriority](#parentpriority)
@@ -604,6 +605,31 @@ Set network name.
 > dataset networkname openthread
 Done
 ```
+
+### networktime
+
+Get the Thread network time and the time sync parameters.
+
+```bash
+> networktime
+Network Time:     21084154us (synchronized)
+Time Sync Period: 100s
+XTAL Threshold:   300ppm
+Done
+```
+
+### networktime \<timesyncperiod\> \<xtalthreshold\>
+
+Set time sync parameters
+
+* timesyncperiod: The time synchronization period, in seconds.
+* xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+
+```bash
+> networktime 100 300
+Done
+```
+
 
 ### dataset panid \<panid\>
 

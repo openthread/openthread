@@ -729,6 +729,15 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
+{
+    // Note: For now this functionality is not supported in Radio Only mode.
+    (void)aInstance;
+    (void)aFrame;
+}
+#endif
+
 #endif // OPENTHREAD_RADIO
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
