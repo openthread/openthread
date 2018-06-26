@@ -1641,6 +1641,18 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL";
         break;
 
+    case SPINEL_PROP_THREAD_NETWORK_TIME:
+        ret = "PROP_THREAD_NETWORK_TIME";
+        break;
+
+    case SPINEL_PROP_TIME_SYNC_PERIOD:
+        ret = "PROP_TIME_SYNC_PERIOD";
+        break;
+
+    case SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD:
+        ret = "PROP_TIME_SYNC_XTAL_THRESHOLD";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "PROP_UART_BITRATE";
         break;
@@ -2224,6 +2236,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_OPENTHREAD_LOG_METADATA:
         ret = "CAP_OPENTHREAD_LOG_METADATA";
+        break;
+
+    case SPINEL_CAP_TIME_SYNC:
+        ret = "CAP_TIME_SYNC";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:

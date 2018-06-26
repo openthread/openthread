@@ -102,7 +102,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mPanIdQuery(aInstance)
     , mEnergyScan(aInstance)
-
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    , mTimeSync(aInstance)
+#endif
 {
     mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
 }

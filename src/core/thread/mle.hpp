@@ -301,6 +301,13 @@ public:
         kCommandAnnounce             = 15, ///< Announce
         kCommandDiscoveryRequest     = 16, ///< Discovery Request
         kCommandDiscoveryResponse    = 17, ///< Discovery Response
+
+        /**
+         * Applicable/Required only when time synchronization service
+         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         *
+         */
+        kCommandTimeSync = 99, ///< Time Synchronization
     };
 
     /**
@@ -1247,6 +1254,41 @@ protected:
      *
      */
     otError AppendAddressRegistration(Message &aMessage);
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    /**
+     * This method appends a Time Request TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Time Request TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Time Request TLV.
+     *
+     */
+    otError AppendTimeRequest(Message &aMessage);
+
+    /**
+     * This method appends a Time Parameter TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Time Parameter TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Time Parameter TLV.
+     *
+     */
+    otError AppendTimeParameter(Message &aMessage);
+
+    /**
+     * This method appends a XTAL Accuracy TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the XTAL Accuracy TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the XTAl Accuracy TLV.
+     *
+     */
+    otError AppendXtalAccuracy(Message &aMessage);
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
     /**
      * This method appends a Active Timestamp TLV to a message.

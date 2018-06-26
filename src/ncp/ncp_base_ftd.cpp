@@ -998,6 +998,44 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+otError NcpBase::GetPropertyHandler_TIME_SYNC_PERIOD(void)
+{
+    return mEncoder.WriteUint16(otNetworkTimeGetSyncPeriod(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_TIME_SYNC_PERIOD(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t timeSyncPeriod;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(timeSyncPeriod));
+
+    SuccessOrExit(error = otNetworkTimeSetSyncPeriod(mInstance, timeSyncPeriod));
+
+exit:
+    return error;
+}
+
+otError NcpBase::GetPropertyHandler_TIME_SYNC_XTAL_THRESHOLD(void)
+{
+    return mEncoder.WriteUint16(otNetworkTimeGetXtalThreshold(mInstance));
+}
+
+otError NcpBase::SetPropertyHandler_TIME_SYNC_XTAL_THRESHOLD(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t xtalThreshold;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(xtalThreshold));
+
+    SuccessOrExit(error = otNetworkTimeSetXtalThreshold(mInstance, xtalThreshold));
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
 } // namespace Ncp
 } // namespace ot
 

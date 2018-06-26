@@ -43,6 +43,7 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
 
 #include "platform.h"
 
@@ -67,6 +68,8 @@
 #define US_PER_OVERFLOW     (512UL * US_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 
 #define MS_PER_S            1000UL
+
+#define XTAL_ACCURACY       40 // The crystal used on nRF52840PDK has ±20ppm accuracy.
 // clang-format on
 
 typedef enum { kMsTimer, kUsTimer, k802154Timer, kNumTimers } AlarmIndex;
@@ -88,7 +91,8 @@ typedef struct
 static volatile uint32_t sOverflowCounter; ///< Counter of RTC overflowCounter, incremented by 2 on each OVERFLOW event.
 static volatile uint8_t  sMutex;           ///< Mutex for write access to @ref sOverflowCounter.
 static volatile uint64_t sTimeOffset = 0;  ///< Time overflowCounter to keep track of current time (in millisecond).
-static AlarmData         sTimerData[kNumTimers];         ///< Data of the timers.
+static AlarmData         sTimerData[kNumTimers]; ///< Data of the timers.
+
 static const AlarmChannelData sChannelData[kNumTimers] = //
     {                                                    //
         [kMsTimer] =
@@ -563,3 +567,15 @@ void RTC_IRQ_HANDLER(void)
         }
     }
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint64_t otPlatTimeGet(void)
+{
+    return nrf5AlarmGetCurrentTime();
+}
+
+uint16_t otPlatTimeGetXtalAccuracy(void)
+{
+    return XTAL_ACCURACY;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
