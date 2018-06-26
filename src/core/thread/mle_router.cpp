@@ -360,7 +360,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
         }
     }
 
-    otLogInfoMle(GetInstance(), "Leader partition id 0x%x", mLeaderData.GetPartitionId());
+    otLogNoteMle(GetInstance(), "Leader partition id 0x%x", mLeaderData.GetPartitionId());
 
     return OT_ERROR_NONE;
 }
@@ -1150,7 +1150,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        otLogInfoMle(GetInstance(), "Different partition (peer:%d, local:%d)", leaderData.GetPartitionId(),
+        otLogNoteMle(GetInstance(), "Different partition (peer:%d, local:%d)", leaderData.GetPartitionId(),
                      mLeaderData.GetPartitionId());
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
@@ -1678,7 +1678,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         if (routerStateUpdate && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
-            otLogInfoMle(GetInstance(), "Downgrade to REED");
+            otLogNoteMle(GetInstance(), "Downgrade to REED");
             BecomeChild(kAttachSame1);
         }
 
