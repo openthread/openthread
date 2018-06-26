@@ -74,6 +74,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
+    fem-control.c                                                               \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
@@ -112,7 +113,6 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/emlib/src/em_usart.c                                          \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/platform/radio/rail_lib/hal/hal_common.c                               \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.2/util/plugin/plugin-common/fem-control/fem-control.c                    \
     $(NULL)
 
 noinst_HEADERS                                                                = \
