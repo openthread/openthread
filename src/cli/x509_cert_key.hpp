@@ -44,24 +44,34 @@ extern "C" {
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 
 /**
+ * Generate your own private key and certificate using openssl.
+ *
+ * 1. Generate a EC (Elliptic Curve) Private Key.
+ *      'openssl ecparam -genkey -out myECKey.pem -name prime256v1 -noout'
+ * 2. Generate a .X509 Certificate (Contains Public Key).
+ *      'openssl req -x509 -new -key myECKey.pem -out myX509Cert.pem'
+ */
+
+/**
  * place your X.509 certificate (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
 #define OT_CLI_COAPS_X509_CERT                                         \
 "-----BEGIN CERTIFICATE-----\r\n"                                      \
-"MIICHzCCAaWgAwIBAgIBCTAKBggqhkjOPQQDAjA+MQswCQYDVQQGEwJOTDERMA8G\r\n" \
-"A1UEChMIUG9sYXJTU0wxHDAaBgNVBAMTE1BvbGFyc3NsIFRlc3QgRUMgQ0EwHhcN\r\n" \
-"MTMwOTI0MTU1MjA0WhcNMjMwOTIyMTU1MjA0WjA0MQswCQYDVQQGEwJOTDERMA8G\r\n" \
-"A1UEChMIUG9sYXJTU0wxEjAQBgNVBAMTCWxvY2FsaG9zdDBZMBMGByqGSM49AgEG\r\n" \
-"CCqGSM49AwEHA0IABDfMVtl2CR5acj7HWS3/IG7ufPkGkXTQrRS192giWWKSTuUA\r\n" \
-"2CMR/+ov0jRdXRa9iojCa3cNVc2KKg76Aci07f+jgZ0wgZowCQYDVR0TBAIwADAd\r\n" \
-"BgNVHQ4EFgQUUGGlj9QH2deCAQzlZX+MY0anE74wbgYDVR0jBGcwZYAUnW0gJEkB\r\n" \
-"PyvLeLUZvH4kydv7NnyhQqRAMD4xCzAJBgNVBAYTAk5MMREwDwYDVQQKEwhQb2xh\r\n" \
-"clNTTDEcMBoGA1UEAxMTUG9sYXJzc2wgVGVzdCBFQyBDQYIJAMFD4n5iQ8zoMAoG\r\n" \
-"CCqGSM49BAMCA2gAMGUCMQCaLFzXptui5WQN8LlO3ddh1hMxx6tzgLvT03MTVK2S\r\n" \
-"C12r0Lz3ri/moSEpNZWqPjkCMCE2f53GXcYLqyfyJR078c/xNSUU5+Xxl7VZ414V\r\n" \
-"fGa5kHvHARBPc8YAIVIqDvHH1Q==\r\n"                                     \
-"-----END CERTIFICATE-----\r\n"
+"MIICazCCAhKgAwIBAgIJAKIuIwCFs70OMAoGCCqGSM49BAMCMIGPMQswCQYDVQQG\r\n" \
+"EwJJTzEQMA4GA1UECAwHTXlTdGF0ZTEPMA0GA1UEBwwGTXlDaXR5MRMwEQYDVQQK\r\n" \
+"DApPcGVuVGhyZWFkMQ0wCwYDVQQLDARUZXN0MRMwEQYDVQQDDApDb0FQUyBUZXN0\r\n" \
+"MSQwIgYJKoZIhvcNAQkBFhVteS5tYWlsQG9wZW50aHJlYWQuaW8wIBcNMTgwNjI2\r\n" \
+"MDkwNTA1WhgPMjI5MjA0MTAwOTA1MDVaMIGPMQswCQYDVQQGEwJJTzEQMA4GA1UE\r\n" \
+"CAwHTXlTdGF0ZTEPMA0GA1UEBwwGTXlDaXR5MRMwEQYDVQQKDApPcGVuVGhyZWFk\r\n" \
+"MQ0wCwYDVQQLDARUZXN0MRMwEQYDVQQDDApDb0FQUyBUZXN0MSQwIgYJKoZIhvcN\r\n" \
+"AQkBFhVteS5tYWlsQG9wZW50aHJlYWQuaW8wWTATBgcqhkjOPQIBBggqhkjOPQMB\r\n" \
+"BwNCAATTaiF8x7S3hmC0Um21euSUmdgwYEtqa9u8a3CcMEcQAvStGtO6u1u8P3Ef\r\n" \
+"RxbvLsQSwIgWu1v2RSP6NEBcK1Pfo1MwUTAdBgNVHQ4EFgQUh05hUYlb1kjIND9x\r\n" \
+"dH9WxwVtaaQwHwYDVR0jBBgwFoAUh05hUYlb1kjIND9xdH9WxwVtaaQwDwYDVR0T\r\n" \
+"AQH/BAUwAwEB/zAKBggqhkjOPQQDAgNHADBEAiA8E5pQVsqOlVnYkBftkclXwCTU\r\n" \
+"0X/4eg4fRe28GcuGkQIgVXS6lIlsH26rcjzMBfOsanSzqx9+d695TGJ/FBuKrbg=\r\n" \
+"-----END CERTIFICATE-----\r\n"                                        \
 
 /**
  * place your private key (PEM format) for ssl session
@@ -69,11 +79,10 @@ extern "C" {
  */
 #define OT_CLI_COAPS_PRIV_KEY                                           \
 "-----BEGIN EC PRIVATE KEY-----\r\n"                                    \
-"MHcCAQEEIPEqEyB2AnCoPL/9U/YDHvdqXYbIogTywwyp6/UfDw6noAoGCCqGSM49\r\n"  \
-"AwEHoUQDQgAEN8xW2XYJHlpyPsdZLf8gbu58+QaRdNCtFLX3aCJZYpJO5QDYIxH/\r\n"  \
-"6i/SNF1dFr2KiMJrdw1VzYoqDvoByLTt/w==\r\n"                              \
+"MHcCAQEEIIG+2tZQBootI0H065kJg/0MK9KOEX/jnZqYPRtbsjJ0oAoGCCqGSM49\r\n"  \
+"AwEHoUQDQgAE02ohfMe0t4ZgtFJttXrklJnYMGBLamvbvGtwnDBHEAL0rRrTurtb\r\n"  \
+"vD9xH0cW7y7EEsCIFrtb9kUj+jRAXCtT3w==\r\n"                              \
 "-----END EC PRIVATE KEY-----\r\n"
-
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
