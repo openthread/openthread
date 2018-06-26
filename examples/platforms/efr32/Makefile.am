@@ -67,6 +67,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
+    -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
     -Wno-unused-parameter                                                       \
     $(NULL)
 
@@ -81,6 +82,7 @@ PLATFORM_SOURCES                                                              = 
     random.c                                                                    \
     startup-gcc.c                                                               \
     uart.c                                                                      \
+    fem-control.c                                                               \
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
