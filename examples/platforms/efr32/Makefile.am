@@ -74,6 +74,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
+    fem-control.c                                                               \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
@@ -82,7 +83,6 @@ PLATFORM_SOURCES                                                              = 
     random.c                                                                    \
     startup-gcc.c                                                               \
     uart.c                                                                      \
-    fem-control.c                                                               \
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
