@@ -189,13 +189,37 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
  * @param[in]  aChannel    The IEEE 802.15.4 channel.
  *
  * @retval  OT_ERROR_NONE           Successfully set the channel.
- * @retval  OT_ERROR_INVALID_ARGS   If @p aChnanel is not in the range [11, 26].
+ * @retval  OT_ERROR_INVALID_ARGS   If @p aChannel is not in the range [11, 26] or is not in the supported channel mask.
  * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
  *
  */
 OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Get the supported channel mask.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The supported channel mask as `uint32_t` with bit 0 (lsb) mapping to channel 0, bit 1 to channel 1, so on.
+ *
+ */
+uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
+
+/**
+ * Set the supported channel mask.
+ *
+ * This function succeeds only when Thread protocols are disabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask  The supported channel mask (bit 0 or lsb mapping to channel 0, and so on).
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the supported channel mask.
+ * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ */
+otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
  * Get the IEEE 802.15.4 Extended Address.

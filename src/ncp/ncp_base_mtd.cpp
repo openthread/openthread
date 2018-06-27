@@ -225,7 +225,19 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
-    return EncodeChannelMask(mSupportedChannelMask);
+    return EncodeChannelMask(otLinkGetSupportedChannelMask(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
+{
+    uint32_t newMask = 0;
+    otError  error   = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(newMask));
+    error = otLinkSetSupportedChannelMask(mInstance, newMask);
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RSSI>(void)
@@ -2577,7 +2589,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_MASK>(void)
 {
-    return EncodeChannelMask(mChannelMask);
+    return EncodeChannelMask(mScanChannelMask);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>(void)
@@ -2586,9 +2598,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>(void)
     otError  error   = OT_ERROR_NONE;
 
     SuccessOrExit(error = DecodeChannelMask(newMask));
-    VerifyOrExit((~mSupportedChannelMask & newMask) == 0, error = OT_ERROR_INVALID_ARGS);
-
-    mChannelMask = newMask;
+    mScanChannelMask = newMask;
 
 exit:
     return error;
@@ -2662,7 +2672,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
         else
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
-            error = otLinkActiveScan(mInstance, mChannelMask, mScanPeriod, &HandleActiveScanResult_Jump, this);
+            error = otLinkActiveScan(mInstance, mScanChannelMask, mScanPeriod, &HandleActiveScanResult_Jump, this);
         }
 
         SuccessOrExit(error);
@@ -2677,9 +2687,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
             // Make sure we aren't already scanning and that we have
             // only 1 bit set for the channel mask.
             VerifyOrExit(mCurScanChannel == kInvalidScanChannel, error = OT_ERROR_INVALID_STATE);
-            VerifyOrExit(HasOnly1BitSet(mChannelMask), error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(HasOnly1BitSet(mScanChannelMask), error = OT_ERROR_INVALID_ARGS);
 
-            scanChannel     = IndexOfMSB(mChannelMask);
+            scanChannel     = IndexOfMSB(mScanChannelMask);
             mCurScanChannel = (int8_t)scanChannel;
 
             error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
@@ -2687,14 +2697,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
         else
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
-            error = otLinkEnergyScan(mInstance, mChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
+            error = otLinkEnergyScan(mInstance, mScanChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
         }
 
         SuccessOrExit(error);
         break;
 
     case SPINEL_SCAN_STATE_DISCOVER:
-        error = otThreadDiscover(mInstance, mChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
+        error = otThreadDiscover(mInstance, mScanChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
                                  mDiscoveryScanEnableFiltering, &HandleActiveScanResult_Jump, this);
 
         SuccessOrExit(error);
@@ -2938,6 +2948,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_MASTER_KEY, SPINEL_PROP_NET_MASTER_KEY},
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
+        {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

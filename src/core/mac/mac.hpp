@@ -598,7 +598,8 @@ public:
      *
      * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 PAN Channel.
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 PAN Channel.
+     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
      *
      */
     otError SetPanChannel(uint8_t aChannel);
@@ -617,7 +618,9 @@ public:
      *
      * @param[in]  aChannel  The IEEE 802.15.4 Radio Channel.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Radio Channel.
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Radio Channel.
+     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
+     * @retval OT_ERROR_INVALID_STATE  The acquisition ID is incorrect.
      *
      */
     otError SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel);
@@ -642,6 +645,22 @@ public:
      *
      */
     otError ReleaseRadioChannel(void);
+
+    /**
+     * This method returns the supported channel mask.
+     *
+     * @returns The supported channel mask.
+     *
+     */
+    const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
+
+    /**
+     * This method sets the supported channel mask
+     *
+     * @param[in] aMask   The supported channel mask.
+     *
+     */
+    void SetSupportedChannelMask(const ChannelMask &aMask);
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -1024,6 +1043,7 @@ private:
     uint8_t      mPanChannel;
     uint8_t      mRadioChannel;
     uint16_t     mRadioChannelAcquisitionId;
+    ChannelMask  mSupportedChannelMask;
 
     otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;

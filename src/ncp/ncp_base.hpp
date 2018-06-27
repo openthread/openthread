@@ -488,8 +488,7 @@ protected:
     };
 
     spinel_status_t mLastStatus;
-    uint32_t        mSupportedChannelMask;
-    uint32_t        mChannelMask;
+    uint32_t        mScanChannelMask;
     uint16_t        mScanPeriod;
     bool            mDiscoveryScanJoinerFlag;
     bool            mDiscoveryScanEnableFiltering;
