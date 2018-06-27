@@ -92,4 +92,12 @@
  */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          1
+
 #endif  // OPENTHREAD_CORE_KW41Z_CONFIG_H_
