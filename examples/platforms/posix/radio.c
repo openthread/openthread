@@ -607,7 +607,7 @@ void radioSendMessage(otInstance *aInstance)
         *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
 
         *(++timeIe) = (uint8_t)(time & 0xff);
-        for (uint8_t i = 0; i < sizeof(uint64_t); i++)
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
         {
             time        = time >> 8;
             *(++timeIe) = (uint8_t)(time & 0xff);
