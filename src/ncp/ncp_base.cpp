@@ -633,6 +633,10 @@ NcpBase::NcpBase(Instance *aInstance)
 
     memset(&mResponseQueue, 0, sizeof(mResponseQueue));
 
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
+#endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueueInit(&mMessageQueue);
     otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
