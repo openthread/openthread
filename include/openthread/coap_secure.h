@@ -286,9 +286,9 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
  * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection is established.
  *
  */
-void otCoapSecureSetClientConnectedCallback(otInstance                      *aInstance,
-                                            otHandleSecureCoapClientConnect  aHandler,
-                                            void                            *aContext);
+void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
+                                            otHandleSecureCoapClientConnect aHandler,
+                                            void *                          aContext);
 
 /**
  * This function sends a CoAP response from the CoAP Secure server.

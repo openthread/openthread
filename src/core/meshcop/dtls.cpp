@@ -228,7 +228,7 @@ otError Dtls::Start(bool             aClient,
 
     VerifyOrExit(rval == 0);
 
-    mStarted = true;
+    mStarted                = true;
     mConnectionClosedByHost = false;
     Process();
 

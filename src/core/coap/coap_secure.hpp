@@ -329,7 +329,7 @@ private:
     Message *         mTransmitMessage;
     Tasklet           mTransmitTask;
 
-    bool mLayerTwoSecurity;
+    bool mLayerTwoSecurity : 1;
     bool mApplicationCoapSecure;
 };
 

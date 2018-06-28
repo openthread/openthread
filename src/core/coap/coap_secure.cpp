@@ -54,9 +54,9 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mTransportContext(NULL)
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
+    , mLayerTwoSecurity(false)
+    , mApplicationCoapSecure(false)
 {
-    mLayerTwoSecurity      = false;
-    mApplicationCoapSecure = false;
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -145,7 +145,7 @@ MeshCoP::Dtls &CoapSecure::GetDtls(void)
 void CoapSecure::SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
 {
     mConnectedCallback = aCallback;
-    mConnectedContext = aContext;
+    mConnectedContext  = aContext;
 }
 
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)

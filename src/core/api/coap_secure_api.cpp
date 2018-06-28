@@ -36,7 +36,6 @@
 #include <openthread/coap_secure.h>
 
 #include "coap/coap_header.hpp"
-
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
 
@@ -167,9 +166,9 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
     instance.GetApplicationCoapSecure().RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
-void otCoapSecureSetClientConnectedCallback(otInstance                      *aInstance,
-                                            otHandleSecureCoapClientConnect  aHandler,
-                                            void                            *aContext)
+void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
+                                            otHandleSecureCoapClientConnect aHandler,
+                                            void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
@@ -188,7 +187,7 @@ otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, con
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+                                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

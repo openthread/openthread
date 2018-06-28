@@ -71,7 +71,7 @@ class Dtls : public InstanceLocator
 public:
     enum
     {
-        kPskMaxLength = 32,
+        kPskMaxLength            = 32,
         kWaitForCloseNotifyMilli = 2000,
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 128,
@@ -346,7 +346,7 @@ private:
                                        size_t               aIvLength);
 
     static void HandleWaitForCloseNotifyTimer(Timer &aTimer);
-    void HandleWaitForCloseNotifyTimer();
+    void        HandleWaitForCloseNotifyTimer();
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 

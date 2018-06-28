@@ -51,13 +51,13 @@ namespace Cli {
 
 CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
+    , mShutdownFlag(false)
+    , mPskLength(0)
+    , mPskIdLength(0)
 {
     memset(&mResource, 0, sizeof(mResource));
-    mShutdownFlag = false;
     memset(&mPsk, 0, sizeof(mPsk));
-    mPskLength = 0;
     memset(&mPskId, 0, sizeof(mPskId));
-    mPskIdLength = 0;
 }
 
 void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
@@ -138,7 +138,7 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 
     if (length > 0)
     {
-        mInterpreter.mServer->OutputFormat("    With payload [UTF8]:\r\n",aMessage);
+        mInterpreter.mServer->OutputFormat("    With payload [UTF8]:\r\n", aMessage);
 
         while (length > 0)
         {
@@ -146,9 +146,9 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
             otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
 
             for (int i = 0; i < bytesToPrint; i++)
-                {
+            {
                 mInterpreter.mServer->OutputFormat("%c", buf[i]);
-                }
+            }
             mInterpreter.mServer->OutputFormat("\r\n");
 
             length -= bytesToPrint;
@@ -370,8 +370,8 @@ void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMess
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
     otMessage *  responseMessage;
-    otCoapCode   responseCode       = OT_COAP_CODE_EMPTY;
-    char         responseContent [] = "helloWorld";
+    otCoapCode   responseCode      = OT_COAP_CODE_EMPTY;
+    char         responseContent[] = "helloWorld";
 
     mInterpreter.mServer->OutputFormat(
         "Received coap secure request from [%x:%x:%x:%x:%x:%x:%x:%x]: ",

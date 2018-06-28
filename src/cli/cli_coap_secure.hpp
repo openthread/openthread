@@ -76,8 +76,10 @@ public:
 private:
     enum
     {
-        kMaxUriLength  = 32,
-        kMaxBufferSize = 16
+        kMaxUriLength   = 32,
+        kMaxBufferSize  = 16,
+        kPskMaxLength   = 32,
+        kPskIdMaxLength = 32
     };
 
     void PrintHeaderInfos(otCoapHeader *aHeader) const;
@@ -109,13 +111,13 @@ private:
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
-    bool           mShutdownFlag;
 
     Interpreter &mInterpreter;
 
-    uint8_t mPsk[32];
+    bool    mShutdownFlag;
+    uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
-    uint8_t mPskId[32];
+    uint8_t mPskId[kPskIdMaxLength];
     uint8_t mPskIdLength;
 };
 
