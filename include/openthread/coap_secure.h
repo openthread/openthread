@@ -51,13 +51,6 @@
 extern "C" {
 #endif
 
-#if defined(__GNUC__)
-#if !defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || !defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || \
-    !defined(MBEDTLS_BASE64_C)
-_Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif // __GNUC__
-
 /**
  * @addtogroup api-coap-secure
  *
@@ -73,14 +66,14 @@ _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
 
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
-    /**
-     * This function pointer is called once DTLS connection is established.
-     *
-     * @param[in]  aConnected  true, if a connection was established, false otherwise.
-     * @param[in]  aContext    A pointer to arbitrary context information.
-     *
-     */
-    typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+/**
+ * This function pointer is called once DTLS connection is established.
+ *
+ * @param[in]  aConnected  true, if a connection was established, false otherwise.
+ * @param[in]  aContext    A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
 
 /**
  * This function starts the CoAP Secure service.

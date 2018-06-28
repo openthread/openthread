@@ -38,7 +38,7 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
-
+#define OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE 1
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 using namespace ot;
@@ -62,6 +62,12 @@ otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
     return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey,
                                                                   aPrivateKeyLength);
 #else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aX509Cert);
+    OT_UNUSED_VARIABLE(aX509Length);
+    OT_UNUSED_VARIABLE(aPrivateKey);
+    OT_UNUSED_VARIABLE(aPrivateKeyLength);
+
     return OT_ERROR_DISABLED_FEATURE;
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 }
@@ -77,6 +83,12 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
 
     return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 #else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPsk);
+    OT_UNUSED_VARIABLE(aPskLength);
+    OT_UNUSED_VARIABLE(aPskIdentity);
+    OT_UNUSED_VARIABLE(aPskIdLength);
+
     return OT_ERROR_DISABLED_FEATURE;
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 }
@@ -92,6 +104,11 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
     return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, (size_t *)aCertLength,
                                                                         (size_t)aCertBufferSize);
 #else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPeerCert);
+    OT_UNUSED_VARIABLE(aCertLength);
+    OT_UNUSED_VARIABLE(aCertBufferSize);
+
     return OT_ERROR_DISABLED_FEATURE;
 #endif // MBEDTLS_BASE64_C
 }
