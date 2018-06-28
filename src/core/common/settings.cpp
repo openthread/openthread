@@ -80,9 +80,9 @@ void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
 
-void SettingsBase::LogFailure(otError error, const char *aText) const
+void SettingsBase::LogFailure(otError error, const char *aText, bool aIsDelete) const
 {
-    if (error != OT_ERROR_NONE)
+    if ((error != OT_ERROR_NONE) && (!aIsDelete || (error != OT_ERROR_NOT_FOUND)))
     {
         otLogWarnCore(GetInstance(), "Non-volatile: Error %s %s", otThreadErrorToString(error), aText);
     }
@@ -106,7 +106,7 @@ otError Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset 
 {
     otError error = Save(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), aDataset.GetSize());
 
-    LogFailure(error, "saving OperationalDataset");
+    LogFailure(error, "saving OperationalDataset", false);
     return error;
 }
 
@@ -127,7 +127,8 @@ otError Settings::DeleteOperationalDataset(bool aIsActive)
 {
     otError error = Delete(aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
 
-    LogFailure(error, "deleting OperationalDataset");
+    LogFailure(error, "deleting OperationalDataset", true);
+
     return error;
 }
 
@@ -150,7 +151,7 @@ otError Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
     LogNetworkInfo("Saved", aNetworkInfo);
 
 exit:
-    LogFailure(error, "saving NetworkInfo");
+    LogFailure(error, "saving NetworkInfo", false);
     return error;
 }
 
@@ -162,7 +163,7 @@ otError Settings::DeleteNetworkInfo(void)
     otLogInfoCore(GetInstance(), "Non-volatile: Deleted NetworkInfo");
 
 exit:
-    LogFailure(error, "deleting NetworkInfo");
+    LogFailure(error, "deleting NetworkInfo", true);
     return error;
 }
 
@@ -185,7 +186,7 @@ otError Settings::SaveParentInfo(const ParentInfo &aParentInfo)
     LogParentInfo("Saved", aParentInfo);
 
 exit:
-    LogFailure(error, "saving ParentInfo");
+    LogFailure(error, "saving ParentInfo", false);
     return error;
 }
 
@@ -197,7 +198,7 @@ otError Settings::DeleteParentInfo(void)
     otLogInfoCore(GetInstance(), "Non-volatile: Deleted ParentInfo");
 
 exit:
-    LogFailure(error, "deleting ParentInfo");
+    LogFailure(error, "deleting ParentInfo", true);
     return error;
 }
 
@@ -209,7 +210,7 @@ otError Settings::AddChildInfo(const ChildInfo &aChildInfo)
     LogChildInfo("Added", aChildInfo);
 
 exit:
-    LogFailure(error, "adding ChildInfo");
+    LogFailure(error, "adding ChildInfo", false);
     return error;
 }
 
@@ -221,7 +222,7 @@ otError Settings::DeleteChildInfo(void)
     otLogInfoCore(GetInstance(), "Non-volatile: Deleted all ChildInfo");
 
 exit:
-    LogFailure(error, "deleting all ChildInfo");
+    LogFailure(error, "deleting all ChildInfo", true);
     return error;
 }
 
@@ -258,7 +259,7 @@ otError Settings::ChildInfoIterator::Delete(void)
     LogChildInfo("Removed", mChildInfo);
 
 exit:
-    LogFailure(error, "removing ChildInfo entry");
+    LogFailure(error, "removing ChildInfo entry", true);
     return error;
 }
 
