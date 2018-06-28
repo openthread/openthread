@@ -100,7 +100,7 @@
   * Define to 1 if you want to enable software ACK timeout logic.
   *
   */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
 
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -109,6 +109,14 @@
   *
   */
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          0
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
