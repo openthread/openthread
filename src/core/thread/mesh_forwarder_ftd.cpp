@@ -649,6 +649,8 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         }
     }
 
+    VerifyOrExit((aError == OT_ERROR_NONE) || (aError == OT_ERROR_NO_ACK));
+
     if (mMessageNextOffset < mSendMessage->GetLength())
     {
         if (mSendMessage == child->GetIndirectMessage())

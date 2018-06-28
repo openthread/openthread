@@ -951,11 +951,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     VerifyOrExit(mEnabled);
 
-    if (mSendMessage != NULL)
-    {
-        mSendMessage->SetOffset(mMessageNextOffset);
-    }
-
     aFrame.GetDstAddr(macDest);
 
     if ((neighbor = netif.GetMle().GetNeighbor(macDest)) != NULL)
@@ -995,7 +990,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     HandleSentFrameToChild(aFrame, aError, macDest);
 
-    VerifyOrExit(mSendMessage != NULL);
+    VerifyOrExit((mSendMessage != NULL) && ((aError == OT_ERROR_NONE) || (aError == OT_ERROR_NO_ACK)));
 
     if (mSendMessage->GetDirectTransmission())
     {
