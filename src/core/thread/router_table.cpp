@@ -249,7 +249,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
     GetNetif().GetMle().ResetAdvertiseInterval();
 
-    otLogInfoMle(GetInstance(), "Allocate router id %d", aRouterId);
+    otLogNoteMle(GetInstance(), "Allocate router id %d", aRouterId);
 
 exit:
     return rval;
@@ -292,7 +292,7 @@ otError RouterTable::Release(uint8_t aRouterId)
     netif.GetNetworkDataLeader().RemoveBorderRouter(rloc16);
     netif.GetMle().ResetAdvertiseInterval();
 
-    otLogInfoMle(GetInstance(), "Release router id %d", aRouterId);
+    otLogNoteMle(GetInstance(), "Release router id %d", aRouterId);
 
 exit:
     return error;
