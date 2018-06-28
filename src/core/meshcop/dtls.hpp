@@ -72,6 +72,7 @@ public:
     enum
     {
         kPskMaxLength = 32,
+        kWaitForCloseNotifyMilli = 2000,
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 128,
 #else
@@ -344,6 +345,8 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
+    static void HandleWaitForCloseNotifyTimer(Timer &aTimer);
+    void HandleWaitForCloseNotifyTimer();
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
@@ -400,6 +403,8 @@ private:
     void *           mContext;
     bool             mClient;
     bool             mApplicationCoapSecure;
+    bool             mConnectionClosedByHost;
+    TimerMilli       mWaitForCloseNotifyTimer;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;

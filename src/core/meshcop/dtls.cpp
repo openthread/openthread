@@ -69,6 +69,8 @@ Dtls::Dtls(Instance &aInstance)
     , mContext(NULL)
     , mClient(false)
     , mApplicationCoapSecure(false)
+    , mConnectionClosedByHost(false)
+    , mWaitForCloseNotifyTimer(aInstance, &HandleWaitForCloseNotifyTimer, this)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -227,6 +229,7 @@ otError Dtls::Start(bool             aClient,
     VerifyOrExit(rval == 0);
 
     mStarted = true;
+    mConnectionClosedByHost = false;
     Process();
 
     if (!mApplicationCoapSecure)
@@ -307,14 +310,20 @@ void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 otError Dtls::Stop(void)
 {
     mbedtls_ssl_close_notify(&mSsl);
-    Close();
+    // wait for ssl close notify from peer.
+    mConnectionClosedByHost = true;
+    mWaitForCloseNotifyTimer.Start(kWaitForCloseNotifyMilli);
+
     return OT_ERROR_NONE;
 }
 
 void Dtls::Close(void)
 {
+    if (mWaitForCloseNotifyTimer.IsRunning())
+    {
+        mWaitForCloseNotifyTimer.Stop();
+    }
     VerifyOrExit(mStarted);
-
     mStarted = false;
     mbedtls_ssl_free(&mSsl);
     mbedtls_ssl_config_free(&mConf);
@@ -660,6 +669,20 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     return 0;
 }
 
+void Dtls::HandleWaitForCloseNotifyTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<Dtls>().HandleWaitForCloseNotifyTimer();
+}
+
+void Dtls::HandleWaitForCloseNotifyTimer()
+{
+    if (mStarted)
+    {
+        // close notify not received. close dtls.
+        Close();
+    }
+}
+
 void Dtls::HandleTimer(Timer &aTimer)
 {
     aTimer.GetOwner<Dtls>().HandleTimer();
@@ -705,7 +728,10 @@ void Dtls::Process(void)
             switch (rval)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                mbedtls_ssl_close_notify(&mSsl);
+                if (!mConnectionClosedByHost)
+                {
+                    mbedtls_ssl_close_notify(&mSsl);
+                }
                 ExitNow(shouldClose = true);
                 break;
 
@@ -713,7 +739,10 @@ void Dtls::Process(void)
                 break;
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-                mbedtls_ssl_close_notify(&mSsl);
+                if (!mConnectionClosedByHost)
+                {
+                    mbedtls_ssl_close_notify(&mSsl);
+                }
                 ExitNow(shouldClose = true);
                 break;
 
@@ -749,7 +778,7 @@ void Dtls::Process(void)
 
 exit:
 
-    if (shouldClose)
+    if (shouldClose || mConnectionClosedByHost)
     {
         Close();
     }
