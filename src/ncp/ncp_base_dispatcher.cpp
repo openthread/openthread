@@ -35,15 +35,15 @@
 namespace ot {
 namespace Ncp {
 
-// ----------------------------------------------------------------------------
-// MARK: Property Handler Jump Tables and Methods
-// ----------------------------------------------------------------------------
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
     NcpBase::PropertyHandler handler;
 
     switch (aKey)
     {
+        // --------------------------------------------------------------------------
+        // Common Properties (Get Handler)
+
     case SPINEL_PROP_CAPS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>;
         break;
@@ -122,6 +122,10 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_VENDOR_ID:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_VENDOR_ID>;
         break;
+
+        // --------------------------------------------------------------------------
+        // MTD (or FTD) Properties (Get Handler)
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_PROP_MAC_DATA_POLL_PERIOD:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>;
@@ -493,6 +497,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+        // --------------------------------------------------------------------------
+        // FTD Only Properties (Get Handler)
+
 #if OPENTHREAD_FTD
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>;
@@ -587,11 +594,15 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #endif // OPENTHREAD_FTD
 
+        // --------------------------------------------------------------------------
+        // Raw Link API Properties (Get Handler)
+
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>;
         break;
 #endif
+
     default:
         handler = NULL;
     }
@@ -605,23 +616,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 
     switch (aKey)
     {
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    case SPINEL_PROP_MAC_15_4_SADDR:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_SADDR>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
-        break;
-    case SPINEL_PROP_PHY_ENABLED:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>;
-        break;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+        // --------------------------------------------------------------------------
+        // Common Properties (Set Handler)
+
     case SPINEL_PROP_POWER_STATE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>;
         break;
@@ -649,6 +646,10 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLED>;
         break;
+
+        // --------------------------------------------------------------------------
+        // MTD (or FTD) Properties (Set Handler)
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_PROP_MAC_DATA_POLL_PERIOD:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>;
@@ -770,6 +771,10 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>;
         break;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+        // --------------------------------------------------------------------------
+        // FTD Only Properties (Set Handler)
+
 #if OPENTHREAD_FTD
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>;
@@ -861,6 +866,28 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         break;
 #endif
 #endif // #if OPENTHREAD_FTD
+
+        // --------------------------------------------------------------------------
+        // Raw Link API Properties (Set Handler)
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    case SPINEL_PROP_MAC_15_4_SADDR:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_SADDR>;
+        break;
+    case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>;
+        break;
+    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
+        break;
+    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
+        break;
+    case SPINEL_PROP_PHY_ENABLED:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>;
+        break;
+#endif // #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
     default:
         handler = NULL;
     }
@@ -874,17 +901,16 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
 
     switch (aKey)
     {
+        // --------------------------------------------------------------------------
+        // Common Properties (Insert Handler)
+
     case SPINEL_PROP_UNSOL_UPDATE_FILTER:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
         break;
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
-        break;
-#endif
+
+        // --------------------------------------------------------------------------
+        // MTD (or FTD) Properties (Insert Handler)
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_PROP_IPV6_ADDRESS_TABLE:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_ADDRESS_TABLE>;
@@ -915,6 +941,10 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         break;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+        // --------------------------------------------------------------------------
+        // FTD Only Properties (Insert Handler)
+
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_COMMISSIONER
     case SPINEL_PROP_THREAD_JOINERS:
@@ -922,6 +952,19 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         break;
 #endif
 #endif // OPENTHREAD_FTD
+
+        // --------------------------------------------------------------------------
+        // Raw Link API Properties (Insert Handler)
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
+        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
+        break;
+    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
+        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
+        break;
+#endif
+
     default:
         handler = NULL;
     }
@@ -935,17 +978,16 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
 
     switch (aKey)
     {
+        // --------------------------------------------------------------------------
+        // Common Properties (Remove Handler)
+
     case SPINEL_PROP_UNSOL_UPDATE_FILTER:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
         break;
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
-        break;
-#endif
+
+        // --------------------------------------------------------------------------
+        // MTD (or FTD) Properties (Remove Handler)
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_PROP_IPV6_ADDRESS_TABLE:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_ADDRESS_TABLE>;
@@ -976,11 +1018,28 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
         break;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+        // --------------------------------------------------------------------------
+        // FTD Only Properties (Remove Handler)
+
 #if OPENTHREAD_FTD
     case SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>;
         break;
 #endif
+
+        // --------------------------------------------------------------------------
+        // Raw Link API Properties (Remove Handler)
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
+        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
+        break;
+    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
+        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
+        break;
+#endif
+
     default:
         handler = NULL;
     }
