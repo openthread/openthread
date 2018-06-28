@@ -178,13 +178,13 @@ exit:
     return;
 }
 
-otError NcpBase::GetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>(void)
 {
     // TODO: Would be good to add an `otLinkRaw` API to give the the status of source match.
     return mEncoder.WriteBool(mSrcMatchEnabled);
 }
 
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -196,7 +196,7 @@ exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -217,7 +217,7 @@ exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -238,7 +238,7 @@ exit:
     return error;
 }
 
-otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t shortAddress;
@@ -251,7 +251,7 @@ exit:
     return error;
 }
 
-otError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>(void)
 {
     otError             error = OT_ERROR_NONE;
     const otExtAddress *extAddress;
@@ -265,7 +265,7 @@ exit:
     return error;
 }
 
-otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t shortAddress;
@@ -278,7 +278,7 @@ exit:
     return error;
 }
 
-otError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(void)
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>(void)
 {
     otError             error      = OT_ERROR_NONE;
     const otExtAddress *extAddress = NULL;
@@ -291,7 +291,7 @@ exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_PHY_ENABLED(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>(void)
 {
     bool    value = false;
     otError error = OT_ERROR_NONE;
@@ -323,7 +323,7 @@ exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_MAC_15_4_SADDR(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_SADDR>(void)
 {
     uint16_t shortAddress;
     otError  error = OT_ERROR_NONE;
@@ -336,7 +336,7 @@ exit:
     return error;
 }
 
-otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t aHeader)
+otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 {
     const uint8_t *frameBuffer = NULL;
     otRadioFrame * frame;
