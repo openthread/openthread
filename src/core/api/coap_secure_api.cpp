@@ -167,6 +167,15 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
     instance.GetApplicationCoapSecure().RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
+void otCoapSecureSetClientConnectedCallback(otInstance                      *aInstance,
+                                            otHandleSecureCoapClientConnect  aHandler,
+                                            void                            *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetApplicationCoapSecure().SetClientConnectedCallback(aHandler, aContext);
+}
+
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

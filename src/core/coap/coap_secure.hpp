@@ -160,6 +160,17 @@ public:
     MeshCoP::Dtls &GetDtls(void);
 
     /**
+     * This method sets the connected callback to indicate, when
+     * a Client connect to the CoAP Secure server.
+     *
+     * @param[in]  aMessageInfo  A reference to an address of the peer.
+     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
+     * established.
+     *
+     */
+    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
+
+    /**
      * This method sets the PSK.
      *
      * @param[in]  aPSK        A pointer to the PSK.

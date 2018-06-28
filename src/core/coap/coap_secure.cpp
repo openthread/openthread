@@ -142,6 +142,12 @@ MeshCoP::Dtls &CoapSecure::GetDtls(void)
     return GetNetif().GetDtls();
 }
 
+void CoapSecure::SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
+{
+    mConnectedCallback = aCallback;
+    mConnectedContext = aContext;
+}
+
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
     return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);

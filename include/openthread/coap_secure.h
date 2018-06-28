@@ -278,6 +278,19 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
 /**
+ * This method sets the connected callback to indicate, when
+ * a Client connect to the CoAP Secure server.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMessageInfo  A reference to an address of the peer.
+ * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection is established.
+ *
+ */
+void otCoapSecureSetClientConnectedCallback(otInstance                      *aInstance,
+                                            otHandleSecureCoapClientConnect  aHandler,
+                                            void                            *aContext);
+
+/**
  * This function sends a CoAP response from the CoAP Secure server.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.

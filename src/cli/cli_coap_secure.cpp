@@ -138,14 +138,17 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 
     if (length > 0)
     {
-        mInterpreter.mServer->OutputFormat("    With payload (hex):\r\n");
+        mInterpreter.mServer->OutputFormat("    With payload [UTF8]:\r\n",aMessage);
 
         while (length > 0)
         {
             bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
             otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
 
-            mInterpreter.OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+            for (int i = 0; i < bytesToPrint; i++)
+                {
+                mInterpreter.mServer->OutputFormat("%c", buf[i]);
+                }
             mInterpreter.mServer->OutputFormat("\r\n");
 
             length -= bytesToPrint;
@@ -178,6 +181,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             }
         }
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
+        otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecureCli::HandleClientConnect, this);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
         mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
                                            mVerifyPeerCert ? "true" : "false");
@@ -366,8 +370,8 @@ void CoapSecureCli::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMess
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
     otMessage *  responseMessage;
-    otCoapCode   responseCode    = OT_COAP_CODE_EMPTY;
-    char         responseContent = '0';
+    otCoapCode   responseCode       = OT_COAP_CODE_EMPTY;
+    char         responseContent [] = "helloWorld";
 
     mInterpreter.mServer->OutputFormat(
         "Received coap secure request from [%x:%x:%x:%x:%x:%x:%x:%x]: ",
