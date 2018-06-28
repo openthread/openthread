@@ -1,6 +1,8 @@
 # OpenThread CLI - COAPS Example
 
-The OpenThread UDP APIs may be invoked via the OpenThread CLI.
+The OpenThread CoAP Secure APIs may be invoked via the OpenThread CLI.
+
+CoAP Secure use DTLS (over UDP) to make a end to end encrypted connection.
 
 ## Init (for Server and Client)
 
