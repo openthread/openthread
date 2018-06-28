@@ -676,12 +676,12 @@ exit:
     switch (error)
     {
     case OT_ERROR_NO_BUFS:
-        otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
+        otLogWarnIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
                      aMessage.GetLength());
         break;
 
     case OT_ERROR_DROP:
-        otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
+        otLogNoteIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
                      aMessage.GetLength());
         break;
 

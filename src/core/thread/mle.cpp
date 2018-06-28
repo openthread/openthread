@@ -298,7 +298,7 @@ void Mle::SetRole(otDeviceRole aRole)
 {
     VerifyOrExit(aRole != mRole, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ROLE));
 
-    otLogInfoMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
+    otLogNoteMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
 
     mRole = aRole;
     GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
@@ -637,7 +637,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         delay += jitter;
     }
 
-    otLogInfoMle(GetInstance(), "Attach attempt %d unsuccessful, will try again in %u.%03u seconds", mAttachCounter,
+    otLogNoteMle(GetInstance(), "Attach attempt %d unsuccessful, will try again in %u.%03u seconds", mAttachCounter,
                  delay / 1000, delay % 1000);
 
 exit:
@@ -1591,12 +1591,12 @@ void Mle::HandleAttachTimer(void)
     case kAttachStateStart:
         if (mAttachCounter > 0)
         {
-            otLogInfoMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter,
+            otLogNoteMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter,
                          AttachModeToString(mParentRequestMode), ReattachStateToString(mReattachState));
         }
         else
         {
-            otLogInfoMle(GetInstance(), "Attempt to attach - %s %s", AttachModeToString(mParentRequestMode),
+            otLogNoteMle(GetInstance(), "Attempt to attach - %s %s", AttachModeToString(mParentRequestMode),
                          ReattachStateToString(mReattachState));
         }
 
@@ -3499,7 +3499,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
         SetAttachState(kAttachStateProcessAnnounce);
         mAttachTimer.Start(kAnnounceProcessTimeout);
 
-        otLogInfoMle(GetInstance(), "Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
+        otLogNoteMle(GetInstance(), "Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
@@ -3530,7 +3530,7 @@ void Mle::ProcessAnnounce(void)
 
     assert(mAttachState == kAttachStateProcessAnnounce);
 
-    otLogInfoMle(GetInstance(), "Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
+    otLogNoteMle(GetInstance(), "Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
 
     Stop(/* aClearNetworkDatasets */ false);
 
@@ -3811,7 +3811,7 @@ otError Mle::InformPreviousParent(void)
 
     SuccessOrExit(error = netif.GetIp6().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 
-    otLogInfoMle(GetInstance(), "Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
+    otLogNoteMle(GetInstance(), "Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
 
 exit:
 
