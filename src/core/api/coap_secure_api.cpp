@@ -38,7 +38,7 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
-#define OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE 1
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 using namespace ot;
