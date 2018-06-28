@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\src\ncp\ncp_base_radio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ncp\ncp_base_dispatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\ncp\ncp_buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -76,6 +76,7 @@ COMMON_SOURCES                                    = \
     ncp_base_ftd.cpp                                \
     ncp_base_mtd.cpp                                \
     ncp_base_radio.cpp                              \
+    ncp_base_dispatcher.cpp                         \
     ncp_buffer.cpp                                  \
     ncp_buffer.hpp                                  \
     ncp_spi.cpp                                     \
