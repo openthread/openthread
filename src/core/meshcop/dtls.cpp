@@ -70,7 +70,7 @@ Dtls::Dtls(Instance &aInstance)
     , mClient(false)
     , mApplicationCoapSecure(false)
     , mConnectionClosedByHost(false)
-    , mWaitForCloseNotifyTimer(aInstance, &HandleWaitForCloseNotifyTimer, this)
+    , mWaitForCloseNotifyTimer(aInstance, &Dtls::HandleWaitForCloseNotifyTimer, this)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
