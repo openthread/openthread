@@ -1030,12 +1030,12 @@ public:
     void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
 
     /**
-     * This method sets the CCA enabled attribute.
+     * This method sets the CSMA-CA enabled attribute.
      *
-     * @param[in]  aIsCcaEnabled  TRUE if CCA must be enabled for this packet, FALSE otherwise.
+     * @param[in]  aCsmaCaEnabled  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
      *
      */
-    void SetIsCcaEnabled(bool aIsCcaEnabled) { mInfo.mTxInfo.mIsCcaEnabled = aIsCcaEnabled; }
+    void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
 
     /**
      * This method returns the key used for frame encryption and authentication (AES CCM).

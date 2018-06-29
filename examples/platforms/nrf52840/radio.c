@@ -343,7 +343,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     nrf_802154_channel_set(aFrame->mChannel);
 
-    if (aFrame->mInfo.mTxInfo.mIsCcaEnabled)
+    if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
     {
         nrf_802154_transmit_csma_ca_raw(&aFrame->mPsdu[-1]);
     }
