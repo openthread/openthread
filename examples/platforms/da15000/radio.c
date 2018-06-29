@@ -589,13 +589,13 @@ void ftdf_rcv_frame_transparent(ftdf_data_length_t  frame_length,
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
         // Timestamp
-        sReceiveFrame[sWriteFrame].mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame[sWriteFrame].mUsec = 0; // Don't support microsecond timer for now.
+        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
-        sReceiveFrame[sWriteFrame].mChannel = sChannel;
-        sReceiveFrame[sWriteFrame].mLength  = frame_length;
-        sReceiveFrame[sWriteFrame].mLqi     = OT_RADIO_LQI_NONE;
-        sReceiveFrame[sWriteFrame].mRssi    = otPlatRadioGetRssi(sThreadInstance);
+        sReceiveFrame[sWriteFrame].mChannel            = sChannel;
+        sReceiveFrame[sWriteFrame].mLength             = frame_length;
+        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
+        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mRssi = otPlatRadioGetRssi(sThreadInstance);
         memcpy(sReceiveFrame[sWriteFrame].mPsdu, frame, frame_length);
 
         sWriteFrame = (sWriteFrame + 1) % RADIO_FRAMES_BUFFER_SIZE;

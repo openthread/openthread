@@ -47,6 +47,12 @@ after_success:
 
 matrix:
   include:
+    - env: BUILD_TARGET="posix-app-cli" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1
+      os: linux
+      compiler: gcc
     - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       addons:

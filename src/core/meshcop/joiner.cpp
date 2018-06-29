@@ -100,7 +100,7 @@ otError Joiner::Start(const char *     aPSKd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().Signal(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
     GetJoinerId(joinerId);
@@ -168,7 +168,7 @@ void Joiner::Complete(otError aError)
     ThreadNetif &netif = GetNetif();
     mState             = OT_JOINER_STATE_IDLE;
     otError error      = OT_ERROR_NOT_FOUND;
-    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().Signal(OT_CHANGED_JOINER_STATE);
 
     netif.GetCoapSecure().Disconnect();
 

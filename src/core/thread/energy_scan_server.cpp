@@ -227,12 +227,12 @@ exit:
     return error;
 }
 
-void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void EnergyScanServer::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<EnergyScanServer>().HandleStateChanged(aFlags);
 }
 
-void EnergyScanServer::HandleStateChanged(uint32_t aFlags)
+void EnergyScanServer::HandleStateChanged(otChangedFlags aFlags)
 {
     if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 && !mActive &&
         GetNetif().GetNetworkDataLeader().GetCommissioningData() == NULL)

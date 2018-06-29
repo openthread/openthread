@@ -78,6 +78,7 @@
 #include "thread/network_data_local.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
+#include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -412,6 +413,16 @@ public:
      */
     PanIdQueryServer &GetPanIdQueryServer(void) { return mPanIdQuery; }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    /**
+     * This method returns a reference to the Time Synchronization Service object.
+     *
+     * @returns A reference to the Time Synchronization Service object.
+     *
+     */
+    TimeSync &GetTimeSync(void) { return mTimeSync; }
+#endif
+
     /**
      * This method returns whether Thread Management Framework Addressing Rules are met.
      *
@@ -483,6 +494,9 @@ private:
     AnnounceBeginServer        mAnnounceBegin;
     PanIdQueryServer           mPanIdQuery;
     EnergyScanServer           mEnergyScan;
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    TimeSync mTimeSync;
+#endif
 };
 
 /**

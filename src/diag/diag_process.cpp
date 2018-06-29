@@ -347,8 +347,8 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
         // for sensitivity test, only record the rssi and lqi for the first packet
         if (sStats.mReceivedPackets == 0)
         {
-            sStats.mFirstRssi = aFrame->mRssi;
-            sStats.mFirstLqi = aFrame->mLqi;
+            sStats.mFirstRssi = aFrame->mInfo.mRxInfo.mRssi;
+            sStats.mFirstLqi = aFrame->mInfo.mRxInfo.mLqi;
         }
 
         sStats.mReceivedPackets++;

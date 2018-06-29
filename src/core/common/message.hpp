@@ -114,6 +114,11 @@ struct MessageInfo
     uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+#endif
 };
 
 /**
@@ -709,6 +714,60 @@ public:
     {
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    /**
+     * This method indicates whether or not the message is also used for time sync purpose.
+     *
+     * @retval TRUE   If the message is also used for time sync purpose.
+     * @retval FALSE  If the message is not used for time sync purpose.
+     *
+     */
+    bool IsTimeSync(void) const { return mBuffer.mHead.mInfo.mTimeSync; }
+
+    /**
+     * This method sets whether or not the message is also used for time sync purpose.
+     *
+     * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
+     *
+     */
+    void SetTimeSync(bool aEnabled) { mBuffer.mHead.mInfo.mTimeSync = aEnabled; }
+
+    /**
+     * This method sets the offset to network time.
+     *
+     * @param[in]  aNetworkTimeOffset  The offset to network time.
+     *
+     */
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
+    {
+        mBuffer.mHead.mInfo.mNetworkTimeOffset = aNetworkTimeOffset;
+    }
+
+    /**
+     * This method gets the offset to network time.
+     *
+     * @returns  The offset to network time.
+     *
+     */
+    int64_t GetNetworkTimeOffset(void) const { return mBuffer.mHead.mInfo.mNetworkTimeOffset; }
+
+    /**
+     * This method sets the time sync sequence.
+     *
+     * @param[in]  aTimeSyncSeq  The time sync sequence.
+     *
+     */
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mBuffer.mHead.mInfo.mTimeSyncSeq = aTimeSyncSeq; }
+
+    /**
+     * This method gets the time sync sequence.
+     *
+     * @returns  The time sync sequence.
+     *
+     */
+    uint8_t GetTimeSyncSeq(void) const { return mBuffer.mHead.mInfo.mTimeSyncSeq; }
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 private:
     /**

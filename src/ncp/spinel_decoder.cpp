@@ -39,21 +39,21 @@
 namespace ot {
 namespace Ncp {
 
-SpinelDecoder::SpinelDecoder(void) :
-    mFrame(NULL),
-    mLength(0),
-    mIndex(0),
-    mEnd(0),
-    mNumOpenStructs(0),
-    mSavedNumOpenStructs(0),
-    mSavedIndex(0),
-    mSavedEnd(0)
+SpinelDecoder::SpinelDecoder(void)
+    : mFrame(NULL)
+    , mLength(0)
+    , mIndex(0)
+    , mEnd(0)
+    , mNumOpenStructs(0)
+    , mSavedNumOpenStructs(0)
+    , mSavedIndex(0)
+    , mSavedEnd(0)
 {
 }
 
 void SpinelDecoder::Init(const uint8_t *aFrame, uint16_t aLength)
 {
-    mFrame = aFrame;
+    mFrame  = aFrame;
     mLength = (mFrame != NULL) ? aLength : 0;
 
     Reset();
@@ -62,8 +62,8 @@ void SpinelDecoder::Init(const uint8_t *aFrame, uint16_t aLength)
 
 void SpinelDecoder::Reset(void)
 {
-    mIndex = 0;
-    mEnd = mLength;
+    mIndex          = 0;
+    mEnd            = mLength;
     mNumOpenStructs = 0;
     ClearSavedPosition();
 }
@@ -133,7 +133,7 @@ exit:
 
 otError SpinelDecoder::ReadInt16(int16_t &aInt16)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t u16;
 
     SuccessOrExit(error = ReadUint16(u16));
@@ -149,10 +149,8 @@ otError SpinelDecoder::ReadUint32(uint32_t &aUint32)
 
     VerifyOrExit(mIndex + sizeof(uint32_t) <= mEnd, error = OT_ERROR_PARSE);
 
-    aUint32 = ((static_cast<uint32_t>(mFrame[mIndex + 0]) << 0) |
-               (static_cast<uint32_t>(mFrame[mIndex + 1]) << 8) |
-               (static_cast<uint32_t>(mFrame[mIndex + 2]) << 16) |
-               (static_cast<uint32_t>(mFrame[mIndex + 3]) << 24));
+    aUint32 = ((static_cast<uint32_t>(mFrame[mIndex + 0]) << 0) | (static_cast<uint32_t>(mFrame[mIndex + 1]) << 8) |
+               (static_cast<uint32_t>(mFrame[mIndex + 2]) << 16) | (static_cast<uint32_t>(mFrame[mIndex + 3]) << 24));
 
     mIndex += sizeof(uint32_t);
 
@@ -162,7 +160,7 @@ exit:
 
 otError SpinelDecoder::ReadInt32(int32_t &aInt32)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint32_t u32;
 
     SuccessOrExit(error = ReadUint32(u32));
@@ -178,14 +176,10 @@ otError SpinelDecoder::ReadUint64(uint64_t &aUint64)
 
     VerifyOrExit(mIndex + sizeof(uint64_t) <= mEnd, error = OT_ERROR_PARSE);
 
-    aUint64 = ((static_cast<uint64_t>(mFrame[mIndex + 0]) << 0) |
-               (static_cast<uint64_t>(mFrame[mIndex + 1]) << 8) |
-               (static_cast<uint64_t>(mFrame[mIndex + 2]) << 16) |
-               (static_cast<uint64_t>(mFrame[mIndex + 3]) << 24) |
-               (static_cast<uint64_t>(mFrame[mIndex + 4]) << 32) |
-               (static_cast<uint64_t>(mFrame[mIndex + 5]) << 40) |
-               (static_cast<uint64_t>(mFrame[mIndex + 6]) << 48) |
-               (static_cast<uint64_t>(mFrame[mIndex + 7]) << 56));
+    aUint64 = ((static_cast<uint64_t>(mFrame[mIndex + 0]) << 0) | (static_cast<uint64_t>(mFrame[mIndex + 1]) << 8) |
+               (static_cast<uint64_t>(mFrame[mIndex + 2]) << 16) | (static_cast<uint64_t>(mFrame[mIndex + 3]) << 24) |
+               (static_cast<uint64_t>(mFrame[mIndex + 4]) << 32) | (static_cast<uint64_t>(mFrame[mIndex + 5]) << 40) |
+               (static_cast<uint64_t>(mFrame[mIndex + 6]) << 48) | (static_cast<uint64_t>(mFrame[mIndex + 7]) << 56));
 
     mIndex += sizeof(uint64_t);
 
@@ -195,7 +189,7 @@ exit:
 
 otError SpinelDecoder::ReadInt64(int64_t &aInt64)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint64_t u64;
 
     SuccessOrExit(error = ReadUint64(u64));
@@ -207,9 +201,9 @@ exit:
 
 otError SpinelDecoder::ReadUintPacked(unsigned int &aUint)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
     spinel_ssize_t parsedLen;
-    unsigned int uint;
+    unsigned int   uint;
 
     parsedLen = spinel_packed_uint_decode(&mFrame[mIndex], mEnd - mIndex, &uint);
     VerifyOrExit(parsedLen > 0, error = OT_ERROR_PARSE);
@@ -238,7 +232,7 @@ exit:
 
 otError SpinelDecoder::ReadIp6Address(spinel_ipv6addr_t &aIp6Addr)
 {
-    otError error = OT_ERROR_NONE;
+    otError                  error = OT_ERROR_NONE;
     const spinel_ipv6addr_t *ipv6AddrPtr;
 
     SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
@@ -250,7 +244,7 @@ exit:
 
 otError SpinelDecoder::ReadIp6Address(otIp6Address &aIp6Addr)
 {
-    otError error = OT_ERROR_NONE;
+    otError             error = OT_ERROR_NONE;
     const otIp6Address *ipv6AddrPtr;
 
     SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
@@ -262,7 +256,7 @@ exit:
 
 otError SpinelDecoder::ReadEui64(spinel_eui64_t &aEui64)
 {
-    otError error = OT_ERROR_NONE;
+    otError               error = OT_ERROR_NONE;
     const spinel_eui64_t *eui64Ptr;
 
     SuccessOrExit(error = ReadEui64(eui64Ptr));
@@ -274,7 +268,7 @@ exit:
 
 otError SpinelDecoder::ReadEui64(otExtAddress &aEui64)
 {
-    otError error = OT_ERROR_NONE;
+    otError             error = OT_ERROR_NONE;
     const otExtAddress *eui64Ptr;
 
     SuccessOrExit(error = ReadEui64(eui64Ptr));
@@ -286,7 +280,7 @@ exit:
 
 otError SpinelDecoder::ReadEui48(spinel_eui48_t &aEui48)
 {
-    otError error = OT_ERROR_NONE;
+    otError               error = OT_ERROR_NONE;
     const spinel_eui48_t *eui48Ptr;
 
     SuccessOrExit(error = ReadEui48(eui48Ptr));
@@ -299,7 +293,7 @@ exit:
 otError SpinelDecoder::ReadUtf8(const char *&aUtf8)
 {
     otError error = OT_ERROR_NONE;
-    size_t len;
+    size_t  len;
 
     // Ensure there is at least one byte (for null character).
     VerifyOrExit(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
@@ -309,7 +303,7 @@ otError SpinelDecoder::ReadUtf8(const char *&aUtf8)
 
     aUtf8 = reinterpret_cast<const char *>(&mFrame[mIndex]);
 
-    mIndex += (len + sizeof(uint8_t));    // `sizeof(uint8_t)` is added for the terminating null character.
+    mIndex += (len + sizeof(uint8_t)); // `sizeof(uint8_t)` is added for the terminating null character.
 
 exit:
     return error;
@@ -324,7 +318,7 @@ otError SpinelDecoder::ReadData(const uint8_t *&aData, uint16_t &aDataLen)
 
 otError SpinelDecoder::ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t len;
 
     SuccessOrExit(error = ReadUint16(len));
@@ -337,7 +331,7 @@ exit:
 
 otError SpinelDecoder::OpenStruct(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
     uint16_t structLen;
 
     VerifyOrExit(mNumOpenStructs < kMaxNestedStructs, error = OT_ERROR_INVALID_STATE);
@@ -346,7 +340,7 @@ otError SpinelDecoder::OpenStruct(void)
     VerifyOrExit(structLen <= mEnd - mIndex, error = OT_ERROR_PARSE);
 
     mPrevEnd[mNumOpenStructs] = mEnd;
-    mEnd = (mIndex + structLen);
+    mEnd                      = (mIndex + structLen);
     mNumOpenStructs++;
 
 exit:
@@ -371,7 +365,7 @@ otError SpinelDecoder::CloseStruct(void)
 
     mNumOpenStructs--;
     mIndex = mEnd;
-    mEnd = mPrevEnd[mNumOpenStructs];
+    mEnd   = mPrevEnd[mNumOpenStructs];
 
 exit:
     return error;
@@ -379,8 +373,8 @@ exit:
 
 void SpinelDecoder::SavePosition(void)
 {
-    mSavedIndex = mIndex;
-    mSavedEnd = mEnd;
+    mSavedIndex          = mIndex;
+    mSavedEnd            = mEnd;
     mSavedNumOpenStructs = mNumOpenStructs;
 }
 
@@ -390,13 +384,13 @@ otError SpinelDecoder::ResetToSaved(void)
 
     VerifyOrExit(IsSavedPositionValid(), error = OT_ERROR_INVALID_STATE);
 
-    mIndex = mSavedIndex;
-    mEnd = mSavedEnd;
-    mNumOpenStructs =  mSavedNumOpenStructs;
+    mIndex          = mSavedIndex;
+    mEnd            = mSavedEnd;
+    mNumOpenStructs = mSavedNumOpenStructs;
 
 exit:
     return error;
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot

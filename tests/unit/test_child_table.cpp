@@ -97,7 +97,7 @@ static bool StateMatchesFilter(Child::State aState, ChildTable::StateFilter aFil
         rval = child.IsStateValidOrAttaching();
         break;
 
-    case ChildTable::kInStateAnyExceptValidOrRestoing:
+    case ChildTable::kInStateAnyExceptValidOrRestoring:
         rval = !child.IsStateValidOrRestoring();
         break;
     }
@@ -175,14 +175,14 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
                     VerifyOrQuit(iter.GetChild() == startingChild,
                                  "Iterator failed to start from the given child entry");
 
-                    iter.Advance();
+                    iter++;
                     iter.Reset();
                     VerifyOrQuit(iter.GetChild() == startingChild, "iterator Reset() failed");
                 }
 
                 // Use the iterator and verify that each returned `Child` entry is in the expected list.
 
-                for (; !iter.IsDone(); iter.Advance())
+                for (; !iter.IsDone(); iter++)
                 {
                     Child * child   = iter.GetChild();
                     bool    didFind = false;
@@ -212,7 +212,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
 
                 VerifyOrQuit(iter.GetChild() == NULL, "iterator GetChild() failed");
 
-                iter.Advance();
+                iter++;
                 VerifyOrQuit(iter.IsDone(), "iterator Advance() (after iterator is done) failed");
                 VerifyOrQuit(iter.GetChild() == NULL, "iterator GetChild() failed");
 

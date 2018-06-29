@@ -109,7 +109,17 @@ public:
         kActiveDataset       = 24, ///< Active Operational Dataset TLV
         kPendingDataset      = 25, ///< Pending Operational Dataset TLV
         kDiscovery           = 26, ///< Thread Discovery TLV
-        kInvalid             = 255,
+
+        /**
+         * Applicable/Required only when time synchronization service
+         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         *
+         */
+        kTimeRequest   = 252, ///< Time Request TLV
+        kTimeParameter = 253, ///< Time Parameter TLV
+        kXtalAccuracy  = 254, ///< XTAL Accuracy TLV
+
+        kInvalid = 255,
     };
 
     /**
@@ -1594,6 +1604,147 @@ public:
 private:
     uint16_t mPanId;
 } OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+/**
+ * This class implements Time Request TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class TimeRequestTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kTimeRequest);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Time Parameter TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class TimeParameterTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kTimeParameter);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the time sync period.
+     *
+     * @returns The time sync period.
+     *
+     */
+    uint16_t GetTimeSyncPeriod(void) const { return HostSwap16(mTimeSyncPeriod); }
+
+    /**
+     * This method sets the time sync period.
+     *
+     * @param[in]  aTimeSyncPeriod  The time sync period.
+     *
+     */
+    void SetTimeSyncPeriod(uint16_t aTimeSyncPeriod) { mTimeSyncPeriod = HostSwap16(aTimeSyncPeriod); }
+
+    /**
+     * This method returns the XTAL accuracy threshold.
+     *
+     * @returns The XTAL accuracy threshold.
+     *
+     */
+    uint16_t GetXtalThreshold(void) const { return HostSwap16(mXtalThreshold); }
+
+    /**
+     * This method sets the XTAL accuracy threshold.
+     *
+     * @param[in]  aXTALThreshold  The XTAL accuracy threshold.
+     *
+     */
+    void SetXtalThreshold(uint16_t aXtalThreshold) { mXtalThreshold = HostSwap16(aXtalThreshold); }
+
+private:
+    uint16_t mTimeSyncPeriod;
+    uint16_t mXtalThreshold;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements XTAL Accuracy TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class XtalAccuracyTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kXtalAccuracy);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the XTAL accuracy.
+     *
+     * @returns The XTAL accuracy.
+     *
+     */
+    uint16_t GetXtalAccuracy(void) const { return HostSwap16(mXtalAccuracy); }
+
+    /**
+     * This method sets the XTAL accuracy.
+     *
+     * @param[in]  aXTALAccuracy  The XTAL accuracy.
+     *
+     */
+    void SetXtalAccuracy(uint16_t aXtalAccuracy) { mXtalAccuracy = HostSwap16(aXtalAccuracy); }
+
+private:
+    uint16_t mXtalAccuracy;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 /**
  * This class implements Active Timestamp TLV generation and parsing.

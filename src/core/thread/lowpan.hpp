@@ -138,20 +138,34 @@ public:
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aHeader       A reference where the IPv6 header will be placed.
-     * @param[in]   aMacSource    The MAC source address.
-     * @param[in]   aMacDest      The MAC destination address.
-     * @param[in]   aBuf          A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength    The number of bytes in @p aBuf.
+     * @param[out]  aHeader                 A reference where the IPv6 header will be placed.
+     * @param[out]  aCommpressedNextHeader  A boolean reference to output whether next header is compressed or not.
+     * @param[in]   aMacSource              The MAC source address.
+     * @param[in]   aMacDest                The MAC destination address.
+     * @param[in]   aBuf                    A pointer to the LOWPAN_IPHC header.
+     * @param[in]   aBufLength              The number of bytes in @p aBuf.
      *
-     * @returns The size of the compressed header in bytes.
+     * @returns The size of the compressed header in bytes or -1 if decompression fails.
      *
      */
     int DecompressBaseHeader(Ip6::Header &       aHeader,
+                             bool &              aCompressedNextHeader,
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,
                              const uint8_t *     aBuf,
                              uint16_t            aBufLength);
+
+    /**
+     * This method decompresses a LOWPAN_NHC UDP header.
+     *
+     * @param[out]  aUdpHeader    A reference where the UDP header will be placed.
+     * @param[in]   aBuf          A pointer to the LOWPAN_NHC header.
+     * @param[in]   aBufLength    The number of bytes in @p aBuf.
+     *
+     * @returns The size of the compressed header in bytes or -1 if decompression fails.
+     *
+     */
+    int DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
     enum
@@ -279,7 +293,7 @@ public:
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
      *
      */
-    bool IsMeshHeader(void) { return (mDispatchHopsLeft & kDispatchMask) == kDispatch; }
+    bool IsMeshHeader(void) const { return (mDispatchHopsLeft & kDispatchMask) == kDispatch; }
 
     /**
      * This method indicates whether or not the Mesh Header appears to be well-formed.
@@ -288,7 +302,7 @@ public:
      * @retval FALSE  If the header does not appear to be well-formed.
      *
      */
-    bool IsValid(void) { return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort); }
+    bool IsValid(void) const { return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort); }
 
     /**
      * This method indicates whether or not the header contains Deep Hops Left field.
@@ -297,7 +311,7 @@ public:
      * @retval FALSE  If the header does not contain Deep Hops Left field.
      *
      */
-    bool IsDeepHopsLeftField(void) { return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft; }
+    bool IsDeepHopsLeftField(void) const { return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft; }
 
     /**
      * This static method returns the size of the Mesh Header in bytes.
@@ -305,7 +319,7 @@ public:
      * @returns The size of the Mesh Header in bytes.
      *
      */
-    uint8_t GetHeaderLength(void) { return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft)); }
+    uint8_t GetHeaderLength(void) const { return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft)); }
 
     /**
      * This method returns the Hops Left value.
@@ -313,7 +327,10 @@ public:
      * @returns The Hops Left value.
      *
      */
-    uint8_t GetHopsLeft(void) { return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask; }
+    uint8_t GetHopsLeft(void) const
+    {
+        return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask;
+    }
 
     /**
      * This method sets the Hops Left value.
@@ -340,7 +357,7 @@ public:
      * @returns The Mesh Source address.
      *
      */
-    uint16_t GetSource(void) { return HostSwap16(mAddress.mSource); }
+    uint16_t GetSource(void) const { return HostSwap16(mAddress.mSource); }
 
     /**
      * This method sets the Mesh Source address.
@@ -356,7 +373,7 @@ public:
      * @returns The Mesh Destination address.
      *
      */
-    uint16_t GetDestination(void) { return HostSwap16(mAddress.mDestination); }
+    uint16_t GetDestination(void) const { return HostSwap16(mAddress.mDestination); }
 
     /**
      * This method sets the Mesh Destination address.
@@ -372,7 +389,7 @@ public:
      * @param[in]  aFrame  The pointer to the frame.
      *
      */
-    void AppendTo(uint8_t *aFrame)
+    void AppendTo(uint8_t *aFrame) const
     {
         *aFrame++ = mDispatchHopsLeft;
 
@@ -440,6 +457,18 @@ public:
      *
      */
     otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+
+    /**
+     * This method initializes the fragment header from a message @p aMessage.
+     *
+     * @param[in]  aMessage      The message object.
+     * @param[in]  aOffset       An offset into the message to read the header.
+     *
+     * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
+     * @retval OT_ERROR_PARSE    Fragment header could not be initialized (e.g., no frag header or message too short).
+     *
+     */
+    otError Init(const Message &aMessage, uint16_t aOffset);
 
     /**
      * This method indicates whether or not the header is a Fragment Header.

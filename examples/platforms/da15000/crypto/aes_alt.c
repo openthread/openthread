@@ -178,7 +178,7 @@ int mbedtls_aes_self_test(int verbose)
     uint8_t             output[16]  = {0};
     uint8_t             decrypt[16] = {0};
 
-    strcpy((char *)input, (const char *)"hw_cryptaes_test");
+    strcpy((char *)input, (const char *)"hw_aes_test");
 
     mbedtls_aes_init(&aes);
 

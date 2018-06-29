@@ -53,6 +53,10 @@ class OpenThread(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
+    # Used for reference firmware version control for Test Harness.
+    # This variable will be updated to match the OpenThread reference firmware officially released.
+    firmwarePrefix = "OPENTHREAD/201806"
+
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -210,7 +214,7 @@ class OpenThread(IThci):
                         break
                 else:
                     retry_times -= 1
-                    time.sleep(0.1)
+                    time.sleep(0.2)
             if line != 'Done':
                 raise Exception('%s: failed to find end of response' % self.port)
             logging.info('%s: send command[%s] done!', self.port, cmd)
@@ -487,7 +491,14 @@ class OpenThread(IThci):
         Returns:
             IPv6 address dotted-quad format
         """
-        return strIp6Prefix[0:4] + '::'
+        prefix1 = strIp6Prefix.rstrip('L')
+        prefix2 = prefix1.lstrip("0x")
+        hexPrefix = str(prefix2).ljust(16,'0')
+        hexIter = iter(hexPrefix)
+        finalMac = ':'.join(a + b + c + d for a,b,c,d in zip(hexIter, hexIter,hexIter,hexIter))
+        prefix = str(finalMac)
+        strIp6Prefix = prefix[:20]
+        return strIp6Prefix +':'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
@@ -640,9 +651,17 @@ class OpenThread(IThci):
         """initialize the serial port with baudrate, timeout parameters"""
         print '%s call intialize' % self.port
         try:
+            self.deviceConnected = False
+
             # init serial port
             self._connect()
-            self.deviceConnected = True
+
+            if self.firmwarePrefix in self.UIStatusMsg:
+                self.deviceConnected = True
+            else:
+                self.UIStatusMsg = "Firmware Not Matching Expecting " + self.firmwarePrefix + " Now is " + self.UIStatusMsg
+                ModuleHelper.WriteIntoDebugLogger("Err: OpenThread device Firmware not matching..")
+
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
             self.deviceConnected = False
@@ -1824,8 +1843,9 @@ class OpenThread(IThci):
                 return globalAddrs[0]
             else:
                 for line in globalAddrs:
-                    if line.startswith(filterByPrefix):
-                        return line
+                    fullIp = ModuleHelper.GetFullIpv6Address(line)
+                    if fullIp.startswith(filterByPrefix):
+                        return fullIp
                 print 'no global address matched'
                 return None
         except Exception, e:

@@ -477,8 +477,8 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     // Timestamp
-    sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
     sReceiveFrame.mLength = (uint8_t)(aBufLength - 1);
@@ -637,8 +637,8 @@ void radioProcessFrame(otInstance *aInstance)
         goto exit;
     }
 
-    sReceiveFrame.mRssi = -20;
-    sReceiveFrame.mLqi  = OT_RADIO_LQI_NONE;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = -20;
+    sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
 
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))

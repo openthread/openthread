@@ -122,7 +122,7 @@ otError Commissioner::Stop(void)
     GetNetif().GetCoapSecure().Stop();
 
     mState = OT_COMMISSIONER_STATE_DISABLED;
-    GetNotifier().SetFlags(OT_CHANGED_COMMISSIONER_STATE);
+    GetNotifier().Signal(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     ClearJoiners();
     mTransmitAttempts = 0;
@@ -681,7 +681,7 @@ exit:
         }
     }
 
-    GetNotifier().SetFlags(OT_CHANGED_COMMISSIONER_STATE);
+    GetNotifier().Signal(OT_CHANGED_COMMISSIONER_STATE);
 }
 
 otError Commissioner::SendKeepAlive(void)

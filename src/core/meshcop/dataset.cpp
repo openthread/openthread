@@ -522,12 +522,11 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 
 otError Dataset::ApplyConfiguration(Instance &aInstance) const
 {
-    ThreadNetif &netif    = aInstance.GetThreadNetif();
-    Notifier &   notifier = aInstance.GetNotifier();
-    Mac::Mac &   mac      = netif.GetMac();
-    otError      error    = OT_ERROR_NONE;
-    const Tlv *  cur      = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *  end      = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+    ThreadNetif &netif = aInstance.GetThreadNetif();
+    Mac::Mac &   mac   = netif.GetMac();
+    otError      error = OT_ERROR_NONE;
+    const Tlv *  cur   = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv *  end   = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
     VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
 
@@ -539,63 +538,30 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         {
             uint8_t channel = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
 
-            if (mac.GetPanChannel() != channel)
+            error = mac.SetPanChannel(channel);
+
+            if (error != OT_ERROR_NONE)
             {
-                error = mac.SetPanChannel(channel);
-
-                if (error != OT_ERROR_NONE)
-                {
-                    otLogWarnMeshCoP(aInstance, "DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)",
-                                     channel, otThreadErrorToString(error));
-                    ExitNow();
-                }
-
-                notifier.SetFlags(OT_CHANGED_THREAD_CHANNEL);
+                otLogWarnMeshCoP(aInstance, "DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)",
+                                 channel, otThreadErrorToString(error));
+                ExitNow();
             }
 
             break;
         }
 
         case Tlv::kPanId:
-        {
-            uint16_t panid = static_cast<const PanIdTlv *>(cur)->GetPanId();
-
-            if (mac.GetPanId() != panid)
-            {
-                mac.SetPanId(panid);
-                notifier.SetFlags(OT_CHANGED_THREAD_PANID);
-            }
-
+            mac.SetPanId(static_cast<const PanIdTlv *>(cur)->GetPanId());
             break;
-        }
 
         case Tlv::kExtendedPanId:
-        {
-            const ExtendedPanIdTlv *extpanid = static_cast<const ExtendedPanIdTlv *>(cur);
-
-            if (memcmp(mac.GetExtendedPanId(), extpanid->GetExtendedPanId(), OT_EXT_PAN_ID_SIZE) != 0)
-            {
-                mac.SetExtendedPanId(extpanid->GetExtendedPanId());
-                notifier.SetFlags(OT_CHANGED_THREAD_EXT_PANID);
-            }
-
+            mac.SetExtendedPanId(static_cast<const ExtendedPanIdTlv *>(cur)->GetExtendedPanId());
             break;
-        }
 
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
-            otNetworkName         networkName;
-
-            memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
-            networkName.m8[name->GetLength()] = '\0';
-
-            if (strcmp(networkName.m8, mac.GetNetworkName()) != 0)
-            {
-                mac.SetNetworkName(networkName.m8);
-                notifier.SetFlags(OT_CHANGED_THREAD_NETWORK_NAME);
-            }
-
+            mac.SetNetworkName(name->GetNetworkName(), name->GetLength());
             break;
         }
 

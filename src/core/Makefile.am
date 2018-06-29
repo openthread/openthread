@@ -115,6 +115,7 @@ SOURCES_COMMON                      = \
     api/link_raw_api.cpp              \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
+    api/network_time_api.cpp          \
     api/server_api.cpp                \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
@@ -196,6 +197,7 @@ SOURCES_COMMON                      = \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     thread/tmf_proxy.cpp              \
+    thread/time_sync_service.cpp      \
     thread/topology.cpp               \
     utils/channel_manager.cpp         \
     utils/channel_monitor.cpp         \
@@ -327,6 +329,7 @@ HEADERS_COMMON                      = \
     thread/thread_tlvs.hpp            \
     thread/thread_uri_paths.hpp       \
     thread/tmf_proxy.hpp              \
+    thread/time_sync_service.hpp      \
     thread/topology.hpp               \
     utils/channel_manager.hpp         \
     utils/channel_monitor.hpp         \
