@@ -1051,7 +1051,7 @@ exit:
 }
 #endif // OPENTHREAD_ENABLE_SERVICE
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                              const Message &     aMessage,
@@ -1059,7 +1059,8 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                              otError             aError,
                                              uint16_t &          aOffset,
                                              Mac::Address &      aMeshSource,
-                                             Mac::Address &      aMeshDest)
+                                             Mac::Address &      aMeshDest,
+                                             otLogLevel          aLogLevel)
 {
     otError                error             = OT_ERROR_FAILED;
     bool                   hasFragmentHeader = false;
@@ -1083,8 +1084,8 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 
     shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
 
-    otLogInfoMac(
-        GetInstance(), "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s",
+    otLogMac(
+        GetInstance(), aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s",
         MessageActionToString(aAction, aError), aMessage.GetLength(),
         (aMacAddress == NULL) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
         (aMacAddress == NULL) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
@@ -1095,8 +1096,8 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 
     if (hasFragmentHeader)
     {
-        otLogInfoMac(GetInstance(), "\tFrag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
-                     fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
+        otLogMac(GetInstance(), aLogLevel, "\tFrag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
+                 fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
     }
@@ -1183,7 +1184,8 @@ exit:
 void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
                                     uint16_t            aOffset,
                                     const Mac::Address &aMeshSource,
-                                    const Mac::Address &aMeshDest)
+                                    const Mac::Address &aMeshDest,
+                                    otLogLevel          aLogLevel)
 {
     uint16_t    checksum;
     uint16_t    sourcePort;
@@ -1193,10 +1195,10 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
     SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
                                             destPort));
 
-    otLogInfoMac(GetInstance(), "\tIPv6 %s msg, chksum:%04x, prio:%s",
-                 Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), checksum, MessagePriorityToString(aMessage));
+    otLogMac(GetInstance(), aLogLevel, "\tIPv6 %s msg, chksum:%04x, prio:%s",
+             Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), checksum, MessagePriorityToString(aMessage));
 
-    LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort);
+    LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
 
 exit:
     return;
@@ -1205,13 +1207,15 @@ exit:
 void MeshForwarder::LogMeshMessage(MessageAction       aAction,
                                    const Message &     aMessage,
                                    const Mac::Address *aMacAddress,
-                                   otError             aError)
+                                   otError             aError,
+                                   otLogLevel          aLogLevel)
 {
     uint16_t     offset;
     Mac::Address meshSource;
     Mac::Address meshDest;
 
-    SuccessOrExit(LogMeshFragmentHeader(aAction, aMessage, aMacAddress, aError, offset, meshSource, meshDest));
+    SuccessOrExit(
+        LogMeshFragmentHeader(aAction, aMessage, aMacAddress, aError, offset, meshSource, meshDest, aLogLevel));
 
     // When log action is `kMessageTransmit` we do not include
     // the IPv6 header info in the logs, as the same info is
@@ -1220,13 +1224,13 @@ void MeshForwarder::LogMeshMessage(MessageAction       aAction,
 
     VerifyOrExit(aAction != kMessageTransmit);
 
-    LogMeshIpHeader(aMessage, offset, meshSource, meshDest);
+    LogMeshIpHeader(aMessage, offset, meshSource, meshDest, aLogLevel);
 
 exit:
     return;
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 } // namespace ot
 

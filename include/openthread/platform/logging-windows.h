@@ -442,6 +442,11 @@
 // USESUFFIX(otLogDebgMacErr, ", %!otError!", EXP);
 // end_wpp
 
+// begin_wpp config
+// USEPREFIX (otLogMac, "[%p]MAC%!SPACE!", &CTX);
+// otLogMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// end_wpp
+
 // ==CORE==
 
 // begin_wpp config
