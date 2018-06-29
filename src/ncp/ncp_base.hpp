@@ -175,16 +175,6 @@ public:
 protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
-    template <spinel_prop_key_t aKey> otError HandlePropertyGet(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertySet(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertyInsert(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertyRemove(void);
-
-    otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
-
     /**
      * This struct represents a spinel response entry.
      *
@@ -360,34 +350,27 @@ protected:
     // (they expect `aHeader` as an input argument) and are processed separately in
     // `HandleCommandPropertySet()`.
 
-    // --------------------------------------------------------------------------
-    // Common Properties
-
-    // --------------------------------------------------------------------------
-    // Raw Link API Properties
-
-    // --------------------------------------------------------------------------
-    // MTD (or FTD) Properties
-
-    // --------------------------------------------------------------------------
-    // FTD Only Properties
+    template <spinel_prop_key_t aKey> otError HandlePropertyGet(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertySet(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertyInsert(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertyRemove(void);
 
     // --------------------------------------------------------------------------
     // Property "set" handlers for special properties for which the spinel
     // response needs to be created from within the set handler.
 
-    otError SetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
 #if OPENTHREAD_ENABLE_DIAG
-    otError SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    otError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    otError SetPropertyHandler_STREAM_RAW(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
 #if OPENTHREAD_ENABLE_LEGACY
