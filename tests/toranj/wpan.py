@@ -424,6 +424,28 @@ class Node(object):
 
         return False
 
+    def find_ip6_address_with_prefix(self, prefix):
+        """Find an IPv6 address on node matching a given prefix.
+           `prefix` should be an string containing the prefix.
+           Returns a string containing the IPv6 address matching the prefix or empty string if no address found.
+        """
+        if len(prefix) > 2 and prefix[-1] == ':' and prefix[-2] == ':':
+            prefix = prefix[:-1]
+        all_addrs = parse_list(self.get(WPAN_IP6_ALL_ADDRESSES))
+        matched_addr = [addr for addr in all_addrs if addr.startswith(prefix)]
+        return matched_addr[0] if len(matched_addr) >= 1 else ''
+
+    def add_ip6_address_on_interface(self, address):
+        """Adds an IPv6 interface on the network interface.
+           `address` should be string containing the IPv6 address
+           NOTE: this method uses linux `ip` command.
+        """
+        cmd = 'ip -6 addr add '+ address + ' dev ' + self.interface_name
+        if self._verbose:
+            _log('$ Node{} \'{}\')'.format(self._index, cmd))
+
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+
     #------------------------------------------------------------------------------------------------------------------
     # class methods
 
@@ -511,7 +533,7 @@ class Node(object):
         return receiver
 
     def _remove_recver(self, recvr):
-        # Removes a receiver from weak dictionary - called when the receiver is done and its scoket is closed
+        # Removes a receiver from weak dictionary - called when the receiver is done and its socket is closed
         local_port = recvr.local_port
         if local_port in self._recvers:
             del self._recvers[local_port]
