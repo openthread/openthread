@@ -71,12 +71,12 @@ extern "C" {
 #define _OT_LEVEL_DEBG_PREFIX "[DEBG]"
 #define _OT_REGION_SUFFIX ": "
 #else
-#define _OT_LEVEL_NONE_PREFIX
-#define _OT_LEVEL_CRIT_PREFIX
-#define _OT_LEVEL_WARN_PREFIX
-#define _OT_LEVEL_NOTE_PREFIX
-#define _OT_LEVEL_INFO_PREFIX
-#define _OT_LEVEL_DEBG_PREFIX
+#define _OT_LEVEL_NONE_PREFIX ""
+#define _OT_LEVEL_CRIT_PREFIX ""
+#define _OT_LEVEL_WARN_PREFIX ""
+#define _OT_LEVEL_NOTE_PREFIX ""
+#define _OT_LEVEL_INFO_PREFIX ""
+#define _OT_LEVEL_DEBG_PREFIX ""
 #define _OT_REGION_SUFFIX
 #endif
 
@@ -789,6 +789,18 @@ extern "C" {
  * @param[in]  ...          Arguments for the format specification.
  *
  */
+
+/**
+ * @def otLogMac
+ *
+ * This method generates a log with a given log level for the MAC region.
+ *
+ * @param[in]  aInstance    A reference to the OpenThread instance.
+ * @param[in]  aLogLevel    A log level.
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
 #if OPENTHREAD_CONFIG_LOG_MAC == 1
 #define otLogCritMac(aInstance, aFormat, ...) \
     otLogCrit(&aInstance, OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX aFormat, ##__VA_ARGS__)
@@ -803,6 +815,16 @@ extern "C" {
 #define otLogDebgMacErr(aInstance, aError, aFormat, ...)                                                               \
     otLogWarn(aInstance, OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
               ##__VA_ARGS__)
+#define otLogMac(aInstance, aLogLevel, aFormat, ...)                                                      \
+    do                                                                                                    \
+    {                                                                                                     \
+        if (aInstance.GetLogLevel() >= aLogLevel)                                                         \
+        {                                                                                                 \
+            _otLogFormatter(&aInstance, aLogLevel, OT_LOG_REGION_MAC, "%s" _OT_REGION_MAC_PREFIX aFormat, \
+                            otLogLevelToPrefixString(aLogLevel), ##__VA_ARGS__);                          \
+        }                                                                                                 \
+    } while (false)
+
 #else
 #define otLogCritMac(aInstance, aFormat, ...)
 #define otLogWarnMac(aInstance, aFormat, ...)
@@ -810,6 +832,7 @@ extern "C" {
 #define otLogInfoMac(aInstance, aFormat, ...)
 #define otLogDebgMac(aInstance, aFormat, ...)
 #define otLogDebgMacErr(aInstance, aError, aFormat, ...)
+#define otLogMac(aInstance, aLogLevel, aFormat, ...)
 #endif
 
 /**
@@ -2071,6 +2094,16 @@ void otDump(otInstance * aIntsance,
             const char * aId,
             const void * aBuf,
             const size_t aLength);
+
+/**
+ * This function converts a log level to a prefix string for appending to log message.
+ *
+ * @param[in]  aLogLevel    A log level.
+ *
+ * @returns A C string representing the log level.
+ *
+ */
+const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 
 /**
  * Local/private macro to format the log message
