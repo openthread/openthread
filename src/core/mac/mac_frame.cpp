@@ -891,8 +891,7 @@ exit:
 
 uint8_t Frame::FindPayloadIndex(void) const
 {
-    uint16_t fcf   = GetFrameControlField();
-    uint8_t  index = SkipSecurityHeaderIndex();
+    uint8_t index = SkipSecurityHeaderIndex();
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     uint8_t *cur    = NULL;
     uint8_t *footer = GetFooter();
@@ -929,7 +928,7 @@ uint8_t Frame::FindPayloadIndex(void) const
 #endif
 
     // Command ID
-    if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    if ((GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         index += kCommandIdSize;
     }
