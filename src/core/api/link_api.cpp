@@ -65,6 +65,27 @@ exit:
     return error;
 }
 
+uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetMac().GetSupportedChannelMask().GetMask();
+}
+
+otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
+                 error = OT_ERROR_INVALID_STATE);
+
+    instance.GetThreadNetif().GetMac().SetSupportedChannelMask(aChannelMask);
+
+exit:
+    return error;
+}
+
 const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

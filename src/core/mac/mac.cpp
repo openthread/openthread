@@ -170,6 +170,7 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
+    , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
     , mSendHead(NULL)
     , mSendTail(NULL)
     , mReceiveHead(NULL)
@@ -249,7 +250,14 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
     mScanContext  = aContext;
     mScanDuration = aScanDuration;
     mScanChannel  = ChannelMask::kChannelIteratorFirst;
-    mScanChannelMask.SetMask((aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels);
+
+    if (aScanChannels == 0)
+    {
+        aScanChannels = OT_RADIO_SUPPORTED_CHANNELS;
+    }
+
+    mScanChannelMask.SetMask(aScanChannels);
+    mScanChannelMask.Intersect(mSupportedChannelMask);
     StartOperation(aScanOperation);
 }
 
@@ -513,6 +521,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(mPanChannel != aChannel, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
 
@@ -536,6 +545,8 @@ otError Mac::SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
+
     VerifyOrExit(mRadioChannelAcquisitionId && aAcquisitionId == mRadioChannelAcquisitionId,
                  error = OT_ERROR_INVALID_STATE);
 
@@ -575,6 +586,20 @@ otError Mac::ReleaseRadioChannel(void)
 
 exit:
     return error;
+}
+
+void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
+{
+    ChannelMask newMask = aMask;
+
+    newMask.Intersect(OT_RADIO_SUPPORTED_CHANNELS);
+    VerifyOrExit(newMask != mSupportedChannelMask, GetNotifier().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
+
+    mSupportedChannelMask = newMask;
+    GetNotifier().Signal(OT_CHANGED_SUPPORTED_CHANNEL_MASK);
+
+exit:
+    return;
 }
 
 otError Mac::SetNetworkName(const char *aNetworkName)

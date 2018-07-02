@@ -651,6 +651,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         // MTD (or FTD) Properties (Set Handler)
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>;
+        break;
     case SPINEL_PROP_MAC_DATA_POLL_PERIOD:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>;
         break;
