@@ -1027,6 +1027,12 @@ void Mac::StartCsmaBackoff(void)
         // If the radio supports CSMA back off logic, immediately schedule the send.
         BeginTransmit();
     }
+#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+    else if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
+    {
+        BeginTransmit();
+    }
+#endif
     else
     {
         uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
@@ -1137,17 +1143,15 @@ void Mac::BeginTransmit(void)
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
 
-#if OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
-
-    // Disable CCA for the last attempt
+#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
     {
-        sendFrame.SetIsCcaEnabled(false);
+        sendFrame.SetCsmaCaEnabled(false);
     }
     else
 #endif
     {
-        sendFrame.SetIsCcaEnabled(true);
+        sendFrame.SetCsmaCaEnabled(true);
     }
 
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
