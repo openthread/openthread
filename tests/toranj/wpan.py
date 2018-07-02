@@ -435,16 +435,31 @@ class Node(object):
         matched_addr = [addr for addr in all_addrs if addr.startswith(prefix)]
         return matched_addr[0] if len(matched_addr) >= 1 else ''
 
-    def add_ip6_address_on_interface(self, address):
+    def add_ip6_address_on_interface(self, address, prefix_len=64):
         """Adds an IPv6 interface on the network interface.
-           `address` should be string containing the IPv6 address
+           `address` should be string containing the IPv6 address.
+           `prefix_len` is an `int` specifying the prefix length.
            NOTE: this method uses linux `ip` command.
         """
-        cmd = 'ip -6 addr add '+ address + ' dev ' + self.interface_name
+        cmd = 'ip -6 addr add '+ address + '/{} dev '.format(prefix_len) + self.interface_name
         if self._verbose:
             _log('$ Node{} \'{}\')'.format(self._index, cmd))
 
         result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        return result
+
+    def remove_ip6_address_on_interface(self, address, prefix_len=64):
+        """Removes an IPv6 interface on the network interface.
+           `address` should be string containing the IPv6 address.
+           `prefix_len` is an `int` specifying the prefix length.
+           NOTE: this method uses linux `ip` command.
+        """
+        cmd = 'ip -6 addr del '+ address + '/{} dev '.format(prefix_len) + self.interface_name
+        if self._verbose:
+            _log('$ Node{} \'{}\')'.format(self._index, cmd))
+
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        return result
 
     #------------------------------------------------------------------------------------------------------------------
     # class methods
@@ -900,7 +915,7 @@ class OnMeshPrefix(object):
         self._config     = (data[6] == '1')
         self._dhcp       = (data[7] == '1')
         self._slaac      = (data[8] == '1')
-        self._preffered  = (data[9] == '1')
+        self._preferred  = (data[9] == '1')
         self._priority   = (data[10])
 
     @property
@@ -937,8 +952,8 @@ class OnMeshPrefix(object):
     def is_slaac(self):
         return self._slaac
 
-    def is_preffered(self):
-        return self._preffered
+    def is_preferred(self):
+        return self._preferred
 
     def __repr__(self):
         return 'OnMeshPrefix({})'.format(self.__dict__)
