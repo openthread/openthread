@@ -230,7 +230,7 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-        if (aFrame->mInfo.mTxInfo.mIsCcaEnabled)
+        if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
         {
             // Start the transmission backoff logic
             StartCsmaBackoff();
