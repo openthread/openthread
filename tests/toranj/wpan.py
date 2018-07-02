@@ -438,7 +438,8 @@ class Node(object):
                 try:
                     node.leave()
                 except subprocess.CalledProcessError as e:
-                    _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
+                    if (node._verbose):
+                        _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
                     if time.time() - start_time > wait_time:
                         print 'Took too long to init all nodes ({}>{} sec)'.format(time.time() - start_time, wait_time)
                         raise
