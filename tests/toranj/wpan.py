@@ -361,16 +361,34 @@ class Node(object):
                             (' -d' if default_route else '') +
                             (' -P {}'.format(priority) if priority is not None else ''))
 
-    def add_route(self, route_prefix, prefix_len_in_bytes=None, priority=None):
+    def add_prefix(self, prefix, prefix_len=None, priority=None, stable=True, on_mesh=False, slaac=False, dhcp=False,
+            configure=False, default_route=False, preferred=False):
+        return self.wpanctl('add-prefix ' + prefix +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+                            (' -P {}'.format(priority) if priority is not None else '') +
+                            (' -s' if stable else '') +
+                            (' -f' if preferred else '') +
+                            (' -a' if slaac else '') +
+                            (' -d' if dhcp else '') +
+                            (' -c' if configure else '') +
+                            (' -r' if default_route else '') +
+                            (' -o' if on_mesh else ''))
+
+    def remove_prefix(self, prefix, prefix_len=None):
+        return self.wpanctl('remove-prefix ' + prefix +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else ''))
+
+    def add_route(self, route_prefix, prefix_len=None, priority=None, stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
         return self.wpanctl('add-route ' + route_prefix +
-                            (' -l {}'.format(prefix_len_in_bytes) if prefix_len_in_bytes is not None else '') +
-                            (' -p {}'.format(priority) if priority is not None else ''))
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+                            (' -p {}'.format(priority) if priority is not None else '') +
+                            ('' if stable else '-n'))
 
-    def remove_route(self, route_prefix, prefix_len_in_bytes=None, priority=None):
+    def remove_route(self, route_prefix, prefix_len=None, priority=None, stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
         return self.wpanctl('remove-route ' + route_prefix +
-                            (' -l {}'.format(prefix_len_in_bytes) if prefix_len_in_bytes is not None else '') +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
                             (' -p {}'.format(priority) if priority is not None else ''))
 
     #------------------------------------------------------------------------------------------------------------------
@@ -878,7 +896,7 @@ class OnMeshPrefix(object):
         self._config     = (data[6] == '1')
         self._dhcp       = (data[7] == '1')
         self._slaac      = (data[8] == '1')
-        self._preffered  = (data[9] == '1')
+        self._preferred  = (data[9] == '1')
         self._priority   = (data[10])
 
     @property
@@ -915,8 +933,8 @@ class OnMeshPrefix(object):
     def is_slaac(self):
         return self._slaac
 
-    def is_preffered(self):
-        return self._preffered
+    def is_preferred(self):
+        return self._preferred
 
     def __repr__(self):
         return 'OnMeshPrefix({})'.format(self.__dict__)
