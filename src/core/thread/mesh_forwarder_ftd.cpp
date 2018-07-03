@@ -336,23 +336,18 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
     }
 }
 
-void MeshForwarder::RemoveResponseMessages(uint8_t aSubType, const Ip6::Address &aDestination)
+void MeshForwarder::RemoveDataResponseMessages(void)
 {
     Ip6::Header ip6Header;
 
     for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
     {
-        if (message->GetSubType() != aSubType)
+        if (message->GetSubType() != Message::kSubTypeMleDataResponse)
         {
             continue;
         }
 
         message->Read(0, sizeof(ip6Header), &ip6Header);
-
-        if (!aDestination.IsMulticast() && ip6Header.GetDestination() != aDestination)
-        {
-            continue;
-        }
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {

@@ -985,13 +985,10 @@ public:
     const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
 
     /**
-     * This method frees MLE Response message from Delayed Message Queue if any.
-     *
-     * @param[in]  aSubType      The message sub-type to remove.
-     * @param[in]  aDestination  The destination IPv6 address of the message.
+     * This method frees multicast MLE Data Response from Delayed Message Queue if any.
      *
      */
-    void RemoveDelayedResponseMessage(uint8_t aSubType, const Ip6::Address &aDestination);
+    void RemoveDelayedDataResponseMessage(void);
 
     /**
      * This method converts a device role into a human-readable string.

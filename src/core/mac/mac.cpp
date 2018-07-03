@@ -1155,7 +1155,7 @@ void Mac::BeginTransmit(void)
         sendFrame.SetCsmaCaEnabled(true);
     }
 
-    if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
+    if (mCsmaAttempts == 0 && mTransmitAttempts == 0 && mBroadcastTransmitCount == 0)
     {
         switch (mOperation)
         {
@@ -1419,15 +1419,6 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         mCounters.mTxErrBusyChannel++;
     }
 
-    if (dstAddr.IsBroadcast())
-    {
-        mCounters.mTxBroadcast++;
-    }
-    else
-    {
-        mCounters.mTxUnicast++;
-    }
-
     if (ackRequested)
     {
         mCounters.mTxAckRequested++;
@@ -1442,9 +1433,11 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         mCounters.mTxNoAckRequested++;
     }
 
-    // Determine whether to re-transmit the broadcast frame.
     if (dstAddr.IsBroadcast())
     {
+        mCounters.mTxBroadcast++;
+
+        // Determine whether to re-transmit the broadcast frame.
         mBroadcastTransmitCount++;
         if (mBroadcastTransmitCount < kTxNumBcast)
         {
@@ -1453,6 +1446,10 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         }
 
         mBroadcastTransmitCount = 0;
+    }
+    else
+    {
+        mCounters.mTxUnicast++;
     }
 
     // Determine next action based on current operation.

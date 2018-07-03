@@ -167,13 +167,10 @@ public:
     void RemoveMessages(Child &aChild, uint8_t aSubType);
 
     /**
-     * This method frees unicast/multicast MLE Response messages from Send Message Queue if any.
-     *
-     * @param[in]  aSubType      The message sub-type to remove.
-     * @param[in]  aDestination  The destination IPv6 address of the message.
+     * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
      *
      */
-    void RemoveResponseMessages(uint8_t aSubType, const Ip6::Address &aDestination);
+    void RemoveDataResponseMessages(void);
 
     /**
      * This method evicts the first indirect message in the indirect send queue.
