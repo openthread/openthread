@@ -40,7 +40,9 @@ extern "C" {
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 #include <pty.h>
+#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -246,6 +248,7 @@ static void LogIfFail(otInstance *aInstance, const char *aText, otError aError)
     OT_UNUSED_VARIABLE(aError);
 }
 
+#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 static int OpenPty(const char *aFile, const char *aConfig)
 {
     int fd  = -1;
@@ -308,6 +311,7 @@ static int OpenPty(const char *aFile, const char *aConfig)
 exit:
     return fd;
 }
+#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 
 static int OpenUart(const char *aRadioFile, const char *aRadioConfig)
 {
@@ -391,10 +395,12 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     {
         mSockFd = OpenUart(aRadioFile, aRadioConfig);
     }
+#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
     {
         mSockFd = OpenPty(aRadioFile, aRadioConfig);
     }
+#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 
     VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     error = SendReset();
@@ -621,7 +627,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 #if !OPENTHREAD_ENABLE_DIAG
-        otPlatRadioEnergyScanDone(aInstance, maxRssi);
+        otPlatRadioEnergyScanDone(mInstance, maxRssi);
 #endif
     }
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)

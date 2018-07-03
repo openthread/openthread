@@ -44,15 +44,17 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
+    int i = 0;
+    // Restart the process using execvp.
+    char *argv[gArgumentsCount + 1];
+
 #if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     gPlatformPseudoResetWasRequested = true;
     sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
 
 #else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    // Restart the process using execvp.
-    char *argv[gArgumentsCount + 1];
 
-    for (int i = 0; i < gArgumentsCount; ++i)
+    for (i = 0; i < gArgumentsCount; ++i)
     {
         argv[i] = gArguments[i];
     }
