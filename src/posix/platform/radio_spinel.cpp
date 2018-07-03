@@ -969,7 +969,6 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    otError        error = OT_ERROR_NONE;
     struct timeval end;
     struct timeval now;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
@@ -1030,13 +1029,11 @@ otError RadioSpinel::WaitResponse(void)
         }
     } while (mWaitingTid || !mIsReady);
 
-    error = mError;
-
 exit:
-    LogIfFail(mInstance, "Error waiting response", error);
+    LogIfFail(mInstance, "Error waiting response", mError);
     // This indicates end of waiting repsonse.
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
-    return error;
+    return mError;
 }
 
 spinel_tid_t RadioSpinel::GetNextTid(void)
@@ -1412,13 +1409,13 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
-    sRadioSpinel.SetShortAddress(aAddress);
+    SuccessOrDie(sRadioSpinel.SetShortAddress(aAddress));
     OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    sRadioSpinel.SetPromiscuous(aEnable);
+    SuccessOrDie(sRadioSpinel.SetPromiscuous(aEnable));
     OT_UNUSED_VARIABLE(aInstance);
 }
 
