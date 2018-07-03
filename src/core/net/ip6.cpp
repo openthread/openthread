@@ -798,11 +798,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, header, nextHeader, forward, receive));
 
-    if (!mForwardingEnabled && aNetif != NULL)
-    {
-        forward = false;
-    }
-
     // process IPv6 Payload
     if (receive)
     {
@@ -841,6 +836,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
 
         if (aNetif != NULL)
         {
+            VerifyOrExit(mForwardingEnabled, forward = false);
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 
