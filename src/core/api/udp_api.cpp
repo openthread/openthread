@@ -39,17 +39,20 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_QOS
 otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
+#if OPENTHREAD_ENABLE_QOS
     // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
     if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
     {
         aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
     }
+#else
+    aPriority = static_cast<otMessagePriority>(Ip6::kDefaultUdpMessagePriority);
+#endif
 
     message = instance.GetIp6().GetUdp().NewMessage(0, static_cast<uint8_t>(aPriority));
 
@@ -60,19 +63,11 @@ otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurity
 
     return message;
 }
-#endif
 
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetIp6().GetUdp().NewMessage(0);
-
-    if (message)
-    {
-        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
-    }
-
-    return message;
+    return otUdpNewMessageWithPriority(aInstance, aLinkSecurityEnabled,
+                                       static_cast<otMessagePriority>(Ip6::kDefaultUdpMessagePriority));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)

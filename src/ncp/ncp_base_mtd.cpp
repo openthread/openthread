@@ -1406,29 +1406,21 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
 {
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    const uint8_t *metaPtr  = NULL;
-    uint16_t       metaLen  = 0;
-    otMessage *    message  = NULL;
-    otError        error    = OT_ERROR_NONE;
-
-#if OPENTHREAD_ENABLE_QOS
+    const uint8_t *   framePtr = NULL;
+    uint16_t          frameLen = 0;
+    const uint8_t *   metaPtr  = NULL;
+    uint16_t          metaLen  = 0;
+    otMessage *       message  = NULL;
+    otError           error    = OT_ERROR_NONE;
     otMessagePriority priority;
-#endif
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
 
-#if OPENTHREAD_ENABLE_QOS
     SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &priority));
 
     // STREAM_NET requires layer 2 security.
     message = otIp6NewMessageWithPriority(mInstance, true, priority);
-#else
-    // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, true);
-#endif
 
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -2228,29 +2220,21 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_REQUIRE_JOIN_EXIS
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(void)
 {
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    const uint8_t *metaPtr  = NULL;
-    uint16_t       metaLen  = 0;
-    otMessage *    message  = NULL;
-    otError        error    = OT_ERROR_NONE;
-
-#if OPENTHREAD_ENABLE_QOS
+    const uint8_t *   framePtr = NULL;
+    uint16_t          frameLen = 0;
+    const uint8_t *   metaPtr  = NULL;
+    uint16_t          metaLen  = 0;
+    otMessage *       message  = NULL;
+    otError           error    = OT_ERROR_NONE;
     otMessagePriority priority;
-#endif
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
 
-#if OPENTHREAD_ENABLE_QOS
     SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &priority));
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
     message = otIp6NewMessageWithPriority(mInstance, false, priority);
-#else
-    // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, false);
-#endif
 
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 

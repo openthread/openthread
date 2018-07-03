@@ -360,7 +360,7 @@ public:
      * If the message is already queued in a priority queue, changing the priority ensures to
      * update the message in the associated queue.
      *
-     * @param[in]  aPrority  The message priority level.
+     * @param[in]  aPriority  The message priority level.
      *
      * @retval OT_ERROR_NONE           Successfully set the priority for the message.
      * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.

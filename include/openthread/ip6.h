@@ -243,7 +243,7 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
  * @param[in]   aInstance     A pointer to an OpenThread instance.
  * @param[in]   aDatagram     A pointer to an IPv6 datagram.
  * @param[in]   aDatagramLen  The length of the IPv6 datagram.
- * @param[out]  aPrority      A pointer to the priority level of the IPv6 datagram.
+ * @param[out]  aPriority     A pointer to the priority level of the IPv6 datagram.
  *
  * @retval OT_ERROR_NONE   Successfully get the priority level.
  * @retval OT_ERROR_PARSE  Malformed IPv6 header.
@@ -255,20 +255,21 @@ otError otIp6GetPriority(otInstance *       aInstance,
                          uint16_t           aDatagramLen,
                          otMessagePriority *aPriority);
 
-#if OPENTHREAD_ENABLE_QOS
 /**
  * Allocate a new message buffer for sending an IPv6 message.
+ * Note: Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control
+ * messages. If the pamameter aPriority is set to OT_MESSAGE_PRIORITY_HIGH, it will be
+ * converted to OT_MESSAGE_PRIORITY_MEDIUM automatically.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
- * @param[in]  aPrority              The message priority level.
+ * @param[in]  aPriority             The message priority level.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
 otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
-#endif
 
 /**
  * Allocate a new message buffer for sending an IPv6 message.

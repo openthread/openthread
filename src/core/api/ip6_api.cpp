@@ -210,17 +210,20 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_QOS
 otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
+#if OPENTHREAD_ENABLE_QOS
     // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
     if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
     {
         aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
     }
+#else
+    aPriority = static_cast<otMessagePriority>(Ip6::kDefaultIp6MessagePriority);
+#endif
 
     message = instance.GetMessagePool().New(Message::kTypeIp6, 0, static_cast<uint8_t>(aPriority));
 
@@ -231,19 +234,11 @@ otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurity
 
     return message;
 }
-#endif
 
 otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0);
-
-    if (message)
-    {
-        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
-    }
-
-    return message;
+    return otIp6NewMessageWithPriority(aInstance, aLinkSecurityEnabled,
+                                       static_cast<otMessagePriority>(Ip6::kDefaultIp6MessagePriority));
 }
 
 otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)

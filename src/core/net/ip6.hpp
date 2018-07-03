@@ -95,6 +95,15 @@ namespace Ip6 {
  */
 
 /**
+ * Default Ipv6 message priority level
+ *
+ */
+enum
+{
+    kDefaultIp6MessagePriority = Message::kPriorityLow,
+};
+
+/**
  * This class implements the core IPv6 message processing.
  *
  */
@@ -143,7 +152,7 @@ public:
      *
      * @param[in]   aDatagram     A pointer to an IPv6 datagram.
      * @param[in]   aDatagramLen  The length of the IPv6 datagram.
-     * @param[out]  aPrority      A reference to the priority level of the IPv6 datagram.
+     * @param[out]  aPriority     A reference to the priority level of the IPv6 datagram.
      *
      * @retval OT_ERROR_NONE   Successfully get the priority level.
      * @retval OT_ERROR_PARSE  Malformed IPv6 header.
@@ -413,11 +422,6 @@ public:
     static const char *IpProtoToString(IpProto aIpProto);
 
 private:
-    enum
-    {
-        kDefaultIp6MessagePriority = Message::kPriorityLow,
-    };
-
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 

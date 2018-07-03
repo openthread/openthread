@@ -57,6 +57,15 @@ class Udp;
  */
 
 /**
+ * Default Udp message priority level
+ *
+ */
+enum
+{
+    kDefaultUdpMessagePriority = Message::kPriorityLow,
+};
+
+/**
  * This class implements a UDP/IPv6 socket.
  *
  */
@@ -285,11 +294,6 @@ public:
 #endif // OPENTHREAD_ENABLE_UDP_PROXY
 
 private:
-    enum
-    {
-        kDefaultUdpMessagePriority = Message::kPriorityLow,
-    };
-
     enum
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry

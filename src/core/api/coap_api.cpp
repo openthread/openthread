@@ -138,7 +138,6 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
 
-#if OPENTHREAD_ENABLE_QOS
 otMessage *otCoapNewMessageWithPriority(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -146,28 +145,27 @@ otMessage *otCoapNewMessageWithPriority(otInstance *aInstance, const otCoapHeade
 
     VerifyOrExit(aHeader != NULL, message = NULL);
 
+#if OPENTHREAD_ENABLE_QOS
     // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
     if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
     {
         aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
     }
+#else
+    aPriority = static_cast<otMessagePriority>(Coap::kDefaultCoapMessagePriority);
+#endif
 
     message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)),
                                                        static_cast<uint8_t>(aPriority));
+
 exit:
     return message;
 }
-#endif
 
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
-    Message * message;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aHeader != NULL, message = NULL);
-    message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
-exit:
-    return message;
+    return otCoapNewMessageWithPriority(aInstance, aHeader,
+                                        static_cast<otMessagePriority>(Coap::kDefaultCoapMessagePriority));
 }
 
 otError otCoapSendRequest(otInstance *          aInstance,

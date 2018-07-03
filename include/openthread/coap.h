@@ -452,13 +452,15 @@ const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader);
  */
 const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 
-#if OPENTHREAD_ENABLE_QOS
 /**
  * This function creates a new message with a CoAP header.
+ * Note: Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control
+ * messages. If the pamameter aPriority is set to OT_MESSAGE_PRIORITY_HIGH, it will be
+ * converted to OT_MESSAGE_PRIORITY_MEDIUM automatically.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
- * @param[in]  aPrority   The message priority level.
+ * @param[in]  aPriority  The message priority level.
  *
  * @returns A pointer to the message or NULL if failed to allocate message.
  *
@@ -466,7 +468,6 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 otMessage *otCoapNewMessageWithPriority(otInstance *        aInstance,
                                         const otCoapHeader *aHeader,
                                         otMessagePriority   aPriority);
-#endif
 
 /**
  * This function creates a new message with a CoAP header.
