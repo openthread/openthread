@@ -1412,6 +1412,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     uint8_t    cost;
     uint8_t    linkQuality;
     bool       update;
+    bool       changed = false;
 
     neighbor = mRouterTable.GetRouter(aRouterId);
     VerifyOrExit(neighbor != NULL);
@@ -1483,6 +1484,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
                             router->SetNextHop(aRouterId);
                             router->SetCost(cost);
+                            changed = true;
                         }
                         else if (nextHop == neighbor)
                         {
@@ -1494,6 +1496,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                             router->SetNextHop(kInvalidRouterId);
                             router->SetCost(0);
                             router->SetLastHeard(TimerMilli::GetNow());
+                            changed = true;
                         }
                     }
                 }
@@ -1506,6 +1509,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     {
                         router->SetNextHop(aRouterId);
                         router->SetCost(cost);
+                        changed = true;
                     }
                 }
 
@@ -1514,17 +1518,21 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
             routeCount++;
         }
+
+        changed |= update;
+
     } while (update);
 
 #if (OPENTHREAD_CONFIG_LOG_MLE && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO))
 
+    VerifyOrExit(changed);
     otLogInfoMle(GetInstance(), "Route table updated");
 
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
         Router &router = *iter.GetRouter();
 
-        otLogInfoMle(GetInstance(), "%x -> %x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
+        otLogInfoMle(GetInstance(), "\t%04x -> %04x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
                      GetRloc16(router.GetNextHop()), router.GetCost(), mRouterTable.GetLinkCost(router),
                      router.GetLinkInfo().GetLinkQuality(), router.GetLinkQualityOut());
     }
