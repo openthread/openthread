@@ -32,10 +32,17 @@ The IPv6 address of the leader. (Note: May change to long and short address of l
 
 ### PROP 81: PROP_THREAD_PARENT
 * Type: Read-Only
-* Packed-Encoding: `ES`
-* LADDR, SADDR
+* Packed-Encoding: `ESLccCC`
 
-The long address and short address of the parent of this node.
+Information about parent of this node.
+
+*  `E`: Extended address
+*  `S`: RLOC16
+*  `L`: Age (seconds since last heard from)
+*  `c`: Average RSS (in dBm)
+*  `c`: Last RSSI (in dBm)
+*  `C`: Link Quality In
+*  `C`: Link Quality Out
 
 ### PROP 82: PROP_THREAD_CHILD_TABLE
 * Type: Read-Only
