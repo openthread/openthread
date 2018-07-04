@@ -165,6 +165,21 @@ OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
 OTAPI otError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
 
 /**
+ * This function updates the fields of existing Operational Dataset with new configuration.
+ *
+ * @param[in]     aInstance    A pointer to an OpenThread instance.
+ * @param[in]     aDatasetFrom A pointer to Operational Dataset with updated configuartion.
+ * @param[inout]  aDatasetTo   A pointer to existing Operational Dataset, which to be updated by @p aDatasetFrom.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetFrom or @p aDatasetTo was NULL.
+ *
+ */
+otError otDatasetUpdate(otInstance *                aInstance,
+                        const otOperationalDataset *aDatasetFrom,
+                        otOperationalDataset *      aDatasetTo);
+
+/**
  * @}
  *
  */

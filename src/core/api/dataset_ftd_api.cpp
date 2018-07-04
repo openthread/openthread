@@ -121,4 +121,91 @@ otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTime
     return instance.GetThreadNetif().GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
 
+otError otDatasetUpdate(otInstance *                aInstance,
+                        const otOperationalDataset *aDatasetFrom,
+                        otOperationalDataset *      aDatasetTo)
+{
+    otError error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    VerifyOrExit(aDatasetFrom != NULL && aDatasetTo != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    if (aDatasetFrom->mIsActiveTimestampSet)
+    {
+        aDatasetTo->mActiveTimestamp      = aDatasetFrom->mActiveTimestamp;
+        aDatasetTo->mIsActiveTimestampSet = true;
+    }
+
+    if (aDatasetFrom->mIsPendingTimestampSet)
+    {
+        aDatasetTo->mPendingTimestamp      = aDatasetFrom->mPendingTimestamp;
+        aDatasetTo->mIsPendingTimestampSet = true;
+    }
+
+    if (aDatasetFrom->mIsMasterKeySet)
+    {
+        memcpy(aDatasetTo->mMasterKey.m8, aDatasetFrom->mMasterKey.m8, sizeof(aDatasetTo->mMasterKey));
+        aDatasetTo->mIsMasterKeySet = true;
+    }
+
+    if (aDatasetFrom->mIsNetworkNameSet)
+    {
+        memcpy(aDatasetTo->mNetworkName.m8, aDatasetFrom->mNetworkName.m8, sizeof(aDatasetTo->mNetworkName));
+        aDatasetTo->mIsNetworkNameSet = true;
+    }
+
+    if (aDatasetFrom->mIsExtendedPanIdSet)
+    {
+        memcpy(aDatasetTo->mExtendedPanId.m8, aDatasetFrom->mExtendedPanId.m8, sizeof(aDatasetTo->mExtendedPanId));
+        aDatasetTo->mIsExtendedPanIdSet = true;
+    }
+
+    if (aDatasetFrom->mIsMeshLocalPrefixSet)
+    {
+        memcpy(aDatasetTo->mMeshLocalPrefix.m8, aDatasetFrom->mMeshLocalPrefix.m8,
+               sizeof(aDatasetTo->mMeshLocalPrefix));
+        aDatasetTo->mIsMeshLocalPrefixSet = true;
+    }
+
+    if (aDatasetFrom->mIsDelaySet)
+    {
+        aDatasetTo->mDelay      = aDatasetFrom->mDelay;
+        aDatasetTo->mIsDelaySet = true;
+    }
+
+    if (aDatasetFrom->mIsPanIdSet)
+    {
+        aDatasetTo->mPanId      = aDatasetFrom->mPanId;
+        aDatasetTo->mIsPanIdSet = true;
+    }
+
+    if (aDatasetFrom->mIsChannelSet)
+    {
+        aDatasetTo->mChannel      = aDatasetFrom->mChannel;
+        aDatasetTo->mIsChannelSet = true;
+    }
+
+    if (aDatasetFrom->mIsPSKcSet)
+    {
+        memcpy(aDatasetTo->mPSKc.m8, aDatasetFrom->mPSKc.m8, sizeof(aDatasetTo->mPSKc));
+        aDatasetTo->mIsPSKcSet = true;
+    }
+
+    if (aDatasetFrom->mIsSecurityPolicySet)
+    {
+        aDatasetTo->mSecurityPolicy.mRotationTime = aDatasetFrom->mSecurityPolicy.mRotationTime;
+        aDatasetTo->mSecurityPolicy.mFlags        = aDatasetFrom->mSecurityPolicy.mFlags;
+        aDatasetTo->mIsSecurityPolicySet          = true;
+    }
+
+    if (aDatasetFrom->mIsChannelMaskPage0Set)
+    {
+        aDatasetTo->mChannelMaskPage0      = aDatasetFrom->mChannelMaskPage0;
+        aDatasetTo->mIsChannelMaskPage0Set = true;
+    }
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD

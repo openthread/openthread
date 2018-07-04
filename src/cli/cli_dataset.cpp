@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
+#include <openthread/commissioner.h>
 #include <openthread/openthread.h>
 
 #if OPENTHREAD_FTD
@@ -316,6 +317,28 @@ otError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
+#ifndef OTDLL
+    {
+        otOperationalDataset dataset;
+        memset(&dataset, 0, sizeof(dataset));
+
+        if (otCommissionerGetState(aInstance) == OT_COMMISSIONER_STATE_DISABLED)
+        {
+            if (strcmp(argv[0], "active") == 0)
+            {
+                otDatasetGetActive(aInstance, &dataset);
+            }
+            else if (strcmp(argv[0], "pending") == 0)
+            {
+                otDatasetGetPending(aInstance, &dataset);
+            }
+            otDatasetUpdate(aInstance, &sDataset, &dataset);
+        }
+
+        sDataset = dataset;
+    }
+#endif
+
     if (strcmp(argv[0], "active") == 0)
     {
         SuccessOrExit(error = otDatasetSetActive(aInstance, &sDataset));
@@ -464,6 +487,20 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&dataset, 0, sizeof(dataset));
+
+#ifndef OTDLL
+    if (otCommissionerGetState(aInstance) == OT_COMMISSIONER_STATE_DISABLED)
+    {
+        if (strcmp(argv[0], "active") == 0)
+        {
+            otDatasetGetActive(aInstance, &dataset);
+        }
+        else if (strcmp(argv[0], "pending") == 0)
+        {
+            otDatasetGetPending(aInstance, &dataset);
+        }
+    }
+#endif
 
     for (uint8_t index = 1; index < argc; index++)
     {

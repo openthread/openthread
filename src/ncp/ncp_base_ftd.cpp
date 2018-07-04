@@ -33,6 +33,8 @@
 #include "ncp_base.hpp"
 #include <openthread/config.h>
 
+#include <openthread/commissioner.h>
+
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
 #include <openthread/channel_manager.h>
 #endif
@@ -826,7 +828,21 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ACTIVE_DATASET
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
 
+#ifndef OTDLL
+    otOperationalDataset newDataset;
+
+    SuccessOrExit(error = DecodeOperationalDataset(newDataset, NULL, NULL));
+
+    if (otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_DISABLED &&
+        otDatasetGetActive(mInstance, &dataset) == OT_ERROR_NONE)
+    {
+        otDatasetUpdate(mInstance, &newDataset, &dataset);
+    }
+
+#else
     SuccessOrExit(error = DecodeOperationalDataset(dataset, NULL, NULL));
+#endif
+
     error = otDatasetSetActive(mInstance, &dataset);
 
 exit:
@@ -837,8 +853,21 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASE
 {
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
+#ifndef OTDLL
+    otOperationalDataset newDataset;
 
+    SuccessOrExit(error = DecodeOperationalDataset(newDataset, NULL, NULL));
+
+    if (otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_DISABLED &&
+        otDatasetGetPending(mInstance, &dataset) == OT_ERROR_NONE)
+    {
+        otDatasetUpdate(mInstance, &newDataset, &dataset);
+    }
+
+#else
     SuccessOrExit(error = DecodeOperationalDataset(dataset, NULL, NULL));
+#endif
+
     error = otDatasetSetPending(mInstance, &dataset);
 
 exit:
@@ -852,7 +881,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_ACTIVE_DA
     const uint8_t *      extraTlvs;
     uint8_t              extraTlvsLength;
 
+#ifndef OTDLL
+    otOperationalDataset newDataset;
+
+    SuccessOrExit(error = DecodeOperationalDataset(newDataset, &extraTlvs, &extraTlvsLength));
+
+    if (otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_DISABLED &&
+        otDatasetGetActive(mInstance, &dataset) == OT_ERROR_NONE)
+    {
+        otDatasetUpdate(mInstance, &newDataset, &dataset);
+    }
+#else
     SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
+#endif
+
     error = otDatasetSendMgmtActiveSet(mInstance, &dataset, extraTlvs, extraTlvsLength);
 
 exit:
@@ -865,8 +907,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_PENDING_D
     otOperationalDataset dataset;
     const uint8_t *      extraTlvs;
     uint8_t              extraTlvsLength;
+#ifndef OTDLL
+    otOperationalDataset newDataset;
 
+    SuccessOrExit(error = DecodeOperationalDataset(newDataset, &extraTlvs, &extraTlvsLength));
+
+    if (otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_DISABLED &&
+        otDatasetGetPending(mInstance, &dataset) == OT_ERROR_NONE)
+    {
+        otDatasetUpdate(mInstance, &newDataset, &dataset);
+    }
+#else
     SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
+#endif
+
     error = otDatasetSendMgmtPendingSet(mInstance, &dataset, extraTlvs, extraTlvsLength);
 
 exit:
