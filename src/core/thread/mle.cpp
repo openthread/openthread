@@ -1460,10 +1460,6 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         {
             netif.GetMle().HandleNetworkDataUpdateRouter();
         }
-        else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
-        {
-            mSendChildUpdateRequest.Post();
-        }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
         netif.GetNetworkDataLocal().SendServerDataNotification();
