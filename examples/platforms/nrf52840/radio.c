@@ -227,6 +227,12 @@ void nrf5RadioDeinit(void)
     nrf_802154_deinit();
 }
 
+void nrf5RadioPseudoReset(void)
+{
+    nrf_802154_sleep();
+    sPendingEvents = 0;
+}
+
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
     (void)aInstance;
