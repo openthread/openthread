@@ -923,7 +923,20 @@ typedef enum {
 
     SPINEL_PROP_THREAD__BEGIN      = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
-    SPINEL_PROP_THREAD_PARENT      = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
+
+    /// Thread Parent Info
+    /** Format: `ESLccCC` - Read only
+     *
+     *  `E`: Extended address
+     *  `S`: RLOC16
+     *  `L`: Age (seconds since last heard from)
+     *  `c`: Average RSS (in dBm)
+     *  `c`: Last RSSI (in dBm)
+     *  `C`: Link Quality In
+     *  `C`: Link Quality Out
+     *
+     */
+    SPINEL_PROP_THREAD_PARENT = SPINEL_PROP_THREAD__BEGIN + 1,
 
     /// Thread Child Table
     /** Format: [A(t(ESLLCCcCc)] - Read only

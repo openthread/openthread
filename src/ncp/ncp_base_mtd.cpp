@@ -568,8 +568,26 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PARENT>(void)
 
     if (error == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = mEncoder.WriteEui64(parentInfo.mExtAddress)); // Parent's extended address
-        SuccessOrExit(error = mEncoder.WriteUint16(parentInfo.mRloc16));
+        if (parentInfo.mLinkEstablished)
+        {
+            int8_t averageRssi;
+            int8_t lastRssi;
+
+            otThreadGetParentAverageRssi(mInstance, &averageRssi);
+            otThreadGetParentLastRssi(mInstance, &lastRssi);
+
+            SuccessOrExit(error = mEncoder.WriteEui64(parentInfo.mExtAddress));
+            SuccessOrExit(error = mEncoder.WriteUint16(parentInfo.mRloc16));
+            SuccessOrExit(error = mEncoder.WriteUint32(parentInfo.mAge));
+            SuccessOrExit(error = mEncoder.WriteInt8(averageRssi));
+            SuccessOrExit(error = mEncoder.WriteInt8(lastRssi));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityIn));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityOut));
+        }
+        else
+        {
+            SuccessOrExit(error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_ITEM_NOT_FOUND));
+        }
     }
     else
     {
