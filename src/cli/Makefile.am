@@ -120,6 +120,11 @@ CPPFLAGS_COMMON =                     \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
+if OPENTHREAD_POSIX
+CPPFLAGS_COMMON +=                    \
+    -DOPENTHREAD_POSIX=1              \
+    $(NULL)
+endif
 
 libopenthread_cli_mtd_a_CPPFLAGS =    \
     -DOPENTHREAD_MTD=1                \

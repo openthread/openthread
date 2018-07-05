@@ -215,10 +215,10 @@ private:
     void ProcessEidCache(int argc, char *argv[]);
 #endif
     void ProcessEui64(int argc, char *argv[]);
-#ifdef OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_POSIX
     void ProcessExit(int argc, char *argv[]);
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
     void ProcessLogFilename(int argc, char *argv[]);
 #endif
     void    ProcessExtAddress(int argc, char *argv[]);
@@ -266,6 +266,9 @@ private:
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif
     void ProcessNetworkName(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    void ProcessNetworkTime(int argc, char *argv[]);
+#endif
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
 #if OPENTHREAD_FTD

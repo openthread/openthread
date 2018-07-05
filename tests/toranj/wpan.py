@@ -361,16 +361,34 @@ class Node(object):
                             (' -d' if default_route else '') +
                             (' -P {}'.format(priority) if priority is not None else ''))
 
-    def add_route(self, route_prefix, prefix_len_in_bytes=None, priority=None):
+    def add_prefix(self, prefix, prefix_len=None, priority=None, stable=True, on_mesh=False, slaac=False, dhcp=False,
+            configure=False, default_route=False, preferred=False):
+        return self.wpanctl('add-prefix ' + prefix +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+                            (' -P {}'.format(priority) if priority is not None else '') +
+                            (' -s' if stable else '') +
+                            (' -f' if preferred else '') +
+                            (' -a' if slaac else '') +
+                            (' -d' if dhcp else '') +
+                            (' -c' if configure else '') +
+                            (' -r' if default_route else '') +
+                            (' -o' if on_mesh else ''))
+
+    def remove_prefix(self, prefix, prefix_len=None):
+        return self.wpanctl('remove-prefix ' + prefix +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else ''))
+
+    def add_route(self, route_prefix, prefix_len=None, priority=None, stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
         return self.wpanctl('add-route ' + route_prefix +
-                            (' -l {}'.format(prefix_len_in_bytes) if prefix_len_in_bytes is not None else '') +
-                            (' -p {}'.format(priority) if priority is not None else ''))
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+                            (' -p {}'.format(priority) if priority is not None else '') +
+                            ('' if stable else '-n'))
 
-    def remove_route(self, route_prefix, prefix_len_in_bytes=None, priority=None):
+    def remove_route(self, route_prefix, prefix_len=None, priority=None, stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
         return self.wpanctl('remove-route ' + route_prefix +
-                            (' -l {}'.format(prefix_len_in_bytes) if prefix_len_in_bytes is not None else '') +
+                            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
                             (' -p {}'.format(priority) if priority is not None else ''))
 
     #------------------------------------------------------------------------------------------------------------------
@@ -424,6 +442,43 @@ class Node(object):
 
         return False
 
+    def find_ip6_address_with_prefix(self, prefix):
+        """Find an IPv6 address on node matching a given prefix.
+           `prefix` should be an string containing the prefix.
+           Returns a string containing the IPv6 address matching the prefix or empty string if no address found.
+        """
+        if len(prefix) > 2 and prefix[-1] == ':' and prefix[-2] == ':':
+            prefix = prefix[:-1]
+        all_addrs = parse_list(self.get(WPAN_IP6_ALL_ADDRESSES))
+        matched_addr = [addr for addr in all_addrs if addr.startswith(prefix)]
+        return matched_addr[0] if len(matched_addr) >= 1 else ''
+
+    def add_ip6_address_on_interface(self, address, prefix_len=64):
+        """Adds an IPv6 interface on the network interface.
+           `address` should be string containing the IPv6 address.
+           `prefix_len` is an `int` specifying the prefix length.
+           NOTE: this method uses linux `ip` command.
+        """
+        cmd = 'ip -6 addr add '+ address + '/{} dev '.format(prefix_len) + self.interface_name
+        if self._verbose:
+            _log('$ Node{} \'{}\')'.format(self._index, cmd))
+
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        return result
+
+    def remove_ip6_address_on_interface(self, address, prefix_len=64):
+        """Removes an IPv6 interface on the network interface.
+           `address` should be string containing the IPv6 address.
+           `prefix_len` is an `int` specifying the prefix length.
+           NOTE: this method uses linux `ip` command.
+        """
+        cmd = 'ip -6 addr del '+ address + '/{} dev '.format(prefix_len) + self.interface_name
+        if self._verbose:
+            _log('$ Node{} \'{}\')'.format(self._index, cmd))
+
+        result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        return result
+
     #------------------------------------------------------------------------------------------------------------------
     # class methods
 
@@ -438,7 +493,8 @@ class Node(object):
                 try:
                     node.leave()
                 except subprocess.CalledProcessError as e:
-                    _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
+                    if (node._verbose):
+                        _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
                     if time.time() - start_time > wait_time:
                         print 'Took too long to init all nodes ({}>{} sec)'.format(time.time() - start_time, wait_time)
                         raise
@@ -510,7 +566,7 @@ class Node(object):
         return receiver
 
     def _remove_recver(self, recvr):
-        # Removes a receiver from weak dictionary - called when the receiver is done and its scoket is closed
+        # Removes a receiver from weak dictionary - called when the receiver is done and its socket is closed
         local_port = recvr.local_port
         if local_port in self._recvers:
             del self._recvers[local_port]
@@ -877,7 +933,7 @@ class OnMeshPrefix(object):
         self._config     = (data[6] == '1')
         self._dhcp       = (data[7] == '1')
         self._slaac      = (data[8] == '1')
-        self._preffered  = (data[9] == '1')
+        self._preferred  = (data[9] == '1')
         self._priority   = (data[10])
 
     @property
@@ -914,8 +970,8 @@ class OnMeshPrefix(object):
     def is_slaac(self):
         return self._slaac
 
-    def is_preffered(self):
-        return self._preffered
+    def is_preferred(self):
+        return self._preferred
 
     def __repr__(self):
         return 'OnMeshPrefix({})'.format(self.__dict__)

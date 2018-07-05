@@ -194,7 +194,23 @@ public:
     void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
+     * This method returns the active log level.
+     *
+     * @returns The log level.
+     *
+     */
+    otLogLevel GetLogLevel(void) const
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    {
+        return GetDynamicLogLevel();
+    }
+#else
+    {
+        return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+    }
+#endif
+
     /**
      * This method finalizes the OpenThread instance.
      *
@@ -203,6 +219,7 @@ public:
      */
     void Finalize(void);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
      *

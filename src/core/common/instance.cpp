@@ -168,21 +168,23 @@ void Instance::AfterInit(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::Finalize(void)
 {
     VerifyOrExit(mIsInitialized == true);
 
     mIsInitialized = false;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
     IgnoreReturnValue(otLinkSetEnabled(this, false));
+#endif
 
 exit:
     return;
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::FactoryReset(void)
 {
     GetSettings().Wipe();

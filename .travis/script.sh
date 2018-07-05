@@ -221,14 +221,14 @@ set -x
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -301,14 +301,14 @@ set -x
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
 
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -432,6 +432,13 @@ set -x
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
+[ $BUILD_TARGET != posix-app-cli ] || {
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+    make -f src/posix/Makefile-posix || die
+    OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
+}
+
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
@@ -440,6 +447,13 @@ set -x
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
     make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
+}
+
+[ $BUILD_TARGET != posix-app-ncp ] || {
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+    make -f src/posix/Makefile-posix || die
+    OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {

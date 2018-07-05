@@ -495,15 +495,17 @@
 #endif
 
 /**
- * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+ * @def NRF_802154_TX_STARTED_NOTIFY_ENABLED
  *
- * Define as 1 to enable AES usage in interrupt context.
+ * If notification of started transmission should be enabled in the driver.
  *
- * @note A software AES is enabled to support AES usage in interrupt context.
+ * @note This feature is enabled by default if OpenThread time synchronization service is enabled.
  *
  */
-#ifndef NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
+#ifndef NRF_802154_TX_STARTED_NOTIFY_ENABLED
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define NRF_802154_TX_STARTED_NOTIFY_ENABLED 1
+#endif
 #endif
 
 #endif // PLATFORM_CONFIG_H_

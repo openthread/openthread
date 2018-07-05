@@ -40,7 +40,7 @@
 
 #include "common/timer.hpp"
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT || \
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF || \
     OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 #define OPENTHREAD_LINKRAW_TIMER_REQUIRED 1
 #else
@@ -246,7 +246,7 @@ private:
     {
         kTimerReasonNone,
         kTimerReasonAckTimeout,
-        kTimerReasonRetransmitTimeout,
+        kTimerReasonCsmaBackoffComplete,
         kTimerReasonEnergyScanComplete,
     };
 
@@ -266,9 +266,13 @@ private:
     uint8_t mTransmitAttempts;
     uint8_t mCsmaAttempts;
 
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+
     void StartCsmaBackoff(void);
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 

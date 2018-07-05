@@ -676,12 +676,12 @@ exit:
     switch (error)
     {
     case OT_ERROR_NO_BUFS:
-        otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
+        otLogWarnIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
                      aMessage.GetLength());
         break;
 
     case OT_ERROR_DROP:
-        otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
+        otLogNoteIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
                      aMessage.GetLength());
         break;
 
@@ -798,11 +798,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, header, nextHeader, forward, receive));
 
-    if (!mForwardingEnabled && aNetif != NULL)
-    {
-        forward = false;
-    }
-
     // process IPv6 Payload
     if (receive)
     {
@@ -841,6 +836,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
 
         if (aNetif != NULL)
         {
+            VerifyOrExit(mForwardingEnabled, forward = false);
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 

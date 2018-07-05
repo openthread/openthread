@@ -30,10 +30,12 @@
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>
+#include <openthread/platform/time.h>
 
 #include "utils/code_utils.h"
 
@@ -108,6 +110,11 @@ static struct RadioMessage sAckMessage;
 static otRadioFrame        sReceiveFrame;
 static otRadioFrame        sTransmitFrame;
 static otRadioFrame        sAckFrame;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+static otRadioIeInfo sTransmitIeInfo;
+static otRadioIeInfo sReceivedIeInfo;
+#endif
 
 static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
@@ -423,6 +430,14 @@ void platformRadioInit(void)
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    sTransmitFrame.mIeInfo = &sTransmitIeInfo;
+    sReceiveFrame.mIeInfo  = &sReceivedIeInfo;
+#else
+    sTransmitFrame.mIeInfo = NULL;
+    sReceiveFrame.mIeInfo  = NULL;
+#endif
 }
 
 void platformRadioDeinit(void)
@@ -560,6 +575,10 @@ void radioReceive(otInstance *aInstance)
     sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    sReceiveFrame.mIeInfo->mTimestamp = otPlatTimeGet();
+#endif
+
     sReceiveFrame.mLength = (uint8_t)(rval - 1);
 
     if (sAckWait && sTransmitFrame.mChannel == sReceiveMessage.mChannel && isFrameTypeAck(sReceiveFrame.mPsdu) &&
@@ -579,6 +598,25 @@ void radioReceive(otInstance *aInstance)
 
 void radioSendMessage(otInstance *aInstance)
 {
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
+    {
+        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
+        uint64_t time   = otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset;
+
+        *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
+
+        *(++timeIe) = (uint8_t)(time & 0xff);
+        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
+        {
+            time        = time >> 8;
+            *(++timeIe) = (uint8_t)(time & 0xff);
+        }
+
+        otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
+    }
+#endif
+
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);

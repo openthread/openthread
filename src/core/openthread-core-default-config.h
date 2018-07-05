@@ -949,6 +949,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
  *
  * Define to 1 if you want to enable software energy scanning logic.
@@ -1593,13 +1605,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+ * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
- * Define as 1 to disable CCA on the last transmit attempt
+ * Define as 1 to disable CSMA-CA on the last transmit attempt
  *
  */
-#ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
-#define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT 0
+#ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#define OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT 0
 #endif
 
 /**
@@ -1630,6 +1642,56 @@
  */
 #ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+ *
+ * Define as 1 to enable the time synchronization service feature.
+ *
+ * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+ *
+ * Define as 1 to require time synchronization when attaching to a network. If the device is router capable
+ * and cannot find a neighboring router supporting time synchronization, the device will form a new partition.
+ * If the device is not router capable, the device will remain an orphan.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+#define OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
+ *
+ * Specifies the default period of time synchronization, in seconds.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
+#define OPENTHREAD_CONFIG_TIME_SYNC_PERIOD 30
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
+ *
+ * Specifies the default XTAL threshold for a device to become Router in time synchronization enabled network, in PPM.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
+#define OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD 300
 #endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

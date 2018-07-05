@@ -93,25 +93,46 @@ typedef enum otRadioCaps {
 } otRadioCaps;
 
 /**
+ * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
+ */
+typedef struct otRadioIeInfo
+{
+    uint8_t  mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
+    uint8_t  mTimeSyncSeq;       ///< The Time sync sequence.
+    uint64_t mTimestamp;         ///< The time in microseconds when the SFD was received.
+    int64_t  mNetworkTimeOffset; ///< The time offset to the Thread network time.
+} otRadioIeInfo;
+
+/**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
 {
-    uint8_t *mPsdu;      ///< The PSDU.
-    uint8_t  mLength;    ///< Length of the PSDU.
-    uint8_t  mChannel;   ///< Channel used to transmit/receive the frame.
-    bool     mDidTx : 1; ///< Set to true if this frame sent from the radio. Ignored by radio driver.
+    uint8_t *      mPsdu;      ///< The PSDU.
+    uint8_t        mLength;    ///< Length of the PSDU.
+    uint8_t        mChannel;   ///< Channel used to transmit/receive the frame.
+    bool           mDidTx : 1; ///< Set to true if this frame sent from the radio. Ignored by radio driver.
+    otRadioIeInfo *mIeInfo;    ///< The pointer to the Header IE(s) related information.
 
+    /**
+     * The union of transmit and receive information for a radio frame.
+     */
     union
     {
+        /**
+         * Structure representing radio frame transmit information.
+         */
         struct
         {
-            uint8_t mMaxTxAttempts; ///< Max number of transmit attempts for an outbound frame.
-            bool    mIsARetx : 1; ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
-            bool    mIsCcaEnabled : 1; ///< Set to true if CCA must be enabled for this packet. False otherwise.
-            const uint8_t *mAesKey;    ///< The key used for frame encryption and authentication (AES CCM).
+            uint8_t        mMaxTxAttempts;     ///< Max number of transmit attempts for an outbound frame.
+            bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
+            bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
         } mTxInfo;
 
+        /**
+         * Structure representing radio frame receive information.
+         */
         struct
         {
             int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
@@ -554,6 +575,19 @@ extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanM
  * @returns The radio receive sensitivity value in dBm.
  */
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
+
+/**
+ * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
+ * this happens when the frame includes Header IE(s) that were updated before transmission.
+ *
+ * @note This function will be called from interrupt context, it should only read/write data passed in
+ *       via @p aFrame, but should not read/write any state within OpenThread.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aFrame      The radio frame which neeeds to process transmit security.
+ *
+ */
+extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
  * @}

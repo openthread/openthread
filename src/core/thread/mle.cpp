@@ -36,6 +36,7 @@
 #include "mle.hpp"
 
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -55,6 +56,7 @@
 #include "thread/key_manager.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/time_sync_service.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -296,7 +298,7 @@ void Mle::SetRole(otDeviceRole aRole)
 {
     VerifyOrExit(aRole != mRole, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ROLE));
 
-    otLogInfoMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
+    otLogNoteMle(GetInstance(), "Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
 
     mRole = aRole;
     GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
@@ -635,7 +637,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         delay += jitter;
     }
 
-    otLogInfoMle(GetInstance(), "Attach attempt %d unsuccessful, will try again in %u.%03u seconds", mAttachCounter,
+    otLogNoteMle(GetInstance(), "Attach attempt %d unsuccessful, will try again in %u.%03u seconds", mAttachCounter,
                  delay / 1000, delay % 1000);
 
 exit:
@@ -1349,6 +1351,38 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+otError Mle::AppendTimeRequest(Message &aMessage)
+{
+    TimeRequestTlv tlv;
+
+    tlv.Init();
+
+    return aMessage.Append(&tlv, sizeof(tlv));
+}
+
+otError Mle::AppendTimeParameter(Message &aMessage)
+{
+    TimeParameterTlv tlv;
+
+    tlv.Init();
+    tlv.SetTimeSyncPeriod(GetNetif().GetTimeSync().GetTimeSyncPeriod());
+    tlv.SetXtalThreshold(GetNetif().GetTimeSync().GetXtalThreshold());
+
+    return aMessage.Append(&tlv, sizeof(tlv));
+}
+
+otError Mle::AppendXtalAccuracy(Message &aMessage)
+{
+    XtalAccuracyTlv tlv;
+
+    tlv.Init();
+    tlv.SetXtalAccuracy(otPlatTimeGetXtalAccuracy());
+
+    return aMessage.Append(&tlv, sizeof(tlv));
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
 otError Mle::AppendActiveTimestamp(Message &aMessage)
 {
     ThreadNetif &             netif = GetNetif();
@@ -1557,12 +1591,12 @@ void Mle::HandleAttachTimer(void)
     case kAttachStateStart:
         if (mAttachCounter > 0)
         {
-            otLogInfoMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter,
+            otLogNoteMle(GetInstance(), "Attempt to attach - attempt %d, %s %s", mAttachCounter,
                          AttachModeToString(mParentRequestMode), ReattachStateToString(mReattachState));
         }
         else
         {
-            otLogInfoMle(GetInstance(), "Attempt to attach - %s %s", AttachModeToString(mParentRequestMode),
+            otLogNoteMle(GetInstance(), "Attempt to attach - %s %s", AttachModeToString(mParentRequestMode),
                          ReattachStateToString(mReattachState));
         }
 
@@ -1845,6 +1879,9 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
     SuccessOrExit(error = AppendVersion(*message));
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    SuccessOrExit(error = AppendTimeRequest(*message));
+#endif
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xff02);
@@ -2604,6 +2641,12 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     case Header::kCommandAnnounce:
         HandleAnnounce(aMessage, aMessageInfo);
         break;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    case Header::kCommandTimeSync:
+        mle.HandleTimeSync(aMessage, aMessageInfo);
+        break;
+#endif
     }
 
 exit:
@@ -2947,6 +2990,9 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     MleFrameCounterTlv      mleFrameCounter;
     ChallengeTlv            challenge;
     Mac::ExtAddress         extAddress;
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    TimeParameterTlv timeParameter;
+#endif
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -3049,6 +3095,27 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     {
         mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
     }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
+    // Time Parameter
+    if (Tlv::GetTlv(aMessage, Tlv::kTimeParameter, sizeof(timeParameter), timeParameter) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(timeParameter.IsValid());
+
+        GetNetif().GetTimeSync().SetTimeSyncPeriod(timeParameter.GetTimeSyncPeriod());
+        GetNetif().GetTimeSync().SetXtalThreshold(timeParameter.GetXtalThreshold());
+    }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+    else
+    {
+        // If the time sync feature is required, don't choose the parent which doesn't support it.
+        ExitNow();
+    }
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
@@ -3157,6 +3224,14 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     {
         netif.GetPendingDataset().ClearNetwork();
     }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    // Sync to Thread network time
+    if (aMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ)
+    {
+        GetNetif().GetTimeSync().HandleTimeSyncMessage(aMessage);
+    }
+#endif
 
     // Parent Attach Success
     mAttachTimer.Stop();
@@ -3424,7 +3499,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
         SetAttachState(kAttachStateProcessAnnounce);
         mAttachTimer.Start(kAnnounceProcessTimeout);
 
-        otLogInfoMle(GetInstance(), "Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
+        otLogNoteMle(GetInstance(), "Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
@@ -3455,7 +3530,7 @@ void Mle::ProcessAnnounce(void)
 
     assert(mAttachState == kAttachStateProcessAnnounce);
 
-    otLogInfoMle(GetInstance(), "Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
+    otLogNoteMle(GetInstance(), "Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
 
     Stop(/* aClearNetworkDatasets */ false);
 
@@ -3736,7 +3811,7 @@ otError Mle::InformPreviousParent(void)
 
     SuccessOrExit(error = netif.GetIp6().SendDatagram(*message, messageInfo, Ip6::kProtoNone));
 
-    otLogInfoMle(GetInstance(), "Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
+    otLogNoteMle(GetInstance(), "Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
 
 exit:
 

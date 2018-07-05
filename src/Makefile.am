@@ -35,6 +35,7 @@ DIST_SUBDIRS                            = \
     cli                                   \
     ncp                                   \
     diag                                  \
+    posix                                 \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -55,12 +56,17 @@ if OPENTHREAD_ENABLE_DIAG
 SUBDIRS                                += diag
 endif
 
+if OPENTHREAD_ENABLE_POSIX_APP
+SUBDIRS                                += posix
+endif
+
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
     cli                                   \
     core                                  \
     ncp                                   \
+    posix                                 \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

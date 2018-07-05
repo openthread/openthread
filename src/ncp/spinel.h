@@ -452,6 +452,7 @@ enum
     SPINEL_CAP_ERROR_RATE_TRACKING     = (SPINEL_CAP_OPENTHREAD__BEGIN + 4),
     SPINEL_CAP_CHANNEL_MANAGER         = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
     SPINEL_CAP_OPENTHREAD_LOG_METADATA = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
+    SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN       = 1024,
@@ -922,7 +923,20 @@ typedef enum {
 
     SPINEL_PROP_THREAD__BEGIN      = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
-    SPINEL_PROP_THREAD_PARENT      = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
+
+    /// Thread Parent Info
+    /** Format: `ESLccCC` - Read only
+     *
+     *  `E`: Extended address
+     *  `S`: RLOC16
+     *  `L`: Age (seconds since last heard from)
+     *  `c`: Average RSS (in dBm)
+     *  `c`: Last RSSI (in dBm)
+     *  `C`: Link Quality In
+     *  `C`: Link Quality Out
+     *
+     */
+    SPINEL_PROP_THREAD_PARENT = SPINEL_PROP_THREAD__BEGIN + 1,
 
     /// Thread Child Table
     /** Format: [A(t(ESLLCCcCc)] - Read only
@@ -1566,6 +1580,37 @@ typedef enum {
      *
      */
     SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL = SPINEL_PROP_OPENTHREAD__BEGIN + 6,
+
+    /// Thread network time.
+    /** Format: `Xc` - Read only
+     *
+     * Data per item is:
+     *
+     *  `X`: The Thread network time, in microseconds.
+     *  `c`: Time synchronization status.
+     *
+     */
+    SPINEL_PROP_THREAD_NETWORK_TIME = SPINEL_PROP_OPENTHREAD__BEGIN + 7,
+
+    /// Thread time synchronization period
+    /** Format: `S` - Read-Write
+     *
+     * Data per item is:
+     *
+     *  `S`: Time synchronization period, in seconds.
+     *
+     */
+    SPINEL_PROP_TIME_SYNC_PERIOD = SPINEL_PROP_OPENTHREAD__BEGIN + 8,
+
+    /// Thread Time synchronization XTAL accuracy threshold for Router
+    /** Format: `S` - Read-Write
+     *
+     * Data per item is:
+     *
+     *  `S`: The XTAL accuracy threshold for Router, in PPM.
+     *
+     */
+    SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD = SPINEL_PROP_OPENTHREAD__BEGIN + 9,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

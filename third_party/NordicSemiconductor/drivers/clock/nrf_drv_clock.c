@@ -190,6 +190,7 @@ void nrf_drv_clock_uninit(void)
     ASSERT(m_clock_cb.module_initialized);
     nrfx_clock_disable();
     nrfx_clock_uninit();
+    m_clock_cb.module_initialized = false;
 }
 
 static void item_enqueue(nrf_drv_clock_handler_item_t ** p_head,
