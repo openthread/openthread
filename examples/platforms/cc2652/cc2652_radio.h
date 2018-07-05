@@ -72,22 +72,26 @@ typedef struct output_config
     uint16_t value;
 } output_config_t;
 
-/* TODO: update with power measurments */
+/**
+ * TX Power dBm lookup table from SmartRF Studio 7 2.10.0#94
+ */
 static const output_config_t rgOutputPower[] =
 {
-    {   5, 0x9330},
-    {   4, 0x9324},
-    {   3, 0x5a1c},
-    {   2, 0x4e18},
-    {   1, 0x4214},
-    {   0, 0x3161},
-    {  -3, 0x2558},
-    {  -6, 0x1d52},
-    {  -9, 0x194e},
-    { -12, 0x144b},
-    { -15, 0x0ccb},
-    { -18, 0x0cc9},
-    { -21, 0x0cc7},
+    {   5, 0x941e},
+    {   4, 0x6c16},
+    {   3, 0x5411},
+    {   2, 0x440d},
+    {   1, 0x385c},
+    {   0, 0x3459},
+    {  -3, 0x2851},
+    {  -5, 0x224e},
+    {  -6, 0x204d},
+    {  -9, 0x0a8d},
+    { -10, 0x168c},
+    { -12, 0x10a8},
+    { -15, 0xc88c},
+    { -18, 0x06c9},
+    { -21, 0x06c7},
 };
 
 #define OUTPUT_CONFIG_COUNT (sizeof(rgOutputPower) / sizeof(rgOutputPower[0]))

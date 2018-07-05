@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       prcm.h
-*  Revised:        2017-04-26 10:04:08 +0200 (Wed, 26 Apr 2017)
-*  Revision:       48836
+*  Revised:        2017-07-28 15:52:43 +0200 (Fri, 28 Jul 2017)
+*  Revision:       49450
 *
 *  Description:    Defines and prototypes for the PRCM
 *
@@ -687,8 +687,7 @@ PRCMDomainDisable(uint32_t ui32Domains)
 //! The domains that can be turned on/off are:
 //! - \b PRCM_DOMAIN_RFCORE : RF Core
 //! - \b PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
-//! - \b PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S,
-//!                           DMA, UART1, I2C1
+//! - \b PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //! - \b PRCM_DOMAIN_VIMS   : SRAM, FLASH, ROM
 //! - \b PRCM_DOMAIN_SYSBUS
 //! - \b PRCM_DOMAIN_CPU
@@ -711,8 +710,7 @@ extern void PRCMPowerDomainOn(uint32_t ui32Domains);
 //! The domains that can be turned on/off are:
 //! - \b PRCM_DOMAIN_RFCORE : RF Core
 //! - \b PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
-//! - \b PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S,
-//!                           DMA, UART1, I2C1
+//! - \b PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //! - \b PRCM_DOMAIN_VIMS   : SRAM, FLASH, ROM
 //! - \b PRCM_DOMAIN_SYSBUS
 //! - \b PRCM_DOMAIN_CPU
@@ -785,7 +783,7 @@ extern void PRCMPeripheralRunEnable(uint32_t ui32Peripheral);
 
 //*****************************************************************************
 //
-//! Disables a peripheral in Run mode
+//! \brief Disables a peripheral in Run mode
 //!
 //! Peripherals are disabled with this function. Once disabled, they will not
 //! operate or respond to register reads/writes.
@@ -990,7 +988,7 @@ extern void PRCMPeripheralDeepSleepDisable(uint32_t ui32Peripheral);
 //! The parameter must be an OR'ed combination of one or several of:
 //! - \ref PRCM_DOMAIN_RFCORE : RF Core.
 //! - \ref PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
-//! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1, I2C1
+//! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //!
 //! \return Returns status of the requested domains:
 //! - \ref PRCM_DOMAIN_POWER_ON  : The specified domains are \b all powered up.

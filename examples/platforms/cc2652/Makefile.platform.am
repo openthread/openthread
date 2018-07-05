@@ -30,15 +30,15 @@
 # cc2652 platform-specific Makefile
 #
 
-CPPFLAGS_COMMON                                                            += \
-    -I$(top_srcdir)/third_party/ti/devices/cc26x2                             \
+CPPFLAGS_COMMON                                                             += \
+    -I$(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2                       \
     $(NULL)
 
-LDADD_COMMON                                                               += \
-    $(top_builddir)/examples/platforms/cc2652/libopenthread-cc2652.a          \
-    $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
+LDADD_COMMON                                                                +=       \
+    $(top_builddir)/examples/platforms/cc2652/libopenthread-cc2652.a                 \
+    $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-LDFLAGS_COMMON                                                             += \
-    -T $(top_srcdir)/third_party/ti/devices/cc26x2/linker_files/cc26x2r1f.lds \
+LDFLAGS_COMMON                                                              +=       \
+    -T $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds \
     $(NULL)

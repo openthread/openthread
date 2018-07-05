@@ -40,7 +40,7 @@ libopenthread_cc2652_a_CPPFLAGS                       = \
     -I$(top_srcdir)/src/core                            \
     -I$(top_srcdir)/examples/platforms                  \
     -I$(top_srcdir)/examples/platforms/cc2652           \
-    -I$(top_srcdir)/third_party/ti/devices/cc26x2       \
+    -I$(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2 \
     -I$(top_srcdir)/third_party/mbedtls/repo/include    \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
@@ -65,8 +65,8 @@ libopenthread_cc2652_a_SOURCES                        = \
     $(PLATFORM_SOURCES)                                 \
     $(NULL)
 
-libopenthread_cc2652_a_DEPENDENCIES                   =                       \
-    $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
+libopenthread_cc2652_a_DEPENDENCIES                   =                              \
+    $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
 noinst_HEADERS                                        = \

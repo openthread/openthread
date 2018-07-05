@@ -1,6 +1,6 @@
 /******************************************************************************
 *  Filename:       rf_patch_cpe_ble_priv_1_2.h
-*  Revised:        $Date: 2016-12-07 13:37:33 +0100 (on, 07 des 2016) $
+*  Revised:        $Date: 2016-12-07 13:37:33 +0100 (Wed, 07 Dec 2016) $
 *  Revision:       $Revision: 17556 $
 *
 *  Description:    RF Core patch file for CC26x0 Bluetooth Low Energy with privacy 1.2 support
