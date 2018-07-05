@@ -211,7 +211,6 @@ public:
     }
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method finalizes the OpenThread instance.
      *
@@ -220,6 +219,7 @@ public:
      */
     void Finalize(void);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
      *

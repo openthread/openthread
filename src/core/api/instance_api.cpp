@@ -76,12 +76,8 @@ bool otInstanceIsInitialized(otInstance *aInstance)
 
 void otInstanceFinalize(otInstance *aInstance)
 {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
     Instance &instance = *static_cast<Instance *>(aInstance);
     instance.Finalize();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
 void otInstanceReset(otInstance *aInstance)
