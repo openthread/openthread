@@ -1250,7 +1250,7 @@ typedef enum {
      */
     SPINEL_PROP_THREAD_PENDING_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 25,
 
-    /// Thread Active Operational Dataset (MGMT send)
+    /// Send MGMT_SET Thread Active Operational Dataset
     /** Format: `A(t(iD))` - Write only
      *
      * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_ACTIVE_DATASET.
@@ -1265,9 +1265,9 @@ typedef enum {
      *    SPINEL_PROP_DATASET_RAW_TLVS
      *
      */
-    SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 26,
+    SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 26,
 
-    /// Thread Pending Operational Dataset (MGMT send)
+    /// Send MGMT_SET Thread Pending Operational Dataset
     /** Format: `A(t(iD))` - Write only
      *
      * This property is similar to SPINEL_PROP_THREAD_PENDING_DATASET and follows the same format and rules.
@@ -1278,7 +1278,7 @@ typedef enum {
      *    SPINEL_PROP_DATASET_RAW_TLVS
      *
      */
-    SPINEL_PROP_THREAD_MGMT_PENDING_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 27,
+    SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 27,
 
     /// Operational Dataset Active Timestamp
     /** Format: `X` - No direct read or write
@@ -1287,8 +1287,10 @@ typedef enum {
      *
      *   SPINEL_PROP_THREAD_ACTIVE_DATASET
      *   SPINEL_PROP_THREAD_PENDING_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
      *
      */
     SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP = SPINEL_PROP_THREAD_EXT__BEGIN + 28,
@@ -1299,7 +1301,8 @@ typedef enum {
      * It can only be included in one of the Pending Dataset properties:
      *
      *   SPINEL_PROP_THREAD_PENDING_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
      *
      */
     SPINEL_PROP_DATASET_PENDING_TIMESTAMP = SPINEL_PROP_THREAD_EXT__BEGIN + 29,
@@ -1313,7 +1316,8 @@ typedef enum {
      * It can only be included in one of the Pending Dataset properties:
      *
      *   SPINEL_PROP_THREAD_PENDING_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
      *
      */
     SPINEL_PROP_DATASET_DELAY_TIMER = SPINEL_PROP_THREAD_EXT__BEGIN + 30,
@@ -1325,8 +1329,10 @@ typedef enum {
      *
      *   SPINEL_PROP_THREAD_ACTIVE_DATASET
      *   SPINEL_PROP_THREAD_PENDING_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
      *
      * Content is
      *   `S` : Key Rotation Time (in units of hour)
@@ -1342,8 +1348,10 @@ typedef enum {
      *
      * It can only be included in one of the following Dataset properties:
      *
-     *   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-     *   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
      *
      */
     SPINEL_PROP_DATASET_RAW_TLVS = SPINEL_PROP_THREAD_EXT__BEGIN + 32,
@@ -1414,6 +1422,52 @@ typedef enum {
      *
      */
     SPINEL_PROP_THREAD_UDP_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 36,
+
+    /// Send MGMT_GET Thread Active Operational Dataset
+    /** Format: `A(t(iD))` - Write only
+     *
+     * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET. This
+     * property further allows the sender to not include a value associated with properties in formating of `t(iD)`,
+     * i.e., it should accept either a `t(iD)` or a `t(i)` encoding (in both cases indicating that the associated
+     * Dataset property should be requested as part of MGMT_GET command).
+     *
+     * This is write-only property. When written, it triggers a MGMT_ACTIVE_GET meshcop command to be sent to leader
+     * requesting the Dataset related properties from the format. The spinel frame response should be a `LAST_STATUS`
+     * with the status of the transmission of MGMT_ACTIVE_GET command.
+     *
+     * In addition to supported properties in SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET, the following property can be
+     * optionally included in the Dataset:
+     *
+     *    SPINEL_PROP_DATASET_DEST_ADDRESS
+     *
+     */
+    SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 37,
+
+    /// Send MGMT_GET Thread Pending Operational Dataset
+    /** Format: `A(t(iD))` - Write only
+     *
+     * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET.
+     *
+     * This is write-only property. When written, it triggers a MGMT_PENDING_GET meshcop command to be sent to leader
+     * with the given Dataset. The spinel frame response should be a `LAST_STATUS` with the status of the transmission
+     * of MGMT_PENDING_GET command.
+     *
+     */
+    SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 38,
+
+    /// Operational Dataset (MGMT_GET) Destination IPv6 Address
+    /** Format: `6` - No direct read or write
+     *
+     * This property specifies the IPv6 destination when sending MGMT_GET command for either Active or Pending Dataset
+     * if not provided, Leader ALOC address is used as default.
+     *
+     * It can only be included in one of the MGMT_GET Dataset properties:
+     *
+     *   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+     *   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
+     *
+     */
+    SPINEL_PROP_DATASET_DEST_ADDRESS = SPINEL_PROP_THREAD_EXT__BEGIN + 39,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

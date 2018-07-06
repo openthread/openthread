@@ -383,7 +383,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
-    if (aDataset.mIsActiveTimestampSet)
+    if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
         ActiveTimestampTlv timestamp;
         timestamp.Init();
@@ -392,7 +392,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 
-    if (aDataset.mIsPendingTimestampSet)
+    if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
         PendingTimestampTlv timestamp;
         timestamp.Init();
@@ -401,7 +401,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 
-    if (aDataset.mIsMasterKeySet)
+    if (aDataset.mComponents.mIsMasterKeyPresent)
     {
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
@@ -409,7 +409,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&masterkey, sizeof(masterkey)));
     }
 
-    if (aDataset.mIsNetworkNameSet)
+    if (aDataset.mComponents.mIsNetworkNamePresent)
     {
         NetworkNameTlv networkname;
         networkname.Init();
@@ -417,7 +417,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&networkname, sizeof(Tlv) + networkname.GetLength()));
     }
 
-    if (aDataset.mIsExtendedPanIdSet)
+    if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
@@ -425,7 +425,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&extpanid, sizeof(extpanid)));
     }
 
-    if (aDataset.mIsMeshLocalPrefixSet)
+    if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
         MeshLocalPrefixTlv localprefix;
         localprefix.Init();
@@ -433,7 +433,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&localprefix, sizeof(localprefix)));
     }
 
-    if (aDataset.mIsDelaySet)
+    if (aDataset.mComponents.mIsDelayPresent)
     {
         DelayTimerTlv delaytimer;
         delaytimer.Init();
@@ -441,7 +441,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&delaytimer, sizeof(delaytimer)));
     }
 
-    if (aDataset.mIsPanIdSet)
+    if (aDataset.mComponents.mIsPanIdPresent)
     {
         PanIdTlv panid;
         panid.Init();
@@ -449,7 +449,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&panid, sizeof(panid)));
     }
 
-    if (aDataset.mIsChannelSet)
+    if (aDataset.mComponents.mIsChannelPresent)
     {
         ChannelTlv channel;
         channel.Init();
@@ -458,7 +458,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
 
-    if (aDataset.mIsChannelMaskPage0Set)
+    if (aDataset.mComponents.mIsChannelMaskPage0Present)
     {
         ChannelMask0Tlv channelMask;
         channelMask.Init();
@@ -494,7 +494,10 @@ exit:
     return error;
 }
 
-otError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress) const
+otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
+                                       const uint8_t *                       aTlvTypes,
+                                       uint8_t                               aLength,
+                                       const otIp6Address *                  aAddress) const
 {
     ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
@@ -502,24 +505,97 @@ otError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength
     Message *        message;
     Ip6::MessageInfo messageInfo;
     Tlv              tlv;
+    uint8_t          datasetTlvs[kMaxDatasetTlvs];
+    uint8_t          length;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(mUriGet);
 
-    if (aLength > 0)
+    length = 0;
+
+    if (aDatasetComponents.mIsActiveTimestampPresent)
+    {
+        datasetTlvs[length++] = Tlv::kActiveTimestamp;
+    }
+
+    if (aDatasetComponents.mIsPendingTimestampPresent)
+    {
+        datasetTlvs[length++] = Tlv::kPendingTimestamp;
+    }
+
+    if (aDatasetComponents.mIsMasterKeyPresent)
+    {
+        datasetTlvs[length++] = Tlv::kNetworkMasterKey;
+    }
+
+    if (aDatasetComponents.mIsNetworkNamePresent)
+    {
+        datasetTlvs[length++] = Tlv::kNetworkName;
+    }
+
+    if (aDatasetComponents.mIsExtendedPanIdPresent)
+    {
+        datasetTlvs[length++] = Tlv::kExtendedPanId;
+    }
+
+    if (aDatasetComponents.mIsMeshLocalPrefixPresent)
+    {
+        datasetTlvs[length++] = Tlv::kMeshLocalPrefix;
+    }
+
+    if (aDatasetComponents.mIsDelayPresent)
+    {
+        datasetTlvs[length++] = Tlv::kDelayTimer;
+    }
+
+    if (aDatasetComponents.mIsPanIdPresent)
+    {
+        datasetTlvs[length++] = Tlv::kPanId;
+    }
+
+    if (aDatasetComponents.mIsChannelPresent)
+    {
+        datasetTlvs[length++] = Tlv::kChannel;
+    }
+
+    if (aDatasetComponents.mIsPSKcPresent)
+    {
+        datasetTlvs[length++] = Tlv::kPSKc;
+    }
+
+    if (aDatasetComponents.mIsSecurityPolicyPresent)
+    {
+        datasetTlvs[length++] = Tlv::kSecurityPolicy;
+    }
+
+    if (aDatasetComponents.mIsChannelMaskPage0Present)
+    {
+        datasetTlvs[length++] = Tlv::kChannelMask;
+    }
+
+    if (aLength + length > 0)
     {
         header.SetPayloadMarker();
     }
 
     VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (aLength > 0)
+    if (aLength + length > 0)
     {
         tlv.SetType(Tlv::kGet);
-        tlv.SetLength(aLength);
+        tlv.SetLength(aLength + length);
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aTlvTypes, aLength));
+
+        if (length > 0)
+        {
+            SuccessOrExit(error = message->Append(datasetTlvs, length));
+        }
+
+        if (aLength > 0)
+        {
+            SuccessOrExit(error = message->Append(aTlvTypes, aLength));
+        }
     }
 
     if (aAddress != NULL)

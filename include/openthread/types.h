@@ -550,36 +550,46 @@ typedef struct otEnergyScanResult
 } otEnergyScanResult;
 
 /**
+ * This structure represents presence of different components in Active or Pending Operational Dataset.
+ *
+ */
+typedef struct otOperationalDatasetComponents
+{
+    bool mIsActiveTimestampPresent : 1;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
+    bool mIsPendingTimestampPresent : 1; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
+    bool mIsMasterKeyPresent : 1;        ///< TRUE if Network Master Key is present, FALSE otherwise.
+    bool mIsNetworkNamePresent : 1;      ///< TRUE if Network Name is present, FALSE otherwise.
+    bool mIsExtendedPanIdPresent : 1;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
+    bool mIsMeshLocalPrefixPresent : 1;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
+    bool mIsDelayPresent : 1;            ///< TRUE if Delay Timer is present, FALSE otherwise.
+    bool mIsPanIdPresent : 1;            ///< TRUE if PAN ID is present, FALSE otherwise.
+    bool mIsChannelPresent : 1;          ///< TRUE if Channel is present, FALSE otherwise.
+    bool mIsPSKcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
+    bool mIsSecurityPolicyPresent : 1;   ///< TRUE if Security Policy is present, FALSE otherwise.
+    bool mIsChannelMaskPage0Present : 1; ///< TRUE if Channel Mask Page 0 is present, FALSE otherwise.
+} otOperationalDatasetComponents;
+
+/**
  * This structure represents an Active or Pending Operational Dataset.
+ *
+ * Components in Dataset are optional. `mComponets` structure specifies which components are present in the Dataset.
  *
  */
 typedef struct otOperationalDataset
 {
-    uint64_t           mActiveTimestamp;  ///< Active Timestamp
-    uint64_t           mPendingTimestamp; ///< Pending Timestamp
-    otMasterKey        mMasterKey;        ///< Network Master Key
-    otNetworkName      mNetworkName;      ///< Network Name
-    otExtendedPanId    mExtendedPanId;    ///< Extended PAN ID
-    otMeshLocalPrefix  mMeshLocalPrefix;  ///< Mesh Local Prefix
-    uint32_t           mDelay;            ///< Delay Timer
-    otPanId            mPanId;            ///< PAN ID
-    uint16_t           mChannel;          ///< Channel
-    otPSKc             mPSKc;             ///< PSKc
-    otSecurityPolicy   mSecurityPolicy;   ///< Security Policy
-    otChannelMaskPage0 mChannelMaskPage0; ///< Channel Mask Page 0
-
-    bool mIsActiveTimestampSet : 1;  ///< TRUE if Active Timestamp is set, FALSE otherwise.
-    bool mIsPendingTimestampSet : 1; ///< TRUE if Pending Timestamp is set, FALSE otherwise.
-    bool mIsMasterKeySet : 1;        ///< TRUE if Network Master Key is set, FALSE otherwise.
-    bool mIsNetworkNameSet : 1;      ///< TRUE if Network Name is set, FALSE otherwise.
-    bool mIsExtendedPanIdSet : 1;    ///< TRUE if Extended PAN ID is set, FALSE otherwise.
-    bool mIsMeshLocalPrefixSet : 1;  ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
-    bool mIsDelaySet : 1;            ///< TRUE if Delay Timer is set, FALSE otherwise.
-    bool mIsPanIdSet : 1;            ///< TRUE if PAN ID is set, FALSE otherwise.
-    bool mIsChannelSet : 1;          ///< TRUE if Channel is set, FALSE otherwise.
-    bool mIsPSKcSet : 1;             ///< TRUE if PSKc is set, FALSE otherwise.
-    bool mIsSecurityPolicySet : 1;   ///< TRUE if Security Policy is set, FALSE otherwise.
-    bool mIsChannelMaskPage0Set : 1; ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
+    uint64_t                       mActiveTimestamp;  ///< Active Timestamp
+    uint64_t                       mPendingTimestamp; ///< Pending Timestamp
+    otMasterKey                    mMasterKey;        ///< Network Master Key
+    otNetworkName                  mNetworkName;      ///< Network Name
+    otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID
+    otMeshLocalPrefix              mMeshLocalPrefix;  ///< Mesh Local Prefix
+    uint32_t                       mDelay;            ///< Delay Timer
+    otPanId                        mPanId;            ///< PAN ID
+    uint16_t                       mChannel;          ///< Channel
+    otPSKc                         mPSKc;             ///< PSKc
+    otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
+    otChannelMaskPage0             mChannelMaskPage0; ///< Channel Mask Page 0
+    otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.
 } otOperationalDataset;
 
 /**

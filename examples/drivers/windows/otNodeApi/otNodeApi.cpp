@@ -1976,24 +1976,24 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
     otOperationalDataset aDataset = {};
 
     aDataset.mActiveTimestamp = aTimestamp;
-    aDataset.mIsActiveTimestampSet = true;
+    aDataset.mComponents.mIsActiveTimestampPresent = true;
 
     if (aPanId != 0)
     {
         aDataset.mPanId = aPanId;
-        aDataset.mIsPanIdSet = true;
+        aDataset.mComponents.mIsPanIdPresent = true;
     }
 
     if (aChannel != 0)
     {
         aDataset.mChannel = aChannel;
-        aDataset.mIsChannelSet = true;
+        aDataset.mComponents.mIsChannelPresent = true;
     }
 
     if (aChannelMask != 0)
     {
         aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mIsChannelMaskPage0Set = true;
+        aDataset.mComponents.mIsChannelMaskPage0Present = true;
     }
 
     if (aMasterKey != NULL && strlen(aMasterKey) != 0)
@@ -2004,7 +2004,7 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
             printf("invalid length key %d\r\n", keyLength);
             return OT_ERROR_PARSE;
         }
-        aDataset.mIsMasterKeySet = true;
+        aDataset.mComponents.mIsMasterKeyPresent = true;
     }
 
     auto result = otDatasetSetActive(aNode->mInstance, &aDataset);
@@ -2022,25 +2022,25 @@ OTNODEAPI int32_t OTCALL otNodeSetPendingDataset(otNode* aNode, uint64_t aActive
     if (aActiveTimestamp != 0)
     {
         aDataset.mActiveTimestamp = aActiveTimestamp;
-        aDataset.mIsActiveTimestampSet = true;
+        aDataset.mComponents.mIsActiveTimestampPresent = true;
     }
 
     if (aPendingTimestamp != 0)
     {
         aDataset.mPendingTimestamp = aPendingTimestamp;
-        aDataset.mIsPendingTimestampSet = true;
+        aDataset.mComponents.mIsPendingTimestampPresent = true;
     }
 
     if (aPanId != 0)
     {
         aDataset.mPanId = aPanId;
-        aDataset.mIsPanIdSet = true;
+        aDataset.mComponents.mIsPanIdPresent = true;
     }
 
     if (aChannel != 0)
     {
         aDataset.mChannel = aChannel;
-        aDataset.mIsChannelSet = true;
+        aDataset.mComponents.mIsChannelPresent = true;
     }
 
     auto result = otDatasetSetPending(aNode->mInstance, &aDataset);
@@ -2058,31 +2058,31 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
     if (aActiveTimestamp != 0)
     {
         aDataset.mActiveTimestamp = aActiveTimestamp;
-        aDataset.mIsActiveTimestampSet = true;
+        aDataset.mComponents.mIsActiveTimestampPresent = true;
     }
 
     if (aPendingTimestamp != 0)
     {
         aDataset.mPendingTimestamp = aPendingTimestamp;
-        aDataset.mIsPendingTimestampSet = true;
+        aDataset.mComponents.mIsPendingTimestampPresent = true;
     }
 
     if (aDelayTimer != 0)
     {
         aDataset.mDelay = aDelayTimer;
-        aDataset.mIsDelaySet = true;
+        aDataset.mComponents.mIsDelayPresent = true;
     }
 
     if (aPanId != 0)
     {
         aDataset.mPanId = aPanId;
-        aDataset.mIsPanIdSet = true;
+        aDataset.mComponents.mIsPanIdPresent = true;
     }
 
     if (aChannel != 0)
     {
         aDataset.mChannel = aChannel;
-        aDataset.mIsChannelSet = true;
+        aDataset.mComponents.mIsChannelPresent = true;
     }
 
     if (aMasterKey != NULL && strlen(aMasterKey) != 0)
@@ -2093,7 +2093,7 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
             printf("invalid length key %d\r\n", keyLength);
             return OT_ERROR_PARSE;
         }
-        aDataset.mIsMasterKeySet = true;
+        aDataset.mComponents.mIsMasterKeyPresent = true;
     }
 
     if (aMeshLocal != NULL && strlen(aMeshLocal) != 0)
@@ -2102,13 +2102,13 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
         auto error = otIp6AddressFromString(aMeshLocal, &prefix);
         if (error != OT_ERROR_NONE) return error;
         memcpy(aDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(aDataset.mMeshLocalPrefix.m8));
-        aDataset.mIsMeshLocalPrefixSet = true;
+        aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
     }
 
     if (aNetworkName != NULL && strlen(aNetworkName) != 0)
     {
         strcpy_s(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName.m8), aNetworkName);
-        aDataset.mIsNetworkNameSet = true;
+        aDataset.mComponents.mIsNetworkNamePresent = true;
     }
 
     auto result = otDatasetSendMgmtPendingSet(aNode->mInstance, &aDataset, nullptr, 0);
@@ -2128,24 +2128,24 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
     if (aActiveTimestamp != 0)
     {
         aDataset.mActiveTimestamp = aActiveTimestamp;
-        aDataset.mIsActiveTimestampSet = true;
+        aDataset.mComponents.mIsActiveTimestampPresent = true;
     }
     if (aPanId != 0)
     {
         aDataset.mPanId = aPanId;
-        aDataset.mIsPanIdSet = true;
+        aDataset.mComponents.mIsPanIdPresent = true;
     }
 
     if (aChannel != 0)
     {
         aDataset.mChannel = aChannel;
-        aDataset.mIsChannelSet = true;
+        aDataset.mComponents.mIsChannelPresent = true;
     }
 
     if (aChannelMask != 0)
     {
         aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mIsChannelMaskPage0Set = true;
+        aDataset.mComponents.mIsChannelMaskPage0Present = true;
     }
 
     if (aExtPanId != NULL && strlen(aExtPanId) != 0)
@@ -2156,7 +2156,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
             printf("invalid length ext pan id %d\r\n", keyLength);
             return OT_ERROR_PARSE;
         }
-        aDataset.mIsExtendedPanIdSet = true;
+        aDataset.mComponents.mIsExtendedPanIdPresent = true;
     }
 
     if (aMasterKey != NULL && strlen(aMasterKey) != 0)
@@ -2167,7 +2167,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
             printf("invalid length key %d\r\n", keyLength);
             return OT_ERROR_PARSE;
         }
-        aDataset.mIsMasterKeySet = true;
+        aDataset.mComponents.mIsMasterKeyPresent = true;
     }
 
     if (aMeshLocal != NULL && strlen(aMeshLocal) != 0)
@@ -2176,13 +2176,13 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
         auto error = otIp6AddressFromString(aMeshLocal, &prefix);
         if (error != OT_ERROR_NONE) return error;
         memcpy(aDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(aDataset.mMeshLocalPrefix.m8));
-        aDataset.mIsMeshLocalPrefixSet = true;
+        aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
     }
 
     if (aNetworkName != NULL && strlen(aNetworkName) != 0)
     {
         strcpy_s(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName.m8), aNetworkName);
-        aDataset.mIsNetworkNameSet = true;
+        aDataset.mComponents.mIsNetworkNamePresent = true;
     }
 
     if (aBinary != NULL && strlen(aBinary) != 0)
