@@ -191,13 +191,14 @@ bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
 
     // A TMF message must comply with following rules:
     // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address.
+    //    and the source is a Mesh Local Address. Or
     // 2. Both the destination and the source are Link-Local Addresses.
     VerifyOrExit(
         ((mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
           aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
          mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
+            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
+             aMessageInfo.GetPeerAddr().IsLinkLocal()),
         rval = false);
 exit:
     return rval;
