@@ -274,12 +274,8 @@ extern "C" {
  * #112-D statement is unreachable
  * #129-D loop is not reachable
  */
-#define OT_UNREACHABLE_CODE(CODE)    \
-        _Pragma("diag_push")         \
-        _Pragma("diag_suppress 112") \
-        _Pragma("diag_suppress 129") \
-        CODE                         \
-        _Pragma("diag_pop")
+#define OT_UNREACHABLE_CODE(CODE) \
+    _Pragma("diag_push") _Pragma("diag_suppress 112") _Pragma("diag_suppress 129") CODE _Pragma("diag_pop")
 
 #else
 
