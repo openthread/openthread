@@ -87,6 +87,9 @@
 /* Define to 1 if you want to enable CoAP to an application. */
 #define OPENTHREAD_ENABLE_APPLICATION_COAP 1
 
+/* Define to 1 to enable the border agent feature. */
+#define OPENTHREAD_ENABLE_BORDER_AGENT 1
+
 /* Define to 1 if you want to enable Border Router */
 #define OPENTHREAD_ENABLE_BORDER_ROUTER 1
 
@@ -157,8 +160,8 @@
 /* Define to 1 if you want to enable Service */
 #define OPENTHREAD_ENABLE_SERVICE 1
 
-/* Define to 1 to enable the TMF proxy feature. */
-#define OPENTHREAD_ENABLE_TMF_PROXY 1
+/* Define to 1 to enable the UDP proxy feature. */
+#define OPENTHREAD_ENABLE_UDP_PROXY 1
 
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none
