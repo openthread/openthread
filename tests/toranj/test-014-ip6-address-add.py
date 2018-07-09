@@ -163,7 +163,7 @@ for iter in range(2):
         # Reset the nodes and verify that all addresses/prefixes are preserved.
         fed1.reset()
         sed2.reset()
-
+        time.sleep(5)
 
 # Remove address from `r2`
 
