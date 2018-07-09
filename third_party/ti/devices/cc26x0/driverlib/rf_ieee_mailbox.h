@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_ieee_mailbox.h
-*  Revised:        $ $
-*  Revision:       $ $
+*  Revised:        2017-08-28 10:10:48 +0200 (Mon, 28 Aug 2017)
+*  Revision:       17894
 *
 *  Description:    Definitions for IEEE 802.15.4 interface
 *

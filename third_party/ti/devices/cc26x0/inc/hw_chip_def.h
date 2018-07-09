@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_chip_def.h
-*  Revised:        2016-11-17 16:01:57 +0100 (Thu, 17 Nov 2016)
-*  Revision:       47704
+*  Revised:        2017-06-26 09:33:33 +0200 (Mon, 26 Jun 2017)
+*  Revision:       49227
 *
 *  Description:    Defines for device properties.
 *
@@ -152,6 +152,45 @@ extern "C"
     #define CC_CHIP_ID 0x13500420
 #elif defined(CC1350F128_R20)    || defined(CC1350F128)
     #define CC_CHIP_ID 0x13500020
+/* CC2640R2F */
+#elif defined(CC2640R2FRGZ_R25) || defined(CC2640R2FRGZ)
+    #define CC_CHIP_ID 0x26401710
+#elif defined(CC2640R2FRHB_R25) || defined(CC2640R2FRHB)
+    #define CC_CHIP_ID 0x26401510
+#elif defined(CC2640R2FRSM_R25) || defined(CC2640R2FRSM)
+    #define CC_CHIP_ID 0x26401410
+#elif defined(CC2640R2F_R25)    || defined(CC2640R2F)
+    #define CC_CHIP_ID 0x26401010
+/* CC2652R1F */
+#elif defined(CC2652R1FRGZ_R10) || defined(CC2652R1FRGZ)
+    #define CC_CHIP_ID 0x26523710
+#elif defined(CC2652R1F_R10)    || defined(CC2652R1F)
+    #define CC_CHIP_ID 0x26523010
+/* CC2644R1F */
+#elif defined(CC2644R1FRGZ_R10) || defined(CC2644R1FRGZ)
+    #define CC_CHIP_ID 0x26443710
+#elif defined(CC2644R1F_R10)    || defined(CC2644R1F)
+    #define CC_CHIP_ID 0x26443010
+/* CC2642R1F */
+#elif defined(CC2642R1FRGZ_R10) || defined(CC2642R1FRGZ)
+    #define CC_CHIP_ID 0x26423710
+#elif defined(CC2642R1F_R10)    || defined(CC2642R1F)
+    #define CC_CHIP_ID 0x26423010
+/* CC1354R1F */
+#elif defined(CC1354R1FRGZ_R10) || defined(CC1354R1FRGZ)
+    #define CC_CHIP_ID 0x13543710
+#elif defined(CC1354R1F_R10)    || defined(CC1354R1F)
+    #define CC_CHIP_ID 0x13543010
+/* CC1352R1F */
+#elif defined(CC1352R1FRGZ_R10) || defined(CC1352R1FRGZ)
+    #define CC_CHIP_ID 0x13523710
+#elif defined(CC1352R1F_R10)    || defined(CC1352R1F)
+    #define CC_CHIP_ID 0x13523010
+/* CC1312R1F */
+#elif defined(CC1312R1FRGZ_R10) || defined(CC1312R1FRGZ)
+    #define CC_CHIP_ID 0x13123710
+#elif defined(CC1312R1F_R10)    || defined(CC1312R1F)
+    #define CC_CHIP_ID 0x13123010
 #endif
 
 #define CC_GET_CHIP_FAMILY 0x26
@@ -172,7 +211,7 @@ extern "C"
         #error "Specified chip family does not match DriverLib release"
     #endif
     #if (CC_GET_CHIP_OPTION != ((CC_CHIP_ID & 0x0000F000) >> 12))
-        #error "Specified chip option (OTP) does not match DriverLib release"
+        #error "Specified chip option does not match DriverLib release"
     #endif
     #if (CC_GET_CHIP_HWREV  != ((CC_CHIP_ID & 0x000000FF) >> 0))
         #error "Specified chip hardware revision does not match DriverLib release"

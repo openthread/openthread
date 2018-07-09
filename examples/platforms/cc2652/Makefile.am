@@ -28,58 +28,58 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                                         = libopenthread-cc2652.a
+lib_LIBRARIES = libopenthread-cc2652.a
 
 # Do not enable -pedantic-errors for cc26xx driverlib
-override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
-override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
+override CFLAGS   := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-libopenthread_cc2652_a_CPPFLAGS                       = \
-    -I$(top_srcdir)/include                             \
-    -I$(top_srcdir)/src                                 \
-    -I$(top_srcdir)/src/core                            \
-    -I$(top_srcdir)/examples/platforms                  \
-    -I$(top_srcdir)/examples/platforms/cc2652           \
-    -I$(top_srcdir)/third_party/ti/devices/cc26x2       \
-    -I$(top_srcdir)/third_party/mbedtls/repo/include    \
-    $(MBEDTLS_CPPFLAGS)                                 \
+libopenthread_cc2652_a_CPPFLAGS                                                         = \
+    -I$(top_srcdir)/include                                                               \
+    -I$(top_srcdir)/src                                                                   \
+    -I$(top_srcdir)/src/core                                                              \
+    -I$(top_srcdir)/examples/platforms                                                    \
+    -I$(top_srcdir)/examples/platforms/cc2652                                             \
+    -I$(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2                                  \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include                                      \
+    $(MBEDTLS_CPPFLAGS)                                                                   \
     $(NULL)
 
-PLATFORM_SOURCES                                      = \
-    alarm.c                                             \
-    diag.c                                              \
-    flash.c                                             \
-    logging.c                                           \
-    misc.c                                              \
-    platform.c                                          \
-    radio.c                                             \
-    random.c                                            \
-    uart.c                                              \
-    crypto/aes_alt.c                                    \
-    cc2652_ccfg.c                                       \
-    cc2652_startup.c                                    \
-    cxx_helpers.c                                       \
+PLATFORM_SOURCES                                                                        = \
+    alarm.c                                                                               \
+    diag.c                                                                                \
+    flash.c                                                                               \
+    logging.c                                                                             \
+    misc.c                                                                                \
+    platform.c                                                                            \
+    radio.c                                                                               \
+    random.c                                                                              \
+    uart.c                                                                                \
+    crypto/aes_alt.c                                                                      \
+    cc2652_ccfg.c                                                                         \
+    cc2652_startup.c                                                                      \
+    cxx_helpers.c                                                                         \
     $(NULL)
 
-libopenthread_cc2652_a_SOURCES                        = \
-    $(PLATFORM_SOURCES)                                 \
+libopenthread_cc2652_a_SOURCES                                                          = \
+    $(PLATFORM_SOURCES)                                                                   \
     $(NULL)
 
-libopenthread_cc2652_a_DEPENDENCIES                   =                       \
-    $(top_srcdir)/third_party/ti/devices/cc26x2/driverlib/bin/gcc/driverlib.a \
+libopenthread_cc2652_a_DEPENDENCIES                                                     = \
+    $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a      \
     $(NULL)
 
-noinst_HEADERS                                        = \
-    platform-cc2652.h                                   \
+noinst_HEADERS                                                                          = \
+    platform-cc2652.h                                                                     \
     $(NULL)
 
-PRETTY_FILES                                          = \
-    $(PLATFORM_SOURCES)                                 \
-    $(noinst_HEADERS)                                   \
+PRETTY_FILES                                                                            = \
+    $(PLATFORM_SOURCES)                                                                   \
+    $(noinst_HEADERS)                                                                     \
     $(NULL)
 
-Dash                                                  = -
-libopenthread_cc2652_a_LIBADD                         = \
+Dash = -
+libopenthread_cc2652_a_LIBADD                                                           = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

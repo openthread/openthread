@@ -1,6 +1,6 @@
 /******************************************************************************
 *  Filename:       startup_iar.c
-*  Revised:        $Date: 2017-02-03 19:16:24 +0100 (fr, 03 feb 2017) $
+*  Revised:        $Date: 2017-02-03 19:16:24 +0100 (Fri, 03 Feb 2017) $
 *  Revision:       $Revision: 17634 $
 *
 *  Description:    Startup code for CC26x0 rev2 device family for use with IAR.

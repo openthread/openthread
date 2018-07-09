@@ -69,6 +69,7 @@
             </tr><tr>   <td class="keyword_name">[RF_PATCH]    </td> <td class="keyword_desc">RF Patches                      </td>
             </tr><tr>   <td class="keyword_name">[RF_SETTING]  </td> <td class="keyword_desc">RF Settings                     </td>
             </tr><tr>   <td class="keyword_name">[HW_INC]      </td> <td class="keyword_desc">Hardware interface description  </td>
+            </tr><tr>   <td class="keyword_name">[DRV_API]     </td> <td class="keyword_desc">Driverlib Application interface </td>
             </tr><tr>   <td class="keyword_name">[DRV_SRC]     </td> <td class="keyword_desc">Driverlib source code           </td>
             </tr><tr>   <td class="keyword_name">[DRV_DOC]     </td> <td class="keyword_desc">Driverlib documentation         </td>
             </tr><tr>   <td class="keyword_name">[DRV_LIB]     </td> <td class="keyword_desc">Prebuilt libraries              </td>
@@ -77,6 +78,195 @@
          </table>
 
       <!-- Start of driverlib_cc13xx_cc26xx entry -->
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_02_01_17905</h2>
+         <div class="content-container">
+            Release date: August 31, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>CC13x2_CC26x2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] CPE PROP:</strong> Added new CPE PROP patch, to prepare for future PHYs using "PROP" API commands. (This patch code is currently identical to the existing CPE GenFSK and CPE SimpleLink Long Range patches).</li>
+                  <li><strong>[RF_PATCH] CPE BLE:</strong> Added new CPE BLE patch, to be used for Bluetooth 4.2 using "BLE" API commands. This patch does not include Bluetooth 5 related fixes, and may therefore be smaller in patch code size. This is to supplement the existing CPE BT5 patch for Bluetooth 5, for use cases where only Bluetooth 4.2 functionality is desired.</li>
+                  <li><strong>[RF_PATCH] CPE MULTI:</strong> Added new CPE multi-protocol patch, to be used for multi-PHY use case. This patch contains bug fixes related to all available API command sets (i.e. "BLE", "BLE5", "IEEE", "PROP", "HS") and should be used in a multi-protocol use case instead of switching between multiple CPE patches.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>CC13x2_CC26x2</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] Crypto:</strong> Function SHA2ExecuteHash(): Fixed bug that that yielded incorrect digests for messages whose length is a multiple of the hash block size.</li>
+                  <li><strong>[RF_PATCH] MCE IEEE 802.15.4:</strong> Added new MCE patch for IEEE 802.15.14-2006 at 2.4 GHz. This contains fix for Rx correlation search failure.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional. (The PA_EN status signal does not go low).</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_02_00_17858</h2>
+         <div class="content-container">
+            Release date: August 2, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_SRC] sys_ctrl:</strong> Added configurable initial VDDR recharge period margin to permit setting a more conservative initial recharge period.</li>
+                  <li><strong>[DRV_API] sys_ctrl:</strong> Added a new parameter to function SysCtrlAdjustRechargeAfterPowerDown().</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+				  <li><strong>[RF_PATCH]: GHS</strong> Added new CPE/MCE patch set for general high-speed GenFSK ("ghs" patch). CPE patch is identical to GenFSK.</li>
+                  <li><strong>[RF_PATCH]: BREPEAT</strong> Added new CPE/MCE patch set for using bit-repeat mode ("brepeat" patch), for symbol rate. CPE patch is identical to GenFSK.</li>
+				  <li><strong>[RF_API] Headers:</strong> In CPE commands CMD_PROP_RADIO_SETUP and CMD_PROP_RADIO_DIV_SETUP, the struct bit fields symbolRate.bPdifDecim and symbolRate.pdifDecim have been joined into one field, symbolRate.decimMode, with unchanged functionality. This change is to have same API for CC13x0 as exists for CC13x2 and CC26x2 devices. This field is needed used when using "brepeat" radio patch. </li>
+               </ul></li>
+               <li><strong>CC13x2_CC26x2</strong>
+               <ul>
+                  <li><strong>Initial revision of driverlib for new devices CC13x2 and CC26x2.</strong></li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_API] sys_ctrl:</strong> Removed definition "RSTSRC_VDD_LOSS" since this value will never be returned when calling SysCtrlResetSourceGet().</li>
+                  <li><strong>[DRV_SRC] CCFG:</strong> Removed gcc compiler warning (change of sign) when compiling ccfg.c.</li>
+                  <li><strong>[DRV_SRC] CPU:</strong> Removed gcc compiler warning for function CPUbasepriSet().</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] CPE BLE:</strong> Updated CPE patch for Bluetooth 4.2 to fix known issue related to CMD_SCH_IMM. This also includes a fix for a rare problem where CPE may hang when running BLE master command.</li>
+                  <li><strong>[RF_PATCH] CPE BT5:</strong> Updated CPE patch for Bluetooth 5 to fix known issue related to CMD_SCH_IMM. This also includes a fix for a rare problem where CPE may hang when running BLE master command.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] CPE BT5:</strong> CPE BT5 patch for Bluetooth 5: Corrected an error when ignoring identity address for resolvable private addresses in legacy advertiser.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional. (The PA_EN status signal does not go low).</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_01_03_17842</h2>
+         <div class="content-container">
+            Release date: July 20, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
+      <div class="release-container">
+         <h2>driverlib_cc13xx_cc26xx_3_01_02_17805</h2>
+         <div class="content-container">
+            Release date: June 1, 2017 <br>
+
+            <h3>New features</h3>
+            <ul>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_PATCH] General:</strong> Added GenFSK Antenna diversity CPE patch.</li>
+                  <li><strong>[RF_PATCH] General:</strong> Added high speed GenFSK patches.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Improvements</h3>
+            <ul>
+               <li><strong>Changes that apply to all devices</strong>
+               <ul>
+                  <li><strong>[DRV_DOC] General:</strong> General improvement of the documentation.</li>
+                  <li><strong>[HW_INC] General:</strong> Updated/improved hardware register descriptions (inc/hw_*.h and doc/../*.html files).</li>
+               </ul></li>
+               <li><strong>CC13x0</strong>
+               <ul>
+                  <li><strong>[RF_API] Headers:</strong> Added bPdifDecim and pdifDecim to symbolRate structure.</li>
+               </ul></li>
+                  <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] Headers:</strong> Removed unnecessary RF_MODE_MULTIPLE define.</li>
+                  <li><strong>[RF_API] Headers:</strong> Added bPdifDecim and pdifDecim to symbolRate structure.</li>
+               </ul></li>
+            </ul>
+
+            <h3>Bug fixes</h3>
+            <ul>
+               <li>None</li>
+            </ul>
+
+            <h3>Known issues</h3>
+            <ul>
+               <li><strong>CC26x0</strong></li>
+               <li><strong>CC26x0R2</strong>
+               <ul>
+                  <li><strong>[RF_API] General:</strong> GPO control not functional.</li>
+                  <li><strong>[RF_PATCH] General:</strong> CMD_SCH_IMM could cause loss of commands.</li>
+               </ul></li>
+               <br>
+               <li>For an updated list of known issues (including issues found after the release), see <a href="http://processors.wiki.ti.com/index.php/CC13xx_CC26xx_driverlib">CC13xx_CC26xx_driverlib</a> on the Texas Instruments wiki.</li>
+            </ul>
+         </div>
+      </div>
       <div class="release-container">
          <h2>driverlib_cc13xx_cc26xx_3_01_01_17779</h2>
          <div class="content-container">

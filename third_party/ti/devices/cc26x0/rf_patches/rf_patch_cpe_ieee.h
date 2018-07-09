@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_patch_cpe_ieee.h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        $Date: 2017-08-24 11:43:33 +0200 (Thu, 24 Aug 2017) $
+*  Revision:       $Revision: 17889 $
 *
 *  Description:    RF Core patch file for CC26xx IEEE 802.15.4 PHY
 *
