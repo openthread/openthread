@@ -514,7 +514,7 @@ class Node(object):
     #------------------------------------------------------------------------------------------------------------------
     # IPv6 message Sender and Receiver class
 
-    class _NodeError(BaseException):
+    class _NodeError(Exception):
         pass
 
     def prepare_tx(self, src, dst, data=40, count=1):
@@ -799,14 +799,45 @@ class AsyncReceiver(asyncore.dispatcher):
         self._node._remove_recver(self)
 
 #-----------------------------------------------------------------------------------------------------------------------
+class VerifyError(Exception):
+    pass
+
+_is_in_verify_within = False
 
 def verify(condition):
-    """Verifies that a `condition` is true, otherwise exits"""
+    """Verifies that a `condition` is true, otherwise raises a VerifyError"""
+    global _is_in_verify_within
     if not condition:
         calling_frame = inspect.currentframe().f_back
-        print 'verify() failed at line {} in "{}"'.format(calling_frame.f_lineno, calling_frame.f_code.co_filename)
-        exit(1)
+        error_message = 'verify() failed at line {} in "{}"'.format(calling_frame.f_lineno, calling_frame.f_code.co_filename)
+        if not _is_in_verify_within:
+            print error_message
+        raise VerifyError(error_message)
 
+def verify_within(condition_checker_func, wait_time, delay_time=0.1):
+    """Verifies that a given function `condition_checker_func` passes successfully within a given wait timeout.
+       `wait_time` is maximum time waiting for condition_checker to pass (in seconds).
+       `delay_time` specifies a delay interval added between failed attempts (in seconds).
+    """
+    global _is_in_verify_within
+    start_time = time.time()
+    old_is_in_verify_within = _is_in_verify_within
+    _is_in_verify_within = True
+    while True:
+        try:
+            condition_checker_func()
+        except VerifyError as e:
+            if time.time() - start_time > wait_time:
+                print 'Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time)
+                print e.message
+                raise e
+        except:
+            raise
+        else:
+            break
+        if delay_time != 0:
+            time.sleep(delay_time)
+    _is_in_verify_within = old_is_in_verify_within
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Parsing `wpanctl` output
