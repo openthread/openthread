@@ -1226,13 +1226,13 @@ otError FragmentHeader::Init(const Message &aMessage, uint16_t aOffset)
     otError  error = OT_ERROR_NONE;
     uint16_t bytesRead;
 
-    bytesRead = aMessage.Read(aOffset, sizeof(mDispatchSize), &mDispatchSize);
+    bytesRead = aMessage.Read(aOffset, sizeof(mDispatchSize), reinterpret_cast<void *>(&mDispatchSize));
     VerifyOrExit(bytesRead == sizeof(mDispatchSize), error = OT_ERROR_PARSE);
     aOffset += bytesRead;
 
     VerifyOrExit(IsFragmentHeader(), error = OT_ERROR_PARSE);
 
-    bytesRead = aMessage.Read(aOffset, sizeof(mTag), &mTag);
+    bytesRead = aMessage.Read(aOffset, sizeof(mTag), reinterpret_cast<void *>(&mTag));
     VerifyOrExit(bytesRead == sizeof(mTag), error = OT_ERROR_PARSE);
     aOffset += bytesRead;
 
