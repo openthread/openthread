@@ -55,6 +55,7 @@ void PlatformInit(int argc, char *argv[])
 
     if (gPlatformPseudoResetWasRequested)
     {
+        nrf5RadioPseudoReset();
         nrf5AlarmDeinit();
         nrf5AlarmInit();
 

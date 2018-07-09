@@ -149,6 +149,12 @@ void nrf5RadioInit(void);
 void nrf5RadioDeinit(void);
 
 /**
+ * Pseudo reset Radio driver.
+ *
+ */
+void nrf5RadioPseudoReset(void);
+
+/**
  * Function for processing Radio.
  *
  */
