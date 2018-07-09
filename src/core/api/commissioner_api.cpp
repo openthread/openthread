@@ -46,11 +46,13 @@ otError otCommissionerStart(otInstance *aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().Start();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    SuccessOrExit(error = instance.GetBorderAgent().Stop());
 #endif
-
+    SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Start());
+exit:
+#endif
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 
@@ -61,11 +63,13 @@ otError otCommissionerStop(otInstance *aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().Stop();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
+    SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Stop());
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    SuccessOrExit(error = instance.GetBorderAgent().Start());
 #endif
-
+exit:
+#endif
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 

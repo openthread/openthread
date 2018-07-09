@@ -99,7 +99,6 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 {
     otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
-    UdpHeader   udpHeader;
 
     messageInfoLocal = aMessageInfo;
 
@@ -112,6 +111,7 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     {
         GetSockName().mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
     }
+    messageInfoLocal.SetSockPort(GetSockName().mPort);
 
     if (messageInfoLocal.GetPeerAddr().IsUnspecified())
     {
@@ -126,13 +126,6 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
         messageInfoLocal.mPeerPort = GetPeerName().mPort;
     }
 
-    udpHeader.SetSourcePort(GetSockName().mPort);
-    udpHeader.SetDestinationPort(messageInfoLocal.mPeerPort);
-    udpHeader.SetLength(sizeof(udpHeader) + aMessage.GetLength());
-    udpHeader.SetChecksum(0);
-
-    SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
-    aMessage.SetOffset(0);
     SuccessOrExit(error = static_cast<Udp *>(mTransport)->SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
 
 exit:
@@ -209,7 +202,34 @@ Message *Udp::NewMessage(uint16_t aReserved)
 
 otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
 {
-    return GetIp6().SendDatagram(aMessage, aMessageInfo, aIpProto);
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_ENABLE_UDP_PROXY
+    if (aMessageInfo.GetInterfaceId() == OT_NETIF_INTERFACE_ID_HOST)
+    {
+        VerifyOrExit(mProxySender != NULL, error = OT_ERROR_NO_ROUTE);
+        mProxySender(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
+                     mProxySenderContext);
+        // message is consumed by the callback
+    }
+    else
+#endif
+    {
+        UdpHeader udpHeader;
+
+        udpHeader.SetSourcePort(aMessageInfo.mSockPort);
+        udpHeader.SetDestinationPort(aMessageInfo.mPeerPort);
+        udpHeader.SetLength(sizeof(udpHeader) + aMessage.GetLength());
+        udpHeader.SetChecksum(0);
+
+        SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
+        aMessage.SetOffset(0);
+
+        error = GetIp6().SendDatagram(aMessage, aMessageInfo, aIpProto);
+    }
+
+exit:
+    return error;
 }
 
 otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
@@ -239,10 +259,18 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
+    HandlePayload(aMessage, aMessageInfo);
+
+exit:
+    return error;
+}
+
+void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
+{
     // find socket
     for (UdpSocket *socket = mSockets; socket; socket = socket->GetNext())
     {
-        if (socket->GetSockName().mPort != udpHeader.GetDestinationPort())
+        if (socket->GetSockName().mPort != aMessageInfo.GetSockPort())
         {
             continue;
         }
@@ -261,7 +289,7 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
         // verify source if connected socket
         if (socket->GetPeerName().mPort != 0)
         {
-            if (socket->GetPeerName().mPort != udpHeader.GetSourcePort())
+            if (socket->GetPeerName().mPort != aMessageInfo.GetPeerPort())
             {
                 continue;
             }
@@ -275,9 +303,6 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
         socket->HandleUdpReceive(aMessage, aMessageInfo);
     }
-
-exit:
-    return error;
 }
 
 otError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)

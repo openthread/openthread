@@ -229,6 +229,14 @@ public:
      */
     Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
 
+    /**
+     * This method returns a pointer to the Uri-Path.
+     *
+     * @returns A Pointer to the Uri-Path.
+     *
+     */
+    const char *GetUriPath(void) const { return mUriPath; };
+
 private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
     {
@@ -584,7 +592,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
      *
      */
-    otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
     {
         return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
     };
