@@ -458,6 +458,7 @@ enum
     SPINEL_CAP_THREAD__BEGIN       = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER = (SPINEL_CAP_THREAD__BEGIN + 0),
     SPINEL_CAP_THREAD_TMF_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_UDP_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 2),
     SPINEL_CAP_THREAD__END         = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -1393,6 +1394,19 @@ typedef enum {
      *
      */
     SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE = SPINEL_PROP_THREAD_EXT__BEGIN + 35,
+
+    /// Thread UDP proxy stream
+    /** Format `dS6S`
+     *
+     * This property helps exchange UDP packets with host.
+     *
+     *  `d`: UDP payload
+     *  `S`: Remote UDP port
+     *  `6`: Remote IPv6 address
+     *  `S`: Local UDP port
+     *
+     */
+    SPINEL_PROP_THREAD_UDP_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 36,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

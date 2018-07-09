@@ -2928,6 +2928,82 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_UDP_PROXY
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STREAM>(void)
+{
+    const uint8_t *     framePtr = NULL;
+    uint16_t            frameLen = 0;
+    const otIp6Address *peerAddr;
+    uint16_t            peerPort;
+    uint16_t            sockPort;
+    otMessage *         message;
+    otError             error = OT_ERROR_NONE;
+
+    message = otIp6NewMessage(mInstance, false);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
+    SuccessOrExit(error = mDecoder.ReadUint16(peerPort));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(peerAddr));
+    SuccessOrExit(error = mDecoder.ReadUint16(sockPort));
+
+    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+
+    otUdpProxyReceive(mInstance, message, peerPort, peerAddr, sockPort);
+
+    // `otUdpProxyReceive()` takes ownership of `message` (in both success
+    // or failure cases). `message` is set to NULL so it is not freed at
+    // exit.
+    message = NULL;
+
+exit:
+    if (message != NULL)
+    {
+        otMessageFree(message);
+    }
+
+    return error;
+}
+
+void NcpBase::HandleUdpProxyStream(otMessage *   aMessage,
+                                   uint16_t      aPeerPort,
+                                   otIp6Address *aPeerAddr,
+                                   uint16_t      aSockPort,
+                                   void *        aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleUdpProxyStream(aMessage, aPeerPort, *aPeerAddr, aSockPort);
+}
+
+void NcpBase::HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort)
+{
+    otError  error  = OT_ERROR_NONE;
+    uint16_t length = otMessageGetLength(aMessage);
+    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_PROXY_STREAM));
+    SuccessOrExit(error = mEncoder.WriteUint16(length));
+    SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
+
+    SuccessOrExit(error = mEncoder.WriteUint16(aPeerPort));
+    SuccessOrExit(error = mEncoder.WriteIp6Address(aPeerAddr));
+    SuccessOrExit(error = mEncoder.WriteUint16(aPort));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+    // The `aMessage` is owned by the outbound frame and NCP buffer
+    // after frame was finished/ended successfully. It will be freed
+    // when the frame is successfully sent and removed.
+
+    aMessage = NULL;
+
+exit:
+
+    if (aMessage != NULL)
+    {
+        otMessageFree(aMessage);
+    }
+}
+#endif // OPENTHREAD_ENABLE_UDP_PROXY
+
 // ----------------------------------------------------------------------------
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------

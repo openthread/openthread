@@ -119,7 +119,6 @@ SOURCES_COMMON                      = \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
-    api/tmf_proxy_api.cpp             \
     api/udp_api.cpp                   \
     coap/coap.cpp                     \
     coap/coap_header.cpp              \
@@ -146,6 +145,7 @@ SOURCES_COMMON                      = \
     mac/mac_filter.cpp                \
     mac/mac_frame.cpp                 \
     meshcop/announce_begin_client.cpp \
+    meshcop/border_agent.cpp          \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_local.cpp         \
@@ -195,7 +195,6 @@ SOURCES_COMMON                      = \
     thread/router_table.cpp           \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
-    thread/tmf_proxy.cpp              \
     thread/time_sync_service.cpp      \
     thread/topology.cpp               \
     utils/channel_manager.cpp         \
@@ -268,6 +267,7 @@ HEADERS_COMMON                      = \
     mac/mac_filter.hpp                \
     mac/mac_frame.hpp                 \
     meshcop/announce_begin_client.hpp \
+    meshcop/border_agent.hpp          \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_local.hpp         \
@@ -327,7 +327,6 @@ HEADERS_COMMON                      = \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uri_paths.hpp       \
-    thread/tmf_proxy.hpp              \
     thread/time_sync_service.hpp      \
     thread/topology.hpp               \
     utils/channel_manager.hpp         \
