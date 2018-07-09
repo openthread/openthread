@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rfc.c
-*  Revised:        2017-05-05 10:41:25 +0200 (Fri, 05 May 2017)
-*  Revision:       48919
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Driver for the RF Core.
 *

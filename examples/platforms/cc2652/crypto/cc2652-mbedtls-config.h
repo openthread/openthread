@@ -2461,7 +2461,7 @@
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
 
 /* Entropy options */
-#define MBEDTLS_ENTROPY_MAX_SOURCES                1 /**< Maximum number of sources supported */
+#define MBEDTLS_ENTROPY_MAX_SOURCES                 1 /**< Maximum number of sources supported */
 //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
 
 /* Memory buffer allocator options */

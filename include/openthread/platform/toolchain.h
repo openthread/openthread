@@ -258,6 +258,25 @@ extern "C" {
 
 #define OT_UNREACHABLE_CODE(CODE) CODE
 
+#elif defined(__TI_ARM__)
+
+#include <stddef.h>
+
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        if (&VARIABLE == NULL)       \
+        {                            \
+        }                            \
+    } while (false)
+
+/*
+ * #112-D statement is unreachable
+ * #129-D loop is not reachable
+ */
+#define OT_UNREACHABLE_CODE(CODE) \
+    _Pragma("diag_push") _Pragma("diag_suppress 112") _Pragma("diag_suppress 129") CODE _Pragma("diag_pop")
+
 #else
 
 #define OT_UNUSED_VARIABLE(VARIABLE) \

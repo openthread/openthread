@@ -2,7 +2,7 @@
 //! @file       cc26x0f128.cmd
 //! @brief      CC26x0F128 rev2 linker file for Code Composer Studio.
 //!
-//! Revised     $Date: 2017-03-28 15:32:09 +0200 (ti, 28 mar 2017) $
+//! Revised     $Date: 2017-03-28 15:32:09 +0200 (Tue, 28 Mar 2017) $
 //! Revision    $Revision: 17730 $
 //
 //  This file is auto-generated.
