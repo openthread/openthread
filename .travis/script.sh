@@ -164,6 +164,15 @@ EOF
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
@@ -233,6 +242,15 @@ EOF
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
@@ -298,6 +316,15 @@ EOF
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -378,6 +405,15 @@ EOF
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
 
     git checkout -- . || die
     git clean -xfd || die
