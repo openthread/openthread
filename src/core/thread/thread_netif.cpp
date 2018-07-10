@@ -90,9 +90,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mJamDetector(aInstance)
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_TMF_PROXY
-    , mTmfProxy(mMleRouter.GetMeshLocal16(), mCoap)
-#endif // OPENTHREAD_ENABLE_TMF_PROXY
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)
     , mAddressResolver(aInstance)

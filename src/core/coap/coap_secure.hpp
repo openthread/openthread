@@ -87,6 +87,15 @@ public:
     otError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
 
     /**
+     * This method sets connected callback of this secure CoAP agent.
+     *
+     * @param[in]  aCallback  A pointer to a function to get called when connection state changes.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     */
+    void SetConnectedCallback(ConnectedCallback aCallback, void *aContext);
+
+    /**
      * This method stops the secure CoAP agent.
      *
      * @retval OT_ERROR_NONE  Successfully stopped the secure CoAP agent.
@@ -200,6 +209,14 @@ public:
      *
      */
     virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This method returns the DTLS session's peer address.
+     *
+     * @return DTLS session's message info.
+     *
+     */
+    const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

@@ -359,7 +359,7 @@ private:
     bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];
 #endif
     uint8_t  mKek[kMaxKeyLength];

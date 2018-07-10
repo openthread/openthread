@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       chipinfo.h
-*  Revised:        2017-01-19 13:55:31 +0100 (Thu, 19 Jan 2017)
-*  Revision:       48292
+*  Revised:        2017-08-30 11:09:05 +0200 (Wed, 30 Aug 2017)
+*  Revision:       49664
 *
 *  Description:    Collection of functions returning chip information.
 *
@@ -313,7 +313,7 @@ ChipInfo_GetMinorHwRev( void )
 //! How to decode the USER_ID filed is described in the Technical Reference Manual (TRM)
 //!
 //! \return
-//! Returns the the 32 bits USER_ID field
+//! Returns the 32 bits USER_ID field
 //
 //*****************************************************************************
 __STATIC_INLINE uint32_t
@@ -337,7 +337,13 @@ typedef enum {
    CHIP_TYPE_CC2650        =  5, //!<  5 means that this is a CC2650 chip.
    CHIP_TYPE_CUSTOM_0      =  6, //!<  6 means that this is a CUSTOM_0 chip.
    CHIP_TYPE_CUSTOM_1      =  7, //!<  7 means that this is a CUSTOM_1 chip.
-   CHIP_TYPE_CC2640R2      =  8  //!<  4 means that this is a CC2640R2 chip.
+   CHIP_TYPE_CC2640R2      =  8, //!<  8 means that this is a CC2640R2 chip.
+   CHIP_TYPE_CC2642        =  9, //!<  9 means that this is a CC2642 chip.
+   CHIP_TYPE_CC2644        =  10,//!< 10 means that this is a CC2644 chip.
+   CHIP_TYPE_CC2652        =  11,//!< 11 means that this is a CC2652 chip.
+   CHIP_TYPE_CC1312        =  12,//!< 12 means that this is a CC1312 chip.
+   CHIP_TYPE_CC1352        =  13,//!< 13 means that this is a CC1352 chip.
+   CHIP_TYPE_CC1354        =  14 //!< 14 means that this is a CC1354 chip.
 } ChipType_t;
 
 //*****************************************************************************
@@ -356,12 +362,12 @@ extern ChipType_t ChipInfo_GetChipType( void );
 //
 //*****************************************************************************
 typedef enum {
-   FAMILY_Unknown               = -1, //!< -1 means that the chip's family member is unknown.
-   FAMILY_CC26x0                =  0, //!<  0 means that the chip is a CC26x0 family member.
-   FAMILY_CC13x0                =  1, //!<  1 means that the chip is a CC13x0 family member.
-   FAMILY_CC26x1                =  2, //!<  2 means that the chip is a CC26x1 family member.
-   FAMILY_CC26x0R2              =  3, //!<  3 means that the chip is a CC26x0R2 family (new ROM contents).
-   FAMILY_CC13x2_13x4_26x2_26x4 =  4  //!<  4 means that the chip is a CC13x2, CC13x4, CC26x2, CC26x4 family member.
+   FAMILY_Unknown          = -1, //!< -1 means that the chip's family member is unknown.
+   FAMILY_CC26x0           =  0, //!<  0 means that the chip is a CC26x0 family member.
+   FAMILY_CC13x0           =  1, //!<  1 means that the chip is a CC13x0 family member.
+   FAMILY_CC26x1           =  2, //!<  2 means that the chip is a CC26x1 family member.
+   FAMILY_CC26x0R2         =  3, //!<  3 means that the chip is a CC26x0R2 family (new ROM contents).
+   FAMILY_CC13x2_CC26x2    =  4  //!<  4 means that the chip is a CC13x2, CC26x2 family member.
 } ChipFamily_t;
 
 //*****************************************************************************
@@ -373,6 +379,26 @@ typedef enum {
 //
 //*****************************************************************************
 extern ChipFamily_t ChipInfo_GetChipFamily( void );
+
+//*****************************************************************************
+//
+// Options for the define THIS_DRIVERLIB_BUILD
+//
+//*****************************************************************************
+#define DRIVERLIB_BUILD_CC26X0        0 //!< 0 is the driverlib build ID for the cc26x0 driverlib.
+#define DRIVERLIB_BUILD_CC13X0        1 //!< 1 is the driverlib build ID for the cc13x0 driverlib.
+#define DRIVERLIB_BUILD_CC26X1        2 //!< 2 is the driverlib build ID for the cc26x1 driverlib.
+#define DRIVERLIB_BUILD_CC26X0R2      3 //!< 3 is the driverlib build ID for the cc26x0r2 driverlib.
+#define DRIVERLIB_BUILD_CC13X2_CC26X2 4 //!< 4 is the driverlib build ID for the cc13x2_cc26x2 driverlib.
+
+//*****************************************************************************
+//
+//! \brief Define THIS_DRIVERLIB_BUILD, identifying current driverlib build ID.
+//!
+//! This driverlib build identifier can be useful for compile time checking/optimization (supporting C preprocessor expressions).
+//
+//*****************************************************************************
+#define THIS_DRIVERLIB_BUILD   DRIVERLIB_BUILD_CC26X0
 
 //*****************************************************************************
 //
@@ -432,16 +458,16 @@ ChipInfo_ChipFamilyIs_CC26x1( void )
 
 //*****************************************************************************
 //
-//! \brief Returns true if this chip is member of the CC13x2, CC13x4, CC26x2, CC26x4 family.
+//! \brief Returns true if this chip is member of the CC13x2, CC26x2 family.
 //!
 //! \return
-//! Returns \c true if this chip is member of the CC13x2, CC13x4, CC26x2, CC26x4 family, \c false otherwise.
+//! Returns \c true if this chip is member of the CC13x2, CC26x2 family, \c false otherwise.
 //
 //*****************************************************************************
 __STATIC_INLINE bool
-ChipInfo_ChipFamilyIs_CC13x2_13x4_26x2_26x4( void )
+ChipInfo_ChipFamilyIs_CC13x2_CC26x2( void )
 {
-   return ( ChipInfo_GetChipFamily() == FAMILY_CC13x2_13x4_26x2_26x4 );
+   return ( ChipInfo_GetChipFamily() == FAMILY_CC13x2_CC26x2 );
 }
 
 //*****************************************************************************

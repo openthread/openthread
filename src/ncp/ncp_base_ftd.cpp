@@ -44,10 +44,6 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/misc.h>
 
-#if OPENTHREAD_ENABLE_TMF_PROXY
-#include <openthread/tmf_proxy.h>
-#endif
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -547,107 +543,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_
 exit:
     return error;
 }
-
-#if OPENTHREAD_ENABLE_TMF_PROXY
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_TMF_PROXY_ENABLED>(void)
-{
-    return mEncoder.WriteBool(otTmfProxyIsEnabled(mInstance));
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_TMF_PROXY_STREAM>(void)
-{
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    uint16_t       locator;
-    uint16_t       port;
-    otMessage *    message;
-    otError        error = OT_ERROR_NONE;
-
-    // THREAD_TMF_PROXY_STREAM requires layer 2 security.
-    message = otIp6NewMessage(mInstance, true);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
-    SuccessOrExit(error = mDecoder.ReadUint16(locator));
-    SuccessOrExit(error = mDecoder.ReadUint16(port));
-
-    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
-
-    error = otTmfProxySend(mInstance, message, locator, port);
-
-    // `otTmfProxySend()` takes ownership of `message` (in both success
-    // or failure cases). `message` is set to NULL so it is not freed at
-    // exit.
-    message = NULL;
-
-exit:
-    if (message != NULL)
-    {
-        otMessageFree(message);
-    }
-
-    return error;
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_TMF_PROXY_ENABLED>(void)
-{
-    bool    enabled;
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mDecoder.ReadBool(enabled));
-
-    if (enabled)
-    {
-        error = otTmfProxyStart(mInstance, &NcpBase::HandleTmfProxyStream, this);
-    }
-    else
-    {
-        error = otTmfProxyStop(mInstance);
-    }
-
-exit:
-    return error;
-}
-
-void NcpBase::HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext)
-{
-    static_cast<NcpBase *>(aContext)->HandleTmfProxyStream(aMessage, aLocator, aPort);
-}
-
-void NcpBase::HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
-{
-    otError  error  = OT_ERROR_NONE;
-    uint16_t length = otMessageGetLength(aMessage);
-    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
-    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_TMF_PROXY_STREAM));
-    SuccessOrExit(error = mEncoder.WriteUint16(length));
-    SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
-
-    SuccessOrExit(error = mEncoder.WriteUint16(aLocator));
-    SuccessOrExit(error = mEncoder.WriteUint16(aPort));
-    SuccessOrExit(error = mEncoder.EndFrame());
-
-    // The `aMessage` is owned by the outbound frame and NCP buffer
-    // after frame was finished/ended successfully. It will be freed
-    // when the frame is successfully sent and removed.
-
-    aMessage = NULL;
-
-exit:
-
-    if (aMessage != NULL)
-    {
-        otMessageFree(aMessage);
-    }
-
-    if (error != OT_ERROR_NONE)
-    {
-        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_DROPPED);
-        mUpdateChangedPropsTask.Post();
-    }
-}
-#endif // OPENTHREAD_ENABLE_TMF_PROXY
 
 otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength)
 {

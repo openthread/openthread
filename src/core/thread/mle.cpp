@@ -302,6 +302,17 @@ void Mle::SetRole(otDeviceRole aRole)
 
     mRole = aRole;
     GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    // Start border agent
+    if (aRole == OT_DEVICE_ROLE_ROUTER || aRole == OT_DEVICE_ROLE_LEADER || aRole == OT_DEVICE_ROLE_CHILD)
+    {
+        SuccessOrExit(GetInstance().GetBorderAgent().Start());
+    }
+    else
+    {
+        SuccessOrExit(GetInstance().GetBorderAgent().Stop());
+    }
+#endif
 
 exit:
     return;

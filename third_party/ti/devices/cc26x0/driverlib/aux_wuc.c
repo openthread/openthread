@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aux_wuc.c
-*  Revised:        2016-12-08 10:34:56 +0100 (Thu, 08 Dec 2016)
-*  Revision:       47910
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Driver for the AUX Wakeup Controller.
 *

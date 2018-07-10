@@ -83,7 +83,7 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
     VerifyOrExit(GetVersion() == 1);
 
     tokenLength = GetTokenLength();
-    VerifyOrExit(tokenLength <= kMaxTokenLength && (mHeaderLength + tokenLength) <= length);
+    VerifyOrExit(tokenLength <= OT_COAP_MAX_TOKEN_LENGTH && (mHeaderLength + tokenLength) <= length);
     aMessage.Read(offset, tokenLength, mHeader.mBytes + mHeaderLength);
     mHeaderLength += tokenLength;
     offset += tokenLength;
@@ -416,9 +416,9 @@ exit:
 
 void Header::SetToken(uint8_t aTokenLength)
 {
-    uint8_t token[kMaxTokenLength] = {0};
+    uint8_t token[OT_COAP_MAX_TOKEN_LENGTH] = {0};
 
-    assert(aTokenLength <= kMaxTokenLength);
+    assert(aTokenLength <= sizeof(token));
 
     Random::FillBuffer(token, aTokenLength);
 

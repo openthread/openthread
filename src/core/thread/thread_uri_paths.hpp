@@ -221,6 +221,22 @@ namespace ot {
 #define OT_URI_PATH_COMMISSIONER_GET "c/cg"
 
 /**
+ * @def OT_URI_PATH_COMMISSIONER_KEEP_ALIVE
+ *
+ * The URI Path for Commissioner Keep Alive.
+ *
+ */
+#define OT_URI_PATH_COMMISSIONER_KEEP_ALIVE "c/ca"
+
+/**
+ * @def OT_URI_PATH_COMMISSIONER_PETITION
+ *
+ * The URI Path for Commissioner Petition.
+ *
+ */
+#define OT_URI_PATH_COMMISSIONER_PETITION "c/cp"
+
+/**
  * @def OT_URI_PATH_COMMISSIONER_SET
  *
  * The URI Path for MGMT_COMMISSIONER_SET

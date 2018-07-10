@@ -82,7 +82,7 @@ static void uart_power_control(uint32_t who_base, int turnon)
     {
         /* UART0 is in the SERIAL domain
          * UART1 is in the PERIPH domain.
-         * See: ti/devices/cc26x2/driverlib/pcrm.h, line: 658
+         * See: ti/devices/cc13x2_cc26x2/driverlib/pcrm.h, line: 658
          */
         value = (who_base == UART0_BASE) ? PRCM_DOMAIN_SERIAL : PRCM_DOMAIN_PERIPH;
         PRCMPowerDomainOn(value);

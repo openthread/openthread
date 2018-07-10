@@ -180,7 +180,7 @@ const char *otThreadErrorToString(otError aError)
     switch (aError)
     {
     case OT_ERROR_NONE:
-        retval = "None";
+        retval = "OK";
         break;
 
     case OT_ERROR_FAILED:

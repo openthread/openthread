@@ -64,6 +64,9 @@ Instance::Instance(void)
     , mSettings(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    , mBorderAgent(*this)
+#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif
@@ -419,6 +422,13 @@ template <> Utils::ChannelMonitor &Instance::Get(void)
 template <> Utils::ChannelManager &Instance::Get(void)
 {
     return GetChannelManager();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+template <> MeshCoP::BorderAgent &Instance::Get(void)
+{
+    return mBorderAgent;
 }
 #endif
 

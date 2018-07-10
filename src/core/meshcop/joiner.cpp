@@ -119,8 +119,7 @@ otError Joiner::Start(const char *     aPSKd,
     error = netif.GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
     SuccessOrExit(error);
 
-    error = netif.GetCoapSecure().GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                   static_cast<uint8_t>(strlen(aPSKd)));
+    error = netif.GetCoapSecure().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd), static_cast<uint8_t>(strlen(aPSKd)));
     SuccessOrExit(error);
 
     error = netif.GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);

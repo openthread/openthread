@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+ifeq ($(BORDER_AGENT),1)
+configure_OPTIONS              += --enable-border-agent
+endif
+
 ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
 endif
@@ -95,8 +99,8 @@ ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
 
-ifeq ($(TMF_PROXY),1)
-configure_OPTIONS              += --enable-tmf-proxy
+ifeq ($(UDP_PROXY),1)
+configure_OPTIONS              += --enable-udp-proxy
 endif
 
 ifeq ($(DEBUG_UART),1)
