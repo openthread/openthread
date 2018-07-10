@@ -104,7 +104,7 @@ public:
      * @returns The total size include Type, Length, and Value fields.
      *
      */
-    uint8_t GetSize(void) const { return sizeof(Tlv) + mLength; }
+    uint16_t GetSize(void) const { return sizeof(Tlv) + mLength; }
 
     /**
      * This method returns a pointer to the Value.

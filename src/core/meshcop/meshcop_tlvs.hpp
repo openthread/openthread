@@ -1336,7 +1336,7 @@ public:
      * @returns The total size of this entry (number of bytes).
      *
      */
-    uint8_t GetSize(void) const { return sizeof(ChannelMaskEntry) + mMaskLength; }
+    uint16_t GetSize(void) const { return sizeof(ChannelMaskEntry) + mMaskLength; }
 
     /**
      * This method clears the bit corresponding to @p aChannel in ChannelMask.
