@@ -532,7 +532,7 @@ otError MeshForwarder::DecompressIp6Header(uint8_t *           aFrame,
         lowpan.DecompressBaseHeader(aIp6Header, aNextHeaderCompressed, aMacSource, aMacDest, aFrame, aFrameLength);
     VerifyOrExit(headerLength >= 0, error = OT_ERROR_PARSE);
 
-    aHeaderLength = (aFrame - start) + headerLength;
+    aHeaderLength = static_cast<uint8_t>(aFrame - start) + static_cast<uint8_t>(headerLength);
 
 exit:
     return error;
