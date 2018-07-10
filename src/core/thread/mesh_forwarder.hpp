@@ -280,10 +280,17 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
-    otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  SkipMeshHeader(uint8_t *&aFrame, uint8_t &aFrameLength);
     otError  SkipFragmentHeader(uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  DecompressIp6Header(uint8_t *           aFrame,
+                                 uint8_t             aFrameLength,
+                                 const Mac::Address &aMacSource,
+                                 const Mac::Address &aMacDest,
+                                 Ip6::Header &       aIp6Header,
+                                 uint8_t &           aHeaderLength,
+                                 bool &              aNextHeaderCompressed);
+    otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetFragmentHeader(uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader);
     otError  GetIp6Header(uint8_t *           aFrame,
                           uint8_t             aFrameLength,
@@ -293,6 +300,16 @@ private:
     Message *GetDirectTransmission(void);
     otError  GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
+    otError  GetFramePriority(uint8_t *           aFrame,
+                              uint8_t             aFrameLength,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              uint8_t &           aPriority);
+    otError  GetForwardFramePriority(uint8_t *           aFrame,
+                                     uint8_t             aFrameLength,
+                                     const Mac::Address &aMacDest,
+                                     const Mac::Address &aMacSource,
+                                     uint8_t &           aPriority);
     otError  PrepareDiscoverRequest(void);
     void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     otError  PrepareDataPoll(void);
@@ -304,8 +321,7 @@ private:
                             uint8_t                 aPayloadLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
-                            const otThreadLinkInfo &aLinkInfo,
-                            bool                    aReceive);
+                            const otThreadLinkInfo &aLinkInfo);
     void     HandleLowpanHC(uint8_t *               aFrame,
                             uint8_t                 aPayloadLength,
                             const Mac::Address &    aMacSource,
@@ -319,20 +335,12 @@ private:
     otError  UpdateIp6Route(Message &aMessage);
     otError  UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError  UpdateMeshRoute(Message &aMessage);
+    void     UpdateTimeout(MessageQueue &aList);
     otError  HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
     void     HandleDiscoverComplete(void);
-    Message *FindFragmentMessage(Lowpan::FragmentHeader &aFragmentHeader,
-                                 uint8_t                 aFrameLength,
-                                 bool                    aLinkSecurityEnabled);
-    otError  GetFramePriority(uint8_t *               aFrame,
-                              uint8_t                 aFrameLength,
-                              const Mac::Address &    aMacSource,
-                              const Mac::Address &    aMacDest,
-                              const otThreadLinkInfo &aLinkInfo,
-                              uint8_t &               aPriority);
 
     static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void           HandleReceivedFrame(Mac::Frame &aFrame);
@@ -343,8 +351,8 @@ private:
     void           HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
     static void    HandleDiscoverTimer(Timer &aTimer);
     void           HandleDiscoverTimer(void);
-    static void    HandleReassemblyTimer(Timer &aTimer);
-    void           HandleReassemblyTimer(void);
+    static void    HandleTimeoutUpdateTimer(Timer &aTimer);
+    void           HandleTimeoutUpdateTimer(void);
     static void    ScheduleTransmissionTask(Tasklet &aTasklet);
     void           ScheduleTransmissionTask(void);
     static void    HandleDataPollTimeout(Mac::Receiver &aReceiver);
@@ -364,6 +372,13 @@ private:
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_QOS
+    Message *FindMessageWithFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader);
+    void     UpdateMessageWithFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                               uint8_t                 aFragmentLength,
+                                               uint8_t                 aPriority);
+#endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
     const char *MessageActionToString(MessageAction aAction, otError aError);
@@ -416,12 +431,16 @@ private:
     Mac::Receiver mMacReceiver;
     Mac::Sender   mMacSender;
     TimerMilli    mDiscoverTimer;
-    TimerMilli    mReassemblyTimer;
+    TimerMilli    mTimeoutUpdateTimer;
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
     uint16_t      mFragTag;
     uint16_t      mMessageNextOffset;
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_QOS
+    MessageQueue mFragmentPriorityList;
+#endif
 
     Message *mSendMessage;
     bool     mSendMessageIsARetransmission;

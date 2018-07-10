@@ -229,7 +229,7 @@ public:
 
     enum
     {
-        kPriorityHigh    = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityHigh    = 0,                            ///< High priority level.
         kPriorityMedium  = OT_MESSAGE_PRIORITY_MEDIUM,   ///< Medium priority level.
         kPriorityLow     = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
         kPriorityVeryLow = OT_MESSAGE_PRIORITY_VERY_LOW, ///< Very low priority level.
@@ -261,14 +261,13 @@ public:
     /**
      * This method sets the number of bytes in the message.
      *
-     * @param[in]  aLength         Requested number of bytes in the message.
-     * @param[in]  aResizeMessage  TRUE if resize the message, FALSE otherwise.
+     * @param[in]  aLength  Requested number of bytes in the message.
      *
      * @retval OT_ERROR_NONE     Successfully set the length of the message.
      * @retval OT_ERROR_NO_BUFS  Failed to grow the size of the message because insufficient buffers were available.
      *
      */
-    otError SetLength(uint16_t aLength, bool aResizeMessage = true);
+    otError SetLength(uint16_t aLength);
 
     /**
      * This method returns the number of buffers in the message.
@@ -1070,7 +1069,6 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
-private:
     /**
      * This method returns the tail of the list (last message in the list)
      *

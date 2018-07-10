@@ -454,9 +454,6 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 
 /**
  * This function creates a new message with a CoAP header.
- * Note: Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control
- * messages. If the pamameter aPriority is set to OT_MESSAGE_PRIORITY_HIGH, it will be
- * converted to OT_MESSAGE_PRIORITY_MEDIUM automatically.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.

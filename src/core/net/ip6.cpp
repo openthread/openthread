@@ -86,13 +86,9 @@ uint8_t Ip6::DscpToPriority(uint8_t aDscp)
     {
         priority = Message::kPriorityLow;
     }
-    else if ((cs == kDscpCs4) || (cs == kDscpCs5))
+    else if ((cs == kDscpCs4) || (cs == kDscpCs5) || (cs == kDscpCs6) || (cs == kDscpCs7))
     {
         priority = Message::kPriorityMedium;
-    }
-    else if ((cs == kDscpCs6) || (cs == kDscpCs7))
-    {
-        priority = Message::kPriorityHigh;
     }
 
     return priority;

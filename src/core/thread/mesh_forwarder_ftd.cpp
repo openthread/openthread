@@ -839,6 +839,19 @@ exit:
     return error;
 }
 
+otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
+                                    uint8_t             aFrameLength,
+                                    const Mac::Address &aMacSource,
+                                    const Mac::Address &aMacDest,
+                                    Ip6::Header &       aIp6Header)
+{
+    uint8_t headerLength;
+    bool    nextHeaderCompressed;
+
+    return DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, aIp6Header, headerLength,
+                               nextHeaderCompressed);
+}
+
 otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
                                          uint8_t             aFrameLength,
                                          const Mac::Address &aMeshSource,
@@ -890,7 +903,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
 
         if (reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
         {
-            HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo, true);
+            HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo);
         }
         else if (Lowpan::Lowpan::IsLowpanHc(aFrame))
         {
@@ -903,7 +916,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
-        uint8_t priority = kDefaultMsgPriority;
+        uint8_t priority;
 
         netif.GetMle().ResolveRoutingLoops(aMacSource.GetShort(), meshDest.GetShort());
 
@@ -912,25 +925,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-#if OPENTHREAD_ENABLE_QOS
-        if (GetFramePriority(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo, priority) != OT_ERROR_NONE)
-        {
-            priority = kDefaultMsgPriority;
-        }
-
-        if (aFrameLength - meshHeader.GetHeaderLength() >= 1 &&
-            reinterpret_cast<Lowpan::FragmentHeader *>(aFrame + meshHeader.GetHeaderLength())->IsFragmentHeader())
-        {
-            // An IPv6 packet may be fragmented into several fragments by 6Lowpan.
-            // The fragments, except the first fragment, don’t carry IPv6 header.
-            // Except the Thread control traffic, the priority level comes from the
-            // DSCP value in IPv6 header. To get the priority level of the subsequent
-            // fragments, routers have to store the information of the fragments.
-            HandleFragment(aFrame + meshHeader.GetHeaderLength(), aFrameLength - meshHeader.GetHeaderLength(),
-                           meshSource, meshDest, aLinkInfo, false);
-        }
-#endif
-
+        SuccessOrExit(error = GetForwardFramePriority(aFrame, aFrameLength, meshDest, meshSource, priority));
         VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
@@ -984,6 +979,64 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 exit:
     return;
 }
+
+#if OPENTHREAD_ENABLE_QOS
+
+otError MeshForwarder::GetForwardFramePriority(uint8_t *           aFrame,
+                                               uint8_t             aFrameLength,
+                                               const Mac::Address &aMacDest,
+                                               const Mac::Address &aMacSource,
+                                               uint8_t &           aPriority)
+{
+    otError                error   = OT_ERROR_NONE;
+    Message *              message = NULL;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
+
+    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    {
+        SuccessOrExit(error = GetFragmentHeader(aFrame, aFrameLength, fragmentHeader));
+        SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
+        if (fragmentHeader.GetDatagramOffset() == 0)
+        {
+            // Get priority from Ipv6 header or UDP destination port directly
+            SuccessOrExit(GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+        }
+        else
+        {
+            // Get priority from the message buffered in mFragmentPriorityList
+            VerifyOrExit((message = FindMessageWithFragmentPriority(fragmentHeader)) != NULL,
+                         error = OT_ERROR_NOT_FOUND);
+            aPriority = message->GetPriority();
+        }
+
+        UpdateMessageWithFragmentPriority(fragmentHeader, aFrameLength, aPriority);
+    }
+    else
+    {
+        // Get priority from Ipv6 header or UDP destination port directly
+        SuccessOrExit(GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+    }
+
+exit:
+    return error;
+}
+
+#else // #if OPENTHREAD_ENABLE_QOS
+
+otError MeshForwarder::GetForwardFramePriority(uint8_t *,
+                                               uint8_t,
+                                               const Mac::Address &,
+                                               const Mac::Address &,
+                                               uint8_t &aPriority)
+{
+    aPriority = kDefaultMsgPriority;
+    return OT_ERROR_NONE;
+}
+
+#endif // #if OPENTHREAD_ENABLE_QOS
 
 #if OPENTHREAD_ENABLE_SERVICE
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)

@@ -145,13 +145,7 @@ otMessage *otCoapNewMessageWithPriority(otInstance *aInstance, const otCoapHeade
 
     VerifyOrExit(aHeader != NULL, message = NULL);
 
-#if OPENTHREAD_ENABLE_QOS
-    // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
-    if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
-    {
-        aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
-    }
-#else
+#ifndef OPENTHREAD_ENABLE_QOS
     aPriority = static_cast<otMessagePriority>(Coap::kDefaultCoapMessagePriority);
 #endif
 

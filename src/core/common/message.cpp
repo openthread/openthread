@@ -300,30 +300,26 @@ exit:
     return next;
 }
 
-otError Message::SetLength(uint16_t aLength, bool aResizeMessage)
+otError Message::SetLength(uint16_t aLength)
 {
     otError  error              = OT_ERROR_NONE;
     uint16_t totalLengthRequest = GetReserved() + aLength;
     uint16_t totalLengthCurrent = GetReserved() + GetLength();
     int      bufs               = 0;
 
-    if (aResizeMessage)
+    if (totalLengthRequest > kHeadBufferDataSize)
     {
-        if (totalLengthRequest > kHeadBufferDataSize)
-        {
-            bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
-        }
-
-        if (totalLengthCurrent > kHeadBufferDataSize)
-        {
-            bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
-        }
-
-        SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
-
-        SuccessOrExit(error = ResizeMessage(totalLengthRequest));
+        bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
+    if (totalLengthCurrent > kHeadBufferDataSize)
+    {
+        bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
+    }
+
+    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
+
+    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mBuffer.mHead.mInfo.mLength = aLength;
 
 exit:

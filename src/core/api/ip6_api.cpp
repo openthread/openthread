@@ -215,13 +215,7 @@ otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurity
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-#if OPENTHREAD_ENABLE_QOS
-    // Priority level OT_MESSAGE_PRIORITY_HIGH is reserved for internal network control messages.
-    if (aPriority == OT_MESSAGE_PRIORITY_HIGH)
-    {
-        aPriority = OT_MESSAGE_PRIORITY_MEDIUM;
-    }
-#else
+#ifndef OPENTHREAD_ENABLE_QOS
     aPriority = static_cast<otMessagePriority>(Ip6::kDefaultIp6MessagePriority);
 #endif
 
