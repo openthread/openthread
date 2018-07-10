@@ -82,7 +82,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
-    src/core/api/tmf_proxy_api.cpp                          \
     src/core/api/udp_api.cpp                                \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_header.cpp                           \
@@ -109,6 +108,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
     src/core/meshcop/announce_begin_client.cpp              \
+    src/core/meshcop/border_agent.cpp                       \
     src/core/meshcop/commissioner.cpp                       \
     src/core/meshcop/dataset.cpp                            \
     src/core/meshcop/dataset_local.cpp                      \
@@ -158,7 +158,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
-    src/core/thread/tmf_proxy.cpp                           \
     src/core/thread/topology.cpp                            \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
