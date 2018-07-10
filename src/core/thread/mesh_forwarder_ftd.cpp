@@ -1002,7 +1002,7 @@ otError MeshForwarder::GetForwardFramePriority(uint8_t *           aFrame,
         if (fragmentHeader.GetDatagramOffset() == 0)
         {
             // Get priority from Ipv6 header or UDP destination port directly
-            SuccessOrExit(GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+            SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
         }
         else
         {
@@ -1017,7 +1017,7 @@ otError MeshForwarder::GetForwardFramePriority(uint8_t *           aFrame,
     else
     {
         // Get priority from Ipv6 header or UDP destination port directly
-        SuccessOrExit(GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
     }
 
 exit:
