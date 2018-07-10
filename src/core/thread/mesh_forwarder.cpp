@@ -703,7 +703,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
     if (dstpan == netif.GetMac().GetPanId())
     {
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
         // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
         //  Dest Address:       Extended
         //  Src Address:        Extended
