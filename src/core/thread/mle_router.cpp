@@ -1637,12 +1637,9 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         }
 #endif
     }
-    else
+    else if ((TimerMilli::GetNow() - child->GetLastHeard()) < kParentRequestRouterTimeout)
     {
-        if ((TimerMilli::GetNow() - child->GetLastHeard()) < kParentRequestRouterTimeout)
-        {
-            ExitNow(error = OT_ERROR_DUPLICATED);
-        }
+        ExitNow(error = OT_ERROR_DUPLICATED);
     }
 
     if (!child->IsStateValidOrRestoring())
