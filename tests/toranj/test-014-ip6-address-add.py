@@ -122,18 +122,13 @@ r2.add_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 fed1.add_ip6_address_on_interface(IP6_ADDR_2, prefix_len=64)
 sed2.add_ip6_address_on_interface(IP6_ADDR_3, prefix_len=64)
 
-for iter in range(2):
-
-    time.sleep(1.5)
-
+def check_addresses_and_prefixes():
     # Verify that the addresses are present in "IPv6:AllAddresses" wpantund property on the corresponding node.
-
     verify(r2.find_ip6_address_with_prefix(IP6_PREFIX_1)   == IP6_ADDR_1)
     verify(fed1.find_ip6_address_with_prefix(IP6_PREFIX_2) == IP6_ADDR_2)
     verify(sed2.find_ip6_address_with_prefix(IP6_PREFIX_3) == IP6_ADDR_3)
 
     # Verify that all prefixes are present in network data on all nodes (with correct flags).
-
     for prefix in [IP6_PREFIX_1, IP6_PREFIX_2, IP6_PREFIX_3]:
         for node in all_nodes:
             prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
@@ -150,35 +145,36 @@ for iter in range(2):
                     verify(p.priority == "med")
                     break
             else: # `for` loop finished without finding the prefix.
-                print 'Did not find prefix {} on node {}'.format(prefix, node)
-                exit(1)
+                raise wpan.VerifyError('Did not find prefix {} on node {}'.format(prefix, node))
 
     # Verify that IPv6 address of `sed2` is present on `r2` (its parent) "Thread:ChildTable:Addresses".
-
     addr_str = r2.get(wpan.WPAN_THREAD_CHILD_TABLE_ADDRESSES)
     # search for index on address in the `addr_str` and ensure it is non-negative.
     verify(addr_str.find(IP6_ADDR_3) >= 0)
 
-    if iter == 0:
-        # Reset the nodes and verify that all addresses/prefixes are preserved.
-        fed1.reset()
-        sed2.reset()
 
+# Check the addresses and prefixes (wait time 20 seconds)
+wpan.verify_within(check_addresses_and_prefixes, 15)
+
+# Reset the nodes and verify that all addresses/prefixes are preserved.
+fed1.reset()
+sed2.reset()
+wpan.verify_within(check_addresses_and_prefixes, 20)
 
 # Remove address from `r2`
-
 r2.remove_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 
-time.sleep(1.5)
+def check_address_prefix_removed():
+    # Verify that address is removed from r2
+    verify(r2.find_ip6_address_with_prefix(IP6_PREFIX_1) == '')
+    # Verify that the related prefix is also removed on all nodes
+    for node in all_nodes:
+        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        for p in prefixes:
+            verify(p.prefix != IP6_PREFIX_1)
 
-# Verify that address is removed from r2
-verify(r2.find_ip6_address_with_prefix(IP6_PREFIX_1) == '')
-
-# Verify that the related prefix is also removed on all nodes
-for node in all_nodes:
-    prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
-    for p in prefixes:
-        verify(p.prefix != IP6_PREFIX_1)
+# Check the addresses and prefixes (wait time 15 seconds)
+wpan.verify_within(check_address_prefix_removed, 15)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
