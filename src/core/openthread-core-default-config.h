@@ -163,6 +163,7 @@
  * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
  *
  * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+ *
  * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
  * increase congestion.
  *
