@@ -224,12 +224,8 @@ void nrf5RadioInit(void)
 
 void nrf5RadioDeinit(void)
 {
-    nrf_802154_deinit();
-}
-
-void nrf5RadioPseudoReset(void)
-{
     nrf_802154_sleep();
+    nrf_802154_deinit();
     sPendingEvents = 0;
 }
 
