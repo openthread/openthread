@@ -162,7 +162,9 @@
 /**
  * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
  *
- * The transmit number of a broadcast frame in MAC layer.
+ * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+ * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
+ * increase congestion.
  *
  */
 #ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
