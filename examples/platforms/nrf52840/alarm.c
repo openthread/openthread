@@ -53,6 +53,7 @@
 
 #include <drivers/clock/nrf_drv_clock.h>
 #include <drivers/radio/platform/timer/nrf_802154_timer.h>
+#include <drivers/radio/timer_scheduler/nrf_802154_timer_sched.h>
 
 #include <hal/nrf_rtc.h>
 
@@ -373,10 +374,14 @@ void nrf5AlarmInit(void)
     }
 
     nrf_rtc_task_trigger(RTC_INSTANCE, NRF_RTC_TASK_START);
+
+    nrf_802154_timer_sched_init();
 }
 
 void nrf5AlarmDeinit(void)
 {
+    nrf_802154_timer_sched_deinit();
+
     nrf_rtc_task_trigger(RTC_INSTANCE, NRF_RTC_TASK_STOP);
 
     for (uint32_t i = 0; i < kNumTimers; i++)
