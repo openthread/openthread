@@ -343,6 +343,30 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
+static void setupTransmit(otRadioFrame *aFrame)
+{
+    int i;
+
+    // wait for current TX operation to complete, if any.
+    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
+        ;
+
+    // flush txfifo
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
+
+    // frame length
+    HWREG(RFCORE_SFR_RFDATA) = aFrame->mLength;
+
+    // frame data
+    for (i = 0; i < aFrame->mLength; i++)
+    {
+        HWREG(RFCORE_SFR_RFDATA) = aFrame->mPsdu[i];
+    }
+
+    setChannel(aFrame->mChannel);
+}
+
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
@@ -356,26 +380,60 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sState         = OT_RADIO_STATE_TRANSMIT;
         sTransmitError = OT_ERROR_NONE;
 
-        while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
-            ;
+        setupTransmit(aFrame);
 
-        // flush txfifo
-        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
-        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
+        // Set up a counter to inform us if we get stuck.
+        i = 1000000;
 
-        // frame length
-        HWREG(RFCORE_SFR_RFDATA) = aFrame->mLength;
-
-        // frame data
-        for (i = 0; i < aFrame->mLength; i++)
+        // Wait for radio to enter receive state.
+        while ((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_RX_ACTIVE) == 0)
         {
-            HWREG(RFCORE_SFR_RFDATA) = aFrame->mPsdu[i];
+            // Count down the cycles, and emit a message if we get to zero.
+            // Ideally, we should never get there!
+            if (i)
+            {
+                i--;
+            }
+            else
+            {
+                otLogCritPlat(sInstance, "Radio is stuck!!! FSMSTAT0=0x%08x FSMSTAT1=0x%08x RFERRF=0x%08x",
+                              HWREG(RFCORE_XREG_FSMSTAT0), HWREG(RFCORE_XREG_FSMSTAT1), HWREG(RFCORE_SFR_RFERRF));
+                i = 1000000;
+            }
+
+            // Ensure we haven't overflowed the RX buffer in the mean time, as this
+            // will cause a deadlock here otherwise.  Similarly, if we see an aborted
+            // RX, handle that here too to prevent deadlock.
+            if (HWREG(RFCORE_SFR_RFERRF) & (RFCORE_SFR_RFERRF_RXOVERF | RFCORE_SFR_RFERRF_RXABO))
+            {
+                if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXOVERF)
+                {
+                    otLogCritPlat(sInstance, "RX Buffer Overflow detected", NULL);
+                }
+
+                if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXABO)
+                {
+                    otLogCritPlat(sInstance, "Aborted RX detected", NULL);
+                }
+
+                // Flush the RX buffer
+                HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+                HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+            }
+
+            // Check for idle state.  After flushing the RX buffer, we may wind up here.
+            if (!(HWREG(RFCORE_XREG_FSMSTAT1) & (RFCORE_XREG_FSMSTAT1_TX_ACTIVE | RFCORE_XREG_FSMSTAT1_RX_ACTIVE)))
+            {
+                otLogCritPlat(sInstance, "Idle state detected", NULL);
+
+                // In this case, the state of our driver mis-matches our state.  So force
+                // matters by clearing our channel variable and calling setChannel.  This
+                // should bring our radio into the RX state, which should allow us to go
+                // into TX.
+                sChannel = 0;
+                setupTransmit(aFrame);
+            }
         }
-
-        setChannel(aFrame->mChannel);
-
-        while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0)
-            ;
 
         // wait for valid rssi
         while ((HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0)
