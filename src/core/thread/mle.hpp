@@ -1582,11 +1582,11 @@ private:
         kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
     };
 
-    enum ChildUpdateRequestPendingStatus
+    enum ChildUpdateRequestState
     {
-        kChildUpdateRequestPendingNo,
-        kChildUpdateRequestPendingInProgress,
-        kChildUpdateRequestPendingInit,
+        kChildUpdateRequestNone,
+        kChildUpdateRequestPending,
+        kChildUpdateRequestActive
     };
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
@@ -1665,7 +1665,7 @@ private:
     uint8_t       mParentLinkQuality2;
     uint8_t       mParentLinkQuality1;
     uint8_t       mChildUpdateAttempts;
-    uint8_t       mChildUpdateRequestPendingStatus;
+    uint8_t       mChildUpdateRequestState;
     uint8_t       mParentLinkMargin;
     bool          mParentIsSingleton;
     bool          mReceivedResponseFromParent;

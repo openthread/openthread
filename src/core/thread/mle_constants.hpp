@@ -68,7 +68,7 @@ enum
     kParentResponseMaxDelayRouters  = 500,   ///< Maximum delay for response for Parent Request sent to routers only
     kParentResponseMaxDelayAll      = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
     kUnicastRetransmissionDelay     = 1000,  ///< Base delay before retransmitting an MLE unicast.
-    kChildUpdateRequestPendingDelay = 1000,  ///< Delay (in ms) for aggregating Child Update Request.
+    kChildUpdateRequestPendingDelay = 100,   ///< Delay (in ms) for aggregating Child Update Request.
     kMaxTransmissionCount           = 3,     ///< Maximum number of times an MLE message may be transmitted.
     kMaxResponseDelay               = 1000,  ///< Maximum delay before responding to a multicast request
     kMaxChildIdRequestTimeout       = 5000,  ///< Maximum delay for receiving a Child ID Request

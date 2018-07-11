@@ -82,7 +82,7 @@ Mle::Mle(Instance &aInstance)
     , mParentLinkQuality2(0)
     , mParentLinkQuality1(0)
     , mChildUpdateAttempts(0)
-    , mChildUpdateRequestPendingStatus(kChildUpdateRequestPendingNo)
+    , mChildUpdateRequestState(kChildUpdateRequestNone)
     , mParentLinkMargin(0)
     , mParentIsSingleton(false)
     , mReceivedResponseFromParent(false)
@@ -1454,7 +1454,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice())
         {
-            mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingInit;
+            mChildUpdateRequestState = kChildUpdateRequestPending;
         }
     }
 
@@ -1462,7 +1462,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
     {
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice() && !IsRxOnWhenIdle())
         {
-            mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingInit;
+            mChildUpdateRequestState = kChildUpdateRequestPending;
         }
     }
 
@@ -1474,7 +1474,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         }
         else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
         {
-            mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingInit;
+            mChildUpdateRequestState = kChildUpdateRequestPending;
         }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
@@ -1485,7 +1485,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 #endif
     }
 
-    if (mChildUpdateRequestPendingStatus == kChildUpdateRequestPendingInit)
+    if (mChildUpdateRequestState == kChildUpdateRequestPending)
     {
         mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
     }
@@ -2058,17 +2058,13 @@ void Mle::HandleChildUpdateRequestTimer(void)
         ExitNow();
     }
 
-    if (mChildUpdateRequestPendingStatus == kChildUpdateRequestPendingInit)
+    if (mChildUpdateRequestState == kChildUpdateRequestPending)
     {
-        mChildUpdateAttempts             = 0;
-        mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingInProgress;
+        mChildUpdateAttempts     = 0;
+        mChildUpdateRequestState = kChildUpdateRequestActive;
     }
 
-    if (mChildUpdateRequestPendingStatus == kChildUpdateRequestPendingInProgress)
-    {
-        SendChildUpdateRequest();
-    }
-    else if (mParent.IsStateRestoring() || IsRxOnWhenIdle())
+    if ((mChildUpdateRequestState == kChildUpdateRequestActive) || mParent.IsStateRestoring() || IsRxOnWhenIdle())
     {
         SendChildUpdateRequest();
     }
@@ -2097,8 +2093,8 @@ otError Mle::SendChildUpdateRequest(void)
 
     if (mChildUpdateAttempts >= kMaxChildKeepAliveAttempts)
     {
-        mChildUpdateAttempts             = 0;
-        mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingNo;
+        mChildUpdateAttempts     = 0;
+        mChildUpdateRequestState = kChildUpdateRequestNone;
         BecomeDetached();
         ExitNow();
     }
@@ -3453,8 +3449,8 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
             netif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
-        mChildUpdateAttempts             = 0;
-        mChildUpdateRequestPendingStatus = kChildUpdateRequestPendingNo;
+        mChildUpdateAttempts     = 0;
+        mChildUpdateRequestState = kChildUpdateRequestNone;
         break;
 
     default:
