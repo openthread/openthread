@@ -160,6 +160,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
+ *
+ * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+ *
+ * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
+ * increase congestion.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
+#define OPENTHREAD_CONFIG_TX_NUM_BCAST 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
  *
  * Define as 1 for OpenThread to drop a message (and not send any remaining fragments of the message) if all transmit
