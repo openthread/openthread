@@ -98,9 +98,6 @@ all_nodes = [r1, r2, sc1, sc2]
 
 wpan.Node.init_all_nodes()
 
-for node in all_nodes:
-    node.set(wpan.WPAN_OT_LOG_LEVEL, '0')
-
 #-----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
@@ -174,7 +171,7 @@ verify_prefix([r1], prefix4, 48, priority="high", stable=False, on_mesh=True, sl
 # Remove prefix and verify that it is removed from list
 r1.remove_prefix(prefix4, 48)
 time.sleep(0.5)
-verify(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES).find(prefix4) < 0)
+verify(r1.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES).find(prefix4) < 0)
 
 r1.add_prefix(prefix4, 48, priority="-1", stable=True, on_mesh=False, slaac=True, dhcp=False, configure=True,
     default_route=False, preferred=True)

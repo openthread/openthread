@@ -68,12 +68,6 @@ wpan.Node.init_all_nodes()
 #-----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
-for node in all_nodes:
-    node.set(wpan.WPAN_OT_LOG_LEVEL, '0')
-
-#-----------------------------------------------------------------------------------------------------------------------
-# Test implementation
-
 router.form('announce-tst', channel=11)
 
 c1.join_node(router, node_type=wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
@@ -84,6 +78,9 @@ c2.set(wpan.WPAN_POLL_INTERVAL, '500')
 
 c1.set(wpan.WPAN_THREAD_DEVICE_MODE,'5')
 c2.set(wpan.WPAN_THREAD_DEVICE_MODE,'5')
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Test implementation
 
 # Reset c2 and keep it in detached state
 c2.set('Daemon:AutoAssociateAfterReset', 'false')

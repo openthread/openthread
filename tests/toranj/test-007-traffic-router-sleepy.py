@@ -61,8 +61,6 @@ verify(node2.get(wpan.WPAN_NAME) == node1.get(wpan.WPAN_NAME))
 verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
 verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
 
-
-
 #-----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
