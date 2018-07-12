@@ -79,7 +79,6 @@ for node in all_nodes:
     # interface) are not pushed to NCP (and therefore are not
     # on-mesh).
     node.set("Daemon:IPv6:AutoUpdateInterfaceAddrsOnNCP", '0')
-    node.set(wpan.WPAN_OT_LOG_LEVEL, '0')
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Build network topology
