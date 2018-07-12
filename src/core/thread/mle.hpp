@@ -1584,9 +1584,9 @@ private:
 
     enum ChildUpdateRequestState
     {
-        kChildUpdateRequestNone,
-        kChildUpdateRequestPending,
-        kChildUpdateRequestActive
+        kChildUpdateRequestNone,    ///< No pending or active Child Update Request.
+        kChildUpdateRequestPending, ///< Pending Child Update Request due to relative OT_CHANGED event.
+        kChildUpdateRequestActive,  ///< Child Update Request has been sent and Child Update Response is expected.
     };
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,

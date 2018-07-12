@@ -1487,6 +1487,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if (mChildUpdateRequestState == kChildUpdateRequestPending)
     {
+        mChildUpdateAttempts = 0;
         mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
     }
 
@@ -2050,21 +2051,8 @@ void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
 
 void Mle::HandleChildUpdateRequestTimer(void)
 {
-    // a Network Data update can cause a change to the IPv6 address configuration
-    // only send a Child Update Request after we know there are no more pending changes
-    if (GetNotifier().IsPending())
-    {
-        mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
-        ExitNow();
-    }
-
-    if (mChildUpdateRequestState == kChildUpdateRequestPending)
-    {
-        mChildUpdateAttempts     = 0;
-        mChildUpdateRequestState = kChildUpdateRequestActive;
-    }
-
-    if ((mChildUpdateRequestState == kChildUpdateRequestActive) || mParent.IsStateRestoring() || IsRxOnWhenIdle())
+    if ((mChildUpdateRequestState == kChildUpdateRequestPending) ||
+        (mChildUpdateRequestState == kChildUpdateRequestActive) || IsRxOnWhenIdle())
     {
         SendChildUpdateRequest();
     }
@@ -2079,9 +2067,6 @@ void Mle::HandleChildUpdateRequestTimer(void)
 
         SendDataRequest(destination, tlvs, sizeof(tlvs), 0);
     }
-
-exit:
-    return;
 }
 
 otError Mle::SendChildUpdateRequest(void)
@@ -2108,6 +2093,7 @@ otError Mle::SendChildUpdateRequest(void)
 
     mChildUpdateRequestTimer.Start(kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
+    mChildUpdateRequestState = kChildUpdateRequestActive;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
