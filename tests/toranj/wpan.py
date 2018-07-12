@@ -483,12 +483,14 @@ class Node(object):
     # class methods
 
     @classmethod
-    def init_all_nodes(cls, wait_time=15):
+    def init_all_nodes(cls, disable_logs=True, wait_time=15):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
         random.seed(12345)
         time.sleep(0.5)
         start_time = time.time()
         for node in Node._all_nodes:
+            if disable_logs:
+                node.set(WPAN_OT_LOG_LEVEL, '0')
             while True:
                 try:
                     node.leave()
