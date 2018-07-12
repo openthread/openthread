@@ -1131,13 +1131,19 @@ typedef enum {
 
     /// Thread TMF proxy enable
     /** Format `b`
+     * Required capability: `SPINEL_CAP_THREAD_TMF_PROXY`
      *
-     * Default value is `false`.
+     * This property is deprecated.
+     *
      */
     SPINEL_PROP_THREAD_TMF_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
 
     /// Thread TMF proxy stream
     /** Format `dSS`
+     * Required capability: `SPINEL_CAP_THREAD_TMF_PROXY`
+     *
+     * This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
+     *
      */
     SPINEL_PROP_THREAD_TMF_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
@@ -1397,6 +1403,7 @@ typedef enum {
 
     /// Thread UDP proxy stream
     /** Format `dS6S`
+     * Required capability: `SPINEL_CAP_THREAD_UDP_PROXY`
      *
      * This property helps exchange UDP packets with host.
      *
