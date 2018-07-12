@@ -551,11 +551,6 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_COMMISSIONER_ENABLED>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_TMF_PROXY
-    case SPINEL_PROP_THREAD_TMF_PROXY_ENABLED:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_TMF_PROXY_ENABLED>;
-        break;
-#endif
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     case SPINEL_PROP_THREAD_STEERING_DATA:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STEERING_DATA>;
@@ -817,12 +812,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_TMF_PROXY
-    case SPINEL_PROP_THREAD_TMF_PROXY_ENABLED:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_TMF_PROXY_ENABLED>;
-        break;
-    case SPINEL_PROP_THREAD_TMF_PROXY_STREAM:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_TMF_PROXY_STREAM>;
+#if OPENTHREAD_ENABLE_UDP_PROXY
+    case SPINEL_PROP_THREAD_UDP_PROXY_STREAM:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STREAM>;
         break;
 #endif
     case SPINEL_PROP_THREAD_ACTIVE_DATASET:
