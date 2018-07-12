@@ -53,6 +53,10 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mTimerMicro(aInstance, &LinkRaw::HandleTimer, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+    , mTransmitRetries(0)
+    , mCsmaBackoffs(0)
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mEnergyScanTask(aInstance, &LinkRaw::HandleEnergyScanTask, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -225,8 +229,8 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
         mTransmitDoneCallback = aCallback;
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-        mTransmitAttempts = 0;
-        mCsmaAttempts     = 0;
+        mTransmitRetries = 0;
+        mCsmaBackoffs    = 0;
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -260,9 +264,10 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
 
     if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
     {
-        if (mCsmaAttempts < Mac::kMaxCSMABackoffs)
+        mCsmaBackoffs++;
+
+        if (mCsmaBackoffs < aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs)
         {
-            mCsmaAttempts++;
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
             StartCsmaBackoff();
 #else
@@ -279,14 +284,14 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
     }
     else
     {
-        mCsmaAttempts = 0;
+        mCsmaBackoffs = 0;
     }
 
     if (aError == OT_ERROR_NO_ACK)
     {
-        if (mTransmitAttempts < aFrame->mInfo.mTxInfo.mMaxTxAttempts)
+        if (mTransmitRetries < aFrame->mInfo.mTxInfo.mMaxFrameRetries)
         {
-            mTransmitAttempts++;
+            mTransmitRetries++;
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
             StartCsmaBackoff();
 #else
@@ -451,7 +456,7 @@ void LinkRaw::HandleTimer(void)
 
 void LinkRaw::StartCsmaBackoff(void)
 {
-    uint32_t backoffExponent = Mac::kMinBE + mTransmitAttempts + mCsmaAttempts;
+    uint32_t backoffExponent = Mac::kMinBE + mTransmitRetries + mCsmaBackoffs;
     uint32_t backoff;
 
     if (backoffExponent > Mac::kMaxBE)

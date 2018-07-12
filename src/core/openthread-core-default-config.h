@@ -126,25 +126,51 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+ * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
  *
- * Maximum number of MAC layer transmit attempts for an outbound direct frame.
- * Per IEEE 802.15.4-2006, default value is set to (macMaxFrameRetries + 1) with macMaxFrameRetries = 3.
+ * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+ *
+ * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
-#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT 4
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT 32
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+ * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
  *
- * Maximum number of MAC layer transmit attempts for an outbound indirect frame (to a sleepy child) after receiving
- * a data request command (data poll) from the child.
+ * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+ *
+ * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
-#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL 1
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT 4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+ *
+ * The maximum number of retries allowed after a transmission failure for direct transmissions.
+ *
+ * Equivalent to macMaxFrameRetries, default value is 3.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ *
+ * The maximum number of retries allowed after a transmission failure for indirect transmissions.
+ *
+ * Equivalent to macMaxFrameRetries, default value is 0.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
 #endif
 
 /**

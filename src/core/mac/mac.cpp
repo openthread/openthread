@@ -177,8 +177,8 @@ Mac::Mac(Instance &aInstance)
     , mReceiveTail(NULL)
     , mBeaconSequence(Random::GetUint8())
     , mDataSequence(Random::GetUint8())
-    , mCsmaAttempts(0)
-    , mTransmitAttempts(0)
+    , mCsmaBackoffs(0)
+    , mTransmitRetries(0)
     , mBroadcastTransmitCount(0)
     , mScanChannelMask()
     , mScanDuration(0)
@@ -1029,14 +1029,14 @@ void Mac::StartCsmaBackoff(void)
         BeginTransmit();
     }
 #if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    else if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
+    else if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
     {
         BeginTransmit();
     }
 #endif
     else
     {
-        uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
+        uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
         uint32_t backoff;
         bool     shouldReceive;
 
@@ -1145,7 +1145,7 @@ void Mac::BeginTransmit(void)
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
 
 #if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    if (mTransmitAttempts == (sendFrame.GetMaxTxAttempts() - 1))
+    else if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
     {
         sendFrame.SetCsmaCaEnabled(false);
     }
@@ -1155,7 +1155,7 @@ void Mac::BeginTransmit(void)
         sendFrame.SetCsmaCaEnabled(true);
     }
 
-    if (mCsmaAttempts == 0 && mTransmitAttempts == 0 && mBroadcastTransmitCount == 0)
+    if (mCsmaBackoffs == 0 && mTransmitRetries == 0 && mBroadcastTransmitCount == 0)
     {
         switch (mOperation)
         {
@@ -1164,14 +1164,16 @@ void Mac::BeginTransmit(void)
             sendFrame.SetChannel(mScanChannel);
             SendBeaconRequest(sendFrame);
             sendFrame.SetSequence(0);
-            sendFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
+            sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+            sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
             break;
 
         case kOperationTransmitBeacon:
             sendFrame.SetChannel(mRadioChannel);
             SendBeacon(sendFrame);
             sendFrame.SetSequence(mBeaconSequence++);
-            sendFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
+            sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+            sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
             break;
 
         case kOperationTransmitData:
@@ -1332,15 +1334,15 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     {
         mCounters.mTxErrCca++;
 
-        if (!RadioSupportsCsmaBackoff() && mCsmaAttempts < kMaxCSMABackoffs)
+        if (!RadioSupportsCsmaBackoff() && mCsmaBackoffs < sendFrame.GetMaxCsmaBackoffs())
         {
-            mCsmaAttempts++;
+            mCsmaBackoffs++;
             StartCsmaBackoff();
             ExitNow();
         }
     }
 
-    mCsmaAttempts = 0;
+    mCsmaBackoffs = 0;
 
     sendFrame.GetDstAddr(dstAddr);
     neighbor     = GetNetif().GetMle().GetNeighbor(dstAddr);
@@ -1378,23 +1380,22 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     // Determine whether to re-transmit the frame.
 
-    mTransmitAttempts++;
-
     if (aError != OT_ERROR_NONE)
     {
         LogFrameTxFailure(sendFrame, aError);
 
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
-        if (mEnabled && !RadioSupportsRetries() && mTransmitAttempts < sendFrame.GetMaxTxAttempts())
+        if (mEnabled && !RadioSupportsRetries() && mTransmitRetries < sendFrame.GetMaxFrameRetries())
         {
+            mTransmitRetries++;
             mCounters.mTxRetry++;
             StartCsmaBackoff();
             ExitNow();
         }
     }
 
-    mTransmitAttempts = 0;
+    mTransmitRetries = 0;
 
     // Process the ack frame for "frame pending".
 
@@ -2329,8 +2330,8 @@ void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
 
 void Mac::LogFrameTxFailure(const Frame &aFrame, otError aError) const
 {
-    otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
-                 mTransmitAttempts, aFrame.GetMaxTxAttempts(), aFrame.ToInfoString().AsCString());
+    otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError),
+                 mTransmitRetries, aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
 }
 
 void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
