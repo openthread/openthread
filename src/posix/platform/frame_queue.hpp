@@ -71,12 +71,6 @@ public:
     bool IsEmpty(void) const { return mHead == mTail; }
 
     /**
-     * This method removes one frame from the head.
-     *
-     */
-    void Shift(void);
-
-    /**
      * This method pushes one frame into the queue.
      *
      * @param[in]   aFrame      A pointer to a spinel frame to be queued.
@@ -89,7 +83,7 @@ public:
     otError Push(const uint8_t *aFrame, uint8_t aLength);
 
     /**
-     * This method gets one frame at head.
+     * This method shifts one frame at head.
      *
      * @note aFrame is only used when necessary, always use the returned pointer to access frame data.
      *
@@ -99,7 +93,7 @@ public:
      * @return A pointer to the frame.
      *
      */
-    const uint8_t *Peek(uint8_t *aFrame, uint8_t &aLength);
+    const uint8_t *Shift(uint8_t *aFrame, uint8_t &aLength);
 
 private:
     enum
