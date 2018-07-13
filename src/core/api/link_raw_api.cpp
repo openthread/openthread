@@ -758,7 +758,7 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     // Note: For now this functionality is not supported in Radio Only mode.

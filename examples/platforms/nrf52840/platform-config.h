@@ -499,11 +499,11 @@
  *
  * If notification of started transmission should be enabled in the driver.
  *
- * @note This feature is enabled by default if OpenThread time synchronization service is enabled.
+ * @note This feature must be enabled to support Header IE related features.
  *
  */
 #ifndef NRF_802154_TX_STARTED_NOTIFY_ENABLED
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 #define NRF_802154_TX_STARTED_NOTIFY_ENABLED 1
 #endif
 #endif
