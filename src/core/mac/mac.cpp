@@ -1981,14 +1981,16 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     netif.GetMeshForwarder().GetDataPollManager().CheckFramePending(*aFrame);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
     {
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
         ProcessTimeIe(*aFrame);
+#endif
     }
 
-#endif
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     if (neighbor != NULL)
     {
@@ -2383,11 +2385,13 @@ uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
 exit:
     return offset;
 }
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 /**
  * This function will be called from interrupt context, it should only read/write data passed in
  * via @p aFrame, but should not read/write any state within OpenThread.
  */
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     Instance *        instance   = static_cast<Instance *>(aInstance);
@@ -2405,7 +2409,7 @@ extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFr
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
 } // namespace Mac
 } // namespace ot

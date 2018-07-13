@@ -2976,18 +2976,17 @@ void NcpBase::HandleUdpProxyStream(otMessage *   aMessage,
 
 void NcpBase::HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort)
 {
-    otError  error  = OT_ERROR_NONE;
     uint16_t length = otMessageGetLength(aMessage);
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    SuccessOrExit(error = mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_PROXY_STREAM));
-    SuccessOrExit(error = mEncoder.WriteUint16(length));
-    SuccessOrExit(error = mEncoder.WriteMessage(aMessage));
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_PROXY_STREAM));
+    SuccessOrExit(mEncoder.WriteUint16(length));
+    SuccessOrExit(mEncoder.WriteMessage(aMessage));
 
-    SuccessOrExit(error = mEncoder.WriteUint16(aPeerPort));
-    SuccessOrExit(error = mEncoder.WriteIp6Address(aPeerAddr));
-    SuccessOrExit(error = mEncoder.WriteUint16(aPort));
-    SuccessOrExit(error = mEncoder.EndFrame());
+    SuccessOrExit(mEncoder.WriteUint16(aPeerPort));
+    SuccessOrExit(mEncoder.WriteIp6Address(aPeerAddr));
+    SuccessOrExit(mEncoder.WriteUint16(aPort));
+    SuccessOrExit(mEncoder.EndFrame());
 
     // The `aMessage` is owned by the outbound frame and NCP buffer
     // after frame was finished/ended successfully. It will be freed

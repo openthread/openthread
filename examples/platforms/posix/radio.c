@@ -111,7 +111,7 @@ static otRadioFrame        sReceiveFrame;
 static otRadioFrame        sTransmitFrame;
 static otRadioFrame        sAckFrame;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
 static otRadioIeInfo sReceivedIeInfo;
 #endif
@@ -431,7 +431,7 @@ void platformRadioInit(void)
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     sTransmitFrame.mIeInfo = &sTransmitIeInfo;
     sReceiveFrame.mIeInfo  = &sReceivedIeInfo;
 #else
@@ -601,6 +601,9 @@ void radioReceive(otInstance *aInstance)
 
 void radioSendMessage(otInstance *aInstance)
 {
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+    bool notifyFrameUpdated = false;
+
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
     {
@@ -616,9 +619,15 @@ void radioSendMessage(otInstance *aInstance)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
 
+        notifyFrameUpdated = true;
+    }
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
+    if (notifyFrameUpdated)
+    {
         otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
     }
-#endif
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 

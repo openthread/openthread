@@ -487,18 +487,19 @@ class Node(object):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
         random.seed(12345)
         time.sleep(0.5)
-        start_time = time.time()
         for node in Node._all_nodes:
-            if disable_logs:
-                node.set(WPAN_OT_LOG_LEVEL, '0')
+            start_time = time.time()
             while True:
                 try:
+                    if disable_logs:
+                        node.set(WPAN_OT_LOG_LEVEL, '0')
                     node.leave()
                 except subprocess.CalledProcessError as e:
                     if (node._verbose):
                         _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
-                    if time.time() - start_time > wait_time:
-                        print 'Took too long to init all nodes ({}>{} sec)'.format(time.time() - start_time, wait_time)
+                    interval = time.time() - start_time
+                    if interval > wait_time:
+                        print 'Took too long to init node {} ({}>{} sec)'.format(node, interval, wait_time)
                         raise
                 except:
                     raise
