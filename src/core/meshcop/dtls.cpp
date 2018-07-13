@@ -85,6 +85,12 @@ Dtls::Dtls(Instance &aInstance)
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    mCaChainSrc       = NULL;
+    mCaChainLength    = 0;
+    mOwnCertSrc       = NULL;
+    mOwnCertLength    = 0;
+    mPrivateKeySrc    = NULL;
+    mPrivateKeyLength = 0;
     memset(&mCaChain, 0, sizeof(mCaChain));
     memset(&mOwnCert, 0, sizeof(mOwnCert));
     memset(&mPrivateKey, 0, sizeof(mPrivateKey));
@@ -259,10 +265,23 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
 
         case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
 
-            mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
+            if (mCaChainSrc != NULL)
+            {
+                rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)mCaChainSrc, (size_t)mCaChainLength);
+                VerifyOrExit(rval == 0);
+                mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
+            }
 
-            rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
-            VerifyOrExit(rval == 0);
+            if (mOwnCertSrc != NULL && mPrivateKeySrc != NULL)
+            {
+                rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)mOwnCertSrc, (size_t)mOwnCertLength);
+                VerifyOrExit(rval == 0);
+                rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)mPrivateKeySrc,
+                                            (size_t)mPrivateKeyLength, NULL, 0);
+                VerifyOrExit(rval == 0);
+                rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
+                VerifyOrExit(rval == 0);
+            }
 
             break;
 
@@ -369,7 +388,6 @@ otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
                                 uint32_t       aPrivateKeyLenth)
 {
     otError error = OT_ERROR_NONE;
-    int     rval;
 
     VerifyOrExit(aX509CertLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aX509Certificate != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -377,11 +395,10 @@ otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
     VerifyOrExit(aPrivateKeyLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aPrivateKey != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)aX509Certificate, (size_t)aX509CertLenth);
-    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
-
-    rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)aPrivateKey, (size_t)aPrivateKeyLenth, NULL, 0);
-    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
+    mOwnCertSrc       = aX509Certificate;
+    mOwnCertLength    = aX509CertLenth;
+    mPrivateKeySrc    = aPrivateKey;
+    mPrivateKeyLength = aPrivateKeyLenth;
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
 
@@ -389,17 +406,15 @@ exit:
     return error;
 }
 
-otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
-                                    uint32_t       aX509CaCertChainLenth)
+otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth)
 {
     otError error = OT_ERROR_NONE;
-    int     rval;
 
     VerifyOrExit(aX509CaCertChainLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aX509CaCertificateChain != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)aX509CaCertificateChain, (size_t)aX509CaCertChainLenth);
-    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
+    mCaChainSrc    = aX509CaCertificateChain;
+    mCaChainLength = aX509CaCertChainLenth;
 
 exit:
     return error;

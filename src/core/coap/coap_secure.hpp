@@ -235,8 +235,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
      *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
-                                  uint32_t       aX509CaCertChainLenth);
+    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C

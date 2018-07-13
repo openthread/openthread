@@ -218,8 +218,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
                                   sizeof(OT_CLI_COAPS_PRIV_KEY)));
 
                 SuccessOrExit(error = otCoapSecureSetCaCertificateChain(
-                                  mInterpreter.mInstance,
-                                  (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+                                  mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
                                   sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
 
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
@@ -301,7 +300,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
                                            ": start dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
                                            ": interact with coap source from server, ipv6 is not need as client\r\n");
-        mInterpreter.mServer->OutputFormat("    >> args:(ipV6_addr_srv) <coap_src> and, if you have payload: <con> <payload>\r\n");
+        mInterpreter.mServer->OutputFormat(
+            "    >> args:(ipV6_addr_srv) <coap_src> and, if you have payload: <con> <payload>\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps resource <uri>'                              "
                                            ": add a coap server resource with 'helloWorld' as content.\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  "

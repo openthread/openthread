@@ -59,9 +59,7 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SetOwnCertificate(aX509Cert,
-                                                                 aX509Length,
-                                                                 aPrivateKey,
+    return instance.GetApplicationCoapSecure().SetOwnCertificate(aX509Cert, aX509Length, aPrivateKey,
                                                                  aPrivateKeyLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -81,8 +79,7 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain,
-                                                                     aX509CaCertChainLenth);
+    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLenth);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aX509CaCertificateChain);

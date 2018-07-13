@@ -161,17 +161,12 @@ otError CoapSecure::SetOwnCertificate(const uint8_t *aX509Cert,
                                       const uint8_t *aPrivateKey,
                                       uint32_t       aPrivateKeyLength)
 {
-    return GetNetif().GetDtls().SetOwnCertificate(aX509Cert,
-                                                  aX509Length,
-                                                  aPrivateKey,
-                                                  aPrivateKeyLength);
+    return GetNetif().GetDtls().SetOwnCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
-                                          uint32_t       aX509CaCertChainLenth)
+otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth)
 {
-    return GetNetif().GetDtls().SetCaCertificateChain(aX509CaCertificateChain,
-                                                      aX509CaCertChainLenth);
+    return GetNetif().GetDtls().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLenth);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 

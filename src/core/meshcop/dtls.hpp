@@ -225,8 +225,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
      *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
-                                  uint32_t       aX509CaCertChainLenth);
+    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth);
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -376,6 +375,13 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+    const uint8_t *    mCaChainSrc;
+    uint32_t           mCaChainLength;
+    const uint8_t *    mOwnCertSrc;
+    uint32_t           mOwnCertLength;
+    const uint8_t *    mPrivateKeySrc;
+    uint32_t           mPrivateKeyLength;
     mbedtls_x509_crt   mCaChain;
     mbedtls_x509_crt   mOwnCert;
     mbedtls_pk_context mPrivateKey;
