@@ -110,6 +110,7 @@ enum AlocAllocation
     kAloc16ServiceEnd                  = 0xfc2f,
     kAloc16CommissionerStart           = 0xfc30,
     kAloc16CommissionerEnd             = 0xfc37,
+    kAloc16CommissionerMask            = 0x0007,
     kAloc16NeighborDiscoveryAgentStart = 0xfc40,
     kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e,
 };
@@ -855,7 +856,22 @@ public:
      * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetLeaderAloc(Ip6::Address &aAddress) const;
+    otError GetLeaderAloc(Ip6::Address &aAddress) const { return GetAlocAddress(aAddress, kAloc16Leader); }
+
+    /**
+     * This method retrieves the Commissioner's ALOC.
+     *
+     * @param[out]  aAddress        A reference to the Commissioner's ALOC.
+     * @param[in]   aSessionId      Commissioner session id.
+     *
+     * @retval OT_ERROR_NONE      Successfully retrieved the Commissioner's ALOC.
+     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     *
+     */
+    otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
+    {
+        return GetAlocAddress(aAddress, GetCommissionerAlocFromId(aSessionId));
+    }
 
 #if OPENTHREAD_ENABLE_SERVICE
     /**
@@ -950,7 +966,7 @@ public:
     /**
      * This method returns the Service Aloc corresponding to a Service ID.
      *
-     * @param[in]  aAloc16  The Servicer ID value.
+     * @param[in]  aServiceId  The Servicer ID value.
      *
      * @returns The Service ALOC16 corresponding to given ID.
      *
@@ -958,6 +974,19 @@ public:
     static uint16_t GetServiceAlocFromId(uint8_t aServiceId)
     {
         return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
+    }
+
+    /**
+     * This method returns the Commissioner Aloc corresponding to a Commissioner Session ID.
+     *
+     * @param[in]  aSessionId   The Commissioner Session ID value.
+     *
+     * @returns The Commissioner ALOC16 corresponding to given ID.
+     *
+     */
+    static uint16_t GetCommissionerAlocFromId(uint16_t aSessionId)
+    {
+        return static_cast<uint16_t>((aSessionId & kAloc16DhcpAgentMask) + kAloc16CommissionerStart);
     }
 
     /**
@@ -1648,6 +1677,7 @@ private:
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
+    otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
 #if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method scans for network data from the leader and updates ip addresses assigned to this

@@ -57,6 +57,39 @@ class Udp;
  */
 
 /**
+ * This class implements a UDP receiver.
+ *
+ */
+class UdpReceiver : public otUdpReceiver
+{
+    friend class Udp;
+
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]   aUdpHandler     A pointer to the function to handle UDP message.
+     * @param[in]   aContext        A pointer to arbitrary context information.
+     *
+     */
+    UdpReceiver(otUdpHandler aHandler, void *aContext)
+    {
+        mNext    = NULL;
+        mHandler = aHandler;
+        mContext = aContext;
+    }
+
+private:
+    UdpReceiver *GetNext(void) { return static_cast<UdpReceiver *>(mNext); }
+    void         SetNext(UdpReceiver *aReceiver) { mNext = static_cast<otUdpReceiver *>(aReceiver); }
+
+    bool HandleMessage(Message &aMessage, const MessageInfo &aMessageInfo)
+    {
+        return mHandler(mContext, &aMessage, &aMessageInfo);
+    }
+};
+
+/**
  * This class implements a UDP/IPv6 socket.
  *
  */
@@ -179,6 +212,26 @@ public:
     explicit Udp(Instance &aInstance);
 
     /**
+     * This method adds a UDP receiver.
+     *
+     * @param[in]  aReceiver  A reference to the UDP receiver.
+     *
+     * @retval OT_ERROR_NONE  Successfully added the UDP receiver.
+     *
+     */
+    otError AddReceiver(UdpReceiver &aReceiver);
+
+    /**
+     * This method removes a UDP receiver.
+     *
+     * @param[in]  aReceiver  A reference to the UDP receiver.
+     *
+     * @retval OT_ERROR_NONE  Successfully removed the UDP receiver.
+     *
+     */
+    otError RemoveReceiver(UdpReceiver &aReceiver);
+
+    /**
      * This method adds a UDP socket.
      *
      * @param[in]  aSocket  A reference to the UDP socket.
@@ -283,8 +336,9 @@ private:
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
-    uint16_t   mEphemeralPort;
-    UdpSocket *mSockets;
+    uint16_t     mEphemeralPort;
+    UdpReceiver *mReceivers;
+    UdpSocket *  mSockets;
 #if OPENTHREAD_ENABLE_UDP_PROXY
     void *           mProxySenderContext;
     otUdpProxySender mProxySender;
