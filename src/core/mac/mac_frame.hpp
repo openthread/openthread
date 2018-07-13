@@ -1183,6 +1183,16 @@ public:
     uint64_t GetTimestamp(void) const { return mIeInfo->mTimestamp; }
 
     /**
+     * This method returns a pointer to the vendor specific Time IE.
+     *
+     * @returns A pointer to the Time IE, NULL if not found.
+     *
+     */
+    uint8_t *GetTimeIe(void) const;
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+    /**
      * This method appends Header IEs to MAC header.
      *
      * @param[in]   aIeList  The pointer to the Header IEs array.
@@ -1203,16 +1213,7 @@ public:
      *
      */
     uint8_t *GetHeaderIe(uint8_t aIeId) const;
-
-    /**
-     * This method returns a pointer to the vendor specific Time IE.
-     *
-     * @returns A pointer to the Time IE, NULL if not found.
-     *
-     */
-    uint8_t *GetTimeIe(void) const;
-
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     /**
      * This method returns information about the frame object as an `InfoString` object.
@@ -1237,7 +1238,7 @@ private:
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
