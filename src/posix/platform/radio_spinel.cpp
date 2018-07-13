@@ -147,21 +147,6 @@ static inline void SuccessOrDie(otError aError)
 
 namespace ot {
 
-/**
- * This function returns if the property changed event is *UNSAFE* to be handled during `WaitResponse()`.
- *
- * If property could trigger another call to `ncpSet()`, it's unsafe.
- *
- * @param[in] aKey The identifier of the property.
- *
- * @returns Whether this property is *UNSAFE* to be handled during 'WaitResponse()`.
- *
- */
-static bool ShouldDefer(spinel_prop_key_t aKey)
-{
-    return aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT;
-}
-
 static otError SpinelStatusToOtError(spinel_status_t aError)
 {
     otError ret;
@@ -375,8 +360,9 @@ RadioSpinel::RadioSpinel(void)
     , mTxState(kIdle)
     , mSockFd(-1)
     , mState(OT_RADIO_STATE_DISABLED)
-    , mAckWait(false)
-    , mPromiscuous(false)
+    , mIsAckRequested(false)
+    , mIsDecoding(false)
+    , mIsPromiscuous(false)
     , mIsReady(false)
 {
 }
@@ -492,8 +478,7 @@ void RadioSpinel::HandleNotification(const uint8_t *aBuffer, uint16_t aLength)
         // Some spinel properties cannot be handled during `WaitResponse()`, we must cache these events.
         // `mWaitingTid` is released immediately after received the response. And `mWaitingKey` is be set
         // to `SPINEL_PROP_LAST_STATUS` at the end of `WaitResponse()`.
-        VerifyOrExit(mWaitingKey == SPINEL_PROP_LAST_STATUS || !ShouldDefer(key),
-                     error = mFrameQueue.Push(aBuffer, aLength));
+        VerifyOrExit(IsSafeToHandleNow(key), error = mFrameQueue.Push(aBuffer, aLength));
         HandleValueIs(key, data, static_cast<uint16_t>(len));
         break;
 
@@ -689,7 +674,9 @@ void RadioSpinel::ReadAll(void)
 
     if (rval > 0)
     {
+        mIsDecoding = true;
         mHdlcDecoder.Decode(buf, static_cast<uint16_t>(rval));
+        mIsDecoding = false;
     }
 }
 
@@ -699,10 +686,9 @@ void RadioSpinel::ProcessFrameQueue(void)
     uint8_t        buffer[kMaxSpinelFrame];
     const uint8_t *frame;
 
-    while ((frame = mFrameQueue.Peek(buffer, length)) != NULL)
+    while ((frame = mFrameQueue.Shift(buffer, length)) != NULL)
     {
         HandleNotification(frame, length);
-        mFrameQueue.Shift();
     }
 }
 
@@ -713,7 +699,7 @@ void RadioSpinel::RadioReceive(void)
     otShortAddress shortAddress;
     otExtAddress   extAddress;
 
-    VerifyOrExit(mPromiscuous == false, error = OT_ERROR_NONE);
+    VerifyOrExit(mIsPromiscuous == false, error = OT_ERROR_NONE);
     VerifyOrExit((mState == OT_RADIO_STATE_RECEIVE || mState == OT_RADIO_STATE_TRANSMIT), error = OT_ERROR_DROP);
 
     switch (mRxRadioFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
@@ -790,6 +776,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 {
     if (FD_ISSET(mSockFd, &aReadFdSet) || !mFrameQueue.IsEmpty())
     {
+        // Handle frames received during WaitResponse()
         ProcessFrameQueue();
 
         if (FD_ISSET(mSockFd, &aReadFdSet))
@@ -801,7 +788,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
         {
             mState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckWait ? &mRxRadioFrame : NULL), mTxError);
+            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
         }
     }
 
@@ -820,7 +807,7 @@ otError RadioSpinel::SetPromiscuous(bool aEnable)
 
     uint8_t mode = (aEnable ? SPINEL_MAC_PROMISCUOUS_MODE_NETWORK : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_PROMISCUOUS_MODE, SPINEL_DATATYPE_UINT8_S, mode));
-    mPromiscuous = aEnable;
+    mIsPromiscuous = aEnable;
 
 exit:
     return error;
@@ -1070,12 +1057,17 @@ void RadioSpinel::RadioTransmit(void)
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
     assert(mTxState == kIdle);
 
-    mAckWait = isAckRequested(mTransmitFrame->mPsdu);
-    error    = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
+    mIsAckRequested = isAckRequested(mTransmitFrame->mPsdu);
+
+    error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, mTransmitFrame->mPsdu,
                     mTransmitFrame->mLength, mTransmitFrame->mChannel, mTransmitFrame->mInfo.mRxInfo.mRssi);
 
-    if (error)
+    if (error == OT_ERROR_NONE)
+    {
+        mTxState = kSent;
+    }
+    else
     {
         mState = OT_RADIO_STATE_RECEIVE;
 
@@ -1092,10 +1084,6 @@ void RadioSpinel::RadioTransmit(void)
         }
 
         mTxState = kIdle;
-    }
-    else
-    {
-        mTxState = kSent;
     }
 }
 
@@ -1264,7 +1252,7 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         aBuffer += unpacked;
         aLength -= static_cast<spinel_size_t>(unpacked);
 
-        if (mAckWait)
+        if (mIsAckRequested)
         {
             VerifyOrExit(aLength > 0, error = OT_ERROR_FAILED);
             SuccessOrExit(error = ParseRadioFrame(mRxRadioFrame, aBuffer, aLength));
@@ -1492,7 +1480,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetPromiscuous();
+    return sRadioSpinel.IsPromiscuous();
 }
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)

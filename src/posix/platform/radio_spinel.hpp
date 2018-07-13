@@ -71,7 +71,7 @@ public:
      * @retval false  Promiscuous mode is disabled.
      *
      */
-    bool GetPromiscuous(void) const { return mPromiscuous; }
+    bool IsPromiscuous(void) const { return mIsPromiscuous; }
 
     /**
      * This method sets the status of promiscuous mode.
@@ -439,6 +439,23 @@ private:
     }
     void HandleSpinelFrame(const uint8_t *aBuffer, uint16_t aLength);
 
+    /**
+     * This method returns if the property changed event is safe to be handled now.
+     *
+     * If a property handler will go up to core stack, it may cause reentrant issue of `Hdlc::Decode()` and
+     * `WaitResponse()`.
+     *
+     * @param[in] aKey The identifier of the property.
+     *
+     * @returns Whether this property is safe to be handled now.
+     *
+     */
+    bool IsSafeToHandleNow(spinel_prop_key_t aKey) const
+    {
+        return !((mIsDecoding || mWaitingKey != SPINEL_PROP_LAST_STATUS) &&
+                 (aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
+    }
+
     void HandleNotification(const uint8_t *aBuffer, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
@@ -482,9 +499,10 @@ private:
 
     int          mSockFd;
     otRadioState mState;
-    bool         mAckWait;
-    bool         mPromiscuous;
-    bool         mIsReady;
+    bool         mIsAckRequested : 1; ///< Ack requested.
+    bool         mIsDecoding : 1;     ///< Decoding hdlc frames.
+    bool         mIsPromiscuous : 1;  ///< Promiscuous mode.
+    bool         mIsReady : 1;        ///< NCP ready.
 };
 
 } // namespace ot
