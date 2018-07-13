@@ -156,12 +156,22 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::SetX509Certificate(const uint8_t *aX509Cert,
-                                       uint32_t       aX509Length,
-                                       const uint8_t *aPrivateKey,
-                                       uint32_t       aPrivateKeyLength)
+otError CoapSecure::SetOwnCertificate(const uint8_t *aX509Cert,
+                                      uint32_t       aX509Length,
+                                      const uint8_t *aPrivateKey,
+                                      uint32_t       aPrivateKeyLength)
 {
-    return GetNetif().GetDtls().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    return GetNetif().GetDtls().SetOwnCertificate(aX509Cert,
+                                                  aX509Length,
+                                                  aPrivateKey,
+                                                  aPrivateKeyLength);
+}
+
+otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
+                                          uint32_t       aX509CaCertChainLenth)
+{
+    return GetNetif().GetDtls().SetCaCertificateChain(aX509CaCertificateChain,
+                                                      aX509CaCertChainLenth);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 

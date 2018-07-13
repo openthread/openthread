@@ -43,7 +43,7 @@ extern "C" {
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 
-/**
+/**SERVER
  * Generate your own private key and certificate using openssl.
  *
  * 1. Generate a EC (Elliptic Curve) Private Key.
@@ -58,31 +58,49 @@ extern "C" {
  */
 #define OT_CLI_COAPS_X509_CERT                                         \
 "-----BEGIN CERTIFICATE-----\r\n"                                      \
-"MIICazCCAhKgAwIBAgIJAKIuIwCFs70OMAoGCCqGSM49BAMCMIGPMQswCQYDVQQG\r\n" \
-"EwJJTzEQMA4GA1UECAwHTXlTdGF0ZTEPMA0GA1UEBwwGTXlDaXR5MRMwEQYDVQQK\r\n" \
-"DApPcGVuVGhyZWFkMQ0wCwYDVQQLDARUZXN0MRMwEQYDVQQDDApDb0FQUyBUZXN0\r\n" \
-"MSQwIgYJKoZIhvcNAQkBFhVteS5tYWlsQG9wZW50aHJlYWQuaW8wIBcNMTgwNjI2\r\n" \
-"MDkwNTA1WhgPMjI5MjA0MTAwOTA1MDVaMIGPMQswCQYDVQQGEwJJTzEQMA4GA1UE\r\n" \
-"CAwHTXlTdGF0ZTEPMA0GA1UEBwwGTXlDaXR5MRMwEQYDVQQKDApPcGVuVGhyZWFk\r\n" \
-"MQ0wCwYDVQQLDARUZXN0MRMwEQYDVQQDDApDb0FQUyBUZXN0MSQwIgYJKoZIhvcN\r\n" \
-"AQkBFhVteS5tYWlsQG9wZW50aHJlYWQuaW8wWTATBgcqhkjOPQIBBggqhkjOPQMB\r\n" \
-"BwNCAATTaiF8x7S3hmC0Um21euSUmdgwYEtqa9u8a3CcMEcQAvStGtO6u1u8P3Ef\r\n" \
-"RxbvLsQSwIgWu1v2RSP6NEBcK1Pfo1MwUTAdBgNVHQ4EFgQUh05hUYlb1kjIND9x\r\n" \
-"dH9WxwVtaaQwHwYDVR0jBBgwFoAUh05hUYlb1kjIND9xdH9WxwVtaaQwDwYDVR0T\r\n" \
-"AQH/BAUwAwEB/zAKBggqhkjOPQQDAgNHADBEAiA8E5pQVsqOlVnYkBftkclXwCTU\r\n" \
-"0X/4eg4fRe28GcuGkQIgVXS6lIlsH26rcjzMBfOsanSzqx9+d695TGJ/FBuKrbg=\r\n" \
-"-----END CERTIFICATE-----\r\n"                                        \
+"MIIBrTCCAVICBgDRArfDJTAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTESMBAG\r\n" \
+"A1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZb3Vy\r\n" \
+"T3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTIzNzA3WhgPMjI5\r\n" \
+"MjA0MjYxMjM3MDdaMGExCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3RhdGUx\r\n" \
+"EDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MRYwFAYDVQQD\r\n" \
+"DA1QWEMzLkU3NS0xMDBBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIUtlV99w\r\n" \
+"OggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwcbJHWlvxGPxNIQw6i8kzK\r\n" \
+"bkC642ZWgBT5MzAKBggqhkjOPQQDAgNJADBGAiEA/1yk69A+37kLBvdOWPDRXGwe\r\n" \
+"0AoICTGaLqzB3cF5mtACIQC28WwmzHb5gqe3nOPAM73py1v17EXZj07PU89BAEcb\r\n" \
+"yg==\r\n"                                                             \
+"-----END CERTIFICATE-----\r\n"
 
 /**
  * place your private key (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
-#define OT_CLI_COAPS_PRIV_KEY                                           \
-"-----BEGIN EC PRIVATE KEY-----\r\n"                                    \
-"MHcCAQEEIIG+2tZQBootI0H065kJg/0MK9KOEX/jnZqYPRtbsjJ0oAoGCCqGSM49\r\n"  \
-"AwEHoUQDQgAE02ohfMe0t4ZgtFJttXrklJnYMGBLamvbvGtwnDBHEAL0rRrTurtb\r\n"  \
-"vD9xH0cW7y7EEsCIFrtb9kUj+jRAXCtT3w==\r\n"                              \
+#define OT_CLI_COAPS_PRIV_KEY                                          \
+"-----BEGIN EC PRIVATE KEY-----\r\n"                                   \
+"MHcCAQEEIFYQh2R7M48qOHePw+VE4b034UlZmWWC/iNAK34sQbucoAoGCCqGSM49\r\n" \
+"AwEHoUQDQgAEIUtlV99wOggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwc\r\n" \
+"bJHWlvxGPxNIQw6i8kzKbkC642ZWgBT5Mw==\r\n"                             \
 "-----END EC PRIVATE KEY-----\r\n"
+
+/**
+ * Place peers CA certificate (PEM format) here.
+ * It's necessary to validate the peers certificate. If you haven't a
+ * CA certificate, you must run the coaps without checking certificate.
+ */
+#define OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE                          \
+"-----BEGIN CERTIFICATE-----\r\n"                                      \
+"MIICDzCCAbWgAwIBAgIESZYC0jAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTES\r\n" \
+"MBAGA1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZ\r\n" \
+"b3VyT3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTE1NjA5WhgP\r\n" \
+"MjI5MjA0MjYxMTU2MDlaMFwxCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3Rh\r\n" \
+"dGUxEDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MREwDwYD\r\n" \
+"VQQDDAhWZW5kb3JDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGAAuYcBIgP0\r\n" \
+"fMC1Bd+1nAH5S1goR0TaDAIadK4hULQr5LwziuDk9XTQaOTwmWB9iR1eiHC6RY8W\r\n" \
+"wyrGBbnEbzujYzBhMB0GA1UdDgQWBBQ+yCpIszhzbmXe2At1GofREjnBxjAfBgNV\r\n" \
+"HSMEGDAWgBQ+yCpIszhzbmXe2At1GofREjnBxjAPBgNVHRMBAf8EBTADAQH/MA4G\r\n" \
+"A1UdDwEB/wQEAwIBhjAKBggqhkjOPQQDAgNIADBFAiBW60XgdSRD24rbTgdneS+V\r\n" \
+"SHVix8LuXunPYW50LmxbrwIhAOw4gMroRIOS26y0TcND03FnyO3wBNF9MjM0hWKQ\r\n" \
+"JXk3\r\n"                                                             \
+"-----END CERTIFICATE-----\r\n"                                        \
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

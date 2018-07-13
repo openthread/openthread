@@ -212,10 +212,16 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             else if (strcmp(argv[1], "x509") == 0)
             {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-                SuccessOrExit(error = otCoapSecureSetX509Certificate(
+                SuccessOrExit(error = otCoapSecureSetOwnCertificate(
                                   mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
                                   sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
                                   sizeof(OT_CLI_COAPS_PRIV_KEY)));
+
+                SuccessOrExit(error = otCoapSecureSetCaCertificateChain(
+                                  mInterpreter.mInstance,
+                                  (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+                                  sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
+
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
 #else
                 ExitNow(error = OT_ERROR_DISABLED_FEATURE);
@@ -287,21 +293,23 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat("CLI CoAPS help:\r\n\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps start (false)'                               "
                                            ": start coap secure service, false disable peer cert verification\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps set psk'     args: psk, identity             "
+        mInterpreter.mServer->OutputFormat(">'coaps set psk <psk> <client id>'                   "
                                            ": set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set x509'                                    "
                                            ": set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect'     args: ipV6_addr_srv             "
+        mInterpreter.mServer->OutputFormat(">'coaps connect <servers ipv6 addr>'                 "
                                            ": start dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
                                            ": interact with coap source from server, ipv6 is not need as client\r\n");
-        mInterpreter.mServer->OutputFormat("    >> args:(ipV6_addr_srv), coap_src, con, payload\r\n");
+        mInterpreter.mServer->OutputFormat("    >> args:(ipV6_addr_srv) <coap_src> and, if you have payload: <con> <payload>\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps resource <uri>'                              "
-                                           ": add a coap server resource.\r\n");
+                                           ": add a coap server resource with 'helloWorld' as content.\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  "
                                            ": stop dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps stop'                                        "
                                            ": stop coap secure service\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n legend: <>: must, (): opt                       "
+                                           "\r\n");
         mInterpreter.mServer->OutputFormat("\r\n");
     }
     else

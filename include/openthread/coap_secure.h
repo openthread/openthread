@@ -152,7 +152,7 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 CA certificate.
+ * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 certificate.
  * @param[in]  aX509CertLenth    The length of certificate.
  * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLenth  The length of the private key.
@@ -163,11 +163,28 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
  *
  */
-otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
-                                       const uint8_t *aX509Cert,
-                                       uint32_t       aX509Length,
-                                       const uint8_t *aPrivateKey,
-                                       uint32_t       aPrivateKeyLength);
+otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
+                                      const uint8_t *aX509Cert,
+                                      uint32_t       aX509Length,
+                                      const uint8_t *aPrivateKey,
+                                      uint32_t       aPrivateKeyLength);
+
+/**
+ * This method sets the trusted top level CAs. It is needed for validate the
+ * certificate of the peer.
+ *
+ * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+ *
+ * @param[in]  aInstance                A pointer to an OpenThread instance.
+ * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
+ * @param[in]  aX509CaCertChainLenth    The length of chain.
+ *
+ * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
+ *
+ */
+otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+                                          const uint8_t *aX509CaCertificateChain,
+                                          uint32_t       aX509CaCertChainLenth);
 
 /**
  * This method initializes DTLS session with a peer.

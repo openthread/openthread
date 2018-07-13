@@ -85,14 +85,12 @@ Dtls::Dtls(Instance &aInstance)
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    memset(&mCaCert, 0, sizeof(mCaCert));
+    memset(&mCaChain, 0, sizeof(mCaChain));
+    memset(&mOwnCert, 0, sizeof(mOwnCert));
     memset(&mPrivateKey, 0, sizeof(mPrivateKey));
-    mPk             = NULL;
-    mX509Cert       = NULL;
-    mPkLength       = 0;
-    mX509CertLength = 0;
+    mbedtls_x509_crt_init(&mCaChain);
+    mbedtls_x509_crt_init(&mOwnCert);
     mbedtls_pk_init(&mPrivateKey);
-    mbedtls_x509_crt_init(&mCaCert);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     mVerifyPeerCertificate = true;
@@ -261,15 +259,9 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
 
         case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
 
-            rval = mbedtls_pk_parse_key(&mPrivateKey, mPk, mPkLength, NULL, 0);
-            VerifyOrExit(rval == 0);
+            mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
 
-            rval = mbedtls_x509_crt_parse(&mCaCert, (const unsigned char *)mX509Cert, mX509CertLength);
-            VerifyOrExit(rval == 0);
-
-            mbedtls_ssl_conf_ca_chain(&mConf, &mCaCert, NULL);
-
-            rval = mbedtls_ssl_conf_own_cert(&mConf, &mCaCert, &mPrivateKey);
+            rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
             VerifyOrExit(rval == 0);
 
             break;
@@ -333,7 +325,8 @@ void Dtls::Close(void)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    mbedtls_x509_crt_free(&mCaCert);
+    mbedtls_x509_crt_free(&mCaChain);
+    mbedtls_x509_crt_free(&mOwnCert);
     mbedtls_pk_free(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -370,12 +363,13 @@ exit:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate,
-                                 uint32_t       aX509CertLenth,
-                                 const uint8_t *aPrivateKey,
-                                 uint32_t       aPrivateKeyLenth)
+otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
+                                uint32_t       aX509CertLenth,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateKeyLenth)
 {
     otError error = OT_ERROR_NONE;
+    int     rval;
 
     VerifyOrExit(aX509CertLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aX509Certificate != NULL, error = OT_ERROR_INVALID_ARGS);
@@ -383,13 +377,29 @@ otError Dtls::SetX509Certificate(const uint8_t *aX509Certificate,
     VerifyOrExit(aPrivateKeyLenth > 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aPrivateKey != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    mPk       = aPrivateKey;
-    mPkLength = aPrivateKeyLenth;
+    rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)aX509Certificate, (size_t)aX509CertLenth);
+    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
 
-    mX509Cert       = aX509Certificate;
-    mX509CertLength = aX509CertLenth;
+    rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)aPrivateKey, (size_t)aPrivateKeyLenth, NULL, 0);
+    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
 
     mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
+
+exit:
+    return error;
+}
+
+otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
+                                    uint32_t       aX509CaCertChainLenth)
+{
+    otError error = OT_ERROR_NONE;
+    int     rval;
+
+    VerifyOrExit(aX509CaCertChainLenth > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aX509CaCertificateChain != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)aX509CaCertificateChain, (size_t)aX509CaCertChainLenth);
+    VerifyOrExit(rval == 0, error = OT_ERROR_INVALID_ARGS);
 
 exit:
     return error;
@@ -844,6 +854,7 @@ otError Dtls::MapError(int rval)
     case MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE:
     case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    case MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED:
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
         error = OT_ERROR_SECURITY;
         break;

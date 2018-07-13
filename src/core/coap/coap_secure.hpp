@@ -218,10 +218,25 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
      */
-    otError SetX509Certificate(const uint8_t *aX509Cert,
-                               uint32_t       aX509Length,
-                               const uint8_t *aPrivateKey,
-                               uint32_t       aPrivateKeyLength);
+    otError SetOwnCertificate(const uint8_t *aX509Cert,
+                              uint32_t       aX509Length,
+                              const uint8_t *aPrivateKey,
+                              uint32_t       aPrivateKeyLength);
+
+    /**
+     * This method sets the trusted top level CAs. It is needed for validate the
+     * certificate of the peer.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
+     * @param[in]  aX509CaCertChainLenth    The length of chain.
+     *
+     * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
+     *
+     */
+    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain,
+                                  uint32_t       aX509CaCertChainLenth);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C

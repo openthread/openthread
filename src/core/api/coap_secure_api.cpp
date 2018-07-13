@@ -50,23 +50,43 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetX509Certificate(otInstance *   aInstance,
-                                       const uint8_t *aX509Cert,
-                                       uint32_t       aX509Length,
-                                       const uint8_t *aPrivateKey,
-                                       uint32_t       aPrivateKeyLength)
+otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
+                                      const uint8_t *aX509Cert,
+                                      uint32_t       aX509Length,
+                                      const uint8_t *aPrivateKey,
+                                      uint32_t       aPrivateKeyLength)
 {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SetX509Certificate(aX509Cert, aX509Length, aPrivateKey,
-                                                                  aPrivateKeyLength);
+    return instance.GetApplicationCoapSecure().SetOwnCertificate(aX509Cert,
+                                                                 aX509Length,
+                                                                 aPrivateKey,
+                                                                 aPrivateKeyLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aX509Cert);
     OT_UNUSED_VARIABLE(aX509Length);
     OT_UNUSED_VARIABLE(aPrivateKey);
     OT_UNUSED_VARIABLE(aPrivateKeyLength);
+
+    return OT_ERROR_DISABLED_FEATURE;
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+}
+
+otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+                                          const uint8_t *aX509CaCertificateChain,
+                                          uint32_t       aX509CaCertChainLenth)
+{
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain,
+                                                                     aX509CaCertChainLenth);
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aX509CaCertificateChain);
+    OT_UNUSED_VARIABLE(aX509CaCertChainLenth);
 
     return OT_ERROR_DISABLED_FEATURE;
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
