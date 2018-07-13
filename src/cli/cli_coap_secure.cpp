@@ -194,8 +194,8 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             {
                 if (argc > 2)
                 {
-                    mPskLength   = strlen(argv[2]);
-                    mPskIdLength = strlen(argv[3]);
+                    mPskLength   = (uint8_t)strlen(argv[2]);
+                    mPskIdLength = (uint8_t)strlen(argv[3]);
 
                     memcpy(mPsk, argv[2], mPskLength);
                     memcpy(mPskId, argv[3], mPskIdLength);
