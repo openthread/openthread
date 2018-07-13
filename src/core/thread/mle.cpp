@@ -1455,6 +1455,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice())
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
+            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
         }
     }
 
@@ -1463,6 +1464,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice() && !IsRxOnWhenIdle())
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
+            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
         }
     }
 
@@ -1475,6 +1477,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
+            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
         }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
@@ -1483,12 +1486,6 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         this->UpdateServiceAlocs();
 #endif
 #endif
-    }
-
-    if (mChildUpdateRequestState == kChildUpdateRequestPending)
-    {
-        mChildUpdateAttempts = 0;
-        mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
     }
 
     if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))
@@ -2051,6 +2048,19 @@ void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
 
 void Mle::HandleChildUpdateRequestTimer(void)
 {
+    // Here intentionly delay another kChildUpdateRequestPending cycle to ensure
+    // only send a Child Update Request after we know there are no more pending changes
+    if (mChildUpdateRequestState == kChildUpdateRequestPending)
+    {
+        if (GetNotifier().IsPending())
+        {
+            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
+            ExitNow();
+        }
+
+        mChildUpdateAttempts = 0;
+    }
+
     if ((mChildUpdateRequestState == kChildUpdateRequestPending) ||
         (mChildUpdateRequestState == kChildUpdateRequestActive) || IsRxOnWhenIdle())
     {
@@ -2067,6 +2077,9 @@ void Mle::HandleChildUpdateRequestTimer(void)
 
         SendDataRequest(destination, tlvs, sizeof(tlvs), 0);
     }
+
+exit:
+    return;
 }
 
 otError Mle::SendChildUpdateRequest(void)
