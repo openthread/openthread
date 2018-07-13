@@ -38,7 +38,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "code_utils.h"
+#include <common/code_utils.hpp>
 
 namespace ot {
 
@@ -48,16 +48,16 @@ otError FrameQueue::Push(const uint8_t *aFrame, uint8_t aLength)
     uint16_t newTail = mTail + aLength + 1;
 
     assert(aFrame != NULL);
-    otEXPECT_ACTION(aFrame != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aFrame != NULL, error = OT_ERROR_INVALID_ARGS);
 
     if (mHead > mTail)
     {
-        otEXPECT_ACTION(newTail < mHead, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(newTail < mHead, error = OT_ERROR_NO_BUFS);
     }
     else if (newTail >= sizeof(mBuffer))
     {
         newTail -= sizeof(mBuffer);
-        otEXPECT_ACTION(newTail < mHead, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(newTail < mHead, error = OT_ERROR_NO_BUFS);
     }
 
     mBuffer[mTail] = aLength;
@@ -79,36 +79,28 @@ exit:
     return error;
 }
 
-void FrameQueue::Shift(void)
-{
-    if (mHead != mTail)
-    {
-        mHead += 1 + mBuffer[mHead];
-        mHead %= sizeof(mBuffer);
-    }
-}
-
-const uint8_t *FrameQueue::Peek(uint8_t *aFrame, uint8_t &aLength)
+const uint8_t *FrameQueue::Shift(uint8_t *aFrame, uint8_t &aLength)
 {
     const uint8_t *frame = NULL;
     uint16_t       next;
 
-    otEXPECT(mHead != mTail);
+    VerifyOrExit(mHead != mTail);
 
     aLength = mBuffer[mHead];
     next    = mHead + 1 + aLength;
-
     if (next >= sizeof(mBuffer))
     {
         uint16_t half = sizeof(mBuffer) - mHead - 1;
         memcpy(aFrame, mBuffer + mHead + 1, half);
         memcpy(aFrame + half, mBuffer, aLength - half);
         frame = aFrame;
+        next -= sizeof(mBuffer);
     }
     else
     {
         frame = mBuffer + mHead + 1;
     }
+    mHead = next;
 
 exit:
     return frame;
