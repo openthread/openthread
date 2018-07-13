@@ -1582,6 +1582,13 @@ private:
         kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
     };
 
+    enum ChildUpdateRequestState
+    {
+        kChildUpdateRequestNone,    ///< No pending or active Child Update Request.
+        kChildUpdateRequestPending, ///< Pending Child Update Request due to relative OT_CHANGED event.
+        kChildUpdateRequestActive,  ///< Child Update Request has been sent and Child Update Response is expected.
+    };
+
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
                        uint8_t                aSecurityLevel,
@@ -1597,8 +1604,6 @@ private:
     void        HandleChildUpdateRequestTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleSendChildUpdateRequest(Tasklet &aTasklet);
-    void        HandleSendChildUpdateRequest(void);
 
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1660,17 +1665,16 @@ private:
     uint8_t       mParentLinkQuality2;
     uint8_t       mParentLinkQuality1;
     uint8_t       mChildUpdateAttempts;
-    LeaderDataTlv mParentLeaderData;
+    uint8_t       mChildUpdateRequestState;
     uint8_t       mParentLinkMargin;
     bool          mParentIsSingleton;
     bool          mReceivedResponseFromParent;
+    LeaderDataTlv mParentLeaderData;
 
     Router mParentCandidate;
 
     Ip6::UdpSocket mSocket;
     uint32_t       mTimeout;
-
-    Tasklet mSendChildUpdateRequest;
 
     DiscoverHandler mDiscoverHandler;
     void *          mDiscoverContext;
