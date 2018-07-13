@@ -91,13 +91,14 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
 
 otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
                                     const otOperationalDatasetComponents *aDatasetComponents,
-                                    const uint8_t *                       aTlvs,
+                                    const uint8_t *                       aTlvTypes,
                                     uint8_t                               aLength,
                                     const otIp6Address *                  aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(*aDatasetComponents, aTlvs, aLength, aAddress);
+    return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength,
+                                                                        aAddress);
 }
 
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
