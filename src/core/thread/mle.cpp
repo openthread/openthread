@@ -306,11 +306,11 @@ void Mle::SetRole(otDeviceRole aRole)
     // Start border agent
     if (aRole == OT_DEVICE_ROLE_ROUTER || aRole == OT_DEVICE_ROLE_LEADER || aRole == OT_DEVICE_ROLE_CHILD)
     {
-        SuccessOrExit(GetInstance().GetBorderAgent().Start());
+        SuccessOrExit(GetInstance().Get<MeshCoP::BorderAgent>().Start());
     }
     else
     {
-        SuccessOrExit(GetInstance().GetBorderAgent().Stop());
+        SuccessOrExit(GetInstance().Get<MeshCoP::BorderAgent>().Stop());
     }
 #endif
 

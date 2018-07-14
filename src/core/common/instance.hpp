@@ -366,9 +366,6 @@ public:
      */
     MessagePool &GetMessagePool(void) { return mMessagePool; }
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
-    MeshCoP::BorderAgent &GetBorderAgent(void) { return mBorderAgent; }
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
@@ -424,9 +421,6 @@ private:
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
-#if OPENTHREAD_ENABLE_BORDER_AGENT
-    MeshCoP::BorderAgent mBorderAgent;
-#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap::ApplicationCoap mApplicationCoap;
@@ -651,7 +645,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 #if OPENTHREAD_ENABLE_BORDER_AGENT
 template <> inline MeshCoP::BorderAgent &Instance::Get(void)
 {
-    return mBorderAgent;
+    return GetThreadNetif().GetBorderAgent();
 }
 #endif
 
