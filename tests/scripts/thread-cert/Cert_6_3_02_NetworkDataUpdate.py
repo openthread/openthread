@@ -36,7 +36,7 @@ import node
 LEADER = 1
 ED = 2
 
-class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
+class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -72,7 +72,7 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].register_netdata()
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         addrs = self.nodes[ED].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
