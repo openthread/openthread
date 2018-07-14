@@ -298,7 +298,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     SetAttachState(kAttachStateIdle);
     mAttachCounter = 0;
     mAttachTimer.Stop();
-    mChildUpdateRequestTimer.Stop();
+    mMessageTransmissionTimer.Stop();
     mAdvertiseTimer.Stop();
     ResetAdvertiseInterval();
 
@@ -333,7 +333,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     SetAttachState(kAttachStateIdle);
     mAttachCounter = 0;
     mAttachTimer.Stop();
-    mChildUpdateRequestTimer.Stop();
+    mMessageTransmissionTimer.Stop();
     mAdvertiseTimer.Stop();
     ResetAdvertiseInterval();
     AddLeaderAloc();
