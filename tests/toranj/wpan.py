@@ -491,6 +491,9 @@ class Node(object):
             start_time = time.time()
             while True:
                 try:
+                    node._wpantund_process.poll()
+                    if node._wpantund_process.returncode is not None:
+                        print 'Node {} wpantund instance has terminated unexpectedly'.format(node)
                     if disable_logs:
                         node.set(WPAN_OT_LOG_LEVEL, '0')
                     node.leave()
