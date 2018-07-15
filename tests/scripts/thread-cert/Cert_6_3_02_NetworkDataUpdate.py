@@ -72,9 +72,10 @@ class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].register_netdata()
-        self.simulator.go(10)
+        self.simulator.go(5)
 
         addrs = self.nodes[ED].get_addrs()
+        self.simulator.go(5)
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1':
