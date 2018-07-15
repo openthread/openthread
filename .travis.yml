@@ -53,55 +53,19 @@ matrix:
     - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="android-build" VERBOSE=1
-      language: android
-      android:
-        components:
-          - tools
-          - platform-tools
-    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-          packages:
-            - clang-5.0
-    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-mtd" VERBOSE=1 VIRTUAL_TIME=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="pretty-check"
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-          packages:
-            - clang-5.0
-    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-          packages:
-            - clang-5.0
-    - env: BUILD_TARGET="arm-gcc49"
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="arm-gcc54"
+    - env: BUILD_TARGET="arm-gcc7"
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="arm-gcc63"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc7"
+    - env: BUILD_TARGET="arm-gcc49"
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="arm-gcc54"
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
@@ -145,6 +109,42 @@ matrix:
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
+    - env: BUILD_TARGET="android-build" VERBOSE=1
+      language: android
+      android:
+        components:
+          - tools
+          - platform-tools
+    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-mtd" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="pretty-check"
+      os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
+      os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
