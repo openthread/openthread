@@ -83,7 +83,7 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self._setUpRouter1()
         self.simulator.go(200)
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(15)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertNotEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
@@ -92,7 +92,7 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self._setUpRouter1()
         self.simulator.go(300)
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(15)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
 
