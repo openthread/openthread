@@ -233,6 +233,7 @@ libopenthread_ftd_a_SOURCES         = \
     $(NULL)
 
 HEADERS_COMMON                      = \
+    openthread-core-config-check.h    \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     api/link_raw.hpp                  \

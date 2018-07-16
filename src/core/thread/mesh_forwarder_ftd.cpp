@@ -385,8 +385,9 @@ otError MeshForwarder::GetIndirectTransmission(void)
             continue;
         }
 
-        mSendMessage                 = child.GetIndirectMessage();
-        mSendMessageMaxMacTxAttempts = Mac::kIndirectFrameMacTxAttempts;
+        mSendMessage                = child.GetIndirectMessage();
+        mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsIndirect;
+        mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesIndirect;
 
         if (mSendMessage == NULL)
         {
@@ -648,8 +649,6 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
             break;
         }
     }
-
-    VerifyOrExit((aError == OT_ERROR_NONE) || (aError == OT_ERROR_NO_ACK));
 
     if (mMessageNextOffset < mSendMessage->GetLength())
     {

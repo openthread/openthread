@@ -360,7 +360,8 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     memcpy(frame->mPsdu, frameBuffer, frame->mLength);
 
     // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
-    frame->mInfo.mTxInfo.mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
+    frame->mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    frame->mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT;
 
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.

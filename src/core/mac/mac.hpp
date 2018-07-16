@@ -71,7 +71,6 @@ enum
 {
     kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
     kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006).
-    kMaxCSMABackoffs   = 4,  ///< macMaxCSMABackoffs (IEEE 802.15.4-2006).
     kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
 
     kMinBackoff = 1, ///< Minimum backoff (milliseconds).
@@ -84,24 +83,17 @@ enum
     kScanChannelsAll     = OT_CHANNEL_ALL, ///< All channels.
     kScanDurationDefault = 300,            ///< Default interval between channels (milliseconds).
 
-    /**
-     * Maximum number of MAC layer tx attempts for an outbound direct frame.
-     *
-     */
-    kDirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
+    kMaxCsmaBackoffsDirect =
+        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
+    kMaxCsmaBackoffsIndirect =
+        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
 
-    /**
-     * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
-     * a data request command (data poll) from the child.
-     *
-     */
-    kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
+    kMaxFrameRetriesDirect =
+        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT, ///< macMaxFrameRetries for direct transmissions
+    kMaxFrameRetriesIndirect =
+        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
 
-    /**
-     * The transmit number of a broadcast frame in MAC layer.
-     *
-     */
-    kTxNumBcast = OPENTHREAD_CONFIG_TX_NUM_BCAST,
+    kTxNumBcast = OPENTHREAD_CONFIG_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
 
 /**
@@ -1059,8 +1051,8 @@ private:
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;
-    uint8_t mCsmaAttempts;
-    uint8_t mTransmitAttempts;
+    uint8_t mCsmaBackoffs;
+    uint8_t mTransmitRetries;
     uint8_t mBroadcastTransmitCount;
 
     ChannelMask mScanChannelMask;
