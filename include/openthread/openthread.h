@@ -76,8 +76,8 @@ extern "C" {
  * @defgroup api-dns   DNSv6
  * @defgroup api-icmp6 ICMPv6
  * @defgroup api-ip6   IPv6
- *
  * @defgroup api-udp-group UDP
+ *
  * @{
  * 
  * @defgroup api-udp       UDP
