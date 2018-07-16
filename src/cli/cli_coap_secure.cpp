@@ -32,7 +32,7 @@
  */
 
 #include "cli_coap_secure.hpp"
-#define OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE 1
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include <ctype.h>
@@ -182,8 +182,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             }
         }
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
-        otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecureCli::HandleClientConnect, this);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
+        otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecureCli::HandleClientConnect, this);
+        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecureCli::DefaultHandle, this);
         mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
                                            mVerifyPeerCert ? "true" : "false");
     }
@@ -619,6 +620,22 @@ void CoapSecureCli::HandleClientResponse(otCoapHeader *       aHeader,
     }
 
     OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+}
+
+void OTCALL CoapSecureCli::DefaultHandle(void *               aContext,
+                                         otCoapHeader *       aHeader,
+                                         otMessage *          aMessage,
+                                         const otMessageInfo *aMessageInfo)
+{
+    static_cast<CoapSecureCli *>(aContext)->DefaultHandle(aHeader, aMessage, aMessageInfo);
+}
+
+void CoapSecureCli::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    mInterpreter.mServer->OutputFormat("Default Handle Called.\r\n");
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aMessage);
     OT_UNUSED_VARIABLE(aMessageInfo);
 }
 

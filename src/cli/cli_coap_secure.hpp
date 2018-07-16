@@ -106,6 +106,12 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
+    static void OTCALL DefaultHandle(void *               aContext,
+                                     otCoapHeader *       aHeader,
+                                     otMessage *          aMessage,
+                                     const otMessageInfo *aMessageInfo);
+    void               DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
     static void OTCALL HandleClientConnect(const bool aConnected, void *aContext);
     void               HandleClientConnect(const bool aConnected);
 
