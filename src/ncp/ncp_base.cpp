@@ -183,11 +183,9 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDecoder()
     , mHostPowerStateInProgress(false)
     , mLastStatus(SPINEL_STATUS_OK)
-    , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
-    , mChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
+    , mScanChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
     , mScanPeriod(200)
-    , // ms
-    mDiscoveryScanJoinerFlag(false)
+    , mDiscoveryScanJoinerFlag(false)
     , mDiscoveryScanEnableFiltering(false)
     , mDiscoveryScanPanId(0xffff)
     , mUpdateChangedPropsTask(*aInstance, &NcpBase::UpdateChangedProps, this)
@@ -253,6 +251,9 @@ NcpBase::NcpBase(Instance *aInstance)
     otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+#if OPENTHREAD_ENABLE_UDP_PROXY
+    otUdpProxySetSender(mInstance, &NcpBase::HandleUdpProxyStream, this);
+#endif
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
     otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #if OPENTHREAD_FTD
@@ -1642,8 +1643,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NEST_LEGACY_INTERFACE));
 #endif
 
-#if OPENTHREAD_ENABLE_TMF_PROXY
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_TMF_PROXY));
+#if OPENTHREAD_ENABLE_UDP_PROXY
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_PROXY));
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

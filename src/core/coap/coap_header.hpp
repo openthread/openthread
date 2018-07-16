@@ -480,7 +480,6 @@ private:
         kTokenLengthMask   = 0x0f, ///< Token Length mask as specified (RFC 7252).
         kTokenLengthOffset = 0,    ///< Token Length offset as specified (RFC 7252).
         kTokenOffset       = 4,    ///< Token offset as specified (RFC 7252).
-        kMaxTokenLength    = 8,    ///< Max token length as specified (RFC 7252).
 
         kMaxOptionHeaderSize = 5, ///< Maximum size of an Option header
 

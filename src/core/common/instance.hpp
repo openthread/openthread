@@ -55,6 +55,7 @@
 #endif
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
+#include "meshcop/border_agent.hpp"
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
@@ -194,7 +195,23 @@ public:
     void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    /**
+     * This method returns the active log level.
+     *
+     * @returns The log level.
+     *
+     */
+    otLogLevel GetLogLevel(void) const
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    {
+        return GetDynamicLogLevel();
+    }
+#else
+    {
+        return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+    }
+#endif
+
     /**
      * This method finalizes the OpenThread instance.
      *
@@ -203,6 +220,7 @@ public:
      */
     void Finalize(void);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
      *
@@ -357,6 +375,10 @@ public:
      *
      */
     MessagePool &GetMessagePool(void) { return mMessagePool; }
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    MeshCoP::BorderAgent &GetBorderAgent(void) { return mBorderAgent; }
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
@@ -374,7 +396,7 @@ public:
      * @returns A reference to the `Type` object of the instance.
      *
      */
-    template <typename Type> Type &Get(void);
+    template <typename Type> inline Type &Get(void);
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     /**
@@ -412,6 +434,9 @@ private:
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    MeshCoP::BorderAgent mBorderAgent;
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap::ApplicationCoap mApplicationCoap;
@@ -443,6 +468,234 @@ private:
 #endif
     bool mIsInitialized;
 };
+
+// Specializations of the `Get<Type>()` method.
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+template <> inline Notifier &Instance::Get(void)
+{
+    return GetNotifier();
+}
+
+template <> inline MeshForwarder &Instance::Get(void)
+{
+    return GetThreadNetif().GetMeshForwarder();
+}
+
+template <> inline Mle::Mle &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle();
+}
+
+template <> inline Mle::MleRouter &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle();
+}
+
+template <> inline ChildTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetChildTable();
+}
+
+template <> inline RouterTable &Instance::Get(void)
+{
+    return GetThreadNetif().GetMle().GetRouterTable();
+}
+
+template <> inline Ip6::Netif &Instance::Get(void)
+{
+    return GetThreadNetif();
+}
+
+template <> inline Ip6::Ip6 &Instance::Get(void)
+{
+    return GetIp6();
+}
+
+template <> inline Mac::Mac &Instance::Get(void)
+{
+    return GetThreadNetif().GetMac();
+}
+
+template <> inline KeyManager &Instance::Get(void)
+{
+    return GetThreadNetif().GetKeyManager();
+}
+
+#if OPENTHREAD_FTD
+template <> inline AddressResolver &Instance::Get(void)
+{
+    return GetThreadNetif().GetAddressResolver();
+}
+
+template <> inline MeshCoP::Leader &Instance::Get(void)
+{
+    return GetThreadNetif().GetLeader();
+}
+
+template <> inline MeshCoP::JoinerRouter &Instance::Get(void)
+{
+    return GetThreadNetif().GetJoinerRouter();
+}
+#endif // OPENTHREAD_FTD
+
+template <> inline AnnounceBeginServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetAnnounceBeginServer();
+}
+
+template <> inline DataPollManager &Instance::Get(void)
+{
+    return GetThreadNetif().GetMeshForwarder().GetDataPollManager();
+}
+
+template <> inline EnergyScanServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetEnergyScanServer();
+}
+
+template <> inline PanIdQueryServer &Instance::Get(void)
+{
+    return GetThreadNetif().GetPanIdQueryServer();
+}
+
+template <> inline NetworkData::Leader &Instance::Get(void)
+{
+    return GetThreadNetif().GetNetworkDataLeader();
+}
+
+template <> inline Ip6::Mpl &Instance::Get(void)
+{
+    return GetIp6().GetMpl();
+}
+
+template <> inline Coap::Coap &Instance::Get(void)
+{
+    return GetThreadNetif().GetCoap();
+}
+
+template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
+{
+    return GetThreadNetif().GetActiveDataset();
+}
+
+template <> inline MeshCoP::PendingDataset &Instance::Get(void)
+{
+    return GetThreadNetif().GetPendingDataset();
+}
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+template <> inline Coap::ApplicationCoap &Instance::Get(void)
+{
+    return GetApplicationCoap();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+template <> inline Coap::ApplicationCoapSecure &Instance::Get(void)
+{
+    return GetApplicationCoapSecure();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+template <> inline MeshCoP::Commissioner &Instance::Get(void)
+{
+    return GetThreadNetif().GetCommissioner();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_JOINER
+template <> inline MeshCoP::Joiner &Instance::Get(void)
+{
+    return GetThreadNetif().GetJoiner();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+template <> inline Dns::Client &Instance::Get(void)
+{
+    return GetThreadNetif().GetDnsClient();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DTLS
+template <> inline MeshCoP::Dtls &Instance::Get(void)
+{
+    return GetThreadNetif().GetDtls();
+}
+
+template <> inline Coap::CoapSecure &Instance::Get(void)
+{
+    return GetThreadNetif().GetCoapSecure();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
+{
+    return GetThreadNetif().GetDhcp6Client();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+template <> inline Utils::JamDetector &Instance::Get(void)
+{
+    return GetThreadNetif().GetJamDetector();
+}
+#endif
+
+template <> inline Utils::ChildSupervisor &Instance::Get(void)
+{
+    return GetThreadNetif().GetChildSupervisor();
+}
+
+template <> inline Utils::SupervisionListener &Instance::Get(void)
+{
+    return GetThreadNetif().GetSupervisionListener();
+}
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+template <> inline Utils::ChannelMonitor &Instance::Get(void)
+{
+    return GetChannelMonitor();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+template <> inline Utils::ChannelManager &Instance::Get(void)
+{
+    return GetChannelManager();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+template <> inline MeshCoP::BorderAgent &Instance::Get(void)
+{
+    return mBorderAgent;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+template <> inline AnnounceSender &Instance::Get(void)
+{
+    return GetAnnounceSender();
+}
+#endif
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+template <> inline LinkRaw &Instance::Get(void)
+{
+    return GetLinkRaw();
+}
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
+template <> inline TaskletScheduler &Instance::Get(void)
+{
+    return GetTaskletScheduler();
+}
 
 /**
  * @}

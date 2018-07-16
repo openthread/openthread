@@ -42,10 +42,6 @@
 #include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"
 
-#if OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
-#include "thread/tmf_proxy.hpp"
-#endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
-
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include "meshcop/commissioner.hpp"
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -371,16 +367,6 @@ public:
     Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
-#if OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
-    /**
-     * This method returns the TMF proxy object.
-     *
-     * @returns Reference to the TMF proxy object.
-     *
-     */
-    TmfProxy &GetTmfProxy(void) { return mTmfProxy; }
-#endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
-
     /**
      * This method returns a reference to the child supervisor object.
      *
@@ -478,10 +464,6 @@ private:
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     Utils::JamDetector mJamDetector;
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
-
-#if OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
-    TmfProxy mTmfProxy;
-#endif // OPENTHREAD_ENABLE_TMF_PROXY && OPENTHREAD_FTD
 
 #if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;

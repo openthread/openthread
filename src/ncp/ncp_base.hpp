@@ -175,16 +175,6 @@ public:
 protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
-    template <spinel_prop_key_t aKey> otError HandlePropertyGet(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertySet(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertyInsert(void);
-    template <spinel_prop_key_t aKey> otError HandlePropertyRemove(void);
-
-    otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
-    otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
-
     /**
      * This struct represents a spinel response entry.
      *
@@ -303,12 +293,15 @@ protected:
     otError DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength);
 #endif
 
+#if OPENTHREAD_ENABLE_UDP_PROXY
+    static void HandleUdpProxyStream(otMessage *   aMessage,
+                                     uint16_t      aPeerPort,
+                                     otIp6Address *aPeerAddr,
+                                     uint16_t      aSockPort,
+                                     void *        aContext);
+    void        HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
+#endif // OPENTHREAD_ENABLE_UDP_PROXY
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
-    static void HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
-    void        HandleTmfProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
@@ -360,34 +353,27 @@ protected:
     // (they expect `aHeader` as an input argument) and are processed separately in
     // `HandleCommandPropertySet()`.
 
-    // --------------------------------------------------------------------------
-    // Common Properties
-
-    // --------------------------------------------------------------------------
-    // Raw Link API Properties
-
-    // --------------------------------------------------------------------------
-    // MTD (or FTD) Properties
-
-    // --------------------------------------------------------------------------
-    // FTD Only Properties
+    template <spinel_prop_key_t aKey> otError HandlePropertyGet(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertySet(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertyInsert(void);
+    template <spinel_prop_key_t aKey> otError HandlePropertyRemove(void);
 
     // --------------------------------------------------------------------------
     // Property "set" handlers for special properties for which the spinel
     // response needs to be created from within the set handler.
 
-    otError SetPropertyHandler_HOST_POWER_STATE(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
 #if OPENTHREAD_ENABLE_DIAG
-    otError SetPropertyHandler_NEST_STREAM_MFG(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    otError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    otError SetPropertyHandler_STREAM_RAW(uint8_t aHeader);
+    otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
 #if OPENTHREAD_ENABLE_LEGACY
@@ -488,8 +474,7 @@ protected:
     };
 
     spinel_status_t mLastStatus;
-    uint32_t        mSupportedChannelMask;
-    uint32_t        mChannelMask;
+    uint32_t        mScanChannelMask;
     uint16_t        mScanPeriod;
     bool            mDiscoveryScanJoinerFlag;
     bool            mDiscoveryScanEnableFiltering;

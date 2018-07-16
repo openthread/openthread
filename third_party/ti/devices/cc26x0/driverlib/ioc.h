@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       ioc.h
-*  Revised:        2017-05-04 16:35:28 +0200 (Thu, 04 May 2017)
-*  Revision:       48901
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the IO Controller.
 *
@@ -687,11 +687,14 @@ extern void IOCIOPortIdSet(uint32_t ui32IOId, uint32_t ui32PortId);
 
 //*****************************************************************************
 //
-//! \brief Register an interrupt handler for an IO edge interrupt.
+//! \brief Register an interrupt handler for an IO edge interrupt in the dynamic interrupt table.
 //!
-//! This function does the actual registering of the interrupt handler. This
-//! function enables the global interrupt in the interrupt controller; specific
-//! IO interrupts must be enabled via \ref IOCIntEnable(). It is the interrupt
+//! \note Only use this function if you want to use the dynamic vector table (in SRAM)!
+//!
+//! This function registers a function as the interrupt handler for a specific
+//! interrupt and enables the corresponding interrupt in the interrupt controller.
+//!
+//! Specific IO interrupts must be enabled via \ref IOCIntEnable(). It is the interrupt
 //! handler's responsibility to clear the interrupt source.
 //!
 //! \param pfnHandler is a pointer to the function to be called when the
@@ -715,7 +718,7 @@ IOCIntRegister(void (*pfnHandler)(void))
 
 //*****************************************************************************
 //
-//! \brief Unregisters an interrupt handler for a IO edge interrupt.
+//! \brief Unregisters an interrupt handler for a IO edge interrupt in the dynamic interrupt table.
 //!
 //! This function does the actual unregistering of the interrupt handler.  It
 //! clears the handler to be called when an IO edge interrupt occurs.

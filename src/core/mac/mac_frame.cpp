@@ -365,7 +365,7 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
 
     if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
     {
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
         // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
         //  Dest Address:       Extended
         //  Source Address:     Extended
@@ -891,16 +891,15 @@ exit:
 
 uint8_t Frame::FindPayloadIndex(void) const
 {
-    uint16_t fcf   = GetFrameControlField();
-    uint8_t  index = SkipSecurityHeaderIndex();
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    uint8_t index = SkipSecurityHeaderIndex();
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     uint8_t *cur    = NULL;
     uint8_t *footer = GetFooter();
 #endif
 
     VerifyOrExit(index != kInvalidIndex);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     cur = GetPsdu() + index;
 
     if (IsIePresent())
@@ -929,7 +928,7 @@ uint8_t Frame::FindPayloadIndex(void) const
 #endif
 
     // Command ID
-    if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    if ((GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         index += kCommandIdSize;
     }
@@ -970,7 +969,7 @@ uint8_t *Frame::GetFooter(void) const
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 uint8_t Frame::FindHeaderIeIndex(void) const
 {
     uint8_t index;
@@ -1042,7 +1041,9 @@ uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 exit:
     return cur;
 }
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 uint8_t *Frame::GetTimeIe(void) const
 {
     TimeIe * timeIe              = NULL;

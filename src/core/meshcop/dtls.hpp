@@ -74,7 +74,7 @@ public:
         kPskMaxLength            = 32,
         kWaitForCloseNotifyMilli = 2000,
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-        kApplicationDataMaxLength = 128,
+        kApplicationDataMaxLength = 512,
 #else
         kApplicationDataMaxLength = 1400,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

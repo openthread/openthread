@@ -196,14 +196,14 @@ private:
     uint8_t GetNumEntries(void) const;
     void    Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus);
 
-    static void SetBit(uint32_t &aBitset, uint8_t aBitIndex) { aBitset |= (1U << aBitIndex); }
-    static void ClearBit(uint32_t &aBitset, uint8_t aBitIndex) { aBitset &= ~(1U << aBitIndex); }
-    static bool IsBitSet(uint32_t aBitset, uint8_t aBitIndex) { return (aBitset & (1U << aBitIndex)) != 0; }
+    static void SetBit(uint64_t &aBitset, uint8_t aBitIndex) { aBitset |= (1ULL << aBitIndex); }
+    static void ClearBit(uint64_t &aBitset, uint8_t aBitIndex) { aBitset &= ~(1ULL << aBitIndex); }
+    static bool IsBitSet(uint64_t aBitset, uint8_t aBitIndex) { return (aBitset & (1ULL << aBitIndex)) != 0; }
 
     static const Entry mSupportedProps[];
 
-    uint32_t mChangedSet;
-    uint32_t mFilterSet;
+    uint64_t mChangedSet;
+    uint64_t mFilterSet;
 };
 
 } // namespace Ncp

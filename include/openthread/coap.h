@@ -59,6 +59,8 @@ extern "C" {
 
 #define OT_DEFAULT_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
 
+#define OT_COAP_MAX_TOKEN_LENGTH 8 ///< Max token length as specified (RFC 7252).
+
 /**
  * CoAP Type values.
  *

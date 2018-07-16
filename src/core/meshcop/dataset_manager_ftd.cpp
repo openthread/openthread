@@ -618,7 +618,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ChannelMask0Tlv tlv;
         tlv.Init();
-        tlv.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
+        tlv.SetMask(netif.GetMac().GetSupportedChannelMask().GetMask());
         dataset.Set(tlv);
     }
 

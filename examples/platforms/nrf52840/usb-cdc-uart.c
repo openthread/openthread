@@ -246,8 +246,6 @@ static void processTransmit(void)
     }
     else if (sUsbState.mTransferDone)
     {
-        otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "otPlatUartSendDone");
-
         sUsbState.mTransferDone       = false;
         sUsbState.mTransferInProgress = false;
 

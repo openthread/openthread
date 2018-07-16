@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aon_wuc.h
-*  Revised:        2017-03-28 11:12:40 +0200 (Tue, 28 Mar 2017)
-*  Revision:       48729
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the AUX Wakeup Controller
 *

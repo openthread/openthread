@@ -69,13 +69,40 @@ static volatile cc2652_PhyState_t sState;
 /* set to max transmit power by default */
 static output_config_t const *sCurrentOutputPower = &(rgOutputPower[0]);
 
-/* TODO: replace with correct overrides, pre-Alpha */
-/* Overrides for IEEE 802.15.4, differential mode */
+/* Overrides from SmartRF Studio 7 2.10.0#94 */
 static uint32_t sIEEEOverrides[] = {
-    0x00008403, // Use 48 MHz Crystal
-    0x000088C3, // Disabling dynamic DCDC settings control in RX
-    0x000088D3, // Disabling dynamic DCDC settings control in TX
-    0xFFFFFFFF, // END_OVERRIDE
+    // override_ieee_802_15_4.xml
+    // PHY: Use MCE RAM patch, RFE ROM bank 1
+    MCE_RFE_OVERRIDE(1, 0, 0, 0, 1, 0),
+    // Synth: Use 48 MHz crystal, enable extra PLL filtering
+    (uint32_t)0x02400403,
+    // Synth: Configure extra PLL filtering
+    (uint32_t)0x001C8473,
+    // Synth: Configure synth hardware
+    (uint32_t)0x00088433,
+    // Synth: Set minimum RTRIM to 3
+    (uint32_t)0x00038793,
+    // Synth: Configure faster calibration
+    HW32_ARRAY_OVERRIDE(0x4004, 1),
+    // Synth: Configure faster calibration
+    (uint32_t)0x1C0C0618,
+    // Synth: Configure faster calibration
+    (uint32_t)0xC00401A1,
+    // Synth: Configure faster calibration
+    (uint32_t)0x00010101,
+    // Synth: Configure faster calibration
+    (uint32_t)0xC0040141,
+    // Synth: Configure faster calibration
+    (uint32_t)0x00214AD3,
+    // Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us)
+    (uint32_t)0x02980243,
+    // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). In Rx, use DCDCCTL5[3:0]=0xC
+    // (DITHER_EN=1 and IPEAK=4).
+    (uint32_t)0xFCFC08C3,
+    // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
+    (uint32_t)0x000F8883,
+    // override_frontend_id.xml
+    (uint32_t)0xFFFFFFFF,
 };
 
 /*

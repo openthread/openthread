@@ -1,6 +1,6 @@
 /******************************************************************************
 *  Filename:       rf_patch_rfe_genfsk.h
-*  Revised:        $Date: 2017-05-04 12:39:32 +0200 (to, 04 mai 2017) $
+*  Revised:        $Date: 2017-05-04 12:39:32 +0200 (Thu, 04 May 2017) $
 *  Revision:       $Revision: 17776 $
 *
 *  Description: RF core patch for CC26x0 Generic FSK

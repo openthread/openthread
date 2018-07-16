@@ -328,6 +328,10 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "CMNewChan";
         break;
 
+    case OT_CHANGED_SUPPORTED_CHANNEL_MASK:
+        retval = "ChanMask";
+        break;
+
     default:
         break;
     }

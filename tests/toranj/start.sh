@@ -125,6 +125,8 @@ run test-009-insecure-traffic-join.py
 run test-010-on-mesh-prefix-config-gateway.py
 run test-011-child-table.py
 run test-012-multi-hop-traffic.py
+run test-013-off-mesh-route-traffic.py
+run test-014-ip6-address-add.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py

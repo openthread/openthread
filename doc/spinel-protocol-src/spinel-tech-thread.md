@@ -32,10 +32,17 @@ The IPv6 address of the leader. (Note: May change to long and short address of l
 
 ### PROP 81: PROP_THREAD_PARENT
 * Type: Read-Only
-* Packed-Encoding: `ES`
-* LADDR, SADDR
+* Packed-Encoding: `ESLccCC`
 
-The long address and short address of the parent of this node.
+Information about parent of this node.
+
+*  `E`: Extended address
+*  `S`: RLOC16
+*  `L`: Age (seconds since last heard from)
+*  `c`: Average RSS (in dBm)
+*  `c`: Last RSSI (in dBm)
+*  `C`: Link Quality In
+*  `C`: Link Quality Out
 
 ### PROP 82: PROP_THREAD_CHILD_TABLE
 * Type: Read-Only
@@ -288,13 +295,15 @@ Set to true to enable the native commissioner. It is mandatory before adding the
 * Packed-Encoding: `b`
 * Required capability: `CAP_THREAD_TMF_PROXY`
 
-Set to true to enable the TMF proxy.
+Set to true to enable the TMF proxy. This property is deprecated.
 
 ### PROP 5394: PROP_THREAD_TMF_PROXY_STREAM {#prop-thread-tmf-proxy-stream}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `dSS`
 * Required capability: `CAP_THREAD_TMF_PROXY`
+
+This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
 
 Data per item is:
 
@@ -308,7 +317,6 @@ Fields:  | Length | CoAP | locator | port
 
 This property allows the host to send and receive TMF messages from
 the NCP's RLOC address and support Thread-specific border router functions.
-
 
 ### PROP 5395: PROP_THREAD_DISOVERY_SCAN_JOINER_FLAG {#prop-thread-discovery-scan-joiner-flag}
 
@@ -563,7 +571,6 @@ Data per item is:
 * `c`: Average RSSI (in dBm)
 * `c`: Last RSSI (in dBm)
 
-
 ### PROP 5411: SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE (#prop-thread-address-cache-table)
 
 * Type: Read-Only
@@ -576,3 +583,16 @@ Data per item is:
 * `6` : Target IPv6 address
 * `S` : RLOC16 of target
 * `C` : Age (order of use, 0 indicates most recently used entry)
+
+### PROP 5412: SPINEL_PROP_THREAD_UDP_PROXY_STREAM (#prop-thread-udp-proxy-stream)
+
+* Type: Write-Stream
+* Packed-Encoding: `dS6S`
+* Required capability: `CAP_THREAD_UDP_PROXY`
+
+This property helps exchange UDP packets with host.
+
+  `d`: UDP payload
+  `S`: Remote UDP port
+  `6`: Remote IPv6 address
+  `S`: Local UDP port

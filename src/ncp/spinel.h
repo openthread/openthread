@@ -458,6 +458,7 @@ enum
     SPINEL_CAP_THREAD__BEGIN       = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER = (SPINEL_CAP_THREAD__BEGIN + 0),
     SPINEL_CAP_THREAD_TMF_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_UDP_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 2),
     SPINEL_CAP_THREAD__END         = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -923,7 +924,20 @@ typedef enum {
 
     SPINEL_PROP_THREAD__BEGIN      = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
-    SPINEL_PROP_THREAD_PARENT      = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
+
+    /// Thread Parent Info
+    /** Format: `ESLccCC` - Read only
+     *
+     *  `E`: Extended address
+     *  `S`: RLOC16
+     *  `L`: Age (seconds since last heard from)
+     *  `c`: Average RSS (in dBm)
+     *  `c`: Last RSSI (in dBm)
+     *  `C`: Link Quality In
+     *  `C`: Link Quality Out
+     *
+     */
+    SPINEL_PROP_THREAD_PARENT = SPINEL_PROP_THREAD__BEGIN + 1,
 
     /// Thread Child Table
     /** Format: [A(t(ESLLCCcCc)] - Read only
@@ -1117,13 +1131,19 @@ typedef enum {
 
     /// Thread TMF proxy enable
     /** Format `b`
+     * Required capability: `SPINEL_CAP_THREAD_TMF_PROXY`
      *
-     * Default value is `false`.
+     * This property is deprecated.
+     *
      */
     SPINEL_PROP_THREAD_TMF_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
 
     /// Thread TMF proxy stream
     /** Format `dSS`
+     * Required capability: `SPINEL_CAP_THREAD_TMF_PROXY`
+     *
+     * This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
+     *
      */
     SPINEL_PROP_THREAD_TMF_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
@@ -1380,6 +1400,20 @@ typedef enum {
      *
      */
     SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE = SPINEL_PROP_THREAD_EXT__BEGIN + 35,
+
+    /// Thread UDP proxy stream
+    /** Format `dS6S`
+     * Required capability: `SPINEL_CAP_THREAD_UDP_PROXY`
+     *
+     * This property helps exchange UDP packets with host.
+     *
+     *  `d`: UDP payload
+     *  `S`: Remote UDP port
+     *  `6`: Remote IPv6 address
+     *  `S`: Local UDP port
+     *
+     */
+    SPINEL_PROP_THREAD_UDP_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 36,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

@@ -46,6 +46,7 @@ BuildJobs                      ?= 10
 
 configure_OPTIONS                   = \
     --enable-application-coap         \
+    --enable-border-agent             \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
@@ -63,7 +64,7 @@ configure_OPTIONS                   = \
     --enable-ncp-app=all              \
     --enable-raw-link-api             \
     --enable-service                  \
-    --enable-tmf-proxy                \
+    --enable-udp-proxy                \
     --with-examples=posix             \
     --with-ncp-bus=uart               \
     $(NULL)

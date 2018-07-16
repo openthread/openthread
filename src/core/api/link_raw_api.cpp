@@ -230,7 +230,7 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-        if (aFrame->mInfo.mTxInfo.mIsCcaEnabled)
+        if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
         {
             // Start the transmission backoff logic
             StartCsmaBackoff();
@@ -758,7 +758,7 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     // Note: For now this functionality is not supported in Radio Only mode.

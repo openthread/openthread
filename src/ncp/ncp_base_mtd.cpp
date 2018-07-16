@@ -225,7 +225,19 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
-    return EncodeChannelMask(mSupportedChannelMask);
+    return EncodeChannelMask(otLinkGetSupportedChannelMask(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
+{
+    uint32_t newMask = 0;
+    otError  error   = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(newMask));
+    error = otLinkSetSupportedChannelMask(mInstance, newMask);
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RSSI>(void)
@@ -556,8 +568,26 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PARENT>(void)
 
     if (error == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = mEncoder.WriteEui64(parentInfo.mExtAddress)); // Parent's extended address
-        SuccessOrExit(error = mEncoder.WriteUint16(parentInfo.mRloc16));
+        if (parentInfo.mLinkEstablished)
+        {
+            int8_t averageRssi;
+            int8_t lastRssi;
+
+            otThreadGetParentAverageRssi(mInstance, &averageRssi);
+            otThreadGetParentLastRssi(mInstance, &lastRssi);
+
+            SuccessOrExit(error = mEncoder.WriteEui64(parentInfo.mExtAddress));
+            SuccessOrExit(error = mEncoder.WriteUint16(parentInfo.mRloc16));
+            SuccessOrExit(error = mEncoder.WriteUint32(parentInfo.mAge));
+            SuccessOrExit(error = mEncoder.WriteInt8(averageRssi));
+            SuccessOrExit(error = mEncoder.WriteInt8(lastRssi));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityIn));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityOut));
+        }
+        else
+        {
+            SuccessOrExit(error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_ITEM_NOT_FOUND));
+        }
     }
     else
     {
@@ -2577,7 +2607,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_MASK>(void)
 {
-    return EncodeChannelMask(mChannelMask);
+    return EncodeChannelMask(mScanChannelMask);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>(void)
@@ -2586,9 +2616,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>(void)
     otError  error   = OT_ERROR_NONE;
 
     SuccessOrExit(error = DecodeChannelMask(newMask));
-    VerifyOrExit((~mSupportedChannelMask & newMask) == 0, error = OT_ERROR_INVALID_ARGS);
-
-    mChannelMask = newMask;
+    mScanChannelMask = newMask;
 
 exit:
     return error;
@@ -2662,7 +2690,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
         else
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
-            error = otLinkActiveScan(mInstance, mChannelMask, mScanPeriod, &HandleActiveScanResult_Jump, this);
+            error = otLinkActiveScan(mInstance, mScanChannelMask, mScanPeriod, &HandleActiveScanResult_Jump, this);
         }
 
         SuccessOrExit(error);
@@ -2677,9 +2705,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
             // Make sure we aren't already scanning and that we have
             // only 1 bit set for the channel mask.
             VerifyOrExit(mCurScanChannel == kInvalidScanChannel, error = OT_ERROR_INVALID_STATE);
-            VerifyOrExit(HasOnly1BitSet(mChannelMask), error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(HasOnly1BitSet(mScanChannelMask), error = OT_ERROR_INVALID_ARGS);
 
-            scanChannel     = IndexOfMSB(mChannelMask);
+            scanChannel     = IndexOfMSB(mScanChannelMask);
             mCurScanChannel = (int8_t)scanChannel;
 
             error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
@@ -2687,14 +2715,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
         else
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
         {
-            error = otLinkEnergyScan(mInstance, mChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
+            error = otLinkEnergyScan(mInstance, mScanChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
         }
 
         SuccessOrExit(error);
         break;
 
     case SPINEL_SCAN_STATE_DISCOVER:
-        error = otThreadDiscover(mInstance, mChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
+        error = otThreadDiscover(mInstance, mScanChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
                                  mDiscoveryScanEnableFiltering, &HandleActiveScanResult_Jump, this);
 
         SuccessOrExit(error);
@@ -2900,6 +2928,81 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_UDP_PROXY
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STREAM>(void)
+{
+    const uint8_t *     framePtr = NULL;
+    uint16_t            frameLen = 0;
+    const otIp6Address *peerAddr;
+    uint16_t            peerPort;
+    uint16_t            sockPort;
+    otMessage *         message;
+    otError             error = OT_ERROR_NONE;
+
+    message = otIp6NewMessage(mInstance, false);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
+    SuccessOrExit(error = mDecoder.ReadUint16(peerPort));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(peerAddr));
+    SuccessOrExit(error = mDecoder.ReadUint16(sockPort));
+
+    SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
+
+    otUdpProxyReceive(mInstance, message, peerPort, peerAddr, sockPort);
+
+    // `otUdpProxyReceive()` takes ownership of `message` (in both success
+    // or failure cases). `message` is set to NULL so it is not freed at
+    // exit.
+    message = NULL;
+
+exit:
+    if (message != NULL)
+    {
+        otMessageFree(message);
+    }
+
+    return error;
+}
+
+void NcpBase::HandleUdpProxyStream(otMessage *   aMessage,
+                                   uint16_t      aPeerPort,
+                                   otIp6Address *aPeerAddr,
+                                   uint16_t      aSockPort,
+                                   void *        aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleUdpProxyStream(aMessage, aPeerPort, *aPeerAddr, aSockPort);
+}
+
+void NcpBase::HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort)
+{
+    uint16_t length = otMessageGetLength(aMessage);
+    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_PROXY_STREAM));
+    SuccessOrExit(mEncoder.WriteUint16(length));
+    SuccessOrExit(mEncoder.WriteMessage(aMessage));
+
+    SuccessOrExit(mEncoder.WriteUint16(aPeerPort));
+    SuccessOrExit(mEncoder.WriteIp6Address(aPeerAddr));
+    SuccessOrExit(mEncoder.WriteUint16(aPort));
+    SuccessOrExit(mEncoder.EndFrame());
+
+    // The `aMessage` is owned by the outbound frame and NCP buffer
+    // after frame was finished/ended successfully. It will be freed
+    // when the frame is successfully sent and removed.
+
+    aMessage = NULL;
+
+exit:
+
+    if (aMessage != NULL)
+    {
+        otMessageFree(aMessage);
+    }
+}
+#endif // OPENTHREAD_ENABLE_UDP_PROXY
+
 // ----------------------------------------------------------------------------
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
@@ -2938,6 +3041,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_MASTER_KEY, SPINEL_PROP_NET_MASTER_KEY},
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
+        {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

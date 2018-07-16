@@ -65,12 +65,12 @@ static void clock_handler(nrf_drv_clock_evt_type_t event)
 
 void nrf_802154_clock_init(void)
 {
-    nrf_drv_clock_init();
+    // Intentionally empty.
 }
 
 void nrf_802154_clock_deinit(void)
 {
-    nrf_drv_clock_uninit();
+    // Intentionally empty.
 }
 
 void nrf_802154_clock_hfclk_start(void)

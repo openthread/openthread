@@ -81,8 +81,6 @@ all_nodes = routers + sed_children + fed_children
 # Init all nodes
 
 wpan.Node.init_all_nodes()
-for node in all_nodes:
-    node.set(wpan.WPAN_OT_LOG_LEVEL, '0')
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Build network topology

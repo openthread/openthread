@@ -82,6 +82,8 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
     otError error      = OT_ERROR_NONE;
     mTransportCallback = aCallback;
     mTransportContext  = aContext;
+    mConnectedCallback = NULL;
+    mConnectedContext  = NULL;
 
     // Passing mTransportCallback means that we do not want to use socket
     // to transmit/receive messages, so do not open it in that case.
@@ -91,6 +93,12 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
     }
 
     return error;
+}
+
+void CoapSecure::SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
+{
+    mConnectedCallback = aCallback;
+    mConnectedContext  = aContext;
 }
 
 otError CoapSecure::Stop(void)

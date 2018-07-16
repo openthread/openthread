@@ -48,6 +48,10 @@ cd /tmp || die
         }
     }
 
+    [ $BUILD_TARGET != android-build ] || {
+        echo y | sdkmanager "ndk-bundle"
+    }
+
     [ $BUILD_TARGET != pretty-check ] || {
         clang-format --version || die
     }
@@ -102,7 +106,7 @@ cd /tmp || die
         sudo apt-get install llvm-3.4-runtime || die
     }
 
-    [ $BUILD_TARGET != posix -o $CC != clang ] || {
+    [ $BUILD_TARGET != posix -o "$CC" != clang ] || {
         sudo apt-get install clang || die
     }
 

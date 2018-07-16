@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aux_timer.c
-*  Revised:        2017-05-03 15:10:31 +0200 (Wed, 03 May 2017)
-*  Revision:       48885
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Driver for the AUX Timer Module
 *

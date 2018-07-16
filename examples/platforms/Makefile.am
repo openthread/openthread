@@ -31,6 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    cc1352                                \
     cc2538                                \
     cc2650                                \
     cc2652                                \
@@ -50,6 +51,10 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     utils                                 \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_CC1352
+SUBDIRS                                += cc1352
+endif
 
 if OPENTHREAD_EXAMPLES_CC2538
 SUBDIRS                                += cc2538
@@ -102,6 +107,7 @@ noinst_HEADERS                          = \
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
+    cc1352                                \
     cc2538                                \
     cc2650                                \
     cc2652                                \

@@ -58,6 +58,7 @@ otError utilsFlashInit(void)
     struct stat st;
     bool        create = false;
     const char *offset = getenv("PORT_OFFSET");
+    uint16_t    index  = 0;
 
     memset(&st, 0, sizeof(st));
 
@@ -85,7 +86,7 @@ otError utilsFlashInit(void)
 
     if (create)
     {
-        for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
+        for (index = 0; index < FLASH_PAGE_NUM; index++)
         {
             error = utilsFlashErasePage(index * FLASH_PAGE_SIZE);
             otEXPECT(error == OT_ERROR_NONE);

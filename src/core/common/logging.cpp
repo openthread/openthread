@@ -180,7 +180,7 @@ const char *otThreadErrorToString(otError aError)
     switch (aError)
     {
     case OT_ERROR_NONE:
-        retval = "None";
+        retval = "OK";
         break;
 
     case OT_ERROR_FAILED:
@@ -321,6 +321,40 @@ const char *otThreadErrorToString(otError aError)
 
     default:
         retval = "UnknownErrorType";
+        break;
+    }
+
+    return retval;
+}
+
+const char *otLogLevelToPrefixString(otLogLevel aLogLevel)
+{
+    const char *retval = "";
+
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        retval = _OT_LEVEL_NONE_PREFIX;
+        break;
+
+    case OT_LOG_LEVEL_CRIT:
+        retval = _OT_LEVEL_CRIT_PREFIX;
+        break;
+
+    case OT_LOG_LEVEL_WARN:
+        retval = _OT_LEVEL_WARN_PREFIX;
+        break;
+
+    case OT_LOG_LEVEL_NOTE:
+        retval = _OT_LEVEL_NOTE_PREFIX;
+        break;
+
+    case OT_LOG_LEVEL_INFO:
+        retval = _OT_LEVEL_INFO_PREFIX;
+        break;
+
+    case OT_LOG_LEVEL_DEBG:
+        retval = _OT_LEVEL_DEBG_PREFIX;
         break;
     }
 

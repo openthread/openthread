@@ -41,11 +41,11 @@ namespace Ncp {
 // Note that {`SPINEL_PROP_LAST_STATUS`, `SPINEL_STATUS_RESET_UNKNOWN`} should be first entry to ensure that RESET is
 // reported before any other property update.
 //
-// Since a `uint32_t` is used as bit-mask to track which entries are in the changed set, we should ensure that the
-// number of entries in the list is always less than or equal to 32.
+// Since a `uint64_t` is used as bit-mask to track which entries are in the changed set, we should ensure that the
+// number of entries in the list is always less than or equal to 64.
 //
 const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
-    // Spinel property                                  Status (if prop is `LAST_STATUS`)  IsFilterable?
+    // Spinel property , Status (if prop is `LAST_STATUS`),  IsFilterable?
 
     {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_RESET_UNKNOWN, false},    // 0
     {SPINEL_PROP_STREAM_DEBUG, SPINEL_STATUS_OK, true},               // 1
@@ -79,10 +79,10 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_NET_XPANID, SPINEL_STATUS_OK, true},                   // 25
     {SPINEL_PROP_NET_MASTER_KEY, SPINEL_STATUS_OK, true},               // 26
     {SPINEL_PROP_NET_PSKC, SPINEL_STATUS_OK, true},                     // 27
+    {SPINEL_PROP_PHY_CHAN_SUPPORTED, SPINEL_STATUS_OK, true},           // 28
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
-    {SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_STATUS_OK, true}, // 28
+    {SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_STATUS_OK, true}, // 29
 #endif
-
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const

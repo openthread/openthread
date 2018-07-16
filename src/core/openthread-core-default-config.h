@@ -160,6 +160,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
+ *
+ * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+ *
+ * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
+ * increase congestion.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
+#define OPENTHREAD_CONFIG_TX_NUM_BCAST 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
  *
  * Define as 1 for OpenThread to drop a message (and not send any remaining fragments of the message) if all transmit
@@ -1605,13 +1618,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+ * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
- * Define as 1 to disable CCA on the last transmit attempt
+ * Define as 1 to disable CSMA-CA on the last transmit attempt
  *
  */
-#ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
-#define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT 0
+#ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#define OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT 0
 #endif
 
 /**
@@ -1648,8 +1661,6 @@
  * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
  *
  * Define as 1 to enable the time synchronization service feature.
- *
- * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
  *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -1692,6 +1703,24 @@
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
 #define OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD 300
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+ *
+ * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
+ * to support following features:
+ *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
+ *
+ * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
+#else
+#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 0
+#endif
 #endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
