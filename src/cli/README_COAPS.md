@@ -43,7 +43,7 @@ coaps resource <coapUri>
  * connect to a dtls server
  
 ```bash
-coaps connect <serversIp>
+coaps connect <serversIp> (port, if not default)
 ```
 
 ## CoAP Secure Client

@@ -318,7 +318,7 @@ src/cli/x509_cert_key.h.
 Coap Secure set own .X509 certificate: Done
 ```
 
-### coaps connect \<serverAddress\>
+### coaps connect \<serverAddress\> \[port\]
 
 Open a dtls session to a CoAP Secure Server.
 
