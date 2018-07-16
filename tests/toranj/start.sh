@@ -102,6 +102,7 @@ fi
     --enable-service                    \
     --enable-channel-monitor            \
     --enable-channel-manager            \
+    --enable-commissioner               \
     --disable-docs                      \
     --disable-test || die
 

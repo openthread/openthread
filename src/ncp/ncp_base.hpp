@@ -281,6 +281,17 @@ protected:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void        HandleJamStateChange(bool aJamState);
 
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+    static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
+                                                    const uint8_t *aEnergyData,
+                                                    uint8_t        aLength,
+                                                    void *         aContext);
+    void        HandleCommissionerEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyData, uint8_t aLength);
+
+    static void HandleCommissionerPanIdConflict_Jump(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+    void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+#endif
+
     static void SendDoneTask(void *aContext);
     void        SendDoneTask(void);
 
