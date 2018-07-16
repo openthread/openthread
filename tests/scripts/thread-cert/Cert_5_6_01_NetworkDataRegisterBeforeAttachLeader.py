@@ -86,6 +86,7 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[LEADER].register_netdata()
+        self.simulator.go(5)
 
         self.nodes[ROUTER].start()
         self.simulator.go(5)
