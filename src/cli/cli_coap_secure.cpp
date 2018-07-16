@@ -32,7 +32,7 @@
  */
 
 #include "cli_coap_secure.hpp"
-
+#define OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE 1
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include <ctype.h>
@@ -168,6 +168,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     otError      error = OT_ERROR_NONE;
     otIp6Address coapDestinationIp;
     bool         mVerifyPeerCert = true;
+    long         value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -248,6 +249,15 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             messageInfo.mPeerAddr    = coapDestinationIp;
             messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
             messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+
+            // check for port specification
+            if (argc > 2)
+            {
+                error = Interpreter::ParseLong(argv[2], value);
+                SuccessOrExit(error);
+                messageInfo.mPeerPort = static_cast<uint16_t>(value);
+            }
+
             SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
                                                       &CoapSecureCli::HandleClientConnect, this));
             mInterpreter.mServer->OutputFormat("Coap Secure connect: ");
@@ -296,7 +306,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
                                            ": set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set x509'                                    "
                                            ": set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
-        mInterpreter.mServer->OutputFormat(">'coaps connect <servers ipv6 addr>'                 "
+        mInterpreter.mServer->OutputFormat(">'coaps connect <servers ipv6 addr> (port)'          "
                                            ": start dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
                                            ": interact with coap source from server, ipv6 is not need as client\r\n");
