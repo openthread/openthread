@@ -79,7 +79,7 @@ extern "C" {
  * @defgroup api-udp-group UDP
  *
  * @{
- * 
+ *
  * @defgroup api-udp       UDP
  * @defgroup api-udp-proxy UDP Proxy
  *
