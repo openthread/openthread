@@ -263,8 +263,8 @@ private:
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-    uint8_t mTransmitAttempts;
-    uint8_t mCsmaAttempts;
+    uint8_t mTransmitRetries;
+    uint8_t mCsmaBackoffs;
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
