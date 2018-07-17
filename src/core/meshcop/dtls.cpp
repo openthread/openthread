@@ -253,7 +253,7 @@ exit:
 
 otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite)
 {
-    int rval, i;
+    int rval = 0, i = 0;
 
     for (i = 0; i < aAnsCipherSuite; i++)
     {
