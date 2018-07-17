@@ -83,7 +83,7 @@ The [Node 2](#complete-example-dtlscoap-client-node-2) below is able to connect 
 ```bash
 coaps start
 coaps set psk secretPSK Client_identity
-coaps resource time
+coaps resource test
 ```
 
 ### with Certificate
@@ -91,7 +91,7 @@ coaps resource time
 ```bash
 coaps start (false)
 coaps set x509
-coaps resource time
+coaps resource test
 ```
 
 * param false: optional, disables peer certificate validation.
@@ -118,7 +118,7 @@ The dlts client can connect to an coaps server which is listen on coaps port 568
 coaps start
 coaps set psk secretPSK Client_identity
 coaps connect 2001:620:190:ffa1::321
-coaps get time
+coaps get test
 coaps disconnect
 ```
 
@@ -128,7 +128,7 @@ coaps disconnect
 coaps start (false)
 coaps set x509
 coaps connect <server_ip>
-coaps get time
+coaps get test
 coaps disconnect
 ```
 

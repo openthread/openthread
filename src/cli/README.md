@@ -349,7 +349,7 @@ Done
 * type: Switch between confirmable ("con") and non-confirmable (default).
 
 ```bash
-> coaps get 2001:1234::321 test
+> coaps get 2001:1234::321 secret
 Sending coap secure request: Done
 Received coap secure response
     CoapSecure RX Header Informations:
