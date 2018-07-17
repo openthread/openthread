@@ -104,7 +104,6 @@ libmbedcrypto_a_SOURCES                      += \
     repo/library/pkparse.c                      \
     repo/library/x509.c                         \
     repo/library/x509_crt.c                     \
-    repo/library/hmac_drbg.c                    \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 

@@ -719,13 +719,10 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 
 /**
- * to increase the security with ECDHE ECDSA enable
- * ECDSA DETERMINISTIC and X509 CHECK KEY USAGE.
+ * To increase the security with ECDHE ECDSA enable
+ * X509 CHECK KEY USAGE.
  * Not required!
  */
-#ifndef MBEDTLS_ECDSA_DETERMINISTIC
-//#define MBEDTLS_ECDSA_DETERMINISTIC
-#endif // MBEDTLS_ECDSA_DETERMINISTIC
 
 #ifndef MBEDTLS_X509_CHECK_KEY_USAGE
 //#define MBEDTLS_X509_CHECK_KEY_USAGE
