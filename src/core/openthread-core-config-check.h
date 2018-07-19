@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,24 +28,15 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for OpenThread.
+ *   Sanity checking for configuration options.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef OPENTHREAD_CORE_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_CONFIG_CHECK_H_
 
-#include <openthread/config.h>
-
-#define OPENTHREAD_CORE_CONFIG_H_IN
-
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#ifdef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+#error \
+    "OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL was replaced by OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT."
 #endif
 
-#include "openthread-core-default-config.h"
-
-#undef OPENTHREAD_CORE_CONFIG_H_IN
-
-#include "openthread-core-config-check.h"
-
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
