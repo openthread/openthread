@@ -2287,13 +2287,14 @@ OTAPI
 otError 
 OTCALL
 otDatasetSendMgmtActiveGet(
-    _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance,
+    const otOperationalDatasetComponents *aDatasetComponents,
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aInstance == nullptr || aDatasetComponents == nullptr) return OT_ERROR_INVALID_ARGS;
     if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
@@ -2302,6 +2303,7 @@ otDatasetSendMgmtActiveGet(
     if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
+    memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDatasetComponents, sizeof(otOperationalDatasetComponents));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
@@ -2320,7 +2322,7 @@ otError
 OTCALL
 otDatasetSendMgmtActiveSet(
     _In_ otInstance *aInstance, 
-    const otOperationalDataset *aDataset, 
+    const otOperationalDataset *aDataset,
     const uint8_t *aTlvs,
     uint8_t aLength
     )
@@ -2349,13 +2351,14 @@ OTAPI
 otError 
 OTCALL
 otDatasetSendMgmtPendingGet(
-    _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance,
+    const otOperationalDatasetComponents *aDatasetComponents,
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aInstance == nullptr || aDatasetComponents == nullptr) return OT_ERROR_INVALID_ARGS;
     if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
@@ -2364,6 +2367,7 @@ otDatasetSendMgmtPendingGet(
     if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
+    memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDatasetComponents, sizeof(otOperationalDatasetComponents));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);

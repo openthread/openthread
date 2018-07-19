@@ -230,7 +230,8 @@ public:
      * @param[in]  aTlvs     Any additional raw TLVs to include.
      * @param[in]  aLength   Number of bytes in @p aTlvs.
      *
-     * @retval OT_ERROR_NONE on success.
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
      *
      */
     otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
@@ -238,14 +239,19 @@ public:
     /**
      * This method sends a MGMT_GET request.
      *
-     * @param[in]  aTlvTypes  The list of TLV types to request.
-     * @param[in]  aLength    Number of bytes in @p aTlvTypes.
-     * @param[in]  aAddress   The IPv6 destination address for the MGMT_GET request.
+     * @param[in]  aDatasetComponents  An Operational Dataset components structure specifying components to request.
+     * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+     * @param[in]  aLength             Number of bytes in @p aTlvTypes.
+     * @param[in]  aAddress            The IPv6 destination address for the MGMT_GET request.
      *
-     * @retval OT_ERROR_NONE on success.
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
      *
      */
-    otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress) const;
+    otError SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
+                           const uint8_t *                       aTlvTypes,
+                           uint8_t                               aLength,
+                           const otIp6Address *                  aAddress) const;
 
 protected:
     /**
@@ -270,10 +276,15 @@ protected:
     otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
+    enum
+    {
+        kMaxDatasetTlvs = 16, // Maximum number of TLVs in an `otOperationalDataset`.
+    };
+
     void SendSetResponse(const Coap::Header &    aRequestHeader,
                          const Ip6::MessageInfo &aMessageInfo,
                          StateTlv::State         aState);
-#endif
+#endif // OPENTHREAD_FTD
 };
 
 class ActiveDataset : public DatasetManager

@@ -111,7 +111,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     if (netif.GetPendingDataset().Get(dataset) == OT_ERROR_NONE)
     {
-        if (dataset.mIsPendingTimestampSet)
+        if (dataset.mComponents.mIsPendingTimestampPresent)
         {
             pendingTimestamp = dataset.mPendingTimestamp;
         }
@@ -121,8 +121,9 @@ void ChannelManager::PreparePendingDataset(void)
         // should match and delay should be less than the requested
         // delay).
 
-        if (dataset.mIsChannelSet && (mChannel == dataset.mChannel) && dataset.mIsDelaySet &&
-            (dataset.mDelay <= delayInMs) && dataset.mIsActiveTimestampSet)
+        if (dataset.mComponents.mIsChannelPresent && (mChannel == dataset.mChannel) &&
+            dataset.mComponents.mIsDelayPresent && (dataset.mDelay <= delayInMs) &&
+            dataset.mComponents.mIsActiveTimestampPresent)
         {
             // We save the active timestamp to later check and ensure it
             // is ahead of current ActiveDataset timestamp.
@@ -199,14 +200,14 @@ void ChannelManager::PreparePendingDataset(void)
         mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
     }
 
-    dataset.mActiveTimestamp       = mActiveTimestamp;
-    dataset.mIsActiveTimestampSet  = true;
-    dataset.mChannel               = mChannel;
-    dataset.mIsChannelSet          = true;
-    dataset.mPendingTimestamp      = pendingTimestamp;
-    dataset.mIsPendingTimestampSet = true;
-    dataset.mDelay                 = delayInMs;
-    dataset.mIsDelaySet            = true;
+    dataset.mActiveTimestamp                       = mActiveTimestamp;
+    dataset.mComponents.mIsActiveTimestampPresent  = true;
+    dataset.mChannel                               = mChannel;
+    dataset.mComponents.mIsChannelPresent          = true;
+    dataset.mPendingTimestamp                      = pendingTimestamp;
+    dataset.mComponents.mIsPendingTimestampPresent = true;
+    dataset.mDelay                                 = delayInMs;
+    dataset.mComponents.mIsDelayPresent            = true;
 
     error = netif.GetPendingDataset().SendSetRequest(dataset, NULL, 0);
 

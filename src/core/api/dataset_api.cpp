@@ -45,8 +45,9 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
     otDatasetGetActive(aInstance, &dataset);
 
-    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) && (dataset.mIsExtendedPanIdSet) &&
-        (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    if (dataset.mComponents.mIsMasterKeyPresent && dataset.mComponents.mIsNetworkNamePresent &&
+        dataset.mComponents.mIsExtendedPanIdPresent && dataset.mComponents.mIsPanIdPresent &&
+        dataset.mComponents.mIsChannelPresent)
     {
         return true;
     }
