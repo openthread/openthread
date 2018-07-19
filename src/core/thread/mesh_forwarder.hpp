@@ -400,7 +400,8 @@ private:
 
     Message *mSendMessage;
     bool     mSendMessageIsARetransmission;
-    uint8_t  mSendMessageMaxMacTxAttempts;
+    uint8_t  mSendMessageMaxCsmaBackoffs;
+    uint8_t  mSendMessageMaxFrameRetries;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;

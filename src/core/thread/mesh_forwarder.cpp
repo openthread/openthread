@@ -65,7 +65,8 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
     , mSendMessageIsARetransmission(false)
-    , mSendMessageMaxMacTxAttempts(Mac::kDirectFrameMacTxAttempts)
+    , mSendMessageMaxCsmaBackoffs(Mac::kMaxCsmaBackoffsDirect)
+    , mSendMessageMaxFrameRetries(Mac::kMaxFrameRetriesDirect)
     , mMeshSource()
     , mMeshDest()
     , mAddMeshHeader(false)
@@ -184,7 +185,8 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             mSendMessage->SetTxSuccess(true);
         }
 
-        mSendMessageMaxMacTxAttempts = Mac::kDirectFrameMacTxAttempts;
+        mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsDirect;
+        mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesDirect;
         GetNetif().GetMac().SendFrameRequest(mMacSender);
         ExitNow();
     }
@@ -469,7 +471,8 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     {
         SendEmptyFrame(aFrame, false);
         aFrame.SetIsARetransmission(false);
-        aFrame.SetMaxTxAttempts(Mac::kDirectFrameMacTxAttempts);
+        aFrame.SetMaxCsmaBackoffs(Mac::kMaxCsmaBackoffsDirect);
+        aFrame.SetMaxFrameRetries(Mac::kMaxFrameRetriesDirect);
         ExitNow();
     }
 
@@ -534,7 +537,8 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     assert(error == OT_ERROR_NONE);
 
     aFrame.SetIsARetransmission(mSendMessageIsARetransmission);
-    aFrame.SetMaxTxAttempts(mSendMessageMaxMacTxAttempts);
+    aFrame.SetMaxCsmaBackoffs(mSendMessageMaxCsmaBackoffs);
+    aFrame.SetMaxFrameRetries(mSendMessageMaxFrameRetries);
 
 #if OPENTHREAD_FTD
 
@@ -990,11 +994,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     HandleSentFrameToChild(aFrame, aError, macDest);
 
-    VerifyOrExit((mSendMessage != NULL) && ((aError == OT_ERROR_NONE) || (aError == OT_ERROR_NO_ACK)));
+    VerifyOrExit(mSendMessage != NULL);
 
     if (mSendMessage->GetDirectTransmission())
     {
-        if (aError == OT_ERROR_NO_ACK)
+        if (aError != OT_ERROR_NONE)
         {
             // If the transmission of any fragment frame fails,
             // the overall message transmission is considered

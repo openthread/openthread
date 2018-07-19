@@ -989,20 +989,48 @@ public:
     void SetLqi(uint8_t aLqi) { mInfo.mRxInfo.mLqi = aLqi; }
 
     /**
-     * This method returns the maximum number of transmit attempts for the frame.
+     * This method returns the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
+     * access failure.
      *
-     * @returns The maximum number of transmit attempts.
+     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
+     *
+     * @returns The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access
+     *          failure.
      *
      */
-    uint8_t GetMaxTxAttempts(void) const { return mInfo.mTxInfo.mMaxTxAttempts; }
+    uint8_t GetMaxCsmaBackoffs(void) const { return mInfo.mTxInfo.mMaxCsmaBackoffs; }
 
     /**
-     * This method set the maximum number of transmit attempts for frame.
+     * This method sets the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
+     * access failure.
      *
-     * @returns The maximum number of transmit attempts.
+     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
+     *
+     * @param[in]  aMaxCsmaBackoffs  The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring
+     *                               a channel access failure.
      *
      */
-    void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mInfo.mTxInfo.mMaxTxAttempts = aMaxTxAttempts; }
+    void SetMaxCsmaBackoffs(uint8_t aMaxCsmaBackoffs) { mInfo.mTxInfo.mMaxCsmaBackoffs = aMaxCsmaBackoffs; }
+
+    /**
+     * This method returns the maximum number of retries allowed after a transmission failure.
+     *
+     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
+     *
+     * @returns The maximum number of retries allowed after a transmission failure.
+     *
+     */
+    uint8_t GetMaxFrameRetries(void) const { return mInfo.mTxInfo.mMaxFrameRetries; }
+
+    /**
+     * This method sets the maximum number of retries allowed after a transmission failure.
+     *
+     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
+     *
+     * @param[in]  aMaxFrameRetries  The maximum number of retries allowed after a transmission failure.
+     *
+     */
+    void SetMaxFrameRetries(uint8_t aMaxFrameRetries) { mInfo.mTxInfo.mMaxFrameRetries = aMaxFrameRetries; }
 
     /**
      * This method indicates whether or not the frame is a retransmission.
