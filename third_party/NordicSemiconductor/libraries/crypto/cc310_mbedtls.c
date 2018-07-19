@@ -41,6 +41,19 @@ CRYS_RND_WorkBuff_t  m_rndWorkBuff;
 CRYS_RND_State_t    * pRndState    = &m_rndState;
 CRYS_RND_WorkBuff_t * pRndWorkBuff = &m_rndWorkBuff;
 
+void cc310_enable(void)
+{
+    NRF_CRYPTOCELL->ENABLE = 1;
+    NVIC_EnableIRQ(CRYPTOCELL_IRQn);
+}
+
+void cc310_disable(void)
+{
+    NRF_CRYPTOCELL->ENABLE = 0;
+    NVIC_DisableIRQ(CRYPTOCELL_IRQn);
+    NVIC_ClearPendingIRQ(CRYPTOCELL_IRQn);
+}
+
 void nrf5CryptoInit(void)
 {
     SA_SilibRetCode_t sa_result;

@@ -33,19 +33,10 @@
 #include "nrf.h"
 
 /** @brief Enable CC310 hardware. */
-static inline void cc310_enable(void)
-{
-    NRF_CRYPTOCELL->ENABLE = 1;
-    NVIC_EnableIRQ(CRYPTOCELL_IRQn);
-}
+void cc310_enable(void);
 
 /** @brief Disable CC310 hardware. */
-static inline void cc310_disable(void)
-{
-    NRF_CRYPTOCELL->ENABLE = 0;
-    NVIC_DisableIRQ(CRYPTOCELL_IRQn);
-    NVIC_ClearPendingIRQ(CRYPTOCELL_IRQn);
-}
+void cc310_disable(void);
 
 /** @brief Wrapper for CC310 operations which ignores result.
  *
