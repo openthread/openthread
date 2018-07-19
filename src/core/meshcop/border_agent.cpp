@@ -404,7 +404,7 @@ otError BorderAgent::ForwardToLeader(const Coap::Header &    aHeader,
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
     aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), *message);
 
-    SuccessOrExit(netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    SuccessOrExit(error = netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetSockPort(kCoapUdpPort);
