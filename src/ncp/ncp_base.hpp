@@ -290,7 +290,11 @@ protected:
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
-    otError DecodeOperationalDataset(otOperationalDataset &aDataset, const uint8_t **aTlvs, uint8_t *aTlvsLength);
+    otError DecodeOperationalDataset(otOperationalDataset &aDataset,
+                                     const uint8_t **      aTlvs             = NULL,
+                                     uint8_t *             aTlvsLength       = NULL,
+                                     const otIp6Address ** aDestIpAddress    = NULL,
+                                     bool                  aAllowEmptyValues = false);
 #endif
 
 #if OPENTHREAD_ENABLE_UDP_PROXY

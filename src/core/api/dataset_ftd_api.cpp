@@ -67,14 +67,16 @@ exit:
     return error;
 }
 
-otError otDatasetSendMgmtActiveGet(otInstance *        aInstance,
-                                   const uint8_t *     aTlvTypes,
-                                   uint8_t             aLength,
-                                   const otIp6Address *aAddress)
+otError otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
+                                   const otOperationalDatasetComponents *aDatasetComponents,
+                                   const uint8_t *                       aTlvTypes,
+                                   uint8_t                               aLength,
+                                   const otIp6Address *                  aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
+    return instance.GetThreadNetif().GetActiveDataset().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength,
+                                                                       aAddress);
 }
 
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
@@ -87,14 +89,16 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
     return instance.GetThreadNetif().GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-otError otDatasetSendMgmtPendingGet(otInstance *        aInstance,
-                                    const uint8_t *     aTlvTypes,
-                                    uint8_t             aLength,
-                                    const otIp6Address *aAddress)
+otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
+                                    const otOperationalDatasetComponents *aDatasetComponents,
+                                    const uint8_t *                       aTlvTypes,
+                                    uint8_t                               aLength,
+                                    const otIp6Address *                  aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
+    return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength,
+                                                                        aAddress);
 }
 
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,

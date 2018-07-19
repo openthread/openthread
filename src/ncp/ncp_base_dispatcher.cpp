@@ -823,11 +823,17 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_PENDING_DATASET:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASET>;
         break;
-    case SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET>;
+    case SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET>;
         break;
-    case SPINEL_PROP_THREAD_MGMT_PENDING_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_PENDING_DATASET>;
+    case SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET>;
         break;
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
