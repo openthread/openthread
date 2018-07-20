@@ -1053,15 +1053,17 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 
             if (compare->GetServiceID() == aServiceId)
             {
-                return compare;
+                ExitNow();
             }
         }
 
         cur = cur->GetNext();
     }
 
+    compare = NULL;
+
 exit:
-    return NULL;
+    return compare;
 }
 #endif
 
