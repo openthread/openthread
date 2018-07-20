@@ -60,8 +60,8 @@ public:
      * This method sends a Announce Begin message.
      *
      * @param[in]  aChannelMask   The channel mask value.
-     * @param[in]  aCount         The number of energy measurements per channel.
-     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+     * @param[in]  aCount         The number of Announce messages sent per channel.
+     * @param[in]  aPeriod        The time between two successive MLE Announce transmissions (in milliseconds).
      *
      * @retval OT_ERROR_NONE     Successfully enqueued the Announce Begin message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a Announce Begin message.

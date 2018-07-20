@@ -68,7 +68,8 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Commissioner service.
+     * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
      *
      */
     otError Start(void);
@@ -76,7 +77,8 @@ public:
     /**
      * This method stops the Commissioner service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the Commissioner service.
+     * @retval OT_ERROR_NONE           Successfully stopped the Commissioner service.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
      *
      */
     otError Stop(void);
@@ -94,8 +96,9 @@ public:
      * @param[in]  aPSKd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
-     * @retval OT_ERROR_NONE     Successfully added the Joiner.
-     * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
     otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout);
@@ -106,8 +109,9 @@ public:
      * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
      * @param[in]  aDelay          The delay to remove Joiner (in seconds).
      *
-     * @retval OT_ERROR_NONE       Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aEui64 was not found.
+     * @retval OT_ERROR_NONE           Successfully added the Joiner.
+     * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
     otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
@@ -157,8 +161,9 @@ public:
      * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
      * @param[in]  aLength      The length of requested TLVs in bytes.
      *
-     * @retval OT_ERROR_NONE     Send MGMT_COMMISSIONER_GET successfully.
-     * @retval OT_ERROR_FAILED   Send MGMT_COMMISSIONER_GET fail.
+     * @retval OT_ERROR_NONE           Send MGMT_COMMISSIONER_GET successfully.
+     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space to send.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
     otError SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
@@ -170,8 +175,9 @@ public:
      * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
      * @param[in]  aLength      The length of user specific TLVs in bytes.
      *
-     * @retval OT_ERROR_NONE     Send MGMT_COMMISSIONER_SET successfully.
-     * @retval OT_ERROR_FAILED   Send MGMT_COMMISSIONER_SET fail.
+     * @retval OT_ERROR_NONE           Send MGMT_COMMISSIONER_SET successfully.
+     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space to send.
+     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
     otError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
