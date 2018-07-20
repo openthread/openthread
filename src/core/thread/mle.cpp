@@ -3684,32 +3684,34 @@ exit:
 
 Neighbor *Mle::GetNeighbor(uint16_t aAddress)
 {
+    Neighbor *rval = NULL;
+
     if ((mParent.IsStateValidOrRestoring()) && (mParent.GetRloc16() == aAddress))
     {
-        return &mParent;
+        rval = &mParent;
     }
-
-    if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetRloc16() == aAddress))
+    else if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetRloc16() == aAddress))
     {
-        return &mParentCandidate;
+        rval = &mParentCandidate;
     }
 
-    return NULL;
+    return rval;
 }
 
 Neighbor *Mle::GetNeighbor(const Mac::ExtAddress &aAddress)
 {
+    Neighbor *rval = NULL;
+
     if ((mParent.IsStateValidOrRestoring()) && (mParent.GetExtAddress() == aAddress))
     {
-        return &mParent;
+        rval = &mParent;
     }
-
-    if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetExtAddress() == aAddress))
+    else if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetExtAddress() == aAddress))
     {
-        return &mParentCandidate;
+        rval = &mParentCandidate;
     }
 
-    return NULL;
+    return rval;
 }
 
 Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)

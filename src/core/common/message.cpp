@@ -158,14 +158,7 @@ exit:
     // First comparison is to get around issues with comparing
     // signed and unsigned numbers, if aNumBuffers is negative then
     // the second comparison wont be attempted.
-    if (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount())
-    {
-        return OT_ERROR_NONE;
-    }
-    else
-    {
-        return OT_ERROR_NO_BUFS;
-    }
+    return (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount()) ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT

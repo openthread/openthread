@@ -114,17 +114,24 @@ private:
 
 static Coap::Header::Code CoapCodeFromError(otError aError)
 {
+    Coap::Header::Code code;
+
     switch (aError)
     {
     case OT_ERROR_NONE:
-        return OT_COAP_CODE_CHANGED;
+        code = OT_COAP_CODE_CHANGED;
+        break;
 
     case OT_ERROR_PARSE:
-        return OT_COAP_CODE_BAD_REQUEST;
+        code = OT_COAP_CODE_BAD_REQUEST;
+        break;
 
     default:
-        return OT_COAP_CODE_INTERNAL_ERROR;
+        code = OT_COAP_CODE_INTERNAL_ERROR;
+        break;
     }
+
+    return code;
 }
 
 void BorderAgent::SendErrorMessage(const Coap::Header &aHeader)
