@@ -485,7 +485,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                         borderRouterEntry = borderRouter->GetEntry(i);
 
                         if ((aExactMatch && borderRouterEntry->GetRloc() == aRloc16) ||
-                            (!aExactMatch && (borderRouterEntry->GetRloc() & (~Mle::kMaxChildId)) == aRloc16))
+                            (!aExactMatch && (Mle::Mle::RouterIdMatch(borderRouterEntry->GetRloc(), aRloc16))))
                         {
                             aIn = true;
 
@@ -506,7 +506,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                         hasRouteEntry = hasRoute->GetEntry(i);
 
                         if ((aExactMatch && hasRouteEntry->GetRloc() == aRloc16) ||
-                            (!aExactMatch && (hasRouteEntry->GetRloc() & (~Mle::kMaxChildId)) == aRloc16))
+                            (!aExactMatch && (Mle::Mle::RouterIdMatch(hasRouteEntry->GetRloc(), aRloc16))))
                         {
                             aIn = true;
 
@@ -556,7 +556,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     VerifyOrExit(server->IsValid(), error = OT_ERROR_PARSE);
 
                     if ((aExactMatch && server->GetServer16() == aRloc16) ||
-                        (!aExactMatch && (server->GetServer16() & (~Mle::kMaxChildId)) == aRloc16))
+                        (!aExactMatch && (Mle::Mle::RouterIdMatch(server->GetServer16(), aRloc16))))
                     {
                         aIn = true;
 
@@ -1373,7 +1373,7 @@ otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, bool aExactMat
             server = static_cast<ServerTlv *>(cur);
 
             if ((aExactMatch && server->GetServer16() == aRloc16) ||
-                (!aExactMatch && (server->GetServer16() & (~Mle::kMaxChildId)) == aRloc16))
+                (!aExactMatch && (Mle::Mle::RouterIdMatch(server->GetServer16(), aRloc16))))
             {
                 removeLength = sizeof(ServerTlv) + server->GetServerDataLength();
                 service.SetSubTlvsLength(service.GetSubTlvsLength() - removeLength);
@@ -1404,7 +1404,7 @@ otError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t 
         entry = aHasRoute.GetEntry(i);
 
         if ((aExactMatch && entry->GetRloc() != aRloc16) ||
-            (!aExactMatch && (entry->GetRloc() & (~Mle::kMaxChildId)) != aRloc16))
+            (!aExactMatch && !(Mle::Mle::RouterIdMatch(entry->GetRloc(), aRloc16))))
         {
             continue;
         }
@@ -1428,7 +1428,7 @@ otError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, u
         entry = aBorderRouter.GetEntry(i);
 
         if ((aExactMatch && entry->GetRloc() != aRloc16) ||
-            (!aExactMatch && (entry->GetRloc() & (~Mle::kMaxChildId)) != aRloc16))
+            (!aExactMatch && !(Mle::Mle::RouterIdMatch(entry->GetRloc(), aRloc16))))
         {
             continue;
         }
