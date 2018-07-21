@@ -1013,6 +1013,38 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
     return EncodeOperationalDataset(dataset);
 }
 
+#if OPENTHREAD_ENABLE_JOINER
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>(void)
+{
+    return mEncoder.WriteUint8(static_cast<uint8_t>(otJoinerGetState(mInstance)));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>(void)
+{
+    bool        action          = false;
+    const char *psk             = NULL;
+    const char *provisioningUrl = NULL;
+    otError     error           = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(action));
+    SuccessOrExit(error = mDecoder.ReadUtf8(psk));
+    SuccessOrExit(error = mDecoder.ReadUtf8(provisioningUrl));
+
+    if (action)
+    {
+        error = otJoinerStart(mInstance, psk, provisioningUrl, PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO,
+                              PACKAGE_VERSION, NULL, &NcpBase::HandleJoinerCallback_Jump, this);
+    }
+    else
+    {
+        error = otJoinerStop(mInstance);
+    }
+exit:
+    return error;
+}
+
+#endif
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
     otError        error    = OT_ERROR_NONE;
@@ -2875,6 +2907,35 @@ exit:
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
         mUpdateChangedPropsTask.Post();
     }
+}
+
+void NcpBase::HandleJoinerCallback_Jump(otError aError, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleJoinerCallback(aError);
+}
+
+void NcpBase::HandleJoinerCallback(otError aError)
+{
+    switch (aError)
+    {
+    case OT_ERROR_NONE:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_SUCCESS);
+        break;
+    case OT_ERROR_SECURITY:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_SECURITY);
+        break;
+    case OT_ERROR_NOT_FOUND:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_NO_PEERS);
+        break;
+    case OT_ERROR_RESPONSE_TIMEOUT:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_RSP_TIMEOUT);
+        break;
+    default:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_FAILURE);
+        break;
+    }
+
+    mUpdateChangedPropsTask.Post();
 }
 
 // ----------------------------------------------------------------------------

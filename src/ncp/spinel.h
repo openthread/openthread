@@ -165,6 +165,18 @@ typedef enum {
      */
     SPINEL_STATUS_JOIN_INCOMPATIBLE = SPINEL_STATUS_JOIN__BEGIN + 3,
 
+    /// No response in expecting time.
+    /**
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_RSP_TIMEOUT = SPINEL_STATUS_JOIN__BEGIN + 4,
+
+    /// The node succeeds in commissioning and get the network credentials.
+    /**
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_SUCCESS = SPINEL_STATUS_JOIN__BEGIN + 5,
+
     SPINEL_STATUS_JOIN__END = 112,
 
     SPINEL_STATUS_RESET__BEGIN   = 112,
@@ -467,6 +479,7 @@ enum
     SPINEL_CAP_THREAD_COMMISSIONER = (SPINEL_CAP_THREAD__BEGIN + 0),
     SPINEL_CAP_THREAD_TMF_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 1),
     SPINEL_CAP_THREAD_UDP_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 2),
+    SPINEL_CAP_THREAD_JOINER       = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD__END         = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -1603,6 +1616,45 @@ typedef enum {
     SPINEL_PROP_STREAM_EXT__END   = 0x1800,
 
     SPINEL_PROP_MESHCOP__BEGIN = 0x80,
+
+    // Thread Joiner State
+    /** Format `C` - Read Only
+     *
+     * Required capability: SPINEL_CAP_THREAD_JOINER
+     *
+     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     *
+     */
+    SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
+
+    /// Thread Joiner Commissioning command and the parameters
+    /** Format `bUU` - Write Only
+     *
+     * This property starts or stops Joiner's commissioning process
+     *
+     * Required capability: SPINEL_CAP_THREAD_JOINER
+     *
+     * Writing to this property starts/stops the Joiner commissioning process.
+     * The immediate `VALUE_IS` response indicates success/failure of the starting/stopping
+     * the Joiner commissioning process.
+     *
+     * After a successful start operation, the join process outcome is reported through an
+     * asynchronous `VALUE_IS(LAST_STATUS)`  update with one of the following error status values:
+     *
+     *     - SPINEL_STATUS_JOIN_SUCCESS     the join process succeeded.
+     *     - SPINEL_STATUS_JOIN_SECURITY    the join process failed due to security credentials.
+     *     - SPINEL_STATUS_JOIN_NO_PEERS    no joinable network was discovered.
+     *     - SPINEL_STATUS_JOIN_RSP_TIMEOUT if a response timed out.
+     *     - SPINEL_STATUS_JOIN_FAILURE     join failure.
+     *
+     * Data per item is:
+     *
+     *  `b` : Start or stop commissioning process
+     *  `U` : Joiner's PSKd if start commissioning, empty string if stop commissioning
+     *  `U` : Provisioning url if start commissioning, empty string if stop commissioning
+     *
+     */
+    SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING = SPINEL_PROP_MESHCOP__BEGIN + 1,
 
     // Thread Commissioner State
     /** Format `C`

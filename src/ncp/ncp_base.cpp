@@ -1651,6 +1651,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_COMMISSIONER));
 #endif
 
+#if OPENTHREAD_ENABLE_JOINER
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_JOINER));
+#endif
+
 #if OPENTHREAD_ENABLE_UDP_PROXY
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_PROXY));
 #endif
