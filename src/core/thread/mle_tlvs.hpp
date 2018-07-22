@@ -649,7 +649,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
-#else //OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#else // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -863,7 +863,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;
 
-#endif //OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#endif // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
 
 /**
  * This class implements Source Address TLV generation and parsing.

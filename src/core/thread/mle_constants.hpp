@@ -91,11 +91,11 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin      = 1,   ///< ADVERTISEMENT_I_MIN (sec)
+    kAdvertiseIntervalMin = 1, ///< ADVERTISEMENT_I_MIN (sec)
 #if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
-    kAdvertiseIntervalMax      = 5,   ///< ADVERTISEMENT_I_MAX (sec) proposal
+    kAdvertiseIntervalMax = 5, ///< ADVERTISEMENT_I_MAX (sec) proposal
 #else
-    kAdvertiseIntervalMax      = 32,  ///< ADVERTISEMENT_I_MAX (sec)
+    kAdvertiseIntervalMax = 32, ///< ADVERTISEMENT_I_MAX (sec)
 #endif
     kFailedRouterTransmissions = 4,   ///< FAILED_ROUTER_TRANSMISSIONS
     kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
@@ -104,7 +104,7 @@ enum
 #if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
     kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
 #else
-    kMaxRouteCost = 16, ///< MAX_ROUTE_COST
+    kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
 #endif
     kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
     kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
