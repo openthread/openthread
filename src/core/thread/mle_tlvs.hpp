@@ -564,7 +564,7 @@ public:
      */
     void SetRouteDataLength(uint8_t aLength)
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength);
 #else
         SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2);
@@ -579,7 +579,7 @@ public:
      */
     uint8_t GetRouteCost(uint8_t aRouterId) const
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         return mRouteData[aRouterId] & kRouteCostMask;
 #else
         if (aRouterId & 1)
@@ -605,7 +605,7 @@ public:
      */
     void SetRouteCost(uint8_t aRouterId, uint8_t aRouteCost)
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kRouteCostMask) | aRouteCost;
 #else
         if (aRouterId & 1)
@@ -631,7 +631,7 @@ public:
      */
     uint8_t GetLinkQualityIn(uint8_t aRouterId) const
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         return (mRouteData[aRouterId] & kLinkQualityInMask) >> kLinkQualityInOffset;
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
@@ -649,7 +649,7 @@ public:
      */
     void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality)
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityInMask) |
                                 ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
 #else
@@ -668,7 +668,7 @@ public:
      */
     uint8_t GetLinkQualityOut(uint8_t aRouterId) const
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         return (mRouteData[aRouterId] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
 #else
         int offset = ((aRouterId & 1) ? kOddEntryOffset : 0);
@@ -686,7 +686,7 @@ public:
      */
     void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality)
     {
-#if !OPENTHREAD_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
                                 ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
 #else
@@ -706,13 +706,13 @@ private:
         kLinkQualityInMask    = 3 << kLinkQualityInOffset,
         kRouteCostOffset      = 0,
         kRouteCostMask        = 0xf << kRouteCostOffset,
-#if OPENTHREAD_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
         kOddEntryOffset = 4,
 #endif
     };
     uint8_t mRouterIdSequence;
     uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
-#if OPENTHREAD_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
     // Since we do hold 12 (compressable to 11) bits of data per router, each entry occupies 1.5 bytes, consecutively.
     // First 4 bits are link qualities, remaining 8 bits are route cost.
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];

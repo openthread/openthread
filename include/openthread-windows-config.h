@@ -86,7 +86,7 @@
 #define OPENTHREAD_ENABLE_SERVICE 0
 
 /* Define to 1 to enable long routes support. */
-#define OPENTHREAD_ENABLE_LONG_ROUTES 0
+#define OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES 0
 
 /* Name of package */
 #define PACKAGE "openthread"

@@ -92,12 +92,16 @@ enum
 enum
 {
     kAdvertiseIntervalMin      = 1,   ///< ADVERTISEMENT_I_MIN (sec)
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+    kAdvertiseIntervalMax      = 5,   ///< ADVERTISEMENT_I_MAX (sec) proposal
+#else
     kAdvertiseIntervalMax      = 32,  ///< ADVERTISEMENT_I_MAX (sec)
+#endif
     kFailedRouterTransmissions = 4,   ///< FAILED_ROUTER_TRANSMISSIONS
     kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
     kRouterIdSequencePeriod    = 10,  ///< ID_SEQUENCE_PERIOD (sec)
     kMaxNeighborAge            = 100, ///< MAX_NEIGHBOR_AGE (sec)
-#if OPENTHREAD_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
     kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
 #else
     kMaxRouteCost = 16, ///< MAX_ROUTE_COST
