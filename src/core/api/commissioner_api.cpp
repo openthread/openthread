@@ -47,7 +47,7 @@ otError otCommissionerStart(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT
-    SuccessOrExit(error = instance.GetBorderAgent().Stop());
+    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
 #endif
     SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Start());
 exit:
@@ -65,7 +65,7 @@ otError otCommissionerStop(otInstance *aInstance)
 
     SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Stop());
 #if OPENTHREAD_ENABLE_BORDER_AGENT
-    SuccessOrExit(error = instance.GetBorderAgent().Start());
+    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
 #endif
 exit:
 #endif
