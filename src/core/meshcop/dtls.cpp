@@ -516,6 +516,7 @@ otError Dtls::MapError(int rval)
         break;
 
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
+    case MBEDTLS_ERR_SSL_WANT_WRITE:
         error = OT_ERROR_NO_BUFS;
         break;
 
