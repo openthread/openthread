@@ -921,6 +921,20 @@ public:
     static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
+     * This method returns whether the two RLOC16 have the same Router ID.
+     *
+     * @param[in]  aRloc16A  The first RLOC16 value.
+     * @param[in]  aRloc16B  The second RLOC16 value.
+     *
+     * @returns true if the two RLOC16 have the same Router ID, false otherwise.
+     *
+     */
+    static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
+    {
+        return ((aRloc16A >> kRouterIdOffset) == (aRloc16B >> kRouterIdOffset));
+    }
+
+    /**
      * This method returns the Service ID corresponding to a Service ALOC16.
      *
      * @param[in]  aAloc16  The Servicer ALOC16 value.
