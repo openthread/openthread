@@ -124,10 +124,13 @@ public:
     /**
      * This method removes Network Data associated with a given RLOC16.
      *
-     * @param[in]  aRloc16  A RLOC16 value.
+     * @param[in]  aRloc16     A RLOC16 value.
+     * @param[in]  aExactMatch Whether exact match or fuzzy match.
+     *                         true if to remove only the network data of the @p aRloc16.
+     *                         false if to remove the router's and all its children's network data.
      *
      */
-    void RemoveBorderRouter(uint16_t aRloc16);
+    void RemoveBorderRouter(uint16_t aRloc16, bool aExactMatch);
 
     /**
      * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
@@ -180,16 +183,22 @@ private:
 
     otError RemoveCommissioningData(void);
 
-    otError RemoveRloc(uint16_t aRloc16);
-    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
+    otError RemoveRloc(uint16_t aRloc16, bool aExactMatch);
+    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, bool aExactMatch);
 #if OPENTHREAD_ENABLE_SERVICE
-    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16);
+    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16, bool aExactMatch);
 #endif
-    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16);
-    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16);
+    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, bool aExactMatch);
+    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, bool aExactMatch);
 
-    otError RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength);
-    bool    IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
+    otError RlocLookup(uint16_t aRloc16,
+                       bool &   aIn,
+                       bool &   aStable,
+                       uint8_t *aTlvs,
+                       uint8_t  aTlvsLength,
+                       bool     aExactMatch);
+
+    bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
 
     static void HandleCommissioningSet(void *               aContext,
                                        otCoapHeader *       aHeader,
