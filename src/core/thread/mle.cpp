@@ -74,7 +74,7 @@ Mle::Mle(Instance &aInstance)
     , mAnnounceDelay(kAnnounceTimeout)
     , mAttachTimer(aInstance, &Mle::HandleAttachTimer, this)
     , mDelayedResponseTimer(aInstance, &Mle::HandleDelayedResponseTimer, this)
-    , mChildUpdateRequestTimer(aInstance, &Mle::HandleChildUpdateRequestTimer, this)
+    , mMessageTransmissionTimer(aInstance, &Mle::HandleMessageTransmissionTimer, this)
     , mParentLeaderCost(0)
     , mParentRequestMode(kAttachAny)
     , mParentPriority(0)
@@ -83,6 +83,8 @@ Mle::Mle(Instance &aInstance)
     , mParentLinkQuality1(0)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
+    , mDataRequestAttempts(0)
+    , mDataRequestState(kDataRequestNone)
     , mParentLinkMargin(0)
     , mParentIsSingleton(false)
     , mReceivedResponseFromParent(false)
@@ -672,7 +674,11 @@ otError Mle::SetStateDetached(void)
     SetRole(OT_DEVICE_ROLE_DETACHED);
     SetAttachState(kAttachStateIdle);
     mAttachTimer.Stop();
-    mChildUpdateRequestTimer.Stop();
+    mMessageTransmissionTimer.Stop();
+    mChildUpdateRequestState = kChildUpdateRequestNone;
+    mChildUpdateAttempts     = 0;
+    mDataRequestState        = kDataRequestNone;
+    mDataRequestAttempts     = 0;
     netif.GetMeshForwarder().SetRxOnWhenIdle(true);
     netif.GetMac().SetBeaconEnabled(false);
     netif.GetMle().HandleDetachStart();
@@ -697,13 +703,9 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     mAttachCounter       = 0;
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
+    mDataRequestAttempts = 0;
     netif.GetMac().SetBeaconEnabled(false);
-
-    if (IsRxOnWhenIdle())
-    {
-        mChildUpdateRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
-                                       static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts);
-    }
+    ScheduleMessageTransmissionTimer();
 
     if (IsFullThreadDevice())
     {
@@ -1455,7 +1457,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice())
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
+            ScheduleMessageTransmissionTimer();
         }
     }
 
@@ -1464,7 +1466,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice() && !IsRxOnWhenIdle())
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
+            ScheduleMessageTransmissionTimer();
         }
     }
 
@@ -1477,7 +1479,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
+            ScheduleMessageTransmissionTimer();
         }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
@@ -2033,49 +2035,123 @@ exit:
         message->Free();
     }
 
-    if (!IsRxOnWhenIdle())
+    if ((mRole == OT_DEVICE_ROLE_CHILD) && !IsRxOnWhenIdle())
     {
-        mChildUpdateRequestTimer.Start(kMaxChildUpdateResponseTimeout);
+        mDataRequestState = kDataRequestActive;
+
+        if (mChildUpdateRequestState == kChildUpdateRequestNone)
+        {
+            ScheduleMessageTransmissionTimer();
+        }
     }
 
     return error;
 }
 
-void Mle::HandleChildUpdateRequestTimer(Timer &aTimer)
+void Mle::ScheduleMessageTransmissionTimer(void)
 {
-    aTimer.GetOwner<Mle>().HandleChildUpdateRequestTimer();
+    uint32_t interval = 0;
+
+    switch (mChildUpdateRequestState)
+    {
+    case kChildUpdateRequestNone:
+        break;
+
+    case kChildUpdateRequestPending:
+        ExitNow(interval = kChildUpdateRequestPendingDelay);
+
+    case kChildUpdateRequestActive:
+        ExitNow(interval = kUnicastRetransmissionDelay);
+    }
+
+    switch (mDataRequestState)
+    {
+    case kDataRequestNone:
+        break;
+
+    case kDataRequestActive:
+        ExitNow(interval = kUnicastRetransmissionDelay);
+    }
+
+    if ((mRole == OT_DEVICE_ROLE_CHILD) && IsRxOnWhenIdle())
+    {
+        interval = TimerMilli::SecToMsec(mTimeout) -
+                   static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts;
+    }
+
+exit:
+    if (interval != 0)
+    {
+        mMessageTransmissionTimer.Start(interval);
+    }
+    else
+    {
+        mMessageTransmissionTimer.Stop();
+    }
 }
 
-void Mle::HandleChildUpdateRequestTimer(void)
+void Mle::HandleMessageTransmissionTimer(Timer &aTimer)
 {
-    // Here intentionly delay another kChildUpdateRequestPending cycle to ensure
-    // only send a Child Update Request after we know there are no more pending changes
-    if (mChildUpdateRequestState == kChildUpdateRequestPending)
+    aTimer.GetOwner<Mle>().HandleMessageTransmissionTimer();
+}
+
+void Mle::HandleMessageTransmissionTimer(void)
+{
+    // The `mMessageTransmissionTimer` is used for:
+    //
+    //  - Delaying OT_CHANGED notification triggered "Child Update Request" transmission (to allow aggregation),
+    //  - Retransmission of "Child Update Request",
+    //  - Retransmission of "Data Request" on a child,
+    //  - Sending periodic keep-alive "Child Update Request" messages on a non-sleepy (rx-on) child.
+
+    switch (mChildUpdateRequestState)
     {
+    case kChildUpdateRequestNone:
+        if (mDataRequestState == kDataRequestActive)
+        {
+            static const uint8_t tlvs[] = {Tlv::kNetworkData};
+            Ip6::Address         destination;
+
+            VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, BecomeDetached());
+
+            memset(&destination, 0, sizeof(destination));
+            destination.mFields.m16[0] = HostSwap16(0xfe80);
+            destination.SetIid(mParent.GetExtAddress());
+
+            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == OT_ERROR_NONE)
+            {
+                mDataRequestAttempts++;
+            }
+
+            ExitNow();
+        }
+
+        // Keep-alive "Child Update Request" only on a non-sleepy child
+        VerifyOrExit((mRole == OT_DEVICE_ROLE_CHILD) && IsRxOnWhenIdle());
+        break;
+
+    case kChildUpdateRequestPending:
         if (GetNotifier().IsPending())
         {
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPendingDelay);
+            // Here intentionally delay another kChildUpdateRequestPendingDelay
+            // cycle to ensure we only send a Child Update Request after we
+            // know there are no more pending changes.
+            ScheduleMessageTransmissionTimer();
             ExitNow();
         }
 
         mChildUpdateAttempts = 0;
+        break;
+
+    case kChildUpdateRequestActive:
+        break;
     }
 
-    if ((mChildUpdateRequestState == kChildUpdateRequestPending) ||
-        (mChildUpdateRequestState == kChildUpdateRequestActive) || IsRxOnWhenIdle())
-    {
-        SendChildUpdateRequest();
-    }
-    else if (mRole == OT_DEVICE_ROLE_CHILD)
-    {
-        static const uint8_t tlvs[] = {Tlv::kNetworkData};
-        Ip6::Address         destination;
+    VerifyOrExit(mChildUpdateAttempts < kMaxChildKeepAliveAttempts, BecomeDetached());
 
-        memset(&destination, 0, sizeof(destination));
-        destination.mFields.m16[0] = HostSwap16(0xfe80);
-        destination.SetIid(mParent.GetExtAddress());
-
-        SendDataRequest(destination, tlvs, sizeof(tlvs), 0);
+    if (SendChildUpdateRequest() == OT_ERROR_NONE)
+    {
+        mChildUpdateAttempts++;
     }
 
 exit:
@@ -2089,14 +2165,6 @@ otError Mle::SendChildUpdateRequest(void)
     Ip6::Address destination;
     Message *    message = NULL;
 
-    if (mChildUpdateAttempts >= kMaxChildKeepAliveAttempts)
-    {
-        mChildUpdateAttempts     = 0;
-        mChildUpdateRequestState = kChildUpdateRequestNone;
-        BecomeDetached();
-        ExitNow();
-    }
-
     if (!mParent.IsStateValidOrRestoring())
     {
         otLogWarnMle(GetInstance(), "No valid parent when sending Child Update Request");
@@ -2104,9 +2172,8 @@ otError Mle::SendChildUpdateRequest(void)
         ExitNow();
     }
 
-    mChildUpdateRequestTimer.Start(kUnicastRetransmissionDelay);
-    mChildUpdateAttempts++;
     mChildUpdateRequestState = kChildUpdateRequestActive;
+    ScheduleMessageTransmissionTimer();
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
@@ -2908,11 +2975,6 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
 
     mRetrieveNewNetworkData = false;
 
-    if (!IsRxOnWhenIdle())
-    {
-        mChildUpdateRequestTimer.Stop();
-    }
-
 exit:
 
     if (dataRequest)
@@ -2933,6 +2995,18 @@ exit:
         }
 
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
+    }
+    else if (error == OT_ERROR_NONE)
+    {
+        mDataRequestAttempts = 0;
+        mDataRequestState    = kDataRequestNone;
+
+        // Here the `mMessageTransmissionTimer` is intentionally not canceled
+        // so that when it fires from its callback a "Child Update" is sent
+        // if the device is a rx-on child. This way, even when the timer is
+        // reused for retransmission of "Data Request" messages, it is ensured
+        // that keep-alive "Child Update Request" messages are send within the
+        // child's timeout.
     }
 
     return error;
@@ -3383,6 +3457,13 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
     VerifyOrExit(mode.IsValid(), error = OT_ERROR_PARSE);
     VerifyOrExit(mode.GetMode() == mDeviceMode, error = OT_ERROR_DROP);
 
+    if (mChildUpdateRequestState == kChildUpdateRequestActive)
+    {
+        mChildUpdateAttempts     = 0;
+        mChildUpdateRequestState = kChildUpdateRequestNone;
+        ScheduleMessageTransmissionTimer();
+    }
+
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
@@ -3438,18 +3519,12 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
         {
             netif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
             netif.GetMeshForwarder().SetRxOnWhenIdle(false);
-            mChildUpdateRequestTimer.Stop();
         }
         else
         {
-            mChildUpdateRequestTimer.Start(TimerMilli::SecToMsec(mTimeout) -
-                                           static_cast<uint32_t>(kUnicastRetransmissionDelay) *
-                                               kMaxChildKeepAliveAttempts);
             netif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
-        mChildUpdateAttempts     = 0;
-        mChildUpdateRequestState = kChildUpdateRequestNone;
         break;
 
     default:
