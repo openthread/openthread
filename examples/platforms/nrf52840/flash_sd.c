@@ -33,7 +33,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include <utils/code_utils.h>

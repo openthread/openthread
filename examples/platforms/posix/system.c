@@ -48,7 +48,6 @@
 #include <syslog.h>
 #endif
 
-#include <openthread/openthread.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 

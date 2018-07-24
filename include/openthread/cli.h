@@ -37,7 +37,9 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <openthread/types.h>
+
+#include <openthread/instance.h>
+#include <openthread/platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {

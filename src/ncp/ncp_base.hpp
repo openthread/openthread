@@ -46,7 +46,6 @@
 #include <openthread/dhcp6_client.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
-#include <openthread/types.h>
 
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"

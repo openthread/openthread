@@ -52,7 +52,6 @@
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
 #endif
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_FTD

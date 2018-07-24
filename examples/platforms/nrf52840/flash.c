@@ -35,7 +35,6 @@
 
 #include <utils/code_utils.h>
 #include <utils/flash.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-nrf5.h"

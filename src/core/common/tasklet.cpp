@@ -33,8 +33,6 @@
 
 #include "tasklet.hpp"
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"

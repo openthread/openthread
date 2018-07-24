@@ -36,8 +36,6 @@
 
 #include <assert.h>
 #include <utils/code_utils.h>
-#include <openthread/openthread.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>

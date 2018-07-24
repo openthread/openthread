@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/openthread.h>
-
 #include "common/message.hpp"
 
 namespace ot {

@@ -29,7 +29,6 @@
 #include <openthread/config.h>
 
 #include <driverlib/sys_ctrl.h>
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 /*

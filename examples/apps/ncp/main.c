@@ -32,7 +32,7 @@
 
 #include <openthread/diag.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
+#include <openthread/tasklet.h>
 
 #include "openthread-system.h"
 

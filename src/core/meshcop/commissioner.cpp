@@ -38,7 +38,6 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/random.h>
 
 #include "coap/coap_header.hpp"

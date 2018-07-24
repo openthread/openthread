@@ -43,7 +43,6 @@
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/misc.h>
 

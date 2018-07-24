@@ -37,8 +37,8 @@
 
 #include <openthread/config.h>
 #include <openthread-core-config.h>
+
 #include <stdint.h>
-#include <openthread/types.h>
 
 typedef void     (*qorvoPlatPollFunction_t)(uint8_t);
 typedef uint8_t  (*qorvoPlatGotoSleepCheckCallback_t) (void);

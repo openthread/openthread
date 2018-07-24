@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "platform-cc2538.h"

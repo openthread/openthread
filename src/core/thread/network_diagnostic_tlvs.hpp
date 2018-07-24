@@ -38,7 +38,7 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
+#include <openthread/thread.h>
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"

@@ -35,9 +35,10 @@
 #ifndef OPENTHREAD_PLATFORM_SPI_SLAVE_H_
 #define OPENTHREAD_PLATFORM_SPI_SLAVE_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #ifdef __cplusplus
 extern "C" {

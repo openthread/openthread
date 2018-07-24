@@ -35,6 +35,7 @@
 #define OPENTHREAD_POSIX_APP_CLI 2
 
 #include <openthread/diag.h>
+#include <openthread/tasklet.h>
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
 #include <openthread/ncp.h>
 #elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
@@ -42,7 +43,6 @@
 #else
 #error "Unknown posix app mode!"
 #endif
-#include <openthread/openthread.h>
 #include <openthread/platform/logging.h>
 
 #include "openthread-system.h"

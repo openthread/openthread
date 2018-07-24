@@ -37,8 +37,8 @@
 
 #include <stdint.h>
 
+#include <openthread/ip6.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -34,7 +34,6 @@
  */
 
 #include "platform-emsk.h"
-#include "openthread/openthread.h"
 #include "openthread/platform/uart.h"
 
 #include <stdio.h>

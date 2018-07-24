@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"

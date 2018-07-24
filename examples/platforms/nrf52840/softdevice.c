@@ -44,7 +44,6 @@
 #include "platform-softdevice.h"
 #include "platform-nrf5.h"
 
-#include <openthread/types.h>
 #include <nrf_raal_softdevice.h>
 
 otError nrf5SdErrorToOtError(uint32_t aSdError)

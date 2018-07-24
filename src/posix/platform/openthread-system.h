@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_SYSTEM_H_
 #define OPENTHREAD_SYSTEM_H_
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {

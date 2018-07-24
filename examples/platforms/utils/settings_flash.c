@@ -38,7 +38,7 @@
 
 #include <openthread-core-config.h>
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 #include <openthread/platform/settings.h>
 
 #include "utils/code_utils.h"

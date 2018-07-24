@@ -41,7 +41,6 @@
 #include "utils/wrap_string.h"
 
 #include <openthread/instance.h>
-#include <openthread/types.h>
 #include <openthread/platform/logging.h>
 
 #ifdef WINDOWS_LOGGING

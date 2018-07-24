@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include <mbedtls/certs.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>

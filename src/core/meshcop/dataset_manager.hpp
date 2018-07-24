@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"

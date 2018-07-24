@@ -34,7 +34,6 @@
 
 #include <stddef.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"

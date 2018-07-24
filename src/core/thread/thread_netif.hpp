@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"

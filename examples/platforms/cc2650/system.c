@@ -28,7 +28,6 @@
 
 #include "platform-cc2650.h"
 #include <stdio.h>
-#include <openthread/types.h>
 #include "inc/hw_ccfg_simple_struct.h"
 
 extern const ccfg_t __ccfg;

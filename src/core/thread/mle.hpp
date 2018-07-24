@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/openthread.h>
-
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"

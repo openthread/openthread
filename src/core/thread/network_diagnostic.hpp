@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"

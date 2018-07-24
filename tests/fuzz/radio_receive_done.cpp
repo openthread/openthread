@@ -34,7 +34,6 @@
 #include <openthread/link.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"

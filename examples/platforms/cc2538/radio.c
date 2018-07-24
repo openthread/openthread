@@ -33,7 +33,6 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>

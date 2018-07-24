@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,42 @@ extern "C" {
  * @{
  *
  */
+
+/**
+ * This structure points to an OpenThread message buffer.
+ */
+typedef struct otMessage
+{
+    struct otMessage *mNext; ///< A pointer to the next Message buffer.
+} otMessage;
+
+/**
+ * This structure represents the message buffer information.
+ *
+ */
+typedef struct otBufferInfo
+{
+    uint16_t mTotalBuffers;            ///< The number of buffers in the pool.
+    uint16_t mFreeBuffers;             ///< The number of free message buffers.
+    uint16_t m6loSendMessages;         ///< The number of messages in the 6lo send queue.
+    uint16_t m6loSendBuffers;          ///< The number of buffers in the 6lo send queue.
+    uint16_t m6loReassemblyMessages;   ///< The number of messages in the 6LoWPAN reassembly queue.
+    uint16_t m6loReassemblyBuffers;    ///< The number of buffers in the 6LoWPAN reassembly queue.
+    uint16_t mIp6Messages;             ///< The number of messages in the IPv6 send queue.
+    uint16_t mIp6Buffers;              ///< The number of buffers in the IPv6 send queue.
+    uint16_t mMplMessages;             ///< The number of messages in the MPL send queue.
+    uint16_t mMplBuffers;              ///< The number of buffers in the MPL send queue.
+    uint16_t mMleMessages;             ///< The number of messages in the MLE send queue.
+    uint16_t mMleBuffers;              ///< The number of buffers in the MLE send queue.
+    uint16_t mArpMessages;             ///< The number of messages in the ARP send queue.
+    uint16_t mArpBuffers;              ///< The number of buffers in the ARP send queue.
+    uint16_t mCoapMessages;            ///< The number of messages in the CoAP send queue.
+    uint16_t mCoapBuffers;             ///< The number of buffers in the CoAP send queue.
+    uint16_t mCoapSecureMessages;      ///< The number of messages in the CoAP secure send queue.
+    uint16_t mCoapSecureBuffers;       ///< The number of buffers in the CoAP secure send queue.
+    uint16_t mApplicationCoapMessages; ///< The number of messages in the application CoAP send queue.
+    uint16_t mApplicationCoapBuffers;  ///< The number of buffers in the application CoAP send queue.
+} otBufferInfo;
 
 /**
  * Free an allocated message buffer.

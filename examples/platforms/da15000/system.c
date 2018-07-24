@@ -33,7 +33,7 @@
 
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
-#include <openthread/openthread.h>
+#include <openthread/thread.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-da15000.h"

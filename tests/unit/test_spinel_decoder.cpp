@@ -28,8 +28,6 @@
 
 #include <ctype.h>
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "ncp/spinel_decoder.hpp"
