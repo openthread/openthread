@@ -44,6 +44,11 @@
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 
+/**
+ * to test the default handler for not handled requests set to 1.
+ */
+#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
+
 namespace ot {
 namespace Cli {
 
@@ -106,11 +111,13 @@ private:
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
 
+#if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
     static void OTCALL DefaultHandle(void *               aContext,
                                      otCoapHeader *       aHeader,
                                      otMessage *          aMessage,
                                      const otMessageInfo *aMessageInfo);
     void               DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+#endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
     static void OTCALL HandleClientConnect(const bool aConnected, void *aContext);
     void               HandleClientConnect(const bool aConnected);

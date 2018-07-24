@@ -184,7 +184,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
         otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecureCli::HandleClientConnect, this);
+#if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
         otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecureCli::DefaultHandle, this);
+#endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
         mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
                                            mVerifyPeerCert ? "true" : "false");
     }
@@ -623,6 +625,7 @@ void CoapSecureCli::HandleClientResponse(otCoapHeader *       aHeader,
     OT_UNUSED_VARIABLE(aMessageInfo);
 }
 
+#if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 void OTCALL CoapSecureCli::DefaultHandle(void *               aContext,
                                          otCoapHeader *       aHeader,
                                          otMessage *          aMessage,
@@ -633,11 +636,28 @@ void OTCALL CoapSecureCli::DefaultHandle(void *               aContext,
 
 void CoapSecureCli::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    mInterpreter.mServer->OutputFormat("Default Handle Called.\r\n");
-    OT_UNUSED_VARIABLE(aHeader);
     OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    otError      error = OT_ERROR_NONE;
+    otCoapHeader responseHeader;
+    otMessage *  responseMessage;
+
+    if (otCoapHeaderGetType(aHeader) == OT_COAP_TYPE_CONFIRMABLE || otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
+    {
+        otCoapHeaderInit(&responseHeader, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
+        otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
+        otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
+
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
+        SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
+    }
+
+exit:
+
+    mInterpreter.mServer->OutputFormat("Default handler called.\r\n> ");
 }
+#endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
 } // namespace Cli
 } // namespace ot
