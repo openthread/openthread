@@ -5918,20 +5918,22 @@ otLwfIoCtl_otSendActiveGet(
     *OutBufferLength = 0;
     UNREFERENCED_PARAMETER(OutBuffer);
 
-    if (InBufferLength >= sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t))
     {
-        uint8_t aLength = *(uint8_t*)InBuffer;
-        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(uint8_t);
+        const otOperationalDatasetComponents *aDatasetComp = (otOperationalDatasetComponents*)InBuffer;
+        uint8_t aLength = *(uint8_t*)(InBuffer + sizeof(otOperationalDatasetComponents));
+        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(otOperationalDatasetComponents) + sizeof(uint8_t);
 
-        if (InBufferLength >= sizeof(uint8_t) + aLength)
+        if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength)
         {
             otIp6Address *aAddress = NULL;
-            if (InBufferLength >= sizeof(uint8_t) + aLength + sizeof(otIp6Address))
-                aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
+            if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength + sizeof(otIp6Address))
+                aAddress = (otIp6Address*)(InBuffer + sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
                 otDatasetSendMgmtActiveGet(
                     pFilter->otCtx,
+                    aDatasetComp,
                     aTlvTypes,
                     aLength,
                     aAddress)
@@ -5997,20 +5999,22 @@ otLwfIoCtl_otSendPendingGet(
     *OutBufferLength = 0;
     UNREFERENCED_PARAMETER(OutBuffer);
 
-    if (InBufferLength >= sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otOperationalDataset) + sizeof(uint8_t))
     {
-        uint8_t aLength = *(uint8_t*)InBuffer;
-        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(uint8_t);
+        const otOperationalDatasetComponents *aDatasetComp = (otOperationalDatasetComponents*)InBuffer;
+        uint8_t aLength = *(uint8_t*)(InBuffer + sizeof(otOperationalDataset));
+        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(otOperationalDataset) +  sizeof(uint8_t);
 
-        if (InBufferLength >= sizeof(uint8_t) + aLength)
+        if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength)
         {
             otIp6Address *aAddress = NULL;
-            if (InBufferLength >= sizeof(uint8_t) + aLength + sizeof(otIp6Address))
-                aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
+            if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength + sizeof(otIp6Address))
+                aAddress = (otIp6Address*)(InBuffer + sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
                 otDatasetSendMgmtPendingGet(
                     pFilter->otCtx,
+                    aDatasetComp,
                     aTlvTypes,
                     aLength,
                     aAddress)

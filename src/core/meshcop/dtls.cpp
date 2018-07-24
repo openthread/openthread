@@ -859,6 +859,7 @@ otError Dtls::MapError(int rval)
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
+    case MBEDTLS_ERR_SSL_WANT_WRITE:
         error = OT_ERROR_NO_BUFS;
         break;
 

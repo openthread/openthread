@@ -114,17 +114,24 @@ private:
 
 static Coap::Header::Code CoapCodeFromError(otError aError)
 {
+    Coap::Header::Code code;
+
     switch (aError)
     {
     case OT_ERROR_NONE:
-        return OT_COAP_CODE_CHANGED;
+        code = OT_COAP_CODE_CHANGED;
+        break;
 
     case OT_ERROR_PARSE:
-        return OT_COAP_CODE_BAD_REQUEST;
+        code = OT_COAP_CODE_BAD_REQUEST;
+        break;
 
     default:
-        return OT_COAP_CODE_INTERNAL_ERROR;
+        code = OT_COAP_CODE_INTERNAL_ERROR;
+        break;
     }
+
+    return code;
 }
 
 void BorderAgent::SendErrorMessage(const Coap::Header &aHeader)
@@ -202,9 +209,9 @@ void BorderAgent::HandleRequest<&BorderAgent::mCommissionerKeepAlive>(void *    
                                                                       otMessage *          aMessage,
                                                                       const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgent *>(aContext)->ForwardToLeader(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo), OT_URI_PATH_LEADER_KEEP_ALIVE, true);
+    static_cast<BorderAgent *>(aContext)->HandleKeepAlive(*static_cast<Coap::Header *>(aHeader),
+                                                          *static_cast<Message *>(aMessage),
+                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 template <>
@@ -265,7 +272,7 @@ void BorderAgent::HandleRelayReceive(const Coap::Header &aHeader, const Message 
     }
 
     SuccessOrExit(ForwardToCommissioner(header, aMessage));
-    otLogInfoMeshCoP(GetInstance(), "Sent to leader on %s", OT_URI_PATH_RELAY_RX);
+    otLogInfoMeshCoP(GetInstance(), "Sent to commissioner on %s", OT_URI_PATH_RELAY_RX);
 
 exit:
     return;
@@ -299,6 +306,20 @@ exit:
     }
 
     return error;
+}
+
+void BorderAgent::HandleKeepAlive(const Coap::Header &    aHeader,
+                                  const Message &         aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo)
+{
+    otError error;
+
+    error = ForwardToLeader(aHeader, aMessage, aMessageInfo, OT_URI_PATH_LEADER_KEEP_ALIVE, true);
+
+    if (error == OT_ERROR_NONE)
+    {
+        mTimer.Start(kKeepAliveTimeout);
+    }
 }
 
 void BorderAgent::HandleRelayTransmit(const Coap::Header &aHeader, const Message &aMessage)
@@ -350,11 +371,11 @@ exit:
     }
 }
 
-void BorderAgent::ForwardToLeader(const Coap::Header &    aHeader,
-                                  const Message &         aMessage,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  const char *            aPath,
-                                  bool                    aSeparate)
+otError BorderAgent::ForwardToLeader(const Coap::Header &    aHeader,
+                                     const Message &         aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     const char *            aPath,
+                                     bool                    aSeparate)
 {
     ThreadNetif &    netif          = GetNetif();
     otError          error          = OT_ERROR_NONE;
@@ -390,7 +411,7 @@ void BorderAgent::ForwardToLeader(const Coap::Header &    aHeader,
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
     aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), *message);
 
-    SuccessOrExit(netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    SuccessOrExit(error = netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
     messageInfo.SetSockPort(kCoapUdpPort);
@@ -406,6 +427,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP(GetInstance(), "Failed to forward to leader: %s", otThreadErrorToString(error));
+
         if (forwardContext != NULL)
         {
             GetInstance().GetHeap().Free(forwardContext);
@@ -430,6 +452,8 @@ exit:
 
         SendErrorMessage(header);
     }
+
+    return error;
 }
 
 void BorderAgent::HandleConnected(bool aConnected)

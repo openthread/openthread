@@ -42,6 +42,9 @@
 #include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+#include "meshcop/border_agent.hpp"
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include "meshcop/commissioner.hpp"
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -319,6 +322,15 @@ public:
      */
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    /**
+     * This method returns a reference to the border agent object.
+     *
+     * @returns A reference to the border agent object.
+     *
+     */
+    MeshCoP::BorderAgent &GetBorderAgent(void) { return mBorderAgent; }
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     /**
      * This method returns a reference to the commissioner object.
@@ -448,6 +460,9 @@ private:
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     bool mIsUp;
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    MeshCoP::BorderAgent mBorderAgent;
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     MeshCoP::Commissioner mCommissioner;
 #endif // OPENTHREAD_ENABLE_COMMISSIONER

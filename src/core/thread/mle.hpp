@@ -921,6 +921,20 @@ public:
     static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
+     * This method returns whether the two RLOC16 have the same Router ID.
+     *
+     * @param[in]  aRloc16A  The first RLOC16 value.
+     * @param[in]  aRloc16B  The second RLOC16 value.
+     *
+     * @returns true if the two RLOC16 have the same Router ID, false otherwise.
+     *
+     */
+    static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
+    {
+        return ((aRloc16A >> kRouterIdOffset) == (aRloc16B >> kRouterIdOffset));
+    }
+
+    /**
      * This method returns the Service ID corresponding to a Service ALOC16.
      *
      * @param[in]  aAloc16  The Servicer ALOC16 value.
@@ -1551,7 +1565,7 @@ protected:
     uint16_t      mAnnounceDelay;                 ///< Delay in between sending Announce messages during attach.
     TimerMilli    mAttachTimer;                   ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;          ///< The timer to delay MLE responses.
-    TimerMilli    mChildUpdateRequestTimer;       ///< The timer for sending MLE Child Update Request messages.
+    TimerMilli    mMessageTransmissionTimer;      ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
     uint32_t      mLastPartitionId;               ///< The partition ID of the previous Thread partition
     uint8_t       mLastPartitionRouterIdSequence; ///< The router ID sequence from the previous Thread partition
     uint8_t       mLastPartitionIdTimeout;        ///< The time remaining to avoid the previous Thread partition
@@ -1589,6 +1603,12 @@ private:
         kChildUpdateRequestActive,  ///< Child Update Request has been sent and Child Update Response is expected.
     };
 
+    enum DataRequestState
+    {
+        kDataRequestNone,   ///< Not waiting for a Data Response.
+        kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
+    };
+
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
                        uint8_t                aSecurityLevel,
@@ -1600,10 +1620,11 @@ private:
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
     void        HandleDelayedResponseTimer(void);
-    static void HandleChildUpdateRequestTimer(Timer &aTimer);
-    void        HandleChildUpdateRequestTimer(void);
+    static void HandleMessageTransmissionTimer(Timer &aTimer);
+    void        HandleMessageTransmissionTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        ScheduleMessageTransmissionTimer(void);
 
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1659,13 +1680,17 @@ private:
         uint8_t mChallenge[ChallengeTlv::kMaxSize];
     } mParentRequest;
 
-    AttachMode    mParentRequestMode;
-    int8_t        mParentPriority;
-    uint8_t       mParentLinkQuality3;
-    uint8_t       mParentLinkQuality2;
-    uint8_t       mParentLinkQuality1;
-    uint8_t       mChildUpdateAttempts;
-    uint8_t       mChildUpdateRequestState;
+    AttachMode mParentRequestMode;
+    int8_t     mParentPriority;
+    uint8_t    mParentLinkQuality3;
+    uint8_t    mParentLinkQuality2;
+    uint8_t    mParentLinkQuality1;
+
+    uint8_t                 mChildUpdateAttempts;
+    ChildUpdateRequestState mChildUpdateRequestState;
+    uint8_t                 mDataRequestAttempts;
+    DataRequestState        mDataRequestState;
+
     uint8_t       mParentLinkMargin;
     bool          mParentIsSingleton;
     bool          mReceivedResponseFromParent;

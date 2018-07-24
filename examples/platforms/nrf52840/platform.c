@@ -78,12 +78,12 @@ void PlatformInit(int argc, char *argv[])
     if (!gPlatformPseudoResetWasRequested)
     {
         nrf5UartInit();
+        nrf5CryptoInit();
     }
 #ifndef SPIS_TRANSPORT_DISABLE
     nrf5SpiSlaveInit();
 #endif
     nrf5MiscInit();
-    nrf5CryptoInit();
     nrf5RadioInit();
     nrf5TempInit();
 
@@ -94,13 +94,13 @@ void PlatformDeinit(void)
 {
     nrf5TempDeinit();
     nrf5RadioDeinit();
-    nrf5CryptoDeinit();
     nrf5MiscDeinit();
 #ifndef SPIS_TRANSPORT_DISABLE
     nrf5SpiSlaveDeinit();
 #endif
     if (!gPlatformPseudoResetWasRequested)
     {
+        nrf5CryptoDeinit();
         nrf5UartDeinit();
     }
     nrf5RandomDeinit();

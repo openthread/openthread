@@ -77,19 +77,21 @@ OTAPI otError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperatio
 /**
  * This function sends MGMT_ACTIVE_GET.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aLength    The length of TLV Types.
- * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *        aInstance,
-                                                const uint8_t *     aTlvTypes,
-                                                uint8_t             aLength,
-                                                const otIp6Address *aAddress);
+OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
+                                                const otOperationalDatasetComponents *aDatasetComponents,
+                                                const uint8_t *                       aTlvTypes,
+                                                uint8_t                               aLength,
+                                                const otIp6Address *                  aAddress);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
@@ -111,19 +113,21 @@ OTAPI otError OTCALL otDatasetSendMgmtActiveSet(otInstance *                aIns
 /**
  * This function sends MGMT_PENDING_GET.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aLength    The length of TLV Types.
- * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *        aInstance,
-                                                 const uint8_t *     aTlvTypes,
-                                                 uint8_t             aLength,
-                                                 const otIp6Address *aAddress);
+OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
+                                                 const otOperationalDatasetComponents *aDatasetComponents,
+                                                 const uint8_t *                       aTlvTypes,
+                                                 uint8_t                               aLength,
+                                                 const otIp6Address *                  aAddress);
 
 /**
  * This function sends MGMT_PENDING_SET.

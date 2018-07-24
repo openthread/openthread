@@ -76,7 +76,14 @@ extern "C" {
  * @defgroup api-dns   DNSv6
  * @defgroup api-icmp6 ICMPv6
  * @defgroup api-ip6   IPv6
- * @defgroup api-udp   UDP
+ * @defgroup api-udp-group UDP
+ *
+ * @{
+ *
+ * @defgroup api-udp       UDP
+ * @defgroup api-udp-proxy UDP Proxy
+ *
+ * @}
  *
  * @}
  *
@@ -103,7 +110,6 @@ extern "C" {
  * @defgroup api-thread-router  Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
  * @defgroup api-server         Server
- * @defgroup api-tmf-proxy      TMF Proxy
  *
  * @}
  *
@@ -120,6 +126,7 @@ extern "C" {
  * @defgroup api-factory-diagnostics Factory Diagnostics
  * @defgroup api-jam-detection       Jam Detection
  * @defgroup api-ncp                 Network Co-Processor
+ * @defgroup api-network-time        Network Time Synchronization
  *
  * @}
  *
@@ -145,6 +152,7 @@ extern "C" {
  * @defgroup plat-random              Random
  * @defgroup plat-settings            Settings
  * @defgroup plat-spi-slave           SPI Slave
+ * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-uart                UART
  *

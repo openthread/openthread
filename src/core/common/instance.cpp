@@ -64,9 +64,6 @@ Instance::Instance(void)
     , mSettings(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_BORDER_AGENT
-    , mBorderAgent(*this)
-#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif

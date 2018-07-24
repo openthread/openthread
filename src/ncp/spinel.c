@@ -1525,12 +1525,12 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_PENDING_DATASET";
         break;
 
-    case SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET:
-        ret = "PROP_THREAD_MGMT_ACTIVE_DATASET";
+    case SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET:
+        ret = "PROP_THREAD_MGMT_SET_ACTIVE_DATASET";
         break;
 
-    case SPINEL_PROP_THREAD_MGMT_PENDING_DATASET:
-        ret = "PROP_THREAD_MGMT_PENDING_DATASET";
+    case SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET:
+        ret = "PROP_THREAD_MGMT_SET_PENDING_DATASET";
         break;
 
     case SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP:
@@ -1563,6 +1563,18 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE:
         ret = "PROP_THREAD_ADDRESS_CACHE_TABLE";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET:
+        ret = "PROP_THREAD_MGMT_GET_ACTIVE_DATASET";
+        break;
+
+    case SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET:
+        ret = "PROP_THREAD_MGMT_GET_PENDING_DATASET";
+        break;
+
+    case SPINEL_PROP_DATASET_DEST_ADDRESS:
+        ret = "PROP_DATASET_DEST_ADDRESS";
         break;
 
     case SPINEL_PROP_IPV6_LL_ADDR:

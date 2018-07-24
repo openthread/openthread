@@ -98,6 +98,8 @@ uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
 
 bool HdlcByteNeedsEscape(uint8_t aByte)
 {
+    bool rval;
+
     switch (aByte)
     {
     case kFlagXOn:
@@ -105,11 +107,15 @@ bool HdlcByteNeedsEscape(uint8_t aByte)
     case kEscapeSequence:
     case kFlagSequence:
     case kFlagSpecial:
-        return true;
+        rval = true;
+        break;
 
     default:
-        return false;
+        rval = false;
+        break;
     }
+
+    return rval;
 }
 
 Encoder::BufferWriteIterator::BufferWriteIterator(void)

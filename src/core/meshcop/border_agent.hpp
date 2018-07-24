@@ -102,12 +102,13 @@ private:
                                    otError              aResult);
 
     void    SendErrorMessage(const Coap::Header &aHeader);
-    void    ForwardToLeader(const Coap::Header &    aHeader,
+    otError ForwardToLeader(const Coap::Header &    aHeader,
                             const Message &         aMessage,
                             const Ip6::MessageInfo &aMessageInfo,
                             const char *            aPath,
                             bool                    aSeparate);
     otError ForwardToCommissioner(const Coap::Header &aHeader, const Message &aMessage);
+    void    HandleKeepAlive(const Coap::Header &aHeader, const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    HandleRelayTransmit(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleRelayReceive(const Coap::Header &aHeader, const Message &aMessage);
 

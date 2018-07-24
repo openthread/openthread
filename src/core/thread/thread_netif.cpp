@@ -76,6 +76,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mNetworkDiagnostic(aInstance)
 #endif
     , mIsUp(false)
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    , mBorderAgent(aInstance)
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     , mCommissioner(aInstance)
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
