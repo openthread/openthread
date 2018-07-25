@@ -1019,7 +1019,7 @@ def parse_on_mesh_prefix_result(on_mesh_prefix_list):
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class ChildEntry(object):
-    """ This object encapsulates an child entry"""
+    """ This object encapsulates a child entry"""
 
     def __init__(self, text):
 
@@ -1029,14 +1029,14 @@ class ChildEntry(object):
         # `RxOnIdle:no, FFD:no, SecDataReq:yes, FullNetData:yes"`
         #
 
-        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as seperator.
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
         # Then remove any ',' at end of items in the list.
         items = [item[:-1] if item[-1] ==',' else item for item in text[2:-1].split()]
 
         # First item in the extended address
         self._ext_address = items[0]
 
-        # Convert the rest into a dictionary by splitting using ':' as seperator
+        # Convert the rest into a dictionary by splitting using ':' as separator
         dict = {item.split(':')[0] : item.split(':')[1] for item in items[1:]}
 
         self._rloc16     = dict['RLOC16']
@@ -1068,3 +1068,54 @@ class ChildEntry(object):
 def parse_child_table_result(child_table_list):
     """ Parses child table list string and returns an array of `ChildEntry` objects"""
     return [ ChildEntry(item) for item in child_table_list.split('\n')[1:-1] ]
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+class NeighborEntry(object):
+    """ This object encapsulates a neighbor entry"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # `\t"5AC95ED4646D6565, RLOC16:9403, LQIn:3, AveRssi:-20, LastRssi:-20, Age:0, LinkFC:8, MleFC:0, IsChild:yes, '
+        # 'RxOnIdle:no, FFD:no, SecDataReq:yes, FullNetData:yes"'
+        #
+
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
+        # Then remove any ',' at end of items in the list.
+        items = [item[:-1] if item[-1] ==',' else item for item in text[2:-1].split()]
+
+        # First item in the extended address
+        self._ext_address = items[0]
+
+        # Convert the rest into a dictionary by splitting the text using ':' as separator
+        dict = {item.split(':')[0] : item.split(':')[1] for item in items[1:]}
+
+        self._rloc16     = dict['RLOC16']
+        self._is_child   = (dict['IsChild'] == 'yes')
+        self._rx_on_idle = (dict['RxOnIdle'] == 'yes')
+        self._ffd        = (dict['FFD'] == 'yes')
+
+    @property
+    def ext_address(self):
+        return self._ext_address
+
+    @property
+    def rloc16(self):
+        return self._rloc16
+
+    def is_rx_on_when_idle(self):
+        return self._rx_on_idle
+
+    def is_ffd(self):
+        return self._ffd
+
+    def is_child(self):
+        return self._is_child
+
+    def __repr__(self):
+        return 'NeighborEntry({})'.format(self.__dict__)
+
+def parse_neighbor_table_result(neighbor_table_list):
+    """ Parses neighbor table list string and returns an array of `NeighborEntry` objects"""
+    return [ NeighborEntry(item) for item in neighbor_table_list.split('\n')[1:-1] ]
