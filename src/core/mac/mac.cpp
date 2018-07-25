@@ -1023,69 +1023,77 @@ exit:
 
 void Mac::StartCsmaBackoff(void)
 {
+    uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
+    uint32_t backoff;
+    bool     shouldReceive;
+
     if (RadioSupportsCsmaBackoff())
     {
         // If the radio supports CSMA back off logic, immediately schedule the send.
         BeginTransmit();
+        ExitNow();
     }
 #if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    else if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
+    else if (mTransmitRetries > 0)
     {
-        BeginTransmit();
+        Frame &sendFrame(*GetOperationFrame());
+
+        if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
+        {
+            BeginTransmit();
+            ExitNow();
+        }
     }
 #endif
-    else
+
+    if (backoffExponent > kMaxBE)
     {
-        uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
-        uint32_t backoff;
-        bool     shouldReceive;
+        backoffExponent = kMaxBE;
+    }
 
-        if (backoffExponent > kMaxBE)
+    backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
+    backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
+
+    // Put the radio in either sleep or receive mode depending on
+    // `mRxOnWhenIdle` flag before starting the backoff timer.
+
+    shouldReceive = (mRxOnWhenIdle || otPlatRadioGetPromiscuous(&GetInstance()));
+
+    if (!shouldReceive)
+    {
+        if (RadioSleep() == OT_ERROR_INVALID_STATE)
         {
-            backoffExponent = kMaxBE;
+            // If `RadioSleep()` returns `OT_ERROR_INVALID_STATE`
+            // indicating sleep is being delayed, the radio should
+            // be put in receive mode.
+
+            shouldReceive = true;
         }
+    }
 
-        backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
-        backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
-
-        // Put the radio in either sleep or receive mode depending on
-        // `mRxOnWhenIdle` flag before starting the backoff timer.
-
-        shouldReceive = (mRxOnWhenIdle || otPlatRadioGetPromiscuous(&GetInstance()));
-
-        if (!shouldReceive)
+    if (shouldReceive)
+    {
+        switch (mOperation)
         {
-            if (RadioSleep() == OT_ERROR_INVALID_STATE)
-            {
-                // If `RadioSleep()` returns `OT_ERROR_INVALID_STATE`
-                // indicating sleep is being delayed, the radio should
-                // be put in receive mode.
+        case kOperationActiveScan:
+        case kOperationEnergyScan:
+            RadioReceive(mScanChannel);
+            break;
 
-                shouldReceive = true;
-            }
+        default:
+            RadioReceive(mRadioChannel);
+            break;
         }
-
-        if (shouldReceive)
-        {
-            switch (mOperation)
-            {
-            case kOperationActiveScan:
-            case kOperationEnergyScan:
-                RadioReceive(mScanChannel);
-                break;
-
-            default:
-                RadioReceive(mRadioChannel);
-                break;
-            }
-        }
+    }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffTimer.Start(backoff);
+    mBackoffTimer.Start(backoff);
 #else  // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-        mBackoffTimer.Start(backoff / 1000UL);
+    mBackoffTimer.Start(backoff / 1000UL);
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    }
+
+exit:
+    return;
 }
 
 void Mac::HandleBackoffTimer(Timer &aTimer)
@@ -1144,17 +1152,6 @@ void Mac::BeginTransmit(void)
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
 
-#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    else if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
-    {
-        sendFrame.SetCsmaCaEnabled(false);
-    }
-    else
-#endif
-    {
-        sendFrame.SetCsmaCaEnabled(true);
-    }
-
     if (mCsmaBackoffs == 0 && mTransmitRetries == 0 && mBroadcastTransmitCount == 0)
     {
         switch (mOperation)
@@ -1208,7 +1205,6 @@ void Mac::BeginTransmit(void)
             sendFrame.SetTimeSyncSeq(GetNetif().GetTimeSync().GetTimeSyncSeq());
             sendFrame.SetNetworkTimeOffset(GetNetif().GetTimeSync().GetNetworkTimeOffset());
         }
-
 #endif
 
         if (applyTransmitSecurity)
@@ -1216,6 +1212,17 @@ void Mac::BeginTransmit(void)
             // Security Processing
             ProcessTransmitSecurity(sendFrame, processTransmitAesCcm);
         }
+    }
+
+#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+    if ((sendFrame.GetMaxFrameRetries() > 0) && (sendFrame.GetMaxFrameRetries() <= mTransmitRetries))
+    {
+        sendFrame.SetCsmaCaEnabled(false);
+    }
+    else
+#endif
+    {
+        sendFrame.SetCsmaCaEnabled(true);
     }
 
     error = RadioReceive(sendFrame.GetChannel());
