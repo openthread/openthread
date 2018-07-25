@@ -122,6 +122,19 @@ OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *        aInstance,
 OTAPI otError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aEui64);
 
 /**
+ * This function gets the Provisioning URL.
+ *
+ * @param[in]    aInstance       A pointer to an OpenThread instance.
+ * @param[out]   aLength         A pointer to `uint16_t` to return the length (number of chars) in the URL string.
+ *
+ * Note that the returned URL string buffer is not necessarily null-terminated.
+ *
+ * @returns A pointer to char buffer containing the URL string, or NULL if @p aLength is NULL.
+ *
+ */
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength);
+
+/**
  * This function sets the Provisioning URL.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.

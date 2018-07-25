@@ -310,6 +310,15 @@ exit:
     return error;
 }
 
+const char *Commissioner::GetProvisioningUrl(uint16_t &aLength) const
+{
+    ProvisioningUrlTlv &provisioningUrl = GetNetif().GetDtls().mProvisioningUrl;
+
+    aLength = provisioningUrl.GetLength();
+
+    return provisioningUrl.GetProvisioningUrl();
+}
+
 otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
     return GetNetif().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);

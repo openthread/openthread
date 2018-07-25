@@ -124,6 +124,25 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
     return error;
 }
 
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength)
+{
+    const char *url = NULL;
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    if (aLength != NULL)
+    {
+        url = instance.GetThreadNetif().GetCommissioner().GetProvisioningUrl(*aLength);
+    }
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLength);
+#endif
+
+    return url;
+}
+
 otError otCommissionerAnnounceBegin(otInstance *        aInstance,
                                     uint32_t            aChannelMask,
                                     uint8_t             aCount,
