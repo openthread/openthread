@@ -161,6 +161,8 @@ typedef enum otCoapOptionContentFormat {
     OT_COAP_OPTION_CONTENT_FORMAT_EXI          = 47, ///< application/exi
     OT_COAP_OPTION_CONTENT_FORMAT_JSON         = 50, ///< application/json
     OT_COAP_OPTION_CONTENT_FORMAT_PKCS10       = 70, ///< application/pkcs10
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7        = 80, ///< application/pkcs7
+    OT_COAP_OPTION_CONTENT_FORMAT_JWS          = 101 ///< application/json-web-signature
 } otCoapOptionContentFormat;
 
 #define OT_COAP_HEADER_MAX_LENGTH 128 ///< Max CoAP header length (bytes)
