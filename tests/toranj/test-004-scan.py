@@ -98,4 +98,6 @@ verify(nodes[0].is_in_scan_result(scan_result))
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

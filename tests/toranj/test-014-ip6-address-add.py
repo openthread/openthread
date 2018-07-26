@@ -177,4 +177,6 @@ wpan.verify_within(check_address_prefix_removed, 15)
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

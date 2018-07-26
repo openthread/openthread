@@ -78,4 +78,6 @@ verify(node.get(wpan.WPAN_NETWORK_ALLOW_JOIN) == 'false')
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

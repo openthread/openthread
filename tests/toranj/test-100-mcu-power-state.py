@@ -208,4 +208,6 @@ verify(wpan_state == wpan.STATE_ASSOCIATED or wpan_state == wpan.STATE_ASSOCIATI
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)
