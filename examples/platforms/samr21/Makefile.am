@@ -102,9 +102,9 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                                                    \
     logging.c                                                                                                  \
     misc.c                                                                                                     \
-    platform.c                                                                                                 \
     radio.c                                                                                                    \
     random.c                                                                                                   \
+    system.c                                                                                                   \
     uart.c                                                                                                     \
     $(NULL)
 

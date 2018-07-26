@@ -70,7 +70,7 @@ static void handleSignal(int aSignal)
 }
 #endif
 
-void PlatformInit(int aArgCount, char *aArgVector[])
+void otSysInit(int aArgCount, char *aArgVector[])
 {
     char *   endptr;
     uint32_t speedUpFactor = 1;
@@ -122,17 +122,17 @@ void PlatformInit(int aArgCount, char *aArgVector[])
     platformRandomInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return gPlatformPseudoResetWasRequested;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
     platformRadioDeinit();
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     fd_set         read_fds;
     fd_set         write_fds;

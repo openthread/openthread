@@ -26,30 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file includes the platform-specific initializers.
- */
-
-#include <openthread/config.h>
-
-#include "platform-cc2652.h"
+#include "platform-cc2650.h"
 #include <stdio.h>
 #include <openthread/types.h>
-
-#include "inc/hw_ccfg.h"
 #include "inc/hw_ccfg_simple_struct.h"
-#include "inc/hw_types.h"
 
 extern const ccfg_t __ccfg;
 
-const char *dummy_ccfg_ref = ((const char *)(&(__ccfg)));
+void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
 
 /**
- * Function documented in platform-cc2652.h
+ * Function documented in platform-cc2650.h
  */
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
@@ -57,33 +46,30 @@ void PlatformInit(int argc, char *argv[])
     while (dummy_ccfg_ref == NULL)
     {
         /*
-         * This provides a code reference to the customer configuration area of
-         * the flash, otherwise the data is skipped by the linker and not put
-         * into the final flash image.
+         * This provides a code reference to the customer configuration
+         * area of the flash, otherwise the data is skipped by the
+         * linker and not put into the final flash image.
          */
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
-    cc2652DebugUartInit();
-#endif
-    cc2652AlarmInit();
-    cc2652RandomInit();
-    cc2652RadioInit();
+    cc2650AlarmInit();
+    cc2650RandomInit();
+    cc2650RadioInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
 /**
- * Function documented in platform-cc2652.h
+ * Function documented in platform-cc2650.h
  */
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     // should sleep and wait for interrupts here
 
-    cc2652UartProcess();
-    cc2652RadioProcess(aInstance);
-    cc2652AlarmProcess(aInstance);
+    cc2650UartProcess();
+    cc2650RadioProcess(aInstance);
+    cc2650AlarmProcess(aInstance);
 }

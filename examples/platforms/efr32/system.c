@@ -26,50 +26,74 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-cc2650.h"
-#include <stdio.h>
-#include <openthread/types.h>
-#include "inc/hw_ccfg_simple_struct.h"
-
-extern const ccfg_t __ccfg;
-
-void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
-
 /**
- * Function documented in platform-cc2650.h
+ * @file
+ * @brief
+ *   This file includes the platform-specific initializers.
  */
-void PlatformInit(int argc, char *argv[])
+
+#include <string.h>
+
+#include <openthread/platform/uart.h>
+
+#include "common/logging.hpp"
+
+#include "bsp.h"
+#include "em_chip.h"
+#include "hal_common.h"
+
+#include "openthread-core-efr32-config.h"
+#include "platform-efr32.h"
+
+#include "hal-config.h"
+
+#if (HAL_FEM_ENABLE)
+#include "fem-control.h"
+#endif
+
+void halInitChipSpecific(void);
+
+otInstance *sInstance;
+
+void otSysInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
 
-    while (dummy_ccfg_ref == NULL)
-    {
-        /*
-         * This provides a code reference to the customer configuration
-         * area of the flash, otherwise the data is skipped by the
-         * linker and not put into the final flash image.
-         */
-    }
+    CHIP_Init();
 
-    cc2650AlarmInit();
-    cc2650RandomInit();
-    cc2650RadioInit();
+    halInitChipSpecific();
+
+    BSP_Init(BSP_INIT_BCC);
+
+#if (HAL_FEM_ENABLE)
+    initFem();
+    wakeupFem();
+#endif
+
+    efr32RadioInit();
+    efr32AlarmInit();
+    efr32MiscInit();
+    efr32RandomInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-/**
- * Function documented in platform-cc2650.h
- */
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysDeinit(void)
 {
+    efr32RadioDeinit();
+}
+
+void otSysProcessDrivers(otInstance *aInstance)
+{
+    sInstance = aInstance;
+
     // should sleep and wait for interrupts here
 
-    cc2650UartProcess();
-    cc2650RadioProcess(aInstance);
-    cc2650AlarmProcess(aInstance);
+    efr32UartProcess();
+    efr32RadioProcess(aInstance);
+    efr32AlarmProcess(aInstance);
 }

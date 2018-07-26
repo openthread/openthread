@@ -60,7 +60,7 @@ void PrintUsage(const char *aArg0)
     exit(EXIT_FAILURE);
 }
 
-void PlatformInit(int aArgCount, char *aArgVector[])
+void otSysInit(int aArgCount, char *aArgVector[])
 {
     int         i;
     uint32_t    speedUpFactor = 1;
@@ -115,17 +115,17 @@ void PlatformInit(int aArgCount, char *aArgVector[])
     platformRandomInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return gPlatformPseudoResetWasRequested;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
     platformRadioDeinit();
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     fd_set         read_fds;
     fd_set         write_fds;
