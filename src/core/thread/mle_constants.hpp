@@ -91,13 +91,21 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin       = 1,                                       ///< ADVERTISEMENT_I_MIN (sec)
-    kAdvertiseIntervalMax       = 32,                                      ///< ADVERTISEMENT_I_MAX (sec)
-    kFailedRouterTransmissions  = 4,                                       ///< FAILED_ROUTER_TRANSMISSIONS
-    kRouterIdReuseDelay         = 100,                                     ///< ID_REUSE_DELAY (sec)
-    kRouterIdSequencePeriod     = 10,                                      ///< ID_SEQUENCE_PERIOD (sec)
-    kMaxNeighborAge             = 100,                                     ///< MAX_NEIGHBOR_AGE (sec)
-    kMaxRouteCost               = 16,                                      ///< MAX_ROUTE_COST
+    kAdvertiseIntervalMin = 1, ///< ADVERTISEMENT_I_MIN (sec)
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+    kAdvertiseIntervalMax = 5, ///< ADVERTISEMENT_I_MAX (sec) proposal
+#else
+    kAdvertiseIntervalMax = 32, ///< ADVERTISEMENT_I_MAX (sec)
+#endif
+    kFailedRouterTransmissions = 4,   ///< FAILED_ROUTER_TRANSMISSIONS
+    kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
+    kRouterIdSequencePeriod    = 10,  ///< ID_SEQUENCE_PERIOD (sec)
+    kMaxNeighborAge            = 100, ///< MAX_NEIGHBOR_AGE (sec)
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+    kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
+#else
+    kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
+#endif
     kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
     kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
     kMaxRouters                 = OPENTHREAD_CONFIG_MAX_ROUTERS,           ///< MAX_ROUTERS
@@ -128,10 +136,10 @@ enum
 
 enum
 {
-    kLinkQuality3LinkCost = 1,  ///< Link Cost for Link Quality 3
-    kLinkQuality2LinkCost = 2,  ///< Link Cost for Link Quality 2
-    kLinkQuality1LinkCost = 4,  ///< Link Cost for Link Quality 1
-    kLinkQuality0LinkCost = 16, ///< Link Cost for Link Quality 0
+    kLinkQuality3LinkCost = 1,             ///< Link Cost for Link Quality 3
+    kLinkQuality2LinkCost = 2,             ///< Link Cost for Link Quality 2
+    kLinkQuality1LinkCost = 4,             ///< Link Cost for Link Quality 1
+    kLinkQuality0LinkCost = kMaxRouteCost, ///< Link Cost for Link Quality 0
 };
 
 /**
