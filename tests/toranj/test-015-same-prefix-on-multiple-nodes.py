@@ -136,4 +136,6 @@ wpan.verify_within(check_prefix, 5)
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

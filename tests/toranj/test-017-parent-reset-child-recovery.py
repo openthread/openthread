@@ -157,4 +157,6 @@ for i in range(len(all_children)):
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

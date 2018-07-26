@@ -119,4 +119,6 @@ verify(recver2.was_successful)
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

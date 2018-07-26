@@ -94,4 +94,6 @@ for child in children:
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)
