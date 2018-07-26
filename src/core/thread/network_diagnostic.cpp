@@ -351,8 +351,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kLeaderData:
         {
-            LeaderDataTlv tlv;
-            memcpy(&tlv, &netif.GetMle().GetLeaderDataTlv(), sizeof(tlv));
+            LeaderDataTlv tlv(reinterpret_cast<const LeaderDataTlv &>(netif.GetMle().GetLeaderDataTlv()));
             tlv.Init();
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
