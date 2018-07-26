@@ -1749,4 +1749,15 @@
 #endif
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+ *
+ * Enable experimental mode for 'deep' networks, allowing packet routes up to 32 nodes.
+ * This mode is incompatible with Thread 1.1.1 and older.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#define OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES 0
+#endif
+
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
