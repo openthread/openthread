@@ -107,5 +107,7 @@ verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)
 

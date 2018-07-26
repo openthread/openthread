@@ -108,4 +108,6 @@ for poll_interval in [10, 100, 300]:
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

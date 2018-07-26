@@ -243,8 +243,10 @@ class Node(object):
         Node._all_nodes.add(self)
 
     def __del__(self):
-        self._wpantund_process.terminate()
-        self._tund_log_file.close()
+        self._wpantund_process.poll()
+        if self._wpantund_process.returncode is None:
+            self._wpantund_process.terminate()
+            self._wpantund_process.wait()
 
     def __repr__(self):
         return 'Node (index={}, interface_name={})'.format(self._index, self._interface_name)
@@ -509,6 +511,13 @@ class Node(object):
                 else:
                     break
                 time.sleep(0.4)
+
+    @classmethod
+    def finalize_all_nodes(cls):
+        """Finalizes all previously created `Node` instances (stops the wpantund process)"""
+        for node in Node._all_nodes:
+            node._wpantund_process.terminate()
+            node._wpantund_process.wait()
 
     @classmethod
     def set_time_speedup_factor(cls, factor):

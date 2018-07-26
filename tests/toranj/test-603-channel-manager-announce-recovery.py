@@ -113,5 +113,7 @@ verify(int(c2.get(wpan.WPAN_CHANNEL), 0) == 26)
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)
 
