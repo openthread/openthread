@@ -176,9 +176,15 @@
 /**
  * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
  *
- * Maximum number of transmit attempts for an outbound indirect frame (for a sleepy child) each triggered by the
- * reception of a new data request command (a new data poll) from the sleepy child. Each data poll triggered attempt is
- * retried by the MAC layer up to `OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL` times.
+ * Maximum number of received IEEE 802.15.4 Data Requests for a queued indirect transaction.
+ *
+ * The indirect frame remains in the transaction queue until it is successfully transmitted or until the indirect
+ * transmission fails after the maximum number of IEEE 802.15.4 Data Request messages have been received.
+ *
+ * Takes the place of macTransactionPersistenceTime. The time period is specified in units of IEEE 802.15.4 Data
+ * Request receptions, rather than being governed by macBeaconOrder.
+ *
+ * @sa OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
