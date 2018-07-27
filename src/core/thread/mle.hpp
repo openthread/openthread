@@ -1522,7 +1522,7 @@ protected:
      */
     void InformPreviousChannel(void);
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
      * This method converts an `AttachMode` enumeration value into a human-readable string.
      *
