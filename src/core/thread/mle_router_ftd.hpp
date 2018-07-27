@@ -364,13 +364,13 @@ public:
     /**
      * This method store a child information into non-volatile memory.
      *
-     * @param[in]  aChildRloc16   The child RLOC16 to store.
+     * @param[in]  aChild          A reference to the child to store.
      *
      * @retval  OT_ERROR_NONE      Successfully store child.
      * @retval  OT_ERROR_NO_BUFS   Insufficient available buffers to store child.
      *
      */
-    otError StoreChild(uint16_t aChildRloc16);
+    otError StoreChild(const Child &aChild);
 
     /**
      * This method returns a pointer to a Neighbor object.

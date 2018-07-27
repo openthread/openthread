@@ -2773,6 +2773,8 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
 
     if (aChild.GetRloc16() == 0)
     {
+        uint16_t rloc16;
+
         // pick next Child ID that is not being used
         do
         {
@@ -2782,10 +2784,13 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
             {
                 mNextChildId = kMinChildId;
             }
-        } while (GetChildTable().FindChild(mNextChildId, ChildTable::kInStateAnyExceptInvalid) != NULL);
+
+            rloc16 = netif.GetMac().GetShortAddress() | mNextChildId;
+
+        } while (GetChildTable().FindChild(rloc16, ChildTable::kInStateAnyExceptInvalid) != NULL);
 
         // allocate Child ID
-        aChild.SetRloc16(netif.GetMac().GetShortAddress() | mNextChildId);
+        aChild.SetRloc16(rloc16);
     }
 
     SuccessOrExit(error = AppendAddress16(*message, aChild.GetRloc16()));
@@ -3423,15 +3428,17 @@ void MleRouter::SetRouterId(uint8_t aRouterId)
 
 otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Child * child;
+    otError  error = OT_ERROR_NONE;
+    Child *  child;
+    uint16_t rloc16;
 
     if ((aChildId & ~kMaxChildId) != 0)
     {
         aChildId = GetChildId(aChildId);
     }
 
-    child = GetChildTable().FindChild(aChildId, ChildTable::kInStateAnyExceptInvalid);
+    rloc16 = GetNetif().GetMac().GetShortAddress() | aChildId;
+    child  = GetChildTable().FindChild(rloc16, ChildTable::kInStateAnyExceptInvalid);
     VerifyOrExit(child != NULL, error = OT_ERROR_NOT_FOUND);
 
     error = GetChildInfo(*child, aChildInfo);
@@ -3537,27 +3544,19 @@ exit:
     return error;
 }
 
-otError MleRouter::StoreChild(uint16_t aChildRloc16)
+otError MleRouter::StoreChild(const Child &aChild)
 {
-    otError             error = OT_ERROR_NONE;
-    Child *             child;
     Settings::ChildInfo childInfo;
 
-    child = GetChildTable().FindChild(GetChildId(aChildRloc16), ChildTable::kInStateAnyExceptInvalid);
-    VerifyOrExit(child != NULL, error = OT_ERROR_NOT_FOUND);
-
-    IgnoreReturnValue(RemoveStoredChild(aChildRloc16));
+    IgnoreReturnValue(RemoveStoredChild(aChild.GetRloc16()));
 
     memset(&childInfo, 0, sizeof(childInfo));
-    childInfo.mExtAddress = child->GetExtAddress();
-    childInfo.mTimeout    = child->GetTimeout();
-    childInfo.mRloc16     = child->GetRloc16();
-    childInfo.mMode       = child->GetDeviceMode();
+    childInfo.mExtAddress = aChild.GetExtAddress();
+    childInfo.mTimeout    = aChild.GetTimeout();
+    childInfo.mRloc16     = aChild.GetRloc16();
+    childInfo.mMode       = aChild.GetDeviceMode();
 
-    error = GetInstance().GetSettings().AddChildInfo(childInfo);
-
-exit:
-    return error;
+    return GetInstance().GetSettings().AddChildInfo(childInfo);
 }
 
 otError MleRouter::RefreshStoredChildren(void)
@@ -3568,7 +3567,7 @@ otError MleRouter::RefreshStoredChildren(void)
 
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
-        SuccessOrExit(error = StoreChild(iter.GetChild()->GetRloc16()));
+        SuccessOrExit(error = StoreChild(*iter.GetChild()));
     }
 
 exit:
@@ -4535,7 +4534,7 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     VerifyOrExit(aChild.GetState() != Neighbor::kStateValid);
 
     aChild.SetState(Neighbor::kStateValid);
-    StoreChild(aChild.GetRloc16());
+    StoreChild(aChild);
     SignalChildUpdated(OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED, aChild);
 
 exit:
