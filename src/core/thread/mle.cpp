@@ -3492,6 +3492,8 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
         mParent.SetState(Neighbor::kStateValid);
         SetStateChild(GetRloc16());
 
+        mRetrieveNewNetworkData = true;
+
         // fall through
 
     case OT_DEVICE_ROLE_CHILD:
