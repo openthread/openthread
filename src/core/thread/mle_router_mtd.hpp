@@ -90,7 +90,7 @@ public:
 
     void    RestoreChildren(void) {}
     otError RemoveStoredChild(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
-    otError StoreChild(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError StoreChild(const Child &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
