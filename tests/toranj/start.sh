@@ -128,6 +128,7 @@ run test-012-multi-hop-traffic.py
 run test-013-off-mesh-route-traffic.py
 run test-014-ip6-address-add.py
 run test-016-neighbor-table.py
+run test-017-parent-reset-child-recovery.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
