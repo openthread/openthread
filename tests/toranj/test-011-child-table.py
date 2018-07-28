@@ -65,7 +65,7 @@ wpan.Node.init_all_nodes()
 router.form('child-table')
 for child in children:
     child.join_node(router, node_type=wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
-    child.set(wpan.WPAN_POLL_INTERVAL, '300')
+    child.set(wpan.WPAN_POLL_INTERVAL, '1000')
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -90,20 +90,6 @@ for child in children:
     verify(entry.is_rx_on_when_idle() == False)
     verify(entry.is_ffd() == False)
 
-
-# Reset router and ensure all children are restored.
-router.reset()
-
-start_time = time.time()
-wait_time = 5
-while time.time() - start_time < wait_time:
-    time.sleep(0.25)
-    child_table = wpan.parse_child_table_result(router.get(wpan.WPAN_THREAD_CHILD_TABLE))
-    if (len(child_table) == len(children)):
-        break
-else:
-    print 'Took too long for node to recover after reset ({}>{} sec)'.format(time.time() - start_time, wait_time)
-    exit(1)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
