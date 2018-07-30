@@ -101,6 +101,7 @@ static otError sTxStatus;
 
 static otRadioFrame sTxFrame;
 static otRadioFrame sRxFrame;
+static uint8_t      sTxData[OT_RADIO_FRAME_MAX_SIZE];
 #if DOUBLE_BUFFERING
 static uint8_t sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
@@ -356,6 +357,14 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     rf_set_channel(aFrame->mChannel);
 
     *(uint8_t *)ZLL->PKT_BUFFER_TX = aFrame->mLength;
+
+    /* MKW41Z Reference Manual Section 44.6.2.7 states: "The 802.15.4
+     * Link Layer software prepares data to be transmitted, by loading
+     * the octets, in order, into the Packet Buffer." */
+    for (int i = 0; i < aFrame->mLength - sizeof(uint16_t); i++)
+    {
+        ((uint8_t *)ZLL->PKT_BUFFER_TX)[1 + i] = sTxFrame.mPsdu[i];
+    }
 
     /* Set CCA mode */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_CCATYPE_MASK;
@@ -929,7 +938,7 @@ void kw41zRadioInit(void)
     rf_set_tx_power(0);
 
     sTxFrame.mLength = 0;
-    sTxFrame.mPsdu   = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
+    sTxFrame.mPsdu   = sTxData;
     sRxFrame.mLength = 0;
 #if DOUBLE_BUFFERING
     sRxFrame.mPsdu = sRxData;
