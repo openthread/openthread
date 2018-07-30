@@ -121,7 +121,7 @@ EOF
     test -f out/target/product/generic/obj/EXECUTABLES/ot-cli_intermediates/LINKED/ot-cli || die
 }
 
-[ $BUILD_TARGET != arm-gcc49 ] || {
+[ $BUILD_TARGET != arm-gcc-4 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
 
     git checkout -- . || die
@@ -199,7 +199,7 @@ EOF
     arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
-[ $BUILD_TARGET != arm-gcc54 ] || {
+[ $BUILD_TARGET != arm-gcc-5 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
 
     git checkout -- . || die
@@ -277,7 +277,7 @@ EOF
     arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
-[ $BUILD_TARGET != arm-gcc63 ] || {
+[ $BUILD_TARGET != arm-gcc-6 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-6-2017-q2-update/bin:$PATH || die
 
     git checkout -- . || die
@@ -366,7 +366,7 @@ EOF
     arc-elf32-size  output/emsk/bin/ot-ncp-mtd || die
 }
 
-[ $BUILD_TARGET != arm-gcc7 ] || {
+[ $BUILD_TARGET != arm-gcc-7 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
 
     git checkout -- . || die
