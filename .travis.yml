@@ -92,16 +92,16 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-    - env: BUILD_TARGET="arm-gcc49"
+    - env: BUILD_TARGET="arm-gcc-4"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc54"
+    - env: BUILD_TARGET="arm-gcc-5"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc63"
+    - env: BUILD_TARGET="arm-gcc-6"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc7"
+    - env: BUILD_TARGET="arm-gcc-7"
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
