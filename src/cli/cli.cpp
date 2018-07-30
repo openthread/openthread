@@ -790,7 +790,6 @@ void Interpreter::ProcessDns(int argc, char *argv[])
 
         strcpy(mResolvingHostname, argv[1]);
 
-        memset(&messageInfo, 0, sizeof(messageInfo));
         messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
         if (argc > 2)
@@ -1771,7 +1770,6 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     VerifyOrExit(!mPingTimer.IsRunning(), error = OT_ERROR_BUSY);
 
-    memset(&mMessageInfo, 0, sizeof(mMessageInfo));
     SuccessOrExit(error = mMessageInfo.GetPeerAddr().FromString(argv[0]));
     mMessageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
