@@ -37,7 +37,7 @@
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\utils\settings.cpp">
+    <ClCompile Include="..\..\examples\platforms\utils\settings_flash.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
