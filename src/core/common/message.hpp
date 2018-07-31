@@ -443,23 +443,28 @@ public:
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     * This method creates a copy of the message.
      *
-     * The `Type`, `SubType`, `LinkSecurity` and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
+     * cloned message are also copied from the original one.
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies a full payload.
+     * This method creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
     Message *Clone(void) const { return Clone(GetLength()); };
 
