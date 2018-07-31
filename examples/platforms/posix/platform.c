@@ -57,9 +57,17 @@ uint32_t WELLKNOWN_NODE_ID = 34;
 
 extern bool gPlatformPseudoResetWasRequested;
 
+static volatile bool gTerminate = false;
+
 #ifndef _WIN32
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
+
+static void handleSignal(int aSignal)
+{
+    (void)aSignal;
+    gTerminate = true;
+}
 #endif
 
 void PlatformInit(int aArgCount, char *aArgVector[])
@@ -85,6 +93,9 @@ void PlatformInit(int aArgCount, char *aArgVector[])
 
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
+
+    signal(SIGTERM, &handleSignal);
+    signal(SIGHUP, &handleSignal);
 #endif
 
     NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
@@ -147,6 +158,11 @@ void PlatformProcessDrivers(otInstance *aInstance)
             perror("select");
             exit(EXIT_FAILURE);
         }
+    }
+
+    if (gTerminate)
+    {
+        exit(0);
     }
 
     platformUartProcess();
