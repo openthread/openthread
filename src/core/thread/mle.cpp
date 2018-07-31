@@ -4076,7 +4076,7 @@ const char *Mle::RoleToString(otDeviceRole aRole)
     return roleString;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
     const char *str = "unknown";
@@ -4171,7 +4171,7 @@ const char *Mle::ReattachStateToString(ReattachState aState)
     return str;
 }
 
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
 } // namespace Mle
 } // namespace ot
