@@ -36,7 +36,7 @@
 
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_UART
+#if OPENTHREAD_ENABLE_NCP_UART || OPENTHREAD_POSIX_APP
 
 namespace ot {
 namespace Hdlc {
@@ -334,4 +334,4 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
 } // namespace Hdlc
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_NCP_UART
+#endif // OPENTHREAD_ENABLE_NCP_UART || OPENTHREAD_POSIX_APP

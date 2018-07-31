@@ -115,7 +115,7 @@
 #define OPENTHREAD_ENABLE_DHCP6_SERVER 1
 
 /* Define to 1 if you want to use diagnostics module */
-#define OPENTHREAD_ENABLE_DIAG 0
+#define OPENTHREAD_ENABLE_DIAG 1
 
 /* Define to 1 if you want to enable DNS Client */
 #define OPENTHREAD_ENABLE_DNS_CLIENT 1
@@ -143,13 +143,13 @@
 #define OPENTHREAD_ENABLE_MULTIPLE_INSTANCES 0
 
 /* Define to 1 to enable the NCP SPI interface. */
-#define OPENTHREAD_ENABLE_NCP_SPI 0
+#define OPENTHREAD_ENABLE_NCP_SPI 1
 
 /* Define to 1 if using NCP Spinel Encrypter */
 #define OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER 0
 
 /* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_ENABLE_NCP_UART 1
+#define OPENTHREAD_ENABLE_NCP_UART 0
 
 /* Define to 1 if using NCP vendor hook */
 #define OPENTHREAD_ENABLE_NCP_VENDOR_HOOK 0
