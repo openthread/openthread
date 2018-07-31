@@ -70,6 +70,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
