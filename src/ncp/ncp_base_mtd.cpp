@@ -2199,6 +2199,19 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>
     return mEncoder.WriteUint32(otThreadGetChildTimeout(mInstance));
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>(void)
+{
+    uint32_t timeout = 0;
+    otError  error   = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
+
+    otThreadSetChildTimeout(mInstance, timeout);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_RLOC16>(void)
 {
     return mEncoder.WriteUint16(otThreadGetRloc16(mInstance));
