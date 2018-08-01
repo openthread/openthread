@@ -32,15 +32,17 @@
  *
  */
 
+#include "platform-config.h"
 #include <openthread-core-config.h>
 #include <openthread/config.h>
+
+#if ENABLE_FEM
 
 #include <stdint.h>
 #include <string.h>
 
 #include "platform-fem.h"
 
-#define ENABLE_FEM 1
 #include <nrf_802154.h>
 
 void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig)
@@ -62,3 +64,5 @@ void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig)
 
     nrf_802154_fem_control_cfg_set(&cfg);
 }
+
+#endif // ENABLE_FEM

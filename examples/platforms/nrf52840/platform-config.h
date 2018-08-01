@@ -49,6 +49,16 @@
  ******************************************************************************/
 
 /**
+ * @def ENABLE_FEM
+ *
+ * Enable front end module
+ *
+ */
+#ifndef ENABLE_FEM
+#define ENABLE_FEM 0
+#endif
+
+/**
  * @def UART_INSTANCE
  *
  * UART Instance.

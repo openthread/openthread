@@ -38,6 +38,7 @@
 #include <openthread/platform/logging.h>
 
 #include "openthread-system.h"
+#include "platform-fem.h"
 #include "platform-nrf5.h"
 #include <drivers/clock/nrf_drv_clock.h>
 #include <nrf.h>
@@ -84,6 +85,9 @@ void otSysInit(int argc, char *argv[])
     nrf5SpiSlaveInit();
 #endif
     nrf5MiscInit();
+#if ENABLE_FEM
+    PlatformFemSetConfigParams(&PLATFORM_FEM_DEFAULT_CONFIG);
+#endif
     nrf5RadioInit();
     nrf5TempInit();
 
