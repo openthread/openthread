@@ -75,7 +75,7 @@ Dtls::Dtls(Instance &aInstance)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    memset(&mApplicationCoapCiphreSuite, 0, sizeof(mApplicationCoapCiphreSuite));
+    memset(&mApplicationCipherSuite, 0, sizeof(mApplicationCipherSuite));
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     mPreSharedKey         = NULL;
@@ -196,7 +196,7 @@ otError Dtls::Start(bool             aClient,
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCoapCiphreSuite);
+        mbedtls_ssl_conf_ciphersuites(&mConf, mApplicationCipherSuite);
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
@@ -226,7 +226,7 @@ otError Dtls::Start(bool             aClient,
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        SetApplicationCoapSecureKeys(mApplicationCoapCiphreSuite, 1);
+        SetApplicationCoapSecureKeys(mApplicationCipherSuite, 1);
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -259,7 +259,7 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
     {
         VerifyOrExit(&aCipherSuite[i] != NULL, rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA);
 
-        switch (mApplicationCoapCiphreSuite[i])
+        switch (mApplicationCipherSuite[i])
         {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -389,20 +389,19 @@ otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aX509CertLenth > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aX509Certificate != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aX509CertLenth > 0);
+    assert(aX509Certificate != NULL);
 
-    VerifyOrExit(aPrivateKeyLenth > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPrivateKey != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aPrivateKeyLenth > 0);
+    assert(aPrivateKey != NULL);
 
     mOwnCertSrc       = aX509Certificate;
     mOwnCertLength    = aX509CertLenth;
     mPrivateKeySrc    = aPrivateKey;
     mPrivateKeyLength = aPrivateKeyLenth;
 
-    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
+    mApplicationCipherSuite[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
 
-exit:
     return error;
 }
 
@@ -410,13 +409,12 @@ otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aX509CaCertChainLenth > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aX509CaCertificateChain != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aX509CaCertChainLenth > 0);
+    assert(aX509CaCertificateChain != NULL);
 
     mCaChainSrc    = aX509CaCertificateChain;
     mCaChainLength = aX509CaCertChainLenth;
 
-exit:
     return error;
 }
 
@@ -431,19 +429,18 @@ otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aPsk != NULL, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPskIdentity != NULL, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPskLength > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aPskIdLength > 0, error = OT_ERROR_INVALID_ARGS);
+    assert(aPsk != NULL);
+    assert(aPskIdentity != NULL);
+    assert(aPskLength > 0);
+    assert(aPskIdLength > 0);
 
     mPreSharedKey         = aPsk;
     mPreSharedKeyLength   = aPskLength;
     mPreSharedKeyIdentity = aPskIdentity;
     mPreSharedKeyIdLength = aPskIdLength;
 
-    mApplicationCoapCiphreSuite[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
+    mApplicationCipherSuite[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
 
-exit:
     return error;
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED

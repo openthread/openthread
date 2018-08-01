@@ -714,7 +714,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * for Application Coap Secure.
  */
 #ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 
@@ -2684,7 +2684,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 
 /* SSL options */
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#define MBEDTLS_SSL_MAX_CONTENT_LEN             2*768 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
+#define MBEDTLS_SSL_MAX_CONTENT_LEN             900 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
 #else
 #define MBEDTLS_SSL_MAX_CONTENT_LEN             768 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
 #endif

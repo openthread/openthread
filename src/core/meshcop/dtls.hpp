@@ -394,7 +394,7 @@ private:
     uint16_t       mPreSharedKeyIdLength;
 #endif
 
-    int mApplicationCoapCiphreSuite[1];
+    int mApplicationCipherSuite[1];
 
     bool mVerifyPeerCertificate;
 

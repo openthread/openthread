@@ -70,7 +70,7 @@ void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
 
     mInterpreter.mServer->OutputFormat("\r\n    CoapSecure RX Header Informations:"
                                        "\r\n        Type %d ",
-                                       (uint16_t)mCoapType);
+                                       static_cast<uint16_t>(mCoapType));
 
     switch (mCoapType)
     {
@@ -348,7 +348,7 @@ void OTCALL CoapSecureCli::HandleClientConnect(bool aConnected, void *aContext)
     static_cast<CoapSecureCli *>(aContext)->HandleClientConnect(aConnected);
 }
 
-void CoapSecureCli::HandleClientConnect(const bool aConnected)
+void CoapSecureCli::HandleClientConnect(bool aConnected)
 {
     if (aConnected)
     {

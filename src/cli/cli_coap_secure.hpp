@@ -119,8 +119,8 @@ private:
     void               DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
-    static void OTCALL HandleClientConnect(const bool aConnected, void *aContext);
-    void               HandleClientConnect(const bool aConnected);
+    static void OTCALL HandleClientConnect(bool aConnected, void *aContext);
+    void               HandleClientConnect(bool aConnected);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

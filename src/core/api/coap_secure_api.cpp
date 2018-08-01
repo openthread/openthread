@@ -59,6 +59,11 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    if (aX509Cert == NULL || aX509Length <= 0 || aPrivateKey == NULL || aPrivateKeyLength == 0)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
     return instance.GetApplicationCoapSecure().SetOwnCertificate(aX509Cert, aX509Length, aPrivateKey,
                                                                  aPrivateKeyLength);
 #else
@@ -79,6 +84,11 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    if (aX509CaCertificateChain == NULL || aX509CaCertChainLenth == 0)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
     return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLenth);
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -97,6 +107,11 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
 {
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
+
+    if (aPsk == NULL || aPskLength == 0 || aPskIdentity == NULL || aPskIdLength == 0)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
 
     return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 #else
