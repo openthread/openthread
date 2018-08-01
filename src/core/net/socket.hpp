@@ -72,14 +72,6 @@ public:
     const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
 
     /**
-     * This method returns a reference to the local socket address.
-     *
-     * @returns A reference to the local socket address.
-     *
-     */
-    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
-
-    /**
      * This method sets the local socket address.
      *
      * @param[in]  aAddress  The IPv6 address.

@@ -143,9 +143,10 @@ private:
     Coap::Resource mProxyTransmit;
 
     Ip6::UdpReceiver         mProxyReceiver; ///< The UDP receiver to handle proxy packets to Commissioner
-    TimerMilli               mTimer;
     Ip6::NetifUnicastAddress mCommissionerAloc;
-    bool                     mIsStarted;
+
+    TimerMilli mTimer;
+    bool       mIsStarted;
 };
 
 } // namespace MeshCoP

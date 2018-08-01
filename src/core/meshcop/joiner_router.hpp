@@ -117,8 +117,6 @@ private:
     void    SendDelayedJoinerEntrust(void);
     otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otError GetBorderAgentRloc(uint16_t &aRloc);
-
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
 

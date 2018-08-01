@@ -870,7 +870,7 @@ public:
      */
     otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
     {
-        return GetAlocAddress(aAddress, GetCommissionerAlocFromId(aSessionId));
+        return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
     }
 
 #if OPENTHREAD_ENABLE_SERVICE
@@ -984,9 +984,9 @@ public:
      * @returns The Commissioner ALOC16 corresponding to given ID.
      *
      */
-    static uint16_t GetCommissionerAlocFromId(uint16_t aSessionId)
+    static uint16_t GetCommissionerAloc16FromId(uint16_t aSessionId)
     {
-        return static_cast<uint16_t>((aSessionId & kAloc16DhcpAgentMask) + kAloc16CommissionerStart);
+        return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
     }
 
     /**

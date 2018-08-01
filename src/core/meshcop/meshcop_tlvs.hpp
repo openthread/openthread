@@ -2233,7 +2233,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kVendorStackVersion);
+        SetType(kIPv6Address);
         SetLength(sizeof(mAddress));
     }
 
@@ -2269,7 +2269,17 @@ public:
      * Default constructor.
      *
      */
-    UdpEncapsulationTlv(void) { SetType(MeshCoP::Tlv::kUdpEncapsulation); }
+    UdpEncapsulationTlv(void) {}
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(MeshCoP::Tlv::kUdpEncapsulation);
+        SetLength(sizeof(*this) - sizeof(ExtendedTlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -2278,7 +2288,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ExtendedTlv); }
 
     /**
      * This method returns the source port.
@@ -2319,6 +2329,14 @@ public:
      *
      */
     uint16_t GetUdpLength(void) const { return GetLength() - sizeof(mSourcePort) - sizeof(mDestinationPort); }
+
+    /**
+     * This method updates the UDP length.
+     *
+     * @param[in]   aLength     The length of UDP payload in bytes.
+     *
+     */
+    void SetUdpLength(uint16_t aLength) { SetLength(sizeof(mSourcePort) + sizeof(mDestinationPort) + aLength); }
 
 private:
     uint16_t mSourcePort;
