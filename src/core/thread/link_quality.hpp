@@ -68,17 +68,6 @@ public:
     };
 
     /**
-     * This constructor initializes a `SuccessRateTracker` instance.
-     *
-     * After initialization the tracker starts with success rate 100% (failure rate 0%).
-     *
-     */
-    SuccessRateTracker(void)
-        : mFailureRate(0)
-    {
-    }
-
-    /**
      * This method resets the tracker to its initialized state, setting success rate to 100%.
      *
      */
@@ -240,12 +229,6 @@ public:
      *
      */
     typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    LinkQualityInfo(void);
 
     /**
      * This method clears the all the data in the object.

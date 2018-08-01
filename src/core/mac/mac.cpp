@@ -195,12 +195,11 @@ Mac::Mac(Instance &aInstance)
     , mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
     , mOobFrame(NULL)
     , mKeyIdMode2FrameCounter(0)
-    , mCcaSuccessRateTracker()
     , mCcaSampleCount(0)
     , mEnabled(true)
 {
     GenerateExtAddress(&mExtAddress);
-
+    mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
 
     otPlatRadioEnable(&GetInstance());
