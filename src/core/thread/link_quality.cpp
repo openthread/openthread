@@ -140,18 +140,16 @@ exit:
     return string;
 }
 
-LinkQualityInfo::LinkQualityInfo(void)
-    : mLastRss(OT_RADIO_RSSI_INVALID)
-{
-    mRssAverager.Reset();
-    SetLinkQuality(0);
-}
-
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Reset();
     SetLinkQuality(0);
     mLastRss = OT_RADIO_RSSI_INVALID;
+
+#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+    mFrameErrorRate.Reset();
+    mMessageErrorRate.Reset();
+#endif
 }
 
 void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
