@@ -115,6 +115,7 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
             if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
                 config.mPrefix.mLength == address->mPrefixLength)
             {
+                otIp6AddUnicastAddress(aInstance, address);
                 found = true;
                 break;
             }
