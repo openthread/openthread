@@ -45,6 +45,7 @@ extern "C" {
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <syslog.h>
@@ -252,19 +253,20 @@ static int OpenPty(const char *aFile, const char *aConfig)
 
     if (0 == pid)
     {
-        const int kMaxCommand = 255;
-        char      cmd[kMaxCommand];
-        int       rval;
-        const int dtablesize = getdtablesize();
+        const int     kMaxCommand = 255;
+        char          cmd[kMaxCommand];
+        int           rval;
+        struct rlimit limit;
 
+        rval = getrlimit(RLIMIT_NOFILE, &limit);
         rval = setenv("SHELL", SOCKET_UTILS_DEFAULT_SHELL, 0);
 
         VerifyOrExit(rval == 0, perror("setenv failed"));
 
         // Close all file descriptors larger than STDERR_FILENO.
-        for (int i = (STDERR_FILENO + 1); i < dtablesize; i++)
+        for (rlim_t i = (STDERR_FILENO + 1); i < limit.rlim_cur; i++)
         {
-            close(i);
+            close(static_cast<int>(i));
         }
 
         rval = snprintf(cmd, sizeof(cmd), "%s %s", aFile, aConfig);
@@ -617,12 +619,15 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
     }
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
-        const char *   message = NULL;
+        char           logStream[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
+        unsigned int   len = sizeof(logStream);
         spinel_ssize_t unpacked;
 
-        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &message);
-        VerifyOrExit(unpacked > 0 && message, error = OT_ERROR_PARSE);
-        otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", message);
+        unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, logStream, &len);
+        assert(len < sizeof(logStream));
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        logStream[len] = '\0';
+        otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", logStream);
     }
 
 exit:

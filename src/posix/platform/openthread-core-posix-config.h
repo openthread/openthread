@@ -53,36 +53,6 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
-#if OPENTHREAD_RADIO
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
- *
- * Define to 1 if you want to enable software ACK timeout logic.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
- *
- * Define to 1 if you want to enable software retransmission logic.
- *
- * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
- *
- * Define to 1 if you want to enable software CSMA-CA backoff logic.
- *
- * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          1
-#endif // OPENTHREAD_RADIO
-
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
  *
