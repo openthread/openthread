@@ -393,7 +393,7 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
         tlv.SetUdpLength(udpLength);
         SuccessOrExit(error = message->SetLength(tlv.GetLength()));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        VerifyOrExit(aMessage.CopyTo(aMessage.GeOffset(), sizeof(tlv), udpLength, *message) == udpLength, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset(), sizeof(tlv), udpLength, *message) == udpLength, error = OT_ERROR_NO_BUFS);
     }
 
     {
