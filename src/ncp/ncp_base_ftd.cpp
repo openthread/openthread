@@ -36,6 +36,9 @@
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
 #include <openthread/channel_manager.h>
 #endif
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#include <openthread/child_supervision.h>
+#endif
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -856,6 +859,27 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDI
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
+{
+    return mEncoder.WriteUint16(otChildSupervisionGetInterval(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t interval;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(interval));
+    otChildSupervisionSetInterval(mInstance, interval);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
 
