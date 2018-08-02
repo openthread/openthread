@@ -371,6 +371,7 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
     Coap::Header header;
     otError      error;
     Message *    message = NULL;
+    ThreadNetif &netif   = GetNetif();
 
     VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress(),
                  error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
@@ -381,19 +382,23 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
     header.AppendUriPathOptions(OT_URI_PATH_PROXY_RX);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = GetInstance().GetIp6().GetUdp().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoapSecure(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     {
         UdpEncapsulationTlv tlv;
+        uint16_t            offset;
         uint16_t            udpLength = aMessage.GetLength() - aMessage.GetOffset();
 
         tlv.Init();
         tlv.SetSourcePort(aMessageInfo.GetPeerPort());
         tlv.SetDestinationPort(aMessageInfo.GetSockPort());
         tlv.SetUdpLength(udpLength);
-        SuccessOrExit(error = message->SetLength(sizeof(tlv) + udpLength));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset(), sizeof(tlv), udpLength, *message) == udpLength, error = OT_ERROR_NO_BUFS);
+
+        offset = message->GetLength();
+        SuccessOrExit(error = message->SetLength(offset + udpLength));
+        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message) == udpLength,
+                     error = OT_ERROR_NO_BUFS);
     }
 
     {
@@ -404,7 +409,8 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
     }
 
-    SuccessOrExit(error = ForwardToCommissioner(header, *message));
+    SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()));
+
     otLogInfoMeshCoP(GetInstance(), "Sent to commissioner on %s", OT_URI_PATH_PROXY_RX);
 
 exit:
