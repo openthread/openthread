@@ -1669,6 +1669,14 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_TIME_SYNC_XTAL_THRESHOLD";
         break;
 
+    case SPINEL_PROP_CHILD_SUPERVISION_INTERVAL:
+        ret = "PROP_CHILD_SUPERVISION_INTERVAL";
+        break;
+
+    case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
+        ret = "PROP_CHILD_SUPERVISION_CHECK_TIMEOUT";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "PROP_UART_BITRATE";
         break;
@@ -2256,6 +2264,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_TIME_SYNC:
         ret = "CAP_TIME_SYNC";
+        break;
+
+    case SPINEL_CAP_CHILD_SUPERVISION:
+        ret = "CAP_CHILD_SUPERVISION";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:

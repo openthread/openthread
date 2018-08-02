@@ -453,6 +453,7 @@ enum
     SPINEL_CAP_CHANNEL_MANAGER         = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
     SPINEL_CAP_OPENTHREAD_LOG_METADATA = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
+    SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN       = 1024,
@@ -1727,6 +1728,41 @@ typedef enum {
      *
      */
     SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD = SPINEL_PROP_OPENTHREAD__BEGIN + 9,
+
+    /// Child Supervision Interval
+    /** Format: `S` - Read-Write
+     *  Units: Seconds
+     *
+     * Required capability: `SPINEL_CAP_CHILD_SUPERVISION`
+     *
+     * The child supervision interval (in seconds). Zero indicates that child supervision is disabled.
+     *
+     * When enabled, Child supervision feature ensures that at least one message is sent to every sleepy child within
+     * the given supervision interval. If there is no other message, a supervision message (a data message with empty
+     * payload) is enqueued and sent to the child.
+     *
+     * This property is available for FTD build only.
+     *
+     */
+    SPINEL_PROP_CHILD_SUPERVISION_INTERVAL = SPINEL_PROP_OPENTHREAD__BEGIN + 10,
+
+    /// Child Supervision Check Timeout
+    /** Format: `S` - Read-Write
+     *  Units: Seconds
+     *
+     * Required capability: `SPINEL_CAP_CHILD_SUPERVISION`
+     *
+     * The child supervision check timeout interval (in seconds). Zero indicates supervision check on the child is
+     * disabled.
+     *
+     * Supervision check is only applicable on a sleepy child. When enabled, if the child does not hear from its parent
+     * within the specified check timeout, it initiates a re-attach process by starting an MLE Child Update
+     * Request/Response exchange with the parent.
+     *
+     * This property is available for FTD and MTD builds.
+     *
+     */
+    SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT = SPINEL_PROP_OPENTHREAD__BEGIN + 11,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 
