@@ -89,8 +89,7 @@ void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
     default:
         break;
     }
-    mInterpreter.mServer->OutputFormat("\r\n        Code %d => %s\r\n",
-                                       static_cast<uint16_t>(mCoapCode),
+    mInterpreter.mServer->OutputFormat("\r\n        Code %d => %s\r\n", static_cast<uint16_t>(mCoapCode),
                                        static_cast<const char *>(otCoapHeaderCodeToString(aHeader)));
 }
 

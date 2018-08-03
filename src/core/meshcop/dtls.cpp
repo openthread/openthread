@@ -138,16 +138,16 @@ otError Dtls::Start(bool             aClient,
                     SendHandler      aSendHandler,
                     void *           aContext)
 {
-    otExtAddress     eui64;
-    int              rval;
+    otExtAddress eui64;
+    int          rval;
 
-    mConnectedHandler      = aConnectedHandler;
-    mReceiveHandler        = aReceiveHandler;
-    mSendHandler           = aSendHandler;
-    mContext               = aContext;
-    mClient                = aClient;
-    mReceiveMessage        = NULL;
-    mMessageSubType        = Message::kSubTypeNone;
+    mConnectedHandler = aConnectedHandler;
+    mReceiveHandler   = aReceiveHandler;
+    mSendHandler      = aSendHandler;
+    mContext          = aContext;
+    mClient           = aClient;
+    mReceiveMessage   = NULL;
+    mMessageSubType   = Message::kSubTypeNone;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -200,7 +200,7 @@ otError Dtls::Start(bool             aClient,
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     }
@@ -214,7 +214,7 @@ otError Dtls::Start(bool             aClient,
     mConnectionClosedByHost = false;
     Process();
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "DTLS started");
     }
@@ -343,7 +343,7 @@ otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     VerifyOrExit(aPskLength <= sizeof(mPsk), error = OT_ERROR_INVALID_ARGS);
 
     memcpy(mPsk, aPsk, aPskLength);
-    mPskLength = aPskLength;
+    mPskLength       = aPskLength;
     mCipherSuites[0] = MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
 
@@ -491,7 +491,7 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     otError error;
     int     rval = 0;
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
     }
@@ -532,7 +532,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
     int rval;
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsReceive");
     }
@@ -565,7 +565,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
 {
     int rval;
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsGetTimer");
     }
@@ -601,7 +601,7 @@ void Dtls::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_
 
 void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::SetTimer");
     }
@@ -649,7 +649,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 
     GetNetif().GetKeyManager().SetKek(kek);
 
-    if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         otLogInfoMeshCoP(GetInstance(), "Generated KEK");
     }
@@ -761,7 +761,7 @@ void Dtls::Process(void)
             }
 
             mbedtls_ssl_session_reset(&mSsl);
-            if (mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+            if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
             {
                 mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             }
@@ -856,7 +856,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     OT_UNUSED_VARIABLE(pThis);
     OT_UNUSED_VARIABLE(str);
 
-    if (pThis->mCipherSuites[0]  == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    if (pThis->mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
         switch (level)
         {

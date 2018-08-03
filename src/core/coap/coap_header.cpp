@@ -436,7 +436,7 @@ const char *Header::CodeToString(void) const
 {
     const char *mCodeString;
 
-    switch(mHeader.mFields.mCode)
+    switch (mHeader.mFields.mCode)
     {
     case OT_COAP_CODE_INTERNAL_ERROR:
         mCodeString = "InternalError";
