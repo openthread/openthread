@@ -101,7 +101,7 @@ SUBDIRS                                += samr21
 endif
 
 noinst_HEADERS                          = \
-    platform.h                            \
+    openthread-system.h                   \
     $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

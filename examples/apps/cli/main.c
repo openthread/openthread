@@ -35,7 +35,7 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/logging.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
 pseudo_reset:
 
-    PlatformInit(argc, argv);
+    otSysInit(argc, argv);
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     // Call to query the buffer size
@@ -88,10 +88,10 @@ pseudo_reset:
     otDiagInit(sInstance);
 #endif
 
-    while (!PlatformPseudoResetWasRequested())
+    while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
+        otSysProcessDrivers(sInstance);
     }
 
     otInstanceFinalize(sInstance);

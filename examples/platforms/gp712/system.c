@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,58 +32,65 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include <openthread/config.h>
+#include "platform_qorvo.h"
 
-#include "platform-cc1352.h"
-#include <stdio.h>
-#include <openthread/types.h>
+#include "stdio.h"
+#include "stdlib.h"
 
-#include "inc/hw_ccfg.h"
-#include "inc/hw_ccfg_simple_struct.h"
-#include "inc/hw_types.h"
+#include <openthread/tasklet.h>
+#include <openthread/platform/uart.h>
 
-extern const ccfg_t __ccfg;
+#include "radio_qorvo.h"
+#include "random_qorvo.h"
+#include "uart_qorvo.h"
 
-const char *dummy_ccfg_ref = ((const char *)(&(__ccfg)));
+void platformUartInit(void);
+void platformUartProcess(void);
 
-/**
- * Function documented in platform-cc1352.h
- */
-void PlatformInit(int argc, char *argv[])
+otInstance *localInstance = NULL;
+
+int    gArgumentsCount = 0;
+char **gArguments      = NULL;
+
+bool qorvoPlatGotoSleepCheck(void)
 {
-    (void)argc;
-    (void)argv;
+    bool canGotoSleep = false;
 
-    while (dummy_ccfg_ref == NULL)
+    if (localInstance)
     {
-        /*
-         * This provides a code reference to the customer configuration area of
-         * the flash, otherwise the data is skipped by the linker and not put
-         * into the final flash image.
-         */
+        canGotoSleep = !otTaskletsArePending(localInstance);
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
-    cc1352DebugUartInit();
-#endif
-    cc1352AlarmInit();
-    cc1352RandomInit();
-    cc1352RadioInit();
+    return canGotoSleep;
 }
 
-bool PlatformPseudoResetWasRequested(void)
+void otSysInit(int argc, char *argv[])
+{
+    gArgumentsCount = argc;
+    gArguments      = argv;
+
+    qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
+    platformUartInit();
+    // qorvoAlarmInit();
+    qorvoRandomInit();
+    qorvoRadioInit();
+}
+
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-/**
- * Function documented in platform-cc1352.h
- */
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
-    // should sleep and wait for interrupts here
+    if (localInstance == NULL)
+    {
+        // local copy in case we need to perform a callback.
+        localInstance = aInstance;
+    }
 
-    cc1352UartProcess();
-    cc1352RadioProcess(aInstance);
-    cc1352AlarmProcess(aInstance);
+    qorvoPlatMainLoop(!otTaskletsArePending(aInstance));
+    platformUartProcess();
+    // qorvoRadioProcess();
+    // qorvoAlarmProcess();
 }

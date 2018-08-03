@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,37 +30,37 @@
  * @file
  * @brief
  *   This file includes the platform-specific initializers.
+ *
  */
-#include "platform-cc2538.h"
-#include <openthread/config.h>
 
-otInstance *sInstance;
+#include "platform-emsk.h"
+#include "openthread/openthread.h"
+#include "openthread/platform/uart.h"
 
-void PlatformInit(int argc, char *argv[])
+#include <stdio.h>
+#define DBG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+
+void otSysInit(int argc, char *argv[])
 {
-#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
-    cc2538DebugUartInit();
-#endif
-    cc2538AlarmInit();
-    cc2538RandomInit();
-    cc2538RadioInit();
+    emskAlarmInit();
+    emskRadioInit();
+    emskRandomInit();
+    otPlatUartEnable();
+
+    DBG("OpenThread Init Finished\r\n");
 
     (void)argc;
     (void)argv;
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
-    sInstance = aInstance;
-
-    // should sleep and wait for interrupts here
-
-    cc2538UartProcess();
-    cc2538RadioProcess(aInstance);
-    cc2538AlarmProcess(aInstance);
+    emskUartProcess();
+    emskRadioProcess(aInstance);
+    emskAlarmProcess(aInstance);
 }

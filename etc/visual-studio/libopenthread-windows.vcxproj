@@ -59,10 +59,10 @@
     <ClCompile Include="..\..\examples\platforms\posix\flash-windows-stubs.c" />
     <ClCompile Include="..\..\examples\platforms\posix\logging.c" />
     <ClCompile Include="..\..\examples\platforms\posix\misc.c" />
-    <ClCompile Include="..\..\examples\platforms\posix\platform.c" />
     <ClCompile Include="..\..\examples\platforms\posix\radio.c" />
     <ClCompile Include="..\..\examples\platforms\posix\random.c" />
     <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\system.c" />
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c" />
     <ClCompile Include="..\..\examples\platforms\utils\settings_flash.c" />
   </ItemGroup>

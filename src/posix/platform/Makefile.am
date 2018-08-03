@@ -46,19 +46,19 @@ libopenthread_posix_a_SOURCES             = \
     hdlc.cpp                                \
     logging.c                               \
     misc.c                                  \
-    platform.c                              \
     radio_spinel.cpp                        \
     random.c                                \
     settings.cpp                            \
     spi-stubs.c                             \
     spinel.c                                \
+    system.c                                \
     uart.c                                  \
     $(NULL)
 
 noinst_HEADERS                            = \
     flash.h                                 \
     frame_queue.hpp                         \
-    platform.h                              \
+    openthread-system.h                     \
     platform-posix.h                        \
     radio_spinel.hpp                        \
     $(NULL)

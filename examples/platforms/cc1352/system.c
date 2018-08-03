@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,68 +32,58 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include <string.h>
+#include <openthread/config.h>
 
-#include <openthread/platform/uart.h>
+#include "platform-cc1352.h"
+#include <stdio.h>
+#include <openthread/types.h>
 
-#include "common/logging.hpp"
+#include "inc/hw_ccfg.h"
+#include "inc/hw_ccfg_simple_struct.h"
+#include "inc/hw_types.h"
 
-#include "bsp.h"
-#include "em_chip.h"
-#include "hal_common.h"
+extern const ccfg_t __ccfg;
 
-#include "openthread-core-efr32-config.h"
-#include "platform-efr32.h"
+const char *dummy_ccfg_ref = ((const char *)(&(__ccfg)));
 
-#include "hal-config.h"
-
-#if (HAL_FEM_ENABLE)
-#include "fem-control.h"
-#endif
-
-void halInitChipSpecific(void);
-
-otInstance *sInstance;
-
-void PlatformInit(int argc, char *argv[])
+/**
+ * Function documented in platform-cc1352.h
+ */
+void otSysInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
 
-    CHIP_Init();
+    while (dummy_ccfg_ref == NULL)
+    {
+        /*
+         * This provides a code reference to the customer configuration area of
+         * the flash, otherwise the data is skipped by the linker and not put
+         * into the final flash image.
+         */
+    }
 
-    halInitChipSpecific();
-
-    BSP_Init(BSP_INIT_BCC);
-
-#if (HAL_FEM_ENABLE)
-    initFem();
-    wakeupFem();
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+    cc1352DebugUartInit();
 #endif
-
-    efr32RadioInit();
-    efr32AlarmInit();
-    efr32MiscInit();
-    efr32RandomInit();
+    cc1352AlarmInit();
+    cc1352RandomInit();
+    cc1352RadioInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformDeinit(void)
+/**
+ * Function documented in platform-cc1352.h
+ */
+void otSysProcessDrivers(otInstance *aInstance)
 {
-    efr32RadioDeinit();
-}
-
-void PlatformProcessDrivers(otInstance *aInstance)
-{
-    sInstance = aInstance;
-
     // should sleep and wait for interrupts here
 
-    efr32UartProcess();
-    efr32RadioProcess(aInstance);
-    efr32AlarmProcess(aInstance);
+    cc1352UartProcess();
+    cc1352RadioProcess(aInstance);
+    cc1352AlarmProcess(aInstance);
 }

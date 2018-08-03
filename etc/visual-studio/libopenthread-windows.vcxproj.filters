@@ -22,9 +22,6 @@
     <ClCompile Include="..\..\examples\platforms\posix\misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\posix\platform.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\examples\platforms\posix\random.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -32,6 +29,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\platforms\posix\system.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c">

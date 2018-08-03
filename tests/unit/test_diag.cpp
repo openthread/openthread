@@ -33,7 +33,7 @@
 
 #include "utils/wrap_string.h"
 
-#include "platform.h"
+#include "openthread-system.h"
 #include "test_util.h"
 
 extern "C" void otTaskletsSignalPending(otInstance *)
@@ -234,7 +234,7 @@ void TestDiag(void)
 #else
     char *argv[] = {(char *)"test_diag", (char *)"1"};
 #endif
-    PlatformInit(sizeof(argv) / sizeof(char *), argv);
+    otSysInit(sizeof(argv) / sizeof(char *), argv);
 
     // initialize diagnostics module
     otDiagInit(NULL);
