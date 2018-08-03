@@ -127,7 +127,7 @@ otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallb
     mConnectedContext  = aContext;
 
     return GetNetif().GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                                      &CoapSecure::HandleDtlsSend, this, mApplicationCoapSecure);
+                                      &CoapSecure::HandleDtlsSend, this);
 }
 
 bool CoapSecure::IsConnectionActive(void)
@@ -251,7 +251,7 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
         netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                              CoapSecure::HandleDtlsSend, this, mApplicationCoapSecure);
+                              CoapSecure::HandleDtlsSend, this);
     }
     else
     {

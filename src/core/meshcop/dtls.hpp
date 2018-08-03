@@ -46,7 +46,6 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/base64.h>
 #include <mbedtls/x509.h>
@@ -54,7 +53,6 @@
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -130,7 +128,6 @@ public:
      * @param[in]  aReceiveHandler         A pointer to the receive handler.
      * @param[in]  aSendHandler            A pointer to the send handler.
      * @param[in]  aContext                A pointer to application-specific context.
-     * @parma[in]  aApplicationCoapSecure  TRUE, if operating from Application CoAP Secure API.
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
@@ -139,8 +136,7 @@ public:
                   ConnectedHandler aConnectedHandler,
                   ReceiveHandler   aReceiveHandler,
                   SendHandler      aSendHandler,
-                  void *           aContext,
-                  bool             aApplicationCoapSecure = false);
+                  void *           aContext);
 
     /**
      * This method stops the DTLS service.
@@ -168,8 +164,6 @@ public:
      *
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
@@ -256,8 +250,6 @@ public:
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
      *
@@ -320,7 +312,6 @@ public:
 private:
     static otError MapError(int rval);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
@@ -331,7 +322,6 @@ private:
      *
      */
     otError SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
@@ -369,10 +359,9 @@ private:
     void Close(void);
     void Process(void);
 
+    int     mCipherSuites[2];
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -392,13 +381,9 @@ private:
     const uint8_t *mPreSharedKeyIdentity;
     uint16_t       mPreSharedKeyLength;
     uint16_t       mPreSharedKeyIdLength;
-#endif
-
-    int mApplicationCipherSuite[1];
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
     bool mVerifyPeerCertificate;
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     mbedtls_entropy_context  mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;
@@ -420,7 +405,6 @@ private:
     SendHandler      mSendHandler;
     void *           mContext;
     bool             mClient;
-    bool             mApplicationCoapSecure;
     bool             mConnectionClosedByHost;
     TimerMilli       mWaitForCloseNotifyTimer;
 
