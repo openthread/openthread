@@ -237,10 +237,8 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
 
         switch (aCipherSuite[i])
         {
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
         case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
-
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
             if (mCaChainSrc != NULL)
             {
                 rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)mCaChainSrc, (size_t)mCaChainLength);
@@ -258,22 +256,16 @@ otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuit
                 rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
                 VerifyOrExit(rval == 0);
             }
-
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
             break;
 
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-
         case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
-
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
             rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
                                         (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
             VerifyOrExit(rval == 0);
-
-            break;
-
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+            break;
 
         default:
             otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
