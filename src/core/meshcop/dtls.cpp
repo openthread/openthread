@@ -266,7 +266,7 @@ otError Dtls::SetApplicationCoapSecureKeys(void)
         break;
 
     default:
-        otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
+        otLogCritCoap(GetInstance(), "Application Coap Secure DTLS: Not supported cipher.");
         rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
         ExitNow();
         break;
