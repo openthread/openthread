@@ -45,7 +45,7 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/logging.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 void otTaskletsSignalPending(otInstance *aInstance)
 {
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 pseudo_reset:
 
-    PlatformInit(argc, argv);
+    otSysInit(argc, argv);
 
     sInstance = otInstanceInitSingle();
     assert(sInstance);
@@ -73,10 +73,10 @@ pseudo_reset:
     otDiagInit(sInstance);
 #endif
 
-    while (!PlatformPseudoResetWasRequested())
+    while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
+        otSysProcessDrivers(sInstance);
     }
 
     otInstanceFinalize(sInstance);

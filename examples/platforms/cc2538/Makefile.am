@@ -41,10 +41,10 @@ PLATFORM_SOURCES                          = \
     diag.c                                  \
     flash.c                                 \
     misc.c                                  \
-    platform.c                              \
     radio.c                                 \
     random.c                                \
     startup-gcc.c                           \
+    system.c                                \
     logging.c                               \
     uart.c                                  \
     $(NULL)

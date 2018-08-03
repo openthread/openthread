@@ -81,7 +81,6 @@ PLATFORM_COMMON_SOURCES                                                         
     flash.c                                                                                                  \
     logging.c                                                                                                \
     misc.c                                                                                                   \
-    platform.c                                                                                               \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
@@ -89,6 +88,7 @@ PLATFORM_COMMON_SOURCES                                                         
     random.c                                                                                                 \
     temp.c                                                                                                   \
     spi-slave.c                                                                                              \
+    system.c                                                                                                 \
     uart.c                                                                                                   \
     usb-cdc-uart.c                                                                                           \
     $(NULL)

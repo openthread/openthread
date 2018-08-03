@@ -49,8 +49,8 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "openthread-system.h"
 #include "platform-nrf5.h"
-#include "platform.h"
 
 #include <nrf.h>
 #include <nrf_802154.h>
@@ -147,7 +147,7 @@ static void setPendingEvent(RadioPendingEvents aEvent)
         pendingEvents |= bitToSet;
     } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 
-    PlatformEventSignalPending();
+    otSysEventSignalPending();
 }
 
 static void resetPendingEvent(RadioPendingEvents aEvent)
@@ -717,7 +717,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
 
-    PlatformEventSignalPending();
+    otSysEventSignalPending();
 }
 
 void nrf_802154_receive_failed(nrf_802154_rx_error_t error)

@@ -45,7 +45,7 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 #include "platform-config.h"
 #include "platform-nrf5.h"
@@ -217,7 +217,7 @@ static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
         else
         {
             sTimerData[aIndex].mFireAlarm = true;
-            PlatformEventSignalPending();
+            otSysEventSignalPending();
         }
     }
 }

@@ -168,7 +168,7 @@ static void socket_init(void)
     }
 }
 
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     char *endptr;
 
@@ -204,17 +204,17 @@ void PlatformInit(int argc, char *argv[])
     platformRandomInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return gPlatformPseudoResetWasRequested;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
     close(sSockFd);
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     fd_set read_fds;
     fd_set write_fds;
