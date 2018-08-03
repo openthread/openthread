@@ -315,13 +315,10 @@ private:
     /**
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
-     * @param[in]  aCipherSuite     A pointer to a list of supported cipher suites.
-     * @param[in]  aAnsCipherSuite  Number of cipher suites in aCipherSuite.
-     *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
      */
-    otError SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite);
+    otError SetApplicationCoapSecureKeys(void);
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 

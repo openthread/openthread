@@ -206,7 +206,7 @@ otError Dtls::Start(bool             aClient,
     }
     else
     {
-        SetApplicationCoapSecureKeys(mCipherSuites, 1);
+        SetApplicationCoapSecureKeys();
     }
     VerifyOrExit(rval == 0);
 
@@ -227,52 +227,49 @@ exit:
     return MapError(rval);
 }
 
-otError Dtls::SetApplicationCoapSecureKeys(int *aCipherSuite, int aAnsCipherSuite)
+otError Dtls::SetApplicationCoapSecureKeys(void)
 {
-    int rval = 0, i = 0;
+    int rval = 0;
 
-    for (i = 0; i < aAnsCipherSuite; i++)
+    VerifyOrExit(&mCipherSuites[0] != NULL, rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA);
+
+    switch (mCipherSuites[0])
     {
-        VerifyOrExit(&aCipherSuite[i] != NULL, rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA);
-
-        switch (aCipherSuite[i])
-        {
-        case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
+    case MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-            if (mCaChainSrc != NULL)
-            {
-                rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)mCaChainSrc, (size_t)mCaChainLength);
-                VerifyOrExit(rval == 0);
-                mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
-            }
-
-            if (mOwnCertSrc != NULL && mPrivateKeySrc != NULL)
-            {
-                rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)mOwnCertSrc, (size_t)mOwnCertLength);
-                VerifyOrExit(rval == 0);
-                rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)mPrivateKeySrc,
-                                            (size_t)mPrivateKeyLength, NULL, 0);
-                VerifyOrExit(rval == 0);
-                rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
-                VerifyOrExit(rval == 0);
-            }
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-            break;
-
-        case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-            rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
-                                        (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+        if (mCaChainSrc != NULL)
+        {
+            rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)mCaChainSrc, (size_t)mCaChainLength);
             VerifyOrExit(rval == 0);
-#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-            break;
-
-        default:
-            otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
-            rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
-            ExitNow();
-            break;
+            mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
         }
+
+        if (mOwnCertSrc != NULL && mPrivateKeySrc != NULL)
+        {
+            rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)mOwnCertSrc, (size_t)mOwnCertLength);
+            VerifyOrExit(rval == 0);
+            rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)mPrivateKeySrc, (size_t)mPrivateKeyLength,
+                                        NULL, 0);
+            VerifyOrExit(rval == 0);
+            rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
+            VerifyOrExit(rval == 0);
+        }
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+        break;
+
+    case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+        rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
+                                    (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+        VerifyOrExit(rval == 0);
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+        break;
+
+    default:
+        otLogCritCoap(this, "Application Coap Secure DTLS: Not supported cipher.");
+        rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+        ExitNow();
+        break;
     }
 
 exit:
