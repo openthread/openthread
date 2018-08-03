@@ -406,6 +406,16 @@ otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader);
 otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader);
 
 /**
+ * This method returns the CoAP Code as human readable string.
+ *
+ * @param[in]  aHeader    A pointer to the CoAP header.
+ *
+ * @ returns The CoAP Code as string.
+ *
+ */
+const char *otCoapHeaderCodeToString(const otCoapHeader *aHeader);
+
+/**
  * This function returns the Message ID value.
  *
  * @param[in]  aHeader  A pointer to the CoAP header.

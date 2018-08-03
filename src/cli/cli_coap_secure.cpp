@@ -69,64 +69,29 @@ void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
     mCoapType = otCoapHeaderGetType(aHeader);
 
     mInterpreter.mServer->OutputFormat("\r\n    CoapSecure RX Header Informations:"
-                                       "\r\n        Type %d ",
+                                       "\r\n        Type %d => ",
                                        static_cast<uint16_t>(mCoapType));
 
     switch (mCoapType)
     {
     case OT_COAP_TYPE_ACKNOWLEDGMENT:
-        mInterpreter.mServer->OutputFormat("(ACK)");
+        mInterpreter.mServer->OutputFormat("Ack");
         break;
     case OT_COAP_TYPE_CONFIRMABLE:
-        mInterpreter.mServer->OutputFormat("(CONF)");
+        mInterpreter.mServer->OutputFormat("Confirmable");
         break;
     case OT_COAP_TYPE_NON_CONFIRMABLE:
-        mInterpreter.mServer->OutputFormat("(NON CONF)");
+        mInterpreter.mServer->OutputFormat("NonConfirmable");
         break;
     case OT_COAP_TYPE_RESET:
-        mInterpreter.mServer->OutputFormat("(RESET)");
+        mInterpreter.mServer->OutputFormat("Reset");
         break;
     default:
         break;
     }
-    mInterpreter.mServer->OutputFormat("\r\n        Code %d", (uint16_t)mCoapCode);
-
-    switch (mCoapCode)
-    {
-    case OT_COAP_CODE_INTERNAL_ERROR:
-        mInterpreter.mServer->OutputFormat(" (Coap Code Internal Error)");
-        break;
-    case OT_COAP_CODE_METHOD_NOT_ALLOWED:
-        mInterpreter.mServer->OutputFormat(" (Coap Code Method not allowed)");
-        break;
-    case OT_COAP_CODE_CONTENT:
-        mInterpreter.mServer->OutputFormat(" (Coap Code CONTENT)");
-        break;
-    case OT_COAP_CODE_EMPTY:
-        mInterpreter.mServer->OutputFormat(" (Coap Code Empty)");
-        break;
-    case OT_COAP_CODE_GET:
-        mInterpreter.mServer->OutputFormat(" (Coap Code GET)");
-        break;
-    case OT_COAP_CODE_POST:
-        mInterpreter.mServer->OutputFormat(" (Coap Code POST)");
-        break;
-    case OT_COAP_CODE_PUT:
-        mInterpreter.mServer->OutputFormat(" (Coap Code PUT)");
-        break;
-    case OT_COAP_CODE_DELETE:
-        mInterpreter.mServer->OutputFormat(" (Coap Code DELETE)");
-        break;
-    case OT_COAP_CODE_NOT_FOUND:
-        mInterpreter.mServer->OutputFormat(" (Coap Code Not Found)");
-        break;
-    case OT_COAP_CODE_UNSUPPORTED_FORMAT:
-        mInterpreter.mServer->OutputFormat(" (Coap Code Unsupported Format)");
-        break;
-    default:
-        break;
-    }
-    mInterpreter.mServer->OutputFormat("\r\n");
+    mInterpreter.mServer->OutputFormat("\r\n        Code %d => %s\r\n",
+                                       static_cast<uint16_t>(mCoapCode),
+                                       static_cast<const char *>(otCoapHeaderCodeToString(aHeader)));
 }
 
 void CoapSecureCli::PrintPayload(otMessage *aMessage) const
