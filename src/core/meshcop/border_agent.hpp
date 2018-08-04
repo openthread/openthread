@@ -114,12 +114,12 @@ private:
     void    HandleRelayTransmit(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleRelayReceive(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleProxyTransmit(const Coap::Header &aHeader, const Message &aMessage);
-    static bool HandleProxyMessage(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
+    static bool HandleProxyReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
-        return static_cast<BorderAgent *>(aContext)->HandleProxyMessage(
+        return static_cast<BorderAgent *>(aContext)->HandleProxyReceive(
             *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
-    bool HandleProxyMessage(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool HandleProxyReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     enum
     {

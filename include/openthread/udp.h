@@ -54,7 +54,7 @@ extern "C" {
  */
 
 /**
- * This callback allows OpenThread to provide specific handler for certain UDP message.
+ * This callback allows OpenThread to provide specific handlers for certain UDP messages.
  *
  * @retval  true    The message is handled by this receiver and should not be further processed.
  * @retval  false   The message is not handled by this receiver.

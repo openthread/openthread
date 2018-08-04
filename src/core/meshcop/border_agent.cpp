@@ -61,7 +61,7 @@ public:
      *
      * @param[in]   aBorderAgent    A reference to the border agent.
      * @param[in]   aHeader         A reference to the request header.
-     * @param[in]   aPetition       Whether this request is leader petition.
+     * @param[in]   aPetition       Whether this request is a petition.
      * @param[in]   aSeparate       Whether this original request expects separate response.
      *
      */
@@ -77,7 +77,7 @@ public:
     }
 
     /**
-     * This method returns whether the request is petition.
+     * This method returns whether the request is a petition.
      *
      * @retval  true    This is a petition request.
      * @retval  false   This is not a petition request.
@@ -230,8 +230,6 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
     SuccessOrExit(error = borderAgent.ForwardToCommissioner(header, *message));
 
 exit:
-    netif.GetInstance().GetHeap().Free(&forwardContext);
-
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP(GetInstance(), "Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
@@ -239,6 +237,8 @@ exit:
         forwardContext.ToHeader(header, CoapCodeFromError(error));
         borderAgent.SendErrorMessage(header);
     }
+
+    netif.GetInstance().GetHeap().Free(&forwardContext);
 }
 
 template <>
@@ -313,7 +313,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mPendingGet(OT_URI_PATH_PENDING_GET, BorderAgent::HandleRequest<&BorderAgent::mPendingGet>, this)
     , mPendingSet(OT_URI_PATH_PENDING_SET, BorderAgent::HandleRequest<&BorderAgent::mPendingSet>, this)
     , mProxyTransmit(OT_URI_PATH_PROXY_TX, BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>, this)
-    , mProxyReceiver(BorderAgent::HandleProxyMessage, this)
+    , mProxyReceiver(BorderAgent::HandleProxyReceive, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mIsStarted(false)
 {
@@ -366,7 +366,7 @@ exit:
     }
 }
 
-bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool BorderAgent::HandleProxyReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Coap::Header header;
     otError      error;
@@ -397,8 +397,7 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
 
         offset = message->GetLength();
         SuccessOrExit(error = message->SetLength(offset + udpLength));
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message) == udpLength,
-                     error = OT_ERROR_NO_BUFS);
+        aMessage.CopyTo(aMessage.GetOffset(), offset, udpLength, *message);
     }
 
     {
@@ -416,6 +415,7 @@ bool BorderAgent::HandleProxyMessage(const Message &aMessage, const Ip6::Message
 exit:
     if (message != NULL && error != OT_ERROR_NONE)
     {
+        otLogWarnMeshCoP(GetInstance(), "Failed notify commissioner on %s", OT_URI_PATH_PROXY_RX);
         message->Free();
     }
 

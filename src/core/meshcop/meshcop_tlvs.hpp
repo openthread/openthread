@@ -204,16 +204,6 @@ public:
      *
      */
     void SetType(MeshCoP::Tlv::Type aType) { ot::ExtendedTlv::SetType(static_cast<uint8_t>(aType)); }
-
-    /**
-     * This method returns a pointer to the next TLV.
-     *
-     * @returns A pointer to the next TLV.
-     *
-     */
-    Tlv *GetNext(void) { return static_cast<Tlv *>(ot::ExtendedTlv::GetNext()); }
-
-    const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -2222,12 +2212,6 @@ class IPv6AddressTlv : public Tlv
 {
 public:
     /**
-     * Default constructor.
-     *
-     */
-    IPv6AddressTlv(void) {}
-
-    /**
      * This method initializes the TLV.
      *
      */
@@ -2265,12 +2249,6 @@ OT_TOOL_PACKED_BEGIN
 class UdpEncapsulationTlv : public ExtendedTlv
 {
 public:
-    /**
-     * Default constructor.
-     *
-     */
-    UdpEncapsulationTlv(void) {}
-
     /**
      * This method initializes the TLV.
      *

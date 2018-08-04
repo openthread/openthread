@@ -859,7 +859,7 @@ public:
     otError GetLeaderAloc(Ip6::Address &aAddress) const { return GetAlocAddress(aAddress, kAloc16Leader); }
 
     /**
-     * This method retrieves the Commissioner's ALOC.
+     * This method computes the Commissioner's ALOC.
      *
      * @param[out]  aAddress        A reference to the Commissioner's ALOC.
      * @param[in]   aSessionId      Commissioner session id.
@@ -966,7 +966,7 @@ public:
     /**
      * This method returns the Service Aloc corresponding to a Service ID.
      *
-     * @param[in]  aServiceId  The Servicer ID value.
+     * @param[in]  aServiceId  The Service ID value.
      *
      * @returns The Service ALOC16 corresponding to given ID.
      *
