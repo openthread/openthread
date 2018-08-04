@@ -55,7 +55,6 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
     , mLayerTwoSecurity(false)
-    , mApplicationCoapSecure(false)
 {
 }
 
@@ -72,7 +71,6 @@ CoapSecure::CoapSecure(Instance &       aInstance,
     , mTransmitMessage(NULL)
     , mTransmitTask(aInstance, aUdpTransmitHandle, this)
     , mLayerTwoSecurity(true)
-    , mApplicationCoapSecure(true)
 {
 }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
