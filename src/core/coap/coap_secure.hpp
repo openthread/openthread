@@ -361,7 +361,6 @@ private:
     Tasklet           mTransmitTask;
 
     bool mLayerTwoSecurity : 1;
-    bool mApplicationCoapSecure;
 };
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
