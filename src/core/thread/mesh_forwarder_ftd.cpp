@@ -39,6 +39,7 @@
 
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
@@ -753,6 +754,10 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
         if (aloc16 == Mle::kAloc16Leader)
         {
             mMeshDest = netif.GetMle().GetRloc16(netif.GetMle().GetLeaderId());
+        }
+        else if ((aloc16 >= Mle::kAloc16CommissionerStart) && (aloc16 <= Mle::kAloc16CommissionerEnd))
+        {
+            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(netif, mMeshDest));
         }
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT

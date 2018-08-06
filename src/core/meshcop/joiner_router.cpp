@@ -105,21 +105,6 @@ exit:
     return;
 }
 
-otError JoinerRouter::GetBorderAgentRloc(uint16_t &aRloc)
-{
-    otError                error = OT_ERROR_NONE;
-    BorderAgentLocatorTlv *borderAgentLocator;
-
-    borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
-        GetNetif().GetNetworkDataLeader().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-    VerifyOrExit(borderAgentLocator != NULL, error = OT_ERROR_NOT_FOUND);
-
-    aRloc = borderAgentLocator->GetBorderAgentLocator();
-
-exit:
-    return error;
-}
-
 uint16_t JoinerRouter::GetJoinerUdpPort(void)
 {
     uint16_t          rval = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
@@ -167,7 +152,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     otLogInfoMeshCoP(GetInstance(), "JoinerRouter::HandleUdpReceive");
 
-    SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
+    SuccessOrExit(error = GetBorderAgentRloc(GetNetif(), borderAgentRloc));
 
     header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
