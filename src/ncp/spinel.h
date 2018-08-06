@@ -323,6 +323,13 @@ enum
     SPINEL_NCP_LOG_REGION_OT_UTIL     = 16,
 };
 
+enum
+{
+    SPINEL_MESHCOP_COMMISSIONER_STATE_DISABLED = 0,
+    SPINEL_MESHCOP_COMMISSIONER_STATE_PETITION = 1,
+    SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE   = 2,
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -1149,6 +1156,9 @@ typedef enum {
     /// Thread joiner data
     /** Format `A(T(ULE))`
      *  PSKd, joiner timeout, eui64 (optional)
+     *
+     * This property is being deprecated by SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS.
+     *
      */
     SPINEL_PROP_THREAD_JOINERS = SPINEL_PROP_THREAD_EXT__BEGIN + 15,
 
@@ -1156,6 +1166,9 @@ typedef enum {
     /** Format `b`
      *
      * Default value is `false`.
+     *
+     * This property is being deprecated by SPINEL_PROP_MESHCOP_COMMISSIONER_STATE.
+     *
      */
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
 
@@ -1590,10 +1603,170 @@ typedef enum {
     SPINEL_PROP_STREAM_EXT__END   = 0x1800,
 
     SPINEL_PROP_MESHCOP__BEGIN = 0x80,
-    SPINEL_PROP_MESHCOP__END   = 0x90,
+
+    // Thread Commissioner State
+    /** Format `C`
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 2,
+
+    // Thread Commissioner Joiners
+    /** Format `A(t(E)UL)` - insert or remove only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Data per item is:
+     *
+     *  `t(E)` | `t()`: Joiner EUI64. Empty struct indicates any Joiner
+     *  `L`           : Timeout (in seconds) after which the Joiner is automatically removed
+     *  `U`           : PSKd
+     *
+     * For CMD_PROP_VALUE_REMOVE the timeout and PSKd are optional.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS = SPINEL_PROP_MESHCOP__BEGIN + 3,
+
+    // Thread Commissioner Provisioning URL
+    /** Format `U`
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL = SPINEL_PROP_MESHCOP__BEGIN + 4,
+
+    // Thread Commissioner Session ID
+    /** Format `S` - Read only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID = SPINEL_PROP_MESHCOP__BEGIN + 5,
+
+    SPINEL_PROP_MESHCOP__END = 0x90,
 
     SPINEL_PROP_MESHCOP_EXT__BEGIN = 0x1800,
-    SPINEL_PROP_MESHCOP_EXT__END   = 0x1900,
+
+    // Thread Commissioner Announce Begin
+    /** Format `LCS6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends an Announce Begin message with the specified parameters. Response is a
+     * `LAST_STATUS` update with status of operation.
+     *
+     *   `L` : Channel mask
+     *   `C` : Number of messages per channel
+     *   `S` : The time between two successive MLE Announce transmissions (milliseconds)
+     *   `6` : IPv6 destination
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN = SPINEL_PROP_MESHCOP_EXT__BEGIN + 0,
+
+    // Thread Commissioner Energy Scan Query
+    /** Format `LCSS6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends an Energy Scan Query message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation. The energy scan results are emitted asynchronously through
+     * `SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT` updates.
+     *
+     * Format is:
+     *
+     *   `L` : Channel mask
+     *   `C` : The number of energy measurements per channel
+     *   `S` : The time between energy measurements (milliseconds)
+     *   `S` : The scan duration for each energy measurement (milliseconds)
+     *   `6` : IPv6 destination.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN = SPINEL_PROP_MESHCOP_EXT__BEGIN + 1,
+
+    // Thread Commissioner Energy Scan Result
+    /** Format `Ld` - Asynchronous event only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * This property provides asynchronous `CMD_PROP_VALUE_INSERTED` updates to report energy scan results for a
+     * previously sent Energy Scan Query message (please see `SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN`).
+     *
+     * Format is:
+     *
+     *   `L` : Channel mask
+     *   `d` : Energy measurement data (note that `d` encoding includes the length)
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT = SPINEL_PROP_MESHCOP_EXT__BEGIN + 2,
+
+    // Thread Commissioner PAN ID Query
+    /** Format `SL6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a PAN ID Query message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation. The PAN ID Conflict results are emitted asynchronously through
+     * `SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT` updates.
+     *
+     * Format is:
+     *
+     *   `S` : PAN ID to query
+     *   `L` : Channel mask
+     *   `6` : IPv6 destination
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY = SPINEL_PROP_MESHCOP_EXT__BEGIN + 3,
+
+    // Thread Commissioner PAN ID Conflict Result
+    /** Format `SL` - Asynchronous event only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * This property provides asynchronous `CMD_PROP_VALUE_INSERTED` updates to report PAN ID conflict results for a
+     * previously sent PAN ID Query message (please see `SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY`).
+     *
+     * Format is:
+     *
+     *   `S` : The PAN ID
+     *   `L` : Channel mask
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT = SPINEL_PROP_MESHCOP_EXT__BEGIN + 4,
+
+    // Thread Commissioner Send MGMT_COMMISSIONER_GET
+    /** Format `d` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a MGMT_COMMISSIONER_GET message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation.
+     *
+     * Format is:
+     *
+     *   `d` : List of TLV types to get
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET = SPINEL_PROP_MESHCOP_EXT__BEGIN + 5,
+
+    // Thread Commissioner Send MGMT_COMMISSIONER_SET
+    /** Format `d` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a MGMT_COMMISSIONER_SET message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation.
+     *
+     * Format is:
+     *
+     *   `d` : TLV encoded data
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET = SPINEL_PROP_MESHCOP_EXT__BEGIN + 6,
+
+    SPINEL_PROP_MESHCOP_EXT__END = 0x1900,
 
     SPINEL_PROP_OPENTHREAD__BEGIN = 0x1900,
 
