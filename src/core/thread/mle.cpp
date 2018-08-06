@@ -981,17 +981,14 @@ exit:
     return error;
 }
 
-otError Mle::GetLeaderAloc(Ip6::Address &aAddress) const
+otError Mle::GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
-    aAddress.mFields.m16[4] = HostSwap16(0x0000);
-    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
-    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(kAloc16Leader);
+    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 14);
+    aAddress.mFields.m16[7] = HostSwap16(aAloc16);
 
 exit:
     return error;

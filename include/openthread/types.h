@@ -641,6 +641,8 @@ typedef enum otMeshcopTlvType {
     OT_MESHCOP_TLV_VENDOR_SW_VERSION_TLV    = 35,  ///< meshcop Vendor SW Version TLV
     OT_MESHCOP_TLV_VENDOR_DATA_TLV          = 36,  ///< meshcop Vendor Data TLV
     OT_MESHCOP_TLV_VENDOR_STACK_VERSION_TLV = 37,  ///< meshcop Vendor Stack Version TLV
+    OT_MESHCOP_TLV_UDP_ENCAPSULATION_TLV    = 48,  ///< meshcop UDP encapsulation TLV
+    OT_MESHCOP_TLV_IPV6_ADDRESS_TLV         = 49,  ///< meshcop IPv6 address TLV
     OT_MESHCOP_TLV_PENDINGTIMESTAMP         = 51,  ///< meshcop Pending Timestamp TLV
     OT_MESHCOP_TLV_DELAYTIMER               = 52,  ///< meshcop Delay Timer TLV
     OT_MESHCOP_TLV_CHANNELMASK              = 53,  ///< meshcop Channel Mask TLV
