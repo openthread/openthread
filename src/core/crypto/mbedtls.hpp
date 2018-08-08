@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/instance.h>
+
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 namespace ot {

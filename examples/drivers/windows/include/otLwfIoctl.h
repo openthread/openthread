@@ -35,8 +35,6 @@
 #ifndef __OTLWFIOCTL_H__
 #define __OTLWFIOCTL_H__
 
-#include <openthread/types.h>
-
 __inline LONG ThreadErrorToNtstatus(otError error) { return (LONG)-((int)error); }
 
 // User-mode IOCTL path for CreateFile

@@ -173,6 +173,7 @@
     <ClInclude Include="..\..\include\openthread\dataset_ftd.h" />
     <ClInclude Include="..\..\include\openthread\dhcp6_client.h" />
     <ClInclude Include="..\..\include\openthread\dhcp6_server.h" />
+    <ClInclude Include="..\..\include\openthread\error.h" />
     <ClInclude Include="..\..\include\openthread\icmp6.h" />
     <ClInclude Include="..\..\include\openthread\instance.h" />
     <ClInclude Include="..\..\include\openthread\ip6.h" />
@@ -181,11 +182,9 @@
     <ClInclude Include="..\..\include\openthread\link.h" />
     <ClInclude Include="..\..\include\openthread\message.h" />
     <ClInclude Include="..\..\include\openthread\netdata.h" />
-    <ClInclude Include="..\..\include\openthread\openthread.h" />
     <ClInclude Include="..\..\include\openthread\tasklet.h" />
     <ClInclude Include="..\..\include\openthread\thread.h" />
     <ClInclude Include="..\..\include\openthread\thread_ftd.h" />
-    <ClInclude Include="..\..\include\openthread\types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
     <ClInclude Include="..\..\include\openthread\udp.h" />
     <ClInclude Include="..\..\src\core\api\link_raw.hpp" />

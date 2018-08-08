@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "mac/mac.hpp"

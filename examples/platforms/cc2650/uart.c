@@ -34,7 +34,6 @@
 #include <driverlib/uart.h>
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/uart.h>
 
 /**

@@ -33,6 +33,8 @@
 #include <string>
 #include <vector>
 
+#include <stdint.h>
+
 void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
 {
     std::istringstream ss(aHex);

@@ -52,6 +52,135 @@ extern "C" {
  *
  */
 
+#define OT_IP6_PREFIX_SIZE 8   ///< Size of an IPv6 prefix (bytes)
+#define OT_IP6_IID_SIZE 8      ///< Size of an IPv6 Interface Identifier (bytes)
+#define OT_IP6_ADDRESS_SIZE 16 ///< Size of an IPv6 address (bytes)
+
+/**
+ * @struct otIp6Address
+ *
+ * This structure represents an IPv6 address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp6Address
+{
+    union OT_TOOL_PACKED_FIELD
+    {
+        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                     ///< 8-bit fields
+        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)]; ///< 16-bit fields
+        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)]; ///< 32-bit fields
+    } mFields;                                                ///< IPv6 accessor fields
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents an IPv6 address.
+ *
+ */
+typedef struct otIp6Address otIp6Address;
+
+/**
+ * This structure represents an IPv6 prefix.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp6Prefix
+{
+    otIp6Address mPrefix; ///< The IPv6 prefix.
+    uint8_t      mLength; ///< The IPv6 prefix length.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents an IPv6 prefix.
+ *
+ */
+typedef struct otIp6Prefix otIp6Prefix;
+
+/**
+ * This structure represents an IPv6 network interface unicast address.
+ *
+ */
+typedef struct otNetifAddress
+{
+    otIp6Address           mAddress;                ///< The IPv6 unicast address.
+    uint8_t                mPrefixLength;           ///< The Prefix length.
+    bool                   mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
+    bool                   mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
+    bool                   mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
+    unsigned int           mScopeOverride : 4;      ///< The IPv6 scope of this address.
+    bool                   mRloc : 1;               ///< TRUE if the address is an RLOC, FALSE otherwise.
+    struct otNetifAddress *mNext;                   ///< A pointer to the next network interface address.
+} otNetifAddress;
+
+/**
+ * This structure represents an IPv6 network interface multicast address.
+ *
+ */
+typedef struct otNetifMulticastAddress
+{
+    otIp6Address                          mAddress; ///< The IPv6 multicast address.
+    const struct otNetifMulticastAddress *mNext;    ///< A pointer to the next network interface multicast address.
+} otNetifMulticastAddress;
+
+/**
+ * This enumeration represents the list of allowable values for an InterfaceId.
+ *
+ */
+typedef enum otNetifInterfaceId {
+    OT_NETIF_INTERFACE_ID_HOST   = -1, ///< The interface ID telling packets received by host side interfaces.
+    OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
+} otNetifInterfaceId;
+
+/**
+ * This structure represents data used by Semantically Opaque IID Generator.
+ *
+ */
+typedef struct
+{
+    uint8_t *mInterfaceId;       ///< String of bytes representing interface ID. Like "eth0" or "wlan0".
+    uint8_t  mInterfaceIdLength; ///< Length of interface ID string.
+
+    uint8_t *mNetworkId;       ///< Network ID (or name). Can be null if mNetworkIdLength is 0.
+    uint8_t  mNetworkIdLength; ///< Length of Network ID string.
+
+    uint8_t mDadCounter; ///< Duplicate address detection counter.
+
+    uint8_t *mSecretKey;       ///< Secret key used to create IID. Cannot be null.
+    uint16_t mSecretKeyLength; ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
+} otSemanticallyOpaqueIidGeneratorData;
+
+/**
+ * This structure represents an IPv6 socket address.
+ *
+ */
+typedef struct otSockAddr
+{
+    otIp6Address mAddress; ///< An IPv6 address.
+    uint16_t     mPort;    ///< A transport-layer port.
+    int8_t       mScopeId; ///< An IPv6 scope identifier.
+} otSockAddr;
+
+/**
+ * This structure represents the local and peer IPv6 socket addresses.
+ *
+ */
+typedef struct otMessageInfo
+{
+    otIp6Address mSockAddr;    ///< The local IPv6 address.
+    otIp6Address mPeerAddr;    ///< The peer IPv6 address.
+    uint16_t     mSockPort;    ///< The local transport-layer port.
+    uint16_t     mPeerPort;    ///< The peer transport-layer port.
+    int8_t       mInterfaceId; ///< The IPv6 interface identifier.
+    uint8_t      mHopLimit;    ///< The IPv6 hop limit.
+
+    /**
+     * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
+     * @p mLinkInfo points to @sa otThreadLinkInfo. This field is only valid for messages received from the
+     * Thread radio and is ignored on transmission.
+     */
+    const void *mLinkInfo;
+} otMessageInfo;
+
 /**
  * This function brings up the IPv6 interface.
  *

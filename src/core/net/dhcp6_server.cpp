@@ -35,8 +35,6 @@
 
 #include "dhcp6_server.hpp"
 
-#include <openthread/types.h>
-
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"

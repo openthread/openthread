@@ -33,8 +33,6 @@
 
 #include "jam_detector.hpp"
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"

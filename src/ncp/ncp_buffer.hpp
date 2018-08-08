@@ -36,7 +36,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 namespace ot {
 namespace Ncp {

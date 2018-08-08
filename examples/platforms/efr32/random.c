@@ -32,7 +32,6 @@
  *
  */
 
-#include <openthread/types.h>
 #include <openthread/platform/random.h>
 
 #include "utils/code_utils.h"

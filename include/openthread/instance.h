@@ -36,9 +36,13 @@
 #define OPENTHREAD_INSTANCE_H_
 
 #include <stdlib.h>
+#ifdef OTDLL
+#include <guiddef.h>
+#endif
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +58,38 @@ extern "C" {
  *
  */
 
+/**
+ * This structure represents the OpenThread instance structure.
+ */
+typedef struct otInstance otInstance;
+
 #ifdef OTDLL
+
+/**
+ * This structure represents the handle to the OpenThread API.
+ *
+ */
+typedef struct otApiInstance otApiInstance;
+
+/**
+ * This structure represents a list of device GUIDs.
+ *
+ */
+typedef struct otDeviceList
+{
+    uint16_t aDevicesLength;
+    GUID     aDevices[1];
+} otDeviceList;
+
+/**
+ * This function pointer is called to notify addition and removal of OpenThread devices.
+ *
+ * @param[in]  aAdded       A flag indicating if the device was added or removed.
+ * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
+ * @param[in]  aContext     A pointer to application-specific context.
+ *
+ */
+typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 /**
  * This function initializes a new instance of the OpenThread library.
@@ -342,6 +377,14 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  *
  */
 otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+
+/**
+ * Get the OpenThread version string.
+ *
+ * @returns A pointer to the OpenThread version.
+ *
+ */
+OTAPI const char *OTCALL otGetVersionString(void);
 
 /**
  * @}

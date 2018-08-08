@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
 #include "common/instance.hpp"

@@ -35,7 +35,6 @@
 #ifndef OPENTHREAD_LINK_RAW_H_
 #define OPENTHREAD_LINK_RAW_H_
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus

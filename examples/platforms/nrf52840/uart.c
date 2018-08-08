@@ -39,7 +39,6 @@
 #include <stdint.h>
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/uart.h>
 

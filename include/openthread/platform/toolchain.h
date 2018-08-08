@@ -57,9 +57,20 @@
 #ifndef OPENTHREAD_PLATFORM_TOOLCHAIN_H_
 #define OPENTHREAD_PLATFORM_TOOLCHAIN_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef _WIN32
+#pragma warning(disable : 4214) // nonstandard extension used: bit field types other than int
+#ifdef _KERNEL_MODE
+#include <ntdef.h>
+#else
+#include <windows.h>
+#endif
+#endif /* _WIN32 */
 
 /**
  * @def OT_TOOL_PACKED_BEGIN

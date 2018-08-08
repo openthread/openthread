@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -48,7 +48,6 @@
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
 #endif
-#include <openthread/openthread.h>
 
 #if OPENTHREAD_FTD
 #include <openthread/dataset_ftd.h>

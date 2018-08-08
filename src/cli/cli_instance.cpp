@@ -38,8 +38,6 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/openthread.h>
-
 #include "cli.hpp"
 
 namespace ot {

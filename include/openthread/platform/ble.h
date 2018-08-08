@@ -42,7 +42,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 /**
  * @addtogroup plat-ble

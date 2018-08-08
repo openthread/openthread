@@ -33,7 +33,6 @@
  */
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/spi-slave.h>
 
 #include <hal/nrf_gpio.h>

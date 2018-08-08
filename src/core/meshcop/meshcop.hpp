@@ -37,6 +37,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/instance.h>
+
 #include "coap/coap.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"

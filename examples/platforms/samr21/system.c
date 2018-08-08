@@ -34,6 +34,8 @@
 
 #include "asf.h"
 
+#include <openthread/platform/radio.h>
+
 #include "openthread-system.h"
 
 #include "platform-samr21.h"

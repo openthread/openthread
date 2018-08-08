@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
 #include "utils/wrap_string.h"

@@ -39,7 +39,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>

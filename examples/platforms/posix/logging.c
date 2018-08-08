@@ -42,6 +42,7 @@
 #endif
 
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #include "utils/code_utils.h"
 

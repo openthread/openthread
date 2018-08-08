@@ -35,7 +35,8 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/openthread.h>
+#include <openthread/ip6.h>
+#include <openthread/netdata.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"

@@ -79,7 +79,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #define POLL poll
 #endif
 
-#include <openthread/openthread.h>
+#include <openthread/instance.h>
 
 #include "openthread-core-config.h"
 

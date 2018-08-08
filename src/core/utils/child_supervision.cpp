@@ -33,8 +33,6 @@
 
 #include "child_supervision.hpp"
 
-#include <openthread/openthread.h>
-
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"

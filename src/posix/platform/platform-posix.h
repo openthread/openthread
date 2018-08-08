@@ -54,7 +54,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <openthread/openthread.h>
+#include <openthread/instance.h>
 
 #include "openthread-core-config.h"
 

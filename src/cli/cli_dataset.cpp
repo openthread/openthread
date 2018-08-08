@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/openthread.h>
-
 #if OPENTHREAD_FTD
 #include <openthread/dataset_ftd.h>
 #endif

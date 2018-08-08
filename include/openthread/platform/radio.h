@@ -38,7 +38,8 @@
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +92,40 @@ typedef enum otRadioCaps {
     OT_RADIO_CAPS_TRANSMIT_RETRIES = 4, ///< Radio supports transmission retry logic with collision avoidance (CSMA).
     OT_RADIO_CAPS_CSMA_BACKOFF     = 8, ///< Radio supports CSMA backoff for frame transmission (but no retry).
 } otRadioCaps;
+
+#define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
+
+/**
+ * This type represents the IEEE 802.15.4 PAN ID.
+ *
+ */
+typedef uint16_t otPanId;
+
+/**
+ * This type represents the IEEE 802.15.4 Short Address.
+ *
+ */
+typedef uint16_t otShortAddress;
+
+#define OT_EXT_ADDRESS_SIZE 8 ///< Size of an IEEE 802.15.4 Extended Address (bytes)
+
+/**
+ * @struct otExtAddress
+ *
+ * This structure represents the IEEE 802.15.4 Extended Address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otExtAddress
+{
+    uint8_t m8[OT_EXT_ADDRESS_SIZE]; ///< IEEE 802.15.4 Extended Address bytes
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents the IEEE 802.15.4 Extended Address.
+ *
+ */
+typedef struct otExtAddress otExtAddress;
 
 /**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.

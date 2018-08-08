@@ -35,8 +35,6 @@
 
 #include "border_agent.hpp"
 
-#include <openthread/types.h>
-
 #include "coap/coap_header.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"

@@ -32,7 +32,6 @@
 #include <unistd.h>
 #endif
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"

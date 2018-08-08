@@ -45,7 +45,6 @@
 
 #include <common/logging.hpp>
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/misc.h>

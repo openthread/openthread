@@ -31,7 +31,8 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-#include <openthread/types.h>
+
+#include <openthread/instance.h>
 
 /**
  * This function initializes the radio service used by OpenThread.
