@@ -36,7 +36,8 @@
 #define RADIO_QORVO_H_
 
 #include <stdint.h>
-#include <openthread/types.h>
+
+#include <openthread/error.h>
 #include <openthread/platform/radio.h>
 
 /**

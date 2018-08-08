@@ -30,7 +30,6 @@
 
 #include <unistd.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"

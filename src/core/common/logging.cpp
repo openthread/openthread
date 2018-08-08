@@ -35,8 +35,6 @@
 
 #include "logging.hpp"
 
-#include <openthread/openthread.h>
-
 #include "common/instance.hpp"
 
 /*

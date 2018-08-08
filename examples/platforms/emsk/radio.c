@@ -34,14 +34,16 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
-#include "openthread/types.h"
+#include <string.h>
 
 #include "platform-emsk.h"
-#include <utils/code_utils.h>
+
+#include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
-#include <string.h>
+#include "utils/code_utils.h"
+
 #include "device/device_hal/inc/dev_gpio.h"
 
 #include <stdio.h>

@@ -39,7 +39,7 @@
 #include "utils/wrap_stdbool.h"
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API

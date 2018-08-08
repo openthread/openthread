@@ -28,8 +28,6 @@
 
 #include <openthread/config.h>
 
-#include <openthread/types.h>
-
 #include "cc2650_radio.h"
 #include <assert.h>
 #include <utils/code_utils.h>

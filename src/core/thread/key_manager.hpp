@@ -38,7 +38,7 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
+#include <openthread/dataset.h>
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"

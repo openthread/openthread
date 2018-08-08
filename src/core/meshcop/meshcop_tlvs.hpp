@@ -39,7 +39,8 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
+#include <openthread/commissioner.h>
+#include <openthread/dataset.h>
 
 #include "common/crc16.hpp"
 #include "common/encoding.hpp"

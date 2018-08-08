@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "common/locator.hpp"
 #include "thread/topology.hpp"
 

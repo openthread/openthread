@@ -36,7 +36,9 @@
 #define OPENTHREAD_NCP_H_
 
 #include <stdarg.h>
-#include <openthread/types.h>
+
+#include <openthread/platform/logging.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -36,7 +36,6 @@
 
 #include "platform-cc2652.h"
 #include <stdio.h>
-#include <openthread/types.h>
 
 #include "inc/hw_ccfg.h"
 #include "inc/hw_ccfg_simple_struct.h"

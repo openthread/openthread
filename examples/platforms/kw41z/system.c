@@ -39,7 +39,6 @@
 #include "platform-kw41z.h"
 #include <stdint.h>
 #include "openthread/platform/uart.h"
-#include "openthread/types.h"
 
 otInstance *sInstance;
 

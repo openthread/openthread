@@ -57,7 +57,6 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-#include <openthread/types.h>
 
 // clang-format off
 

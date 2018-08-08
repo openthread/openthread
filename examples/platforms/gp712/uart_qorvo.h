@@ -36,7 +36,6 @@
 #define UART_QORVO_H_
 
 #include <stdint.h>
-#include <openthread/types.h>
 
 /**
  * This function initializes the UART driver.

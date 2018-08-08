@@ -38,8 +38,6 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
-
 #include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 

@@ -30,6 +30,7 @@
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
+#include <openthread/dataset.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>

@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <openthread/config.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/toolchain.h>

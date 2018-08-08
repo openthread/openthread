@@ -36,7 +36,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/instance.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 
 #include "common/instance.hpp"

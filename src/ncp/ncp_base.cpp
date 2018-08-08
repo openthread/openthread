@@ -39,7 +39,6 @@
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 

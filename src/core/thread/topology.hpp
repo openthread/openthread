@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/thread_ftd.h>
+
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"

@@ -36,8 +36,8 @@
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
+#include <openthread/ip6.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

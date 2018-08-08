@@ -29,7 +29,6 @@
 #include "test_platform.h"
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "test_util.h"
 #include "common/code_utils.hpp"

@@ -38,8 +38,6 @@
 
 #include <stdio.h>
 
-#include <openthread/types.h>
-
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"

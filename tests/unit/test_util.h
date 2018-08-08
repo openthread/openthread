@@ -32,8 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openthread/types.h>
-
 #ifndef _WIN32
 
 #ifdef __cplusplus
