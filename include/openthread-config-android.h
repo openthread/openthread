@@ -143,13 +143,13 @@
 #define OPENTHREAD_ENABLE_MULTIPLE_INSTANCES 0
 
 /* Define to 1 to enable the NCP SPI interface. */
-#define OPENTHREAD_ENABLE_NCP_SPI 1
+#define OPENTHREAD_ENABLE_NCP_SPI 0
 
 /* Define to 1 if using NCP Spinel Encrypter */
 #define OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER 0
 
 /* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_ENABLE_NCP_UART 0
+#define OPENTHREAD_ENABLE_NCP_UART 1
 
 /* Define to 1 if using NCP vendor hook */
 #define OPENTHREAD_ENABLE_NCP_VENDOR_HOOK 0
