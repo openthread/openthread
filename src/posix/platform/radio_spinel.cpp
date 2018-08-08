@@ -793,7 +793,19 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
         {
             mState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+
+#if OPENTHREAD_ENABLE_DIAG
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone(mInstance, mTransmitFrame, mTxError);
+            }
+            else
+#endif
+            {
+                otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+            }
+
+            mTxState = kIdle;
         }
     }
 
@@ -1062,7 +1074,7 @@ void RadioSpinel::RadioTransmit(void)
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
     assert(mTxState == kIdle);
 
-    mIsAckRequested = isAckRequested(mTransmitFrame->mPsdu);
+    mIsAckRequested = isAckRequested(mTransmitFrame->mPsdu) && !mIsPromiscuous;
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, mTransmitFrame->mPsdu,
