@@ -49,16 +49,6 @@
  ******************************************************************************/
 
 /**
- * @def PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
- *
- * Enable default front end module configuration.
- *
- */
-#ifndef PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
-#define PLATFORM_FEM_ENABLE_DEFAULT_CONFIG 0
-#endif
-
-/**
  * @def UART_INSTANCE
  *
  * UART Instance.
@@ -443,6 +433,20 @@
  */
 #ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 #define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET USB_CDC_AS_SERIAL_TRANSPORT
+#endif
+
+/*******************************************************************************
+ * @section Platform FEM Configuration
+ ******************************************************************************/
+
+/**
+ * @def PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+ *
+ * Enable default front end module configuration.
+ *
+ */
+#ifndef PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+#define PLATFORM_FEM_ENABLE_DEFAULT_CONFIG 0
 #endif
 
 /*******************************************************************************
