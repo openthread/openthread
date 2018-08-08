@@ -49,13 +49,13 @@
  ******************************************************************************/
 
 /**
- * @def ENABLE_FEM
+ * @def PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
  *
- * Enable front end module
+ * Enable default front end module configuration.
  *
  */
-#ifndef ENABLE_FEM
-#define ENABLE_FEM 0
+#ifndef PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+#define PLATFORM_FEM_ENABLE_DEFAULT_CONFIG 0
 #endif
 
 /**
