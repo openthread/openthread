@@ -551,6 +551,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE>;
         break;
+#if OPENTHREAD_ENABLE_JOINER
+    case SPINEL_PROP_MESHCOP_JOINER_STATE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>;
+        break;
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER
     case SPINEL_PROP_MESHCOP_COMMISSIONER_STATE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>;
@@ -725,6 +730,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>;
         break;
+#if OPENTHREAD_ENABLE_JOINER
+    case SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>;
+        break;
+#endif
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU>;
         break;

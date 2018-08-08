@@ -292,6 +292,11 @@ protected:
     void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #endif
 
+#if OPENTHREAD_ENABLE_JOINER
+    static void HandleJoinerCallback_Jump(otError aError, void *aContext);
+    void        HandleJoinerCallback(otError aError);
+#endif
+
     static void SendDoneTask(void *aContext);
     void        SendDoneTask(void);
 
