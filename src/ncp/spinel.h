@@ -141,6 +141,7 @@ typedef enum {
      *  later join failure status codes would be more accurate.
      *
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_FAILURE = SPINEL_STATUS_JOIN__BEGIN + 0,
 
@@ -150,12 +151,14 @@ typedef enum {
      *  key has been set incorrectly.
      *
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_SECURITY = SPINEL_STATUS_JOIN__BEGIN + 1,
 
     /// The node was unable to find any other peers on the network.
     /**
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_NO_PEERS = SPINEL_STATUS_JOIN__BEGIN + 2,
 
@@ -167,13 +170,13 @@ typedef enum {
 
     /// No response in expecting time.
     /**
-     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_RSP_TIMEOUT = SPINEL_STATUS_JOIN__BEGIN + 4,
 
     /// The node succeeds in commissioning and get the network credentials.
     /**
-     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_SUCCESS = SPINEL_STATUS_JOIN__BEGIN + 5,
 

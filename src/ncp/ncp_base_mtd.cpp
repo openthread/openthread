@@ -2909,6 +2909,7 @@ exit:
     }
 }
 
+#if OPENTHREAD_ENABLE_JOINER
 void NcpBase::HandleJoinerCallback_Jump(otError aError, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleJoinerCallback(aError);
@@ -2937,6 +2938,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
 
     mUpdateChangedPropsTask.Post();
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
