@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2016, The OTBR Authors.
+# Copyright (c) 2018, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,14 +46,20 @@ from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from GRLLibs.UtilityModules.Plugins.AES_CMAC import Thread_PBKDF2
 
-LINESEPX = re.compile(r'\r\n|\n')
+"""wpanctl carrier info and wpanctl command prefix"""
+WPAN_CARRIER_USER = 'pi'
+WPAN_CARRIER_PASSWD = 'raspberry'
+WPAN_CARRIER_PROMPT = 'pi@raspberrypi'
+WPAN_INTERFACE = 'wpan0'
+WPANCTL_CMD = 'sudo wpanctl -I ' + WPAN_INTERFACE + ' '
+
 """regex: used to split lines"""
+LINESEPX = re.compile(r'\r\n|\n')
 
 class OTBR(IThci):
-    LOWEST_POSSIBLE_PARTATION_ID = 0x1
+    LOWEST_POSSIBLE_PARTITION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
-    #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
         Args:
@@ -67,17 +73,12 @@ class OTBR(IThci):
             self.handle = None
             self.AutoDUTEnable = False
             self._is_net = False                  # whether device is through ser2net
-            self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
-            self.joinStatus = {'notstart':'idle', 'ongoing':'discover', 'succeed':'joined', "failed":'failed'}
+            self.logStatus = {'stop':'stop', 'running':'running', 'pauseReq':'pauseReq', 'paused':'paused'}
+            self.joinStatus = {'notstart':'idle', 'ongoing':'discover', 'succeed':'joined', 'failed':'failed'}
             self.logThreadStatus = self.logStatus['stop']
-            self.wpan = 'wpan0'
-            self.otbrCmd = 'sudo wpanctl -I ' + self.wpan + ' '
-            self.piUser = 'pi'
-            self.piPasswd = 'raspberry'
-            self.piPrompt = 'pi@raspberrypi'
             self.intialize()
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('initialize() Error: ' + str(e))
 
     def __del__(self):
         """close the serial port connection"""
@@ -85,7 +86,7 @@ class OTBR(IThci):
             self.closeConnection()
             self.deviceConnected = False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('delete() Error: ' + str(e))
 
     def _expect(self, expected, times=50):
         """Find the `expected` line within `times` trials.
@@ -216,7 +217,7 @@ class OTBR(IThci):
                 if line:
                     response.append(line)
                     print "response: %s" % response
-                    if re.match(self.piPrompt, line):
+                    if re.match(WPAN_CARRIER_PROMPT, line):
                         break
                     elif re.search(r'Not\s+Found|failed\s+with\s+error', line, re.M|re.I):
                         print "Command failed"
@@ -227,12 +228,12 @@ class OTBR(IThci):
                 else:
                     retry_times -= 1
                     time.sleep(1)
-            if not re.match(self.piPrompt, line):
+            if not re.match(WPAN_CARRIER_PROMPT, line):
                 raise Exception('%s: failed to find end of response' % self.port)
             logging.info('%s: send command[%s] done!', self.port, cmd)
             return response
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("sendCommand() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
 
     def __stripValue(self, value):
@@ -284,11 +285,11 @@ class OTBR(IThci):
         rlocAddr = ''
         meshEIDAddr = ''
 
-        addrs = self.__sendCommand(self.otbrCmd + 'getprop -v IPv6:AllAddresses')
+        addrs = self.__sendCommand(WPANCTL_CMD + 'getprop -v IPv6:AllAddresses')
         for ip6AddrItem in addrs:
             if re.match('\[|\]', ip6AddrItem):
                 continue
-            if re.match(self.piPrompt, ip6AddrItem, re.M|re.I):
+            if re.match(WPAN_CARRIER_PROMPT, ip6AddrItem, re.M|re.I):
                 break
             ip6AddrItem = ip6AddrItem.strip()
             ip6Addr = self.__stripValue(ip6AddrItem).split(' ')[0]
@@ -305,11 +306,11 @@ class OTBR(IThci):
                 else:
                     # mesh EID
                     meshEIDAddr = ip6Addr
-                    print "meshEIDAddr:" + meshEIDAddr
+                    print "meshEIDAddr:' + meshEIDAddr
             else:
                 # global ipv6 address
                 if ip6Addr:
-                    print "globalAddr: " + ip6Addr
+                    print "globalAddr: ' + ip6Addr
                     globalAddr.append(ip6Addr)
                 else:
                     pass
@@ -342,10 +343,10 @@ class OTBR(IThci):
         print 'call __setDeviceMode'
 
         try:
-            cmd = self.otbrCmd + 'setprop Thread:DeviceMode %d' % mode
+            cmd = WPANCTL_CMD + 'setprop Thread:DeviceMode %d' % mode
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setDeviceMode() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setDeviceMode() Error: ' + str(e))
 
     def __setRouterUpgradeThreshold(self, iThreshold):
         """set router upgrade threshold
@@ -360,10 +361,10 @@ class OTBR(IThci):
         """
         print 'call __setRouterUpgradeThreshold'
         try:
-            cmd = self.otbrCmd + 'setprop Thread:RouterUpgradeThreshold %s' % str(iThreshold)
+            cmd = WPANCTL_CMD + 'setprop Thread:RouterUpgradeThreshold %s' % str(iThreshold)
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setRouterUpgradeThreshold() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setRouterUpgradeThreshold() Error: ' + str(e))
 
     def __setRouterDowngradeThreshold(self, iThreshold):
         """set router downgrade threshold
@@ -379,10 +380,10 @@ class OTBR(IThci):
         """
         print 'call __setRouterDowngradeThreshold'
         try:
-            cmd = self.otbrCmd + 'setprop Thread:RouterDowngradeThreshold %s %s' % str(iThreshold)
+            cmd = WPANCTL_CMD + 'setprop Thread:RouterDowngradeThreshold %s %s' % str(iThreshold)
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setRouterDowngradeThreshold() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setRouterDowngradeThreshold() Error: ' + str(e))
 
     def __setRouterSelectionJitter(self, iRouterJitter):
         """set ROUTER_SELECTION_JITTER parameter for REED to upgrade to Router
@@ -396,10 +397,10 @@ class OTBR(IThci):
         """
         print 'call _setRouterSelectionJitter'
         try:
-            cmd = self.otbrCmd + 'setprop Thread:RouterSelectionJitter %s' % str(iRouterJitter)
+            cmd = WPANCTL_CMD + 'setprop Thread:RouterSelectionJitter %s' % str(iRouterJitter)
             return self.__sendCommand(cmd) != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setRouterSelectionJitter() Error: ' + str(e))
 
     def __setAddressfilterMode(self, mode):
         """set address filter mode
@@ -411,9 +412,9 @@ class OTBR(IThci):
         print 'call setAddressFilterMode() ' +  mode
         try:
             if re.match('list', mode, re.M|re.I):
-                cmd = self.otbrCmd + 'setprop MAC:' + mode + ':Enabled 1'
+                cmd = WPANCTL_CMD + 'setprop MAC:' + mode + ':Enabled 1'
             elif mode == 'disabled':
-                cmd = self.otbrCmd + 'setprop MAC:' + mode + ':Enabled 0'
+                cmd = WPANCTL_CMD + 'setprop MAC:' + mode + ':Enabled 0'
             else:
                 print 'no such option'
                 return False
@@ -421,7 +422,7 @@ class OTBR(IThci):
                 return True
             return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("__setAddressFilterMode() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('__setAddressFilterMode() Error: ' + str(e))
 
     def __startOTBR(self):
         """start OTBR
@@ -467,14 +468,14 @@ class OTBR(IThci):
                 pass
             self.__setRouterSelectionJitter(1)
             if startType == 'form':
-                startCmd = self.otbrCmd + '%s %s -c %s -T %s ' % (startType, self.networkName, str(self.channel), nodeType)
+                startCmd = WPANCTL_CMD + '%s %s -c %s -T %s ' % (startType, self.networkName, str(self.channel), nodeType)
             else:
-                startCmd = self.otbrCmd + '%s %s -p %s -c %s -T %s ' % (startType, self.networkName, str(hex(self.panId)), str(self.channel), nodeType)
+                startCmd = WPANCTL_CMD + '%s %s -p %s -c %s -T %s ' % (startType, self.networkName, str(hex(self.panId)), str(self.channel), nodeType)
             if self.__sendCommand(startCmd)[0] != 'Fail':
                 if self.__isOTBRRunning():
                     self.isPowerDown = False
                     if self.hasActiveDatasetToCommit:
-                        if self.__sendCommand(self.otbrCmd + 'setprop Dataset:Command SetActive')[0] == 'Fail':
+                        if self.__sendCommand(WPANCTL_CMD + 'setprop Dataset:Command SetActive')[0] == 'Fail':
                             raise Exception('failed to commit active dataset')
                         else:
                             self.hasActiveDatasetToCommit = False
@@ -483,7 +484,7 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("startOTBR() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('startOTBR() Error: ' + str(e))
 
     def __stopOTBR(self):
         """stop OTBR
@@ -494,12 +495,12 @@ class OTBR(IThci):
         """
         print 'call stopOTBR'
         try:
-            if self.__sendCommand(self.otbrCmd + 'leave')[0] != 'Fail' and self.__sendCommand(self.otbrCmd + 'dataset erase')[0] != 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'leave')[0] != 'Fail' and self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] != 'Fail':
                 return True
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("stopOTBR() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('stopOTBR() Error: ' + str(e))
 
     def __isOTBRRunning(self):
         """check whether or not OTBR is running
@@ -509,13 +510,12 @@ class OTBR(IThci):
             False: OTBR is not running
         """
         print 'call __isOTBRRunning'
-        if self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:State')[0]) == 'associated':
+        if self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:State')[0]) == 'associated':
             print '*****OTBR is running'
             return True
         else:
             print '*****Wrong OTBR state'
             return False
-        #return self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:State')[0]) == 'associated'
 
     # rloc16 might be hex string or integer, need to return actual allocated router id
     def __convertRlocToRouterId(self, xRloc16):
@@ -528,14 +528,14 @@ class OTBR(IThci):
             actual router id allocated by leader
         """
         routerList = []
-        routerList = self.__sendCommand(self.otbrCmd + 'getprop -v Thread:RouterTable')
+        routerList = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:RouterTable')
         print routerList
         print xRloc16
 
         for line in routerList:
             if re.match('\[|\]', line):
                 continue
-            if re.match(self.piPrompt, line, re.M|re.I):
+            if re.match(WPAN_CARRIER_PROMPT, line, re.M|re.I):
                 break
             router = []
             router = self.__stripValue(line).split(',')
@@ -649,25 +649,25 @@ class OTBR(IThci):
     def __setChannelMask(self, channelMask):
         print 'call _setChannelMask'
         try:
-            cmd = self.otbrCmd + 'setprop NCP:ChannelMask %s' % channelMask
+            cmd = WPANCTL_CMD + 'setprop NCP:ChannelMask %s' % channelMask
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd) != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setChannelMask() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setChannelMask() Error: ' + str(e))
 
     def __setSecurityPolicy(self, securityPolicySecs, securityPolicyFlags):
         print 'call _setSecurityPolicy'
         try:
-            cmd1 = self.otbrCmd + 'setprop Dataset:SecPolicy:KeyRotation %s' % str(securityPolicySecs)
+            cmd1 = WPANCTL_CMD + 'setprop Dataset:SecPolicy:KeyRotation %s' % str(securityPolicySecs)
             if securityPolicyFlags == 'onrcb':
-                cmd2 = self.otbrCmd + 'setprop Dataset:SecPolicy:Flags 0xff'
+                cmd2 = WPANCTL_CMD + 'setprop Dataset:SecPolicy:Flags 0xff'
             else:
-                print "unknown policy flag :" + securityPolicyFlags
+                print "unknown policy flag :' + securityPolicyFlags
                 return False
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd1) != 'Fail' and self.__sendCommand(cmd2) != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setSecurityPolicy() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setSecurityPolicy() Error: ' + str(e))
 
     def __setKeySwitchGuardTime(self, iKeySwitchGuardTime):
         """ set the Key switch guard time
@@ -682,19 +682,19 @@ class OTBR(IThci):
         print '%s call setKeySwitchGuardTime' % self.port
         print iKeySwitchGuardTime
         try:
-            cmd = self.otbrCmd + 'setprop Network:KeySwitchGuardTime %s' % str(iKeySwitchGuardTime)
+            cmd = WPANCTL_CMD + 'setprop Network:KeySwitchGuardTime %s' % str(iKeySwitchGuardTime)
             if self.__sendCommand(cmd)[0] != 'Fail':
                 time.sleep(1)
                 return True
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setKeySwitchGuardTime() Error; " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setKeySwitchGuardTime() Error; ' + str(e))
 
     def __getCommissionerSessionId(self):
         """ get the commissioner session id allocated from Leader """
         print '%s call getCommissionerSessionId' % self.port
-        return self.__sendCommand(self.otbrCmd + 'getprop -v Commissioner:SessionId')[0]
+        return self.__sendCommand(WPANCTL_CMD + 'getprop -v Commissioner:SessionId')[0]
 
     def _connect(self):
         print 'My port is %s' % self.port
@@ -706,11 +706,11 @@ class OTBR(IThci):
                 time.sleep(3)
                 input_data = self.handle.read(self.handle.inWaiting())
             if 'login' in input_data:
-                self.handle.write(self.piUser + '\n')
+                self.handle.write(WPAN_CARRIER_USER + '\n')
                 time.sleep(3)
                 input_data = self.handle.read(self.handle.inWaiting())
                 if 'Password' in input_data:
-                    self.handle.write(self.piPasswd + '\n')
+                    self.handle.write(WPAN_CARRIER_PASSWD + '\n')
                     input_data = self.handle.read(self.handle.inWaiting())
             self.handle.write('stty cols 128\n')
             time.sleep(3)
@@ -733,7 +733,7 @@ class OTBR(IThci):
                 self.handle.close()
                 self.handle = None
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("closeConnection() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('closeConnection() Error: ' + str(e))
 
     def intialize(self):
         """initialize the serial port with baudrate, timeout parameters"""
@@ -741,11 +741,11 @@ class OTBR(IThci):
         try:
             # init serial port
             self._connect()
-            self.__sendCommand(self.otbrCmd + 'leave')
-            self.__sendCommand(self.otbrCmd + 'dataset erase')
+            self.__sendCommand(WPANCTL_CMD + 'leave')
+            self.__sendCommand(WPANCTL_CMD + 'dataset erase')
             self.deviceConnected = True
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('intialize() Error: ' + str(e))
             self.deviceConnected = False
 
     def setNetworkName(self, networkName='GRL'):
@@ -761,18 +761,18 @@ class OTBR(IThci):
         print '%s call setNetworkName' % self.port
 
         try:
-            cmd = self.otbrCmd + 'setprop -s Network:Name %s' % networkName
-            datasetCmd = self.otbrCmd + 'setprop Dataset:NetworkName %s' % networkName
+            cmd = WPANCTL_CMD + 'setprop -s Network:Name %s' % networkName
+            datasetCmd = WPANCTL_CMD + 'setprop Dataset:NetworkName %s' % networkName
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
             #return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setNetworkName() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setNetworkName() Error: ' + str(e))
 
     def getNetworkName(self):
         """get Thread Network name"""
         print '%s call getNetworkname' % self.port
-        networkName = self.__sendCommand(self.otbrCmd + 'getprop -v Network:Name')[0]
+        networkName = self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:Name')[0]
         return self.__stripValue(networkName)
 
     def setChannel(self, channel=15):
@@ -791,17 +791,17 @@ class OTBR(IThci):
         print '%s call setChannel' % self.port
 
         try:
-            cmd = self.otbrCmd + 'setprop NCP:Channel %s' % channel
-            datasetCmd = self.otbrCmd + 'setprop Dataset:Channel %s' % channel
+            cmd = WPANCTL_CMD + 'setprop NCP:Channel %s' % channel
+            datasetCmd = WPANCTL_CMD + 'setprop Dataset:Channel %s' % channel
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setChannel() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setChannel() Error: ' + str(e))
 
     def getChannel(self):
         """get current channel"""
         print '%s call getChannel' % self.port
-        return self.__sendCommand(self.otbrCmd + 'getprop -v NCP:Channel')[0]
+        return self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:Channel')[0]
 
     def setMAC(self, xEUI):
         """set the extended addresss of Thread device
@@ -830,7 +830,7 @@ class OTBR(IThci):
             else:
                 address64 = xEUI
 
-            cmd = self.otbrCmd + 'setprop NCP:MACAddress %s' % address64
+            cmd = WPANCTL_CMD + 'setprop NCP:MACAddress %s' % address64
 
             if self.__sendCommand(cmd)[0] != 'Fail':
                 self.mac = address64
@@ -838,7 +838,7 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setMAC() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setMAC() Error: ' + str(e))
 
     def getMAC(self, bType=MacType.RandomMac):
         """get one specific type of MAC address
@@ -857,18 +857,18 @@ class OTBR(IThci):
             macAddr64 = self.mac
         else:
             if bType == MacType.FactoryMac:
-                macAddr64 = self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:HardwareAddress')[0])
+                macAddr64 = self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:HardwareAddress')[0])
             elif bType == MacType.HashMac:
-                macAddr64 = self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:MACAddress')[0])
+                macAddr64 = self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:MACAddress')[0])
             else:
-                macAddr64 = self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:ExtendedAddress')[0])
+                macAddr64 = self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:ExtendedAddress')[0])
 
         return int(macAddr64, 16)
 
     def getLL64(self):
         """get link local unicast IPv6 address"""
         print '%s call getLL64' % self.port
-        return self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v IPv6:LinkLocalAddress')[0])
+        return self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v IPv6:LinkLocalAddress')[0])
 
     def getMLEID(self):
         """get mesh local endpoint identifier address"""
@@ -878,15 +878,15 @@ class OTBR(IThci):
     def getRloc16(self):
         """get rloc16 short address"""
         print '%s call getRloc16' % self.port
-        rloc16 = self.__sendCommand(self.otbrCmd + 'getprop -v Thread:RLOC16')[0]
+        rloc16 = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:RLOC16')[0]
         return int(rloc16, 16)
 
     def getRloc(self):
         """get router locator unicast IPv6 address"""
         print '%s call getRloc' % self.port
-        prefix = self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v IPv6:MeshLocalPrefix')[0])
+        prefix = self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v IPv6:MeshLocalPrefix')[0])
         mlprefix = prefix.split('/')[0]
-        rloc16 = self.__sendCommand(self.otbrCmd + 'getprop -v Thread:RLOC16')[0].lstrip('0x')
+        rloc16 = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:RLOC16')[0].lstrip('0x')
         print "prefix: " + prefix
         print "mlprefix: " + mlprefix
         print "rloc16: " + rloc16
@@ -923,18 +923,18 @@ class OTBR(IThci):
                 if len(masterKey) < 32:
                     masterKey = masterKey.zfill(32)
 
-                cmd = self.otbrCmd + 'setprop Network:Key %s' % masterKey
-                datasetCmd = self.otbrCmd + 'setprop Dataset:MasterKey %s' % masterKey
+                cmd = WPANCTL_CMD + 'setprop Network:Key %s' % masterKey
+                datasetCmd = WPANCTL_CMD + 'setprop Dataset:MasterKey %s' % masterKey
             else:
                 masterKey = key
-                cmd = self.otbrCmd + 'setprop Network:Key %s' % masterKey
-                datasetCmd = self.otbrCmd + 'setprop Dataset:MasterKey %s' % masterKey
+                cmd = WPANCTL_CMD + 'setprop Network:Key %s' % masterKey
+                datasetCmd = WPANCTL_CMD + 'setprop Dataset:MasterKey %s' % masterKey
 
             self.networkKey = masterKey
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setNetworkkey() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setNetworkkey() Error: ' + str(e))
 
     def getNetworkKey(self):
         """get the current Thread Network master key"""
@@ -968,7 +968,7 @@ class OTBR(IThci):
                 if self.__setAddressfilterMode('Blacklist'):
                     self._addressfilterMode = 'blacklist'
 
-            cmd = self.otbrCmd + 'insert MAC:Blacklist:Entries %s' % macAddr
+            cmd = WPANCTL_CMD + 'insert MAC:Blacklist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
 
             self._addressfilterSet.add(macAddr)
@@ -978,7 +978,7 @@ class OTBR(IThci):
 
             return ret
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("addBlockedMAC() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('addBlockedMAC() Error: ' + str(e))
 
     def addAllowMAC(self, xEUI):
         """add a given extended address to the whitelist addressfilter
@@ -1002,7 +1002,7 @@ class OTBR(IThci):
                 if self.__setAddressfilterMode('Whitelist'):
                     self._addressfilterMode = 'whitelist'
 
-            cmd = self.otbrCmd + 'insert MAC:Whitelist:Entries %s' % macAddr
+            cmd = WPANCTL_CMD + 'insert MAC:Whitelist:Entries %s' % macAddr
             ret = self.__sendCommand(cmd)[0] != 'Fail'
 
             self._addressfilterSet.add(macAddr)
@@ -1012,7 +1012,7 @@ class OTBR(IThci):
             return ret
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("addAllowMAC() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('addAllowMAC() Error: ' + str(e))
 
     def clearBlockList(self):
         """clear all entries in blacklist table
@@ -1033,13 +1033,13 @@ class OTBR(IThci):
             if self.__setAddressfilterMode('disable'):
                 self._addressfilterMode = 'disable'
                 # clear ops
-                cmd =  cmd = self.otbrCmd + 'remove MAC:Blocklist:Entries'
+                cmd = WPANCTL_CMD + 'remove MAC:Blocklist:Entries'
                 if self.__sendCommand(cmd)[0] != 'Fail':
                     self._addressfilterSet.clear()
                     return True
             return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("clearBlockList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('clearBlockList() Error: ' + str(e))
 
     def clearAllowList(self):
         """clear all entries in whitelist table
@@ -1060,18 +1060,18 @@ class OTBR(IThci):
             if self.__setAddressfilterMode('disable'):
                 self._addressfilterMode = 'disable'
                 # clear ops
-                cmd = self.otbrCmd + 'insert MAC:Whitelist:Entries'
+                cmd = WPANCTL_CMD + 'insert MAC:Whitelist:Entries'
                 if self.__sendCommand(cmd)[0] != 'Fail':
                     self._addressfilterSet.clear()
                     return True
             return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("clearAllowList() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('clearAllowList() Error: ' + str(e))
 
     def getDeviceRole(self):
         """get current device role in Thread Network"""
         print '%s call getDeviceRole' % self.port
-        return self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v Network:NodeType')[0])
+        return self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:NodeType')[0])
 
     def joinNetwork(self, eRoleId):
         """make device ready to join the Thread Network with a given role
@@ -1145,7 +1145,7 @@ class OTBR(IThci):
             time.sleep(3)
             return True
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("joinNetwork() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('joinNetwork() Error: ' + str(e))
 
     def getNetworkFragmentID(self):
         """get current partition id of Thread Network Partition from LeaderData
@@ -1158,7 +1158,7 @@ class OTBR(IThci):
             print 'OTBR is not running'
             return None
 
-        return self.__sendCommand(self.otbrCmd + 'getprop -v Network:PartitionId')[0]
+        return self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:PartitionId')[0]
 
     def getParentAddress(self):
         """get Thread device's parent extended address and rloc16 short address
@@ -1168,16 +1168,16 @@ class OTBR(IThci):
         """
         print '%s call getParentAddress' % self.port
         parentInfo = []
-        parentInfo = self.__stripValue(self.__sendCommand(self.otbrCmd + 'getporp -v Thread:Parent')).split(' ')
+        parentInfo = self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getporp -v Thread:Parent')).split(' ')
 
         return parentInfo[0]
 
     def powerDown(self):
         """power down the OTBR"""
         print '%s call powerDown' % self.port
-        if self.__sendCommand(self.otbrCmd + 'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
+        if self.__sendCommand(WPANCTL_CMD + 'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
             time.sleep(0.5)
-            if self.__sendCommand(self.otbrCmd + 'reset')[0] != 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'reset')[0] != 'Fail':
                 self.isPowerDown = True
                 return True
             else:
@@ -1192,15 +1192,15 @@ class OTBR(IThci):
             self._connect()
 
         self.isPowerDown = False
-        if self.__sendCommand(self.otbrCmd + 'attach')[0] != 'Fail':
+        if self.__sendCommand(WPANCTL_CMD + 'attach')[0] != 'Fail':
             time.sleep(3)
         else:
             return False
 
-        if self.__sendCommand(self.otbrCmd + 'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
+        if self.__sendCommand(WPANCTL_CMD + 'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
             return False
 
-        if self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:State')[0]) != 'associated':
+        if self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:State')[0]) != 'associated':
             print 'powerUp failed'
             return False
         else:
@@ -1215,17 +1215,17 @@ class OTBR(IThci):
         """
         print '%s call reboot' % self.port
         try:
-            self._sendline(self.otbrCmd + 'reset')
+            self._sendline(WPANCTL_CMD + 'reset')
             self.isPowerDown = True
 
 
-            if self.__sendCommand(self.otbrCmd + 'getprop -v NCP:State')[0] != 'associated':
+            if self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:State')[0] != 'associated':
                 print '[FAIL] reboot'
                 return False
             else:
                 return True
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("reboot() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('reboot() Error: ' + str(e))
 
     def ping(self, destination, length=20):
         """ send ICMPv6 echo request with a given length to a unicast destination
@@ -1238,13 +1238,13 @@ class OTBR(IThci):
         print '%s call ping' % self.port
         print 'destination: %s' %destination
         try:
-            cmd = 'ping %s  -c 5 -s %s -I %s'  % (destination, str(length), self.wpan)
+            cmd = 'ping %s  -c 5 -s %s -I %s'  % (destination, str(length), WPAN_INTERFACE)
             self._sendline(cmd)
             self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("ping() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('ping() Error: ' + str(e))
 
     def multicast_Ping(self, destination, length=20):
         """send ICMPv6 echo request with a given length to a multicast destination
@@ -1257,18 +1257,18 @@ class OTBR(IThci):
         print '%s call multicast_Ping' % self.port
         print 'destination: %s' % destination
         try:
-            cmd = 'ping %s -c 5 -s %s -I %s' % (destination, str(length), self.wpan)
+            cmd = 'ping %s -c 5 -s %s -I %s' % (destination, str(length), WPAN_INTERFACE)
             self._sendline(cmd)
             self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("multicast_ping() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('multicast_ping() Error: ' + str(e))
 
     def getVersionNumber(self):
         """get OTBR stack firmware version number"""
         print '%s call getVersionNumber' % self.port
-        versionStr = self.__sendCommand(self.otbrCmd + 'getprop -v NCP:Version')[0]
+        versionStr = self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:Version')[0]
 
         return self.__stripValue(versionStr)
 
@@ -1290,29 +1290,29 @@ class OTBR(IThci):
                 panid = str(hex(xPAN))
                 print panid
 
-            cmd = self.otbrCmd + 'setprop -s Network:PANID %s' % panid
-            datasetCmd = self.otbrCmd + 'setprop Dataset:PanId %s' % panid
+            cmd = WPANCTL_CMD + 'setprop -s Network:PANID %s' % panid
+            datasetCmd = WPANCTL_CMD + 'setprop Dataset:PanId %s' % panid
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setPANID() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
     def getPANID(self):
         """get current Thread Network PAN ID"""
         print '%s call getPANID' % self.port
-        return self.__sendCommand(self.otbrCmd + 'getprop -v Network:PANID')[0]
+        return self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:PANID')[0]
 
     def reset(self):
         """factory reset"""
         print '%s call reset' % self.port
         try:
-            self._sendline(self.otbrCmd + 'leave')
-            self.__sendCommand(self.otbrCmd + 'dataset erase')
+            self._sendline(WPANCTL_CMD + 'leave')
+            self.__sendCommand(WPANCTL_CMD + 'dataset erase')
             time.sleep(2)
             self._read()
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("reset() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('reset() Error: ' + str(e))
 
     def removeRouter(self, xRouterId):
         """kick router with a given router id from the Thread Network
@@ -1338,7 +1338,7 @@ class OTBR(IThci):
             cmd = 'releaserouterid %s' % routerId
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("removeRouter() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('removeRouter() Error: ' + str(e))
 
     def setDefaultValues(self):
         """set default mandatory Thread Network parameter value"""
@@ -1385,7 +1385,7 @@ class OTBR(IThci):
             self.setPSKc(self.pskc)
             self.setActiveTimestamp(self.activetimestamp)
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setDefaultValue() Error: ' + str(e))
 
     def getDeviceConncetionStatus(self):
         """check if serial port connection is ready or not"""
@@ -1395,7 +1395,7 @@ class OTBR(IThci):
     def getPollingRate(self):
         """get data polling rate for sleepy end device"""
         print '%s call getPollingRate' % self.port
-        return self.__sendCommand(self.otbrCmd + 'getprop -v NCP:SleepyPollInterval')[0]
+        return self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:SleepyPollInterval')[0]
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
@@ -1410,11 +1410,11 @@ class OTBR(IThci):
         print '%s call setPollingRate' % self.port
         print iPollingRate
         try:
-            cmd = self.otbrCmd + 'setprop NCP:SleepyPollInterval %s' % str(iPollingRate*1000)
+            cmd = WPANCTL_CMD + 'setprop NCP:SleepyPollInterval %s' % str(iPollingRate*1000)
             print cmd
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setPollingRate() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setPollingRate() Error: ' + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the specified EUIadr
@@ -1476,9 +1476,9 @@ class OTBR(IThci):
         print '%s call resetAndRejoin' % self.port
         print timeout
         try:
-            if self.__sendCommand(self.otbrCmd + 'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
                 time.sleep(0.5)
-                if self.__sendCommand(self.otbrCmd + 'reset')[0] != 'Fail':
+                if self.__sendCommand(WPANCTL_CMD + 'reset')[0] != 'Fail':
                     self.isPowerDown = True
                 else:
                     return False
@@ -1489,20 +1489,20 @@ class OTBR(IThci):
             if self.deviceRole == Thread_Device_Role.SED:
                 self.setPollingRate(self.sedPollingRate)
 
-            if self.__sendCommand(self.otbrCmd + 'attach')[0] != 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'attach')[0] != 'Fail':
                 time.sleep(3)
             else:
                 return False
 
-            if self.__sendCommand(self.otbrCmd + 'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
                 return False
 
-            if self.__stripValue(self.__sendCommand(self.otbrCmd + 'getprop -v NCP:State')[0]) != 'associated':
+            if self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:State')[0]) != 'associated':
                 print '[FAIL] reset and rejoin'
                 return False
             return True
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("resetAndRejoin() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('resetAndRejoin() Error: ' + str(e))
 
     def configBorderRouter(self, P_Prefix, P_stable=1, P_default=1, P_slaac_preferred=0, P_Dhcp=0, P_preference=0, P_on_mesh=1, P_nd_dns=0):
         """configure the border router with a given prefix entry parameters
@@ -1542,7 +1542,7 @@ class OTBR(IThci):
             if P_on_mesh == 1:
                 parameter += ' -o'
 
-            cmd = self.otbrCmd + 'add-prefix %s %s -P %d' % (prefix, parameter, P_preference)
+            cmd = WPANCTL_CMD + 'add-prefix %s %s -P %d' % (prefix, parameter, P_preference)
             print parameter
             print cmd
             if self.__sendCommand(cmd)[0] != 'Fail':
@@ -1550,7 +1550,7 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("configBorderRouter() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('configBorderRouter() Error: ' + str(e))
 
     def setNetworkIDTimeout(self, iNwkIDTimeOut):
         """set networkid timeout for OTBR
@@ -1578,11 +1578,11 @@ class OTBR(IThci):
         print '%s call setKeepAliveTimeOut' % self.port
         print iTimeOut
         try:
-            cmd = self.otbrCmd + 'setprop NCP:SleepyPollInterval %s' % str(iTimeOut*1000)
+            cmd = WPANCTL_CMD + 'setprop NCP:SleepyPollInterval %s' % str(iTimeOut*1000)
             print cmd
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setKeepAliveTimeOut() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setKeepAliveTimeOut() Error: ' + str(e))
 
     def setKeySequenceCounter(self, iKeySequenceValue):
         """ set the Key sequence counter corresponding to Thread Network master key
@@ -1597,20 +1597,20 @@ class OTBR(IThci):
         print '%s call setKeySequenceCounter' % self.port
         print iKeySequenceValue
         try:
-            cmd = self.otbrCmd + 'setprop Network:KeyIndex %s' % str(iKeySequenceValue)
+            cmd = WPANCTL_CMD + 'setprop Network:KeyIndex %s' % str(iKeySequenceValue)
             if self.__sendCommand(cmd)[0] != 'Fail':
                 time.sleep(1)
                 return True
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setKeySequenceCounter() Error; " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setKeySequenceCounter() Error: ' + str(e))
 
     def getKeySequenceCounter(self):
         """get current Thread Network key sequence"""
         print '%s call getKeySequenceCounter' % self.port
         keySequence = ''
-        keySequence = self.__sendCommand(self.otbrCmd + 'getprop -v Network:KeyIndex')[0]
+        keySequence = self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:KeyIndex')[0]
         return keySequence
 
     def incrementKeySequenceCounter(self, iIncrementValue=1):
@@ -1632,7 +1632,7 @@ class OTBR(IThci):
             print keySequence
             return self.setKeySequenceCounter(keySequence)
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("incrementKeySequenceCounter() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('incrementKeySequenceCounter() Error: ' + str(e))
 
     def setNetworkDataRequirement(self, eDataRequirement):
         """set whether the Thread device requires the full network data
@@ -1672,9 +1672,9 @@ class OTBR(IThci):
         prefix = self.__convertIp6PrefixStringToIp6Address(str(P_Prefix))
         try:
             if P_stable:
-                cmd = self.otbrCmd + 'add-route %s -l 64 -p %d' % (prefix, R_Preference)
+                cmd = WPANCTL_CMD + 'add-route %s -l 64 -p %d' % (prefix, R_Preference)
             else:
-                cmd = self.otbrCmd + 'add-route %s -l 64 -p %d -n' % (prefix, R_Preference)
+                cmd = WPANCTL_CMD + 'add-route %s -l 64 -p %d -n' % (prefix, R_Preference)
             print cmd
 
             if self.__sendCommand(cmd)[0] != 'Fail':
@@ -1682,7 +1682,7 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("configExternalRouter() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('configExternalRouter() Error: ' + str(e))
 
     def getNeighbouringRouters(self):
         """get neighboring routers information
@@ -1694,7 +1694,7 @@ class OTBR(IThci):
         try:
             routerInfo = []
             routerList = []
-            routerList = self.__sendCommand(self.otbrCmd + 'getprop -v Thread:NeighborTable')
+            routerList = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:NeighborTable')
             print routerList
 
             if 'Done' in routerList:
@@ -1724,7 +1724,7 @@ class OTBR(IThci):
             print routerInfo
             return routerInfo
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("getNeighbouringDevice() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('getNeighbouringDevice() Error: ' + str(e))
 
     def getChildrenInfo(self):
         """get all children information
@@ -1736,7 +1736,7 @@ class OTBR(IThci):
         try:
             childrenInfoAll = []
             childrenInfo = {'EUI': 0, 'Rloc16': 0, 'MLEID': ''}
-            childrenList = self.__sendCommand(self.otbrCmd + 'getprop Thread:ChildTable')
+            childrenList = self.__sendCommand(WPANCTL_CMD + 'getprop Thread:ChildTable')
             print childrenList
 
             if 'Done' in childrenList:
@@ -1772,7 +1772,7 @@ class OTBR(IThci):
             print childrenInfoAll
             return childrenInfoAll
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("getChildrenInfo() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('getChildrenInfo() Error: ' + str(e))
 
     def setXpanId(self, xPanId):
         """set extended PAN ID of Thread Network
@@ -1795,18 +1795,18 @@ class OTBR(IThci):
                 if len(xpanid) < 16:
                     xpanid = xpanid.zfill(16)
                     print xpanid
-                    cmd = self.otbrCmd + 'setprop Network:XPANID %s' % xpanid
-                    datasetCmd = self.otbrCmd + 'setprop Dataset:ExtendedPanId %s' % xpanid
+                    cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid
+                    datasetCmd = WPANCTL_CMD + 'setprop Dataset:ExtendedPanId %s' % xpanid
             else:
                 xpanid = xPanId
-                cmd = self.otbrCmd + 'setprop Network:XPANID %s' % xpanid
-                datasetCmd = self.otbrCmd + 'setprop Dataset:ExtendedPanId %s' % xpanid
+                cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid
+                datasetCmd = WPANCTL_CMD + 'setprop Dataset:ExtendedPanId %s' % xpanid
 
             self.xpanId = xpanid
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setXpanId() Error: ' + str(e))
 
     def getNeighbouringDevices(self):
         """gets the neighboring devices' extended address to compute the DUT
@@ -1852,7 +1852,7 @@ class OTBR(IThci):
         print '%s call setPartationId' % self.port
         print partationId
 
-        cmd = self.otbrCmd + 'setprop Network:PartitionId %s' %(str(hex(partationId)).rstrip('L'))
+        cmd = WPANCTL_CMD + 'setprop Network:PartitionId %s' %(str(hex(partationId)).rstrip('L'))
         print cmd
         return self.__sendCommand(cmd)[0] != 'Fail'
 
@@ -1884,7 +1884,7 @@ class OTBR(IThci):
                 print 'no global address matched'
                 return None
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("getGUA() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('getGUA() Error: ' + str(e))
 
     def getShortAddress(self):
         """get Rloc16 short address of Thread device"""
@@ -1900,11 +1900,11 @@ class OTBR(IThci):
         """set mesh local prefix"""
         print '%s call setMLPrefix' % self.port
         try:
-            cmd = self.otbrCmd + 'setprop IPv6:MeshLocalPrefix %s' % sMeshLocalPrefix
+            cmd = WPANCTL_CMD + 'setprop IPv6:MeshLocalPrefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setMLPrefix() Error: ' + str(e))
 
     def getML16(self):
         """get mesh local 16 unicast address (Rloc)"""
@@ -1931,7 +1931,7 @@ class OTBR(IThci):
     def getChildTimeoutValue(self):
         """get child timeout"""
         print '%s call getChildTimeoutValue' % self.port
-        childTimeout = self.__sendCommand(self.otbrCmd + 'getporp -v Thread:ChildTimeout')[0]
+        childTimeout = self.__sendCommand(WPANCTL_CMD + 'getporp -v Thread:ChildTimeout')[0]
         return int(childTimeout)
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
@@ -1948,7 +1948,7 @@ class OTBR(IThci):
         #TODO: Support the whole Native Commissioner functionality
         #      Currently it only aims to trigger a Discovery Request message to pass Certification test 5.8.4
         print '%s call startNativeCommissioner' % self.port
-        cmd = self.otbrCmd + 'joiner --start %s' %(strPSKc)
+        cmd = WPANCTL_CMD + 'joiner --start %s' %(strPSKc)
         print cmd
         if self.__sendCommand(cmd)[0] != "Fail":
             return True
@@ -1963,10 +1963,10 @@ class OTBR(IThci):
             False: fail to start Commissioner
         """
         print '%s call startCollapsedCommissioner' % self.port
-        startCmd = self.otbrCmd + 'form %s -c %s -T router' % (self.networkName, str(self.channel))
+        startCmd = WPANCTL_CMD + 'form %s -c %s -T router' % (self.networkName, str(self.channel))
         if self.__sendCommand(startCmd) != 'Fail':
             time.sleep(2)
-            cmd = self.otbrCmd + 'commissioner start'
+            cmd = WPANCTL_CMD + 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] != 'Fail':
                 self.isActiveCommissioner = True
@@ -2002,7 +2002,7 @@ class OTBR(IThci):
         # long timeout value to avoid automatic joiner removal (in seconds)
         timeout = 500
 
-        cmd = self.otbrCmd + 'commissioner joiner-add %s %s %s' % (strPSKd, eui64, str(timeout))
+        cmd = WPANCTL_CMD + 'commissioner joiner-add %s %s %s' % (strPSKd, eui64, str(timeout))
         print cmd
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()
@@ -2025,7 +2025,7 @@ class OTBR(IThci):
         """
         print '%s call setProvisioningUrl' % self.port
         if self.deviceRole == Thread_Device_Role.Commissioner:
-            cmd = self.otbrCmd + 'setprop Commissioner:ProvisioningUrl %s' %(strURL)
+            cmd = WPANCTL_CMD + 'setprop Commissioner:ProvisioningUrl %s' %(strURL)
 
         self.provisioningUrl = strURL
         print cmd
@@ -2040,7 +2040,7 @@ class OTBR(IThci):
         """
         print '%s call allowCommission' % self.port
         try:
-            cmd = self.otbrCmd + 'commissioner start'
+            cmd = WPANCTL_CMD + 'commissioner start'
             print cmd
             if self.isActiveCommissioner:
                 return True
@@ -2051,7 +2051,7 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.writeintodebuglogger("allowcommission() error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('allowcommission() error: ' + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -2064,7 +2064,7 @@ class OTBR(IThci):
             False: fail to start joiner
         """
         print '%s call joinCommissioned' % self.port
-        cmd = self.otbrCmd + 'joiner --start %s %s' %(strPSKd, self.provisioningUrl)
+        cmd = WPANCTL_CMD + 'joiner --start %s %s' %(strPSKd, self.provisioningUrl)
         print cmd
         if self.__sendCommand(cmd)[0] != "Fail":
             maxDuration = 150 # seconds
@@ -2082,7 +2082,7 @@ class OTBR(IThci):
 
                 time.sleep(1)
 
-            self.__sendCommand(self.otbrCmd + 'joiner --attach')
+            self.__sendCommand(WPANCTL_CMD + 'joiner --attach')
             time.sleep(30)
             return True
         else:
@@ -2159,11 +2159,11 @@ class OTBR(IThci):
         channelMask = ''
         channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
         try:
-            cmd = self.otbrCmd + 'commissioner energy-scan %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
+            cmd = WPANCTL_CMD + 'commissioner energy-scan %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
             print cmd
             return self.__sendCommand(cmd) != 'Fail'
         except Exception, e:
-            ModuleHelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_ED_SCAN() error: ' + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         """send MGMT_PANID_QUERY message to a given destination
@@ -2184,11 +2184,11 @@ class OTBR(IThci):
             panid = str(hex(xPanId))
 
         try:
-            cmd = self.otbrCmd + 'commissioner pan-id-query %s %s %s' % (panid, channelMask, sAddr)
+            cmd = WPANCTL_CMD + 'commissioner pan-id-query %s %s %s' % (panid, channelMask, sAddr)
             print cmd
             return self.__sendCommand(cmd) != 'Fail'
         except Exception, e:
-            ModuleHelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_PANID_QUERY() error: ' + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         """send MGMT_ANNOUNCE_BEGIN message to a given destination
@@ -2201,11 +2201,11 @@ class OTBR(IThci):
         channelMask = ''
         channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
         try:
-            cmd = self.otbrCmd + 'commissioner announce-begin %s %s %s %s' % (channelMask, xCount, xPeriod, sAddr)
+            cmd = WPANCTL_CMD + 'commissioner announce-begin %s %s %s %s' % (channelMask, xCount, xPeriod, sAddr)
             print cmd
             return self.__sendCommand(cmd) != 'Fail'
         except Exception, e:
-            ModuleHelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_ANNOUNCE_BEGIN() error: ' + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2217,19 +2217,19 @@ class OTBR(IThci):
         print '%s call MGMT_ACTIVE_GET' % self.port
         try:
 
-            cmd = self.otbrCmd + 'dataset mgmt-get-active'
+            cmd = WPANCTL_CMD + 'dataset mgmt-get-active'
 
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
-                setTLVCmd = self.otbrCmd + 'setprop Dataset:RawTlvs ' + tlvs
+                setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
             else:
-                if self.__sendCommand(self.otbrCmd + 'dataset erase')[0] == 'Fail':
+                if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                     return False
 
             if Addr != '':
-                setAddressCmd = self.otbrCmd + 'setprop Dataset:DestIpAddress ' + Addr
+                setAddressCmd = WPANCTL_CMD + 'setprop Dataset:DestIpAddress ' + Addr
                 if self.__sendCommand(setAddressCmd)[0] == 'Fail':
                     return False
 
@@ -2238,7 +2238,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_GET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_ACTIVE_GET() Error: ' + str(e))
 
     def MGMT_ACTIVE_SET(self, sAddr='', xCommissioningSessionId=None, listActiveTimestamp=None, listChannelMask=None, xExtendedPanId=None,
                         sNetworkName=None, sPSKc=None, listSecurityPolicy=None, xChannel=None, sMeshLocalPrefix=None, xMasterKey=None,
@@ -2251,16 +2251,16 @@ class OTBR(IThci):
         """
         print '%s call MGMT_ACTIVE_SET' % self.port
         try:
-            cmd = self.otbrCmd + 'dataset mgmt-set-active'
+            cmd = WPANCTL_CMD + 'dataset mgmt-set-active'
 
-            if self.__sendCommand(self.otbrCmd + 'dataset erase')[0] == 'Fail':
+            if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                 return False
 
             if listActiveTimestamp != None:
                 sActiveTimestamp = str(hex(listActiveTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
-                setActiveTimeCmd = self.otbrCmd + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
+                setActiveTimeCmd = WPANCTL_CMD + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
@@ -2268,22 +2268,22 @@ class OTBR(IThci):
                 xpanid = self.__convertLongToString(xExtendedPanId)
                 if len(xpanid) < 16:
                     xpanid = xpanid.zfill(16)
-                setExtendedPanIdCmd = self.otbrCmd + 'setprop Dataset:ExtendedPanId ' + xpanid
+                setExtendedPanIdCmd = WPANCTL_CMD + 'setprop Dataset:ExtendedPanId ' + xpanid
                 if self.__sendCommand(setExtendedPanIdCmd)[0] == 'Fail':
                     return False
 
             if sNetworkName != None:
-                setNetworkNameCmd = self.otbrCmd + 'setprop Dataset:NetworkName ' + str(sNetworkName)
+                setNetworkNameCmd = WPANCTL_CMD + 'setprop Dataset:NetworkName ' + str(sNetworkName)
                 if self.__sendCommand(setNetworkNameCmd)[0] == 'Fail':
                     return False
 
             if xChannel != None:
-                setChannelCmd = self.otbrCmd + 'setprop Dataset:Channel ' + str(xChannel)
+                setChannelCmd = WPANCTL_CMD + 'setprop Dataset:Channel ' + str(xChannel)
                 if self.__sendCommand(setChannelCmd)[0] == 'Fail':
                     return False
 
             if sMeshLocalPrefix != None:
-                setMLPrefixCmd = self.otbrCmd + 'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
+                setMLPrefixCmd = WPANCTL_CMD + 'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
                 if self.__sendCommand(setMLPrefixCmd)[0] == 'Fail':
                     return False
 
@@ -2293,17 +2293,17 @@ class OTBR(IThci):
                 if len(key) < 32:
                     key = key.zfill(32)
 
-                setMasterKeyCmd = self.otbrCmd + 'setprop Dataset:MasterKey ' + key
+                setMasterKeyCmd = WPANCTL_CMD + 'setprop Dataset:MasterKey ' + key
                 if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
                     return False
 
             if xPanId != None:
-                setPanIdCmd = self.otbrCmd + 'setprop Dataset:PanId ' + str(xPanId)
+                setPanIdCmd = WPANCTL_CMD + 'setprop Dataset:PanId ' + str(xPanId)
                 if self.__sendCommand(setPanIdCmd)[0] == 'Fail':
                     return False
 
             if listChannelMask != None:
-                setChannelMaskCmd = self.otbrCmd + 'setprop Dataset:ChannelMaskPage0 ' \
+                setChannelMaskCmd = WPANCTL_CMD + 'setprop Dataset:ChannelMaskPage0 ' \
                                     + '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
                 if self.__sendCommand(setChannelMaskCmd)[0] == 'Fail':
                     return False
@@ -2311,7 +2311,7 @@ class OTBR(IThci):
             if sPSKc != None or listSecurityPolicy != None or \
                     xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
                     BogusTLV != None:
-                setRawTLVCmd = self.otbrCmd + 'setprop Dataset:RawTlvs '
+                setRawTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs '
 
             if sPSKc != None:
                 setRawTLVCmd += '0410'
@@ -2395,7 +2395,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_SET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_ACTIVE_SET() Error: ' + str(e))
 
     def MGMT_PENDING_GET(self, Addr='', TLVs=[]):
         """send MGMT_PENDING_GET command
@@ -2406,19 +2406,19 @@ class OTBR(IThci):
         """
         print '%s call MGMT_PENDING_GET' % self.port
         try:
-            cmd = self.otbrCmd + 'dataset mgmt-get-pending'
+            cmd = WPANCTL_CMD + 'dataset mgmt-get-pending'
 
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
-                setTLVCmd = self.otbrCmd + 'setprop Dataset:RawTlvs ' + tlvs
+                setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
             else:
-                if self.__sendCommand(self.otbrCmd + 'dataset erase')[0] == 'Fail':
+                if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                     return False
 
             if Addr != '':
-                setAddressCmd = self.otbrCmd + 'setprop Dataset:DestIpAddress ' + Addr
+                setAddressCmd = WPANCTL_CMD + 'setprop Dataset:DestIpAddress ' + Addr
                 if self.__sendCommand(setAddressCmd)[0] == 'Fail':
                     return False
 
@@ -2427,7 +2427,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_GET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_PENDING_GET() Error: ' + str(e))
 
     def MGMT_PENDING_SET(self, sAddr='', xCommissionerSessionId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
                          xChannel=None, xPanId=None, xMasterKey=None, sMeshLocalPrefix=None, sNetworkName=None):
@@ -2439,15 +2439,15 @@ class OTBR(IThci):
         """
         print '%s call MGMT_PENDING_SET' % self.port
         try:
-            cmd = self.otbrCmd + 'dataset mgmt-set-pending'
-            if self.__sendCommand(self.otbrCmd + 'dataset erase')[0] == 'Fail':
+            cmd = WPANCTL_CMD + 'dataset mgmt-set-pending'
+            if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                 return False
 
             if listPendingTimestamp != None:
                 sActiveTimestamp = str(hex(listPendingTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
-                setPendingTimeCmd = self.otbrCmd + 'setprop Dataset:PendingTimestamp ' + sActiveTimestamp
+                setPendingTimeCmd = WPANCTL_CMD + 'setprop Dataset:PendingTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setPendingTimeCmd)[0] == 'Fail':
                     return False
 
@@ -2455,27 +2455,27 @@ class OTBR(IThci):
                 sActiveTimestamp = str(hex(listActiveTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
-                setActiveTimeCmd = self.otbrCmd + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
+                setActiveTimeCmd = WPANCTL_CMD + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
             if xDelayTimer != None:
-                setDelayTimerCmd = self.otbrCmd + 'setprop Dataset:Delay ' + str(xDelayTimer)
+                setDelayTimerCmd = WPANCTL_CMD + 'setprop Dataset:Delay ' + str(xDelayTimer)
                 if self.__sendCommand(setDelayTimerCmd)[0] == 'Fail':
                     return False
 
             if sNetworkName != None:
-                setNetworkNameCmd = self.otbrCmd + 'setprop Dataset:NetworkName ' + str(sNetworkName)
+                setNetworkNameCmd = WPANCTL_CMD + 'setprop Dataset:NetworkName ' + str(sNetworkName)
                 if self.__sendCommand(setNetworkNameCmd)[0] == 'Fail':
                     return False
 
             if xChannel != None:
-                setChannelCmd = self.otbrCmd + 'setprop Dataset:Channel ' + str(xChannel)
+                setChannelCmd = WPANCTL_CMD + 'setprop Dataset:Channel ' + str(xChannel)
                 if self.__sendCommand(setChannelCmd)[0] == 'Fail':
                     return False
 
             if sMeshLocalPrefix != None:
-                setMLPrefixCmd = self.otbrCmd + 'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
+                setMLPrefixCmd = WPANCTL_CMD + 'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
                 if self.__sendCommand(setMLPrefixCmd)[0] == 'Fail':
                     return False
 
@@ -2485,12 +2485,12 @@ class OTBR(IThci):
                 if len(key) < 32:
                     key = key.zfill(32)
 
-                setMasterKeyCmd = self.otbrCmd + 'setprop Dataset:MasterKey ' + key
+                setMasterKeyCmd = WPANCTL_CMD + 'setprop Dataset:MasterKey ' + key
                 if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
                     return False
 
             if xPanId != None:
-                setPanIdCmd = self.otbrCmd + 'setprop Dataset:PanId ' + str(xPanId)
+                setPanIdCmd = WPANCTL_CMD + 'setprop Dataset:PanId ' + str(xPanId)
                 if self.__sendCommand(setPanIdCmd)[0] == 'Fail':
                     return False
 
@@ -2502,7 +2502,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_SET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_PENDING_SET() Error: ' + str(e))
 
     def MGMT_COMM_GET(self, Addr='ff02::1', TLVs=[]):
         """send MGMT_COMM_GET command
@@ -2513,7 +2513,7 @@ class OTBR(IThci):
         """
         print '%s call MGMT_COMM_GET' % self.port
         try:
-            cmd = self.otbrCmd + 'commissioner mgmt-get '
+            cmd = WPANCTL_CMD + 'commissioner mgmt-get '
             print 'TLVs:'
             print TLVs
 
@@ -2526,7 +2526,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_GET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_COMM_GET() Error: ' + str(e))
 
     def MGMT_COMM_SET(self, Addr='ff02::1', xCommissionerSessionID=None, xSteeringData=None, xBorderRouterLocator=None,
                       xChannelTlv=None, ExceedMaxPayload=False):
@@ -2538,7 +2538,7 @@ class OTBR(IThci):
         """
         print '%s call MGMT_COMM_SET' % self.port
         try:
-            cmd = self.otbrCmd + 'commissioner mgmt-set '
+            cmd = WPANCTL_CMD + 'commissioner mgmt-set '
             print "-------------------------------"
             print xCommissionerSessionID
             print xSteeringData
@@ -2572,7 +2572,7 @@ class OTBR(IThci):
             return self.__sendCommand(cmd)[0] != 'Fail'
 
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_SET() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('MGMT_COMM_SET() Error: ' + str(e))
 
     def setActiveDataset(self, listActiveDataset=[]):
         print '%s call setActiveDataset' % self.port
@@ -2583,11 +2583,11 @@ class OTBR(IThci):
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
         try:
-            cmd = self.otbrCmd + 'setprop Network:PSKc %s' % strPSKc
+            cmd = WPANCTL_CMD + 'setprop Network:PSKc %s' % strPSKc
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setPSKc() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setPSKc() Error: ' + str(e))
 
     def setActiveTimestamp(self, xActiveTimestamp):
         print '%s call setActiveTimestamp' % self.port
@@ -2596,11 +2596,11 @@ class OTBR(IThci):
             if len(sActiveTimestamp) < 16:
                 sActiveTimestamp = sActiveTimestamp.zfill(16)
             self.activetimestamp = sActiveTimestamp
-            cmd = self.otbrCmd + 'setprop Dataset:ActiveTimestamp %s' % sActiveTimestamp
+            cmd = WPANCTL_CMD + 'setprop Dataset:ActiveTimestamp %s' % sActiveTimestamp
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setActiveTimestamp() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setActiveTimestamp() Error: ' + str(e))
 
     def setUdpJoinerPort(self, portNumber):
         """set Joiner UDP Port
@@ -2622,7 +2622,7 @@ class OTBR(IThci):
             False: fail to stop commissioner
         """
         print '%s call commissionerUnregister' % self.port
-        cmd = self.otbrCmd + 'commissioner stop'
+        cmd = WPANCTL_CMD + 'commissioner stop'
         print cmd
         if self.__sendCommand(cmd)[0] != 'Fail':
             self.isActiveCommissioner = False
@@ -2632,7 +2632,7 @@ class OTBR(IThci):
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         print '%s call sendBeacons' % self.port
-        self._sendline(self.otbrCmd + 'scan')
+        self._sendline(WPANCTL_CMD + 'scan')
         return True
 
     def updateRouterStatus(self):
