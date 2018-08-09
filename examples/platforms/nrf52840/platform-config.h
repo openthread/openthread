@@ -436,6 +436,20 @@
 #endif
 
 /*******************************************************************************
+ * @section Platform FEM Configuration
+ ******************************************************************************/
+
+/**
+ * @def PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+ *
+ * Enable default front end module configuration.
+ *
+ */
+#ifndef PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+#define PLATFORM_FEM_ENABLE_DEFAULT_CONFIG 0
+#endif
+
+/*******************************************************************************
  * @section Radio driver configuration.
  ******************************************************************************/
 
