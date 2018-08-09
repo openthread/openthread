@@ -749,11 +749,12 @@ static bool rf_process_rx_frame(void)
     /* Check if frame is valid */
     otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    // Timestamp
-    sRxFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-    sRxFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+    if (otPlatRadioGetPromiscuous(NULL))
+    {
+        // Timestamp
+        sRxFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sRxFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+    }
 
     sRxFrame.mLength = temp;
     temp             = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;

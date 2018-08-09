@@ -704,11 +704,12 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
-    receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
-    receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
-#endif
+    if (otPlatRadioGetPromiscuous(NULL))
+    {
+        uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
+        receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
+        receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
+    }
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     // Get the timestamp when the SFD was received.
     uint32_t offset =

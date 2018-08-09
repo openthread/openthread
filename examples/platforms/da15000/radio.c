@@ -587,11 +587,13 @@ void ftdf_rcv_frame_transparent(ftdf_data_length_t  frame_length,
     {
         radioRssiCalc(link_quality);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        // Timestamp
-        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+        if (otPlatRadioGetPromiscuous(NULL))
+        {
+            // Timestamp
+            sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+            sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+        }
+
         sReceiveFrame[sWriteFrame].mChannel            = sChannel;
         sReceiveFrame[sWriteFrame].mLength             = frame_length;
         sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
