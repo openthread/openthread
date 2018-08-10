@@ -82,8 +82,8 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
 static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
-static otInstance *  sInstance = NULL;
 #endif
+static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
 
@@ -258,7 +258,7 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    (void)aInstance;
+    sInstance = aInstance;
 
     otError error;
 
@@ -334,10 +334,6 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    sInstance = aInstance;
-#endif
-
     otError result = OT_ERROR_NONE;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
