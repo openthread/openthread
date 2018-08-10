@@ -140,7 +140,7 @@ void da15000RadioInit(void)
         sReceiveFrame[ptr].mPsdu = &sReceivePsdu[ptr][0];
     }
 
-    otLogInfoPlat(sInstance, "Radio initialized", NULL);
+    otLogInfoPlat(sThreadInstance, "Radio initialized", NULL);
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -587,7 +587,7 @@ void ftdf_rcv_frame_transparent(ftdf_data_length_t  frame_length,
     {
         radioRssiCalc(link_quality);
 
-        if (otPlatRadioGetPromiscuous(sInstance))
+        if (otPlatRadioGetPromiscuous(sThreadInstance))
         {
             // Timestamp
             sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
