@@ -904,7 +904,7 @@ otError RadioSpinel::ClearSrcMatchExtEntries(void)
 
 otError RadioSpinel::GetTransmitPower(int8_t &aPower)
 {
-    otError error = Get(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
+    otError error = Get(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, &aPower);
 
     LogIfFail(mInstance, "Get transmit power failed", error);
     return error;
