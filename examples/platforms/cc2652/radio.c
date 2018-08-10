@@ -1860,7 +1860,7 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
-                if (otPlatRadioGetPromiscuous(NULL))
+                if (otPlatRadioGetPromiscuous(aInstance))
                 {
                     // TODO: Propagate CM0 timestamp
                     receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();

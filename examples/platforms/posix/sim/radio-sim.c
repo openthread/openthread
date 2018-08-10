@@ -475,7 +475,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 
     memcpy(&sReceiveMessage, aBuf, aBufLength);
 
-    if (otPlatRadioGetPromiscuous(NULL))
+    if (otPlatRadioGetPromiscuous(aInstance))
     {
         // Timestamp
         sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();

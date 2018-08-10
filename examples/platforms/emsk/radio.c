@@ -429,7 +429,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     mrf24j40_set_promiscuous(~aEnable);
 }
 
-void readFrame(void)
+void readFrame(otInstance *aInstance)
 {
     /* readBuffer
      * 1 bit -- 5 to 127 bits -- 1 bit -- 1bit
@@ -462,7 +462,7 @@ void readFrame(void)
 
     otEXPECT_ACTION(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
 
-    if (otPlatRadioGetPromiscuous(NULL))
+    if (otPlatRadioGetPromiscuous(aInstance))
     {
         // Timestamp
         sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
@@ -536,7 +536,7 @@ void emskRadioProcess(otInstance *aInstance)
 {
     numRadioProcess++;
 
-    readFrame();
+    readFrame(aInstance);
     uint8_t reg = mrf24j40_read_short_ctrl_reg(MRF24J40_TXSTAT);
 
     if (reg & MRF24J40_TXNSTAT)

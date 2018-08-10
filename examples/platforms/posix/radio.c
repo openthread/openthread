@@ -571,7 +571,7 @@ void radioReceive(otInstance *aInstance)
         exit(EXIT_FAILURE);
     }
 
-    if (otPlatRadioGetPromiscuous(NULL))
+    if (otPlatRadioGetPromiscuous(aInstance))
     {
         // Timestamp
         sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();

@@ -587,7 +587,7 @@ void ftdf_rcv_frame_transparent(ftdf_data_length_t  frame_length,
     {
         radioRssiCalc(link_quality);
 
-        if (otPlatRadioGetPromiscuous(NULL))
+        if (otPlatRadioGetPromiscuous(sInstance))
         {
             // Timestamp
             sReceiveFrame[sWriteFrame].mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();

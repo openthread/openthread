@@ -704,7 +704,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
-    if (otPlatRadioGetPromiscuous(NULL))
+    if (otPlatRadioGetPromiscuous(sInstance))
     {
         uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
         receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;

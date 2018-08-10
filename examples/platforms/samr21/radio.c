@@ -214,7 +214,7 @@ static void handleRx(void)
     {
         sRxDone = false;
 
-        if (otPlatRadioGetPromiscuous(NULL))
+        if (otPlatRadioGetPromiscuous(sInstance))
         {
             // Timestamp
             sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();

@@ -497,7 +497,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-void readFrame(void)
+void readFrame(otInstance *aInstance)
 {
     uint8_t length;
     uint8_t crcCorr;
@@ -510,7 +510,7 @@ void readFrame(void)
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-    if (otPlatRadioGetPromiscuous(NULL))
+    if (otPlatRadioGetPromiscuous(aInstance))
     {
         // Timestamp
         sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
@@ -554,7 +554,7 @@ exit:
 
 void cc2538RadioProcess(otInstance *aInstance)
 {
-    readFrame();
+    readFrame(aInstance);
 
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
