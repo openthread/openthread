@@ -214,11 +214,12 @@ static void handleRx(void)
     {
         sRxDone = false;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        // Timestamp
-        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+        if (otPlatRadioGetPromiscuous(sInstance))
+        {
+            // Timestamp
+            sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+            sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+        }
 
 #if OPENTHREAD_ENABLE_DIAG
 

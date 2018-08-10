@@ -105,6 +105,7 @@ static uint8_t      sTxData[OT_RADIO_FRAME_MAX_SIZE];
 #if DOUBLE_BUFFERING
 static uint8_t sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
+static otInstance *sInstance = NULL;
 
 /* Private functions */
 static void         rf_abort(void);
@@ -182,6 +183,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
+    sInstance = aInstance;
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_TRCV_MSK_MASK;
     NVIC_ClearPendingIRQ(Radio_1_IRQn);
     NVIC_EnableIRQ(Radio_1_IRQn);
@@ -749,11 +751,12 @@ static bool rf_process_rx_frame(void)
     /* Check if frame is valid */
     otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    // Timestamp
-    sRxFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-    sRxFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+    if (otPlatRadioGetPromiscuous(sInstance))
+    {
+        // Timestamp
+        sRxFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sRxFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+    }
 
     sRxFrame.mLength = temp;
     temp             = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
