@@ -28,8 +28,8 @@
 
 """
 >> Thread Host Controller Interface
->> Device : OTBR THCI
->> Class : OTBR
+>> Device : OpenThread_WpanCtl THCI
+>> Class : OpenThread_WpanCtl
 """
 
 import re
@@ -56,7 +56,7 @@ WPANCTL_CMD = 'sudo wpanctl -I ' + WPAN_INTERFACE + ' '
 """regex: used to split lines"""
 LINESEPX = re.compile(r'\r\n|\n')
 
-class OTBR(IThci):
+class OpenThread_WpanCtl(IThci):
     LOWEST_POSSIBLE_PARTITION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
@@ -179,7 +179,7 @@ class OTBR(IThci):
         """send specific command to reference unit over serial port
 
         Args:
-            cmd: OTBR CLI string
+            cmd: OpenThread_WpanCtl CLI string
 
         Returns:
             Fail: Failed to send the command to reference unit and parse it
@@ -265,7 +265,7 @@ class OTBR(IThci):
         return ':'.join(segments)
 
     def __getIp6Address(self, addressType):
-        """get specific type of IPv6 address configured on OTBR
+        """get specific type of IPv6 address configured on OpenThread_WpanCtl
 
         Args:
             addressType: the specific type of IPv6 address
@@ -306,11 +306,11 @@ class OTBR(IThci):
                 else:
                     # mesh EID
                     meshEIDAddr = ip6Addr
-                    print "meshEIDAddr:' + meshEIDAddr
+                    print 'meshEIDAddr:' + meshEIDAddr
             else:
                 # global ipv6 address
                 if ip6Addr:
-                    print "globalAddr: ' + ip6Addr
+                    print 'globalAddr: ' + ip6Addr
                     globalAddr.append(ip6Addr)
                 else:
                     pass
@@ -424,14 +424,14 @@ class OTBR(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('__setAddressFilterMode() Error: ' + str(e))
 
-    def __startOTBR(self):
-        """start OTBR
+    def __startOpenThreadWpan(self):
+        """start OpenThreadWpan
 
         Returns:
-            True: successful to start OTBR up
-            False: fail to start OTBR
+            True: successful to start OpenThreadWpan up
+            False: fail to start OpenThreadWpan
         """
-        print 'call startOTBR'
+        print 'call startOpenThreadWpan'
         try:
 
             # restore whitelist/blacklist address filter mode if rejoin after reset
@@ -472,7 +472,7 @@ class OTBR(IThci):
             else:
                 startCmd = WPANCTL_CMD + '%s %s -p %s -c %s -T %s ' % (startType, self.networkName, str(hex(self.panId)), str(self.channel), nodeType)
             if self.__sendCommand(startCmd)[0] != 'Fail':
-                if self.__isOTBRRunning():
+                if self.__isOpenThreadWpanRunning():
                     self.isPowerDown = False
                     if self.hasActiveDatasetToCommit:
                         if self.__sendCommand(WPANCTL_CMD + 'setprop Dataset:Command SetActive')[0] == 'Fail':
@@ -484,37 +484,37 @@ class OTBR(IThci):
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger('startOTBR() Error: ' + str(e))
+            ModuleHelper.WriteIntoDebugLogger('startOpenThreadWpan() Error: ' + str(e))
 
-    def __stopOTBR(self):
-        """stop OTBR
+    def __stopOpenThreadWpan(self):
+        """stop OpenThreadWpan
 
         Returns:
-            True: successfully stop OTBR
-            False: failed to stop OTBR
+            True: successfully stop OpenThreadWpan
+            False: failed to stop OpenThreadWpan
         """
-        print 'call stopOTBR'
+        print 'call stopOpenThreadWpan'
         try:
             if self.__sendCommand(WPANCTL_CMD + 'leave')[0] != 'Fail' and self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] != 'Fail':
                 return True
             else:
                 return False
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger('stopOTBR() Error: ' + str(e))
+            ModuleHelper.WriteIntoDebugLogger('stopOpenThreadWpan() Error: ' + str(e))
 
-    def __isOTBRRunning(self):
-        """check whether or not OTBR is running
+    def __isOpenThreadWpanRunning(self):
+        """check whether or not OpenThreadWpan is running
 
         Returns:
-            True: OTBR is running
-            False: OTBR is not running
+            True: OpenThreadWpan is running
+            False: OpenThreadWpan is not running
         """
-        print 'call __isOTBRRunning'
+        print 'call __isOpenThreadWpanRunning'
         if self.__stripValue(self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:State')[0]) == 'associated':
-            print '*****OTBR is running'
+            print '*****OpenThreadWpan is running'
             return True
         else:
-            print '*****Wrong OTBR state'
+            print '*****Wrong OpenThreadWpan state'
             return False
 
     # rloc16 might be hex string or integer, need to return actual allocated router id
@@ -662,7 +662,7 @@ class OTBR(IThci):
             if securityPolicyFlags == 'onrcb':
                 cmd2 = WPANCTL_CMD + 'setprop Dataset:SecPolicy:Flags 0xff'
             else:
-                print "unknown policy flag :' + securityPolicyFlags
+                print 'unknown policy flag :' + securityPolicyFlags
                 return False
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd1) != 'Fail' and self.__sendCommand(cmd2) != 'Fail'
@@ -842,7 +842,7 @@ class OTBR(IThci):
 
     def getMAC(self, bType=MacType.RandomMac):
         """get one specific type of MAC address
-           currently OTBR only supports Random MAC address
+           currently OpenThreadWpan only supports Random MAC address
 
         Args:
             bType: indicate which kind of MAC address is required
@@ -1140,8 +1140,8 @@ class OTBR(IThci):
             self.__setDeviceMode(mode)
             self.__setKeySwitchGuardTime(0)  #temporally
             time.sleep(0.1)
-            # start OTBR
-            self.__startOTBR()
+            # start OpenThreadWpan
+            self.__startOpenThreadWpan()
             time.sleep(3)
             return True
         except Exception, e:
@@ -1154,8 +1154,8 @@ class OTBR(IThci):
             The Thread network Partition Id
         """
         print '%s call getNetworkFragmentID' % self.port
-        if not self.____isOTBRRunning():
-            print 'OTBR is not running'
+        if not self.____isOpenThreadWpanRunning():
+            print 'OpenThreadWpan is not running'
             return None
 
         return self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:PartitionId')[0]
@@ -1173,7 +1173,7 @@ class OTBR(IThci):
         return parentInfo[0]
 
     def powerDown(self):
-        """power down the OTBR"""
+        """power down the OpenThreadWpan"""
         print '%s call powerDown' % self.port
         if self.__sendCommand(WPANCTL_CMD + 'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
             time.sleep(0.5)
@@ -1266,7 +1266,7 @@ class OTBR(IThci):
             ModuleHelper.WriteIntoDebugLogger('multicast_ping() Error: ' + str(e))
 
     def getVersionNumber(self):
-        """get OTBR stack firmware version number"""
+        """get OpenThreadWpan stack firmware version number"""
         print '%s call getVersionNumber' % self.port
         versionStr = self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:Version')[0]
 
@@ -1553,7 +1553,7 @@ class OTBR(IThci):
             ModuleHelper.WriteIntoDebugLogger('configBorderRouter() Error: ' + str(e))
 
     def setNetworkIDTimeout(self, iNwkIDTimeOut):
-        """set networkid timeout for OTBR
+        """set networkid timeout for OpenThreadWpan
 
         Args:
             iNwkIDTimeOut: a given NETWORK_ID_TIMEOUT
@@ -1857,7 +1857,7 @@ class OTBR(IThci):
         return self.__sendCommand(cmd)[0] != 'Fail'
 
     def getGUA(self, filterByPrefix=None):
-        """get expected global unicast IPv6 address of OTBR
+        """get expected global unicast IPv6 address of OpenThreadWpan
 
         Args:
             filterByPrefix: a given expected global IPv6 prefix to be matched
