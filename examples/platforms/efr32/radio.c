@@ -43,7 +43,7 @@
 #include "utils/code_utils.h"
 
 #include "em_core.h"
-#include "em_openthread-system.h"
+#include "em_system.h"
 #include "openthread-core-efr32-config.h"
 #include "pa_conversions_efr32.h"
 #include "rail.h"
