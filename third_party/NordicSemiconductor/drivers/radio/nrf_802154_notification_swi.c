@@ -41,7 +41,6 @@
 
 #include "nrf_802154.h"
 #include "nrf_802154_swi.h"
-#include "raal/nrf_raal_api.h"
 
 void nrf_802154_notification_init(void)
 {

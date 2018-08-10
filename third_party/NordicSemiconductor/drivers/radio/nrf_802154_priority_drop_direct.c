@@ -37,7 +37,7 @@
 
 #include "nrf_802154_priority_drop.h"
 
-#include "raal/nrf_raal_api.h"
+#include "nrf_802154_rsch.h"
 
 void nrf_802154_priority_drop_init(void)
 {
@@ -46,7 +46,7 @@ void nrf_802154_priority_drop_init(void)
 
 void nrf_802154_priority_drop_timeslot_exit(void)
 {
-    nrf_raal_continuous_mode_exit();
+    nrf_802154_rsch_continuous_mode_exit();
 }
 
 void nrf_802154_priority_drop_timeslot_exit_terminate(void)

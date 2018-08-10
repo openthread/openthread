@@ -77,27 +77,26 @@ static uint8_t m_num_of_pending_extended;
  */
 static int8_t extended_addr_compare(const uint8_t * p_first_addr, const uint8_t * p_second_addr)
 {
-    uint64_t first_addr;
-    uint64_t second_addr;
+    uint32_t first_addr;
+    uint32_t second_addr;
 
-    // Cast address pointer to uint64_t variables in 2 steps to prevent unaligned access errors.
-    first_addr  = *(uint32_t *)p_first_addr;
-    first_addr  = (first_addr << 32) | (*(uint32_t *)(p_first_addr + sizeof(uint32_t)));
-    second_addr = *(uint32_t *)p_second_addr;
-    second_addr = (second_addr << 32) | (*(uint32_t *)(p_second_addr + sizeof(uint32_t)));
+    // Compare extended address in two steps to prevent unaligned access error.
+    for (uint32_t i = 0; i < EXTENDED_ADDRESS_SIZE / sizeof(uint32_t); i++)
+    {
+        first_addr  = *(uint32_t *)(p_first_addr + (i * sizeof(uint32_t)));
+        second_addr = *(uint32_t *)(p_second_addr + (i * sizeof(uint32_t)));
 
-    if (first_addr < second_addr)
-    {
-        return -1;
+        if (first_addr < second_addr)
+        {
+            return -1;
+        }
+        else if (first_addr > second_addr)
+        {
+            return 1;
+        }
     }
-    else if (first_addr > second_addr)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 /**

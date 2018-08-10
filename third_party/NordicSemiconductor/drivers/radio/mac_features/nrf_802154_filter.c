@@ -137,55 +137,58 @@ static bool dst_addressing_may_be_present(uint8_t frame_type)
  * @param[out] p_num_bytes  Offset of addressing fields end.
  * @param[in]  frame_type   Type of incoming frame.
  *
- * @retval true   No errors in given frame were detected - it may be further processed.
- * @retval false  Detected an error in given frame - it should be discarded.
+ * @retval NRF_802154_RX_ERROR_NONE               No errors in given frame were detected - it may be
+ *                                                further processed.
+ * @retval NRF_802154_RX_ERROR_INVALID_DEST_ADDR  The frame is valid but addressed to another node.
+ * @retval NRF_802154_RX_ERROR_INVALID_FRAME      Detected an error in given frame - it should be
+ *                                                discarded.
  */
-static bool dst_addressing_end_offset_get_2006(const uint8_t * p_psdu,
-                                               uint8_t       * p_num_bytes,
-                                               uint8_t         frame_type)
+static nrf_802154_rx_error_t dst_addressing_end_offset_get_2006(const uint8_t * p_psdu,
+                                                                uint8_t       * p_num_bytes,
+                                                                uint8_t         frame_type)
 {
-    bool result;
+    nrf_802154_rx_error_t result;
 
     switch (p_psdu[DEST_ADDR_TYPE_OFFSET] & DEST_ADDR_TYPE_MASK)
     {
         case DEST_ADDR_TYPE_SHORT:
             *p_num_bytes = SHORT_ADDR_CHECK_OFFSET;
-            result = true;
+            result = NRF_802154_RX_ERROR_NONE;
             break;
 
         case DEST_ADDR_TYPE_EXTENDED:
             *p_num_bytes = EXTENDED_ADDR_CHECK_OFFSET;
-            result = true;
+            result = NRF_802154_RX_ERROR_NONE;
             break;
 
         case DEST_ADDR_TYPE_NONE:
-            if (frame_type == FRAME_TYPE_BEACON)
+            if (nrf_802154_pib_pan_coord_get() || (frame_type == FRAME_TYPE_BEACON))
             {
                 switch (p_psdu[SRC_ADDR_TYPE_OFFSET] & SRC_ADDR_TYPE_MASK)
                 {
                     case SRC_ADDR_TYPE_SHORT:
                         *p_num_bytes = SHORT_ADDR_CHECK_OFFSET;
-                        result = true;
+                        result = NRF_802154_RX_ERROR_NONE;
                         break;
 
                     case SRC_ADDR_TYPE_EXTENDED:
                         *p_num_bytes = EXTENDED_ADDR_CHECK_OFFSET;
-                        result = true;
+                        result = NRF_802154_RX_ERROR_NONE;
                         break;
 
                     default:
-                        result = false;
+                        result = NRF_802154_RX_ERROR_INVALID_FRAME;
                 }
             }
             else
             {
-                result = true;
+                result = NRF_802154_RX_ERROR_INVALID_DEST_ADDR;
             }
 
             break;
 
         default:
-            result = false;
+            result = NRF_802154_RX_ERROR_INVALID_FRAME;
     }
 
     return result;
@@ -203,14 +206,17 @@ static bool dst_addressing_end_offset_get_2006(const uint8_t * p_psdu,
  * @param[out] p_num_bytes  Offset of addressing fields end.
  * @param[in]  frame_type   Type of incoming frame.
  *
- * @retval true   No errors in given frame were detected - it may be further processed.
- * @retval false  Detected an error in given frame - it should be discarded.
+ * @retval NRF_802154_RX_ERROR_NONE               No errors in given frame were detected - it may be
+ *                                                further processed.
+ * @retval NRF_802154_RX_ERROR_INVALID_DEST_ADDR  The frame is valid but addressed to another node.
+ * @retval NRF_802154_RX_ERROR_INVALID_FRAME      Detected an error in given frame - it should be
+ *                                                discarded.
  */
-static bool dst_addressing_end_offset_get_2015(const uint8_t * p_psdu,
-                                               uint8_t       * p_num_bytes,
-                                               uint8_t         frame_type)
+static nrf_802154_rx_error_t dst_addressing_end_offset_get_2015(const uint8_t * p_psdu,
+                                                                uint8_t       * p_num_bytes,
+                                                                uint8_t         frame_type)
 {
-    bool result = false;
+    nrf_802154_rx_error_t result;
 
     switch (frame_type)
     {
@@ -224,14 +230,17 @@ static bool dst_addressing_end_offset_get_2015(const uint8_t * p_psdu,
 
         case FRAME_TYPE_MULTIPURPOSE:
             // TODO: Implement dst addressing filtering according to 2015 spec
-            result = false;
+            result = NRF_802154_RX_ERROR_INVALID_FRAME;
             break;
 
         case FRAME_TYPE_FRAGMENT:
         case FRAME_TYPE_EXTENDED:
             // No addressing data
-            result = true;
+            result = NRF_802154_RX_ERROR_NONE;
             break;
+
+        default:
+            result = NRF_802154_RX_ERROR_INVALID_FRAME;
     }
 
     return result;
@@ -249,15 +258,18 @@ static bool dst_addressing_end_offset_get_2015(const uint8_t * p_psdu,
  * @param[out] p_num_bytes  Offset of addressing fields end.
  * @param[in]  frame_type   Type of incoming frame.
  *
- * @retval true   No errors in given frame were detected - it may be further processed.
- * @retval false  Detected an error in given frame - it should be discarded.
+ * @retval NRF_802154_RX_ERROR_NONE               No errors in given frame were detected - it may be
+ *                                                further processed.
+ * @retval NRF_802154_RX_ERROR_INVALID_DEST_ADDR  The frame is valid but addressed to another node.
+ * @retval NRF_802154_RX_ERROR_INVALID_FRAME      Detected an error in given frame - it should be
+ *                                                discarded.
  */
-static bool dst_addressing_end_offset_get(const uint8_t * p_psdu,
-                                          uint8_t       * p_num_bytes,
-                                          uint8_t         frame_type,
-                                          uint8_t         frame_version)
+static nrf_802154_rx_error_t dst_addressing_end_offset_get(const uint8_t * p_psdu,
+                                                           uint8_t       * p_num_bytes,
+                                                           uint8_t         frame_type,
+                                                           uint8_t         frame_version)
 {
-    bool result;
+    nrf_802154_rx_error_t result;
 
     switch (frame_version)
     {
@@ -271,7 +283,7 @@ static bool dst_addressing_end_offset_get(const uint8_t * p_psdu,
             break;
 
         default:
-            result = false;
+            result = NRF_802154_RX_ERROR_INVALID_FRAME;
     }
 
     return result;
@@ -330,6 +342,11 @@ static bool dst_short_addr_check(const uint8_t * p_psdu)
     {
         result = true;
     }
+    else if (DEST_ADDR_TYPE_NONE == (p_psdu[DEST_ADDR_TYPE_OFFSET] & DEST_ADDR_TYPE_MASK) &&
+             nrf_802154_pib_pan_coord_get())
+    {
+        result = true;
+    }
     else
     {
         result = false;
@@ -357,6 +374,11 @@ static bool dst_extended_addr_check(const uint8_t *p_psdu)
         result = true;
     }
     else if (FRAME_TYPE_BEACON == (p_psdu[FRAME_TYPE_OFFSET] & FRAME_TYPE_MASK))
+    {
+        result = true;
+    }
+    else if (DEST_ADDR_TYPE_NONE == (p_psdu[DEST_ADDR_TYPE_OFFSET] & DEST_ADDR_TYPE_MASK) &&
+             nrf_802154_pib_pan_coord_get())
     {
         result = true;
     }
@@ -398,8 +420,7 @@ nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_psdu, uint8
                 break;
             }
 
-            result = dst_addressing_end_offset_get(p_psdu, p_num_bytes, frame_type, frame_version) ?
-                    NRF_802154_RX_ERROR_NONE : NRF_802154_RX_ERROR_INVALID_FRAME;
+            result = dst_addressing_end_offset_get(p_psdu, p_num_bytes, frame_type, frame_version);
             break;
         }
 

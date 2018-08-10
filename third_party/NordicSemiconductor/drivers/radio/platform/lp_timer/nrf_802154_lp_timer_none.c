@@ -36,24 +36,24 @@
  *
  */
 
-#include "nrf_802154_timer.h"
+#include "nrf_802154_lp_timer.h"
 
-void nrf_802154_timer_init(void)
+void nrf_802154_lp_timer_init(void)
 {
     // Intentionally empty
 }
 
-void nrf_802154_timer_deinit(void)
+void nrf_802154_lp_timer_deinit(void)
 {
     // Intentionally empty
 }
 
-void nrf_802154_timer_critical_section_enter(void)
+void nrf_802154_lp_timer_critical_section_enter(void)
 {
     // Intentionally empty
 }
 
-void nrf_802154_timer_critical_section_exit(void)
+void nrf_802154_lp_timer_critical_section_exit(void)
 {
     // Intentionally empty
 }

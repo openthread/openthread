@@ -67,6 +67,7 @@ typedef uint8_t nrf_802154_tx_error_t;
 #define NRF_802154_TX_ERROR_TIMESLOT_ENDED    0x04 //!< Radio timeslot ended during transmission procedure.
 #define NRF_802154_TX_ERROR_NO_ACK            0x05 //!< ACK frame was not received during time-out period.
 #define NRF_802154_TX_ERROR_ABORTED           0x06 //!< Procedure was aborted by another driver operation with FORCE priority.
+#define NRF_802154_TX_ERROR_TIMESLOT_DENIED   0x07 //!< Transmission did not start due to denied timeslot request.
 
 /**
  * @brief Possible errors during frame reception.
@@ -95,6 +96,14 @@ typedef uint8_t nrf_802154_cca_error_t;
 
 #define NRF_802154_CCA_ERROR_ABORTED          0x01 //!< Procedure was aborted by another driver operation with FORCE priority.
 
+/**
+ * @brief Possible errors during sleep procedure call.
+ */
+typedef uint8_t nrf_802154_sleep_error_t;
+
+#define NRF_802154_SLEEP_ERROR_NONE           0x00 //!< There is no error.
+#define NRF_802154_SLEEP_ERROR_BUSY           0x01 //!< The driver cannot enter sleep state due to ongoing operation.
+ 
 /**
  * @brief Termination level selected for a particular request.
  *
