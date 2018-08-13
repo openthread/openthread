@@ -33,7 +33,7 @@ Harness.
 
 ## OpenThread WpanCtl Environment Setup ##
 
-1. Copy the "OpenThread_WpanCtl.png" to \GRL\Thread1.1\Web\images folder.
+1. Copy the "OpenThread.png" to \GRL\Thread1.1\Web\images folder.
 
 2. Copy the "deviceInputFields.xml" to \GRL\Thread1.1\Web\data folder.
 
