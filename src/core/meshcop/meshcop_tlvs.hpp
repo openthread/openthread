@@ -591,7 +591,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const uint8_t *GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -599,13 +599,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
-    {
-        memcpy(mMeshLocalPrefix, aMeshLocalPrefix, sizeof(mMeshLocalPrefix));
-    }
+    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    uint8_t mMeshLocalPrefix[8];
+    otMeshLocalPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 /**

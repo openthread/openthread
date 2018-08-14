@@ -109,7 +109,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
  */
 static void Init()
 {
-    uint8_t meshLocalPrefix[] = {0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34};
+    otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
     sThreadNetif->GetMle().SetMeshLocalPrefix(meshLocalPrefix);
 
     // Emulate global prefixes with contextes.

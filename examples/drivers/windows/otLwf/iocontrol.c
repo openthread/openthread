@@ -1936,12 +1936,13 @@ otLwfIoCtl_otMeshLocalPrefix(
 
     if (InBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        status = ThreadErrorToNtstatus(otThreadSetMeshLocalPrefix(pFilter->otCtx, InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetMeshLocalPrefix(pFilter->otCtx, (otMeshLocalPrefix*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        memcpy(OutBuffer, otThreadGetMeshLocalPrefix(pFilter->otCtx), sizeof(otMeshLocalPrefix));
+        const otMeshLocalPrefix* aMeshLocalPrefix = otThreadGetMeshLocalPrefix(pFilter->otCtx);
+        memcpy(OutBuffer, aMeshLocalPrefix, sizeof(otMeshLocalPrefix));
         *OutBufferLength = sizeof(otMeshLocalPrefix);
         status = STATUS_SUCCESS;
     }

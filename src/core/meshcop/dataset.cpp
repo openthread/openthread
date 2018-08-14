@@ -174,8 +174,8 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kMeshLocalPrefix:
         {
-            const MeshLocalPrefixTlv *tlv = static_cast<const MeshLocalPrefixTlv *>(cur);
-            memcpy(aDataset.mMeshLocalPrefix.m8, tlv->GetMeshLocalPrefix(), sizeof(aDataset.mMeshLocalPrefix));
+            const MeshLocalPrefixTlv *tlv                  = static_cast<const MeshLocalPrefixTlv *>(cur);
+            aDataset.mMeshLocalPrefix                      = tlv->GetMeshLocalPrefix();
             aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
             break;
         }
@@ -318,7 +318,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::MeshLocalPrefixTlv tlv;
         tlv.Init();
-        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix.m8);
+        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
         Set(tlv);
     }
 

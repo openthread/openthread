@@ -691,20 +691,20 @@ public:
     /**
      * This method returns a pointer to the Mesh Local Prefix.
      *
-     * @returns A pointer to the Mesh Local Prefix.
+     * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const uint8_t *GetMeshLocalPrefix(void) const;
+    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const;
 
     /**
      * This method sets the Mesh Local Prefix.
      *
-     * @param[in]  aPrefix  A pointer to the Mesh Local Prefix.
+     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
      *
      * @retval OT_ERROR_NONE  Successfully set the Mesh Local Prefix.
      *
      */
-    otError SetMeshLocalPrefix(const uint8_t *aPrefix);
+    otError SetMeshLocalPrefix(const otMeshLocalPrefix &aPrefix);
 
     /**
      * This method returns a reference to the Thread link-local address.

@@ -79,9 +79,9 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
+    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix().m8, aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
@@ -129,7 +129,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 
     if (aContextId == 0)
     {
-        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
@@ -200,7 +200,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool       rval = false;
 
-    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix)) == 0)
     {
         ExitNow(rval = true);
     }
