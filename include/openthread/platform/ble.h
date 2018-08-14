@@ -200,7 +200,7 @@ enum
 };
 
 /// Convert the advertising interval from [ms] to [ble symbol times].
-#define OT_BLE_MS_TO_TICKS(x)  (((x) * 1000) / OT_BLE_ADV_INTERVAL_UNIT)
+#define OT_BLE_MS_TO_TICKS(x) (((x)*1000) / OT_BLE_ADV_INTERVAL_UNIT)
 
 /**
  * This enum represents BLE Device Address types.
@@ -994,9 +994,7 @@ otError otPlatBleGattServerServiceRegister(otInstance *aInstance, const otPlatBl
  * @retval ::OT_ERROR_INVALID_ARGS   Invalid service UUID has been provided.
  * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
  */
-otError otPlatBleGattServerServicesRegister(otInstance *          aInstance, 
-                                            otPlatBleGattService *aServices, 
-                                            uint16_t *            aHandle);
+otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices, uint16_t *aHandle);
 
 /**
  * Registers GATT Characteristic with maximum length of 128 octets.
