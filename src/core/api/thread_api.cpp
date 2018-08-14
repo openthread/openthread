@@ -57,14 +57,14 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
     instance.GetThreadNetif().GetMle().SetTimeout(aTimeout);
 }
 
-const uint8_t *otThreadGetExtendedPanId(otInstance *aInstance)
+const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMac().GetExtendedPanId();
+    return &instance.GetThreadNetif().GetMac().GetExtendedPanId();
 }
 
-otError otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId)
+otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -73,10 +73,10 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtended
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetMac().SetExtendedPanId(aExtendedPanId);
+    instance.GetThreadNetif().GetMac().SetExtendedPanId(*aExtendedPanId);
 
     mlPrefix[0] = 0xfd;
-    memcpy(mlPrefix + 1, aExtendedPanId, 5);
+    memcpy(mlPrefix + 1, aExtendedPanId->m8, 5);
     mlPrefix[6] = 0x00;
     mlPrefix[7] = 0x00;
     instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(mlPrefix);

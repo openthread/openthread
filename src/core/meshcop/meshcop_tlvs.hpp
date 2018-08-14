@@ -351,7 +351,7 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId; }
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
@@ -359,10 +359,10 @@ public:
      * @param[in]  aExtendedPanId  A pointer to the Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const uint8_t *aExtendedPanId) { memcpy(mExtendedPanId, aExtendedPanId, OT_EXT_PAN_ID_SIZE); }
+    void SetExtendedPanId(const otExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    uint8_t mExtendedPanId[OT_EXT_PAN_ID_SIZE];
+    otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

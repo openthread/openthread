@@ -1059,10 +1059,10 @@ exit:
     return error;
 }
 
-otError Commissioner::GeneratePSKc(const char *   aPassPhrase,
-                                   const char *   aNetworkName,
-                                   const uint8_t *aExtPanId,
-                                   uint8_t *      aPSKc)
+otError Commissioner::GeneratePSKc(const char *           aPassPhrase,
+                                   const char *           aNetworkName,
+                                   const otExtendedPanId &aExtPanId,
+                                   uint8_t *              aPSKc)
 {
     otError     error      = OT_ERROR_NONE;
     const char *saltPrefix = "Thread";
@@ -1077,7 +1077,7 @@ otError Commissioner::GeneratePSKc(const char *   aPassPhrase,
     memcpy(salt, saltPrefix, strlen(saltPrefix));
     saltLen += static_cast<uint16_t>(strlen(saltPrefix));
 
-    memcpy(salt + saltLen, aExtPanId, OT_EXT_PAN_ID_SIZE);
+    memcpy(salt + saltLen, aExtPanId.m8, sizeof(aExtPanId));
     saltLen += OT_EXT_PAN_ID_SIZE;
 
     memcpy(salt + saltLen, aNetworkName, strlen(aNetworkName));

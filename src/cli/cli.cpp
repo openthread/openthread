@@ -956,17 +956,17 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extPanId(otThreadGetExtendedPanId(mInstance));
+        otBufferPtr extPanId(reinterpret_cast<const uint8_t *>(otThreadGetExtendedPanId(mInstance)));
         OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
         mServer->OutputFormat("\r\n");
     }
     else
     {
-        uint8_t extPanId[8];
+        otExtendedPanId extPanId;
 
-        VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[0], extPanId.m8, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
 
-        error = otThreadSetExtendedPanId(mInstance, extPanId);
+        error = otThreadSetExtendedPanId(mInstance, &extPanId);
     }
 
 exit:
