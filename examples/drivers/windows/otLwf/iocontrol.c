@@ -1256,12 +1256,13 @@ otLwfIoCtl_otExtendedPanId(
 
     if (InBufferLength >= sizeof(otExtendedPanId))
     {
-        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (otExtendedPanId*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otExtendedPanId))
     {
-        memcpy(OutBuffer, otThreadGetExtendedPanId(pFilter->otCtx), sizeof(otExtendedPanId));
+        const otExtendedPanId* aExtendedPanId = otThreadGetExtendedPanId(pFilter->otCtx);
+        memcpy(OutBuffer, aExtendedPanId, sizeof(otExtendedPanId));
         *OutBufferLength = sizeof(otExtendedPanId);
         status = STATUS_SUCCESS;
     }

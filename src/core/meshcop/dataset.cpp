@@ -166,8 +166,8 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kExtendedPanId:
         {
-            const ExtendedPanIdTlv *tlv = static_cast<const ExtendedPanIdTlv *>(cur);
-            memcpy(aDataset.mExtendedPanId.m8, tlv->GetExtendedPanId(), sizeof(aDataset.mExtendedPanId));
+            const ExtendedPanIdTlv *tlv                  = static_cast<const ExtendedPanIdTlv *>(cur);
+            aDataset.mExtendedPanId                      = tlv->GetExtendedPanId();
             aDataset.mComponents.mIsExtendedPanIdPresent = true;
             break;
         }
@@ -310,7 +310,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
-        tlv.SetExtendedPanId(aDataset.mExtendedPanId.m8);
+        tlv.SetExtendedPanId(aDataset.mExtendedPanId);
         Set(tlv);
     }
 

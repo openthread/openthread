@@ -64,8 +64,10 @@ static const otExtAddress sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
 
-static const uint8_t sExtendedPanidInit[] = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe};
-static const char    sNetworkNameInit[]   = "OpenThread";
+static const otExtendedPanId sExtendedPanidInit = {
+    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
+};
+static const char sNetworkNameInit[] = "OpenThread";
 
 #ifdef _WIN32
 const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMinBE)) / 1000;
@@ -635,12 +637,12 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
+otError Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
 {
-    VerifyOrExit(memcmp(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId)) != 0,
+    VerifyOrExit(memcmp(mExtendedPanId.m8, aExtendedPanId.m8, sizeof(mExtendedPanId)) != 0,
                  GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
 
-    memcpy(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId));
+    mExtendedPanId = aExtendedPanId;
     GetNotifier().Signal(OT_CHANGED_THREAD_EXT_PANID);
 
 exit:

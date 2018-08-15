@@ -421,7 +421,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
-        extpanid.SetExtendedPanId(aDataset.mExtendedPanId.m8);
+        extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
         SuccessOrExit(error = message->Append(&extpanid, sizeof(extpanid)));
     }
 

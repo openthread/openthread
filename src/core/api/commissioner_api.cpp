@@ -292,18 +292,18 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     return state;
 }
 
-otError otCommissionerGeneratePSKc(otInstance *   aInstance,
-                                   const char *   aPassPhrase,
-                                   const char *   aNetworkName,
-                                   const uint8_t *aExtPanId,
-                                   uint8_t *      aPSKc)
+otError otCommissionerGeneratePSKc(otInstance *           aInstance,
+                                   const char *           aPassPhrase,
+                                   const char *           aNetworkName,
+                                   const otExtendedPanId *aExtPanId,
+                                   uint8_t *              aPSKc)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
+    error = instance.GetThreadNetif().GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPassPhrase);
