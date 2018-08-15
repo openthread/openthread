@@ -1,4 +1,4 @@
-SPI/HDLC Adaptor
+SPI/HDLC Adapter
 ================
 
 `spi-hdlc-adapter` is an adapter tool for using a SPI interface as if
@@ -50,7 +50,8 @@ protocol document.
     to be successfully transmitted. Increasing this value will (up to a point)
     decrease latency for smaller packets at the expense of overall bandwidth.
     Default value is 32. The minimum value is 0. The maximum value is 2043.
-*   `--verbose`: Increase debug verbosity.
+*   `--verbose`: Increase debug verbosity (can be repeated up to 3 times,
+    each time increasing the verbosity of the logs).
 *   `--help`: Print out usage information to `stdout` and exit.
 
 `spi-device-path` is a required argument since it indicates which SPI
