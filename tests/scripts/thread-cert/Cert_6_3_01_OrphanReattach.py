@@ -67,7 +67,7 @@ class Cert_6_3_1_OrphanReattach(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()

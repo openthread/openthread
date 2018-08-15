@@ -58,7 +58,7 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def test(self):
         # 1 Ensure topology is formed correctly without ROUTER24.

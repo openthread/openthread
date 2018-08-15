@@ -30,6 +30,8 @@
 import collections
 import io
 import logging
+import os
+import pcap
 import threading
 
 try:
@@ -59,6 +61,8 @@ class Sniffer:
         self.nodeid = nodeid
         self._message_factory = message_factory
 
+        self._pcap = pcap.PcapCodec()
+
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
         self._transport = transport_factory.create_transport(nodeid)
@@ -79,6 +83,8 @@ class Sniffer:
 
         while self._thread_alive.is_set():
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
+
+            self._pcap.append(data)
 
             # Ignore any exceptions
             try:
@@ -112,9 +118,12 @@ class Sniffer:
         self._thread_alive.clear()
 
         self._transport.close()
-        
+
         self._thread.join()
         self._thread = None
+
+    def save_as_pcap(self):
+        self._pcap.save_to_file(os.getenv('TEST_NAME', 'current'))
 
     def set_lowpan_context(self, cid, prefix):
         self._message_factory.set_lowpan_context(cid, prefix)

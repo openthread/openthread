@@ -116,7 +116,7 @@ while true; do
 done
 
 # Run a test
-PORT_OFFSET=$OFFSET "$@" >$log_file 2>&1
+TEST_NAME="${test_name}" PORT_OFFSET=$OFFSET "$@" >$log_file 2>&1
 estatus=$?
 
 # Return the offset

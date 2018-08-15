@@ -74,7 +74,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER1].start()

@@ -55,7 +55,7 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def test(self):
         # 1. Ensure topology is formed correctly without DUT_ROUTER1.

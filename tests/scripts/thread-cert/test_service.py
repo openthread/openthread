@@ -86,7 +86,7 @@ class Test_Service(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def hasAloc(self, node_id, service_id):
         for addr in self.nodes[node_id].get_ip6_address(config.ADDRESS_TYPE.ALOC):

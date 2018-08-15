@@ -72,7 +72,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-        del self.simulator
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
