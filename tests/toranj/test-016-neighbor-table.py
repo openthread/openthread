@@ -33,8 +33,8 @@ from wpan import verify
 #-----------------------------------------------------------------------------------------------------------------------
 # Test description: Neighbor table
 #
-# - Network with NUM_ROUTERS(= 5) routers, all within range of each other.
-# - The first router has NUM_CHILDREN(= 4) sleepy children attached to it.
+# - Network with NUM_ROUTERS(= 2) routers, all within range of each other.
+# - The first router has NUM_CHILDREN(= 1) sleepy children attached to it.
 # - The test verifies that all children and routers are observed in the "Thread:NeighborTable" of the first router.
 #
 
@@ -48,8 +48,8 @@ print 'Starting \'{}\''.format(test_name)
 speedup = 4
 wpan.Node.set_time_speedup_factor(speedup)
 
-NUM_ROUTERS = 5
-NUM_CHILDREN = 4
+NUM_ROUTERS = 2
+NUM_CHILDREN = 1
 
 routers = []
 for num in range(NUM_ROUTERS):
