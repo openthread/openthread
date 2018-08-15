@@ -262,7 +262,7 @@ OTAPI void OTCALL otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeo
  *
  * @sa otThreadSetExtendedPanId
  */
-OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
+OTAPI const otExtendedPanId *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
@@ -279,7 +279,7 @@ OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
  *
  * @sa otThreadGetExtendedPanId
  */
-OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
+OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId);
 
 /**
  * This function returns a pointer to the Leader's RLOC.

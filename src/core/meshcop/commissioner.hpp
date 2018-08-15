@@ -210,10 +210,10 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
      *
      */
-    static otError GeneratePSKc(const char *   aPassPhrase,
-                                const char *   aNetworkName,
-                                const uint8_t *aExtPanId,
-                                uint8_t *      aPSKc);
+    static otError GeneratePSKc(const char *           aPassPhrase,
+                                const char *           aNetworkName,
+                                const otExtendedPanId &aExtPanId,
+                                uint8_t *              aPSKc);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.
