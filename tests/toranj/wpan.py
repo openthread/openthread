@@ -112,6 +112,9 @@ WPAN_MAC_BLACKLIST_ENABLED                     = "MAC:Blacklist:Enabled"
 WPAN_MAC_BLACKLIST_ENTRIES                     = "MAC:Blacklist:Entries"
 WPAN_MAC_BLACKLIST_ENTRIES_ASVALMAP            = "MAC:Blacklist:Entries:AsValMap"
 
+WPAN_CHILD_SUPERVISION_INTERVAL                = "ChildSupervision:Interval"
+WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT           = "ChildSupervision:CheckTimeout"
+
 WPAN_JAM_DETECTION_STATUS                      = "JamDetection:Status"
 WPAN_JAM_DETECTION_ENABLE                      = "JamDetection:Enable"
 WPAN_JAM_DETECTION_RSSI_THRESHOLD              = "JamDetection:RssiThreshold"
@@ -421,6 +424,10 @@ class Node(object):
 
         self.add(WPAN_MAC_WHITELIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
         self.set(WPAN_MAC_WHITELIST_ENABLED, '1')
+
+    def un_whitelist_node(self, node):
+        """Removes a given node (of node `Node) from the whitelist"""
+        self.remove(WPAN_MAC_WHITELIST_ENTRIES, node.get(WPAN_EXT_ADDRESS)[1:-1])
 
     def is_in_scan_result(self, scan_result):
         """Checks if node is in the scan results
