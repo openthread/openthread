@@ -715,17 +715,17 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId.m8; }
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended PAN ID.
      *
-     * @param[in]  aExtPanId  The IEEE 802.15.4 Extended PAN ID.
+     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN ID.
      *
      * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    otError SetExtendedPanId(const uint8_t *aExtPanId);
+    otError SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
     /**

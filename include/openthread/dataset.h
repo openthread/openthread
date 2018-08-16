@@ -86,10 +86,17 @@ typedef struct otNetworkName
  * This structure represents an Extended PAN ID.
  *
  */
-typedef struct otExtendedPanId
+OT_TOOL_PACKED_BEGIN
+struct otExtendedPanId
 {
     uint8_t m8[OT_EXT_PAN_ID_SIZE]; ///< Byte values
-} otExtendedPanId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents an Extended PAN ID.
+ *
+ */
+typedef struct otExtendedPanId otExtendedPanId;
 
 #define OT_MESH_LOCAL_PREFIX_SIZE 8 ///< Size of the Mesh Local Prefix (bytes)
 

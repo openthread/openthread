@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_COMMISSIONER_H_
 #define OPENTHREAD_COMMISSIONER_H_
 
+#include <openthread/dataset.h>
 #include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
@@ -346,11 +347,11 @@ OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *   aInstance,
-                                                const char *   aPassPhrase,
-                                                const char *   aNetworkName,
-                                                const uint8_t *aExtPanId,
-                                                uint8_t *      aPSKc);
+OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *           aInstance,
+                                                const char *           aPassPhrase,
+                                                const char *           aNetworkName,
+                                                const otExtendedPanId *aExtPanId,
+                                                uint8_t *              aPSKc);
 
 /**
  * @}

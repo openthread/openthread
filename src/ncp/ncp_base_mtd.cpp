@@ -395,7 +395,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_XPANID>(void)
 {
-    return mEncoder.WriteData(otThreadGetExtendedPanId(mInstance), sizeof(spinel_net_xpanid_t));
+    return mEncoder.WriteData(otThreadGetExtendedPanId(mInstance)->m8, sizeof(spinel_net_xpanid_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_XPANID>(void)
@@ -408,7 +408,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_XPANID>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetExtendedPanId(mInstance, ptr);
+    error = otThreadSetExtendedPanId(mInstance, reinterpret_cast<const otExtendedPanId *>(ptr));
 
 exit:
     return error;
