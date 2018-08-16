@@ -76,7 +76,7 @@
               hint="eg: 115200">115200
         </ITEM>
     </DEVICE>
-    <DEVICE name="OpenThread_WpanCtl" thumbnail="OpenThread.png" description = "OpenThread_WpanCtl: Wpantund + NCP" THCI="OpenThread_WpanCtl">
+    <DEVICE name="OpenThread_WpanCtl" thumbnail="OpenThread.png" description = "OpenThread_WpanCtl: wpantund + NCP" THCI="OpenThread_WpanCtl">
         <ITEM label="Serial Line"
               type="text"
               forParam="SerialPort"

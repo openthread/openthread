@@ -179,7 +179,7 @@ class OpenThread_WpanCtl(IThci):
         """send specific command to reference unit over serial port
 
         Args:
-            cmd: OpenThread_WpanCtl CLI string
+            cmd: OpenThread_WpanCtl command string
 
         Returns:
             Fail: Failed to send the command to reference unit and parse it
@@ -765,7 +765,6 @@ class OpenThread_WpanCtl(IThci):
             datasetCmd = WPANCTL_CMD + 'setprop Dataset:NetworkName %s' % networkName
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
-            #return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setNetworkName() Error: ' + str(e))
 
@@ -1448,6 +1447,8 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             True: successful to set the link quality
             False: fail to set the link quality
+
+        @todo: required if as reference device
         """
         pass
 
@@ -1460,6 +1461,8 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             True: successful to remove the prefix entry from border router
             False: fail to remove the prefix entry from border router
+
+        @todo: required if as reference device
         """
         pass
 
@@ -1561,6 +1564,8 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             True: successful to set NETWORK_ID_TIMEOUT
             False: fail to set NETWORK_ID_TIMEOUT
+
+        @todo: required if as reference device
         """
         pass
 
@@ -1689,90 +1694,20 @@ class OpenThread_WpanCtl(IThci):
 
         Returns:
             neighboring routers' extended address
+
+        @todo: required if as reference device
         """
-        print '%s call getNeighbouringRouters' % self.port
-        try:
-            routerInfo = []
-            routerList = []
-            routerList = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:NeighborTable')
-            print routerList
-
-            if 'Done' in routerList:
-                print 'no neighbouring routers'
-                return None
-
-            for index in routerList:
-                router = []
-                cmd = 'router %s' % index
-                router = self.__sendCommand(cmd)
-
-                for line in router:
-                    if 'Done' in line:
-                        break
-                    #elif 'Rloc' in line:
-                    #    rloc16 = line.split()[1]
-                    elif 'Ext Addr' in line:
-                        eui = line.split()[2]
-                        routerInfo.append(int(eui, 16))
-                    #elif 'LQI In' in line:
-                    #    lqi_in = line.split()[1]
-                    #elif 'LQI Out' in line:
-                    #    lqi_out = line.split()[1]
-                    else:
-                        pass
-
-            print routerInfo
-            return routerInfo
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger('getNeighbouringDevice() Error: ' + str(e))
+        pass
 
     def getChildrenInfo(self):
         """get all children information
 
         Returns:
             children's extended address
+
+        @todo: required if as reference device
         """
-        print '%s call getChildrenInfo' % self.port
-        try:
-            childrenInfoAll = []
-            childrenInfo = {'EUI': 0, 'Rloc16': 0, 'MLEID': ''}
-            childrenList = self.__sendCommand(WPANCTL_CMD + 'getprop Thread:ChildTable')
-            print childrenList
-
-            if 'Done' in childrenList:
-                print 'no children'
-                return None
-
-            for index in childrenList:
-                cmd = 'child %s' % index
-                child = []
-                child = self.__sendCommand(cmd)
-
-                for line in child:
-                    if 'Done' in line:
-                        break
-                    elif 'Rloc' in line:
-                        rloc16 = line.split()[1]
-                    elif 'Ext Addr' in line:
-                        eui = line.split()[2]
-                    #elif 'Child ID' in line:
-                    #    child_id = line.split()[2]
-                    #elif 'Mode' in line:
-                    #    mode = line.split()[1]
-                    else:
-                        pass
-
-                childrenInfo['EUI'] = int(eui, 16)
-                childrenInfo['Rloc16'] = int(rloc16, 16)
-                #children_info['MLEID'] = self.getMLEID()
-
-                childrenInfoAll.append(childrenInfo['EUI'])
-                #childrenInfoAll.append(childrenInfo)
-
-            print childrenInfoAll
-            return childrenInfoAll
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger('getChildrenInfo() Error: ' + str(e))
+        pass
 
     def setXpanId(self, xPanId):
         """set extended PAN ID of Thread Network
@@ -2029,7 +1964,7 @@ class OpenThread_WpanCtl(IThci):
 
         self.provisioningUrl = strURL
         print cmd
-        return self.__sendCommand(cmd)[0] == "Done"
+        return self.__sendCommand(cmd)[0] != "Fail"
 
     def allowCommission(self):
         """start commissioner candidate petition process
