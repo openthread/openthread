@@ -53,13 +53,13 @@
 #include <driverlib/rf_ieee_mailbox.h>
 #include <driverlib/rf_mailbox.h>
 #include <driverlib/rfc.h>
-#include <rf_patches/rf_patch_cpe_ieee_802_15_4.h>
-#include <rf_patches/rf_patch_mce_ieee_802_15_4.h>
-#include <rf_patches/rf_patch_rfe_ieee_802_15_4.h>
 #include <inc/hw_ccfg.h>
 #include <inc/hw_fcfg1.h>
 #include <inc/hw_memmap.h>
 #include <inc/hw_prcm.h>
+#include <rf_patches/rf_patch_cpe_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_mce_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_rfe_ieee_802_15_4.h>
 
 enum
 {
@@ -873,8 +873,7 @@ static uint_fast8_t rfCorePowerOn(void)
     RFCClockEnable();
 
     /* Enable ram clocks for patches */
-    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0,
-                RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
 
     /* Send ping (to verify RFCore is ready and alive) */
     return rfCoreExecutePingCmd();
