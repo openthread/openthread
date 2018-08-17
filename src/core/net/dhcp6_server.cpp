@@ -153,7 +153,7 @@ otError Dhcp6Server::UpdateService(void)
             if (!mAgentsAloc[i].mValid)
             {
                 address = &(mAgentsAloc[i].GetAddress());
-                memcpy(address, netif.GetMle().GetMeshLocalPrefix(), 8);
+                memcpy(address, netif.GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix));
                 address->mFields.m16[4]      = HostSwap16(0x0000);
                 address->mFields.m16[5]      = HostSwap16(0x00ff);
                 address->mFields.m16[6]      = HostSwap16(0xfe00);

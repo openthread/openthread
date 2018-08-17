@@ -1046,13 +1046,13 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
-    otError        error    = OT_ERROR_NONE;
-    const uint8_t *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
-    otIp6Address   addr;
+    otError                  error    = OT_ERROR_NONE;
+    const otMeshLocalPrefix *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
+    otIp6Address             addr;
 
     VerifyOrExit(mlPrefix != NULL); // If `mlPrefix` is NULL send empty response.
 
-    memcpy(addr.mFields.m8, mlPrefix, 8);
+    memcpy(addr.mFields.m8, mlPrefix->m8, 8);
 
     // Zero out the last 8 bytes.
     memset(addr.mFields.m8 + 8, 0, 8);
@@ -1066,15 +1066,15 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
-    otError        error = OT_ERROR_NONE;
-    const uint8_t *meshLocalPrefix;
-    uint8_t        prefixLength;
+    otError             error = OT_ERROR_NONE;
+    const otIp6Address *meshLocalPrefix;
+    uint8_t             prefixLength;
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(meshLocalPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     VerifyOrExit(prefixLength == 64, error = OT_ERROR_INVALID_ARGS);
 
-    error = otThreadSetMeshLocalPrefix(mInstance, meshLocalPrefix);
+    error = otThreadSetMeshLocalPrefix(mInstance, reinterpret_cast<const otMeshLocalPrefix *>(meshLocalPrefix));
 
 exit:
     return error;

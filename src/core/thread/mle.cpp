@@ -110,7 +110,7 @@ Mle::Mle(Instance &aInstance)
     , mAlternateTimestamp(0)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
 {
-    uint8_t meshLocalPrefix[8];
+    otMeshLocalPrefix meshLocalPrefix;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -157,10 +157,10 @@ Mle::Mle(Instance &aInstance)
 #endif
 
     // initialize Mesh Local Prefix
-    meshLocalPrefix[0] = 0xfd;
-    memcpy(meshLocalPrefix + 1, GetNetif().GetMac().GetExtendedPanId().m8, 5);
-    meshLocalPrefix[6] = 0x00;
-    meshLocalPrefix[7] = 0x00;
+    meshLocalPrefix.m8[0] = 0xfd;
+    memcpy(&meshLocalPrefix.m8[1], GetNetif().GetMac().GetExtendedPanId().m8, 5);
+    meshLocalPrefix.m8[6] = 0x00;
+    meshLocalPrefix.m8[7] = 0x00;
 
     // mesh-local 64
     Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
@@ -830,16 +830,16 @@ otError Mle::UpdateLinkLocalAddress(void)
     return OT_ERROR_NONE;
 }
 
-const uint8_t *Mle::GetMeshLocalPrefix(void) const
+const otMeshLocalPrefix &Mle::GetMeshLocalPrefix(void) const
 {
-    return mMeshLocal16.GetAddress().mFields.m8;
+    return reinterpret_cast<const otMeshLocalPrefix &>(mMeshLocal16.GetAddress());
 }
 
-otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
+otError Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8) == 0)
+    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix)) == 0)
     {
         GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR);
         ExitNow();
@@ -851,7 +851,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
     netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8);
+    memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
     memcpy(mMeshLocal16.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
 
 #if OPENTHREAD_ENABLE_SERVICE

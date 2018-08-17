@@ -364,7 +364,7 @@ OTAPI const otIp6Address *OTCALL otThreadGetMeshLocalEid(otInstance *aInstance);
  * @returns A pointer to the Mesh Local Prefix.
  *
  */
-OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
+OTAPI const otMeshLocalPrefix *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 
 /**
  * This function sets the Mesh Local Prefix.
@@ -380,7 +380,7 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix);
+OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix);
 
 /**
  * This function returns the Thread link-local IPv6 address.
