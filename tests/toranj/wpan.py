@@ -1136,3 +1136,61 @@ class NeighborEntry(object):
 def parse_neighbor_table_result(neighbor_table_list):
     """ Parses neighbor table list string and returns an array of `NeighborEntry` objects"""
     return [ NeighborEntry(item) for item in neighbor_table_list.split('\n')[1:-1] ]
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+class RouterTableEntry(object):
+    """ This object encapsulates a router table entry"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # `\t"8A970B3251810826, RLOC16:4000, RouterId:16, NextHop:43, PathCost:1, LQIn:3, LQOut:3, Age:3, LinkEst:yes"`
+        #
+
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
+        # Then remove any ',' at end of items in the list.
+        items = [item[:-1] if item[-1] ==',' else item for item in text[2:-1].split()]
+
+        # First item in the extended address
+        self._ext_address = items[0]
+
+        # Convert the rest into a dictionary by splitting the text using ':' as separator
+        dict = {item.split(':')[0] : item.split(':')[1] for item in items[1:]}
+
+        self._rloc16    = int(dict['RLOC16'], 16)
+        self._router_id = int(dict['RouterId'], 0)
+        self._next_hop  = int(dict['NextHop'], 0)
+        self._path_cost = int(dict['PathCost'], 0)
+        self._age       = int(dict['Age'], 0)
+        self._le        = (dict['LinkEst'] == 'yes')
+
+    @property
+    def ext_address(self):
+        return self._ext_address
+
+    @property
+    def rloc16(self):
+        return self._rloc16
+
+    @property
+    def router_id(self):
+        return self._router_id
+
+    @property
+    def next_hop(self):
+        return self._next_hop
+
+    @property
+    def path_cost(self):
+        return self._path_cost
+
+    def is_link_established(self):
+        return self._le
+
+    def __repr__(self):
+        return 'RouterTableEntry({})'.format(self.__dict__)
+
+def parse_router_table_result(router_table_list):
+    """ Parses router table list string and returns an array of `RouterTableEntry` objects"""
+    return [ RouterTableEntry(item) for item in router_table_list.split('\n')[1:-1] ]
