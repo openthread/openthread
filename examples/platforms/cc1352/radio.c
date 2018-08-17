@@ -64,6 +64,7 @@
 enum
 {
     CC1352_RECEIVE_SENSITIVITY = -100, // dBm
+    CC1352_RF_CMD0             = 0x0607,
 };
 
 /* phy state as defined by openthread */
@@ -873,7 +874,7 @@ static uint_fast8_t rfCorePowerOn(void)
     RFCClockEnable();
 
     /* Enable ram clocks for patches */
-    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC1352_RF_CMD0, RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
 
     /* Send ping (to verify RFCore is ready and alive) */
     return rfCoreExecutePingCmd();
@@ -922,7 +923,7 @@ static void rfCoreApplyPatch(void)
     rf_patch_rfe_ieee_802_15_4();
 
     /* disable ram bus clocks */
-    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, 0));
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC1352_RF_CMD0, 0));
 }
 
 /**
