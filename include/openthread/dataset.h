@@ -104,10 +104,17 @@ typedef struct otExtendedPanId otExtendedPanId;
  * This structure represents a Mesh Local Prefix.
  *
  */
-typedef struct otMeshLocalPrefix
+OT_TOOL_PACKED_BEGIN
+struct otMeshLocalPrefix
 {
     uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE]; ///< Byte values
-} otMeshLocalPrefix;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a Mesh Local Prefix
+ *
+ */
+typedef struct otMeshLocalPrefix otMeshLocalPrefix;
 
 #define OT_PSKC_MAX_SIZE 16 ///< Maximum size of the PSKc (bytes)
 

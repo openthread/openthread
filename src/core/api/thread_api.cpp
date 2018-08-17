@@ -66,20 +66,20 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-    uint8_t   mlPrefix[8];
+    otError           error    = OT_ERROR_NONE;
+    Instance &        instance = *static_cast<Instance *>(aInstance);
+    otMeshLocalPrefix prefix;
 
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     instance.GetThreadNetif().GetMac().SetExtendedPanId(*aExtendedPanId);
 
-    mlPrefix[0] = 0xfd;
-    memcpy(mlPrefix + 1, aExtendedPanId->m8, 5);
-    mlPrefix[6] = 0x00;
-    mlPrefix[7] = 0x00;
-    instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(mlPrefix);
+    prefix.m8[0] = 0xfd;
+    memcpy(&prefix.m8[1], aExtendedPanId->m8, 5);
+    prefix.m8[6] = 0x00;
+    prefix.m8[7] = 0x00;
+    instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(prefix);
 
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
@@ -191,14 +191,14 @@ const otIp6Address *otThreadGetMeshLocalEid(otInstance *aInstance)
     return &instance.GetThreadNetif().GetMle().GetMeshLocal64();
 }
 
-const uint8_t *otThreadGetMeshLocalPrefix(otInstance *aInstance)
+const otMeshLocalPrefix *otThreadGetMeshLocalPrefix(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetMeshLocalPrefix();
+    return &instance.GetThreadNetif().GetMle().GetMeshLocalPrefix();
 }
 
-otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix)
+otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -206,7 +206,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLo
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    error = instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
+    error = instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(*aMeshLocalPrefix);
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
 
