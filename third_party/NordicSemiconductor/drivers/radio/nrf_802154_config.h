@@ -273,6 +273,16 @@ extern "C" {
 #endif
 
 /**
+ * @def NRF_802154_DELAYED_TRX_ENABLED
+ *
+ * If delayed transmission and receive window features are available.
+ *
+ */
+#ifndef NRF_802154_DELAYED_TRX_ENABLED
+#define NRF_802154_DELAYED_TRX_ENABLED 1
+#endif
+
+/**
  * @}
  * @defgroup nrf_802154_config_clock Clock driver configuration
  * @{
@@ -315,8 +325,8 @@ extern "C" {
  *
  * Priority of RTC interrupt used in standalone timer driver implementation.
  *
- * @note This configuration is only applicable for the Timer Abstraction Layer implementation
- *       in nrf_802154_timer_nodrv.c.
+ * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
+ *       in nrf_802154_lp_timer_nodrv.c.
  *
  */
 #ifndef NRF_802154_RTC_IRQ_PRIORITY
@@ -328,8 +338,8 @@ extern "C" {
  *
  * RTC instance used in standalone timer driver implementation.
  *
- * @note This configuration is only applicable for the Timer Abstraction Layer implementation
- *       in nrf_802154_timer_nodrv.c.
+ * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
+ *       in nrf_802154_lp_timer_nodrv.c.
  *
  */
 #ifndef NRF_802154_RTC_INSTANCE
@@ -341,8 +351,8 @@ extern "C" {
  *
  * RTC interrupt handler name used in standalone timer driver implementation.
  *
- * @note This configuration is only applicable for Timer Abstraction Layer implementation
- *       in nrf_802154_timer_nodrv.c.
+ * @note This configuration is only applicable for Low Power Timer Abstraction Layer implementation
+ *       in nrf_802154_lp_timer_nodrv.c.
  *
  */
 #ifndef NRF_802154_RTC_IRQ_HANDLER
@@ -355,8 +365,8 @@ extern "C" {
  *
  * RTC Interrupt number used in standalone timer driver implementation.
  *
- * @note This configuration is only applicable for the Timer Abstraction Layer implementation
- *       in nrf_802154_timer_nodrv.c.
+ * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
+ *       in nrf_802154_lp_timer_nodrv.c.
  *
  */
 #ifndef NRF_802154_RTC_IRQN

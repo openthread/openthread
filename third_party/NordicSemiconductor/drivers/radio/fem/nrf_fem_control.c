@@ -257,14 +257,14 @@ void nrf_fem_control_pin_clear(void)
 {
     if (pin_is_enabled(NRF_FEM_CONTROL_PA_PIN))
     {
-        nrf_gpio_pin_write(m_nrf_fem_control_cfg.pa_cfg.gpio_pin,
-                           !m_nrf_fem_control_cfg.pa_cfg.active_high);
+        nrf_gpiote_task_force(m_nrf_fem_control_cfg.pa_gpiote_ch_id,
+                              (nrf_gpiote_outinit_t)!m_nrf_fem_control_cfg.pa_cfg.active_high);
     }
 
     if (pin_is_enabled(NRF_FEM_CONTROL_LNA_PIN))
     {
-        nrf_gpio_pin_write(m_nrf_fem_control_cfg.lna_cfg.gpio_pin,
-                           !m_nrf_fem_control_cfg.lna_cfg.active_high);
+        nrf_gpiote_task_force(m_nrf_fem_control_cfg.lna_gpiote_ch_id,
+                              (nrf_gpiote_outinit_t)!m_nrf_fem_control_cfg.lna_cfg.active_high);
     }
 }
 
@@ -284,8 +284,8 @@ void nrf_fem_control_timer_reset(nrf_fem_control_pin_t pin, nrf_timer_short_mask
 {
     if (pin_is_enabled(pin))
     {
-        nrf_timer_task_trigger(NRF_FEM_TIMER_INSTANCE, NRF_TIMER_TASK_STOP);
-        nrf_timer_task_trigger(NRF_FEM_TIMER_INSTANCE, NRF_TIMER_TASK_CLEAR);
+        // Anomaly 78: use SHUTDOWN instead of STOP and CLEAR.
+        nrf_timer_task_trigger(NRF_FEM_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
         nrf_timer_shorts_disable(NRF_FEM_TIMER_INSTANCE, short_mask);
     }
 }

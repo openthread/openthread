@@ -80,6 +80,21 @@ bool nrf_802154_pib_auto_ack_get(void);
  */
 void nrf_802154_pib_auto_ack_set(bool enabled);
 
+/**
+ * @brief Check if radio is configured as the PAN coordinator.
+ *
+ * @retval  true   If radio is configured as the PAN coordinator.
+ * @retval  false  If radio is not configured as the PAN coordinator.
+ */
+bool nrf_802154_pib_pan_coord_get(void);
+
+/**
+ * @brief Notify driver that radio is configured as the PAN coordinator.
+ *
+ * @param[in]  enabled  If radio is configured as the PAN coordinator.
+ */
+void nrf_802154_pib_pan_coord_set(bool enabled);
+
 
 /**
  * @brief Get currently used channel.

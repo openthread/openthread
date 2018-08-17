@@ -73,7 +73,7 @@ void nrf_802154_notify_transmitted(const uint8_t * p_frame,
     nrf_802154_transmitted_raw(p_frame, p_ack, power, lqi);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_transmitted(p_frame + RAW_PAYLOAD_OFFSET,
-                           p_ack + RAW_PAYLOAD_OFFSET,
+                           p_ack == NULL ? NULL : p_ack + RAW_PAYLOAD_OFFSET,
                            p_ack[RAW_LENGTH_OFFSET],
                            power,
                            lqi);

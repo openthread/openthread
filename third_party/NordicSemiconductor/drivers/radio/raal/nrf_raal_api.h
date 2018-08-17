@@ -108,14 +108,6 @@ void nrf_raal_continuous_mode_exit(void);
 bool nrf_raal_timeslot_request(uint32_t length_us);
 
 /**
- * @brief Check if the 802.15.4 driver is currently in timeslot.
- *
- * @retval TRUE  Timeslot is currently granted.
- * @retval FALSE Timeslot is not currently granted.
- */
-bool nrf_raal_timeslot_is_granted(void);
-
-/**
  * @brief Get left time of currently granted timeslot [us].
  *
  * @returns  Number of microseconds left in currently granted timeslot.

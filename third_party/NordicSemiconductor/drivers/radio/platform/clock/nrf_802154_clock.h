@@ -36,7 +36,8 @@
  * It is used by Radio Arbiter clients (RAAL) to start HF clock when entering continuous mode
  * and stop HF clock after continuous mode exit.
  *
- * It is used by standalone Timer Abstraction Layer implementation to start LF clock during initialization.
+ * It is used by standalone Low Power Timer Abstraction Layer implementation
+ * to start LF clock during initialization.
  *
  */
 
