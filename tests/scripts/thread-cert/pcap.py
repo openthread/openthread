@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016-2017, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
 """ Module to provide codec utilities for .pcap formatters. """
 
 import struct

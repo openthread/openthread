@@ -62,7 +62,6 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-            node.destroy()
         self.simulator.stop()
 
     def test(self):
