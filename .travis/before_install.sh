@@ -49,6 +49,7 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != android-build ] || {
+        sudo apt-get install -y bison gcc-multilib g++-multilib
         echo y | sdkmanager "ndk-bundle"
     }
 

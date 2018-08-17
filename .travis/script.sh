@@ -32,6 +32,65 @@ die() {
 	exit 1
 }
 
+#######################################
+# Prepare android build system
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+android_prepare_build_system()
+{
+    # Android build system
+    (mkdir build && cd build && git init && git pull --depth 1 https://android.googlesource.com/platform/build 2db32730e79cafcf13e1f898a7bee7f82b0449d6)
+    ln -s build/core/main.mk Makefile
+
+    # Workarounds for java checking
+    export ANDROID_JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    mkdir bin
+    cat > bin/java <<EOF
+#!/bin/sh
+echo java version \"1.6\"
+EOF
+
+    cat > bin/javac <<EOF
+echo javac \"1.6\"
+EOF
+    chmod a+x bin/java bin/javac
+    export PATH=$(pwd)/bin:$PATH
+
+    # Files for building ndk
+    mkdir -p system/core/include/arch/linux-arm
+    touch system/core/include/arch/linux-arm/AndroidConfig.h
+
+    mkdir -p system/core/include/arch/linux-x86
+    touch system/core/include/arch/linux-x86/AndroidConfig.h
+
+    ANDROID_NDK_PATH=$(dirname $(which sdkmanager))/../../ndk-bundle
+    mkdir -p bionic/libc/
+    cp -r $ANDROID_NDK_PATH/sysroot/usr/include bionic/libc/include
+    mv bionic/libc/include/arm-linux-androideabi/asm bionic/libc/include/asm
+
+    mkdir -p out/target/product/generic/obj/
+    cp -r $ANDROID_NDK_PATH/platforms/android-27/arch-arm/usr/lib out/target/product/generic/obj/
+
+    mkdir -p bionic/libstdc++
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/include bionic/libstdc++
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/include/* bionic/libstdc++/include
+    # The default libstdc++.so does not contain full stl implementation, see https://developer.android.com/ndk/guides/cpp-support
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/libgnustl_shared.so out/target/product/generic/obj/lib/libstdc++.so
+
+    # Build spec
+    cat > buildspec.mk <<EOF
+TARGET_PRODUCT := generic
+TARGET_BUILD_VARIANT := eng
+TARGET_BUILD_TYPE := release
+TARGET_TOOLS_PREFIX := $ANDROID_NDK_PATH/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-
+EOF
+}
+
 set -x
 
 [ $BUILD_TARGET != pretty-check ] || {
@@ -74,51 +133,14 @@ set -x
 [ $BUILD_TARGET != android-build ] || {
     cd ..
 
-    # Android build system
-    (mkdir build && cd build && git init && git pull --depth 1 https://android.googlesource.com/platform/build 2db32730e79cafcf13e1f898a7bee7f82b0449d6)
-    ln -s build/core/main.mk Makefile
+    android_prepare_build_system
 
-    # Workarounds for java checking
-    export ANDROID_JAVA_HOME=/usr/lib/jvm/java-8-oracle
-    mkdir bin
-    cat > bin/java <<EOF
-#!/bin/sh
-echo java version \"1.6\"
-EOF
-
-    cat > bin/javac <<EOF
-echo javac \"1.6\"
-EOF
-    chmod a+x bin/java bin/javac
-    export PATH=$(pwd)/bin:$PATH
-
-    # Files for building ndk
-    mkdir -p system/core/include/arch/linux-arm
-    touch system/core/include/arch/linux-arm/AndroidConfig.h
-
-    ANDROID_NDK_PATH=$(dirname $(which sdkmanager))/../../ndk-bundle
-    mkdir -p bionic/libc/
-    cp -r $ANDROID_NDK_PATH/sysroot/usr/include bionic/libc/include
-    mv bionic/libc/include/arm-linux-androideabi/asm bionic/libc/include/asm
-
-    mkdir -p bionic/libstdc++
-    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/include bionic/libc/libstdc++
-
-    mkdir -p out/target/product/generic/obj/
-    cp -r $ANDROID_NDK_PATH/platforms/android-27/arch-arm/usr/lib out/target/product/generic/obj/
-
-    # Build spec
-    cat > buildspec.mk <<EOF
-TARGET_PRODUCT := generic
-TARGET_BUILD_VARIANT := eng
-TARGET_BUILD_TYPE := release
-TARGET_TOOLS_PREFIX := $ANDROID_NDK_PATH/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-
-EOF
     make showcommands ot-core
-    make showcommands ot-ncp
     make showcommands ot-cli
-    test -f out/target/product/generic/obj/EXECUTABLES/ot-ncp_intermediates/LINKED/ot-ncp || die
-    test -f out/target/product/generic/obj/EXECUTABLES/ot-cli_intermediates/LINKED/ot-cli || die
+    make showcommands ot-ncp
+
+    test -f out/target/product/generic/system/bin/ot-cli || die
+    test -f out/target/product/generic/system/bin/ot-ncp || die
 }
 
 [ $BUILD_TARGET != arm-gcc-4 ] || {
