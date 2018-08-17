@@ -54,8 +54,8 @@ extern "C" {
 typedef enum
 {
     // Sleep
-    RADIO_STATE_SLEEP,              ///< Low power (DISABLED) mode - the only state in which HF clock is released and RAAL disabled.
-    RADIO_STATE_FALLING_ASLEEP,     ///< Prior entering SLEEP state RAAL and HF clock are active.
+    RADIO_STATE_SLEEP,              ///< Low power (DISABLED) mode - the only state in which all radio preconditions ane not requested.
+    RADIO_STATE_FALLING_ASLEEP,     ///< Prior entering SLEEP state all radio preconditions are requested.
 
     // Receive
     RADIO_STATE_RX,                 ///< Receiver is enabled and it is receiving frames.
@@ -101,7 +101,7 @@ radio_state_t nrf_802154_core_state_get(void);
  * @brief Request transition to SLEEP state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Shceduler notification.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
@@ -114,32 +114,35 @@ bool nrf_802154_core_sleep(nrf_802154_term_t term_lvl);
  * @brief Request transition to RECEIVE state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @param[in]  term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]  req_orig         Module that originates this request.
- * @param[in]  notify_function  Function called to notify status of this procedure instead of
- *                              default notification. If NULL default notification is used.
+ * @param[in]  notify_function  Function called to notify status of this procedure. May be NULL.
+ * @param[in]  notify_abort     If abort notification should be triggered.
  *
  * @retval  true   Entering RECEIVE state succeeded.
  * @retval  false  Entering RECEIVE state failed (driver is performing other procedure).
  */
 bool nrf_802154_core_receive(nrf_802154_term_t              term_lvl,
                              req_originator_t               req_orig,
-                             nrf_802154_notification_func_t notify_function);
+                             nrf_802154_notification_func_t notify_function,
+                             bool                           notify_abort);
 
 /**
  * @brief Request transition to TRANSMIT state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @param[in]  term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]  req_orig         Module that originates this request.
  * @param[in]  p_data           Pointer to a frame to transmit.
  * @param[in]  cca              If the driver should perform CCA procedure before transmission.
- * @param[in]  notify_function  Function called to notify status of this procedure instead of
- *                              default notification. If NULL default notification is used.
+ * @param[in]  immediate        If true, the driver schedules transmission immediately or never;
+ *                              if false transmission may be postponed until tx preconditions are
+ *                              met.
+ * @param[in]  notify_function  Function called to notify status of this procedure. May be NULL.
  *
  * @retval  true   Entering TRANSMIT state succeeded.
  * @retval  false  Entering TRANSMIT state failed (driver is performing other procedure).
@@ -148,13 +151,14 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
                               req_originator_t               req_orig,
                               const uint8_t                * p_data,
                               bool                           cca,
+                              bool                           immediate,
                               nrf_802154_notification_func_t notify_function);
 
 /**
  * @brief Request transition to ENERGY_DETECTION state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @note This function shall be called when the driver is in SLEEP or RECEIVE state. When Energy
  *       detection procedure is finished the driver will transit to RECEIVE state.
@@ -171,7 +175,7 @@ bool nrf_802154_core_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_
  * @brief Request transition to CCA state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
@@ -184,7 +188,7 @@ bool nrf_802154_core_cca(nrf_802154_term_t term_lvl);
  * @brief Request transition to CONTINUOUS_CARRIER state.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
@@ -204,7 +208,7 @@ bool nrf_802154_core_continuous_carrier(nrf_802154_term_t term_lvl);
  * notification it changes internal state to make sure receiver is started if requested.
  *
  * @note This function shall be called from a critical section context. It shall not be interrupted
- *       by the RADIO event handler or RAAL notification.
+ *       by the RADIO event handler or Radio Scheduler notification.
  *
  * @param[in]  p_data  Pointer to buffer that has been freed.
  */

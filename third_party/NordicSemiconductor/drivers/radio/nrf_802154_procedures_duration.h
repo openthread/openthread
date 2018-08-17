@@ -46,6 +46,7 @@
 #define RX_RAMP_UP_TIME       40  // us
 #define RX_RAMP_DOWN_TIME      0  // us
 #define MAX_RAMP_DOWN_TIME     6  // us
+#define RX_TX_TURNAROUND_TIME 20  // us
 
 #define A_CCA_DURATION         8  // sym
 #define A_TURNAROUND_TIME     12  // sym
@@ -59,8 +60,10 @@
                                (NUM_OCTETS_IN_ACK * PHY_SYMBOLS_PER_OCTET))
 
 __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
-                                                             bool    cca,
-                                                             bool    ack_requested);
+                                                    bool    cca,
+                                                    bool    ack_requested);
+
+__STATIC_INLINE uint16_t nrf_802154_cca_before_tx_duration_get(void);
 
 __STATIC_INLINE uint16_t nrf_802154_rx_duration_get(uint8_t psdu_length, bool ack_requested);
 
@@ -91,6 +94,14 @@ __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
     {
         result += RX_RAMP_UP_TIME + (A_CCA_DURATION * PHY_US_PER_SYMBOL) + RX_RAMP_DOWN_TIME;
     }
+
+    return result;
+}
+
+__STATIC_INLINE uint16_t nrf_802154_cca_before_tx_duration_get(void)
+{
+    // CCA + turnaround time
+    uint16_t result = (A_CCA_DURATION * PHY_US_PER_SYMBOL) + RX_TX_TURNAROUND_TIME;
 
     return result;
 }

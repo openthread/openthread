@@ -53,6 +53,7 @@ typedef struct
     nrf_802154_cca_cfg_t cca;                                     ///< CCA mode and thresholds.
     bool                 promiscuous                          :1; ///< Indicating if radio is in promiscuous mode.
     bool                 auto_ack                             :1; ///< Indicating if auto ACK procedure is enabled.
+    bool                 pan_coord                            :1; ///< Indicating if radio is configured as the PAN coordinator.
     uint8_t              channel                              :5; ///< Channel on which the node receives messages.
 } nrf_802154_pib_data_t;
 
@@ -62,6 +63,7 @@ void nrf_802154_pib_init(void)
 {
     m_data.promiscuous = false;
     m_data.auto_ack    = true;
+    m_data.pan_coord   = false;
     m_data.channel     = 11;
 
     memset(m_data.pan_id, 0xff, sizeof(m_data.pan_id));
@@ -93,6 +95,16 @@ bool nrf_802154_pib_auto_ack_get(void)
 void nrf_802154_pib_auto_ack_set(bool enabled)
 {
     m_data.auto_ack = enabled;
+}
+
+bool nrf_802154_pib_pan_coord_get(void)
+{
+    return m_data.pan_coord;
+}
+
+void nrf_802154_pib_pan_coord_set(bool enabled)
+{
+    m_data.pan_coord = enabled;
 }
 
 uint8_t nrf_802154_pib_channel_get(void)

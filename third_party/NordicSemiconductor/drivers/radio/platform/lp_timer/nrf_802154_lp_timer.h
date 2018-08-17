@@ -29,12 +29,12 @@
  */
 
 /**
- * @brief This module defines Timer Abstraction Layer for the 802.15.4 driver.
+ * @brief This module defines Low Power Timer Abstraction Layer for the 802.15.4 driver.
  *
  */
 
-#ifndef NRF_802154_TIMER_API_H_
-#define NRF_802154_TIMER_API_H_
+#ifndef NRF_802154_LP_TIMER_API_H_
+#define NRF_802154_LP_TIMER_API_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -44,12 +44,12 @@ extern "C" {
 #endif
 
 /**
- * @defgroup nrf_802154_timer Timer Abstraction Layer for the 802.15.4 driver
+ * @defgroup nrf_802154_timer Low Power Timer Abstraction Layer for the 802.15.4 driver
  * @{
  * @ingroup nrf_802154_timer
- * @brief Timer Abstraction Layer interface for the 802.15.4 driver.
+ * @brief Low Power Timer Abstraction Layer interface for the 802.15.4 driver.
  *
- * Timer Abstraction Layer is an abstraction layer of timer that is meant to be used by
+ * Low Power Timer Abstraction Layer is an abstraction layer of timer that is meant to be used by
  * the nRF 802.15.4 driver. This timer should provide low latency (max 100 us) in order to allow
  * implementation in the driver code features like:
  * * Timing out waiting for ACK frame
@@ -58,54 +58,54 @@ extern "C" {
  * * CSL
  * * Auto polling by rx-off-when-idle devices
  *
- * @note Most of Timer Abstraction Layer API should not be called directly by 802.15.4 driver
+ * @note Most of Low Power Timer Abstraction Layer API should not be called directly by 802.15.4 driver
  *       modules. This API is used by the Timer Scheduler module included in the driver and other
  *       modules should use Timer Scheduler API. Exception from above rule are initialization and
- *       deinitialization functions @sa nrf_802154_timer_init()
- *       @sa nrf_802154_timer_deinit() and critical section management
- *       @sa nrf_802154_timer_critical_section_enter()
- *       @sa nrf_802154_timer_critical_section_exit() as these functions are called from
+ *       deinitialization functions @sa nrf_802154_lp_timer_init()
+ *       @sa nrf_802154_lp_timer_deinit() and critical section management
+ *       @sa nrf_802154_lp_timer_critical_section_enter()
+ *       @sa nrf_802154_lp_timer_critical_section_exit() as these functions are called from
  *       nrf_802154_critical_section module and from global initialization functions
  *       @sa nrf_802154_init() @sa nrf_802154_deinit().
  */
 
 /**
- * @brief Initialize Timer.
+ * @brief Initialize the Timer.
  */
-void nrf_802154_timer_init(void);
+void nrf_802154_lp_timer_init(void);
 
 /**
- * @brief Uninitialize Timer.
+ * @brief Uninitialize the Timer.
  */
-void nrf_802154_timer_deinit(void);
+void nrf_802154_lp_timer_deinit(void);
 
 /**
  * @brief Enter critical section of the timer.
  *
- * In critical section timer cannot execute @sa nrf_802154_timer_fired() function.
+ * In critical section timer cannot execute @sa nrf_802154_lp_timer_fired() function.
  *
  * @note Critical section cannot be nested.
  */
-void nrf_802154_timer_critical_section_enter(void);
+void nrf_802154_lp_timer_critical_section_enter(void);
 
 /**
  * @brief Exit critical section of the timer.
  *
- * In critical section timer cannot execute @sa nrf_802154_timer_fired() function.
+ * In critical section timer cannot execute @sa nrf_802154_lp_timer_fired() function.
  *
  * @note Critical section cannot be nested.
  */
-void nrf_802154_timer_critical_section_exit(void);
+void nrf_802154_lp_timer_critical_section_exit(void);
 
 /**
  * @brief Get current time.
  *
- * Prior to getting current time, Timer must be initialized @sa nrf_802154_timer_init().
+ * Prior to getting current time, Timer must be initialized @sa nrf_802154_lp_timer_init().
  * There are no other requirements that must be fulfilled before using this function.
  *
  * @return Current time in microseconds [us].
  */
-uint32_t nrf_802154_timer_time_get(void);
+uint32_t nrf_802154_lp_timer_time_get(void);
 
 /**
  * @brief Get granularity of currently used timer.
@@ -114,7 +114,7 @@ uint32_t nrf_802154_timer_time_get(void);
  *
  * @return Timer granularity in microseconds [us].
  */
-uint32_t nrf_802154_timer_granularity_get(void);
+uint32_t nrf_802154_lp_timer_granularity_get(void);
 
 /**
  * @brief Start one-shot timer that expires at specified time.
@@ -123,18 +123,18 @@ uint32_t nrf_802154_timer_granularity_get(void);
  * If timer is running when this function is called, previously running timer will be stopped
  * automatically.
  *
- * On timer expiration @sa nrf_802154_timer_fired function will be called.
+ * On timer expiration @sa nrf_802154_lp_timer_fired function will be called.
  * Timer automatically stops after expiration.
  *
  * @param[in]  t0  Number of microseconds representing timer start time.
  * @param[in]  dt  Time of timer expiration as time elapsed from @p t0 [us].
  */
-void nrf_802154_timer_start(uint32_t t0, uint32_t dt);
+void nrf_802154_lp_timer_start(uint32_t t0, uint32_t dt);
 
 /**
  * @brief Stop currently running timer.
  */
-void nrf_802154_timer_stop(void);
+void nrf_802154_lp_timer_stop(void);
 
 /**
  * @brief Check if timer is currently running.
@@ -142,12 +142,60 @@ void nrf_802154_timer_stop(void);
  * @retval  true   Timer is running.
  * @retval  false  Timer is not running.
  */
-bool nrf_802154_timer_is_running(void);
+bool nrf_802154_lp_timer_is_running(void);
+
+/**
+ * @brief Start one-shot synchronization timer that expires at nearest possible timepoint.
+ * 
+ * On timer expiration @ref nrf_802154_lp_timer_synchronized function will be called and
+ * event returned by @ref nrf_802154_lp_timer_sync_event_get will be triggered.
+ * 
+ * @note @ref nrf_802154_lp_timer_synchronized may be called multiple times.
+ */
+void nrf_802154_lp_timer_sync_start_now(void);
+
+/**
+ * @brief Start one-shot synchronization timer that expires at specified time.
+ * 
+ * Start one-shot synchronization timer that will expire @p dt microseconds after @p t0 time.
+ * 
+ * On timer expiration @ref nrf_802154_lp_timer_synchronized function will be called and
+ * event returned by @ref nrf_802154_lp_timer_sync_event_get will be triggered.
+ * 
+ * @param[in]  t0  Number of microseconds representing timer start time.
+ * @param[in]  dt  Time of timer expiration as time elapsed from @p t0 [us].
+ */
+void nrf_802154_lp_timer_sync_start_at(uint32_t t0, uint32_t dt);
+
+/**
+ * @brief Stop currently running synchronization timer.
+ */
+void nrf_802154_lp_timer_sync_stop(void);
+
+/**
+ * @brief Get event used to synchronize this timer with HP Timer
+ * 
+ * @return  Address of the peripheral register corresponding to the event that
+ *          should be used for timers synchronization.
+ */
+uint32_t nrf_802154_lp_timer_sync_event_get(void);
+
+/**
+ * @brief Get timestamp of the synchronization event.
+ *
+ * @return  Timestamp of the synchronization event.
+ */
+uint32_t nrf_802154_lp_timer_sync_time_get(void);
 
 /**
  * @brief Callback executed when timer expires.
  */
-extern void nrf_802154_timer_fired(void);
+extern void nrf_802154_lp_timer_fired(void);
+
+/**
+ * @brief Callback executed when synchronization timer expires.
+ */
+extern void nrf_802154_lp_timer_synchronized(void);
 
 /**
  *@}
@@ -157,4 +205,4 @@ extern void nrf_802154_timer_fired(void);
 }
 #endif
 
-#endif /* NRF_802154_TIMER_API_H_ */
+#endif /* NRF_802154_LP_TIMER_API_H_ */

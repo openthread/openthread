@@ -76,11 +76,11 @@ typedef struct nrf_802154_timer_s nrf_802154_timer_t;
  */
 struct nrf_802154_timer_s
 {
-    uint32_t                    t0;         ///< Base time of the timer [us]
-    uint32_t                    dt;         ///< Timer expiration delta from @p t0 [us]
-    nrf_802154_timer_callback_t callback;   ///< Callback function called when timer expires
-    void                      * p_context;  ///< User-defined context passed to callback function
-    nrf_802154_timer_t        * p_next;     ///< A pointer to the next running timer
+    uint32_t                       t0;         ///< Base time of the timer [us]
+    uint32_t                       dt;         ///< Timer expiration delta from @p t0 [us]
+    nrf_802154_timer_callback_t    callback;   ///< Callback function called when timer expires
+    void                         * p_context;  ///< User-defined context passed to callback function
+    nrf_802154_timer_t           * p_next;     ///< A pointer to the next running timer
 };
 
 /**
@@ -101,6 +101,13 @@ void nrf_802154_timer_sched_deinit(void);
  * @return Current time in microseconds [us].
  */
 uint32_t nrf_802154_timer_sched_time_get(void);
+
+/**
+ * @brief Get granularity of the timer that runs the timer scheduler.
+ *
+ * @return Granularity of the timer in microseconds [us].
+ */
+uint32_t nrf_802154_timer_sched_granularity_get(void);
 
 /**
  * @brief Check if given time is in future.

@@ -47,13 +47,15 @@
 #include <stdint.h>
 
 #include <nrf.h>
-#include "platform/timer/nrf_802154_timer.h"
+#include "nrf_802154_debug.h"
+#include "platform/lp_timer/nrf_802154_lp_timer.h"
 
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe167")
 #endif
 
-static volatile uint8_t              m_mutex;              ///< Mutex for starting the timer.
+static volatile uint8_t              m_timer_mutex;        ///< Mutex for starting the timer.
+static volatile uint8_t              m_fired_mutex;        ///< Mutex for the timer firing procedure.
 static volatile uint8_t              m_queue_changed_cntr; ///< Information that scheduler queue was modified.
 static volatile nrf_802154_timer_t * mp_head;              ///< Head of the running timers list.
 
@@ -62,18 +64,18 @@ static volatile nrf_802154_timer_t * mp_head;              ///< Head of the runn
  *  @retval  true   Mutex was acquired.
  *  @retval  false  Mutex could not be acquired.
  */
-static inline bool mutex_trylock(void)
+static inline bool mutex_trylock(volatile uint8_t * p_mutex)
 {
     do
     {
-        volatile uint8_t mutex_value = __LDREXB(&m_mutex);
+        volatile uint8_t mutex_value = __LDREXB(p_mutex);
 
         if (mutex_value)
         {
             __CLREX();
             return false;
         }
-    } while (__STREXB(1, &m_mutex));
+    } while (__STREXB(1, p_mutex));
 
     __DMB();
 
@@ -81,10 +83,10 @@ static inline bool mutex_trylock(void)
 }
 
 /** @brief Release mutex. */
-static inline void mutex_unlock(void)
+static inline void mutex_unlock(volatile uint8_t * p_mutex)
 {
     __DMB();
-    m_mutex = 0;
+    *p_mutex = 0;
 }
 
 /** @brief Increment queue counter value to detect changes in the queue. */
@@ -142,11 +144,11 @@ static inline void handle_timer(void)
         queue_cntr = m_queue_changed_cntr;
         p_head     = mp_head;
 
-        if (mutex_trylock())
+        if (mutex_trylock(&m_timer_mutex))
         {
             if (p_head == NULL)
             {
-                nrf_802154_timer_stop();
+                nrf_802154_lp_timer_stop();
             }
             else
             {
@@ -157,11 +159,11 @@ static inline void handle_timer(void)
                 // between reading t0 and dt and not be a valid combination.
                 if (p_head == mp_head)
                 {
-                    nrf_802154_timer_start(t0, dt);
+                    nrf_802154_lp_timer_start(t0, dt);
                 }
             }
 
-            mutex_unlock();
+            mutex_unlock(&m_timer_mutex);
         }
     } while (queue_cntr != m_queue_changed_cntr);
 }
@@ -250,11 +252,14 @@ static bool timer_remove(nrf_802154_timer_t * p_timer)
     // lower pritority context in case it was going to be used.
     if (p_cur != NULL)
     {
+        uint32_t temp;
+
         do
         {
             // This assignment is used to prevent compiler from removing exclusive load during optimization (IAR).
-            p_next = (nrf_802154_timer_t *)__LDREXW((uint32_t *)&p_cur->p_next);
-        } while (__STREXW((uint32_t)NULL, (uint32_t *)&p_cur->p_next));
+            temp = __LDREXW((uint32_t *)&p_cur->p_next);
+            assert((void *)temp != p_cur);
+        } while (__STREXW(temp, (uint32_t *)&p_cur->p_next));
     }
 
     return (timer_start || timer_stop);
@@ -263,20 +268,26 @@ static bool timer_remove(nrf_802154_timer_t * p_timer)
 void nrf_802154_timer_sched_init(void)
 {
     mp_head              = NULL;
-    m_mutex              = 0;
+    m_timer_mutex        = 0;
+    m_fired_mutex        = 0;
     m_queue_changed_cntr = 0;
 }
 
 void nrf_802154_timer_sched_deinit(void)
 {
-    nrf_802154_timer_stop();
+    nrf_802154_lp_timer_stop();
 
     mp_head = NULL;
 }
 
 uint32_t nrf_802154_timer_sched_time_get(void)
 {
-    return nrf_802154_timer_time_get();
+    return nrf_802154_lp_timer_time_get();
+}
+
+uint32_t nrf_802154_timer_sched_granularity_get(void)
+{
+    return nrf_802154_lp_timer_granularity_get();
 }
 
 bool nrf_802154_timer_sched_time_is_in_future(uint32_t now, uint32_t t0, uint32_t dt)
@@ -289,12 +300,14 @@ bool nrf_802154_timer_sched_time_is_in_future(uint32_t now, uint32_t t0, uint32_
 
 void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TSCH_ADD);
+
     assert(p_timer != NULL);
     assert(p_timer->callback != NULL);
 
     if (round_up)
     {
-        p_timer->dt += nrf_802154_timer_granularity_get() - 1;
+        p_timer->dt += nrf_802154_lp_timer_granularity_get() - 1;
     }
 
     if (timer_remove(p_timer))
@@ -316,6 +329,8 @@ void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
         while (true)
         {
             nrf_802154_timer_t * p_cur = (nrf_802154_timer_t *)__LDREXW((uint32_t *)pp_item);
+
+            assert(p_cur != p_timer);
 
             if (p_cur == NULL)
             {
@@ -340,6 +355,7 @@ void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
             continue;
         }
 
+        assert(p_next != p_timer);
         p_timer->p_next = p_next;
 
         if (!__STREXW((uint32_t)p_timer, (uint32_t *)pp_item))
@@ -354,6 +370,8 @@ void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
     {
         handle_timer();
     }
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TSCH_ADD);
 }
 
 void nrf_802154_timer_sched_remove(nrf_802154_timer_t * p_timer)
@@ -389,21 +407,31 @@ bool nrf_802154_timer_sched_is_running(nrf_802154_timer_t * p_timer)
     return result;
 }
 
-void nrf_802154_timer_fired(void)
+void nrf_802154_lp_timer_fired(void)
 {
-    nrf_802154_timer_t        * p_timer   = (nrf_802154_timer_t *) mp_head;
-    nrf_802154_timer_callback_t callback  = p_timer->callback;
-    void                      * p_context = p_timer->p_context;
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TSCH_FIRED);
 
-    if ((p_timer != NULL) && (callback != NULL))
+    if (mutex_trylock(&m_fired_mutex))
     {
-        bool timer_shall_be_handled = timer_remove(p_timer);
+        nrf_802154_timer_t * p_timer   = (nrf_802154_timer_t *) mp_head;
 
-        callback(p_context);
-
-        if (timer_shall_be_handled)
+        if (p_timer != NULL)
         {
-            handle_timer();
+            nrf_802154_timer_callback_t callback  = p_timer->callback;
+            void                      * p_context = p_timer->p_context;
+
+            (void)timer_remove(p_timer);
+
+            if (callback != NULL)
+            {
+                callback(p_context);
+            }
         }
+
+        mutex_unlock(&m_fired_mutex);
     }
+
+    handle_timer();
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TSCH_FIRED);
 }
