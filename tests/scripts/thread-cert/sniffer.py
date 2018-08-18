@@ -61,7 +61,7 @@ class Sniffer:
         self.nodeid = nodeid
         self._message_factory = message_factory
 
-        self._pcap = pcap.PcapCodec()
+        self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
@@ -72,9 +72,6 @@ class Sniffer:
         self._thread_alive.clear()
 
         self._buckets = collections.defaultdict(Queue.Queue)
-
-    def __del__(self):
-        del self._transport
 
     def _sniffer_main_loop(self):
         """ Sniffer main loop. """
@@ -121,9 +118,6 @@ class Sniffer:
 
         self._thread.join()
         self._thread = None
-
-    def save_as_pcap(self):
-        self._pcap.save_to_file(os.getenv('TEST_NAME', 'current'))
 
     def set_lowpan_context(self, cid, prefix):
         self._message_factory.set_lowpan_context(cid, prefix)

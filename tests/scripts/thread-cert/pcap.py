@@ -29,8 +29,9 @@ PCAP_VERSION_MINOR = 4
 class PcapCodec(object):
     """ Utility class for .pcap formatters. """
 
-    def __init__(self):
-        self.packets = [bytearray(self.encode_header())]
+    def __init__(self, filename):
+        self._pcap_file = open('%s.pcap' % filename, 'wb')
+        self._pcap_file.write(self.encode_header())
         self._epoch = time.time()
 
     def encode_header(self):
@@ -62,10 +63,7 @@ class PcapCodec(object):
         if timestamp is None:
             timestamp = self._get_timestamp()
         pkt = self.encode_frame(frame, *timestamp)
-        self.packets.append(pkt)
+        self._pcap_file.write(pkt)
 
-    def save_to_file(self, filename):
-        """ Saves packets into file. """
-        with open('%s.pcap' % filename, 'wb') as output:
-            for pkt in self.packets:
-                output.write(pkt)
+    def __del__(self):
+        self._pcap_file.close()

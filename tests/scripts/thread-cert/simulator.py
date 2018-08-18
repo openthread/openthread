@@ -56,7 +56,7 @@ class RealTime:
         time.sleep(duration)
 
     def stop(self):
-        self._sniffer.save_as_pcap()
+        pass
 
 class VirtualTime:
 
@@ -77,7 +77,7 @@ class VirtualTime:
         self.current_time = 0
         self.current_event = None;
 
-        self._pcap = pcap.PcapCodec()
+        self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
 
         self._message_factory = config.create_default_thread_message_factory()
 
@@ -88,7 +88,6 @@ class VirtualTime:
     def stop(self):
         self.sock.close()
         self.sock = None
-        self._pcap.save_to_file(os.getenv('TEST_NAME', 'current'))
 
     def _add_message(self, nodeid, message):
         addr = ('127.0.0.1', self.port + nodeid)

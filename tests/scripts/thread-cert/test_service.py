@@ -85,7 +85,7 @@ class Test_Service(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
+            node.destroy()
         self.simulator.stop()
 
     def hasAloc(self, node_id, service_id):

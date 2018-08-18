@@ -78,7 +78,7 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
+            node.destroy()
         self.simulator.stop()
 
     def test(self):
