@@ -1853,6 +1853,7 @@ class OpenThread_WpanCtl(IThci):
         pass
 
     def forceSetSlaac(self, slaacAddress):
+        """@todo : required if as reference device"""
         pass
 
     def setSleepyNodePollTime(self):
@@ -1870,13 +1871,16 @@ class OpenThread_WpanCtl(IThci):
         return int(childTimeout)
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
+        """@todo : required if as reference device"""
         pass
 
 
     def diagnosticQuery(self,strDestinationAddr, listTLV_ids = []):
+        """@todo : required if as reference device"""
        self.diagnosticGet(strDestinationAddr, listTLV_ids)
 
     def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
+        """@todo : required if as reference device"""
         pass
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
@@ -2546,6 +2550,8 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             True: successful to set Joiner UDP Port
             False: fail to set Joiner UDP Port
+
+        @todo : required if as reference device
         """
         pass
 
@@ -2571,7 +2577,9 @@ class OpenThread_WpanCtl(IThci):
         return True
 
     def updateRouterStatus(self):
-        """force update to router as if there is child id request"""
+        """force update to router as if there is child id request
+            @todo : required if as reference device
+        """
         pass
 
     def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
