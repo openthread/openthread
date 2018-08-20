@@ -38,6 +38,7 @@ import sys
 import io
 import config
 import message
+import pcap
 
 class RealTime:
 
@@ -53,6 +54,9 @@ class RealTime:
 
     def go(self, duration):
         time.sleep(duration)
+
+    def stop(self):
+        pass
 
 class VirtualTime:
 
@@ -73,10 +77,17 @@ class VirtualTime:
         self.current_time = 0
         self.current_event = None;
 
+        self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
+
         self._message_factory = config.create_default_thread_message_factory()
 
     def __del__(self):
+        if self.sock:
+            self.stop()
+
+    def stop(self):
         self.sock.close()
+        self.sock = None
 
     def _add_message(self, nodeid, message):
         addr = ('127.0.0.1', self.port + nodeid)
@@ -167,6 +178,7 @@ class VirtualTime:
                         #print "-- Enqueue\t", event
                         bisect.insort(self.event_queue, event)
 
+                self._pcap.append(data, (event_time // 1000000, event_time % 1000000))
                 self._add_message(addr[1] - self.port, data)
 
                 # add radio transmit done events to event queue

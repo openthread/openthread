@@ -108,11 +108,15 @@ class otCli:
         self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
 
     def __del__(self):
-        if self.pexpect.isalive():
+        self.destroy()
+
+    def destroy(self):
+        if self.pexpect and self.pexpect.isalive():
             self.send_command('exit')
             self.pexpect.expect(pexpect.EOF)
             self.pexpect.terminate()
             self.pexpect.close(force=True)
+            self.pexpect = None
 
     def send_command(self, cmd):
         print("%d: %s" % (self.nodeid, cmd))

@@ -51,7 +51,12 @@ class Node:
         self.interface.set_timeout(100)
 
     def __del__(self):
-        del self.interface
+        self.destroy()
+
+    def destroy(self):
+        if self.interface:
+            self.interface.destroy()
+            self.interface = None
 
     def set_mode(self, mode):
         self.interface.set_mode(mode)
