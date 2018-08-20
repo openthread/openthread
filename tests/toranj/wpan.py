@@ -45,6 +45,7 @@ WPAN_NAME                                      = 'Network:Name'
 WPAN_PANID                                     = 'Network:PANID'
 WPAN_XPANID                                    = 'Network:XPANID'
 WPAN_KEY                                       = 'Network:Key'
+WPAN_KEY_INDEX                                 = 'Network:KeyIndex'
 WPAN_CHANNEL                                   = 'NCP:Channel'
 WPAN_HW_ADDRESS                                = 'NCP:HardwareAddress'
 WPAN_EXT_ADDRESS                               = 'NCP:ExtendedAddress'
@@ -319,17 +320,28 @@ class Node(object):
     def leave(self):
         return self.wpanctl('leave')
 
-    def form(self, name, channel=None, node_type=None):
+    def form(self, name, channel=None, channel_mask=None, panid=None, xpanid=None, key=None, key_index=None,
+            node_type=None, mesh_local_prefix=None, legacy_prefix=None):
         return self.wpanctl('form \"' + name + '\"' +
                             (' -c {}'.format(channel) if channel is not None else '') +
-                            (' -T {}'.format(node_type) if node_type is not None else ''))
+                            (' -m {}'.format(channel_mask) if channel_mask is not None else '') +
+                            (' -p {}'.format(panid) if panid is not None else '') +
+                            (' -x {}'.format(xpanid) if xpanid is not None else '') +
+                            (' -k {}'.format(key) if key is not None else '') +
+                            (' -i {}'.format(key_index) if key_index is not None else '') +
+                            (' -T {}'.format(node_type) if node_type is not None else '') +
+                            (' -M {}'.format(mesh_local_prefix) if mesh_local_prefix is not None else '') +
+                            (' -L {}'.format(legacy_prefix) if legacy_prefix is not None else ''))
 
-    def join(self, name, channel=None, node_type=None, panid=None, xpanid=None):
+
+    def join(self, name, channel=None, node_type=None, panid=None, xpanid=None, key=None):
         return self.wpanctl('join \"' + name + '\"' +
                             (' -c {}'.format(channel) if channel is not None else '') +
                             (' -T {}'.format(node_type) if node_type is not None else '') +
                             (' -p {}'.format(panid) if panid is not None else '') +
-                            (' -x {}'.format(xpanid) if xpanid is not None else ''))
+                            (' -x {}'.format(xpanid) if xpanid is not None else '') +
+                            (' -k {}'.format(key) if key is not None else '') +
+                            (' -n'))
 
     def active_scan(self, channel=None):
         return self.wpanctl('scan' +
@@ -409,16 +421,13 @@ class Node(object):
         if not node.is_associated():
             return "{} is not associated".format(node)
 
-        name = node.get(WPAN_NAME)
-        panid = node.get(WPAN_PANID)
-        xpanid = node.get(WPAN_XPANID)
-        channel = node.get(WPAN_CHANNEL)
-
-        if should_set_key:
-            netkey = node.get(WPAN_KEY)
-            self.set(WPAN_KEY, netkey[1:-1], binary_data=True)
-
-        return self.join(name[1:-1], channel=channel, node_type=node_type, panid=panid, xpanid=xpanid)
+        return self.join(
+            node.get(WPAN_NAME)[1:-1],
+            channel=node.get(WPAN_CHANNEL),
+            node_type=node_type,
+            panid=node.get(WPAN_PANID),
+            xpanid=node.get(WPAN_XPANID),
+            key=node.get(WPAN_KEY)[1:-1] if should_set_key else None)
 
     def whitelist_node(self, node):
         """Adds a given node (of type `Node`) to the whitelist of `self` and enables whitelisting on `self`"""
