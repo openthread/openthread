@@ -1240,7 +1240,6 @@ otError FragmentHeader::Init(const Message &aMessage, uint16_t aOffset)
     {
         bytesRead = aMessage.Read(aOffset, sizeof(mOffset), &mOffset);
         VerifyOrExit(bytesRead == sizeof(mOffset), error = OT_ERROR_PARSE);
-        aOffset += bytesRead;
     }
 
 exit:
