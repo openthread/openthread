@@ -200,7 +200,7 @@ enum
 };
 
 /// Convert the advertising interval from [ms] to [ble symbol times].
-#define OT_BLE_MS_TO_TICKS(x) (((x)*1000) / OT_BLE_ADV_INTERVAL_UNIT)
+#define OT_BLE_MS_TO_TICKS(x) (((x)*1000) / OT_BLE_TIMESLOT_UNIT)
 
 /**
  * This enum represents BLE Device Address types.
@@ -325,7 +325,7 @@ typedef struct otPlatBleGapConnParams
  *
  */
 typedef enum otPlatBleUuidType {
-    OT_BLE_UUID_TYPE_NONE = 0, ///< UUID uninitialized value.
+    OT_BLE_UUID_TYPE_NONE = 0, ///< UUID uninitialized value or end of list.
     OT_BLE_UUID_TYPE_16   = 1, ///< UUID represented by 16-bit value.
     OT_BLE_UUID_TYPE_32   = 2, ///< UUID represented by 32-bit value.
     OT_BLE_UUID_TYPE_128  = 3, ///< UUID represented by 128-bit value.
@@ -963,25 +963,10 @@ extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint
  ******************************************************************************/
 
 /**
- * Registers GATT Service.
- *
- * @note This function shall be used only for GATT Server.
- *
- * @param[in]   aInstance  The OpenThread instance structure.
- * @param[in]   aUuid      The UUID of a service.
- * @param[out]  aHandle    The start handle of a service.
- *
- * @retval ::OT_ERROR_NONE           Service has been successfully registered.
- * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
- * @retval ::OT_ERROR_INVALID_ARGS   Invalid service UUID has been provided.
- * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
- */
-otError otPlatBleGattServerServiceRegister(otInstance *aInstance, const otPlatBleUuid *aUuid, uint16_t *aHandle);
-
-/**
  * Registers a list of GATT Services and their enclosed Characteristics.
  * The generated handles will be written back into this structure when the
- * BLE stack is enabled.
+ * BLE stack is enabled. This function can be called multiple times
+ * before otPlatBleEnable in order to register multiple sets of services.
  *
  * @note This function shall be used only for GATT Server.
  *
@@ -995,28 +980,6 @@ otError otPlatBleGattServerServiceRegister(otInstance *aInstance, const otPlatBl
  * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
  */
 otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices, uint16_t *aHandle);
-
-/**
- * Registers GATT Characteristic with maximum length of 128 octets.
- *
- * @note This function shall be used only for GATT Server.
- *
- * @param[in]     aInstance       The OpenThread instance structure.
- * @param[in]     aServiceHandle  The start handle of a service.
- * @param[inout]  aChar           As an input parameter the valid mUuid and mProperties have to be provided.
- *                                In case of success, the value of mValueHandle is filled.
- * @param[in]     aCccd           If set, method has to create Client Characteristic Configuration Descriptor
- *                                and put its handle into mHandleCccd parameter of @p aChar.
- *
- * @retval ::OT_ERROR_NONE           Characteristic has been successfully registered.
- * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
- * @retval ::OT_ERROR_INVALID_ARGS   Invalid service handle or characteristic UUID has been provided.
- * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
- */
-otError otPlatBleGattServerCharacteristicRegister(otInstance *                 aInstance,
-                                                  uint16_t                     aServiceHandle,
-                                                  otPlatBleGattCharacteristic *aChar,
-                                                  bool                         aCccd);
 
 /**
  * Sends ATT Handle Value Indication.
@@ -1067,8 +1030,8 @@ extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aH
  *
  * @note This function shall be used only for GATT Server.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aHandle     The handle of the attribute to be read.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aHandle    The handle of the attribute to be read.
  * @param[out] aPacket    A pointer to the packet to be filled with pointers to attribute data to be read.
  *
  */
