@@ -115,7 +115,7 @@
 #define OPENTHREAD_ENABLE_DHCP6_SERVER 1
 
 /* Define to 1 if you want to use diagnostics module */
-#define OPENTHREAD_ENABLE_DIAG 0
+#define OPENTHREAD_ENABLE_DIAG 1
 
 /* Define to 1 if you want to enable DNS Client */
 #define OPENTHREAD_ENABLE_DNS_CLIENT 1

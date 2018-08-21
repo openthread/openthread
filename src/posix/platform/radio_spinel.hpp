@@ -34,6 +34,8 @@
 #ifndef RADIO_SPINEL_HPP_
 #define RADIO_SPINEL_HPP_
 
+#include <openthread/platform/radio.h>
+
 #include "frame_queue.hpp"
 #include "hdlc.hpp"
 #include "spinel.h"

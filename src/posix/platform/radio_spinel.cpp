@@ -45,6 +45,7 @@ extern "C" {
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <syslog.h>
@@ -252,19 +253,20 @@ static int OpenPty(const char *aFile, const char *aConfig)
 
     if (0 == pid)
     {
-        const int kMaxCommand = 255;
-        char      cmd[kMaxCommand];
-        int       rval;
-        const int dtablesize = getdtablesize();
+        const int     kMaxCommand = 255;
+        char          cmd[kMaxCommand];
+        int           rval;
+        struct rlimit limit;
 
+        rval = getrlimit(RLIMIT_NOFILE, &limit);
         rval = setenv("SHELL", SOCKET_UTILS_DEFAULT_SHELL, 0);
 
         VerifyOrExit(rval == 0, perror("setenv failed"));
 
         // Close all file descriptors larger than STDERR_FILENO.
-        for (int i = (STDERR_FILENO + 1); i < dtablesize; i++)
+        for (rlim_t i = (STDERR_FILENO + 1); i < limit.rlim_cur; i++)
         {
-            close(i);
+            close(static_cast<int>(i));
         }
 
         rval = snprintf(cmd, sizeof(cmd), "%s %s", aFile, aConfig);
@@ -617,12 +619,15 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
     }
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
-        const char *   message = NULL;
+        char           logStream[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
+        unsigned int   len = sizeof(logStream);
         spinel_ssize_t unpacked;
 
-        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &message);
-        VerifyOrExit(unpacked > 0 && message, error = OT_ERROR_PARSE);
-        otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", message);
+        unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, logStream, &len);
+        assert(len < sizeof(logStream));
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        logStream[len] = '\0';
+        otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", logStream);
     }
 
 exit:
@@ -788,7 +793,19 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
         {
             mState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+
+#if OPENTHREAD_ENABLE_DIAG
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone(mInstance, mTransmitFrame, mTxError);
+            }
+            else
+#endif
+            {
+                otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+            }
+
+            mTxState = kIdle;
         }
     }
 
@@ -887,7 +904,7 @@ otError RadioSpinel::ClearSrcMatchExtEntries(void)
 
 otError RadioSpinel::GetTransmitPower(int8_t &aPower)
 {
-    otError error = Get(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
+    otError error = Get(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, &aPower);
 
     LogIfFail(mInstance, "Get transmit power failed", error);
     return error;
@@ -1057,7 +1074,7 @@ void RadioSpinel::RadioTransmit(void)
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
     assert(mTxState == kIdle);
 
-    mIsAckRequested = isAckRequested(mTransmitFrame->mPsdu);
+    mIsAckRequested = isAckRequested(mTransmitFrame->mPsdu) && !mIsPromiscuous;
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, mTransmitFrame->mPsdu,

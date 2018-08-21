@@ -49,9 +49,10 @@ LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
-    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=0                          \
+    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
+    -DOPENTHREAD_POSIX_APP=1                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     -Wno-error=non-virtual-dtor                                                \
@@ -168,23 +169,19 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/missing_strlcat.c                        \
     src/core/utils/missing_strnlen.c                        \
     src/core/utils/slaac_address.cpp                        \
+    src/diag/diag_process.cpp                               \
+    src/diag/openthread-diag.cpp                            \
     src/ncp/hdlc.cpp                                        \
-    src/ncp/hdlc.hpp                                        \
     src/ncp/ncp_spi.cpp                                     \
-    src/ncp/ncp_spi.hpp                                     \
     src/ncp/spinel.c                                        \
-    src/ncp/spinel.h                                        \
-    src/ncp/spinel_decoder.hpp                              \
     src/ncp/spinel_decoder.cpp                              \
-    src/ncp/spinel_encoder.hpp                              \
     src/ncp/spinel_encoder.cpp                              \
-    src/ncp/spinel_platform.h                               \
     src/posix/platform/alarm.c                              \
     src/posix/platform/diag.c                               \
     src/posix/platform/misc.c                               \
     src/posix/platform/logging.c                            \
-    src/posix/platform/platform.c                           \
     src/posix/platform/random.c                             \
+    src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
     src/posix/platform/flash.c                              \
     src/posix/platform/spi-stubs.c                          \
@@ -236,9 +233,7 @@ LOCAL_C_INCLUDES                                         := \
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
-    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=0                          \
-    -DOPENTHREAD_ENABLE_NCP_SPI=0                                              \
-    -DOPENTHREAD_ENABLE_NCP_UART=1                                             \
+    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP=2                                                   \
@@ -246,6 +241,9 @@ LOCAL_CFLAGS                                                                := \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     -Wno-error=non-virtual-dtor                                                \
     $(NULL)
+
+LOCAL_LDLIBS                               := \
+    -lutil
 
 LOCAL_SRC_FILES                            := \
     src/cli/cli.cpp                           \
@@ -277,9 +275,7 @@ LOCAL_C_INCLUDES                                         := \
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
-    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=0                          \
-    -DOPENTHREAD_ENABLE_NCP_SPI=1                                              \
-    -DOPENTHREAD_ENABLE_NCP_UART=0                                             \
+    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP=1                                                   \
@@ -288,18 +284,17 @@ LOCAL_CFLAGS                                                                := \
     -Wno-error=non-virtual-dtor                                                \
     $(NULL)
 
+LOCAL_LDLIBS                               := \
+    -lutil
+
 LOCAL_SRC_FILES                            := \
     src/ncp/changed_props_set.cpp             \
-    src/ncp/changed_props_set.hpp             \
     src/ncp/ncp_base.cpp                      \
-    src/ncp/ncp_base.hpp                      \
     src/ncp/ncp_base_mtd.cpp                  \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
     src/ncp/ncp_buffer.cpp                    \
-    src/ncp/ncp_buffer.hpp                    \
     src/ncp/ncp_uart.cpp                      \
-    src/ncp/ncp_uart.hpp                      \
     src/posix/main.c                          \
     $(NULL)
 

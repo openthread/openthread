@@ -40,6 +40,9 @@
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 #include <openthread/channel_monitor.h>
 #endif
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#include <openthread/child_supervision.h>
+#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -49,7 +52,6 @@
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
 #endif
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_FTD
@@ -393,7 +395,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_XPANID>(void)
 {
-    return mEncoder.WriteData(otThreadGetExtendedPanId(mInstance), sizeof(spinel_net_xpanid_t));
+    return mEncoder.WriteData(otThreadGetExtendedPanId(mInstance)->m8, sizeof(spinel_net_xpanid_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_XPANID>(void)
@@ -406,7 +408,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_XPANID>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetExtendedPanId(mInstance, ptr);
+    error = otThreadSetExtendedPanId(mInstance, reinterpret_cast<const otExtendedPanId *>(ptr));
 
 exit:
     return error;
@@ -1010,15 +1012,47 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PENDING_DATASE
     return EncodeOperationalDataset(dataset);
 }
 
+#if OPENTHREAD_ENABLE_JOINER
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>(void)
+{
+    return mEncoder.WriteUint8(static_cast<uint8_t>(otJoinerGetState(mInstance)));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>(void)
+{
+    bool        action          = false;
+    const char *psk             = NULL;
+    const char *provisioningUrl = NULL;
+    otError     error           = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(action));
+    SuccessOrExit(error = mDecoder.ReadUtf8(psk));
+    SuccessOrExit(error = mDecoder.ReadUtf8(provisioningUrl));
+
+    if (action)
+    {
+        error = otJoinerStart(mInstance, psk, provisioningUrl, PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO,
+                              PACKAGE_VERSION, NULL, &NcpBase::HandleJoinerCallback_Jump, this);
+    }
+    else
+    {
+        error = otJoinerStop(mInstance);
+    }
+exit:
+    return error;
+}
+
+#endif
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
-    otError        error    = OT_ERROR_NONE;
-    const uint8_t *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
-    otIp6Address   addr;
+    otError                  error    = OT_ERROR_NONE;
+    const otMeshLocalPrefix *mlPrefix = otThreadGetMeshLocalPrefix(mInstance);
+    otIp6Address             addr;
 
     VerifyOrExit(mlPrefix != NULL); // If `mlPrefix` is NULL send empty response.
 
-    memcpy(addr.mFields.m8, mlPrefix, 8);
+    memcpy(addr.mFields.m8, mlPrefix->m8, 8);
 
     // Zero out the last 8 bytes.
     memset(addr.mFields.m8 + 8, 0, 8);
@@ -1032,15 +1066,15 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
-    otError        error = OT_ERROR_NONE;
-    const uint8_t *meshLocalPrefix;
-    uint8_t        prefixLength;
+    otError             error = OT_ERROR_NONE;
+    const otIp6Address *meshLocalPrefix;
+    uint8_t             prefixLength;
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(meshLocalPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
     VerifyOrExit(prefixLength == 64, error = OT_ERROR_INVALID_ARGS);
 
-    error = otThreadSetMeshLocalPrefix(mInstance, meshLocalPrefix);
+    error = otThreadSetMeshLocalPrefix(mInstance, reinterpret_cast<const otMeshLocalPrefix *>(meshLocalPrefix));
 
 exit:
     return error;
@@ -1558,6 +1592,27 @@ void NcpBase::HandleJamStateChange(bool aJamState)
 }
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>(void)
+{
+    return mEncoder.WriteUint16(otChildSupervisionGetCheckTimeout(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t timeout;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(timeout));
+    otChildSupervisionSetCheckTimeout(mInstance, timeout);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
@@ -2197,6 +2252,19 @@ exit:
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>(void)
 {
     return mEncoder.WriteUint32(otThreadGetChildTimeout(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>(void)
+{
+    uint32_t timeout = 0;
+    otError  error   = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
+
+    otThreadSetChildTimeout(mInstance, timeout);
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_RLOC16>(void)
@@ -2839,6 +2907,37 @@ exit:
         mUpdateChangedPropsTask.Post();
     }
 }
+
+#if OPENTHREAD_ENABLE_JOINER
+void NcpBase::HandleJoinerCallback_Jump(otError aError, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleJoinerCallback(aError);
+}
+
+void NcpBase::HandleJoinerCallback(otError aError)
+{
+    switch (aError)
+    {
+    case OT_ERROR_NONE:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_SUCCESS);
+        break;
+    case OT_ERROR_SECURITY:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_SECURITY);
+        break;
+    case OT_ERROR_NOT_FOUND:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_NO_PEERS);
+        break;
+    case OT_ERROR_RESPONSE_TIMEOUT:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_RSP_TIMEOUT);
+        break;
+    default:
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_JOIN_FAILURE);
+        break;
+    }
+
+    mUpdateChangedPropsTask.Post();
+}
+#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling

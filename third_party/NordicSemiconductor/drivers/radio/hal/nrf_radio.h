@@ -67,6 +67,7 @@ typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
     NRF_RADIO_TASK_CCASTART  = offsetof(NRF_RADIO_Type, TASKS_CCASTART),  /**< Start Clear Channel Assessment procedure. */
     NRF_RADIO_TASK_CCASTOP   = offsetof(NRF_RADIO_Type, TASKS_CCASTOP),   /**< Stop Clear Channel Assessment procedure. */
     NRF_RADIO_TASK_EDSTART   = offsetof(NRF_RADIO_Type, TASKS_EDSTART),   /**< Start Energy Detection procedure. */
+    NRF_RADIO_TASK_EDSTOP    = offsetof(NRF_RADIO_Type, TASKS_EDSTOP),    /**< Stop Energy Detection procedure. */
     NRF_RADIO_TASK_RSSISTART = offsetof(NRF_RADIO_Type, TASKS_RSSISTART), /**< Start the RSSI and take one single sample of received signal strength. */
 } nrf_radio_task_t;                                                       /*lint -restore */
 

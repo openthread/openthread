@@ -36,8 +36,8 @@
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
+#include <openthread/ip6.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +52,26 @@ extern "C" {
  * @{
  *
  */
+
+/**
+ * This callback allows OpenThread to provide specific handlers for certain UDP messages.
+ *
+ * @retval  true    The message is handled by this receiver and should not be further processed.
+ * @retval  false   The message is not handled by this receiver.
+ *
+ */
+typedef bool (*otUdpHandler)(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * This structure represents a UDP receiver.
+ *
+ */
+typedef struct otUdpReceiver
+{
+    struct otUdpReceiver *mNext;    ///< A pointer to the next UDP receiver (internal use only).
+    otUdpHandler          mHandler; ///< A function pointer to the receiver callback.
+    void *                mContext; ///< A pointer to application-specific context.
+} otUdpReceiver;
 
 /**
  * This callback allows OpenThread to inform the application of a received UDP message.

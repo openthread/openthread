@@ -76,8 +76,8 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.

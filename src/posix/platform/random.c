@@ -37,7 +37,6 @@
 
 #include "platform-posix.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/random.h>
 
 #include "code_utils.h"

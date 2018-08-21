@@ -38,6 +38,8 @@
 
 #include <stdarg.h>
 
+#include <openthread/dataset.h>
+
 #include "cli/cli_server.hpp"
 
 namespace ot {

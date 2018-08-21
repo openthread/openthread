@@ -117,4 +117,6 @@ verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_DELAY), 0) == 180)
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

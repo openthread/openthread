@@ -103,4 +103,6 @@ for src,dst in [ (ll1, ll2), (ll1, ml2), (ml1, ll2), (ml1, ml2) ]:
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

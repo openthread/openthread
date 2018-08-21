@@ -31,7 +31,6 @@
  *   This file implements the OpenThread platform abstraction for miscellaneous behaviors.
  */
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "em_rmu.h"

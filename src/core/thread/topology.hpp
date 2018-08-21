@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/thread_ftd.h>
+
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
@@ -911,7 +913,12 @@ public:
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
-    uint8_t mCost : 4;           ///< The cost to this router via neighbor router
+
+#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+    uint8_t mCost; ///< The cost to this router via neighbor router
+#else
+    uint8_t mCost : 4;     ///< The cost to this router via neighbor router
+#endif
 };
 
 } // namespace ot

@@ -34,38 +34,38 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
-
 #include <assert.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef _WIN32
-#include <libgen.h>
 #include <syslog.h>
-#endif
 
-#include <openthread/openthread.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID           = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+uint64_t NODE_ID = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 
-#ifndef _WIN32
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
-#endif
 
-void PlatformInit(int aArgCount, char *aArgVector[])
+void PrintUsage(const char *aArg0)
 {
-    char *   endptr;
-    uint32_t speedUpFactor = 1;
+    fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
+    exit(EXIT_FAILURE);
+}
+
+void otSysInit(int aArgCount, char *aArgVector[])
+{
+    int         i;
+    uint32_t    speedUpFactor = 1;
+    char *      endptr;
+    const char *radioFile   = NULL;
+    const char *radioConfig = "";
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -75,83 +75,87 @@ void PlatformInit(int aArgCount, char *aArgVector[])
 
     if (aArgCount < 2)
     {
-        fprintf(stderr, "Syntax:\n    %s NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
-        exit(EXIT_FAILURE);
+        PrintUsage(aArgVector[0]);
     }
 
-#ifndef _WIN32
+    i = 1;
+    if (!strcmp(aArgVector[i], "-s"))
+    {
+        ++i;
+        speedUpFactor = (uint32_t)strtol(aArgVector[i], &endptr, 0);
+
+        if (*endptr != '\0' || speedUpFactor == 0)
+        {
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[i]);
+            exit(EXIT_FAILURE);
+        }
+        ++i;
+    }
+
+    if (i >= aArgCount)
+    {
+        PrintUsage(aArgVector[0]);
+    }
+
+    radioFile = aArgVector[i];
+    if (i + 1 < aArgCount)
+    {
+        radioConfig = aArgVector[i + 1];
+    }
+
     openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
-#endif
-
-    NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
-
-    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
-    {
-        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (aArgCount > 2)
-    {
-        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
-
-        if (*endptr != '\0' || speedUpFactor == 0)
-        {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
-            exit(EXIT_FAILURE);
-        }
-    }
 
     platformAlarmInit(speedUpFactor);
-    platformRadioInit();
+    platformRadioInit(radioFile, radioConfig);
     platformRandomInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return gPlatformPseudoResetWasRequested;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
     platformRadioDeinit();
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     fd_set         read_fds;
     fd_set         write_fds;
     fd_set         error_fds;
-    int            max_fd = -1;
     struct timeval timeout;
+    int            max_fd = -1;
     int            rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
+    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd, &timeout);
 
-    if (!otTaskletsArePending(aInstance))
+    if (otTaskletsArePending(aInstance))
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-
-        if ((rval < 0) && (errno != EINTR))
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
     }
 
-    platformUartProcess();
-    platformRadioProcess(aInstance);
+    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+    if ((rval < 0) && (errno != EINTR))
+    {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+
+    platformUartProcess(&read_fds, &write_fds, &error_fds);
+    platformRadioProcess(aInstance, &read_fds, &write_fds);
     platformAlarmProcess(aInstance);
 }
-
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

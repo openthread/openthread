@@ -46,7 +46,6 @@
 #include <openthread/dhcp6_client.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
-#include <openthread/types.h>
 
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
@@ -280,6 +279,22 @@ protected:
 
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void        HandleJamStateChange(bool aJamState);
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+    static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
+                                                    const uint8_t *aEnergyData,
+                                                    uint8_t        aLength,
+                                                    void *         aContext);
+    void        HandleCommissionerEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyData, uint8_t aLength);
+
+    static void HandleCommissionerPanIdConflict_Jump(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+    void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+#endif
+
+#if OPENTHREAD_ENABLE_JOINER
+    static void HandleJoinerCallback_Jump(otError aError, void *aContext);
+    void        HandleJoinerCallback(otError aError);
+#endif
 
     static void SendDoneTask(void *aContext);
     void        SendDoneTask(void);

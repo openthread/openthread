@@ -28,6 +28,8 @@
 
 #include "platform-cc2650.h"
 
+#include <openthread/error.h>
+
 /**
  * @warning this file only implements stubs for the function calls. There is
  * not enough space on the cc2650 to support NV as an SoC.

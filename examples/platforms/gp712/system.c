@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,37 +30,67 @@
  * @file
  * @brief
  *   This file includes the platform-specific initializers.
- *
  */
 
-#include "platform-emsk.h"
-#include "openthread/openthread.h"
-#include "openthread/platform/uart.h"
+#include "platform_qorvo.h"
 
-#include <stdio.h>
-#define DBG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#include "stdio.h"
+#include "stdlib.h"
 
-void PlatformInit(int argc, char *argv[])
+#include <openthread/tasklet.h>
+#include <openthread/platform/uart.h>
+
+#include "radio_qorvo.h"
+#include "random_qorvo.h"
+#include "uart_qorvo.h"
+
+void platformUartInit(void);
+void platformUartProcess(void);
+
+otInstance *localInstance = NULL;
+
+int    gArgumentsCount = 0;
+char **gArguments      = NULL;
+
+bool qorvoPlatGotoSleepCheck(void)
 {
-    emskAlarmInit();
-    emskRadioInit();
-    emskRandomInit();
-    otPlatUartEnable();
+    bool canGotoSleep = false;
 
-    DBG("OpenThread Init Finished\r\n");
+    if (localInstance)
+    {
+        canGotoSleep = !otTaskletsArePending(localInstance);
+    }
 
-    (void)argc;
-    (void)argv;
+    return canGotoSleep;
 }
 
-bool PlatformPseudoResetWasRequested(void)
+void otSysInit(int argc, char *argv[])
+{
+    gArgumentsCount = argc;
+    gArguments      = argv;
+
+    qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
+    platformUartInit();
+    // qorvoAlarmInit();
+    qorvoRandomInit();
+    qorvoRadioInit();
+}
+
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
-    emskUartProcess();
-    emskRadioProcess(aInstance);
-    emskAlarmProcess(aInstance);
+    if (localInstance == NULL)
+    {
+        // local copy in case we need to perform a callback.
+        localInstance = aInstance;
+    }
+
+    qorvoPlatMainLoop(!otTaskletsArePending(aInstance));
+    platformUartProcess();
+    // qorvoRadioProcess();
+    // qorvoAlarmProcess();
 }

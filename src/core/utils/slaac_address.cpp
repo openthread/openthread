@@ -35,7 +35,8 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/openthread.h>
+#include <openthread/ip6.h>
+#include <openthread/netdata.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -115,6 +116,7 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
             if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
                 config.mPrefix.mLength == address->mPrefixLength)
             {
+                otIp6AddUnicastAddress(aInstance, address);
                 found = true;
                 break;
             }

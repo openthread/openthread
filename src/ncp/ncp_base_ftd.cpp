@@ -36,11 +36,13 @@
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
 #include <openthread/channel_manager.h>
 #endif
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#include <openthread/child_supervision.h>
+#endif
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/misc.h>
 
@@ -388,6 +390,291 @@ exit:
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>(void)
+{
+    uint8_t state = SPINEL_MESHCOP_COMMISSIONER_STATE_DISABLED;
+
+    switch (otCommissionerGetState(mInstance))
+    {
+    case OT_COMMISSIONER_STATE_DISABLED:
+        state = SPINEL_MESHCOP_COMMISSIONER_STATE_DISABLED;
+        break;
+
+    case OT_COMMISSIONER_STATE_PETITION:
+        state = SPINEL_MESHCOP_COMMISSIONER_STATE_PETITION;
+        break;
+
+    case OT_COMMISSIONER_STATE_ACTIVE:
+        state = SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>(void)
+{
+    uint8_t state;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    switch (state)
+    {
+    case SPINEL_MESHCOP_COMMISSIONER_STATE_DISABLED:
+        error = otCommissionerStop(mInstance);
+        break;
+
+    case SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE:
+        error = otCommissionerStart(mInstance);
+        break;
+
+    default:
+        error = OT_ERROR_INVALID_ARGS;
+        break;
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *eui64;
+    uint32_t            timeout;
+    const char *        psk;
+
+    SuccessOrExit(error = mDecoder.OpenStruct());
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadEui64(eui64));
+    }
+    else
+    {
+        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
+        eui64 = NULL;
+    }
+
+    SuccessOrExit(error = mDecoder.CloseStruct());
+
+    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
+    SuccessOrExit(error = mDecoder.ReadUtf8(psk));
+
+    error = otCommissionerAddJoiner(mInstance, eui64, psk, timeout);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    const otExtAddress *eui64;
+
+    SuccessOrExit(error = mDecoder.OpenStruct());
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadEui64(eui64));
+    }
+    else
+    {
+        // Empty struct indicates any Joiner (no EUI64 is given so NULL is used.).
+        eui64 = NULL;
+    }
+
+    SuccessOrExit(error = mDecoder.CloseStruct());
+
+    error = otCommissionerRemoveJoiner(mInstance, eui64);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)
+{
+    otError     error  = OT_ERROR_NONE;
+    uint16_t    length = 0;
+    const char *url    = otCommissionerGetProvisioningUrl(mInstance, &length);
+
+    if (url != NULL && length > 0)
+    {
+        SuccessOrExit(error = mEncoder.WriteData(reinterpret_cast<const uint8_t *>(url), length));
+    }
+
+    SuccessOrExit(error = mEncoder.WriteUint8(0));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)
+{
+    otError     error = OT_ERROR_NONE;
+    const char *url;
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(url));
+
+    error = otCommissionerSetProvisioningUrl(mInstance, url);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID>(void)
+{
+    return mEncoder.WriteUint16(otCommissionerGetSessionId(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint32_t            channelMask;
+    uint8_t             count;
+    uint16_t            period;
+    const otIp6Address *address;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(channelMask));
+    SuccessOrExit(error = mDecoder.ReadUint8(count));
+    SuccessOrExit(error = mDecoder.ReadUint16(period));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+
+    error = otCommissionerAnnounceBegin(mInstance, channelMask, count, period, address);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint32_t            channelMask;
+    uint8_t             count;
+    uint16_t            period;
+    uint16_t            scanDuration;
+    const otIp6Address *address;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(channelMask));
+    SuccessOrExit(error = mDecoder.ReadUint8(count));
+    SuccessOrExit(error = mDecoder.ReadUint16(period));
+    SuccessOrExit(error = mDecoder.ReadUint16(scanDuration));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+
+    error = otCommissionerEnergyScan(mInstance, channelMask, count, period, scanDuration, address,
+                                     &NcpBase::HandleCommissionerEnergyReport_Jump, this);
+
+exit:
+    return error;
+}
+
+void NcpBase::HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
+                                                  const uint8_t *aEnergyData,
+                                                  uint8_t        aLength,
+                                                  void *         aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleCommissionerEnergyReport(aChannelMask, aEnergyData, aLength);
+}
+
+void NcpBase::HandleCommissionerEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyData, uint8_t aLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_INSERTED,
+                                              SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT));
+    SuccessOrExit(error = mEncoder.WriteUint32(aChannelMask));
+    SuccessOrExit(error = mEncoder.WriteDataWithLen(aEnergyData, aLength));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint16_t            panId;
+    uint32_t            channelMask;
+    const otIp6Address *address;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(panId));
+    SuccessOrExit(error = mDecoder.ReadUint32(channelMask));
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+
+    error = otCommissionerPanIdQuery(mInstance, panId, channelMask, address,
+                                     &NcpBase::HandleCommissionerPanIdConflict_Jump, this);
+
+exit:
+    return error;
+}
+
+void NcpBase::HandleCommissionerPanIdConflict_Jump(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleCommissionerPanIdConflict(aPanId, aChannelMask);
+}
+
+void NcpBase::HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_INSERTED,
+                                              SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT));
+
+    SuccessOrExit(error = mEncoder.WriteUint16(aPanId));
+    SuccessOrExit(error = mEncoder.WriteUint32(aChannelMask));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET>(void)
+{
+    otError        error = OT_ERROR_NONE;
+    const uint8_t *tlvs;
+    uint16_t       length;
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(tlvs, length));
+    VerifyOrExit(length <= 255, error = OT_ERROR_INVALID_ARGS);
+
+    error = otCommissionerSendMgmtGet(mInstance, tlvs, static_cast<uint8_t>(length));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    const uint8_t *        tlvs;
+    uint16_t               length;
+    otCommissioningDataset dataset;
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(tlvs, length));
+    VerifyOrExit(length <= 255, error = OT_ERROR_INVALID_ARGS);
+
+    memset(&dataset, 0, sizeof(otCommissioningDataset));
+    error = otCommissionerSendMgmtSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length));
+
+exit:
+    return error;
+}
+
+// SPINEL_PROP_THREAD_COMMISSIONER_ENABLED is replaced by SPINEL_PROP_MESHCOP_COMMISSIONER_STATE. Please use the new
+// property. The old property/implementation remains for backward compatibility.
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_COMMISSIONER_ENABLED>(void)
 {
     return mEncoder.WriteBool(otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_ACTIVE);
@@ -412,6 +699,9 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
 exit:
     return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(error));
 }
+
+// SPINEL_PROP_THREAD_JOINERS is replaced by SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS. Please us the new property.
+// The old property/implementation remains for backward compatibility.
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(void)
 {
@@ -467,19 +757,6 @@ exit:
     return error;
 }
 #endif // #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>(void)
-{
-    uint32_t timeout = 0;
-    otError  error   = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mDecoder.ReadUint32(timeout));
-
-    otThreadSetChildTimeout(mInstance, timeout);
-
-exit:
-    return error;
-}
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID>(void)
 {
@@ -869,6 +1146,27 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDI
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
+{
+    return mEncoder.WriteUint16(otChildSupervisionGetInterval(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t interval;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(interval));
+    otChildSupervisionSetInterval(mInstance, interval);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
 

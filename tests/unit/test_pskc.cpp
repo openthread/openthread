@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
@@ -35,7 +34,7 @@
 #include "test_platform.h"
 #include "test_util.h"
 
-static const uint8_t sXPanId[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+static const otExtendedPanId sXPanId = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
 
 void TestMinimumPassphrase(void)
 {

@@ -35,9 +35,9 @@
 #ifndef OPENTHREAD_THREAD_H_
 #define OPENTHREAD_THREAD_H_
 
+#include <openthread/dataset.h>
 #include <openthread/link.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,6 +49,109 @@ extern "C" {
  * @{
  *
  */
+
+/**
+ * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
+ */
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES 19
+
+/**
+ * Represents a Thread device role.
+ *
+ */
+typedef enum {
+    OT_DEVICE_ROLE_DISABLED = 0, ///< The Thread stack is disabled.
+    OT_DEVICE_ROLE_DETACHED = 1, ///< Not currently participating in a Thread network/partition.
+    OT_DEVICE_ROLE_CHILD    = 2, ///< The Thread Child role.
+    OT_DEVICE_ROLE_ROUTER   = 3, ///< The Thread Router role.
+    OT_DEVICE_ROLE_LEADER   = 4, ///< The Thread Leader role.
+} otDeviceRole;
+
+/**
+ * This structure represents an MLE Link Mode configuration.
+ */
+OT_TOOL_ALIGN(4)
+typedef struct otLinkModeConfig
+{
+    bool mRxOnWhenIdle : 1;       ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
+    bool mSecureDataRequests : 1; ///< 1, if the sender uses IEEE 802.15.4 to secure all data requests. 0, otherwise.
+    bool mDeviceType : 1;         ///< 1, if the sender is an FFD. 0, otherwise.
+    bool mNetworkData : 1;        ///< 1, if the sender requires the full Network Data. 0, otherwise.
+} otLinkModeConfig;
+
+/**
+ * This structure holds diagnostic information for a neighboring Thread node
+ *
+ * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
+ * enabled.
+ *
+ */
+typedef struct
+{
+    otExtAddress mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t     mAge;                   ///< Time last heard
+    uint16_t     mRloc16;                ///< RLOC16
+    uint32_t     mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t     mMleFrameCounter;       ///< MLE Frame Counter
+    uint8_t      mLinkQualityIn;         ///< Link Quality In
+    int8_t       mAverageRssi;           ///< Average RSSI
+    int8_t       mLastRssi;              ///< Last observed RSSI
+    uint16_t     mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool         mSecureDataRequest : 1; ///< Secure Data Requests
+    bool         mFullFunction : 1;      ///< Full Function Device
+    bool         mFullNetworkData : 1;   ///< Full Network Data
+    bool         mIsChild : 1;           ///< Is the neighbor a child
+} otNeighborInfo;
+
+#define OT_NEIGHBOR_INFO_ITERATOR_INIT 0 ///< Initializer for otNeighborInfoIterator.
+
+typedef int16_t otNeighborInfoIterator; ///< Used to iterate through neighbor table.
+
+/**
+ * This structure represents the Thread Leader Data.
+ *
+ */
+typedef struct otLeaderData
+{
+    uint32_t mPartitionId;       ///< Partition ID
+    uint8_t  mWeighting;         ///< Leader Weight
+    uint8_t  mDataVersion;       ///< Full Network Data Version
+    uint8_t  mStableDataVersion; ///< Stable Network Data Version
+    uint8_t  mLeaderRouterId;    ///< Leader Router ID
+} otLeaderData;
+
+/**
+ * This structure holds diagnostic information for a Thread Router
+ *
+ */
+OT_TOOL_ALIGN(4)
+typedef struct
+{
+    otExtAddress mExtAddress;          ///< IEEE 802.15.4 Extended Address
+    uint16_t     mRloc16;              ///< RLOC16
+    uint8_t      mRouterId;            ///< Router ID
+    uint8_t      mNextHop;             ///< Next hop to router
+    uint8_t      mPathCost;            ///< Path cost to router
+    uint8_t      mLinkQualityIn;       ///< Link Quality In
+    uint8_t      mLinkQualityOut;      ///< Link Quality Out
+    uint8_t      mAge;                 ///< Time last heard
+    bool         mAllocated : 1;       ///< Router ID allocated or not
+    bool         mLinkEstablished : 1; ///< Link established with Router ID or not
+} otRouterInfo;
+
+/**
+ * This structure represents the IP level counters.
+ *
+ */
+typedef struct otIpCounters
+{
+    uint32_t mTxSuccess; ///< The number of IPv6 packets successfully transmitted.
+    uint32_t mRxSuccess; ///< The number of IPv6 packets successfully received.
+    uint32_t mTxFailure; ///< The number of IPv6 packets failed to transmit.
+    uint32_t mRxFailure; ///< The number of IPv6 packets failed to receive.
+} otIpCounters;
 
 /**
  * This function starts Thread protocol operation.
@@ -159,7 +262,7 @@ OTAPI void OTCALL otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeo
  *
  * @sa otThreadSetExtendedPanId
  */
-OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
+OTAPI const otExtendedPanId *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
@@ -176,7 +279,7 @@ OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
  *
  * @sa otThreadGetExtendedPanId
  */
-OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
+OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId);
 
 /**
  * This function returns a pointer to the Leader's RLOC.
@@ -261,7 +364,7 @@ OTAPI const otIp6Address *OTCALL otThreadGetMeshLocalEid(otInstance *aInstance);
  * @returns A pointer to the Mesh Local Prefix.
  *
  */
-OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
+OTAPI const otMeshLocalPrefix *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 
 /**
  * This function sets the Mesh Local Prefix.
@@ -277,7 +380,7 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix);
+OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix);
 
 /**
  * This function returns the Thread link-local IPv6 address.

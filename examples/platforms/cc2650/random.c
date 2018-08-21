@@ -27,7 +27,6 @@
  */
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>

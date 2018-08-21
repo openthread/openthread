@@ -33,7 +33,7 @@
 
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
-#include <openthread/openthread.h>
+#include <openthread/thread.h>
 #include <openthread/platform/alarm-milli.h>
 
 #include "platform-da15000.h"
@@ -125,7 +125,7 @@ static void ExampleProcess(otInstance *aInstance)
     }
 }
 
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     // Initialize Random number generator
     da15000RandomInit();
@@ -138,7 +138,7 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
@@ -280,7 +280,7 @@ static void StateChangedCallback(uint32_t aFlags, void *aContext)
 }
 #endif // (OPENTHREAD_MTD || OPENTHREAD_FTD) && (OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER)
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     if (sInstance == NULL)
     {

@@ -49,15 +49,14 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "openthread-system.h"
 #include "platform-nrf5.h"
-#include "platform.h"
 
 #include <nrf.h>
 #include <nrf_802154.h>
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-#include <openthread/types.h>
 
 // clang-format off
 
@@ -83,8 +82,8 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
 static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
-static otInstance *  sInstance = NULL;
 #endif
+static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
 
@@ -147,7 +146,7 @@ static void setPendingEvent(RadioPendingEvents aEvent)
         pendingEvents |= bitToSet;
     } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
 
-    PlatformEventSignalPending();
+    otSysEventSignalPending();
 }
 
 static void resetPendingEvent(RadioPendingEvents aEvent)
@@ -259,7 +258,7 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    (void)aInstance;
+    sInstance = aInstance;
 
     otError error;
 
@@ -335,10 +334,6 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    sInstance = aInstance;
-#endif
-
     otError result = OT_ERROR_NONE;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
@@ -705,11 +700,12 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
-    receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
-    receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
-#endif
+    if (otPlatRadioGetPromiscuous(sInstance))
+    {
+        uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
+        receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
+        receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
+    }
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     // Get the timestamp when the SFD was received.
     uint32_t offset =
@@ -717,7 +713,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
 
-    PlatformEventSignalPending();
+    otSysEventSignalPending();
 }
 
 void nrf_802154_receive_failed(nrf_802154_rx_error_t error)

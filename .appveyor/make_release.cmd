@@ -42,13 +42,13 @@ REM Copy the relavant include headers
 
 copy include\openthread\commissioner.h release\include\openthread
 copy include\openthread\dataset.h release\include\openthread
+copy include\openthread\error.h release\include\openthread
 copy include\openthread\instance.h release\include\openthread
 copy include\openthread\ip6.h release\include\openthread
 copy include\openthread\joiner.h release\include\openthread
 copy include\openthread\link.h release\include\openthread
 copy include\openthread\message.h release\include\openthread
 copy include\openthread\netdata.h release\include\openthread
-copy include\openthread\openthread.h release\include\openthread
 copy include\openthread\thread.h release\include\openthread
 copy include\openthread\types.h release\include\openthread
 copy include\openthread\platform\toolchain.h release\include\openthread\platform

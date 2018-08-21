@@ -38,8 +38,6 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
-
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 
@@ -56,16 +54,6 @@ OT_TOOL_PACKED_BEGIN
 class Tlv
 {
 public:
-    /**
-     * Default constructor.
-     *
-     */
-    Tlv(void)
-        : mType(0)
-        , mLength(0)
-    {
-    }
-
     /**
      * This method returns the Type value.
      *

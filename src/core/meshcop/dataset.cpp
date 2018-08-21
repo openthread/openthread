@@ -166,16 +166,16 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kExtendedPanId:
         {
-            const ExtendedPanIdTlv *tlv = static_cast<const ExtendedPanIdTlv *>(cur);
-            memcpy(aDataset.mExtendedPanId.m8, tlv->GetExtendedPanId(), sizeof(aDataset.mExtendedPanId));
+            const ExtendedPanIdTlv *tlv                  = static_cast<const ExtendedPanIdTlv *>(cur);
+            aDataset.mExtendedPanId                      = tlv->GetExtendedPanId();
             aDataset.mComponents.mIsExtendedPanIdPresent = true;
             break;
         }
 
         case Tlv::kMeshLocalPrefix:
         {
-            const MeshLocalPrefixTlv *tlv = static_cast<const MeshLocalPrefixTlv *>(cur);
-            memcpy(aDataset.mMeshLocalPrefix.m8, tlv->GetMeshLocalPrefix(), sizeof(aDataset.mMeshLocalPrefix));
+            const MeshLocalPrefixTlv *tlv                  = static_cast<const MeshLocalPrefixTlv *>(cur);
+            aDataset.mMeshLocalPrefix                      = tlv->GetMeshLocalPrefix();
             aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
             break;
         }
@@ -310,7 +310,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
-        tlv.SetExtendedPanId(aDataset.mExtendedPanId.m8);
+        tlv.SetExtendedPanId(aDataset.mExtendedPanId);
         Set(tlv);
     }
 
@@ -318,7 +318,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::MeshLocalPrefixTlv tlv;
         tlv.Init();
-        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix.m8);
+        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
         Set(tlv);
     }
 
@@ -487,9 +487,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
             uint32_t      elapsed = TimerMilli::GetNow() - mUpdateTime;
-            DelayTimerTlv delayTimer;
-
-            memcpy(&delayTimer, cur, sizeof(delayTimer));
+            DelayTimerTlv delayTimer(static_cast<const DelayTimerTlv &>(*cur));
 
             if (delayTimer.GetDelayTimer() > elapsed)
             {

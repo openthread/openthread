@@ -33,7 +33,6 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -498,7 +497,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-void readFrame(void)
+void readFrame(otInstance *aInstance)
 {
     uint8_t length;
     uint8_t crcCorr;
@@ -511,11 +510,12 @@ void readFrame(void)
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    // Timestamp
-    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+    if (otPlatRadioGetPromiscuous(aInstance))
+    {
+        // Timestamp
+        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+    }
 
     // read psdu
     for (i = 0; i < length - 2; i++)
@@ -554,7 +554,7 @@ exit:
 
 void cc2538RadioProcess(otInstance *aInstance)
 {
-    readFrame();
+    readFrame(aInstance);
 
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))

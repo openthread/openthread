@@ -50,21 +50,12 @@
 
 #include <nrf.h>
 
-#define REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, fail_instr, ...)                     \
+#define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
     bool result = false;                                                                           \
                                                                                                    \
     if (active_vector_priority_is_high())                                                          \
     {                                                                                              \
-        if (nrf_802154_critical_section_enter())                                                   \
-        {                                                                                          \
-            result = func_core(__VA_ARGS__);                                                       \
-            nrf_802154_critical_section_exit();                                                    \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            fail_instr                                                                             \
-            result = false;                                                                        \
-        }                                                                                          \
+        result = func_core(__VA_ARGS__);                                                           \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
@@ -73,23 +64,12 @@
                                                                                                    \
     return result;
 
-#define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
-        REQUEST_FUNCTION_WITH_FAIL_INSTR(func_core, func_swi, , __VA_ARGS__)
-
 #define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi)                                              \
     bool result = false;                                                                           \
                                                                                                    \
     if (active_vector_priority_is_high())                                                          \
     {                                                                                              \
-        if (nrf_802154_critical_section_enter())                                                   \
-        {                                                                                          \
-            result = func_core();                                                                  \
-            nrf_802154_critical_section_exit();                                                    \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            result = false;                                                                        \
-        }                                                                                          \
+        result = func_core();                                                                      \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
@@ -121,30 +101,32 @@ bool nrf_802154_request_sleep(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 req_originator_t               req_orig,
-                                nrf_802154_notification_func_t notify_function)
+                                nrf_802154_notification_func_t notify_function,
+                                bool                           notify_abort)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_receive,
-                                     nrf_802154_swi_receive,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_receive,
+                     nrf_802154_swi_receive,
+                     term_lvl,
+                     req_orig,
+                     notify_function,
+                     notify_abort)
 }
 
 bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  req_originator_t               req_orig,
                                  const uint8_t                * p_data,
                                  bool                           cca,
+                                 bool                           immediate,
                                  nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION_WITH_FAIL_INSTR(nrf_802154_core_transmit,
-                                     nrf_802154_swi_transmit,
-                                     notify_function(false); ,
-                                     term_lvl,
-                                     req_orig,
-                                     p_data,
-                                     cca,
-                                     notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_transmit,
+                     nrf_802154_swi_transmit,
+                     term_lvl,
+                     req_orig,
+                     p_data,
+                     cca,
+                     immediate,
+                     notify_function)
 }
 
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl,

@@ -39,11 +39,10 @@
 #include <stdint.h>
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/toolchain.h>
 #include <openthread/platform/uart.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 #include "platform-nrf5.h"
 #include <drivers/clock/nrf_drv_clock.h>
@@ -290,7 +289,7 @@ void UARTE0_UART0_IRQHandler(void)
         {
             sReceiveBuffer[sReceiveHead] = byte;
             sReceiveHead                 = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
-            PlatformEventSignalPending();
+            otSysEventSignalPending();
         }
     }
 
@@ -309,7 +308,7 @@ void UARTE0_UART0_IRQHandler(void)
         {
             sTransmitDone = true;
             nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STOPTX);
-            PlatformEventSignalPending();
+            otSysEventSignalPending();
         }
     }
 }

@@ -34,14 +34,16 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
-#include "openthread/types.h"
+#include <string.h>
 
 #include "platform-emsk.h"
-#include <utils/code_utils.h>
+
+#include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
-#include <string.h>
+#include "utils/code_utils.h"
+
 #include "device/device_hal/inc/dev_gpio.h"
 
 #include <stdio.h>
@@ -427,7 +429,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     mrf24j40_set_promiscuous(~aEnable);
 }
 
-void readFrame(void)
+void readFrame(otInstance *aInstance)
 {
     /* readBuffer
      * 1 bit -- 5 to 127 bits -- 1 bit -- 1bit
@@ -460,11 +462,12 @@ void readFrame(void)
 
     otEXPECT_ACTION(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    // Timestamp
-    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+    if (otPlatRadioGetPromiscuous(aInstance))
+    {
+        // Timestamp
+        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+    }
 
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
@@ -533,7 +536,7 @@ void emskRadioProcess(otInstance *aInstance)
 {
     numRadioProcess++;
 
-    readFrame();
+    readFrame(aInstance);
     uint8_t reg = mrf24j40_read_short_ctrl_reg(MRF24J40_TXSTAT);
 
     if (reg & MRF24J40_TXNSTAT)

@@ -1506,7 +1506,7 @@ otLinkSetExtendedAddress(
 }
 
 OTAPI 
-const uint8_t *
+const otExtendedPanId *
 OTCALL
 otThreadGetExtendedPanId(
     _In_ otInstance *aInstance
@@ -1515,12 +1515,13 @@ otThreadGetExtendedPanId(
     if (aInstance == nullptr) return nullptr;
 
     otExtendedPanId *Result = (otExtendedPanId*)malloc(sizeof(otExtendedPanId));
-    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, Result) != ERROR_SUCCESS)
+    if (Result == nullptr) return nullptr;
+    if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, Result) != ERROR_SUCCESS)
     {
         free(Result);
         Result = nullptr;
     }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI 
@@ -1528,11 +1529,11 @@ otError
 OTCALL
 otThreadSetExtendedPanId(
     _In_ otInstance *aInstance, 
-    const uint8_t *aExtendedPanId
+    const otExtendedPanId *aExtendedPanId
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, (const otExtendedPanId*)aExtendedPanId));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, aExtendedPanId));
 }
 
 OTAPI 
@@ -1670,7 +1671,7 @@ otThreadGetMeshLocalEid(
 }
 
 OTAPI
-const uint8_t *
+const otMeshLocalPrefix *
 OTCALL
 otThreadGetMeshLocalPrefix(
     _In_ otInstance *aInstance
@@ -1684,7 +1685,7 @@ otThreadGetMeshLocalPrefix(
         free(Result);
         Result = nullptr;
     }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI
@@ -1692,11 +1693,11 @@ otError
 OTCALL
 otThreadSetMeshLocalPrefix(
     _In_ otInstance *aInstance, 
-    const uint8_t *aMeshLocalPrefix
+    const otMeshLocalPrefix *aMeshLocalPrefix
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MESH_LOCAL_PREFIX, (const otMeshLocalPrefix*)aMeshLocalPrefix));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MESH_LOCAL_PREFIX, aMeshLocalPrefix));
 }
 
 OTAPI

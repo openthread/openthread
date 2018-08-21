@@ -30,10 +30,9 @@
 
 #include <unistd.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 extern int    gArgumentsCount;
 extern char **gArguments;
@@ -61,7 +60,7 @@ void otPlatReset(otInstance *aInstance)
 
     argv[gArgumentsCount] = NULL;
 
-    PlatformDeinit();
+    otSysDeinit();
     platformUartRestore();
 
     alarm(0);

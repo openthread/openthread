@@ -40,7 +40,7 @@
 #include "utils/wrap_stdint.h"
 
 #include <openthread/instance.h>
-#include <openthread/types.h>
+#include <openthread/platform/toolchain.h>
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"

@@ -35,7 +35,6 @@
 #include <assert.h>
 
 #include <openthread/config.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -346,7 +345,14 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         txOptions |= RAIL_TX_OPTION_WAIT_FOR_ACK;
     }
 
-    status = RAIL_StartCcaCsmaTx(sRailHandle, aFrame->mChannel, txOptions, &csmaConfig, NULL);
+    if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
+    {
+        status = RAIL_StartCcaCsmaTx(sRailHandle, aFrame->mChannel, txOptions, &csmaConfig, NULL);
+    }
+    else
+    {
+        status = RAIL_StartTx(sRailHandle, aFrame->mChannel, txOptions, NULL);
+    }
     assert(status == RAIL_STATUS_NO_ERROR);
 
     otPlatRadioTxStarted(aInstance, aFrame);

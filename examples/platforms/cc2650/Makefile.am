@@ -51,9 +51,9 @@ PLATFORM_SOURCES                                      = \
     flash.c                                             \
     misc.c                                              \
     logging.c                                           \
-    platform.c                                          \
     radio.c                                             \
     random.c                                            \
+    system.c                                            \
     uart.c                                              \
     crypto/sha256_alt.c                                 \
     crypto/aes_alt.c                                    \

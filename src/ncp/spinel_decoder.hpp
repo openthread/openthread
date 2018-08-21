@@ -35,8 +35,8 @@
 
 #include <openthread/config.h>
 
+#include <openthread/ip6.h>
 #include <openthread/ncp.h>
-#include <openthread/types.h>
 
 #include "openthread-core-config.h"
 #include "ncp/spinel.h"

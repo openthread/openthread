@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
 #include "common/locator.hpp"
@@ -116,8 +114,6 @@ private:
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
     void    SendDelayedJoinerEntrust(void);
     otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    otError GetBorderAgentRloc(uint16_t &aRloc);
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;

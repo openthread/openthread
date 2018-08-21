@@ -29,13 +29,11 @@
 /**
  * @file
  * @brief
- *  This file defines a node interface for openthread.h to be used for certification tests
+ *  This file defines a node interface for openthread to be used for certification tests
  */
 
 #ifndef OTNODE_H_
 #define OTNODE_H_
-
-#include <openthread/openthread.h>
 
 #ifndef OTNODEAPI
 #define OTNODEAPI __declspec(dllimport)

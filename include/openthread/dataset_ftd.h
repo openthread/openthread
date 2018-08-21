@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_DATASET_FTD_H_
 #define OPENTHREAD_DATASET_FTD_H_
 
-#include <openthread/types.h>
+#include <openthread/dataset.h>
+#include <openthread/ip6.h>
 
 #ifdef __cplusplus
 extern "C" {

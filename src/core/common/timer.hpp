@@ -39,7 +39,6 @@
 #include <stddef.h>
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 

@@ -36,7 +36,6 @@
 
 #include "platform-cc1352.h"
 #include <stdio.h>
-#include <openthread/types.h>
 
 #include "inc/hw_ccfg.h"
 #include "inc/hw_ccfg_simple_struct.h"
@@ -49,7 +48,7 @@ const char *dummy_ccfg_ref = ((const char *)(&(__ccfg)));
 /**
  * Function documented in platform-cc1352.h
  */
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
@@ -71,7 +70,7 @@ void PlatformInit(int argc, char *argv[])
     cc1352RadioInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
@@ -79,7 +78,7 @@ bool PlatformPseudoResetWasRequested(void)
 /**
  * Function documented in platform-cc1352.h
  */
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     // should sleep and wait for interrupts here
 

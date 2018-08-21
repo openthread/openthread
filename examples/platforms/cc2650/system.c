@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,57 +26,49 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file defines the platform-specific initializers.
- */
+#include "platform-cc2650.h"
+#include <stdio.h>
+#include "inc/hw_ccfg_simple_struct.h"
 
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
+extern const ccfg_t __ccfg;
 
-#include <openthread/types.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
 
 /**
- * This function performs all platform-specific initialization.
- *
+ * Function documented in platform-cc2650.h
  */
-void PlatformInit(int argc, char *argv[]);
+void otSysInit(int argc, char *argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    while (dummy_ccfg_ref == NULL)
+    {
+        /*
+         * This provides a code reference to the customer configuration
+         * area of the flash, otherwise the data is skipped by the
+         * linker and not put into the final flash image.
+         */
+    }
+
+    cc2650AlarmInit();
+    cc2650RandomInit();
+    cc2650RadioInit();
+}
+
+bool otSysPseudoResetWasRequested(void)
+{
+    return false;
+}
 
 /**
- * This function performs all platform-specific deinitialization.
- *
+ * Function documented in platform-cc2650.h
  */
-void PlatformDeinit(void);
+void otSysProcessDrivers(otInstance *aInstance)
+{
+    // should sleep and wait for interrupts here
 
-/**
- * This function returns true is a pseudo-reset was requested.
- * In such a case, the main loop should shut down and re-initialize
- * the OpenThread instance.
- *
- */
-bool PlatformPseudoResetWasRequested(void);
-
-/**
- * This function performs all platform-specific processing.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- *
- */
-void PlatformProcessDrivers(otInstance *aInstance);
-
-/**
- * This function is called whenever platform drivers needs processing.
- *
- */
-extern void PlatformEventSignalPending(void);
-
-#ifdef __cplusplus
-} // end of extern "C"
-#endif
-
-#endif // PLATFORM_H_
+    cc2650UartProcess();
+    cc2650RadioProcess(aInstance);
+    cc2650AlarmProcess(aInstance);
+}

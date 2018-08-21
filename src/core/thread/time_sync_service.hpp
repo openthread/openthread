@@ -38,7 +38,6 @@
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
-#include <openthread/types.h>
 
 #include "common/locator.hpp"
 #include "common/message.hpp"

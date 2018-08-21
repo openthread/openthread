@@ -178,7 +178,8 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     // check mesh local prefix
     if (Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix) == OT_ERROR_NONE &&
         meshLocalPrefix.IsValid() &&
-        memcmp(meshLocalPrefix.GetMeshLocalPrefix(), netif.GetMle().GetMeshLocalPrefix(), meshLocalPrefix.GetLength()))
+        memcmp(&meshLocalPrefix.GetMeshLocalPrefix(), &netif.GetMle().GetMeshLocalPrefix(),
+               meshLocalPrefix.GetLength()))
     {
         doesAffectConnectivity = true;
     }
@@ -421,7 +422,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
-        extpanid.SetExtendedPanId(aDataset.mExtendedPanId.m8);
+        extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
         SuccessOrExit(error = message->Append(&extpanid, sizeof(extpanid)));
     }
 
@@ -429,7 +430,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         MeshLocalPrefixTlv localprefix;
         localprefix.Init();
-        localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix.m8);
+        localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
         SuccessOrExit(error = message->Append(&localprefix, sizeof(localprefix)));
     }
 

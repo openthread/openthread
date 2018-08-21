@@ -35,8 +35,6 @@
 
 #include "dhcp6_server.hpp"
 
-#include <openthread/types.h>
-
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -155,7 +153,7 @@ otError Dhcp6Server::UpdateService(void)
             if (!mAgentsAloc[i].mValid)
             {
                 address = &(mAgentsAloc[i].GetAddress());
-                memcpy(address, netif.GetMle().GetMeshLocalPrefix(), 8);
+                memcpy(address, netif.GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix));
                 address->mFields.m16[4]      = HostSwap16(0x0000);
                 address->mFields.m16[5]      = HostSwap16(0x00ff);
                 address->mFields.m16[6]      = HostSwap16(0xfe00);
@@ -429,7 +427,6 @@ otError Dhcp6Server::SendReply(otIp6Address &aDst, uint8_t *aTransactionId, Clie
     SuccessOrExit(error = AppendIaAddress(*message, aClient));
     SuccessOrExit(error = AppendRapidCommit(*message));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(messageInfo.GetPeerAddr().mFields.m8, &aDst, sizeof(otIp6Address));
     messageInfo.mPeerPort = kDhcpClientPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));

@@ -141,6 +141,7 @@ typedef enum {
      *  later join failure status codes would be more accurate.
      *
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_FAILURE = SPINEL_STATUS_JOIN__BEGIN + 0,
 
@@ -150,12 +151,14 @@ typedef enum {
      *  key has been set incorrectly.
      *
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_SECURITY = SPINEL_STATUS_JOIN__BEGIN + 1,
 
     /// The node was unable to find any other peers on the network.
     /**
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
      */
     SPINEL_STATUS_JOIN_NO_PEERS = SPINEL_STATUS_JOIN__BEGIN + 2,
 
@@ -164,6 +167,18 @@ typedef enum {
      *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
      */
     SPINEL_STATUS_JOIN_INCOMPATIBLE = SPINEL_STATUS_JOIN__BEGIN + 3,
+
+    /// No response in expecting time.
+    /**
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
+     */
+    SPINEL_STATUS_JOIN_RSP_TIMEOUT = SPINEL_STATUS_JOIN__BEGIN + 4,
+
+    /// The node succeeds in commissioning and get the network credentials.
+    /**
+     *  \sa SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING
+     */
+    SPINEL_STATUS_JOIN_SUCCESS = SPINEL_STATUS_JOIN__BEGIN + 5,
 
     SPINEL_STATUS_JOIN__END = 112,
 
@@ -323,6 +338,13 @@ enum
     SPINEL_NCP_LOG_REGION_OT_UTIL     = 16,
 };
 
+enum
+{
+    SPINEL_MESHCOP_COMMISSIONER_STATE_DISABLED = 0,
+    SPINEL_MESHCOP_COMMISSIONER_STATE_PETITION = 1,
+    SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE   = 2,
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -453,12 +475,14 @@ enum
     SPINEL_CAP_CHANNEL_MANAGER         = (SPINEL_CAP_OPENTHREAD__BEGIN + 5),
     SPINEL_CAP_OPENTHREAD_LOG_METADATA = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
+    SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN       = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER = (SPINEL_CAP_THREAD__BEGIN + 0),
     SPINEL_CAP_THREAD_TMF_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 1),
     SPINEL_CAP_THREAD_UDP_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 2),
+    SPINEL_CAP_THREAD_JOINER       = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD__END         = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -1148,6 +1172,9 @@ typedef enum {
     /// Thread joiner data
     /** Format `A(T(ULE))`
      *  PSKd, joiner timeout, eui64 (optional)
+     *
+     * This property is being deprecated by SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS.
+     *
      */
     SPINEL_PROP_THREAD_JOINERS = SPINEL_PROP_THREAD_EXT__BEGIN + 15,
 
@@ -1155,6 +1182,9 @@ typedef enum {
     /** Format `b`
      *
      * Default value is `false`.
+     *
+     * This property is being deprecated by SPINEL_PROP_MESHCOP_COMMISSIONER_STATE.
+     *
      */
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
 
@@ -1589,10 +1619,209 @@ typedef enum {
     SPINEL_PROP_STREAM_EXT__END   = 0x1800,
 
     SPINEL_PROP_MESHCOP__BEGIN = 0x80,
-    SPINEL_PROP_MESHCOP__END   = 0x90,
+
+    // Thread Joiner State
+    /** Format `C` - Read Only
+     *
+     * Required capability: SPINEL_CAP_THREAD_JOINER
+     *
+     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     *
+     */
+    SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
+
+    /// Thread Joiner Commissioning command and the parameters
+    /** Format `bUU` - Write Only
+     *
+     * This property starts or stops Joiner's commissioning process
+     *
+     * Required capability: SPINEL_CAP_THREAD_JOINER
+     *
+     * Writing to this property starts/stops the Joiner commissioning process.
+     * The immediate `VALUE_IS` response indicates success/failure of the starting/stopping
+     * the Joiner commissioning process.
+     *
+     * After a successful start operation, the join process outcome is reported through an
+     * asynchronous `VALUE_IS(LAST_STATUS)`  update with one of the following error status values:
+     *
+     *     - SPINEL_STATUS_JOIN_SUCCESS     the join process succeeded.
+     *     - SPINEL_STATUS_JOIN_SECURITY    the join process failed due to security credentials.
+     *     - SPINEL_STATUS_JOIN_NO_PEERS    no joinable network was discovered.
+     *     - SPINEL_STATUS_JOIN_RSP_TIMEOUT if a response timed out.
+     *     - SPINEL_STATUS_JOIN_FAILURE     join failure.
+     *
+     * Data per item is:
+     *
+     *  `b` : Start or stop commissioning process
+     *  `U` : Joiner's PSKd if start commissioning, empty string if stop commissioning
+     *  `U` : Provisioning url if start commissioning, empty string if stop commissioning
+     *
+     */
+    SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING = SPINEL_PROP_MESHCOP__BEGIN + 1,
+
+    // Thread Commissioner State
+    /** Format `C`
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 2,
+
+    // Thread Commissioner Joiners
+    /** Format `A(t(E)UL)` - insert or remove only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Data per item is:
+     *
+     *  `t(E)` | `t()`: Joiner EUI64. Empty struct indicates any Joiner
+     *  `L`           : Timeout (in seconds) after which the Joiner is automatically removed
+     *  `U`           : PSKd
+     *
+     * For CMD_PROP_VALUE_REMOVE the timeout and PSKd are optional.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS = SPINEL_PROP_MESHCOP__BEGIN + 3,
+
+    // Thread Commissioner Provisioning URL
+    /** Format `U`
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL = SPINEL_PROP_MESHCOP__BEGIN + 4,
+
+    // Thread Commissioner Session ID
+    /** Format `S` - Read only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID = SPINEL_PROP_MESHCOP__BEGIN + 5,
+
+    SPINEL_PROP_MESHCOP__END = 0x90,
 
     SPINEL_PROP_MESHCOP_EXT__BEGIN = 0x1800,
-    SPINEL_PROP_MESHCOP_EXT__END   = 0x1900,
+
+    // Thread Commissioner Announce Begin
+    /** Format `LCS6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends an Announce Begin message with the specified parameters. Response is a
+     * `LAST_STATUS` update with status of operation.
+     *
+     *   `L` : Channel mask
+     *   `C` : Number of messages per channel
+     *   `S` : The time between two successive MLE Announce transmissions (milliseconds)
+     *   `6` : IPv6 destination
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN = SPINEL_PROP_MESHCOP_EXT__BEGIN + 0,
+
+    // Thread Commissioner Energy Scan Query
+    /** Format `LCSS6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends an Energy Scan Query message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation. The energy scan results are emitted asynchronously through
+     * `SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT` updates.
+     *
+     * Format is:
+     *
+     *   `L` : Channel mask
+     *   `C` : The number of energy measurements per channel
+     *   `S` : The time between energy measurements (milliseconds)
+     *   `S` : The scan duration for each energy measurement (milliseconds)
+     *   `6` : IPv6 destination.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN = SPINEL_PROP_MESHCOP_EXT__BEGIN + 1,
+
+    // Thread Commissioner Energy Scan Result
+    /** Format `Ld` - Asynchronous event only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * This property provides asynchronous `CMD_PROP_VALUE_INSERTED` updates to report energy scan results for a
+     * previously sent Energy Scan Query message (please see `SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN`).
+     *
+     * Format is:
+     *
+     *   `L` : Channel mask
+     *   `d` : Energy measurement data (note that `d` encoding includes the length)
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT = SPINEL_PROP_MESHCOP_EXT__BEGIN + 2,
+
+    // Thread Commissioner PAN ID Query
+    /** Format `SL6` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a PAN ID Query message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation. The PAN ID Conflict results are emitted asynchronously through
+     * `SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT` updates.
+     *
+     * Format is:
+     *
+     *   `S` : PAN ID to query
+     *   `L` : Channel mask
+     *   `6` : IPv6 destination
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY = SPINEL_PROP_MESHCOP_EXT__BEGIN + 3,
+
+    // Thread Commissioner PAN ID Conflict Result
+    /** Format `SL` - Asynchronous event only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * This property provides asynchronous `CMD_PROP_VALUE_INSERTED` updates to report PAN ID conflict results for a
+     * previously sent PAN ID Query message (please see `SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY`).
+     *
+     * Format is:
+     *
+     *   `S` : The PAN ID
+     *   `L` : Channel mask
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT = SPINEL_PROP_MESHCOP_EXT__BEGIN + 4,
+
+    // Thread Commissioner Send MGMT_COMMISSIONER_GET
+    /** Format `d` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a MGMT_COMMISSIONER_GET message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation.
+     *
+     * Format is:
+     *
+     *   `d` : List of TLV types to get
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET = SPINEL_PROP_MESHCOP_EXT__BEGIN + 5,
+
+    // Thread Commissioner Send MGMT_COMMISSIONER_SET
+    /** Format `d` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property sends a MGMT_COMMISSIONER_SET message with the specified parameters. Response is a
+     * `LAST_STATUS` with status of operation.
+     *
+     * Format is:
+     *
+     *   `d` : TLV encoded data
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET = SPINEL_PROP_MESHCOP_EXT__BEGIN + 6,
+
+    SPINEL_PROP_MESHCOP_EXT__END = 0x1900,
 
     SPINEL_PROP_OPENTHREAD__BEGIN = 0x1900,
 
@@ -1727,6 +1956,41 @@ typedef enum {
      *
      */
     SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD = SPINEL_PROP_OPENTHREAD__BEGIN + 9,
+
+    /// Child Supervision Interval
+    /** Format: `S` - Read-Write
+     *  Units: Seconds
+     *
+     * Required capability: `SPINEL_CAP_CHILD_SUPERVISION`
+     *
+     * The child supervision interval (in seconds). Zero indicates that child supervision is disabled.
+     *
+     * When enabled, Child supervision feature ensures that at least one message is sent to every sleepy child within
+     * the given supervision interval. If there is no other message, a supervision message (a data message with empty
+     * payload) is enqueued and sent to the child.
+     *
+     * This property is available for FTD build only.
+     *
+     */
+    SPINEL_PROP_CHILD_SUPERVISION_INTERVAL = SPINEL_PROP_OPENTHREAD__BEGIN + 10,
+
+    /// Child Supervision Check Timeout
+    /** Format: `S` - Read-Write
+     *  Units: Seconds
+     *
+     * Required capability: `SPINEL_CAP_CHILD_SUPERVISION`
+     *
+     * The child supervision check timeout interval (in seconds). Zero indicates supervision check on the child is
+     * disabled.
+     *
+     * Supervision check is only applicable on a sleepy child. When enabled, if the child does not hear from its parent
+     * within the specified check timeout, it initiates a re-attach process by starting an MLE Child Update
+     * Request/Response exchange with the parent.
+     *
+     * This property is available for FTD and MTD builds.
+     *
+     */
+    SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT = SPINEL_PROP_OPENTHREAD__BEGIN + 11,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

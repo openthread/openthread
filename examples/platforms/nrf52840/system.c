@@ -37,8 +37,9 @@
 
 #include <openthread/platform/logging.h>
 
+#include "openthread-system.h"
+#include "platform-fem.h"
 #include "platform-nrf5.h"
-#include "platform.h"
 #include <drivers/clock/nrf_drv_clock.h>
 #include <nrf.h>
 
@@ -52,11 +53,11 @@ void __cxa_pure_virtual(void)
         ;
 }
 
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     if (gPlatformPseudoResetWasRequested)
     {
-        PlatformDeinit();
+        otSysDeinit();
     }
 
     (void)argc;
@@ -87,10 +88,14 @@ void PlatformInit(int argc, char *argv[])
     nrf5RadioInit();
     nrf5TempInit();
 
+#if PLATFORM_FEM_ENABLE_DEFAULT_CONFIG
+    PlatformFemSetConfigParams(&PLATFORM_FEM_DEFAULT_CONFIG);
+#endif
+
     gPlatformPseudoResetWasRequested = false;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
     nrf5TempDeinit();
     nrf5RadioDeinit();
@@ -111,12 +116,12 @@ void PlatformDeinit(void)
 #endif
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return gPlatformPseudoResetWasRequested;
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     nrf5AlarmProcess(aInstance);
     nrf5RadioProcess(aInstance);
@@ -127,7 +132,7 @@ void PlatformProcessDrivers(otInstance *aInstance)
 #endif
 }
 
-__WEAK void PlatformEventSignalPending(void)
+__WEAK void otSysEventSignalPending(void)
 {
     // Intentionally empty
 }

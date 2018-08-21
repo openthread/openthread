@@ -37,6 +37,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/dataset.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "meshcop/meshcop_tlvs.hpp"

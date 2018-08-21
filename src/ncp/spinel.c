@@ -1577,6 +1577,14 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_DATASET_DEST_ADDRESS";
         break;
 
+    case SPINEL_PROP_MESHCOP_JOINER_STATE:
+        ret = "PROP_MESHCOP_JOINER_STATE";
+        break;
+
+    case SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING:
+        ret = "PROP_MESHCOP_JOINER_COMMISSIONING";
+        break;
+
     case SPINEL_PROP_IPV6_LL_ADDR:
         ret = "PROP_IPV6_LL_ADDR";
         break;
@@ -1629,6 +1637,50 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_STREAM_LOG";
         break;
 
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_STATE:
+        ret = "PROP_MESHCOP_COMMISSIONER_STATE";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS:
+        ret = "PROP_MESHCOP_COMMISSIONER_JOINERS";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL:
+        ret = "PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID:
+        ret = "PROP_MESHCOP_COMMISSIONER_SESSION_ID";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN:
+        ret = "PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN:
+        ret = "PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT:
+        ret = "PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN_RESULT";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY:
+        ret = "PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT:
+        ret = "PROP_MESHCOP_COMMISSIONER_PAN_ID_CONFLICT_RESULT";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET:
+        ret = "PROP_MESHCOP_COMMISSIONER_MGMT_GET";
+        break;
+
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET:
+        ret = "PROP_MESHCOP_COMMISSIONER_MGMT_SET";
+        break;
+
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
         ret = "PROP_CHANNEL_MANAGER_NEW_CHANNEL";
         break;
@@ -1667,6 +1719,14 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD:
         ret = "PROP_TIME_SYNC_XTAL_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_CHILD_SUPERVISION_INTERVAL:
+        ret = "PROP_CHILD_SUPERVISION_INTERVAL";
+        break;
+
+    case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
+        ret = "PROP_CHILD_SUPERVISION_CHECK_TIMEOUT";
         break;
 
     case SPINEL_PROP_UART_BITRATE:
@@ -2073,6 +2133,14 @@ const char *spinel_status_to_cstr(spinel_status_t status)
         ret = "STATUS_JOIN_INCOMPATIBLE";
         break;
 
+    case SPINEL_STATUS_JOIN_RSP_TIMEOUT:
+        ret = "STATUS_JOIN_RSP_TIMEOUT";
+        break;
+
+    case SPINEL_STATUS_JOIN_SUCCESS:
+        ret = "STATUS_JOIN_SUCCESS";
+        break;
+
     case SPINEL_STATUS_RESET_POWER_ON:
         ret = "STATUS_RESET_POWER_ON";
         break;
@@ -2258,6 +2326,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_TIME_SYNC";
         break;
 
+    case SPINEL_CAP_CHILD_SUPERVISION:
+        ret = "CAP_CHILD_SUPERVISION";
+        break;
+
     case SPINEL_CAP_ERROR_RATE_TRACKING:
         ret = "CAP_ERROR_RATE_TRACKING";
         break;
@@ -2272,6 +2344,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_THREAD_UDP_PROXY:
         ret = "CAP_THREAD_UDP_PROXY";
+        break;
+
+    case SPINEL_CAP_THREAD_JOINER:
+        ret = "CAP_THREAD_JOINER";
         break;
 
     case SPINEL_CAP_NEST_LEGACY_INTERFACE:

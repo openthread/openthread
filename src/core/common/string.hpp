@@ -37,10 +37,11 @@
 #include "openthread-core-config.h"
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #include "common/code_utils.hpp"
 

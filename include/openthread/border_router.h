@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_BORDER_ROUTER_H_
 #define OPENTHREAD_BORDER_ROUTER_H_
 
-#include <openthread/types.h>
+#include <openthread/ip6.h>
+#include <openthread/netdata.h>
 
 #ifdef __cplusplus
 extern "C" {

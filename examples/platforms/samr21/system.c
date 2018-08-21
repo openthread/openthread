@@ -34,7 +34,9 @@
 
 #include "asf.h"
 
-#include "platform.h"
+#include <openthread/platform/radio.h>
+
+#include "openthread-system.h"
 
 #include "platform-samr21.h"
 
@@ -160,7 +162,7 @@ void samr21GetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 #endif
 }
 
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     system_clock_init();
 
@@ -175,16 +177,16 @@ void PlatformInit(int argc, char *argv[])
     samr21RadioInit();
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
 

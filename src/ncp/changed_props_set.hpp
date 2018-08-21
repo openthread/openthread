@@ -37,7 +37,7 @@
 
 #include <stddef.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #include "spinel.h"
 

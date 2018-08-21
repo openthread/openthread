@@ -110,7 +110,7 @@ Mle::Mle(Instance &aInstance)
     , mAlternateTimestamp(0)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
 {
-    uint8_t meshLocalPrefix[8];
+    otMeshLocalPrefix meshLocalPrefix;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
@@ -157,10 +157,10 @@ Mle::Mle(Instance &aInstance)
 #endif
 
     // initialize Mesh Local Prefix
-    meshLocalPrefix[0] = 0xfd;
-    memcpy(meshLocalPrefix + 1, GetNetif().GetMac().GetExtendedPanId(), 5);
-    meshLocalPrefix[6] = 0x00;
-    meshLocalPrefix[7] = 0x00;
+    meshLocalPrefix.m8[0] = 0xfd;
+    memcpy(&meshLocalPrefix.m8[1], GetNetif().GetMac().GetExtendedPanId().m8, 5);
+    meshLocalPrefix.m8[6] = 0x00;
+    meshLocalPrefix.m8[7] = 0x00;
 
     // mesh-local 64
     Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
@@ -347,7 +347,16 @@ otError Mle::Restore(void)
     netif.GetKeyManager().SetMleFrameCounter(networkInfo.mMleFrameCounter);
     netif.GetKeyManager().SetMacFrameCounter(networkInfo.mMacFrameCounter);
 
-    VerifyOrExit(networkInfo.mRole >= OT_DEVICE_ROLE_CHILD);
+    switch (networkInfo.mRole)
+    {
+    case OT_DEVICE_ROLE_CHILD:
+    case OT_DEVICE_ROLE_ROUTER:
+    case OT_DEVICE_ROLE_LEADER:
+        break;
+
+    default:
+        ExitNow();
+    }
 
     mDeviceMode = networkInfo.mDeviceMode;
     SetRloc16(networkInfo.mRloc16);
@@ -830,16 +839,16 @@ otError Mle::UpdateLinkLocalAddress(void)
     return OT_ERROR_NONE;
 }
 
-const uint8_t *Mle::GetMeshLocalPrefix(void) const
+const otMeshLocalPrefix &Mle::GetMeshLocalPrefix(void) const
 {
-    return mMeshLocal16.GetAddress().mFields.m8;
+    return reinterpret_cast<const otMeshLocalPrefix &>(mMeshLocal16.GetAddress());
 }
 
-otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
+otError Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8) == 0)
+    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix)) == 0)
     {
         GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR);
         ExitNow();
@@ -851,7 +860,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
     netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8);
+    memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
     memcpy(mMeshLocal16.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
 
 #if OPENTHREAD_ENABLE_SERVICE
@@ -879,7 +888,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     netif.SubscribeMulticast(mLinkLocalAllThreadNodes);
     netif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    if (mRole >= OT_DEVICE_ROLE_CHILD)
+    if (IsAttached())
     {
         netif.AddUnicastAddress(mMeshLocal16);
     }
@@ -981,17 +990,14 @@ exit:
     return error;
 }
 
-otError Mle::GetLeaderAloc(Ip6::Address &aAddress) const
+otError Mle::GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
-    aAddress.mFields.m16[4] = HostSwap16(0x0000);
-    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
-    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(kAloc16Leader);
+    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 14);
+    aAddress.mFields.m16[7] = HostSwap16(aAloc16);
 
 exit:
     return error;
@@ -3374,7 +3380,6 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
     otError          error = OT_ERROR_NONE;
     Mac::ExtAddress  srcAddr;
     SourceAddressTlv sourceAddress;
-    LeaderDataTlv    leaderData;
     ChallengeTlv     challenge;
     StatusTlv        status;
     TlvRequestTlv    tlvRequest;
@@ -3491,6 +3496,8 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
 
         mParent.SetState(Neighbor::kStateValid);
         SetStateChild(GetRloc16());
+
+        mRetrieveNewNetworkData = true;
 
         // fall through
 
@@ -3685,7 +3692,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
         case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = OT_ERROR_PARSE);
-            memcpy(&result.mExtendedPanId, extPanId.GetExtendedPanId(), sizeof(result.mExtendedPanId));
+            result.mExtendedPanId = extPanId.GetExtendedPanId();
             break;
 
         case MeshCoP::Tlv::kNetworkName:
@@ -4076,7 +4083,7 @@ const char *Mle::RoleToString(otDeviceRole aRole)
     return roleString;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
     const char *str = "unknown";
@@ -4171,7 +4178,7 @@ const char *Mle::ReattachStateToString(ReattachState aState)
     return str;
 }
 
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
 } // namespace Mle
 } // namespace ot

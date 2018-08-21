@@ -35,7 +35,6 @@
 #include <openthread/link.h>
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"

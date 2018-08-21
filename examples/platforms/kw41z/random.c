@@ -38,7 +38,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <utils/code_utils.h>
-#include "openthread/types.h"
 
 void kw41zRandomInit(void)
 {

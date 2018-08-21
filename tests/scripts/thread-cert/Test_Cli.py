@@ -42,7 +42,7 @@ class Cert_Cli(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
+            node.destroy()
 
     def test(self):
         commands = self.nodes[LEADER].get_commands()

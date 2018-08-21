@@ -102,7 +102,7 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
+            node.destroy()
 
     def test(self):
         self.nodes[LEADER].start()

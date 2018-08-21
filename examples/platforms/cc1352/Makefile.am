@@ -51,9 +51,9 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                               \
     logging.c                                                                             \
     misc.c                                                                                \
-    platform.c                                                                            \
     radio.c                                                                               \
     random.c                                                                              \
+    system.c                                                                              \
     uart.c                                                                                \
     crypto/aes_alt.c                                                                      \
     cc1352_ccfg.c                                                                         \

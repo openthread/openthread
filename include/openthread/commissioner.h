@@ -35,7 +35,9 @@
 #ifndef OPENTHREAD_COMMISSIONER_H_
 #define OPENTHREAD_COMMISSIONER_H_
 
-#include <openthread/types.h>
+#include <openthread/dataset.h>
+#include <openthread/ip6.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -61,6 +63,38 @@ typedef enum otCommissionerState {
     OT_COMMISSIONER_STATE_PETITION = 1, ///< Currently petitioning to become a Commissioner.
     OT_COMMISSIONER_STATE_ACTIVE   = 2, ///< Commissioner role is active.
 } otCommissionerState;
+
+#define OT_COMMISSIONING_PASSPHRASE_MIN_SIZE 6   ///< Minimum size of the Commissioning Passphrase
+#define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE 255 ///< Maximum size of the Commissioning Passphrase
+
+#define OT_STEERING_DATA_MAX_LENGTH 16 ///< Max steering data length (bytes)
+
+/**
+ * This structure represents the steering data.
+ *
+ */
+typedef struct otSteeringData
+{
+    uint8_t mLength;                         ///< Length of steering data (bytes)
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH]; ///< Byte values
+} otSteeringData;
+
+/**
+ * This structure represents a Commissioning Dataset.
+ *
+ */
+typedef struct otCommissioningDataset
+{
+    uint16_t       mLocator;       ///< Border Router RLOC16
+    uint16_t       mSessionId;     ///< Commissioner Session Id
+    otSteeringData mSteeringData;  ///< Steering Data
+    uint16_t       mJoinerUdpPort; ///< Joiner UDP Port
+
+    bool mIsLocatorSet : 1;       ///< TRUE if Border Router RLOC16 is set, FALSE otherwise.
+    bool mIsSessionIdSet : 1;     ///< TRUE if Commissioner Session Id is set, FALSE otherwise.
+    bool mIsSteeringDataSet : 1;  ///< TRUE if Steering Data is set, FALSE otherwise.
+    bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
+} otCommissioningDataset;
 
 /**
  * This function enables the Thread Commissioner role.
@@ -120,6 +154,19 @@ OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *        aInstance,
  *
  */
 OTAPI otError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aEui64);
+
+/**
+ * This function gets the Provisioning URL.
+ *
+ * @param[in]    aInstance       A pointer to an OpenThread instance.
+ * @param[out]   aLength         A pointer to `uint16_t` to return the length (number of chars) in the URL string.
+ *
+ * Note that the returned URL string buffer is not necessarily null-terminated.
+ *
+ * @returns A pointer to char buffer containing the URL string, or NULL if @p aLength is NULL.
+ *
+ */
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength);
 
 /**
  * This function sets the Provisioning URL.
@@ -300,11 +347,11 @@ OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *   aInstance,
-                                                const char *   aPassPhrase,
-                                                const char *   aNetworkName,
-                                                const uint8_t *aExtPanId,
-                                                uint8_t *      aPSKc);
+OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *           aInstance,
+                                                const char *           aPassPhrase,
+                                                const char *           aNetworkName,
+                                                const otExtendedPanId *aExtPanId,
+                                                uint8_t *              aPSKc);
 
 /**
  * @}

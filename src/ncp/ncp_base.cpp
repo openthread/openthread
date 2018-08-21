@@ -39,7 +39,6 @@
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
@@ -1606,6 +1605,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_JAM_DETECT));
 #endif
 
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CHILD_SUPERVISION));
+#endif
+
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CHANNEL_MONITOR));
 #endif
@@ -1641,6 +1644,14 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_ENABLE_LEGACY
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NEST_LEGACY_INTERFACE));
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_COMMISSIONER));
+#endif
+
+#if OPENTHREAD_ENABLE_JOINER
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_JOINER));
 #endif
 
 #if OPENTHREAD_ENABLE_UDP_PROXY

@@ -36,7 +36,8 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
+#include <openthread/border_router.h>
+#include <openthread/server.h>
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"

@@ -102,6 +102,7 @@ fi
     --enable-service                    \
     --enable-channel-monitor            \
     --enable-channel-manager            \
+    --enable-commissioner               \
     --disable-docs                      \
     --disable-test || die
 
@@ -127,6 +128,12 @@ run test-011-child-table.py
 run test-012-multi-hop-traffic.py
 run test-013-off-mesh-route-traffic.py
 run test-014-ip6-address-add.py
+run test-015-same-prefix-on-multiple-nodes.py
+run test-016-neighbor-table.py
+run test-017-parent-reset-child-recovery.py
+run test-018-child-supervision.py
+run test-019-inform-previous-parent.py
+run test-020-router-table.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py

@@ -182,4 +182,6 @@ verify_prefix([r1], prefix4, 48, priority="low", stable=True, on_mesh=False, sla
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
+wpan.Node.finalize_all_nodes()
+
 print '\'{}\' passed.'.format(test_name)

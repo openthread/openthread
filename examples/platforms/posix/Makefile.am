@@ -42,12 +42,12 @@ PLATFORM_SOURCES                          = \
     diag.c                                  \
     misc.c                                  \
     logging.c                               \
-    platform.c                              \
     radio.c                                 \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
     spi-stubs.c                             \
+    system.c                                \
     sim/alarm-sim.c                         \
     sim/platform-sim.c                      \
     sim/radio-sim.c                         \

@@ -27,7 +27,6 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/hmac_sha256.hpp"

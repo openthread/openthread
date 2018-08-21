@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openthread/ip6.h>
 #include <openthread/platform/toolchain.h>
 
 #include "test_util.h"

@@ -117,6 +117,18 @@ public:
     otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
 
     /**
+     * This method gets the Provisioning URL.
+     *
+     * @param[out]   aLength     A reference to `uint16_t` to return the length (number of chars) in the URL string.
+     *
+     * Note that the returned URL string buffer is not necessarily null-terminated.
+     *
+     * @returns A pointer to char buffer containing the URL string.
+     *
+     */
+    const char *GetProvisioningUrl(uint16_t &aLength) const;
+
+    /**
      * This method sets the Provisioning URL.
      *
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
@@ -198,10 +210,10 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
      *
      */
-    static otError GeneratePSKc(const char *   aPassPhrase,
-                                const char *   aNetworkName,
-                                const uint8_t *aExtPanId,
-                                uint8_t *      aPSKc);
+    static otError GeneratePSKc(const char *           aPassPhrase,
+                                const char *           aNetworkName,
+                                const otExtendedPanId &aExtPanId,
+                                uint8_t *              aPSKc);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.

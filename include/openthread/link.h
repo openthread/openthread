@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_LINK_H_
 #define OPENTHREAD_LINK_H_
 
-#include <openthread/types.h>
+#include <openthread/commissioner.h>
+#include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -51,6 +52,124 @@ extern "C" {
  * @{
  *
  */
+
+/**
+ * This structure represents link-specific information for messages received from the Thread radio.
+ *
+ */
+typedef struct otThreadLinkInfo
+{
+    uint16_t mPanId;        ///< Source PAN ID
+    uint8_t  mChannel;      ///< 802.15.4 Channel
+    int8_t   mRss;          ///< Received Signal Strength in dBm.
+    uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
+    bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
+
+    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+} otThreadLinkInfo;
+
+/**
+ * Used to indicate no fixed received signal strength was set
+ *
+ */
+#define OT_MAC_FILTER_FIXED_RSS_DISABLED 127
+
+#define OT_MAC_FILTER_ITERATOR_INIT 0 ///< Initializer for otMacFilterIterator.
+
+typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter entries.
+
+/**
+ * Defines address mode of the mac filter.
+ *
+ */
+typedef enum otMacFilterAddressMode {
+    OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
+    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Whitelist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Blacklist address filter mode is enabled.
+} otMacFilterAddressMode;
+
+/**
+ * This structure represents a Mac Filter entry.
+ *
+ */
+typedef struct otMacFilterEntry
+{
+    otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address
+    int8_t       mRssIn;      ///< Received signal strength
+    bool         mFiltered;   ///< Indicates whether or not this entry is filtered.
+} otMacFilterEntry;
+
+/**
+ * This structure represents the MAC layer counters.
+ *
+ */
+typedef struct otMacCounters
+{
+    uint32_t mTxTotal;              ///< The total number of transmissions.
+    uint32_t mTxUnicast;            ///< The total number of unicast transmissions.
+    uint32_t mTxBroadcast;          ///< The total number of broadcast transmissions.
+    uint32_t mTxAckRequested;       ///< The number of transmissions with ack request.
+    uint32_t mTxAcked;              ///< The number of transmissions that were acked.
+    uint32_t mTxNoAckRequested;     ///< The number of transmissions without ack request.
+    uint32_t mTxData;               ///< The number of transmitted data.
+    uint32_t mTxDataPoll;           ///< The number of transmitted data poll.
+    uint32_t mTxBeacon;             ///< The number of transmitted beacon.
+    uint32_t mTxBeaconRequest;      ///< The number of transmitted beacon request.
+    uint32_t mTxOther;              ///< The number of transmitted other types of frames.
+    uint32_t mTxRetry;              ///< The number of retransmission times.
+    uint32_t mTxErrCca;             ///< The number of CCA failure times.
+    uint32_t mTxErrAbort;           ///< The number of frame transmission failures due to abort error.
+    uint32_t mTxErrBusyChannel;     ///< The number of frames that were dropped due to a busy channel.
+    uint32_t mRxTotal;              ///< The total number of received packets.
+    uint32_t mRxUnicast;            ///< The total number of unicast packets received.
+    uint32_t mRxBroadcast;          ///< The total number of broadcast packets received.
+    uint32_t mRxData;               ///< The number of received data.
+    uint32_t mRxDataPoll;           ///< The number of received data poll.
+    uint32_t mRxBeacon;             ///< The number of received beacon.
+    uint32_t mRxBeaconRequest;      ///< The number of received beacon request.
+    uint32_t mRxOther;              ///< The number of received other types of frames.
+    uint32_t mRxAddressFiltered;    ///< The number of received packets filtered by address filter.
+    uint32_t mRxDestAddrFiltered;   ///< The number of received packets filtered by destination check.
+    uint32_t mRxDuplicated;         ///< The number of received duplicated packets.
+    uint32_t mRxErrNoFrame;         ///< The number of received packets with no or malformed content.
+    uint32_t mRxErrUnknownNeighbor; ///< The number of received packets from unknown neighbor.
+    uint32_t mRxErrInvalidSrcAddr;  ///< The number of received packets whose source address is invalid.
+    uint32_t mRxErrSec;             ///< The number of received packets with security error.
+    uint32_t mRxErrFcs;             ///< The number of received packets with FCS error.
+    uint32_t mRxErrOther;           ///< The number of received packets with other error.
+} otMacCounters;
+
+/**
+ * This structure represents a received IEEE 802.15.4 Beacon.
+ *
+ */
+typedef struct otActiveScanResult
+{
+    otExtAddress    mExtAddress;     ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;    ///< Thread Network Name
+    otExtendedPanId mExtendedPanId;  ///< Thread Extended PAN ID
+    otSteeringData  mSteeringData;   ///< Steering Data
+    uint16_t        mPanId;          ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort;  ///< Joiner UDP Port
+    uint8_t         mChannel;        ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;           ///< RSSI (dBm)
+    uint8_t         mLqi;            ///< LQI
+    unsigned int    mVersion : 4;    ///< Version
+    bool            mIsNative : 1;   ///< Native Commissioner flag
+    bool            mIsJoinable : 1; ///< Joining Permitted flag
+} otActiveScanResult;
+
+/**
+ * This structure represents an energy scan result.
+ *
+ */
+typedef struct otEnergyScanResult
+{
+    uint8_t mChannel; ///< IEEE 802.15.4 Channel
+    int8_t  mMaxRssi; ///< The max RSSI (dBm)
+} otEnergyScanResult;
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or

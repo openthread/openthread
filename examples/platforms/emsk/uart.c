@@ -37,7 +37,6 @@
 #include "platform-emsk.h"
 #include <utils/code_utils.h>
 #include "openthread/platform/uart.h"
-#include "openthread/types.h"
 
 #include <stdio.h>
 #define DBG(fmt, ...) printf(fmt, ##__VA_ARGS__)

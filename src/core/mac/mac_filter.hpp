@@ -38,8 +38,6 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
-
 #include "mac/mac_frame.hpp"
 
 #if OPENTHREAD_ENABLE_MAC_FILTER

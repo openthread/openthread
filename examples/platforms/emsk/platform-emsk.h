@@ -39,7 +39,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <openthread/config.h>
-#include "openthread/types.h"
+#include <openthread/instance.h>
 
 #include "board/board.h"
 

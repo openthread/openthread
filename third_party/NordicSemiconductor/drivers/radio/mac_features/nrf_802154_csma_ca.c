@@ -43,6 +43,7 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
+#include "nrf_802154_debug.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
@@ -111,19 +112,22 @@ static void frame_transmit(void * p_context)
 {
     (void)p_context;
 
-    if (!procedure_is_running())
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_FRAME_TRANSMIT);
+
+    if (procedure_is_running())
     {
-        return;
+        if (!nrf_802154_request_transmit(NRF_802154_TERM_NONE,
+                                         REQ_ORIG_CSMA_CA,
+                                         mp_psdu,
+                                         true,
+                                         true,
+                                         notify_busy_channel))
+        {
+            (void)channel_busy();
+        }
     }
 
-    if (!nrf_802154_request_transmit(NRF_802154_TERM_NONE,
-                                     REQ_ORIG_CSMA_CA,
-                                     mp_psdu,
-                                     true,
-                                     notify_busy_channel))
-    {
-        (void)channel_busy();
-    }
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_FRAME_TRANSMIT);
 }
 
 /**
@@ -147,6 +151,8 @@ static bool channel_busy(void)
 
     if (procedure_is_running())
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_CHANNEL_BUSY);
+
         m_nb++;
 
         if (m_be < NRF_802154_CSMA_CA_MAX_BE)
@@ -163,6 +169,8 @@ static bool channel_busy(void)
         {
             procedure_stop();
         }
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_CHANNEL_BUSY);
     }
 
     return result;
@@ -182,29 +190,33 @@ void nrf_802154_csma_ca_start(const uint8_t * p_data)
 
 bool nrf_802154_csma_ca_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 {
-    // Don't stop CSMA-CA if request by itself or RAAL.
-    if (req_orig == REQ_ORIG_CSMA_CA ||
-        req_orig == REQ_ORIG_RAAL)
+    bool result = false;
+
+    // Stop CSMA-CA only if request by the core or the higher layer.
+    if ((req_orig != REQ_ORIG_CORE) && (req_orig != REQ_ORIG_HIGHER_LAYER))
     {
         return true;
     }
 
-    // Stop CSMA-CA if termination level is high enough.
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_ABORT);
+
     if (term_lvl >= NRF_802154_TERM_802154)
     {
+        // Stop CSMA-CA if termination level is high enough.
         nrf_802154_timer_sched_remove(&m_timer);
         procedure_stop();
 
-        return true;
+        result = true;
     }
-
-    // Return success in case procedure is already stopped.
-    if (!procedure_is_running())
+    else if (!procedure_is_running())
     {
-        return true;
+        // Return success in case procedure is already stopped.
+        result = true;
     }
 
-    return false;
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_ABORT);
+
+    return result;
 }
 
 bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_error_t error)
@@ -215,7 +227,11 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 
     if (p_frame == mp_psdu)
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_FAILED);
+
         result = channel_busy();
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_TX_FAILED);
     }
 
     return result;
@@ -225,8 +241,12 @@ bool nrf_802154_csma_ca_tx_started_hook(const uint8_t * p_frame)
 {
     if (p_frame == mp_psdu)
     {
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_STARTED);
+
         assert(!nrf_802154_timer_sched_is_running(&m_timer));
         procedure_stop();
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CSMA_TX_STARTED);
     }
 
     return true;

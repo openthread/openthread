@@ -501,7 +501,11 @@ class HarnessCase(unittest.TestCase):
             try:
                 while 1:
                     topo_line = f_topo.readline().strip()
+                    if re.match(r'#.*', topo_line):
+                        continue
                     match_line = re.match(r'(.*)-(.*)', topo_line, re.M | re.I)
+                    if not match_line:
+                        continue
                     case_id = match_line.group(1)
 
                     if re.sub(r'\.', ' ', case_id) == self.case:

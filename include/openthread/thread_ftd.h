@@ -37,7 +37,7 @@
 
 #include <openthread/link.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
+#include <openthread/thread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,6 +49,49 @@ extern "C" {
  * @{
  *
  */
+
+/**
+ * This structure holds diagnostic information for a Thread Child
+ *
+ * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
+ * enabled.
+ *
+ */
+typedef struct
+{
+    otExtAddress mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t     mTimeout;               ///< Timeout
+    uint32_t     mAge;                   ///< Time last heard
+    uint16_t     mRloc16;                ///< RLOC16
+    uint16_t     mChildId;               ///< Child ID
+    uint8_t      mNetworkDataVersion;    ///< Network Data Version
+    uint8_t      mLinkQualityIn;         ///< Link Quality In
+    int8_t       mAverageRssi;           ///< Average RSSI
+    int8_t       mLastRssi;              ///< Last observed RSSI
+    uint16_t     mFrameErrorRate;        ///< Frame error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool         mSecureDataRequest : 1; ///< Secure Data Requests
+    bool         mFullFunction : 1;      ///< Full Function Device
+    bool         mFullNetworkData : 1;   ///< Full Network Data
+    bool         mIsStateRestoring : 1;  ///< Is in restoring state
+} otChildInfo;
+
+#define OT_CHILD_IP6_ADDRESS_ITERATOR_INIT 0 ///< Initializer for otChildIP6AddressIterator
+
+typedef uint16_t otChildIp6AddressIterator; ///< Used to iterate through IPv6 addresses of a Thread Child entry.
+
+/**
+ * This structure represents an EID cache entry.
+ *
+ */
+typedef struct otEidCacheEntry
+{
+    otIp6Address   mTarget;    ///< Target
+    otShortAddress mRloc16;    ///< RLOC16
+    uint8_t        mAge;       ///< Age (order of use, 0 indicates most recently used entry)
+    bool           mValid : 1; ///< Indicates whether or not the cache entry is valid
+} otEidCacheEntry;
 
 /**
  * Get the maximum number of children currently allowed.

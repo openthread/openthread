@@ -31,7 +31,6 @@
 #include <stddef.h>
 
 #include <utils/code_utils.h>
-#include <openthread/types.h>
 #include <openthread/platform/random.h>
 
 #include <driverlib/prcm.h>

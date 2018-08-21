@@ -40,7 +40,7 @@
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
+#include <openthread/link.h>
 #include <openthread/platform/radio.h>
 
 #include "common/encoding.hpp"

@@ -36,8 +36,6 @@
 
 #include <assert.h>
 #include <utils/code_utils.h>
-#include <openthread/openthread.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -59,10 +57,14 @@
 #include <inc/hw_fcfg1.h>
 #include <inc/hw_memmap.h>
 #include <inc/hw_prcm.h>
+#include <rf_patches/rf_patch_cpe_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_mce_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_rfe_ieee_802_15_4.h>
 
 enum
 {
     CC1352_RECEIVE_SENSITIVITY = -100, // dBm
+    CC1352_RF_CMD0             = 0x0607,
 };
 
 /* phy state as defined by openthread */
@@ -869,8 +871,10 @@ static uint_fast8_t rfCorePowerOn(void)
     }
 
     /* Let CPE boot */
-    HWREG(RFC_PWR_NONBUF_BASE + RFC_PWR_O_PWMCLKEN) =
-        (RFC_PWR_PWMCLKEN_RFC_M | RFC_PWR_PWMCLKEN_CPE_M | RFC_PWR_PWMCLKEN_CPERAM_M);
+    RFCClockEnable();
+
+    /* Enable ram clocks for patches */
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC1352_RF_CMD0, RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
 
     /* Send ping (to verify RFCore is ready and alive) */
     return rfCoreExecutePingCmd();
@@ -907,6 +911,19 @@ static void rfCorePowerOff(void)
         /* Switch the HF clock source (cc26xxware executes this from ROM) */
         OSCHfSourceSwitch();
     }
+}
+
+/**
+ * Applies CPE, RFE, and MCE patches to the radio.
+ */
+static void rfCoreApplyPatch(void)
+{
+    rf_patch_cpe_ieee_802_15_4();
+    rf_patch_mce_ieee_802_15_4();
+    rf_patch_rfe_ieee_802_15_4();
+
+    /* disable ram bus clocks */
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC1352_RF_CMD0, 0));
 }
 
 /**
@@ -964,6 +981,8 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
     sRadioSetupCmd.pRegOverride = sIEEEOverrides;
 
     interruptsWereDisabled = IntMasterDisable();
+
+    rfCoreApplyPatch();
 
     doorbellRet = (RFCDoorbellSendTo((uint32_t)&sStartRatCmd) & 0xFF);
     otEXPECT_ACTION(CMDSTA_Done == doorbellRet, ret = doorbellRet);

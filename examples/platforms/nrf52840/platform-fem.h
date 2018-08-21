@@ -45,29 +45,29 @@
 #define PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL             19  /**< Default PPI channel for pin clearing. */
 #define PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP       4   /**< Default PPI channel group used to disable timer match PPI. */
 #define PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP    5   /**< Default PPI channel group used to disable radio disabled PPI. */
-#define PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL              7   /**< Default GPIOTE channel for FEM control. */
+#define PLATFORM_FEM_DEFAULT_LNA_GPIOTE_CHANNEL          6   /**< Default LNA GPIOTE channel for FEM control. */
+#define PLATFORM_FEM_DEFAULT_PA_GPIOTE_CHANNEL           7   /**< Default PA GPIOTE channel for FEM control. */
 
 // clang-format on
 
-#define PLATFORM_FEM_DEFAULT_CONFIG                                    \
-    ((PlatformFemConfigParams){                                        \
-        .mPaCfg =                                                      \
-            {                                                          \
-                .mEnable     = 1,                                      \
-                .mActiveHigh = 1,                                      \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,            \
-            },                                                         \
-        .mLnaCfg =                                                     \
-            {                                                          \
-                .mEnable     = 1,                                      \
-                .mActiveHigh = 1,                                      \
-                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,           \
-            },                                                         \
-        .mPpiChIdClr  = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,          \
-        .mPpiChIdSet  = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,          \
-        .mTimerPpiGrp = PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP,    \
-        .mRadioPpiGrp = PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP, \
-        .mGpioteChId  = PLATFORM_FEM_DEFAULT_GPIOTE_CHANNEL,           \
+#define PLATFORM_FEM_DEFAULT_CONFIG                                \
+    ((PlatformFemConfigParams){                                    \
+        .mPaCfg =                                                  \
+            {                                                      \
+                .mEnable     = 1,                                  \
+                .mActiveHigh = 1,                                  \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_PA_PIN,        \
+            },                                                     \
+        .mLnaCfg =                                                 \
+            {                                                      \
+                .mEnable     = 1,                                  \
+                .mActiveHigh = 1,                                  \
+                .mGpioPin    = PLATFORM_FEM_DEFAULT_LNA_PIN,       \
+            },                                                     \
+        .mPpiChIdClr    = PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL,    \
+        .mPpiChIdSet    = PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL,    \
+        .mGpiotePaChId  = PLATFORM_FEM_DEFAULT_PA_GPIOTE_CHANNEL,  \
+        .mGpioteLnaChId = PLATFORM_FEM_DEFAULT_LNA_GPIOTE_CHANNEL, \
     })
 
 /**

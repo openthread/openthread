@@ -28,8 +28,6 @@
 
 #include <openthread/config.h>
 
-#include <openthread/types.h>
-
 #include "cc2650_radio.h"
 #include <assert.h>
 #include <utils/code_utils.h>
@@ -1826,11 +1824,12 @@ static void cc2650RadioProcessReceiveQueue(otInstance *aInstance)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-                // TODO: Propagate CM0 timestamp
-                receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-                receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+                if (otPlatRadioGetPromiscuous(aInstance))
+                {
+                    // TODO: Propagate CM0 timestamp
+                    receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+                    receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+                }
 
                 receiveFrame.mLength             = len;
                 receiveFrame.mPsdu               = &(payload[1]);

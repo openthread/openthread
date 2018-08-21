@@ -495,6 +495,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -546,7 +551,21 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE>;
         break;
+#if OPENTHREAD_ENABLE_JOINER
+    case SPINEL_PROP_MESHCOP_JOINER_STATE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>;
+        break;
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_STATE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_SESSION_ID>;
+        break;
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_COMMISSIONER_ENABLED>;
         break;
@@ -554,6 +573,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     case SPINEL_PROP_THREAD_STEERING_DATA:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STEERING_DATA>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    case SPINEL_PROP_CHILD_SUPERVISION_INTERVAL:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>;
         break;
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
@@ -703,6 +727,14 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE>;
         break;
+    case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>;
+        break;
+#if OPENTHREAD_ENABLE_JOINER
+    case SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>;
+        break;
+#endif
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU>;
         break;
@@ -768,6 +800,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CNTR_RESET:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>;
         break;
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -776,9 +813,6 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #if OPENTHREAD_FTD
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>;
-        break;
-    case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>;
         break;
     case SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT>;
@@ -835,6 +869,34 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET>;
         break;
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    case SPINEL_PROP_CHILD_SUPERVISION_INTERVAL:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_STATE:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_GET>;
+        break;
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET>;
+        break;
+#endif
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL>;
@@ -948,6 +1010,9 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
 
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS:
+        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>;
+        break;
     case SPINEL_PROP_THREAD_JOINERS:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>;
         break;
@@ -1027,7 +1092,12 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
     case SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>;
         break;
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS:
+        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>;
+        break;
 #endif
+#endif // OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
         // Raw Link API Properties (Remove Handler)

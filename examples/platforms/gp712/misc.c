@@ -33,7 +33,8 @@
 
 #include "radio_qorvo.h"
 #include <stdlib.h>
-#include <openthread/types.h>
+
+#include <openthread/instance.h>
 #include <openthread/platform/misc.h>
 
 extern int    gArgumentsCount;

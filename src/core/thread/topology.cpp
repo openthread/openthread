@@ -104,7 +104,7 @@ otError Child::GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddres
 
     VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
 
-    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix().m8,
            Ip6::Address::kMeshLocalPrefixSize);
 
     aAddress.SetIid(mMeshLocalIid);

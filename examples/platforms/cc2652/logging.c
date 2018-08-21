@@ -34,6 +34,7 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,66 +31,36 @@
  * @brief
  *   This file includes the platform-specific initializers.
  */
+#include "platform-cc2538.h"
+#include <openthread/config.h>
 
-#include "platform_qorvo.h"
+otInstance *sInstance;
 
-#include "stdio.h"
-#include "stdlib.h"
-
-#include <openthread/tasklet.h>
-#include <openthread/platform/uart.h>
-
-#include "radio_qorvo.h"
-#include "random_qorvo.h"
-#include "uart_qorvo.h"
-
-void platformUartInit(void);
-void platformUartProcess(void);
-
-otInstance *localInstance = NULL;
-
-int    gArgumentsCount = 0;
-char **gArguments      = NULL;
-
-bool qorvoPlatGotoSleepCheck(void)
+void otSysInit(int argc, char *argv[])
 {
-    bool canGotoSleep = false;
+#if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+    cc2538DebugUartInit();
+#endif
+    cc2538AlarmInit();
+    cc2538RandomInit();
+    cc2538RadioInit();
 
-    if (localInstance)
-    {
-        canGotoSleep = !otTaskletsArePending(localInstance);
-    }
-
-    return canGotoSleep;
+    (void)argc;
+    (void)argv;
 }
 
-void PlatformInit(int argc, char *argv[])
-{
-    gArgumentsCount = argc;
-    gArguments      = argv;
-
-    qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
-    platformUartInit();
-    // qorvoAlarmInit();
-    qorvoRandomInit();
-    qorvoRadioInit();
-}
-
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
-    if (localInstance == NULL)
-    {
-        // local copy in case we need to perform a callback.
-        localInstance = aInstance;
-    }
+    sInstance = aInstance;
 
-    qorvoPlatMainLoop(!otTaskletsArePending(aInstance));
-    platformUartProcess();
-    // qorvoRadioProcess();
-    // qorvoAlarmProcess();
+    // should sleep and wait for interrupts here
+
+    cc2538UartProcess();
+    cc2538RadioProcess(aInstance);
+    cc2538AlarmProcess(aInstance);
 }

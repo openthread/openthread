@@ -70,6 +70,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -78,7 +79,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #define POLL poll
 #endif
 
-#include <openthread/openthread.h>
+#include <openthread/instance.h>
 
 #include "openthread-core-config.h"
 

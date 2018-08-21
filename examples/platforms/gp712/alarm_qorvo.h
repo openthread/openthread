@@ -38,7 +38,6 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <openthread/types.h>
 
 typedef void (*qorvoAlarmCallback_t)( void* );
 

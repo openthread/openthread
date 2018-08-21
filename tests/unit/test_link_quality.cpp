@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
 #include "utils/wrap_string.h"
@@ -93,6 +91,7 @@ void TestLinkQualityData(RssTestData aRssData)
     size_t          i;
 
     printf("- - - - - - - - - - - - - - - - - -\n");
+    linkInfo.Clear();
     min = kMinRssValue;
     max = kMaxRssValue;
 
@@ -386,6 +385,8 @@ void TestSuccessRateTracker(void)
     const uint16_t kWeightLimit[] = {64, 128, 256, 300, 512, 810, 900};
 
     printf("\nTesting SuccessRateTracker\n");
+
+    rateTracker.Reset();
 
     VerifyOrQuit(rateTracker.GetSuccessRate() == kMaxRate, "SuccessRateTracker: Initial value incorrect");
     VerifyOrQuit(rateTracker.GetFailureRate() == 0, "SuccessRateTracker: Initial value incorrect");

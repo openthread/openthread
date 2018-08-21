@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -89,7 +90,7 @@ private:
         static_cast<BorderAgent *>(aContext)->ForwardToLeader(
             *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
             *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-            (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false);
+            (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false, false);
     }
 
     static void HandleTimeout(Timer &aTimer);
@@ -106,11 +107,19 @@ private:
                             const Message &         aMessage,
                             const Ip6::MessageInfo &aMessageInfo,
                             const char *            aPath,
+                            bool                    aPetition,
                             bool                    aSeparate);
     otError ForwardToCommissioner(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleKeepAlive(const Coap::Header &aHeader, const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    HandleRelayTransmit(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleRelayReceive(const Coap::Header &aHeader, const Message &aMessage);
+    void    HandleProxyTransmit(const Coap::Header &aHeader, const Message &aMessage);
+    static bool HandleProxyReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
+    {
+        return static_cast<BorderAgent *>(aContext)->HandleProxyReceive(
+            *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    }
+    bool HandleProxyReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     enum
     {
@@ -131,6 +140,10 @@ private:
     Coap::Resource mActiveSet;
     Coap::Resource mPendingGet;
     Coap::Resource mPendingSet;
+    Coap::Resource mProxyTransmit;
+
+    Ip6::UdpReceiver         mProxyReceiver; ///< The UDP receiver to handle proxy packets to Commissioner
+    Ip6::NetifUnicastAddress mCommissionerAloc;
 
     TimerMilli mTimer;
     bool       mIsStarted;

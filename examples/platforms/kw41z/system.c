@@ -39,11 +39,10 @@
 #include "platform-kw41z.h"
 #include <stdint.h>
 #include "openthread/platform/uart.h"
-#include "openthread/types.h"
 
 otInstance *sInstance;
 
-void PlatformInit(int argc, char *argv[])
+void otSysInit(int argc, char *argv[])
 {
     uint32_t temp, tempTrim;
     uint8_t  revId;
@@ -100,16 +99,16 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
-bool PlatformPseudoResetWasRequested(void)
+bool otSysPseudoResetWasRequested(void)
 {
     return false;
 }
 
-void PlatformDeinit(void)
+void otSysDeinit(void)
 {
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+void otSysProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
     kw41zUartProcess();

@@ -40,7 +40,6 @@
 
 #include <openthread/cli.h>
 #include <openthread/ip6.h>
-#include <openthread/openthread.h>
 #include <openthread/udp.h>
 
 #include "cli/cli_server.hpp"
