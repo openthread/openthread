@@ -39,8 +39,6 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-#include <openthread/types.h>
-
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
 
