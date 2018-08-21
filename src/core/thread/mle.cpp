@@ -123,6 +123,7 @@ Mle::Mle(Instance &aInstance)
     memset(&mRealmLocalAllThreadNodes, 0, sizeof(mRealmLocalAllThreadNodes));
     memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
     memset(&mParentCandidate, 0, sizeof(mParentCandidate));
+    ResetCounters();
 
     // link-local 64
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
@@ -304,6 +305,26 @@ void Mle::SetRole(otDeviceRole aRole)
 
     mRole = aRole;
     GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
+
+    switch (mRole)
+    {
+    case OT_DEVICE_ROLE_DISABLED:
+        mCounters.mDisabledRole++;
+        break;
+    case OT_DEVICE_ROLE_DETACHED:
+        mCounters.mDetachedRole++;
+        break;
+    case OT_DEVICE_ROLE_CHILD:
+        mCounters.mChildRole++;
+        break;
+    case OT_DEVICE_ROLE_ROUTER:
+        mCounters.mRouterRole++;
+        break;
+    case OT_DEVICE_ROLE_LEADER:
+        mCounters.mLeaderRole++;
+        break;
+    }
+
 #if OPENTHREAD_ENABLE_BORDER_AGENT
     // Start border agent
     if (aRole == OT_DEVICE_ROLE_ROUTER || aRole == OT_DEVICE_ROLE_LEADER || aRole == OT_DEVICE_ROLE_CHILD)
@@ -600,6 +621,10 @@ otError Mle::BecomeChild(AttachMode aMode)
             netif.GetMle().StopAdvertiseTimer();
         }
     }
+    else
+    {
+        mCounters.mBetterPartitionAttachAttempts++;
+    }
 
     mAttachTimer.Start(GetAttachStartDelay());
 
@@ -611,6 +636,8 @@ otError Mle::BecomeChild(AttachMode aMode)
         {
             mAttachCounter--;
         }
+
+        mCounters.mAttachAttempts++;
 
         if (!IsRxOnWhenIdle())
         {
@@ -953,6 +980,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     {
         GetNetif().GetMle().HandlePartitionChange();
         GetNotifier().Signal(OT_CHANGED_THREAD_PARTITION_ID);
+        mCounters.mParitionIdChanges++;
     }
     else
     {
@@ -3899,6 +3927,8 @@ otError Mle::InformPreviousParent(void)
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()));
+
+    mCounters.mParentChanges++;
 
     VerifyOrExit((message = netif.GetIp6().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(0));

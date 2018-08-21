@@ -1037,6 +1037,20 @@ public:
      */
     static const char *RoleToString(otDeviceRole aRole);
 
+    /**
+     * This method gets the MLE counters.
+     *
+     * @returns A reference to the MLE counters.
+     *
+     */
+    const otMleCounters &GetCounters(void) const { return mCounters; }
+
+    /**
+     * This method resets the MLE counters.
+     *
+     */
+    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1756,6 +1770,8 @@ private:
 #if OPENTHREAD_ENABLE_SERVICE
     Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVER_ALOCS];
 #endif
+
+    otMleCounters mCounters;
 
     Ip6::NetifUnicastAddress   mLinkLocal64;
     Ip6::NetifUnicastAddress   mMeshLocal64;

@@ -154,6 +154,35 @@ typedef struct otIpCounters
 } otIpCounters;
 
 /**
+ * This structure represents the Thread MLE counters.
+ *
+ */
+typedef struct otMleCounters
+{
+    uint16_t mDisabledRole;                  ///< Number of times device entered OT_DEVICE_ROLE_DISABLED role.
+    uint16_t mDetachedRole;                  ///< Number of times device entered OT_DEVICE_ROLE_DETACHED role.
+    uint16_t mChildRole;                     ///< Number of times device entered OT_DEVICE_ROLE_CHILD role.
+    uint16_t mRouterRole;                    ///< Number of times device entered OT_DEVICE_ROLE_ROUTER role.
+    uint16_t mLeaderRole;                    ///< Number of times device entered OT_DEVICE_ROLE_LEADER role.
+    uint16_t mAttachAttempts;                ///< Number of attach attempts while device was detached.
+    uint16_t mParitionIdChanges;             ///< Number of changes to partition ID.
+    uint16_t mBetterPartitionAttachAttempts; ///< Number of attempts to attach to a better partition.
+
+    /**
+     * Number of times device changed its parents.
+     *
+     * Support for this counter requires the feature option OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH to be
+     * enabled.
+     *
+     * A parent change can happen if device detaches from its current parent and attaches to a different one, or even
+     * while device is attached when the periodic parent search feature is enabled  (please see option
+     * OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
+     *
+     */
+    uint16_t mParentChanges;
+} otMleCounters;
+
+/**
  * This function starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
@@ -669,6 +698,24 @@ OTAPI otError OTCALL otThreadSendDiagnosticReset(otInstance *        aInstance,
  *
  */
 OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
+
+/**
+ * Get the Thread MLE counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Thread MLE counters.
+ *
+ */
+const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
+
+/**
+ * Reset the Thread MLE counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otThreadResetMleCounters(otInstance *aInstance);
 
 /**
  * @}
