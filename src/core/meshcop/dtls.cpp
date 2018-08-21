@@ -69,8 +69,7 @@ Dtls::Dtls(Instance &aInstance)
     , mSendHandler(NULL)
     , mContext(NULL)
     , mClient(false)
-    , mConnectionClosedByHost(false)
-    , mWaitForCloseNotifyTimer(aInstance, &Dtls::HandleWaitForCloseNotifyTimer, this)
+    , mGuardTimerSet(false)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -149,6 +148,9 @@ otError Dtls::Start(bool             aClient,
     mReceiveMessage   = NULL;
     mMessageSubType   = Message::kSubTypeNone;
 
+    // do not handle new connection before guard time expired
+    VerifyOrExit(mGuardTimerSet == false, rval = MBEDTLS_ERR_SSL_TIMEOUT);
+
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
     mbedtls_ctr_drbg_init(&mCtrDrbg);
@@ -210,8 +212,7 @@ otError Dtls::Start(bool             aClient,
     }
     VerifyOrExit(rval == 0);
 
-    mStarted                = true;
-    mConnectionClosedByHost = false;
+    mStarted = true;
     Process();
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
@@ -284,19 +285,17 @@ void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 otError Dtls::Stop(void)
 {
     mbedtls_ssl_close_notify(&mSsl);
-    // wait for ssl close notify from peer.
-    mConnectionClosedByHost = true;
-    mWaitForCloseNotifyTimer.Start(kWaitForCloseNotifyMilli);
+    Close();
+    // guard time, that the possible close notify
+    // not open an invalid (new) connection
+    mGuardTimerSet = true;
+    mTimer.Start(kGuardTimeNewConnectionMilli);
 
     return OT_ERROR_NONE;
 }
 
 void Dtls::Close(void)
 {
-    if (mWaitForCloseNotifyTimer.IsRunning())
-    {
-        mWaitForCloseNotifyTimer.Stop();
-    }
     VerifyOrExit(mStarted);
     mStarted = false;
     mbedtls_ssl_free(&mSsl);
@@ -651,20 +650,6 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     return 0;
 }
 
-void Dtls::HandleWaitForCloseNotifyTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Dtls>().HandleWaitForCloseNotifyTimer();
-}
-
-void Dtls::HandleWaitForCloseNotifyTimer()
-{
-    if (mStarted)
-    {
-        // close notify not received. close dtls.
-        Close();
-    }
-}
-
 void Dtls::HandleTimer(Timer &aTimer)
 {
     aTimer.GetOwner<Dtls>().HandleTimer();
@@ -672,7 +657,15 @@ void Dtls::HandleTimer(Timer &aTimer)
 
 void Dtls::HandleTimer(void)
 {
-    Process();
+    if (!mGuardTimerSet)
+    {
+        Process();
+    }
+    else
+    {
+        mGuardTimerSet = false;
+        mTimer.Stop();
+    }
 }
 
 void Dtls::Process(void)
@@ -710,10 +703,7 @@ void Dtls::Process(void)
             switch (rval)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                if (!mConnectionClosedByHost)
-                {
-                    mbedtls_ssl_close_notify(&mSsl);
-                }
+                mbedtls_ssl_close_notify(&mSsl);
                 ExitNow(shouldClose = true);
                 break;
 
@@ -721,10 +711,7 @@ void Dtls::Process(void)
                 break;
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-                if (!mConnectionClosedByHost)
-                {
-                    mbedtls_ssl_close_notify(&mSsl);
-                }
+                mbedtls_ssl_close_notify(&mSsl);
                 ExitNow(shouldClose = true);
                 break;
 
@@ -760,7 +747,7 @@ void Dtls::Process(void)
 
 exit:
 
-    if (shouldClose || mConnectionClosedByHost)
+    if (shouldClose)
     {
         Close();
     }
@@ -830,6 +817,10 @@ otError Dtls::MapError(int rval)
         error = OT_ERROR_FAILED;
         break;
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+    case MBEDTLS_ERR_SSL_TIMEOUT:
+        error = OT_ERROR_BUSY;
+        break;
 
     default:
         assert(rval >= 0);

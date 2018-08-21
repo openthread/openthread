@@ -248,8 +248,8 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
-        netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
-                              CoapSecure::HandleDtlsSend, this);
+        VerifyOrExit(netif.GetDtls().Start(false, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                           CoapSecure::HandleDtlsSend, this) == OT_ERROR_NONE);
     }
     else
     {

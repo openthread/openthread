@@ -69,8 +69,8 @@ class Dtls : public InstanceLocator
 public:
     enum
     {
-        kPskMaxLength            = 32,
-        kWaitForCloseNotifyMilli = 2000,
+        kPskMaxLength                = 32,
+        kGuardTimeNewConnectionMilli = 2000,
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 512,
 #else
@@ -346,8 +346,6 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-    static void HandleWaitForCloseNotifyTimer(Timer &aTimer);
-    void        HandleWaitForCloseNotifyTimer();
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
@@ -402,8 +400,7 @@ private:
     SendHandler      mSendHandler;
     void *           mContext;
     bool             mClient;
-    bool             mConnectionClosedByHost;
-    TimerMilli       mWaitForCloseNotifyTimer;
+    bool             mGuardTimerSet;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;

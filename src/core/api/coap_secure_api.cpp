@@ -79,21 +79,21 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
 
 otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
                                           const uint8_t *aX509CaCertificateChain,
-                                          uint32_t       aX509CaCertChainLenth)
+                                          uint32_t       aX509CaCertChainLength)
 {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (aX509CaCertificateChain == NULL || aX509CaCertChainLenth == 0)
+    if (aX509CaCertificateChain == NULL || aX509CaCertChainLength == 0)
     {
         return OT_ERROR_INVALID_ARGS;
     }
 
-    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLenth);
+    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aX509CaCertificateChain);
-    OT_UNUSED_VARIABLE(aX509CaCertChainLenth);
+    OT_UNUSED_VARIABLE(aX509CaCertChainLength);
 
     return OT_ERROR_DISABLED_FEATURE;
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
