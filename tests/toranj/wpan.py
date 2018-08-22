@@ -101,6 +101,8 @@ WPAN_THREAD_ACTIVE_DATASET                     = "Thread:ActiveDataset"
 WPAN_THREAD_ACTIVE_DATASET_ASVALMAP            = "Thread:ActiveDataset:AsValMap"
 WPAN_THREAD_PENDING_DATASET                    = "Thread:PendingDataset"
 WPAN_THREAD_PENDING_DATASET_ASVALMAP           = "Thread:PendingDataset:AsValMap"
+WPAN_THREAD_ADDRESS_CACHE_TABLE                = "Thread:AddressCacheTable"
+WPAN_THREAD_ADDRESS_CACHE_TABLE_ASVALMAP       = "Thread:AddressCacheTable:AsValMap"
 
 WPAN_OT_LOG_LEVEL                              = "OpenThread:LogLevel"
 WPAN_OT_STEERING_DATA_ADDRESS                  = "OpenThread:SteeringData:Address"
@@ -1209,3 +1211,46 @@ class RouterTableEntry(object):
 def parse_router_table_result(router_table_list):
     """ Parses router table list string and returns an array of `RouterTableEntry` objects"""
     return [ RouterTableEntry(item) for item in router_table_list.split('\n')[1:-1] ]
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+class AddressCacheEntry(object):
+    """ This object encapsulates an address cache entry"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # '\t"fd00:1234::d427:a1d9:6204:dbae -> 0x9c00, age:0"'
+        #
+
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
+        # Then remove any ',' at end of items in the list.
+        items = [item[:-1] if item[-1] ==',' else item for item in text[2:-1].split()]
+
+        # First item in the extended address
+        self._address = items[0]
+        self._rloc16    = int(items[2], 16)
+
+        # Convert the rest into a dictionary by splitting the text using ':' as separator
+        dict = {item.split(':')[0] : item.split(':')[1] for item in items[3:]}
+
+        self._age       = int(dict['age'], 0)
+
+    @property
+    def address(self):
+        return self._address
+
+    @property
+    def rloc16(self):
+        return self._rloc16
+
+    @property
+    def age(self):
+        return self._age
+
+    def __repr__(self):
+        return 'AddressCacheEntry({})'.format(self.__dict__)
+
+def parse_address_cache_table_result(addr_cache_table_list):
+    """ Parses address cache table list string and returns an array of `AddressCacheEntry` objects"""
+    return [ AddressCacheEntry(item) for item in addr_cache_table_list.split('\n')[1:-1] ]
