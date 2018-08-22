@@ -41,36 +41,10 @@ libmbedcrypto_a_CPPFLAGS                      = \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
-    repo/library/md.c                           \
-    repo/library/md_wrap.c                      \
-    repo/library/memory_buffer_alloc.c          \
-    repo/library/platform.c                     \
-    repo/library/sha256.c                       \
-    $(NULL)
-
-if OPENTHREAD_EXAMPLES_EFR32
-nodist_libmbedcrypto_a_SOURCES                                                                                      = \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c        \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_management.c \
-    $(NULL)
-else
-libmbedcrypto_a_SOURCES                      += \
     repo/library/aes.c                          \
-    $(NULL)
-endif  # OPENTHREAD_EXAMPLES_EFR32
-
-if OPENTHREAD_EXAMPLES_NRF52840
-nodist_libmbedcrypto_a_SOURCES                                                       = \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt.c          \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c    \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_soft.c     \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c    \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_NRF52840
-
-if OPENTHREAD_ENABLE_DTLS
-libmbedcrypto_a_SOURCES                      += \
+    repo/library/asn1parse.c                    \
+    repo/library/asn1write.c                    \
+    repo/library/base64.c                       \
     repo/library/bignum.c                       \
     repo/library/ccm.c                          \
     repo/library/cipher.c                       \
@@ -78,37 +52,36 @@ libmbedcrypto_a_SOURCES                      += \
     repo/library/cmac.c                         \
     repo/library/ctr_drbg.c                     \
     repo/library/debug.c                        \
+    repo/library/ecdh.c                         \
+    repo/library/ecdsa.c                        \
     repo/library/ecjpake.c                      \
     repo/library/ecp_curves.c                   \
     repo/library/entropy.c                      \
     repo/library/entropy_poll.c                 \
+    repo/library/md.c                           \
+    repo/library/md_wrap.c                      \
+    repo/library/memory_buffer_alloc.c          \
+    repo/library/oid.c                          \
+    repo/library/pk.c                           \
+    repo/library/pk_wrap.c                      \
+    repo/library/pkparse.c                      \
+    repo/library/platform.c                     \
+    repo/library/sha256.c                       \
     repo/library/ssl_cookie.c                   \
     repo/library/ssl_ciphersuites.c             \
     repo/library/ssl_cli.c                      \
     repo/library/ssl_srv.c                      \
     repo/library/ssl_ticket.c                   \
     repo/library/ssl_tls.c                      \
+    repo/library/x509.c                         \
+    repo/library/x509_crt.c                     \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_EFR32
-nodist_libmbedcrypto_a_SOURCES                                                                              += \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/library/ecp.c              \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c \
-    $(NULL)
-else
+if !OPENTHREAD_EXAMPLES_EFR32
 libmbedcrypto_a_SOURCES                      += \
     repo/library/ecp.c                          \
     $(NULL)
-endif  # OPENTHREAD_EXAMPLES_EFR32
-
-if OPENTHREAD_EXAMPLES_NRF52840
-nodist_libmbedcrypto_a_SOURCES                                                    += \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_alt_cc310.c  \
-    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_curves_alt.c \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_NRF52840
-
-endif  # OPENTHREAD_ENABLE_DTLS
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 Dash                                          = -
