@@ -149,6 +149,7 @@ otError DatasetManager::Set(const Dataset &aDataset)
     otError          error = OT_ERROR_NONE;
     const Timestamp *timestamp;
     int              compare;
+    bool             isLocalUpdated = false;
 
     timestamp = aDataset.GetTimestamp();
 
@@ -159,7 +160,16 @@ otError DatasetManager::Set(const Dataset &aDataset)
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
+            if (aDataset.Get(Tlv::kPendingTimestamp))
+            {
+                mLocal.Set(aDataset);
+                isLocalUpdated = true;
+                ExitNow(error = Restore());
+            }
+            else
+            {
+                SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
+            }
         }
     }
 
@@ -167,15 +177,8 @@ otError DatasetManager::Set(const Dataset &aDataset)
 
     if (compare > 0)
     {
-        ThreadNetif &netif = GetNetif();
-
         mLocal.Set(aDataset);
-
-        if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
-        {
-            netif.GetNetworkDataLeader().IncrementVersion();
-            netif.GetNetworkDataLeader().IncrementStableVersion();
-        }
+        isLocalUpdated = true;
     }
     else if (compare < 0)
     {
@@ -183,6 +186,17 @@ otError DatasetManager::Set(const Dataset &aDataset)
     }
 
 exit:
+    if (isLocalUpdated)
+    {
+        ThreadNetif &netif = GetNetif();
+
+        if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+        {
+            netif.GetNetworkDataLeader().IncrementVersion();
+            netif.GetNetworkDataLeader().IncrementStableVersion();
+        }
+    }
+
     return error;
 }
 
@@ -521,7 +535,6 @@ void PendingDataset::HandleDelayTimer(void)
 
     otLogInfoMeshCoP(GetInstance(), "pending delay timer expired");
 
-    dataset.ConvertToActive();
     GetNetif().GetActiveDataset().Set(dataset);
 
     Clear();
