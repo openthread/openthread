@@ -222,6 +222,9 @@ libopenthread_radio_a_SOURCES       = \
     common/timer.cpp                  \
     mac/mac_frame.cpp                 \
     thread/link_quality.cpp           \
+    utils/missing_strlcat.c           \
+    utils/missing_strlcpy.c           \
+    utils/missing_strnlen.c           \
     $(NULL)
 
 libopenthread_mtd_a_SOURCES         = \
