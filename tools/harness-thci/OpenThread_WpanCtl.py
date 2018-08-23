@@ -57,7 +57,7 @@ WPANCTL_CMD = 'sudo wpanctl -I ' + WPAN_INTERFACE + ' '
 LINESEPX = re.compile(r'\r\n|\n')
 
 class OpenThread_WpanCtl(IThci):
-    LOWEST_POSSIBLE_PARTITION_ID = 0x1
+    LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
     def __init__(self, **kwargs):
