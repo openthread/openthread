@@ -170,6 +170,13 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/libraries/app_error/app_error_weak.c                      \
     @top_builddir@/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.c                             \
     @top_builddir@/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic.c                             \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt.c                                \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_soft.c                           \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_curves_alt.c                         \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c                       \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd.c                                  \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.c                             \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
