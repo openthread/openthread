@@ -224,11 +224,16 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity,
                  state = StateTlv::kReject);
 
-    // For MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req, Thread specification allows partial dataset changes
-    // from Commissioner, and requires entire dataset from thread device; however no clear description if
-    // receiving partial dataset from thread device. Here partial dataset would always be accepted.
-    // Update is always based on existing active dataset.
-    netif.GetActiveDataset().Get(dataset);
+    if (isUpdateFromCommissioner)
+    {
+        // Thread specification allows partial dataset changes for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req
+        // from Commissioner based on existing active dataset.
+        netif.GetActiveDataset().Get(dataset);
+    }
+    else
+    {
+        dataset.Clear();
+    }
 
     if (type == Tlv::kPendingTimestamp || !doesAffectConnectivity)
     {
