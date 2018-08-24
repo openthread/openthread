@@ -1766,4 +1766,14 @@
 #define OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
+ *
+ * The settings storage path on posix platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
+#define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "tmp"
+#endif
+
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
