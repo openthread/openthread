@@ -164,7 +164,7 @@ static inline uint64_t TimeToTicks(uint64_t aTime, AlarmIndex aIndex)
         aTime *= US_PER_MS;
     }
 
-    return NRF_802154_US_TO_RTC_TICKS(aTime) & RTC_CC_COMPARE_Msk;
+    return NRF_802154_US_TO_RTC_TICKS(aTime);
 }
 
 static inline uint64_t TicksToTime(uint64_t aTicks, AlarmIndex aIndex)
@@ -358,7 +358,7 @@ static void TimerStartAt(uint32_t aT0, uint32_t aDt, AlarmIndex aIndex, const ui
     nrf_rtc_event_enable(RTC_INSTANCE, sChannelData[aIndex].mCompareEventMask);
 
     targetTime    = ConvertT0AndDtTo64BitTime(aT0, aDt, aNow);
-    targetCounter = TimeToTicks(targetTime, aIndex);
+    targetCounter = TimeToTicks(targetTime, aIndex) & RTC_CC_COMPARE_Msk;
 
     sTimerData[aIndex].mTargetTime = RoundUpTimeToTimerTicksMultiply(targetTime, aIndex);
 
