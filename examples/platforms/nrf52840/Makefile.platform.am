@@ -35,6 +35,12 @@ LDADD_COMMON                                                                    
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_cc310/lib/libnrf_cc310_0.9.9.a \
     $(NULL)
 
+if OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE
+LDFLAGS_COMMON                                                                              += \
+    -T $(OPENTHREAD_CUSTOM_LINKER_FILE)                                                        \
+    $(NULL)
+else
 LDFLAGS_COMMON                                                                              += \
     -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld                                   \
     $(NULL)
+endif
