@@ -111,8 +111,6 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     NetworkMasterKeyTlv      masterKey;
     PanIdTlv                 panId;
 
-    mLocal.Get(dataset);
-
     activeTimestamp.SetLength(0);
     pendingTimestamp.SetLength(0);
     channel.SetLength(0);
@@ -229,10 +227,6 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
         // Thread specification allows partial dataset changes for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req
         // from Commissioner based on existing active dataset.
         netif.GetActiveDataset().Get(dataset);
-    }
-    else
-    {
-        dataset.Clear();
     }
 
     if (type == Tlv::kPendingTimestamp || !doesAffectConnectivity)
