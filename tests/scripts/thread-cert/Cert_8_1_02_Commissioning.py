@@ -42,7 +42,7 @@ class Cert_8_1_02_Commissioning(unittest.TestCase):
 
         self.nodes = {}
         for i in range(1,3):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
