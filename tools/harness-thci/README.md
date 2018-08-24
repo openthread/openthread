@@ -10,7 +10,7 @@ example platform and is included in the current Thread Test Harness Software rel
 which is based on wpantund running on a linux host (for example: Raspberry Pi 3B) working with a NCP (Network Co-Processor) 
 board (for example: Nordic Semiconductor nRF52840) running a OpenThread NCP image.
 
-Platform developers should modify the THCI implementation directly to match their platform (e.g. serial baud rate).
+Platform developers should modify the THCI implementation directly to match their platform (for example: serial baud rate).
 Alternatively, platform developers may follow the instructions below to add a new THCI implementation to the Test
 Harness.
 
@@ -41,7 +41,7 @@ Harness.
 
 4. Connect the NCP board (nRF52840) to Raspberry Pi's USB port and verify that wpanctl command works.
 
-5. Connect the Raspberry Pi's GPIOs (For Raspberry Pi 3B, link Pin8 as TXD, Pin10 as RXD and Pin14 as GND) with
+5. Connect the Raspberry Pi's GPIOs (for Raspberry Pi 3B, link Pin8 as TXD, Pin10 as RXD and Pin14 as GND) with
    a UART2USB adapter.
 
 6. Connect DUT (with Step 5's adapter), sniffer and other golden devices as reference device to Host PC.
