@@ -1430,6 +1430,8 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             True: successful to set the link quality
             False: fail to set the link quality
+
+        @todo: required if as reference device
         """
         pass
 
