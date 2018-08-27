@@ -54,7 +54,8 @@ enum
 otError utilsFlashInit(void)
 {
     otError     error = OT_ERROR_NONE;
-    char        fileName[32];
+    const char *path  = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    char        fileName[sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32];
     struct stat st;
     bool        create = false;
     const char *offset = getenv("PORT_OFFSET");
@@ -62,9 +63,9 @@ otError utilsFlashInit(void)
 
     memset(&st, 0, sizeof(st));
 
-    if (stat("tmp", &st) == -1)
+    if (stat(path, &st) == -1)
     {
-        mkdir("tmp", 0777);
+        mkdir(path, 0777);
     }
 
     if (offset == NULL)
@@ -72,7 +73,7 @@ otError utilsFlashInit(void)
         offset = "0";
     }
 
-    snprintf(fileName, sizeof(fileName), "tmp/%s_%" PRIx64 ".flash", offset, NODE_ID);
+    snprintf(fileName, sizeof(fileName), "%s/%s_%" PRIx64 ".flash", path, offset, NODE_ID);
 
     if (access(fileName, 0))
     {
