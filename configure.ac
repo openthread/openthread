@@ -1375,6 +1375,24 @@ AC_MSG_RESULT(${enable_linker_map})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "yes"])
 
 #
+# Custom linker file
+#
+
+AC_ARG_WITH(
+    [custom-linker-file],
+    [AS_HELP_STRING([--with-custom-linker-file=<linkerfile.ld>],[Specify custom linker file (absolute path). @<:@default=none@:>@.])],
+    [
+        with_custom_linker_file=yes
+        OPENTHREAD_CUSTOM_LINKER_FILE=${withval}
+    ],
+    [
+        with_custom_linker_file=no
+    ])
+
+AC_SUBST(OPENTHREAD_CUSTOM_LINKER_FILE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_linker_file}" = "yes"])
+
+#
 # Examples
 #
 

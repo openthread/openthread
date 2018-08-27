@@ -48,6 +48,15 @@ $ make -f examples/Makefile-nrf52840 USB=1
 Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded.
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
 
+## nRF52840 dongle support (PCA10059)
+You can build the libraries with support for USB bootloader present in PCA10059. As this dongle uses native USB support we have to enable it as well. To do so, build the libraries with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
+```
+Please see [nRF52840 Dongle Programming][nrf52840-dongle-programming] for more details about how to use USB bootloader.
+
+[nrf52840-dongle-programming]: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52%2Fdita%2Fnrf52%2Fdevelopment%2Fnrf52840_dongle%2Fprogramming.html&cp=2_0_4_4
+
 ## Native SPI Slave support
 
 You can build the libraries with support for native SPI Slave.
