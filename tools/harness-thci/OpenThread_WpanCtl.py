@@ -1879,7 +1879,7 @@ class OpenThread_WpanCtl(IThci):
 
     def diagnosticQuery(self,strDestinationAddr, listTLV_ids = []):
         """@todo : required if as reference device"""
-       self.diagnosticGet(strDestinationAddr, listTLV_ids)
+        self.diagnosticGet(strDestinationAddr, listTLV_ids)
 
     def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
         """@todo : required if as reference device"""
