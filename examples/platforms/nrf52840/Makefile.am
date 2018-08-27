@@ -61,10 +61,12 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic                                         \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/delay                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm                              \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/utf_converter                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx                                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers                                             \
@@ -175,6 +177,7 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_serial_num.c                       \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c            \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/utf_converter/utf.c                             \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_clock.c                             \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_power.c                             \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_systick.c                           \
@@ -306,6 +309,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic_internal.h                       \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic.h                                \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/delay/nrf_delay.h                                  \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_class_base.h                          \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_descriptor.h                          \
@@ -320,6 +324,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm_internal.h      \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.h               \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config/app_usbd_string_config.h                \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/utf_converter/utf.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_common.h                                   \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_errors.h                                   \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_clock.h                            \

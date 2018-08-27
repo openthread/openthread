@@ -8,33 +8,42 @@
   <version>1</version>
   <description>nRF52840 reference description for radio MCU with ARM 32-bit Cortex-M4 Microcontroller </description>
   <licenseText>
-Copyright (c) 2010 - 2018, Nordic Semiconductor ASA All rights reserved.\n
+Copyright (c) 2010 - 2018, Nordic Semiconductor ASA\n
 \n
-Redistribution and use in source and binary forms, with or without\n
-modification, are permitted provided that the following conditions are met:\n
+All rights reserved.\n
+\n
+Redistribution and use in source and binary forms, with or without modification,\n
+are permitted provided that the following conditions are met:\n
 \n
 1. Redistributions of source code must retain the above copyright notice, this\n
    list of conditions and the following disclaimer.\n
 \n
-2. Redistributions in binary form must reproduce the above copyright\n
-   notice, this list of conditions and the following disclaimer in the\n
-   documentation and/or other materials provided with the distribution.\n
+2. Redistributions in binary form, except as embedded into a Nordic\n
+   Semiconductor ASA integrated circuit in a product or a software update for\n
+   such product, must reproduce the above copyright notice, this list of\n
+   conditions and the following disclaimer in the documentation and/or other\n
+   materials provided with the distribution.\n
 \n
 3. Neither the name of Nordic Semiconductor ASA nor the names of its\n
    contributors may be used to endorse or promote products derived from this\n
    software without specific prior written permission.\n
 \n
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"\n
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n
-IMPLIED WARRANTIES OF MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE\n
-ARE DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE\n
+4. This software, with or without modification, must only be used with a\n
+   Nordic Semiconductor ASA integrated circuit.\n
+\n
+5. Any software provided in binary form under this license must not be reverse\n
+   engineered, decompiled, modified and/or disassembled.\n
+\n
+THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS\n
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\n
+OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE\n
+DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE\n
 LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\n
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\n
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\n
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\n
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\n
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n
-POSSIBILITY OF SUCH DAMAGE.\n
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE\n
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT\n
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n
         </licenseText>
   <addressUnitBits>8</addressUnitBits>
   <width>32</width>
