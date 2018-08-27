@@ -1826,7 +1826,9 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Requires: MBEDTLS_ECP_C
  */
-//#define MBEDTLS_ECDH_C
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#define MBEDTLS_ECDH_C
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
@@ -1852,7 +1854,9 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * Requires: MBEDTLS_ECP_C, MBEDTLS_ASN1_WRITE_C, MBEDTLS_ASN1_PARSE_C
  */
-//#define MBEDTLS_ECDSA_C
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#define MBEDTLS_ECDSA_C
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 /**
@@ -2481,7 +2485,9 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * This module is required for the X.509 parsing modules.
  */
-//#define MBEDTLS_X509_USE_C
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#define MBEDTLS_X509_USE_C
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 /**
@@ -2508,7 +2514,9 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *
  * This module is required for X.509 certificate parsing.
  */
-//#define MBEDTLS_X509_CRT_PARSE_C
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#define MBEDTLS_X509_CRT_PARSE_C
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 /**

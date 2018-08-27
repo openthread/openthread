@@ -61,6 +61,10 @@ else
 configure_OPTIONS              += --with-ncp-bus=uart
 endif
 
+ifeq ($(BOOTLOADER),1)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
+endif
+
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 

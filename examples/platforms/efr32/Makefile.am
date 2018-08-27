@@ -113,6 +113,10 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/platform/emlib/src/em_usart.c                                          \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/platform/radio/rail_lib/hal/hal_common.c                               \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/library/ecp.c                                 \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c                    \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c                    \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/src/crypto_management.c             \
     $(NULL)
 
 noinst_HEADERS                                                                = \

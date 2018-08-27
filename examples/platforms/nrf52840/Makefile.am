@@ -152,9 +152,10 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.c                      \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_timer_coord.c                    \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/fem/nrf_fem_control.c                       \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_ack_timeout.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_csma_ca.c           \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_delayed_trx.c       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock_sdk.c       \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/hp_timer/nrf_802154_hp_timer.c     \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.c    \
@@ -183,6 +184,16 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.c                                   \
     $(NULL)
 
+HWCRYPTO_SOURCES                                                                                           = \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt.c                                \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_soft.c                           \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_curves_alt.c                         \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c                       \
+    $(NULL)
+
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SINGLEPHY_CPPFLAGS)                                                                                    \
@@ -193,6 +204,7 @@ libopenthread_nrf52840_a_SOURCES                                                
     $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(NORDICSEMI_SOURCES)                                                                                    \
     $(SINGLEPHY_SOURCES)                                                                                     \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 libopenthread_nrf52840_sdk_a_CPPFLAGS                                                                      = \
@@ -204,6 +216,7 @@ libopenthread_nrf52840_sdk_a_SOURCES                                            
     $(PLATFORM_SOURCES)                                                                                      \
     $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(SINGLEPHY_SOURCES)                                                                                     \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 libopenthread_nrf52840_softdevice_sdk_a_CPPFLAGS                                                           = \
@@ -215,6 +228,7 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(PLATFORM_SOURCES)                                                                                      \
     $(RADIO_DRIVER_SOURCES)                                                                                  \
     $(SOFTDEVICE_SOURCES)                                                                                    \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 noinst_HEADERS                                                                                               = \
