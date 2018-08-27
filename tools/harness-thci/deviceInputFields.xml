@@ -76,4 +76,18 @@
               hint="eg: 115200">115200
         </ITEM>
     </DEVICE>
+    <DEVICE name="OpenThread_WpanCtl" thumbnail="OpenThread.png" description = "OpenThread_WpanCtl: wpantund + NCP" THCI="OpenThread_WpanCtl">
+        <ITEM label="Serial Line"
+              type="text"
+              forParam="SerialPort"
+              validation="COM"
+              hint="eg: COM1">COM
+        </ITEM>
+        <ITEM label="Speed"
+              type="text"
+              forParam="SerialBaudRate"
+              validation="baud-rate"
+              hint="eg: 115200">115200
+        </ITEM>
+    </DEVICE>
 </DEVICE_FIELDS>
