@@ -4570,11 +4570,6 @@ exit:
     return false;
 }
 
-int8_t MleRouter::GetAssignParentPriority(void) const
-{
-    return mParentPriority;
-}
-
 otError MleRouter::SetAssignParentPriority(int8_t aParentPriority)
 {
     otError error = OT_ERROR_NONE;
