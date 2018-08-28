@@ -149,11 +149,12 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         assert msg is None, "The Address Query Request is not expected."
 
         # 5
+        # Power off ROUTER3 and wait for leader to expire its Router ID.
+        # In this topology, ROUTER3 has two neighbors (Leader and DUT_ROUTER2),
+        # so the wait time is (MAX_NEIGHBOR_AGE (100s) + worst propagation time (32s * 15) for bad routing +\
+        # INFINITE_COST_TIMEOUT (90s) + transmission time + extra redundancy), totally ~700s.
         self.nodes[ROUTER3].stop()
-
-        # Wait for the Leader to expire its Router ID.
-        # MAX_NEIGHBOR_AGE + INFINITE_COST_TIMEOUT + ID_REUSE_DELAY + propagation time + transmission time ~ 580s.
-        self.simulator.go(580)
+        self.simulator.go(700)
 
         # Flush the message queue to avoid possible impact on follow-up verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
