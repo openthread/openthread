@@ -518,7 +518,7 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
     mLength -= aLength;
 }
 
-otError Dataset::ApplyConfiguration(Instance &aInstance) const
+otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
 {
     ThreadNetif &netif = aInstance.GetThreadNetif();
     Mac::Mac &   mac   = netif.GetMac();
@@ -527,6 +527,11 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
     const Tlv *  end   = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
     VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
+
+    if (aIsMasterKeyUpdated)
+    {
+        *aIsMasterKeyUpdated = false;
+    }
 
     while (cur < end)
     {
@@ -578,6 +583,13 @@ otError Dataset::ApplyConfiguration(Instance &aInstance) const
         case Tlv::kNetworkMasterKey:
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
+
+            if (aIsMasterKeyUpdated &&
+                memcmp(&key->GetNetworkMasterKey(), &netif.GetKeyManager().GetMasterKey(), OT_MASTER_KEY_SIZE))
+            {
+                *aIsMasterKeyUpdated = true;
+            }
+
             netif.GetKeyManager().SetMasterKey(key->GetNetworkMasterKey());
             break;
         }

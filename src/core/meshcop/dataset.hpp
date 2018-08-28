@@ -224,13 +224,14 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
+     * @param[in]  aInstance           A reference to the OpenThread instance.
+     * @param[out] aIsMasterKeyUpdated A pointer to where to place whether master key was updated.
      *
      * @retval OT_ERROR_NONE   Successfully applied configuration.
      * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError ApplyConfiguration(Instance &aInstance) const;
+    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = NULL) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.
