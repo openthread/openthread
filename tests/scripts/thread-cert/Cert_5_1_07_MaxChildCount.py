@@ -66,7 +66,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
             self.nodes[i].add_whitelist(self.nodes[ROUTER].get_addr64())
             self.nodes[ROUTER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
-            self.nodes[i].set_timeout(3)
+            self.nodes[i].set_timeout(6)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

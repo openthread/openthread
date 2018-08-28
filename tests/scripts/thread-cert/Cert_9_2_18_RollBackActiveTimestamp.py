@@ -98,7 +98,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.nodes[SED1].set_panid(PANID_INIT)
         self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
+        self.nodes[SED1].set_timeout(6)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

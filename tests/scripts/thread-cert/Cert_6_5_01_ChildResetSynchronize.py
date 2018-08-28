@@ -51,7 +51,7 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].set_timeout(3)
+        self.nodes[ED].set_timeout(6)
         self._setUpEd()
 
     def _setUpEd(self):
