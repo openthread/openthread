@@ -205,7 +205,6 @@ private:
     enum
     {
         kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
-        kMaxPollRetxAttempts    = 5, ///< Maximum number of retransmit attempts of data poll (mac data request).
     };
 
     enum PollPeriodSelector
@@ -230,7 +229,7 @@ private:
     bool    mRetxMode : 1;             //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
     bool    mNoBufferRetxMode : 1;     //< Indicates whether last poll tx failed due to insufficient buffer.
     uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
-    uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
+    uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kFailedChildTransmissions`).
     uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.
 };
 

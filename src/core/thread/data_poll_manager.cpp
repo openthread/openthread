@@ -227,9 +227,9 @@ void DataPollManager::HandlePollSent(otError aError)
         mPollTxFailureCounter++;
 
         otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d", otThreadErrorToString(aError),
-                     mPollTxFailureCounter, kMaxPollRetxAttempts);
+                     mPollTxFailureCounter, Mle::kFailedChildTransmissions);
 
-        if (mPollTxFailureCounter < kMaxPollRetxAttempts)
+        if (mPollTxFailureCounter < Mle::kFailedChildTransmissions)
         {
             if (mRetxMode == false)
             {
@@ -422,7 +422,7 @@ void DataPollManager::HandlePollTimer(Timer &aTimer)
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
     return TimerMilli::SecToMsec(GetNetif().GetMle().GetTimeout()) -
-           static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+           static_cast<uint32_t>(kRetxPollPeriod) * Mle::kFailedChildTransmissions;
 }
 
 } // namespace ot
