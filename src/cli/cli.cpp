@@ -3466,8 +3466,12 @@ exit:
 #if OPENTHREAD_ENABLE_DIAG
 void Interpreter::ProcessDiag(int argc, char *argv[])
 {
+    char output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+
     // all diagnostics related features are processed within diagnostics module
-    mServer->OutputFormat("%s\r\n", otDiagProcessCmd(argc, argv));
+    output[sizeof(output) - 1] = '\0';
+    otDiagProcessCmd(argc, argv, output, sizeof(output) - 1);
+    mServer->OutputFormat("%s\n", output);
 }
 #endif
 

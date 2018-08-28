@@ -1306,14 +1306,15 @@ exit:
 otError NcpBase::HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader)
 {
     const char *string = NULL;
-    const char *output = NULL;
-    otError     error  = OT_ERROR_NONE;
+    char        output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    otError     error = OT_ERROR_NONE;
 
     error = mDecoder.ReadUtf8(string);
 
     VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
 
-    output = otDiagProcessCmdLine(string);
+    output[sizeof(output) - 1] = '\0';
+    otDiagProcessCmdLine(string, output, sizeof(output) - 1);
 
     // Prepare the response
     SuccessOrExit(error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_NEST_STREAM_MFG));
