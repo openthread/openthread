@@ -371,7 +371,7 @@ otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUri
  * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
  *
  */
-void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader);
+otError otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader);
 
 /**
  * This function sets the Message ID value.
