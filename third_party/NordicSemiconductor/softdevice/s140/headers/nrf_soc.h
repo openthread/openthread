@@ -82,10 +82,10 @@ extern "C" {
 
 #define SD_EVT_IRQn                       (SWI2_IRQn)        /**< SoftDevice Event IRQ number. Used for both protocol events and SoC events. */
 #define SD_EVT_IRQHandler                 (SWI2_IRQHandler)  /**< SoftDevice Event IRQ handler. Used for both protocol events and SoC events.
-                                                                       The default interrupt priority for this handler is set to 4 */
+                                                                       The default interrupt priority for this handler is set to 6 */
 #define RADIO_NOTIFICATION_IRQn           (SWI1_IRQn)        /**< The radio notification IRQ number. */
 #define RADIO_NOTIFICATION_IRQHandler     (SWI1_IRQHandler)  /**< The radio notification IRQ handler.
-                                                                       The default interrupt priority for this handler is set to 4 */
+                                                                       The default interrupt priority for this handler is set to 6 */
 #define NRF_RADIO_LENGTH_MIN_US           (100)               /**< The shortest allowed radio timeslot, in microseconds. */
 #define NRF_RADIO_LENGTH_MAX_US           (100000)            /**< The longest allowed radio timeslot, in microseconds. */
 
@@ -94,6 +94,49 @@ extern "C" {
 #define NRF_RADIO_EARLIEST_TIMEOUT_MAX_US (128000000UL - 1UL) /**< The longest timeout, in microseconds, allowed when requesting the earliest possible timeslot. */
 
 #define NRF_RADIO_START_JITTER_US         (2)                 /**< The maximum jitter in @ref NRF_RADIO_CALLBACK_SIGNAL_TYPE_START relative to the requested start time. */
+
+/**@brief Mask of PPI channels reserved by the SoftDevice when the SoftDevice is disabled. */
+#define NRF_SOC_SD_PPI_CHANNELS_SD_DISABLED_MSK ((uint32_t)(0))
+
+/**@brief Mask of PPI channels reserved by the SoftDevice when the SoftDevice is enabled. */
+#define NRF_SOC_SD_PPI_CHANNELS_SD_ENABLED_MSK  ((uint32_t)( \
+      (1U << 17) \
+    | (1U << 18) \
+    | (1U << 19) \
+    | (1U << 20) \
+    | (1U << 21) \
+    | (1U << 22) \
+    | (1U << 23) \
+    | (1U << 24) \
+    | (1U << 25) \
+    | (1U << 26) \
+    | (1U << 27) \
+    | (1U << 28) \
+    | (1U << 29) \
+    | (1U << 30) \
+    | (1U << 31) \
+  ))
+
+/**@brief Mask of PPI channels available to the application when the SoftDevice is disabled. */
+#define NRF_SOC_APP_PPI_CHANNELS_SD_DISABLED_MSK (~NRF_SOC_SD_PPI_CHANNELS_SD_DISABLED_MSK)
+
+/**@brief Mask of PPI channels available to the application when the SoftDevice is enabled. */
+#define NRF_SOC_APP_PPI_CHANNELS_SD_ENABLED_MSK  (~NRF_SOC_SD_PPI_CHANNELS_SD_ENABLED_MSK)
+
+/**@brief Mask of PPI groups reserved by the SoftDevice when the SoftDevice is disabled. */
+#define NRF_SOC_SD_PPI_GROUPS_SD_DISABLED_MSK    ((uint32_t)(0))
+
+/**@brief Mask of PPI groups reserved by the SoftDevice when the SoftDevice is enabled. */
+#define NRF_SOC_SD_PPI_GROUPS_SD_ENABLED_MSK     ((uint32_t)( \
+      (1U << 4) \
+    | (1U << 5) \
+  ))
+
+/**@brief Mask of PPI groups available to the application when the SoftDevice is disabled. */
+#define NRF_SOC_APP_PPI_GROUPS_SD_DISABLED_MSK   (~NRF_SOC_SD_PPI_GROUPS_SD_DISABLED_MSK)
+
+/**@brief Mask of PPI groups available to the application when the SoftDevice is enabled. */
+#define NRF_SOC_APP_PPI_GROUPS_SD_ENABLED_MSK    (~NRF_SOC_SD_PPI_GROUPS_SD_ENABLED_MSK)
 
 /**@} */
 

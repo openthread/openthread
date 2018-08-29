@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2011 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -252,7 +252,7 @@ typedef struct
   ble_l2cap_ch_tx_params_t tx_params;  /**< L2CAP channel TX parameters. */
 } ble_l2cap_evt_ch_setup_t;
 
-/**@brief L2CAP Channel SDU Data Duffer Released event. */
+/**@brief L2CAP Channel SDU Data Buffer Released event. */
 typedef struct
 {
   ble_data_t  sdu_buf;       /**< Returned reception or transmission SDU data buffer. The SoftDevice

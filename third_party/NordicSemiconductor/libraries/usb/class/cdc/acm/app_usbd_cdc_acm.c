@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 #include "sdk_common.h"
 #if NRF_MODULE_ENABLED(APP_USBD_CDC_ACM)
@@ -207,10 +207,10 @@ static ret_code_t setup_req_std_in(app_usbd_class_inst_t const * p_inst,
 }
 
 /**
- * @brief Internal SETUP standard OUT request handler
+ * @brief Internal SETUP standard OUT request handler.
  *
- * @param[in] p_inst        Generic class instance
- * @param[in] p_setup_ev    Setup event
+ * @param[in] p_inst        Generic class instance.
+ * @param[in] p_setup_ev    Setup event.
  *
  * @return Standard error code.
  */
@@ -486,7 +486,7 @@ static ret_code_t setup_event_handler(app_usbd_class_inst_t const * p_inst,
 
 
 /**
- * @brief CDC ACM consumer
+ * @brief CDC ACM consumer.
  *
  * @note See @ref nrf_drv_usbd_consumer_t
  */
@@ -521,9 +521,9 @@ static bool cdc_acm_consumer(nrf_drv_usbd_ep_transfer_t * p_next,
 }
 
 /**
- * @brief CDC ACM single transfer consumer
+ * @brief CDC ACM single transfer consumer.
  *
- * This function finalizes transfer after any received block
+ * This function finalizes transfer after any received block.
  *
  * @note See @ref nrf_drv_usbd_consumer_t
  */
@@ -560,7 +560,7 @@ static bool cdc_acm_single_shoot_consumer(nrf_drv_usbd_ep_transfer_t * p_next,
  *
  * @param p_inst  Generic USB class instance.
  *
- * @return Standard error code
+ * @return Standard error code.
  */
 static ret_code_t cdc_acm_rx_block_finished(app_usbd_class_inst_t const *  p_inst)
 {
@@ -776,111 +776,88 @@ static bool cdc_acm_feed_descriptors(app_usbd_class_descriptor_ctx_t * p_ctx,
                                      uint8_t                         * p_buff,
                                      size_t                            max_size)
 {
-    uint8_t                          cur_size  = 0;
-    static uint8_t                   ifaces    = 0;
-    app_usbd_cdc_acm_t const       * p_cdc_acm = cdc_acm_get(p_inst);
-    app_usbd_class_ep_conf_t const * cur_ep;
-
-    APP_USBD_CLASS_DESCRIPTOR_BEGIN(p_ctx);
-
-    // INTERFACE ASSOCIATION DESCRIPTOR
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x08, p_buff, cur_size, max_size); // bLength
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION,
-                                    p_buff,
-                                    cur_size,
-                                    max_size);                                                     // bDescriptorType = Interface Association
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface, p_buff, cur_size,
-                                    max_size);                                                     // bFirstInterface
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02, p_buff, cur_size, max_size);                               // bInterfaceCount
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS, p_buff, cur_size, max_size);            // bFunctionClass
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM, p_buff, cur_size, max_size);          // bFunctionSubClass
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol, p_buff, cur_size, max_size);  // bFunctionProtocol
-    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size);                               // iFunction
-
+    static uint8_t ifaces    = 0;
     ifaces = app_usbd_class_iface_count_get(p_inst);
+    app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
+
+    APP_USBD_CLASS_DESCRIPTOR_BEGIN(p_ctx, p_buff, max_size);
+
+    /* INTERFACE ASSOCIATION DESCRIPTOR */
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x08); // bLength
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION); // bDescriptorType = Interface Association
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface); // bFirstInterface
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02); // bInterfaceCount
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS); // bFunctionClass
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM); // bFunctionSubClass
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol); // bFunctionProtocol
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // iFunction
+
     static uint8_t i = 0;
 
     for (i = 0; i < ifaces; i++)
     {
-        // INTERFACE DESCRIPTOR
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x09, p_buff, cur_size, max_size);                          // bLength
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE, p_buff, cur_size, max_size); // bDescriptorType = Interface
+        /* INTERFACE DESCRIPTOR */
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x09); // bLength
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE); // bDescriptorType = Interface
 
-        static app_usbd_class_iface_conf_t const * cur_iface = 0;
-        cur_iface = app_usbd_class_iface_get(p_inst, i);
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_number_get(cur_iface),
-                                        p_buff,
-                                        cur_size,
-                                        max_size);                       // bInterfaceNumber
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size); // bAlternateSetting
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_ep_count_get(cur_iface),
-                                        p_buff,
-                                        cur_size,
-                                        max_size); // bNumEndpoints
+        static app_usbd_class_iface_conf_t const * p_cur_iface = NULL;
+        p_cur_iface = app_usbd_class_iface_get(p_inst, i);
 
-        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(cur_iface))
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_number_get(p_cur_iface)); // bInterfaceNumber
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bAlternateSetting
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_ep_count_get(p_cur_iface)); // bNumEndpoints
+
+        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(p_cur_iface))
         {
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS, p_buff, cur_size, max_size);   // bInterfaceClass = CDC COMM
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM, p_buff, cur_size, max_size); // bInterfaceSubclass
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol,
-                                            p_buff,
-                                            cur_size,
-                                            max_size); // bInterfaceProtocol
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS); // bInterfaceClass = CDC COMM
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM); // bInterfaceSubclass
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol); // bInterfaceProtocol
         }
         else if (p_cdc_acm->specific.inst.data_interface ==
-                 app_usbd_class_iface_number_get(cur_iface))
+                 app_usbd_class_iface_number_get(p_cur_iface))
         {
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_DATA_CLASS, p_buff, cur_size, max_size); // bInterfaceClass = CDC DATA
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size);                    // bInterfaceSubclass
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size);                    // bInterfaceProtocol
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_DATA_CLASS); // bInterfaceClass = CDC DATA
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterfaceSubclass
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterfaceProtocol
         }
         else
         {
             ASSERT(0);
         }
 
-        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size); // iInterface
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // iInterface
 
-        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(cur_iface))
+        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(p_cur_iface))
         {
-            // HEADER DESCRIPTOR
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05, p_buff, cur_size, max_size);                      // bLength
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE, p_buff, cur_size, max_size); // bDescriptorType = Class Specific Interface
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_HEADER, p_buff, cur_size, max_size);   // bDescriptorSubtype = Header Functional Descriptor
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x10, p_buff, cur_size, max_size);                      // bcdCDC LSB
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x01, p_buff, cur_size, max_size);                      // bcdCDC MSB
+            /* HEADER DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_HEADER); // bDescriptorSubtype = Header Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x10); // bcdCDC LSB
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x01); // bcdCDC MSB
 
-            // CALL MANAGEMENT DESCRIPTOR
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05, p_buff, cur_size, max_size);                       // bLength
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE, p_buff, cur_size, max_size);  // bDescriptorType = Class Specific Interface
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_CALL_MGMT, p_buff, cur_size, max_size); // bDescriptorSubtype = Call Management Functional Descriptor
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x03, p_buff, cur_size, max_size);                       // bmCapabilities
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface,
-                                            p_buff,
-                                            cur_size,
-                                            max_size); // bDataInterface
+            /* CALL MANAGEMENT DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_CALL_MGMT); // bDescriptorSubtype = Call Management Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x03); // bmCapabilities
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface); // bDataInterface
 
-            // ABSTRACT CONTROL MANAGEMENT DESCRIPTOR
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x04, p_buff, cur_size, max_size);                      // bLength
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE, p_buff, cur_size, max_size); // bDescriptorType = Class Specific Interface
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_ACM, p_buff, cur_size, max_size);      // bDescriptorSubtype = Abstract Control Management Functional Descriptor
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02, p_buff, cur_size, max_size);                      // bmCapabilities
+            /* ABSTRACT CONTROL MANAGEMENT DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x04); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_ACM); // bDescriptorSubtype = Abstract Control Management Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02); // bmCapabilities
 
-            // UNION DESCRIPTOR
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05, p_buff, cur_size, max_size);
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE, p_buff, cur_size, max_size); // bDescriptorType = Class Specific Interface
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_UNION, p_buff, cur_size, max_size);    // bDescriptorSubtype = Union Functional Descriptor
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface,
-                                            p_buff,
-                                            cur_size,
-                                            max_size); // bControlInterface
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface,
-                                            p_buff,
-                                            cur_size,
-                                            max_size); // bSubordinateInterface
+            /* UNION DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05);
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_UNION); // bDescriptorSubtype = Union Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface); // bControlInterface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface); // bSubordinateInterface
         }
         else if (p_cdc_acm->specific.inst.data_interface ==
-                 app_usbd_class_iface_number_get(cur_iface))
+                 app_usbd_class_iface_number_get(p_cur_iface))
         {
             ;
         }
@@ -889,56 +866,48 @@ static bool cdc_acm_feed_descriptors(app_usbd_class_descriptor_ctx_t * p_ctx,
             ASSERT(0);
         }
 
-        // ENDPOINT DESCRIPTORS
+        /* ENDPOINT DESCRIPTORS */
         static uint8_t endpoints = 0;
-        endpoints = app_usbd_class_iface_ep_count_get(cur_iface);
+        endpoints = app_usbd_class_iface_ep_count_get(p_cur_iface);
 
         static uint8_t j = 0;
 
         for (j = 0; j < endpoints; j++)
         {
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x07, p_buff, cur_size, max_size);                         // bLength
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_ENDPOINT, p_buff, cur_size, max_size); // bDescriptorType = Endpoint
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x07);                         // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_ENDPOINT); // bDescriptorType = Endpoint
 
-            cur_ep = app_usbd_class_iface_ep_get(cur_iface, j);
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_ep_address_get(cur_ep),
-                                            p_buff,
-                                            cur_size,
-                                            max_size); // bEndpointAddress
+            static app_usbd_class_ep_conf_t const * p_cur_ep = NULL;
+            p_cur_ep = app_usbd_class_iface_ep_get(p_cur_iface, j);
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_ep_address_get(p_cur_ep)); // bEndpointAddress
 
             if (p_cdc_acm->specific.inst.comm_interface ==
-                app_usbd_class_iface_number_get(cur_iface))
+                app_usbd_class_iface_number_get(p_cur_iface))
             {
-                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_INTERRUPT,
-                                                p_buff,
-                                                cur_size,
-                                                max_size); // bmAttributes
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_INTERRUPT); // bmAttributes
             }
             else if (p_cdc_acm->specific.inst.data_interface ==
-                     app_usbd_class_iface_number_get(cur_iface))
+                     app_usbd_class_iface_number_get(p_cur_iface))
             {
-                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_BULK,
-                                                p_buff,
-                                                cur_size,
-                                                max_size); // bmAttributes
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_BULK); // bmAttributes
             }
             else
             {
                 ASSERT(0);
             }
 
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(LSB_16(NRF_DRV_USBD_EPSIZE), p_buff, cur_size, max_size); // wMaxPacketSize LSB
-            APP_USBD_CLASS_DESCRIPTOR_WRITE(MSB_16(NRF_DRV_USBD_EPSIZE), p_buff, cur_size, max_size); // wMaxPacketSize MSB
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(LSB_16(NRF_DRV_USBD_EPSIZE)); // wMaxPacketSize LSB
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(MSB_16(NRF_DRV_USBD_EPSIZE)); // wMaxPacketSize MSB
 
             if (p_cdc_acm->specific.inst.comm_interface ==
-                app_usbd_class_iface_number_get(cur_iface))
+                app_usbd_class_iface_number_get(p_cur_iface))
             {
-                APP_USBD_CLASS_DESCRIPTOR_WRITE(16, p_buff, cur_size, max_size); // bInterval
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.p_ep_interval[0]); // bInterval
             }
             else if (p_cdc_acm->specific.inst.data_interface ==
-                     app_usbd_class_iface_number_get(cur_iface))
+                     app_usbd_class_iface_number_get(p_cur_iface))
             {
-                APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00, p_buff, cur_size, max_size); // bInterval
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterval
             }
             else
             {
@@ -949,11 +918,11 @@ static bool cdc_acm_feed_descriptors(app_usbd_class_descriptor_ctx_t * p_ctx,
 
     }
 
-    APP_USBD_CLASS_DESCRIPTOR_END(p_ctx);
+    APP_USBD_CLASS_DESCRIPTOR_END();
 }
 
 /**
- * @brief Public cdc_acm class interface
+ * @brief Public cdc_acm class interface.
  *
  */
 const app_usbd_class_methods_t app_usbd_cdc_acm_class_methods = {
@@ -977,10 +946,19 @@ ret_code_t app_usbd_cdc_acm_write(app_usbd_cdc_acm_t const * p_cdc_acm,
         /*Port is not opened*/
         return NRF_ERROR_INVALID_STATE;
     }
-
+    
     nrf_drv_usbd_ep_t ep = data_ep_in_addr_get(p_inst);
-    NRF_DRV_USBD_TRANSFER_IN(transfer, p_buf, length);
-    return app_usbd_ep_transfer(ep, &transfer);
+    
+    if (APP_USBD_CDC_ACM_ZLP_ON_EPSIZE_WRITE && ((length % NRF_DRV_USBD_EPSIZE) == 0))
+    {
+        NRF_DRV_USBD_TRANSFER_IN_ZLP(transfer, p_buf, length);
+        return app_usbd_ep_transfer(ep, &transfer);
+    }
+    else
+    {
+        NRF_DRV_USBD_TRANSFER_IN(transfer, p_buf, length);
+        return app_usbd_ep_transfer(ep, &transfer);
+    }
 }
 
 size_t app_usbd_cdc_acm_rx_size(app_usbd_cdc_acm_t const * p_cdc_acm)

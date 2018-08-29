@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef APP_USBD_DESCRIPTOR_H__
@@ -62,27 +62,27 @@ ANON_UNIONS_ENABLE;
  */
 
 /**
- * @brief Helper macro for translating unsigned 24 bit value to 2 byte raw descriptor
+ * @brief Helper macro for translating unsigned 24 bit value to 2 byte raw descriptor.
  * */
 #define APP_USBD_U16_TO_RAW_DSC(val) (uint8_t)(val),                    \
                                      (uint8_t)(((val) / (256)))
 
 /**
- * @brief Helper macro for translating unsigned 24 bit value to 3 byte raw descriptor
+ * @brief Helper macro for translating unsigned 24 bit value to 3 byte raw descriptor.
  * */
 #define APP_USBD_U24_TO_RAW_DSC(val) (uint8_t)(val),                    \
                                      (uint8_t)(((val) / (256))),        \
                                      (uint8_t)(((val) / (256 * 256)))
 
 /**
- * @brief Helper macro for translating unsigned 32 bit value to 4 byte raw descriptor
+ * @brief Helper macro for translating unsigned 32 bit value to 4 byte raw descriptor.
  * */
 #define APP_USBD_U32_TO_RAW_DSC(val) (uint8_t)(val),                    \
                                      (uint8_t)(((val) / (256))),        \
                                      (uint8_t)(((val) / (256 * 256)))   \
                                      (uint8_t)(((val) / (256 * 256 * 256)))
 /**
- * @brief Descriptor types
+ * @brief Descriptor types.
  *
  * Descriptor types used in two situations:
  * - when processing @ref APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR SETUP request,
@@ -137,7 +137,7 @@ typedef enum
 #pragma pack(push, 1)
 
 /**
- * @brief Common descriptor header
+ * @brief Common descriptor header.
  *
  * The header that we can find on the beginning of all descriptors that contains
  * the descriptor length and type.
@@ -150,9 +150,9 @@ typedef struct
 } app_usbd_descriptor_header_t;
 
 /**
- * @brief Device descriptor
+ * @brief Device descriptor.
  *
- * Descriptor used for the whole device
+ * Descriptor used for the whole device.
  */
 typedef struct
 {
@@ -183,7 +183,7 @@ typedef struct
 } app_usbd_descriptor_device_t;
 
 /**
- * @brief Attributes masks
+ * @brief Attributes masks.
  *
  * Masks used for attributes in configuration.
  */
@@ -198,7 +198,7 @@ typedef enum
 } app_usbd_descriptor_configuration_attributes_t;
 
 /**
- * @brief Configuration descriptor
+ * @brief Configuration descriptor.
  *
  * Descriptor used at the beginning of configuration response.
  */
@@ -215,7 +215,7 @@ typedef struct
 } app_usbd_descriptor_configuration_t;
 
 /**
- * @brief Raw descriptor - String descriptor zero
+ * @brief Raw descriptor - String descriptor zero.
  *
  * String descriptor sent only as a response for GetDescriptor.
  */
@@ -227,7 +227,7 @@ typedef struct
 } app_usbd_descriptor_string0_t;
 
 /**
- * @brief Raw descriptor - Any normal string
+ * @brief Raw descriptor - Any normal string.
  *
  * String descriptor sent only as a response for GetDescriptor.
  */
@@ -240,7 +240,7 @@ typedef struct
 
 
 /**
- * @brief Interface descriptor
+ * @brief Interface descriptor.
  *
  * Interface descriptor, returned as a part of configuration descriptor.
  */
@@ -273,7 +273,7 @@ typedef struct
 #define APP_USBD_DESCRIPTOR_EP_ATTR_USAGE_MASK   BF_MASK(2, APP_USBD_DESCRIPTOR_EP_ATTR_USAGE_OFFSET)
 
 /**
- * @brief Endpoint attributes mnemonics
+ * @brief Endpoint attributes mnemonics.
  *
  * @sa APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_OFFSET APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_MASK
  * @sa APP_USBD_DESCRIPTOR_EP_ATTR_SYNC_OFFSET APP_USBD_DESCRIPTOR_EP_ATTR_SYNC_MASK
@@ -297,7 +297,7 @@ typedef enum
 } app_usbd_descriptor_ep_attr_bitmap_t;
 
 /**
- * @brief Endpoint descriptor
+ * @brief Endpoint descriptor.
  *
  * Endpoint descriptor, returned as a part of configuration descriptor.
  */
@@ -312,7 +312,7 @@ typedef struct
 } app_usbd_descriptor_ep_t;
 
 /**
- * @brief Interface association descriptor
+ * @brief Interface association descriptor.
  */
 typedef struct
 {

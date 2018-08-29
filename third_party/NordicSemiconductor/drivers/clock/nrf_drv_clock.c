@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,13 +35,11 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #include <nordic_common.h>
 #include "nrf_drv_clock.h"
-
-#if NRF_MODULE_ENABLED(CLOCK)
 
 #ifdef SOFTDEVICE_PRESENT
 #include "nrf_sdh.h"
@@ -49,6 +47,13 @@
 #endif
 
 #define NRF_LOG_MODULE_NAME clock
+#if CLOCK_CONFIG_LOG_ENABLED
+    #define NRF_LOG_LEVEL       CLOCK_CONFIG_LOG_LEVEL
+    #define NRF_LOG_INFO_COLOR  CLOCK_CONFIG_INFO_COLOR
+    #define NRF_LOG_DEBUG_COLOR CLOCK_CONFIG_DEBUG_COLOR
+#else //CLOCK_CONFIG_LOG_ENABLED
+    #define NRF_LOG_LEVEL       0
+#endif //CLOCK_CONFIG_LOG_ENABLED
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
@@ -190,6 +195,7 @@ void nrf_drv_clock_uninit(void)
     ASSERT(m_clock_cb.module_initialized);
     nrfx_clock_disable();
     nrfx_clock_uninit();
+
     m_clock_cb.module_initialized = false;
 }
 
@@ -593,5 +599,3 @@ NRF_SDH_STATE_OBSERVER(m_sd_state_observer, CLOCK_CONFIG_STATE_OBSERVER_PRIO) =
 #undef NRF_CLOCK_LFCLK_RC
 #undef NRF_CLOCK_LFCLK_Xtal
 #undef NRF_CLOCK_LFCLK_Synth
-
-#endif // NRF_MODULE_ENABLED(CLOCK)

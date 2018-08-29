@@ -56,7 +56,7 @@ __StackTop:
 #elif defined(__HEAP_SIZE)
     .equ Heap_Size, __HEAP_SIZE
 #else
-    .equ    Heap_Size, 8192
+    .equ Heap_Size, 8192
 #endif
     .globl __HeapBase
     .globl __HeapLimit
@@ -230,11 +230,11 @@ Reset_Handler:
     ldr r2, =__data_start__
     ldr r3, =__bss_start__
 
-    subs r3, r2
+    subs r3, r3, r2
     ble .L_loop1_done
 
 .L_loop1:
-    subs r3, #4
+    subs r3, r3, #4
     ldr r0, [r1,r3]
     str r0, [r2,r3]
     bgt .L_loop1
@@ -257,11 +257,11 @@ Reset_Handler:
 
     movs r0, 0
 
-    subs r2, r1
+    subs r2, r2, r1
     ble .L_loop3_done
 
 .L_loop3:
-    subs r2, #4
+    subs r2, r2, #4
     str r0, [r1, r2]
     bgt .L_loop3
 
