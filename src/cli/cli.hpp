@@ -99,7 +99,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
-    friend class CoapSecureCli;
+    friend class CoapsSecure;
     friend class UdpExample;
 
 public:
@@ -445,7 +445,7 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-    CoapSecureCli mCoapSecure;
+    CoapsSecure mCoapSecure;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 };
