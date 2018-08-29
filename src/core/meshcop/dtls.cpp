@@ -342,22 +342,22 @@ exit:
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
-                                uint32_t       aX509CertLenth,
+                                uint32_t       aX509CertLength,
                                 const uint8_t *aPrivateKey,
-                                uint32_t       aPrivateKeyLenth)
+                                uint32_t       aPrivateKeyLength)
 {
     otError error = OT_ERROR_NONE;
 
-    assert(aX509CertLenth > 0);
+    assert(aX509CertLength > 0);
     assert(aX509Certificate != NULL);
 
-    assert(aPrivateKeyLenth > 0);
+    assert(aPrivateKeyLength > 0);
     assert(aPrivateKey != NULL);
 
     mOwnCertSrc       = aX509Certificate;
-    mOwnCertLength    = aX509CertLenth;
+    mOwnCertLength    = aX509CertLength;
     mPrivateKeySrc    = aPrivateKey;
-    mPrivateKeyLength = aPrivateKeyLenth;
+    mPrivateKeyLength = aPrivateKeyLength;
 
     mCipherSuites[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
@@ -365,15 +365,15 @@ otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
     return error;
 }
 
-otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth)
+otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
     otError error = OT_ERROR_NONE;
 
-    assert(aX509CaCertChainLenth > 0);
+    assert(aX509CaCertChainLength > 0);
     assert(aX509CaCertificateChain != NULL);
 
     mCaChainSrc    = aX509CaCertificateChain;
-    mCaChainLength = aX509CaCertChainLenth;
+    mCaChainLength = aX509CaCertChainLength;
 
     return error;
 }

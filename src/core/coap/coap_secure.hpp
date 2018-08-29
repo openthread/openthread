@@ -125,7 +125,7 @@ public:
     /**
      * This method initializes DTLS session with a peer.
      *
-     * @param[in]  aMessageInfo            A reference to an address of the peer.
+     * @param[in]  aMessageInfo            A pointer to a message info structure.
      * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
      * established.
      *
@@ -172,9 +172,9 @@ public:
      * This method sets the connected callback to indicate, when
      * a Client connect to the CoAP Secure server.
      *
-     * @param[in]  aMessageInfo  A reference to an address of the peer.
      * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
      * established.
+     * @param[in]  aContext      A pointer to arbitrary context information.
      *
      */
     void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
@@ -219,10 +219,10 @@ public:
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
-     * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 PEM certificate.
-     * @param[in]  aX509CertLenth    The length of certificate.
-     * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
-     * @param[in]  aPrivateKeyLenth  The length of the private key.
+     * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 PEM certificate.
+     * @param[in]  aX509CertLength    The length of certificate.
+     * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
+     * @param[in]  aPrivateKeyLength  The length of the private key.
      *
      * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
@@ -239,12 +239,12 @@ public:
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
-     * @param[in]  aX509CaCertChainLenth    The length of chain.
+     * @param[in]  aX509CaCertChainLength   The length of chain.
      *
      * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
      *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth);
+    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C
@@ -257,7 +257,8 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_NONE  Successfully get the peer certificate.
+     * @retval OT_ERROR_NONE     Successfully get the peer certificate.
+     * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);

@@ -52,6 +52,7 @@ namespace Cli {
 CoapSecureCli::CoapSecureCli(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mShutdownFlag(false)
+    , mUseCertificate(false)
     , mPskLength(0)
     , mPskIdLength(0)
 {
@@ -68,7 +69,7 @@ void CoapSecureCli::PrintHeaderInfos(otCoapHeader *aHeader) const
     mCoapCode = otCoapHeaderGetCode(aHeader);
     mCoapType = otCoapHeaderGetType(aHeader);
 
-    mInterpreter.mServer->OutputFormat("\r\n    CoapSecure RX Header Informations:"
+    mInterpreter.mServer->OutputFormat("\r\n    CoapSecure RX Header Information:"
                                        "\r\n        Type %d => ",
                                        static_cast<uint16_t>(mCoapType));
 
@@ -129,10 +130,11 @@ void CoapSecureCli::PrintPayload(otMessage *aMessage) const
 
 otError CoapSecureCli::Process(int argc, char *argv[])
 {
-    otError      error = OT_ERROR_NONE;
-    otIp6Address coapDestinationIp;
-    bool         mVerifyPeerCert = true;
-    long         value;
+    otError       error = OT_ERROR_NONE;
+    otIp6Address  coapDestinationIp;
+    otMessageInfo messageInfo;
+    bool          mVerifyPeerCert = true;
+    long          value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -144,6 +146,10 @@ otError CoapSecureCli::Process(int argc, char *argv[])
             {
                 mVerifyPeerCert = false;
             }
+            else if (strcmp(argv[1], "true") != 0)
+            {
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
         }
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
@@ -151,8 +157,13 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
         otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecureCli::DefaultHandle, this);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-        mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
-                                           mVerifyPeerCert ? "true" : "false");
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+        if (mUseCertificate)
+        {
+            mInterpreter.mServer->OutputFormat("Verify Peer Certificate: %s. Coap Secure service started: ",
+                                               mVerifyPeerCert ? "true" : "false");
+        }
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     }
     else if (strcmp(argv[0], "set") == 0)
     {
@@ -160,7 +171,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         {
             if (strcmp(argv[1], "psk") == 0)
             {
-                if (argc > 2)
+                if (argc > 3)
                 {
                     mPskLength   = (uint8_t)strlen(argv[2]);
                     mPskIdLength = (uint8_t)strlen(argv[3]);
@@ -170,6 +181,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
 
                     SuccessOrExit(
                         error = otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
+                    mUseCertificate = false;
                     mInterpreter.mServer->OutputFormat("Coap Secure set PSK: ");
                 }
                 else
@@ -188,6 +200,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
                 SuccessOrExit(error = otCoapSecureSetCaCertificateChain(
                                   mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
                                   sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
+                mUseCertificate = true;
 
                 mInterpreter.mServer->OutputFormat("Coap Secure set own .X509 certificate: ");
 #else
@@ -211,7 +224,6 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         {
             // parse ipAddr
             SuccessOrExit(error = otIp6AddressFromString(argv[1], &coapDestinationIp));
-            otMessageInfo messageInfo;
             memset(&messageInfo, 0, sizeof(messageInfo));
             messageInfo.mPeerAddr    = coapDestinationIp;
             messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
@@ -254,7 +266,7 @@ otError CoapSecureCli::Process(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        if (otCoapSecureIsConnected(mInterpreter.mInstance) || otCoapSecureIsConncetionActive(mInterpreter.mInstance))
+        if (otCoapSecureIsConncetionActive(mInterpreter.mInstance))
         {
             error         = otCoapSecureDisconnect(mInterpreter.mInstance);
             mShutdownFlag = true;
@@ -276,9 +288,9 @@ otError CoapSecureCli::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat(">'coaps connect <servers ipv6 addr> (port)'          "
                                            ": start dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
-                                           ": interact with coap source from server, ipv6 is not need as client\r\n");
+                                           ": interact with coap resource from server, ipv6 is not need as client\r\n");
         mInterpreter.mServer->OutputFormat(
-            "    >> args:(ipV6_addr_srv) <coap_src> and, if you have payload: <con> <payload>\r\n");
+            "    >> args:(ipv6_addr_srv) <coap_src> and, if you have payload: <con> <payload>\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps resource <uri>'                              "
                                            ": add a coap server resource with 'helloWorld' as content.\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps disconnect'                                  "
@@ -486,7 +498,7 @@ otError CoapSecureCli::ProcessRequest(int argc, char *argv[])
 
     // Destination IPv6 address not need as client
     // if no IPv6 is entered, so ignore it and go away
-    if (error == 0)
+    if (error == OT_ERROR_NONE)
     {
         indexShifter = 0;
     }

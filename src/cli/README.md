@@ -311,7 +311,7 @@ Coap Secure set PSK: Done
 ### coaps set x509
 
 Set X.509 Certificate with his private key, which is saved in
-src/cli/x509_cert_key.h.
+src/cli/x509_cert_key.hpp.
 
 ```bash
 > coaps set x509
@@ -345,8 +345,8 @@ Done
 * method: CoAP method to be used (GET/PUT/POST/DELETE).
 * address: IPv6 address of the CoAP Secure server to query.
 * uri: URI String of the resource on the CoAP server.
-* payload: In case of PUT/POST/DELETE a payload can be encapsulated.
 * type: Switch between confirmable ("con") and non-confirmable (default).
+* payload: In case of PUT/POST/DELETE a payload can be encapsulated.
 
 ```bash
 > coaps get 2001:1234::321 secret

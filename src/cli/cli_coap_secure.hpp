@@ -28,8 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI CoAP Secure (server and) client.
- *   Note: Server functionality now not implemented.
+ *   This file contains definitions for a simple CLI CoAP Secure server and client.
  */
 
 #ifndef CLI_COAP_SECURE_HPP_
@@ -126,6 +125,7 @@ private:
     Interpreter &mInterpreter;
 
     bool    mShutdownFlag;
+    bool    mUseCertificate;
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
     uint8_t mPskId[kPskIdMaxLength];

@@ -2,19 +2,11 @@
 
 The OpenThread CoAP Secure APIs may be invoked via the OpenThread CLI.
 
-CoAP Secure use DTLS (over UDP) to make a end to end encrypted connection.
-
-## Init (for Server and Client)
-
- 1. start (init) the coaps api and starts listen on coaps port (5684)
- 
-```bash
-> coaps start
-```
+CoAP Secure use DTLS (over UDP) to make an end to end encrypted connection.
 
 ### For use PSK with AES128 CCM8
 
- 2a. enter your psk and his identifier
+ 1a. enter your psk and his identifier
  
 ```bash
 coaps set psk <yourPsk> <PskIdentifier>
@@ -22,12 +14,20 @@ coaps set psk <yourPsk> <PskIdentifier>
 
 ### For use ECDHE ECDSA with AES128 CCM8
 
- 2b. set the private key and .X509 certificate stored in core/cli/x509_cert_key.hpp.
+ 1b. set the private key and .X509 certificate stored in core/cli/x509_cert_key.hpp.
  
  > _optional_: add your [own](#create-ec-private-key) X.509 certificate and private key to 'core/cli/x509_cert_key.hpp'.
  
 ```bash
 coaps set x509
+```
+
+## Start CoAPS Service (for Server and Client)
+
+ 2. start (init) the coaps api and starts listen on coaps port (5684)
+ 
+```bash
+> coaps start
 ```
 
 ## CoAP Secure Server
@@ -81,16 +81,16 @@ The [Node 2](#complete-example-dtlscoap-client-node-2) below is able to connect 
 ### with PSK
 
 ```bash
-coaps start
 coaps set psk secretPSK Client_identity
+coaps start
 coaps resource test
 ```
 
 ### with Certificate
 
 ```bash
-coaps start (false)
 coaps set x509
+coaps start (false)
 coaps resource test
 ```
 
@@ -99,7 +99,7 @@ coaps resource test
 ## Complete example DTLS/CoAP client (Node 2)
 
 In this example the coap client is also the dtls client.
-The dlts client can connect to an coaps server which is listen on coaps port 5684, e.g to the [Node 1](#complete-example-for-dtlscoap-server-node-1) above.
+The dlts client can connect to a coaps server which is listen on coaps port 5684, e.g to the [Node 1](#complete-example-for-dtlscoap-server-node-1) above.
 
 > Note: Node 1 and Node 2 must use the same mode. Either PSK or Certificate based.   
 
@@ -115,8 +115,8 @@ The dlts client can connect to an coaps server which is listen on coaps port 568
 ### with PSK
 
 ```bash
-coaps start
 coaps set psk secretPSK Client_identity
+coaps start
 coaps connect 2001:620:190:ffa1::321
 coaps get test
 coaps disconnect
@@ -125,8 +125,8 @@ coaps disconnect
 ### with Certificate
 
 ```bash
-coaps start (false)
 coaps set x509
+coaps start (false)
 coaps connect <server_ip>
 coaps get test
 coaps disconnect

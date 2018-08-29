@@ -59,7 +59,7 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (aX509Cert == NULL || aX509Length <= 0 || aPrivateKey == NULL || aPrivateKeyLength == 0)
+    if (aX509Cert == NULL || aX509Length == 0 || aPrivateKey == NULL || aPrivateKeyLength == 0)
     {
         return OT_ERROR_INVALID_ARGS;
     }
@@ -154,7 +154,7 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
 
 otError otCoapSecureConnect(otInstance *                    aInstance,
                             const otMessageInfo *           aMessageInfo,
-                            otHandleSecureCoapClientConnect aHandler,
+                            otHandleCoapSecureClientConnect aHandler,
                             void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -216,7 +216,7 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
 }
 
 void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
-                                            otHandleSecureCoapClientConnect aHandler,
+                                            otHandleCoapSecureClientConnect aHandler,
                                             void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

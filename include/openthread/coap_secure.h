@@ -33,9 +33,9 @@
  *
  *  @note
  *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
- *    must enabled in mbedtls-config.h
+ *    must be enabled in mbedtls-config.h
  *   To enable cipher suite DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
- *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must enabled in mbedtls-config.h.
+ *    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED must be enabled in mbedtls-config.h.
  */
 
 #ifndef OPENTHREAD_COAP_SECURE_H_
@@ -66,13 +66,13 @@ extern "C" {
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
 /**
- * This function pointer is called once DTLS connection is established.
+ * This function pointer is called when the DTLS connection state changes.
  *
  * @param[in]  aConnected  true, if a connection was established, false otherwise.
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-typedef void (*otHandleSecureCoapClientConnect)(bool aConnected, void *aContext);
+typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext);
 
 /**
  * This function starts the CoAP Secure service.
@@ -96,7 +96,7 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
 otError otCoapSecureStop(otInstance *aInstance);
 
 /**
- * This method sets the Pre-Shared Key (PSK) and set cipher suite
+ * This method sets the Pre-Shared Key (PSK) and cipher suite
  * DTLS_PSK_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -135,10 +135,10 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              uint64_t       aCertBufferSize);
 
 /**
- * This method set the authentication mode for the coap secure connection.
+ * This method sets the authentication mode for the coap secure connection.
  *
  * Disable or enable the verification of peer certificate.
- * Must called before start.
+ * Must be called before start.
  *
  * @param[in]   aInstance               A pointer to an OpenThread instance.
  * @param[in]   aVerifyPeerCertificate  true, to verify the peer certificate.
@@ -150,11 +150,11 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * This method sets the local device's X509 certificate with corresponding private key for
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aX509Certificate  A pointer to the PEM formatted X509 certificate.
- * @param[in]  aX509CertLenth    The length of certificate.
- * @param[in]  aPrivateKey       A pointer to the PEM formatted private key.
- * @param[in]  aPrivateKeyLenth  The length of the private key.
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 certificate.
+ * @param[in]  aX509Length        The length of certificate.
+ * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
+ * @param[in]  aPrivateKeyLength  The length of the private key.
  *
  * @retval OT_ERROR_NONE              Successfully set the x509 certificate
  *                                    with his private key.
@@ -169,7 +169,7 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
                                       uint32_t       aPrivateKeyLength);
 
 /**
- * This method sets the trusted top level CAs. It is needed for validate the
+ * This method sets the trusted top level CAs. It is needed for validating the
  * certificate of the peer.
  *
  * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
@@ -189,8 +189,9 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  * This method initializes DTLS session with a peer.
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
- * @param[in]  aMessageInfo            A reference to an address of the peer.
- * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is established.
+ * @param[in]  aMessageInfo            A pointer to a message info structure.
+ * @param[in]  aCallback               A pointer to a function that will be called when the DTLS connection
+ *                                     state changes.
  * @param[in]  aContext                A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
@@ -198,7 +199,7 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  */
 otError otCoapSecureConnect(otInstance *                    aInstance,
                             const otMessageInfo *           aMessageInfo,
-                            otHandleSecureCoapClientConnect aHandler,
+                            otHandleCoapSecureClientConnect aHandler,
                             void *                          aContext);
 
 /**
@@ -291,12 +292,12 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
  * a Client connect to the CoAP Secure server.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMessageInfo  A reference to an address of the peer.
+ * @param[in]  aMessageInfo  A pointer to a message info structure.
  * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection is established.
  *
  */
 void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
-                                            otHandleSecureCoapClientConnect aHandler,
+                                            otHandleCoapSecureClientConnect aHandler,
                                             void *                          aContext);
 
 /**
