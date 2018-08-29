@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,13 +35,14 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 #include "sdk_common.h"
 #if NRF_MODULE_ENABLED(APP_USBD)
 
 #include "app_usbd.h"
 #include "app_usbd_core.h"
+#include "app_usbd_request.h"
 #include "nrf_power.h"
 #include "nrf_drv_clock.h"
 #include "nrf_drv_power.h"
@@ -95,14 +96,14 @@ static uint16_t m_last_frame;
 #endif
 
 /**
- * @brief Variable type for endpoint configuration
+ * @brief Variable type for endpoint configuration.
  *
  * Each endpoint would have assigned this type of configuration structure.
  */
 typedef struct
 {
     /**
-     * @brief The class instance
+     * @brief The class instance.
      *
      * The pointer to the class instance that is connected to the endpoint.
      */
@@ -129,27 +130,30 @@ typedef struct
 
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE) \
      || defined(__SDK_DOXYGEN__)
-    uint16_t                sof_cnt; //!< Number of the SOF events that appears before current event
+    uint16_t                sof_cnt;        //!< Number of the SOF events that appears before current event
+    uint16_t                start_frame;    //!< Number of the SOF frame that starts this event
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
 
 } app_usbd_internal_queue_evt_t;
 
 #if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
 /**
- * @brief Event queue
+ * @brief Event queue.
  *
- * The queue with events to be processed
+ * The queue with events to be processed.
  */
 NRF_ATFIFO_DEF(m_event_queue, app_usbd_internal_queue_evt_t, APP_USBD_CONFIG_EVENT_QUEUE_SIZE);
 
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE) \
      || defined(__SDK_DOXYGEN__)
-/**
- * @brief SOF events counter.
- */
+
+/** @brief SOF events counter */
 static nrf_atomic_u32_t m_sof_events_cnt;
 
-// Limit of SOF events stacked until warning message.
+/** @brief SOF Frame counter */
+static uint16_t m_event_frame;
+
+/* Limit of SOF events stacked until warning message. */
 #define APP_USBD_SOF_WARNING_LIMIT 500
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
        //  || defined(__SDK_DOXYGEN__)
@@ -157,7 +161,7 @@ static nrf_atomic_u32_t m_sof_events_cnt;
 #endif
 
 /**
- * @brief Instances connected with IN endpoints
+ * @brief Instances connected with IN endpoints.
  *
  * Array of instance pointers connected with every IN endpoint.
  * @sa m_epout_instances
@@ -165,7 +169,7 @@ static nrf_atomic_u32_t m_sof_events_cnt;
 static app_usbd_ep_conf_t m_epin_conf[NRF_USBD_EPIN_CNT];
 
 /**
- * @brief Instances connected with OUT endpoints
+ * @brief Instances connected with OUT endpoints.
  *
  * Array of instance pointers connected with every OUT endpoint.
  * @sa m_epin_instances
@@ -173,7 +177,7 @@ static app_usbd_ep_conf_t m_epin_conf[NRF_USBD_EPIN_CNT];
 static app_usbd_ep_conf_t m_epout_conf[NRF_USBD_EPIN_CNT];
 
 /**
- * @brief Beginning of classes list
+ * @brief Beginning of classes list.
  *
  * All enabled in current configuration instances are connected into
  * a single linked list chain.
@@ -183,11 +187,18 @@ static app_usbd_ep_conf_t m_epout_conf[NRF_USBD_EPIN_CNT];
 static app_usbd_class_inst_t const * m_p_first_cinst;
 
 /**
- * @brief Classes list that requires SOF events
+ * @brief Classes list that requires SOF events.
  *
- * @todo RK Implement and documentation
+ * Pointer to first class that requires SOF events.
  */
 static app_usbd_class_inst_t const * m_p_first_sof_cinst;
+
+/**
+ * @brief Classes list that require SOF events in interrupt.
+ *
+ * Pointer to first class that requires SOF events in interrupt.
+ */
+static app_usbd_class_inst_t const * m_p_first_sof_interrupt_cinst;
 
 /**
  * @brief Default configuration (when NULL is passed to @ref app_usbd_init).
@@ -204,7 +215,7 @@ static const app_usbd_config_t m_default_conf = {
 };
 
 /**
- * @brief SUSPEND state machine states
+ * @brief SUSPEND state machine states.
  *
  * The enumeration of internal SUSPEND state machine states.
  */
@@ -222,14 +233,14 @@ typedef enum
 }app_usbd_sustate_t;
 
 /**
- * @brief Current suspend state
+ * @brief Current suspend state.
  *
- * The state of the suspend state machine
+ * The state of the suspend state machine.
  */
 static app_usbd_sustate_t m_sustate;
 
 /**
- * @brief Remote wake-up register/unregister
+ * @brief Remote wake-up register/unregister.
  *
  * Counter incremented when appended instance required remote wake-up functionality.
  * It should be decremented when the class is removed.
@@ -247,12 +258,12 @@ static app_usbd_config_t m_current_conf;
  *
  * @ref app_usbd_class_interface_t::event_handler
  *
- * @param[in] p_cinst Class instance
- * @param[in] p_event Event passed to class instance
+ * @param[in] p_cinst Class instance.
+ * @param[in] p_event Event passed to class instance.
  *
  * @return Standard error code @ref ret_code_t
- * @retval NRF_SUCCESS event handled successfully
- * @retval NRF_ERROR_NOT_SUPPORTED unsupported event
+ * @retval NRF_SUCCESS event handled successfully.
+ * @retval NRF_ERROR_NOT_SUPPORTED unsupported event.
  * */
 static inline ret_code_t class_event_handler(app_usbd_class_inst_t  const * const p_cinst,
                                              app_usbd_complex_evt_t const * const p_event)
@@ -264,6 +275,15 @@ static inline ret_code_t class_event_handler(app_usbd_class_inst_t  const * cons
 }
 
 #if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE) || defined(__SDK_DOXYGEN__)
+static inline void class_sof_interrupt_handler(app_usbd_class_inst_t  const * const p_cinst,
+                                               app_usbd_complex_evt_t const * const p_event)
+{
+    ASSERT(p_cinst != NULL);
+    ASSERT(p_cinst->p_data != NULL);
+    ASSERT(p_cinst->p_data->sof_handler != NULL);
+    p_cinst->p_data->sof_handler(p_event->drv_evt.data.sof.framecnt);
+}
+
 /**
  * @brief User event handler call (passed via configuration).
  *
@@ -280,7 +300,7 @@ static inline void user_event_handler(app_usbd_internal_evt_t const * const p_ev
 #endif
 
 /**
- * @brief User event processor call (passed via configuration)
+ * @brief User event processor call (passed via configuration).
  *
  * @param event Event type.
  */
@@ -293,17 +313,17 @@ static inline void user_event_state_proc(app_usbd_event_type_t event)
 }
 
 /**
- * @brief Find a specified descriptor
+ * @brief Find a specified descriptor.
  *
- * @param[in] p_cinst Class instance
- * @param[in] desc_type Descriptor type @ref app_usbd_descriptor_t
- * @param[in] desc_index Descriptor index
- * @param[out] p_desc Pointer to escriptor
- * @param[out] p_desc_len Length of descriptor
+ * @param[in] p_cinst       Class instance.
+ * @param[in] desc_type     Descriptor type @ref app_usbd_descriptor_t
+ * @param[in] desc_index    Descriptor index.
+ * @param[out] p_desc       Pointer to escriptor.
+ * @param[out] p_desc_len   Length of descriptor.
  *
  * @return Standard error code @ref ret_code_t
- * @retval NRF_SUCCESS descriptor successfully found
- * @retval NRF_ERROR_NOT_FOUND descriptor not found
+ * @retval NRF_SUCCESS          Descriptor successfully found.
+ * @retval NRF_ERROR_NOT_FOUND  Descriptor not found.
  * */
 ret_code_t app_usbd_class_descriptor_find(app_usbd_class_inst_t const * const p_cinst,
                                           uint8_t                             desc_type,
@@ -373,10 +393,10 @@ ret_code_t app_usbd_class_descriptor_find(app_usbd_class_inst_t const * const p_
 }
 
 /**
- * @brief Access into selected endpoint configuration structure
+ * @brief Access into selected endpoint configuration structure.
  *
- * @param ep Endpoint address
- * @return A pointer to the endpoint configuration structure
+ * @param ep Endpoint address.
+ * @return A pointer to the endpoint configuration structure.
  *
  * @note This function would assert when endpoint number is not correct and debugging is enabled.
  */
@@ -397,11 +417,11 @@ static app_usbd_ep_conf_t * app_usbd_ep_conf_access(nrf_drv_usbd_ep_t ep)
 }
 
 /**
- * @brief Accessing instance connected with selected endpoint
+ * @brief Accessing instance connected with selected endpoint.
  *
- * @param ep Endpoint number
+ * @param ep Endpoint number.
  *
- * @return The pointer to the instance connected with endpoint
+ * @return The pointer to the instance connected with endpoint.
  */
 static inline app_usbd_class_inst_t const * app_usbd_ep_instance_get(nrf_drv_usbd_ep_t ep)
 {
@@ -409,12 +429,12 @@ static inline app_usbd_class_inst_t const * app_usbd_ep_instance_get(nrf_drv_usb
 }
 
 /**
- * @brief Connect instance with selected endpoint
+ * @brief Connect instance with selected endpoint.
  *
  * This function configures instance connected to endpoint but also sets
  * default event handler function pointer.
  *
- * @param ep      Endpoint number
+ * @param ep      Endpoint number.
  * @param p_cinst The instance to connect into the selected endpoint.
  *                NULL if endpoint is going to be disconnected.
  *
@@ -437,7 +457,7 @@ static void app_usbd_ep_instance_set(nrf_drv_usbd_ep_t ep, app_usbd_class_inst_t
 }
 
 /**
- * @brief Call the core handler
+ * @brief Call the core handler.
  *
  * Core instance is special kind of instance that is connected only to endpoint 0.
  * It is not present in instance list.
@@ -454,38 +474,74 @@ static inline ret_code_t app_usbd_core_handler_call(app_usbd_internal_evt_t cons
 
 
 /**
- * @brief Add event for execution
+ * @brief Add event for execution.
  *
  * Dependent on configuration event would be executed in place or would be added into queue
  * to be executed later.
  *
- * @param p_event Event to be executed
+ * @param p_event_input Event to be executed.
  */
-static inline void app_usbd_event_add(app_usbd_internal_evt_t const * const p_event)
+static inline void app_usbd_event_add(app_usbd_internal_evt_t const * const p_event_input)
 {
+    app_usbd_internal_evt_t const * p_event = p_event_input;
+
+
+    if (p_event->type == APP_USBD_EVT_DRV_SETUP)
+    {
+        uint8_t bRequest      = nrf_usbd_setup_brequest_get();
+        uint8_t bmRequestType = nrf_usbd_setup_bmrequesttype_get();
+
+        if ((bmRequestType == app_usbd_setup_req_val(
+                APP_USBD_SETUP_REQREC_DEVICE,
+                APP_USBD_SETUP_REQTYPE_STD,
+                APP_USBD_SETUP_REQDIR_OUT))
+                && (bRequest == APP_USBD_SETUP_STDREQ_SET_ADDRESS))
+        {
+            static const app_usbd_internal_evt_t event_setaddress =
+            {
+                .type = APP_USBD_EVT_SETUP_SETADDRESS,
+            };
+            p_event = &event_setaddress;
+        }
+    }
+
 #if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE)
 
-#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
     if (p_event->app_evt.type == APP_USBD_EVT_DRV_SOF)
     {
+        /* Propagate SOF event to classes that need it in interrupt */
+        app_usbd_class_inst_t const * p_inst = app_usbd_class_sof_interrupt_first_get();
+        while (NULL != p_inst)
+        {
+            class_sof_interrupt_handler(p_inst, (app_usbd_complex_evt_t const *)p_event);
+            p_inst = app_usbd_class_sof_interrupt_next_get(p_inst);
+        }
+
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+        CRITICAL_REGION_ENTER();
+        if (m_sof_events_cnt == 0)
+        {
+            m_event_frame = p_event->drv_evt.data.sof.framecnt;
+        }
         UNUSED_RETURN_VALUE(nrf_atomic_u32_add(&m_sof_events_cnt, 1));
+        CRITICAL_REGION_EXIT();
+
         user_event_handler(p_event, true);
         if (m_sof_events_cnt == APP_USBD_SOF_WARNING_LIMIT)
         {
             NRF_LOG_WARNING("Stacked over %d SOF events.", APP_USBD_SOF_WARNING_LIMIT);
         }
         return;
-    }
+    
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
 
-    if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_INTERRUPT)
-    {
-        if (p_event->app_evt.type == APP_USBD_EVT_DRV_SOF)
-        {
-            user_event_handler(p_event, false);
-            app_usbd_event_execute(p_event);
-            return;
-        }
+#if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_INTERRUPT)
+
+        user_event_handler(p_event, false);
+        app_usbd_event_execute(p_event);
+        return;
+
+#endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_INTERRUPT)
     }
 
     nrf_atfifo_item_put_t cx;
@@ -497,7 +553,10 @@ static inline void app_usbd_event_add(app_usbd_internal_evt_t const * const p_ev
         p_event_item->evt = *p_event;
 
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
+        CRITICAL_REGION_ENTER();
+        p_event_item->start_frame = m_event_frame - m_sof_events_cnt + 1;
         p_event_item->sof_cnt = nrf_atomic_u32_fetch_store(&m_sof_events_cnt, 0);
+        CRITICAL_REGION_EXIT();
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
 
         visible = nrf_atfifo_item_put(m_event_queue, &cx);
@@ -513,10 +572,10 @@ static inline void app_usbd_event_add(app_usbd_internal_evt_t const * const p_ev
 }
 
 /**
- * @brief Power event handler
+ * @brief Power event handler.
  *
- * The function that pushes power events into the queue
- * @param p_event
+ * The function that pushes power events into the queue.
+ * @param p_event Event from power driver to map into APP_USBD_EVT_POWER_ event.
  */
 #if APP_USBD_CONFIG_POWER_EVENTS_PROCESS
 static void app_usbd_power_event_handler(nrf_drv_power_usb_evt_t event)
@@ -554,10 +613,10 @@ static void app_usbd_power_event_handler(nrf_drv_power_usb_evt_t event)
 #endif
 
 /**
- * @brief Event handler
+ * @brief Event handler.
  *
- * The function that pushes the event into the queue
- * @param p_event
+ * The function that pushes the event into the queue.
+ * @param p_event Event to push.
  */
 static void app_usbd_event_handler(nrf_drv_usbd_evt_t const * const p_event)
 {
@@ -565,11 +624,11 @@ static void app_usbd_event_handler(nrf_drv_usbd_evt_t const * const p_event)
 }
 
 /**
- * @brief HF clock ready event handler
+ * @brief HF clock ready event handler.
  *
- * Function that is called when high frequency clock is started
+ * Function that is called when high frequency clock is started.
  *
- * @param event Event type that comes from clock driver
+ * @param event Event type that comes from clock driver.
  */
 static void app_usbd_hfclk_ready(nrf_drv_clock_evt_type_t event)
 {
@@ -581,62 +640,62 @@ static void app_usbd_hfclk_ready(nrf_drv_clock_evt_type_t event)
 }
 
 /**
- * @brief Check if the HFCLK was requested in selected suspend state machine state
+ * @brief Check if the HFCLK was requested in selected suspend state machine state.
  *
  *
- * @param sustate State to be checked
+ * @param sustate State to be checked.
  *
- * @retval true  High frequency clock was requested in selected state
- * @retval false High frequency clock was released in selected state
+ * @retval true  High frequency clock was requested in selected state.
+ * @retval false High frequency clock was released in selected state.
  */
 static inline bool app_usbd_sustate_with_requested_hfclk(app_usbd_sustate_t sustate)
 {
     switch(sustate)
     {
-        case SUSTATE_STOPPED:                    return false;
-        case SUSTATE_STARTED:                    return false;
-        case SUSTATE_ACTIVE:                     return true;
-        case SUSTATE_SUSPENDING:                 return false;
-        case SUSTATE_SUSPEND:                    return false;
-        case SUSTATE_RESUMING:                   return true;
-        case SUSTATE_WAKINGUP_WAITING_HFCLK_WREQ: return true;
-        case SUSTATE_WAKINGUP_WAITING_HFCLK:      return true;
-        case SUSTATE_WAKINGUP_WAITING_WREQ:      return true;
+        case SUSTATE_STOPPED:                       return false;
+        case SUSTATE_STARTED:                       return false;
+        case SUSTATE_ACTIVE:                        return true;
+        case SUSTATE_SUSPENDING:                    return false;
+        case SUSTATE_SUSPEND:                       return false;
+        case SUSTATE_RESUMING:                      return true;
+        case SUSTATE_WAKINGUP_WAITING_HFCLK_WREQ:   return true;
+        case SUSTATE_WAKINGUP_WAITING_HFCLK:        return true;
+        case SUSTATE_WAKINGUP_WAITING_WREQ:         return true;
         default:
             return false;
     }
 }
 
 /**
- * @brief Check it the HFCLK is running in selected suspend state machine state
+ * @brief Check it the HFCLK is running in selected suspend state machine state.
  *
- * @param sustate State to be checked
+ * @param sustate State to be checked.
  *
- * @retval true  High frequency clock is running in selected state
- * @retval false High frequency clock is released in selected state
+ * @retval true  High frequency clock is running in selected state.
+ * @retval false High frequency clock is released in selected state.
  */
 static inline bool app_usbd_sustate_with_running_hfclk(app_usbd_sustate_t sustate)
 {
     switch(sustate)
     {
-        case SUSTATE_STOPPED:                    return false;
-        case SUSTATE_STARTED:                    return false;
-        case SUSTATE_ACTIVE:                     return true;
-        case SUSTATE_SUSPENDING:                 return false;
-        case SUSTATE_SUSPEND:                    return false;
-        case SUSTATE_RESUMING:                   return false;
-        case SUSTATE_WAKINGUP_WAITING_HFCLK_WREQ: return false;
-        case SUSTATE_WAKINGUP_WAITING_HFCLK:      return false;
-        case SUSTATE_WAKINGUP_WAITING_WREQ:      return true;
+        case SUSTATE_STOPPED:                       return false;
+        case SUSTATE_STARTED:                       return false;
+        case SUSTATE_ACTIVE:                        return true;
+        case SUSTATE_SUSPENDING:                    return false;
+        case SUSTATE_SUSPEND:                       return false;
+        case SUSTATE_RESUMING:                      return false;
+        case SUSTATE_WAKINGUP_WAITING_HFCLK_WREQ:   return false;
+        case SUSTATE_WAKINGUP_WAITING_HFCLK:        return false;
+        case SUSTATE_WAKINGUP_WAITING_WREQ:         return true;
         default:
             return false;
     }
 }
 
 /**
- * @brief Get current suspend state machine state
+ * @brief Get current suspend state machine state.
  *
- * @return The state of the suspend state machine
+ * @return The state of the suspend state machine.
  */
 static inline app_usbd_sustate_t sustate_get(void)
 {
@@ -644,9 +703,9 @@ static inline app_usbd_sustate_t sustate_get(void)
 }
 
 /**
- * @brief Set current suspend state machine state
+ * @brief Set current suspend state machine state.
  *
- * @param sustate The requested state of the state machine
+ * @param sustate The requested state of the state machine.
  */
 static inline void sustate_set(app_usbd_sustate_t sustate)
 {
@@ -680,14 +739,19 @@ static inline void sustate_set(app_usbd_sustate_t sustate)
 }
 
 /**
- * @brief Default selection function for interface
+ * @brief Default selection function for interface.
  *
- * This function just enables and clears interface endpoints
+ * This function just enables and clears interface endpoints.
  *
- * @param p_inst    See the documentation for @ref app_usbd_iface_select
- * @param iface_idx See the documentation for @ref app_usbd_iface_select
- * @param alternate See the documentation for @ref app_usbd_iface_select
- * @return
+ * @param[in] p_inst    Class instance.
+ * @param[in] iface_idx Interface index.
+ * @param[in] alternate Interface alternate setting.
+ *
+ * @note Currently only alternate setting 0 is supported.
+ *
+ * @return Standard error code @ref ret_code_t
+ * @retval NRF_SUCCESS               Endpoints  enabled and cleared.
+ * @retval NRF_ERROR_INVALID_PARAM   Unsupported alternate selected.
  */
 static inline ret_code_t default_iface_select(
     app_usbd_class_inst_t const * const p_inst,
@@ -714,12 +778,12 @@ static inline ret_code_t default_iface_select(
 }
 
 /**
- * @brief Default deselection function for interface
+ * @brief Default deselection function for interface.
  *
  * This function just disables all interface endpoints.
  *
- * @param p_inst    See the documentation for @ref app_usbd_iface_deselect
- * @param iface_idx See the documentation for @ref app_usbd_iface_deselect
+ * @param[in] p_inst    Class instance.
+ * @param[in] iface_idx Interface index.
  */
 static inline void default_iface_deselect(
     app_usbd_class_inst_t const * const p_inst,
@@ -852,6 +916,15 @@ ret_code_t app_usbd_uninit(void)
 
     /* Unchain SOF list */
     pp_inst = &m_p_first_sof_cinst;
+    while (NULL != (*pp_inst))
+    {
+        app_usbd_class_inst_t const * * pp_next = &app_usbd_class_data_access(*pp_inst)->p_sof_next;
+        (*pp_inst) = NULL;
+        pp_inst = pp_next;
+    }
+    
+    /* Unchain SOF interrupt list */
+    pp_inst = &m_p_first_sof_interrupt_cinst;
     while (NULL != (*pp_inst))
     {
         app_usbd_class_inst_t const * * pp_next = &app_usbd_class_data_access(*pp_inst)->p_sof_next;
@@ -1008,8 +1081,9 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
             app_usbd_all_call((app_usbd_complex_evt_t const *)&evt_data);
             user_event_state_proc(APP_USBD_EVT_STARTED);
 
-            nrf_drv_usbd_start((NULL != m_p_first_sof_cinst) || (m_current_conf.enable_sof) || (APP_USBD_PROVIDE_SOF_TIMESTAMP));
             app_usbd_all_iface_deselect();
+            app_usbd_core_ep0_disable();
+            nrf_drv_usbd_start((NULL != m_p_first_sof_cinst) || (m_current_conf.enable_sof) || (APP_USBD_PROVIDE_SOF_TIMESTAMP));
             sustate_set(SUSTATE_STARTED);
             break;
         }
@@ -1054,7 +1128,7 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
                     break;
                 }
                 default:
-                    break; // Just ignore - it can happen in specyfic situation
+                    break; // Just ignore - it can happen in specific situation
             }
             break;
         }
@@ -1090,9 +1164,18 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 
         case APP_USBD_EVT_DRV_SOF:
         {
-            #if (APP_USBD_PROVIDE_SOF_TIMESTAMP) || defined(__SDK_DOXYGEN__)
-                m_last_frame = p_event->drv_evt.data.sof.framecnt;
-            #endif
+#if (APP_USBD_PROVIDE_SOF_TIMESTAMP) || defined(__SDK_DOXYGEN__)
+            m_last_frame = p_event->drv_evt.data.sof.framecnt;
+#endif
+            /* Wake up if suspended */
+            if ((sustate_get() == SUSTATE_SUSPENDING) || (sustate_get() == SUSTATE_WAKINGUP_WAITING_WREQ))
+            {
+                static const app_usbd_evt_t evt_data = {
+                    .type = APP_USBD_EVT_DRV_RESUME
+                };
+                app_usbd_event_execute((app_usbd_internal_evt_t *)&evt_data);
+            }
+            
             user_event_state_proc(APP_USBD_EVT_DRV_SOF);
 
             app_usbd_class_inst_t const * p_inst = app_usbd_class_sof_first_get();
@@ -1108,6 +1191,7 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
         case APP_USBD_EVT_DRV_RESET:
         {
             app_usbd_all_iface_deselect();
+            app_usbd_core_ep0_enable();
             sustate_set(SUSTATE_ACTIVE);
             user_event_state_proc(APP_USBD_EVT_DRV_RESET);
             /* Processing core interface (connected only to EP0) and then all instances from the list */
@@ -1117,7 +1201,15 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
         }
         case APP_USBD_EVT_DRV_RESUME:
         {
-            sustate_set(SUSTATE_RESUMING);
+            if (sustate_get() == SUSTATE_WAKINGUP_WAITING_WREQ)
+            {
+                sustate_set(SUSTATE_ACTIVE);
+                nrf_drv_usbd_force_bus_wakeup();
+            }
+            else
+            {
+                sustate_set(SUSTATE_RESUMING);
+            }
             user_event_state_proc(APP_USBD_EVT_DRV_RESUME);
             /* Processing core interface (connected only to EP0) and then all instances from the list */
             UNUSED_RETURN_VALUE(app_usbd_core_handler_call(p_event));
@@ -1144,7 +1236,7 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
                     break;
                 default:
                 {
-                    // This should not happen - but try to recover by setting directly active state
+                    /* This should not happen - but try to recover by setting directly active state */
                     NRF_LOG_WARNING("Unexpected state on WUREQ event (%u)", sustate_get());
                     sustate_set(SUSTATE_ACTIVE);
                 }
@@ -1172,6 +1264,12 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
         }
 
         case APP_USBD_EVT_DRV_SETUP:
+        {
+            UNUSED_RETURN_VALUE(app_usbd_core_handler_call(p_event));
+            break;
+        }
+
+        case APP_USBD_EVT_SETUP_SETADDRESS:
         {
             UNUSED_RETURN_VALUE(app_usbd_core_handler_call(p_event));
             break;
@@ -1227,7 +1325,7 @@ void app_usbd_event_execute(app_usbd_internal_evt_t const * const p_event)
 bool app_usbd_event_queue_process(void)
 {
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
-    static app_usbd_internal_evt_t const sof_event = {
+    app_usbd_internal_evt_t sof_event = {
         .app_evt.type = APP_USBD_EVT_DRV_SOF
     };
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
@@ -1244,8 +1342,13 @@ bool app_usbd_event_queue_process(void)
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
         if (p_event_item->sof_cnt > 0)
         {
-            app_usbd_event_execute(&sof_event);
+            if (p_event_item->start_frame > USBD_FRAMECNTR_FRAMECNTR_Msk)
+            {
+                p_event_item->start_frame = 0;
+            }
+            sof_event.drv_evt.data.sof.framecnt = (p_event_item->start_frame)++;
             --(p_event_item->sof_cnt);
+            app_usbd_event_execute(&sof_event);
             return true;
         }
 #endif // (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
@@ -1258,7 +1361,14 @@ bool app_usbd_event_queue_process(void)
 #if (APP_USBD_CONFIG_SOF_HANDLING_MODE == APP_USBD_SOF_HANDLING_COMPRESS_QUEUE)
     else if (m_sof_events_cnt > 0)
     {
+        CRITICAL_REGION_ENTER();
+        if (m_event_frame > USBD_FRAMECNTR_FRAMECNTR_Msk)
+        {
+            m_event_frame = 0;
+        }
+        sof_event.drv_evt.data.sof.framecnt = m_event_frame++;
         UNUSED_RETURN_VALUE(nrf_atomic_u32_sub_hs(&m_sof_events_cnt, 1));
+        CRITICAL_REGION_EXIT();
         app_usbd_event_execute(&sof_event);
         return true;
     }
@@ -1334,7 +1444,7 @@ ret_code_t app_usbd_class_remove(app_usbd_class_inst_t const * p_cinst)
     ASSERT(NULL != p_cinst);
     ASSERT(NULL != p_cinst->p_class_methods);
     ASSERT(NULL != p_cinst->p_class_methods->event_handler);
-    /** This function should be only called if USBD is disabled */
+    /* This function should be only called if USBD is disabled */
     ASSERT(!nrf_drv_usbd_is_enabled() && nrf_drv_usbd_is_initialized());
     ret_code_t ret;
     /* Remove this class from the chain */
@@ -1407,7 +1517,7 @@ ret_code_t app_usbd_ep_handler_set(app_usbd_class_inst_t const * const p_cinst,
 {
     ASSERT(NULL != p_cinst);
     ASSERT(NULL != handler);
-    /** This function should be only called if USBD is disabled */
+    /* This function should be only called if USBD is disabled */
     ASSERT(!nrf_drv_usbd_is_enabled() && nrf_drv_usbd_is_initialized());
 
     if (p_cinst != app_usbd_ep_instance_get(ep))
@@ -1425,17 +1535,24 @@ ret_code_t app_usbd_class_sof_register(app_usbd_class_inst_t const * p_cinst)
     ASSERT(NULL != p_cinst);
     ASSERT(NULL != p_cinst->p_class_methods);
     ASSERT(NULL != p_cinst->p_class_methods->event_handler);
-    /** This function should be only called if USBD is disabled */
+    /* This function should be only called if USBD is disabled */
     ASSERT(!nrf_drv_usbd_is_enabled() && nrf_drv_usbd_is_initialized());
 
-    /* Next SOF event requiring instance have to be null now  */
+    /* Make sure it's not in interrupt SOF list */
+    app_usbd_class_inst_t const * * pp_last = &m_p_first_sof_interrupt_cinst;
+    while (NULL != (*pp_last))
+    {
+       ASSERT((*pp_last) != p_cinst);
+       pp_last = &(app_usbd_class_data_access(*pp_last)->p_sof_next);
+    }
+
+    /* Next SOF event requiring instance has to be NULL now  */
     ASSERT(NULL == (app_usbd_class_data_access(p_cinst)->p_sof_next));
 
     /* Adding pointer to this instance to the end of the chain */
-    app_usbd_class_inst_t const * * pp_last = &m_p_first_sof_cinst;
+    pp_last = &m_p_first_sof_cinst;
     while (NULL != (*pp_last))
     {
-
        ASSERT((*pp_last) != p_cinst);
        pp_last = &(app_usbd_class_data_access(*pp_last)->p_sof_next);
     }
@@ -1467,6 +1584,62 @@ ret_code_t app_usbd_class_sof_unregister(app_usbd_class_inst_t const * p_cinst)
     return NRF_ERROR_NOT_FOUND;
 }
 
+ret_code_t app_usbd_class_sof_interrupt_register(app_usbd_class_inst_t const * p_cinst, app_usbd_sof_interrupt_handler_t handler)
+{
+    ASSERT(NULL != p_cinst);
+    ASSERT(NULL != p_cinst->p_class_methods);
+    ASSERT(NULL != handler);
+    /* This function should be only called if USBD is disabled */
+    ASSERT(!nrf_drv_usbd_is_enabled() && nrf_drv_usbd_is_initialized());
+
+    /* Next SOF event requiring instance has to be NULL now  */
+    ASSERT(NULL == (app_usbd_class_data_access(p_cinst)->p_sof_next));
+    
+    app_usbd_class_data_access(p_cinst)->sof_handler = handler;
+    
+    /* Make sure it's not in normal SOF list */
+    app_usbd_class_inst_t const * * pp_last = &m_p_first_sof_cinst;
+    while (NULL != (*pp_last))
+    {
+       ASSERT((*pp_last) != p_cinst);
+       pp_last = &(app_usbd_class_data_access(*pp_last)->p_sof_next);
+    }
+
+    /* Adding pointer to this instance to the end of the interrupt chain */
+    pp_last = &m_p_first_sof_interrupt_cinst;
+    while (NULL != (*pp_last))
+    {
+
+       ASSERT((*pp_last) != p_cinst);
+       pp_last = &(app_usbd_class_data_access(*pp_last)->p_sof_next);
+    }
+    (*pp_last) = p_cinst;
+
+    return NRF_SUCCESS;
+}
+
+
+ret_code_t app_usbd_class_sof_interrupt_unregister(app_usbd_class_inst_t const * p_cinst)
+{
+    ASSERT(NULL != p_cinst);
+    /** This function should be only called if USBD is disabled */
+    ASSERT(!nrf_drv_usbd_is_enabled() && nrf_drv_usbd_is_initialized());
+
+    app_usbd_class_inst_t const * * pp_last = &m_p_first_sof_interrupt_cinst;
+    while (NULL != (*pp_last))
+    {
+        if ((*pp_last) == p_cinst)
+        {
+            /* Breaking chain */
+            (*pp_last) = (app_usbd_class_data_access(p_cinst)->p_sof_next);
+            app_usbd_class_data_access(p_cinst)->p_sof_next = NULL;
+
+            return NRF_SUCCESS;
+        }
+        pp_last = &(app_usbd_class_data_access(*pp_last)->p_sof_next);
+    }
+    return NRF_ERROR_NOT_FOUND;
+}
 
 ret_code_t app_usbd_class_rwu_register(app_usbd_class_inst_t const * const p_inst)
 {
@@ -1556,6 +1729,11 @@ app_usbd_class_inst_t const * app_usbd_class_first_get(void)
 app_usbd_class_inst_t const * app_usbd_class_sof_first_get(void)
 {
     return m_p_first_sof_cinst;
+}
+
+app_usbd_class_inst_t const * app_usbd_class_sof_interrupt_first_get(void)
+{
+    return m_p_first_sof_interrupt_cinst;
 }
 
 app_usbd_class_inst_t const * app_usbd_iface_find(uint8_t iface, uint8_t * p_iface_idx)

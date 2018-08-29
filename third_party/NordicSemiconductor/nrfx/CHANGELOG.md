@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project are documented in this file.
 
+## [1.1.0] - 2018-06-15
+### Added
+- Implemented workaround for nRF52832 and nRF52840 anomaly 194 in the I2S driver.
+- Implemented workaround for nRF52840 anomaly 195 in the SPIM driver.
+- Added HALs for CCM, ECB, and RADIO.
+- Extended HALs for GPIO, PPI, SAADC, and USBD.
+- Added support for external LFCLK sources.
+
+### Changed
+- Corrected handling of transfer lengths in the TWI driver.
+- Updated MDK to version 8.17.0.
+
+### Fixed
+- Fixed logging in the PPI driver.
+- Fixed SPIM interrupt definition for nRF52810.
+- Fixed Slave Select configuration in the SPIM driver.
+- Corrected default settings for NRF_SPIM3.
+- Fixed a typo in the UARTE TXDRDY event definition.
+- Corrected the TIMEOUT event clearing in the WDT interrupt handler.
+
 ## [1.0.0] - 2018-03-21
 ### Added
 - Added the NRFX_WAIT_FOR macro to improve the time-out functionality in QSPI and SAADC drivers.

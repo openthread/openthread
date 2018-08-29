@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef APP_USBD_REQUEST_H__
@@ -65,21 +65,21 @@ ANON_UNIONS_ENABLE;
  */
 
 /**
- * @brief Recipient bit-field in request type
+ * @brief Recipient bit-field in request type.
  *
  * Bits 4...0
  */
 #define APP_USBD_SETUP_REQ_BF_REC BF_CX(5, 0)
 
 /**
- * @brief Type bit-field in request type
+ * @brief Type bit-field in request type.
  *
  * Bits 6...5
  */
 #define APP_USBD_SETUP_REQ_BF_TYP BF_CX(2, 5)
 
 /**
- * @brief Direction bit-field in request type
+ * @brief Direction bit-field in request type.
  *
  * Bit 7
  */
@@ -109,7 +109,7 @@ typedef enum {
 } app_usbd_setup_reqtype_t;
 
 /**
- * @brief Direction of setup command
+ * @brief Direction of setup command.
  *
  * @note It is part of @ref app_usbd_setup_reqtype_t variable type.
  */
@@ -120,9 +120,9 @@ typedef enum {
 
 
 /**
- * @brief Standard requests
+ * @brief Standard requests.
  *
- * Enumerator for standard requests values
+ * Enumerator for standard requests values.
  */
 typedef enum {
     APP_USBD_SETUP_STDREQ_GET_STATUS        = 0x00, /**<
@@ -226,21 +226,22 @@ typedef enum {
 } app_usbd_setup_stdrequest_t;
 
 /**
- * @brief Standard feature selectors
+ * @brief Standard feature selectors.
  *
  * Standard features that may be disabled or enabled by
  * @ref APP_USBD_SETUP_STDREQ_CLEAR_FEATURE or @ref APP_USBD_SETUP_STDREQ_SET_FEATURE
  */
 typedef enum {
-    APP_USBD_SETUP_STDFEATURE_DEVICE_REMOTE_WAKEUP = 1, /**< Remote wakeup feature.
-                                                         *
+    APP_USBD_SETUP_STDFEATURE_DEVICE_REMOTE_WAKEUP = 1, /**<
+                                                         *   Remote wakeup feature.
                                                          *   Target: Device only
                                                          */
-    APP_USBD_SETUP_STDFEATURE_ENDPOINT_HALT        = 0, /**< Stall or clear the endpoint.
-                                                         *
+    APP_USBD_SETUP_STDFEATURE_ENDPOINT_HALT        = 0, /**<
+                                                         *   Stall or clear the endpoint.
                                                          *   Target: Endpoint different than default (0)
                                                          */
-    APP_USBD_SETUP_STDFEATURE_TEST_MODE            = 2  /**< Upstream port test mode.
+    APP_USBD_SETUP_STDFEATURE_TEST_MODE            = 2  /**<
+                                                         *   Upstream port test mode.
                                                          *   Power has to be cycled to exit test mode.
                                                          *   This feature cannot be cleared.
                                                          *
@@ -254,7 +255,7 @@ typedef enum {
 
 
 /**
- * @brief Universal way to access 16 bit values and its parts
+ * @brief Universal way to access 16 bit values and its parts.
  */
 typedef union {
     uint16_t w; //!< 16 bit access
@@ -266,7 +267,7 @@ typedef union {
 } app_usbd_setup_w_t;
 
 /**
- * @brief Internal redefinition of setup structure
+ * @brief Internal redefinition of setup structure.
  *
  * Redefinition of the structure to simplify changes in the future
  * if required - app_usbd API would present setup data using app_usbd_setup_t.
@@ -285,11 +286,11 @@ typedef struct {
 
 
 /**
- * @brief Extract recipient from request type
+ * @brief Extract recipient from request type.
  *
  * @param[in] bmRequestType
  *
- * @return Extracted recipient field from request type value
+ * @return Extracted recipient field from request type value.
  */
 static inline app_usbd_setup_reqrec_t app_usbd_setup_req_rec(uint8_t bmRequestType)
 {
@@ -297,11 +298,11 @@ static inline app_usbd_setup_reqrec_t app_usbd_setup_req_rec(uint8_t bmRequestTy
 }
 
 /**
- * @brief Extract type from request type
+ * @brief Extract type from request type.
  *
  * @param[in] bmRequestType
  *
- * @return Extracted type field from request type value
+ * @return Extracted type field from request type value.
  */
 static inline app_usbd_setup_reqtype_t app_usbd_setup_req_typ(uint8_t bmRequestType)
 {
@@ -310,11 +311,11 @@ static inline app_usbd_setup_reqtype_t app_usbd_setup_req_typ(uint8_t bmRequestT
 
 
 /**
- * @brief Extract direction from request type
+ * @brief Extract direction from request type.
  *
  * @param[in] bmRequestType
  *
- * @return Extracted direction field from request type value
+ * @return Extracted direction field from request type value.
  */
 static inline app_usbd_setup_reqdir_t app_usbd_setup_req_dir(uint8_t bmRequestType)
 {
@@ -322,13 +323,13 @@ static inline app_usbd_setup_reqdir_t app_usbd_setup_req_dir(uint8_t bmRequestTy
 }
 
 /**
- * @brief Make request type value
+ * @brief Make request type value.
  *
- * @param[in] rec Recipient
- * @param[in] typ Request type
- * @param[in] dir Direction
+ * @param[in] rec Recipient.
+ * @param[in] typ Request type.
+ * @param[in] dir Direction.
  *
- * @return Assembled request type value
+ * @return Assembled request type value.
  */
 static inline uint8_t app_usbd_setup_req_val(app_usbd_setup_reqrec_t  rec,
                                              app_usbd_setup_reqtype_t typ,
