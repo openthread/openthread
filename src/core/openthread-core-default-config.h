@@ -1779,7 +1779,7 @@
 /**
  * @def OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS
  *
- * The setting configures the number of consecutive MCPS.DATA-Confirms having Status NO_ACK
+ * This setting configures the number of consecutive MCPS.DATA-Confirms having Status NO_ACK
  * that cause a Child-to-Parent link to be considered broken.
  *
  */
@@ -1790,7 +1790,7 @@
 /**
  * @def OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
  *
- * The setting configures the minimum poll period in milliseconds.
+ * This setting configures the minimum poll period in milliseconds.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
@@ -1800,7 +1800,7 @@
 /**
  * @def OPENTHREAD_CONFIG_RETX_POLL_PERIOD
  *
- * The setting configures the retx poll period in milliseconds.
+ * This setting configures the retx poll period in milliseconds.
  *
  */
 #ifndef OPENTHREAD_CONFIG_RETX_POLL_PERIOD
