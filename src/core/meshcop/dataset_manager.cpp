@@ -149,6 +149,7 @@ otError DatasetManager::Set(const Dataset &aDataset)
     otError          error = OT_ERROR_NONE;
     const Timestamp *timestamp;
     int              compare;
+    bool             isMasterkeyUpdated = false;
 
     timestamp = aDataset.GetTimestamp();
 
@@ -159,13 +160,13 @@ otError DatasetManager::Set(const Dataset &aDataset)
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isMasterkeyUpdated));
         }
     }
 
     compare = mLocal.Compare(timestamp);
 
-    if (compare > 0)
+    if (isMasterkeyUpdated || compare > 0)
     {
         ThreadNetif &netif = GetNetif();
 

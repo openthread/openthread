@@ -512,7 +512,7 @@ class Node(object):
     @classmethod
     def init_all_nodes(cls, disable_logs=True, wait_time=15):
         """Issues a `wpanctl.leave` on all `Node` objects and waits for them to be ready"""
-        random.seed(12345)
+        random.seed(123456)
         time.sleep(0.5)
         for node in Node._all_nodes:
             start_time = time.time()
@@ -557,7 +557,7 @@ class Node(object):
     class _NodeError(Exception):
         pass
 
-    def prepare_tx(self, src, dst, data=40, count=1):
+    def prepare_tx(self, src, dst, data=40, count=1, mcast_hops=None):
         """Prepares an IPv6 msg transmission.
 
         - `src` and `dst` can be either a string containing IPv6 address, or a tuple (ipv6 address as string, port),
@@ -565,6 +565,7 @@ class Node(object):
         - `data` can be either a string containing the message to be sent, or an int indicating size of the message (a
            random message with the given length will be used).
         - `count` gives number of times the message will be sent (default is 1).
+        - `mcast_hops` specifies multicast hop limit (only applicable for multicast tx).
 
         Returns an `AsyncSender` object.
 
@@ -590,19 +591,15 @@ class Node(object):
         else:
             msg = data
 
-        return AsyncSender(self, src_addr, src_port, dst_addr, dst_port, msg, count)
+        return AsyncSender(self, src_addr, src_port, dst_addr, dst_port, msg, count, mcast_hops)
 
-    def prepare_rx(self, sender):
-        """Prepare to receive messages from a sender (an `AsyncSender`)"""
-        local_port = sender.dst_port
-
+    def _get_receiver(self, local_port):
+        # Gets or creates a receiver (an `AsyncReceiver`) tied to given port number
         if local_port in self._recvers:
             receiver = self._recvers[local_port]
         else:
             receiver = AsyncReceiver(self, local_port)
             self._recvers[local_port] = receiver
-
-        receiver._add_sender(sender.src_addr, sender.src_port, sender.msg, sender.count)
         return receiver
 
     def _remove_recver(self, recvr):
@@ -611,9 +608,21 @@ class Node(object):
         if local_port in self._recvers:
             del self._recvers[local_port]
 
+    def prepare_rx(self, sender):
+        """Prepare to receive messages from a sender (an `AsyncSender`)"""
+        receiver = self._get_receiver(sender.dst_port)
+        receiver._add_sender(sender.src_addr, sender.src_port, sender.msg, sender.count)
+        return receiver
+
+    def preapre_listener(self, local_port, timeout=1):
+        """Prepares a listener (an `AsyncReceiver`) listening on the given `local_port` for given `timeout` (sec)"""
+        receiver = self._get_receiver(local_port)
+        receiver._set_listen_timeout(timeout)
+        return receiver
+
     @staticmethod
     def perform_async_tx_rx(timeout=20):
-        """Called to perform all previously prepared async rx and tx operations"""
+        """Called to perform all previously prepared async rx/listen and tx operations"""
         try:
             start_time = time.time()
             while asyncore.socket_map:
@@ -622,7 +631,7 @@ class Node(object):
                     print 'Performing aysnc tx/tx took too long ({}>{} sec)'.format(elapsed_time, timeout)
                     raise Node._NodeError('perform_tx_rx timed out ({}>{} sec)'.format(elapsed_time, timeout))
                 # perform a single asyncore loop
-                asyncore.loop(timeout=1, count=1)
+                asyncore.loop(timeout=0.5, count=1)
         except:
             print 'Failed to perform async rx/tx'
             raise
@@ -645,7 +654,7 @@ def _create_socket_address(ip_address, port):
 class AsyncSender(asyncore.dispatcher):
     """ An IPv6 async message sender - use `Node.prepare_tx()` to create one"""
 
-    def __init__(self, node, src_addr, src_port, dst_addr, dst_port, msg, count):
+    def __init__(self, node, src_addr, src_port, dst_addr, dst_port, msg, count, mcast_hops=None):
         self._node = node
         self._src_addr = src_addr
         self._src_port = src_port
@@ -661,6 +670,10 @@ class AsyncSender(asyncore.dispatcher):
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, node.interface_name + '\0')
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+        # Set the IPV6_MULTICAST_HOPS
+        if mcast_hops is not None:
+            sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_HOPS, mcast_hops)
 
         # Bind the socket to the given src address
         if _is_ipv6_addr_link_local(src_addr):
@@ -742,7 +755,7 @@ class AsyncSender(asyncore.dispatcher):
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 class AsyncReceiver(asyncore.dispatcher):
-    """ An IPv6 async message receiver - use `prepare_tx()` to create one"""
+    """ An IPv6 async message receiver - use `prepare_rx()` to create one"""
 
     _MAX_RECV_SIZE = 2048
 
@@ -767,6 +780,9 @@ class AsyncReceiver(asyncore.dispatcher):
         self._local_port = local_port
         self._senders = []        # list of `_SenderInfo` objects
         self._all_rx = []         # contains all received messages as a list of (pkt, (src_addr, src_port))
+        self._timeout = 0         # listen timeout (zero means forever)
+        self._started = False
+        self._start_time = 0
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -781,6 +797,9 @@ class AsyncReceiver(asyncore.dispatcher):
 
     def _add_sender(self, sender_addr, sender_port, msg, count):
         self._senders.append(AsyncReceiver._SenderInfo(sender_addr, sender_port, msg, count))
+
+    def _set_listen_timeout(self, timeout):
+        self._timeout = timeout
 
     # Property getters
 
@@ -800,11 +819,20 @@ class AsyncReceiver(asyncore.dispatcher):
     @property
     def was_successful(self):
         """Indicates if all expected IPv6 messages were received successfully"""
-        return all([sender._did_recv_all() for sender in self._senders])
+        return len(self._senders) == 0 or all([sender._did_recv_all() for sender in self._senders])
 
     # asyncore.dispatcher callbacks
 
     def readable(self):
+        if not self._started:
+            self._start_time = time.time()
+            self._started = True
+        if self._timeout != 0 and time.time() - self._start_time >= self._timeout:
+            self.handle_close()
+            if self._node._verbose:
+                _log('- Node{} finished listening on port {} for {} sec, received {} msg(s)'.format(
+                    self._node._index, self._local_port, self._timeout, len(self._all_rx)))
+            return False
         return True
 
     def writable(self):

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -74,6 +74,16 @@ extern "C" {
 #define __NRF_NVIC_NVMC_IRQn (30) /**< The peripheral ID of the NVMC. IRQ numbers are used to identify peripherals, but the NVMC doesn't have an IRQ number in the MDK. */
 
 #define __NRF_NVIC_ISER_COUNT (2) /**< The number of ISER/ICER registers in the NVIC that are used. */
+
+/**@brief Interrupt priority levels used by the SoftDevice. */
+#define __NRF_NVIC_SD_IRQ_PRIOS ((uint8_t)( \
+      (1U << 0)  /**< Priority level high .*/   \
+    | (1U << 1)  /**< Priority level medium. */ \
+    | (1U << 4)  /**< Priority level low. */    \
+  ))
+
+/**@brief Interrupt priority levels available to the application. */
+#define __NRF_NVIC_APP_IRQ_PRIOS ((uint8_t)~__NRF_NVIC_SD_IRQ_PRIOS)
 
 /**@brief Interrupts used by the SoftDevice, with IRQn in the range 0-31. */
 #define __NRF_NVIC_SD_IRQS_0 ((uint32_t)( \
@@ -305,14 +315,9 @@ __STATIC_INLINE uint32_t __sd_nvic_app_accessible_irq(IRQn_Type IRQn)
 
 __STATIC_INLINE uint32_t __sd_nvic_is_app_accessible_priority(uint32_t priority)
 {
-  if(priority >= (1 << __NVIC_PRIO_BITS))
-  {
-    return 0;
-  }
-  if(   priority == 0
-     || priority == 1
-     || priority == 4
-     )
+  if( (priority >= (1 << __NVIC_PRIO_BITS))
+   || (((1 << priority) & __NRF_NVIC_APP_IRQ_PRIOS) == 0)
+    )
   {
     return 0;
   }

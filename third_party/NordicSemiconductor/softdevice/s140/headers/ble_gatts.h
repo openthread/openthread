@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017, Nordic Semiconductor ASA
+ * Copyright (c) 2011 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -463,7 +463,7 @@ SVCALL(SD_BLE_GATTS_SERVICE_ADD, uint32_t, sd_ble_gatts_service_add(uint8_t type
  * @retval ::NRF_SUCCESS Successfully added an include declaration.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied, handle values need to match previously added services.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation, a service context is required.
  * @retval ::NRF_ERROR_NOT_SUPPORTED Feature is not supported, service_handle must be that of the last added service.
  * @retval ::NRF_ERROR_FORBIDDEN Forbidden value supplied, self inclusions are not allowed.
  * @retval ::NRF_ERROR_NO_MEM Not enough memory to complete operation.
