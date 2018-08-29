@@ -1787,4 +1787,24 @@
 #define OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS 4
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
+ *
+ * The setting configures the minimum poll period in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
+#define OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD 10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_RETX_POLL_PERIOD
+ *
+ * The setting configures the retx poll period in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RETX_POLL_PERIOD
+#define OPENTHREAD_CONFIG_RETX_POLL_PERIOD 1000
+#endif
+
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
