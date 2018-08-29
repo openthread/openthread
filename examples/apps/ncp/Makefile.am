@@ -54,6 +54,9 @@ SOURCES_COMMON                                                        += \
 LDADD_MBEDTLS                                                          = \
     $(NULL)
 
+LDADD_DIAG                                                             = \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 LDADD_MBEDTLS                                                         += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
@@ -61,7 +64,7 @@ LDADD_MBEDTLS                                                         += \
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 if OPENTHREAD_ENABLE_DIAG
-LDADD_COMMON                                                          += \
+LDADD_DIAG                                                            += \
     $(top_builddir)/src/diag/libopenthread-diag.a                        \
     $(NULL)
 endif
@@ -87,9 +90,11 @@ ot_ncp_ftd_LDADD                                                       = \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
     $(NULL)
 
 ot_ncp_ftd_LDFLAGS                                                     = \
@@ -119,9 +124,11 @@ ot_ncp_mtd_LDADD                                                       = \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
     $(NULL)
 
 ot_ncp_mtd_LDFLAGS                                                     = \
