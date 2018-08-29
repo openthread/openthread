@@ -383,13 +383,14 @@ typedef struct otPlatBleGattService
 {
     /**
      * Pointer to service UUID; use BLE_UUIDxx_DECLARE macros to declare
-     * proper UUID; NULL if there are no more characteristics in the service.
+     * proper UUID; OT_BLE_UUID_TYPE_NONE if there are no more characteristics
+     * in the service.
      */
     const otPlatBleUuid mUuid;
 
     /**
-     * Array of characteristic definitions corresponding to characteristics
-     * belonging to this service.
+     * Null-terminated list of characteristic definitions corresponding to
+     * characteristics belonging to this service.
      */
     otPlatBleGattCharacteristic *mCharacteristics;
 } otPlatBleGattService;
