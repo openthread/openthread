@@ -48,7 +48,7 @@ enum
 {
     kMaxChildren               = OPENTHREAD_CONFIG_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions  = 4, ///< FAILED_CHILD_TRANSMISSIONS
+    kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -74,7 +74,7 @@ enum
     kMaxChildIdRequestTimeout       = 5000,  ///< Maximum delay for receiving a Child ID Request
     kMaxChildUpdateResponseTimeout  = 2000,  ///< Maximum delay for receiving a Child Update Response
     kMaxLinkRequestTimeout          = 2000,  ///< Maximum delay for receiving a Link Accept
-    kMinTimeout = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000), ///< Minimum timeout(s)
+    kMinTimeout = (((kFailedChildTransmissions + 1) * kUnicastRetransmissionDelay) / 1000), ///< Minimum timeout(s)
 };
 
 enum
