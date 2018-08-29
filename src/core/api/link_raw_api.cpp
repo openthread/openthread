@@ -771,10 +771,11 @@ void otDiagInit(otInstance *aInstance)
     (void)aInstance;
 }
 
-const char *otDiagProcessCmdLine(const char *aInput)
+void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aInput;
-    return NULL;
+    (void)aString;
+    (void)aOutput;
+    (void)aOutputMaxLen;
 }
 
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
