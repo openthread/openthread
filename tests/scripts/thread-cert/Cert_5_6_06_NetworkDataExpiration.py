@@ -70,7 +70,7 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
+        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
