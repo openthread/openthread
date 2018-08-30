@@ -481,7 +481,7 @@ otError otPlatBleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr 
  * those characteristics.
  *
  * @param[in] aInstance    The OpenThread instance structure.
- * @param[in] aDeviceName  A pointer to device name string (null terminated).
+ * @param[in] aDeviceName  A pointer to device name string (null-terminated).
  *                         Shall not exceed OT_BLE_DEV_NAME_MAX_LENGTH.
  * @param[in] aAppearance  The value of appearance characteristic.
  *
@@ -973,7 +973,7 @@ extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint
  * @note This function shall be used only for GATT Server.
  *
  * @param[in]   aInstance  The OpenThread instance structure.
- * @param[in]   aServices  Null terminated array of service structures to register.
+ * @param[in]   aServices  Null-terminated array of service structures to register.
  * @param[out]  aHandle    The start handle of a service.
  *
  * @retval ::OT_ERROR_NONE           Service has been successfully registered.
