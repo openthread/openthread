@@ -92,12 +92,12 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
     def _setUpEd(self):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ED].enable_whitelist()
-        self.nodes[ED].set_timeout(3)
+        self.nodes[ED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def _setUpSed(self):
         self.nodes[SED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[SED].enable_whitelist()
-        self.nodes[SED].set_timeout(3)
+        self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

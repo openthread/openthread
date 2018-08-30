@@ -78,7 +78,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[SED].set_mode('s')
         self.nodes[SED].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[SED].enable_whitelist()
-        self.nodes[SED].set_timeout(3)
+        self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

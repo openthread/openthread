@@ -66,7 +66,7 @@ class Cert_9_2_17_Orphan(unittest.TestCase):
         self.nodes[ED1].set_panid(PANID_INIT)
         self.nodes[ED1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
-        self.nodes[ED1].set_timeout(3)
+        self.nodes[ED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
