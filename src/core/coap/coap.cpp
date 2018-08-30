@@ -527,8 +527,8 @@ exit:
 
 void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Coap *>(aContext)->Receive(*static_cast<Message *>(aMessage),
-                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<CoapBase *>(aContext)->Receive(*static_cast<Message *>(aMessage),
+                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void CoapBase::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
