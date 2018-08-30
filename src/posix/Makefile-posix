@@ -49,16 +49,19 @@ configure_OPTIONS                   = \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
+    --enable-cli                      \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-diag                     \
     --enable-dns-client               \
+    --enable-ftd                      \
     --enable-jam-detection            \
     --enable-joiner                   \
+    --enable-ncp                      \
     --enable-legacy                   \
     --enable-mac-filter               \
-    --enable-posix-app=all            \
+    --enable-posix-app                \
     --enable-service                  \
     --enable-tmf-proxy                \
     --with-ncp-bus=uart               \
