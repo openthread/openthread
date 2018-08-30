@@ -243,10 +243,11 @@ void TestDiag(void)
 
     for (const TestCommand *test = &tests[0]; test->mCommand != NULL; test++)
     {
-        const char *output = NULL;
+        char output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
 
         printf("\nCommand: %s", MakePrintable(test->mCommand));
-        output = otDiagProcessCmdLine(test->mCommand);
+        output[sizeof(output) - 1] = '\0';
+        otDiagProcessCmdLine(test->mCommand, output, sizeof(output) - 1);
         printf("\nOutput:  %s\n", MakePrintable(output));
 
         VerifyOrQuit(strcmp(output, test->mExpectedOutput) == 0, "diagnostics output does not match expected result\n");

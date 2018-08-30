@@ -103,6 +103,7 @@ enum BLE_GAP_SVCS
   SD_BLE_GAP_DATA_LENGTH_UPDATE    = BLE_GAP_SVC_BASE + 36,  /**< Initiate or respond to a Data Length Update Procedure. */
   SD_BLE_GAP_QOS_CHANNEL_SURVEY_START  = BLE_GAP_SVC_BASE + 37, /**< Start Quality of Service (QoS) channel survey module. */
   SD_BLE_GAP_QOS_CHANNEL_SURVEY_STOP   = BLE_GAP_SVC_BASE + 38, /**< Stop Quality of Service (QoS) channel survey module. */
+  SD_BLE_GAP_ADV_ADDR_GET          = BLE_GAP_SVC_BASE + 39, /**< Get the Address used on air while Advertising. */
 };
 
 /**@brief GAP Event IDs.
@@ -110,7 +111,7 @@ enum BLE_GAP_SVCS
  */
 enum BLE_GAP_EVTS
 {
-  BLE_GAP_EVT_CONNECTED                   = BLE_GAP_EVT_BASE,
+  BLE_GAP_EVT_CONNECTED                   = BLE_GAP_EVT_BASE,       /**< Connected to peer.                              \n See @ref ble_gap_evt_connected_t             */
   BLE_GAP_EVT_DISCONNECTED                = BLE_GAP_EVT_BASE + 1,   /**< Disconnected from peer.                         \n See @ref ble_gap_evt_disconnected_t.         */
   BLE_GAP_EVT_CONN_PARAM_UPDATE           = BLE_GAP_EVT_BASE + 2,   /**< Connection Parameters updated.                  \n See @ref ble_gap_evt_conn_param_update_t.    */
   BLE_GAP_EVT_SEC_PARAMS_REQUEST          = BLE_GAP_EVT_BASE + 3,   /**< Request to provide security parameters.         \n Reply with @ref sd_ble_gap_sec_params_reply.  \n See @ref ble_gap_evt_sec_params_request_t. */
@@ -242,7 +243,11 @@ enum BLE_GAP_TX_POWER_ROLES
 
 /**@defgroup BLE_GAP_ADV_SET_DATA_SIZES Advertising data sizes.
  * @{ */
-#define BLE_GAP_ADV_SET_DATA_SIZE_MAX          (31)    /**< Maximum data length for an advertising set. */
+#define BLE_GAP_ADV_SET_DATA_SIZE_MAX                    (31)   /**< Maximum data length for an advertising set.
+                                                                     If more advertising data is required, use extended advertising instead. */
+#define BLE_GAP_ADV_SET_DATA_SIZE_EXTENDED_MAX_SUPPORTED (255)  /**< Maximum supported data length for an extended advertising set. */
+
+#define BLE_GAP_ADV_SET_DATA_SIZE_EXTENDED_CONNECTABLE_MAX_SUPPORTED (238) /**< Maximum supported data length for an extended connectable advertising set. */
 /**@}. */
 
 /** @brief Set ID not available in advertising report. */
@@ -309,10 +314,7 @@ enum BLE_GAP_TX_POWER_ROLES
 /**@defgroup BLE_GAP_ADV_INTERVALS GAP Advertising interval max and min
  * @{ */
 #define BLE_GAP_ADV_INTERVAL_MIN        0x000020 /**< Minimum Advertising interval in 625 us units, i.e. 20 ms. */
-#define BLE_GAP_ADV_INTERVAL_MAX        0x004000 /**< Maximum Advertising interval in 625 us units, i.e. 10.24 s.
-                                                      @note Support for values above @ref BLE_GAP_ADV_INTERVAL_MAX
-                                                            is experimental. Values above 0xFFFFFF, i.e 10,485.759375 s
-                                                            are not supported. */
+#define BLE_GAP_ADV_INTERVAL_MAX        0x004000 /**< Maximum Advertising interval in 625 us units, i.e. 10.24 s. */
  /**@}  */
 
 
@@ -342,19 +344,16 @@ enum BLE_GAP_TX_POWER_ROLES
  * If ble_gap_scan_params_t::extended is set to 0, @ref BLE_GAP_SCAN_BUFFER_MIN is the minimum scan buffer length.
  * else the minimum scan buffer size is @ref BLE_GAP_SCAN_BUFFER_EXTENDED_MIN.
  * @{ */
-#define BLE_GAP_SCAN_BUFFER_MIN           (31)                                      /**< Minimum data length for an
+#define BLE_GAP_SCAN_BUFFER_MIN                    (31)                             /**< Minimum data length for an
                                                                                          advertising set. */
-#define BLE_GAP_SCAN_BUFFER_MAX           (31)                                      /**< Maximum data length for an
+#define BLE_GAP_SCAN_BUFFER_MAX                    (31)                             /**< Maximum data length for an
                                                                                          advertising set. */
-#define BLE_GAP_SCAN_BUFFER_EXTENDED_MIN  (255)                                     /**< Minimum data length for an
+#define BLE_GAP_SCAN_BUFFER_EXTENDED_MIN           (255)                            /**< Minimum data length for an
                                                                                          extended advertising set. */
-#define BLE_GAP_SCAN_BUFFER_EXTENDED_MAX  (1650)                                    /**< Maximum data length for an
-                                                                                         extended advertising set. 
-                                                                                         @note Extended scanning is only
-                                                                                               supported as an experimental 
-                                                                                               feature in this SoftDevice.
-                                                                                               The scanner will only receive
-                                                                                               advertising data up to 31 bytes. */
+#define BLE_GAP_SCAN_BUFFER_EXTENDED_MAX           (1650)                           /**< Maximum data length for an
+                                                                                         extended advertising set. */
+#define BLE_GAP_SCAN_BUFFER_EXTENDED_MAX_SUPPORTED (255)                            /**< Maximum supported data length for
+                                                                                         an extended advertising set. */
 /** @}  */
 
 /**@defgroup BLE_GAP_ADV_TYPES GAP Advertising types
@@ -362,6 +361,8 @@ enum BLE_GAP_TX_POWER_ROLES
  * Advertising types defined in Bluetooth Core Specification v5.0, Vol 6, Part B, Section 4.4.2.
  *
  * The maximum advertising data length is defined by @ref BLE_GAP_ADV_SET_DATA_SIZE_MAX.
+ * The maximum supported data length for an extended advertiser is defined by
+ * @ref BLE_GAP_ADV_SET_DATA_SIZE_EXTENDED_MAX_SUPPORTED
  * Note that some of the advertising types do not support advertising data. Non-scannable types do not support
  * scan response data.
  *
@@ -380,37 +381,19 @@ enum BLE_GAP_TX_POWER_ROLES
 #define BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED             0x05   /**< Non-connectable non-scannable undirected
                                                                                         advertising events. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_CONNECTABLE_NONSCANNABLE_UNDIRECTED       0x06   /**< Connectable non-scannable undirected advertising
-                                                                                        events using extended advertising PDUs.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        events using extended advertising PDUs. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_CONNECTABLE_NONSCANNABLE_DIRECTED         0x07   /**< Connectable non-scannable directed advertising
-                                                                                        events using extended advertising PDUs.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        events using extended advertising PDUs. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_SCANNABLE_UNDIRECTED       0x08   /**< Non-connectable scannable undirected advertising
                                                                                         events using extended advertising PDUs.
-                                                                                        @note Only scan response data is supported.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        @note Only scan response data is supported. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_SCANNABLE_DIRECTED         0x09   /**< Non-connectable scannable directed advertising
                                                                                         events using extended advertising PDUs.
-                                                                                        @note Only scan response data is supported.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        @note Only scan response data is supported. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED    0x0A   /**< Non-connectable non-scannable undirected advertising
-                                                                                        events using extended advertising PDUs.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        events using extended advertising PDUs. */
 #define BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_NONSCANNABLE_DIRECTED      0x0B   /**< Non-connectable non-scannable directed advertising
-                                                                                        events using extended advertising PDUs.
-                                                                                        @note Extended advertising types are only
-                                                                                              supported as experimental features in this
-                                                                                              SoftDevice. */
+                                                                                        events using extended advertising PDUs. */
 /**@} */
 
 /**@defgroup BLE_GAP_ADV_FILTER_POLICIES GAP Advertising filter policies
@@ -424,9 +407,16 @@ enum BLE_GAP_TX_POWER_ROLES
 /**@defgroup BLE_GAP_ADV_DATA_STATUS GAP Advertising data status
  * @{ */
 #define BLE_GAP_ADV_DATA_STATUS_COMPLETE             0x00 /**< All data in the advertising event have been received. */
-#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MORE_DATA 0x01 /**< More data to be received. */
-#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_TRUNCATED 0x02 /**< Incomplete data. Buffer size insufficient to receive more. */
-#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MISSED    0x03 /**< Failed to receive the remaining data. */
+#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MORE_DATA 0x01 /**< More data to be received.
+                                                               @note This value will only be used if
+                                                               @ref ble_gap_scan_params_t::report_incomplete_evts and
+                                                               @ref ble_gap_adv_report_type_t::extended_pdu are set to true. */
+#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_TRUNCATED 0x02 /**< Incomplete data. Buffer size insufficient to receive more.
+                                                               @note This value will only be used if
+                                                               @ref ble_gap_adv_report_type_t::extended_pdu is set to true. */
+#define BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MISSED    0x03 /**< Failed to receive the remaining data.
+                                                               @note This value will only be used if
+                                                               @ref ble_gap_adv_report_type_t::extended_pdu is set to true. */
 /**@} */
 
 /**@defgroup BLE_GAP_SCAN_FILTER_POLICIES GAP Scanner filter policies
@@ -556,10 +546,7 @@ enum BLE_GAP_TX_POWER_ROLES
 #define BLE_GAP_PHY_NOT_SET                      0xFF    /**< PHY is not configured. */
 
 /**@brief Supported PHYs in connections, for scanning, and for advertising. */
-#define BLE_GAP_PHYS_SUPPORTED  (BLE_GAP_PHY_1MBPS | BLE_GAP_PHY_2MBPS | BLE_GAP_PHY_CODED) /**< All PHYs are supported.
-                                                                                                 @note Coded PHY is only supported
-                                                                                                       as an experimental feature
-                                                                                                       in this SoftDevice. */
+#define BLE_GAP_PHYS_SUPPORTED  (BLE_GAP_PHY_1MBPS | BLE_GAP_PHY_2MBPS | BLE_GAP_PHY_CODED) /**< All PHYs are supported. */
 
 /**@} */
 
@@ -671,9 +658,7 @@ typedef struct
                                      @note Anonymous advertising is only available for
                                      @ref BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED and
                                      @ref BLE_GAP_ADV_TYPE_EXTENDED_NONCONNECTABLE_NONSCANNABLE_DIRECTED. */
-  uint8_t include_tx_power : 1; /**< Include TxPower set by @ref sd_ble_gap_tx_power_set in the extended header
-                                     of the advertising PDU.
-                                     @note TxPower can only be added to the extended header when @ref type is an extended advertising type. */
+  uint8_t include_tx_power : 1; /**< This feature is not supported on this SoftDevice. */
 } ble_gap_adv_properties_t;
 
 
@@ -700,10 +685,14 @@ typedef struct
 typedef struct
 {
   uint8_t addr_id_peer : 1;       /**< Only valid for peer addresses.
-                                       Reference to peer in device identities list (as set with @ref sd_ble_gap_device_identities_set) when peer is using privacy. */
+                                       This bit is set by the SoftDevice to indicate whether the address has been resolved from
+                                       a Resolvable Private Address (when the peer is using privacy).
+                                       If set to 1, @ref addr and @ref addr_type refer to the identity address of the resolved address.
+
+                                       This bit is ignored when a variable of type @ref ble_gap_addr_t is used as input to API functions. */
   uint8_t addr_type    : 7;       /**< See @ref BLE_GAP_ADDR_TYPES. */
   uint8_t addr[BLE_GAP_ADDR_LEN]; /**< 48-bit address, LSB format.
-                                       addr is not used if addr_type is @ref BLE_GAP_ADDR_TYPE_ANONYMOUS. */
+                                       @ref addr is not used if @ref addr_type is @ref BLE_GAP_ADDR_TYPE_ANONYMOUS. */
 } ble_gap_addr_t;
 
 
@@ -791,7 +780,9 @@ typedef struct
                                                                advertising, this parameter is ignored. */
   uint16_t                 duration;                /**< Advertising duration in 10 ms units. When timeout is reached,
                                                          an event of type @ref BLE_GAP_EVT_ADV_SET_TERMINATED is raised.
-                                                         @sa BLE_GAP_ADV_TIMEOUT_VALUES. */
+                                                         @sa BLE_GAP_ADV_TIMEOUT_VALUES.
+                                                         @note The SoftDevice will always complete at least one advertising
+                                                               event even if the duration is set too low. */
   uint8_t                  max_adv_evts;            /**< Maximum advertising events that shall be sent prior to disabling
                                                          advertising. Setting the value to 0 disables the limitation. When
                                                          the count of advertising events specified by this parameter
@@ -799,9 +790,7 @@ typedef struct
                                                          and an event of type @ref BLE_GAP_EVT_ADV_SET_TERMINATED is raised
                                                          @note If @ref ble_gap_adv_properties_t::type is set to
                                                                @ref BLE_GAP_ADV_TYPE_CONNECTABLE_NONSCANNABLE_DIRECTED_HIGH_DUTY_CYCLE,
-                                                               this parameter is ignored.
-                                                         @note Setting max_adv_evts to a values not equal to 0 is only supported
-                                                               as an experimental feature in this SoftDevice. */
+                                                               this parameter is ignored. */
   ble_gap_ch_mask_t        channel_mask;            /**< Channel mask for primary and secondary advertising channels.
                                                          At least one of the primary channels, that is channel index 37-39, must be used.
                                                          Masking away secondary advertising channels is not supported. */
@@ -864,9 +853,7 @@ typedef struct
   uint8_t               extended               : 1; /**< If 1, the scanner will accept extended advertising packets.
                                                          If set to 0, the scanner will not receive advertising packets
                                                          on secondary advertising channels, and will not be able
-                                                         to receive long advertising PDUs.
-                                                         @note Extended scanning is only supported as an experimental feature in this
-                                                               SoftDevice. */
+                                                         to receive long advertising PDUs. */
   uint8_t               report_incomplete_evts : 1; /**< If 1, events of type @ref ble_gap_evt_adv_report_t may have
                                                          @ref ble_gap_adv_report_type_t::status set to
                                                          @ref BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MORE_DATA.
@@ -898,7 +885,10 @@ typedef struct
                                                            @ref BLE_GAP_PHY_CODED, the primary scan PHY is
                                                            @ref BLE_GAP_PHY_CODED only. */
   uint16_t              interval;                   /**< Scan interval in 625 us units. @sa BLE_GAP_SCAN_INTERVALS. */
-  uint16_t              window;                     /**< Scan window in 625 us units. @sa BLE_GAP_SCAN_WINDOW. */
+  uint16_t              window;                     /**< Scan window in 625 us units. @sa BLE_GAP_SCAN_WINDOW.
+                                                         If scan_phys contains both @ref BLE_GAP_PHY_1MBPS and
+                                                         @ref BLE_GAP_PHY_CODED interval shall be larger than or
+                                                         equal to twice the scan window. */
   uint16_t              timeout;                    /**< Scan timeout in 10 ms units. @sa BLE_GAP_SCAN_TIMEOUT. */
   ble_gap_ch_mask_t     channel_mask;               /**< Channel mask for primary and secondary advertising channels.
                                                          At least one of the primary channels, that is channel index 37-39, must be
@@ -1262,11 +1252,11 @@ typedef struct
                                                         and the SoftDevice was unable to resolve it, the application may try
                                                         to resolve this address to find out if the advertising event was
                                                         directed to us. */
-  uint8_t                   primary_phy;           /**< Indicates the PHY on which the primary advertising packet was received on.
+  uint8_t                   primary_phy;           /**< Indicates the PHY on which the primary advertising packet was received.
                                                         See @ref BLE_GAP_PHYS. */
-  uint8_t                   secondary_phy;         /**< Indicates the PHY on which the secondary advertising packet was received on.
-                                                        See @ref BLE_GAP_PHYS. This field is to 0 if no packets where received on
-                                                        a secondary advertising channel. */
+  uint8_t                   secondary_phy;         /**< Indicates the PHY on which the secondary advertising packet was received.
+                                                        See @ref BLE_GAP_PHYS. This field is set to @ref BLE_GAP_PHY_NOT_SET if no packets
+                                                        were received on a secondary advertising channel. */
   int8_t                    tx_power;              /**< TX Power reported by the advertiser in the last packet header received.
                                                         This field is set to @ref BLE_GAP_POWER_LEVEL_INVALID if the
                                                         last received packet did not contain the Tx Power field.
@@ -1661,6 +1651,25 @@ SVCALL(SD_BLE_GAP_ADDR_SET, uint32_t, sd_ble_gap_addr_set(ble_gap_addr_t const *
 SVCALL(SD_BLE_GAP_ADDR_GET, uint32_t, sd_ble_gap_addr_get(ble_gap_addr_t *p_addr));
 
 
+/**@brief Get the Bluetooth device address used by the advertiser.
+ *
+ * @note  This function will return the local Bluetooth address used in advertising PDUs. When
+ *        using privacy, the SoftDevice will generate a new private address every
+ *        @ref ble_gap_privacy_params_t::private_addr_cycle_s configured using
+ *        @ref sd_ble_gap_privacy_set. Hence depending on when the application calls this API, the
+ *        address returned may not be the latest address that is used in the advertising PDUs.
+ *
+ * @param[in]  adv_handle The advertising handle to get the address from.
+ * @param[out] p_addr     Pointer to address structure to be filled in.
+ *
+ * @retval ::NRF_SUCCESS                  Address successfully retrieved.
+ * @retval ::NRF_ERROR_INVALID_ADDR       Invalid or NULL pointer supplied.
+ * @retval ::BLE_ERROR_INVALID_ADV_HANDLE The provided advertising handle was not found. 
+ * @retval ::NRF_ERROR_INVALID_STATE      The advertising set is currently not advertising.
+ */
+SVCALL(SD_BLE_GAP_ADV_ADDR_GET, uint32_t, sd_ble_gap_adv_addr_get(uint8_t adv_handle, ble_gap_addr_t *p_addr));
+
+
 /**@brief Set the active whitelist in the SoftDevice.
  *
  * @note  Only one whitelist can be used at a time and the whitelist is shared between the BLE roles.
@@ -1783,7 +1792,7 @@ SVCALL(SD_BLE_GAP_PRIVACY_GET, uint32_t, sd_ble_gap_privacy_get(ble_gap_privacy_
  *                                                      - Use of whitelist requested but whitelist has not been set,
  *                                                        see @ref sd_ble_gap_whitelist_set.
  * @retval ::BLE_ERROR_GAP_INVALID_BLE_ADDR            ble_gap_adv_params_t::p_peer_addr is invalid.
- * @retval ::NRF_ERROR_INVALID_STATE                   Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE                   Invalid state to perform operation. Either:
  *                                                     - It is invalid to provide non-NULL advertising set parameters while advertising.
  *                                                     - It is invalid to provide the same data buffers while advertising. To update
  *                                                       advertising data, provide new advertising buffers.
@@ -1826,7 +1835,7 @@ SVCALL(SD_BLE_GAP_ADV_SET_CONFIGURE, uint32_t, sd_ble_gap_adv_set_configure(uint
  *                         advertising, this is ignored.
  *
  * @retval ::NRF_SUCCESS                  The BLE stack has started advertising.
- * @retval ::NRF_ERROR_INVALID_STATE      Invalid state to perform operation. adv_handle is not configured or already advertising.
+ * @retval ::NRF_ERROR_INVALID_STATE      adv_handle is not configured or already advertising.
  * @retval ::NRF_ERROR_CONN_COUNT         The limit of available connections has been reached; connectable advertiser cannot be started.
  * @retval ::BLE_ERROR_INVALID_ADV_HANDLE Advertising handle not found. Configure a new adveriting handle with @ref sd_ble_gap_adv_set_configure.
  * @retval ::NRF_ERROR_NOT_FOUND          conn_cfg_tag not found.
@@ -1892,7 +1901,7 @@ SVCALL(SD_BLE_GAP_ADV_STOP, uint32_t, sd_ble_gap_adv_stop(uint8_t adv_handle));
  * @retval ::NRF_SUCCESS The Connection Update procedure has been started successfully.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied, check parameter limits and constraints.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Disconnection in progress or link has not been established.
  * @retval ::NRF_ERROR_BUSY Procedure already in progress, wait for pending procedures to complete and retry.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_NO_MEM Not enough memory to complete operation.
@@ -1919,7 +1928,7 @@ SVCALL(SD_BLE_GAP_CONN_PARAM_UPDATE, uint32_t, sd_ble_gap_conn_param_update(uint
  * @retval ::NRF_SUCCESS The disconnection procedure has been started successfully.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation (disconnection is already in progress).
+ * @retval ::NRF_ERROR_INVALID_STATE Disconnection in progress or link has not been established.
  */
 SVCALL(SD_BLE_GAP_DISCONNECT, uint32_t, sd_ble_gap_disconnect(uint16_t conn_handle, uint8_t hci_status_code));
 
@@ -2066,7 +2075,9 @@ SVCALL(SD_BLE_GAP_DEVICE_NAME_GET, uint32_t, sd_ble_gap_device_name_get(uint8_t 
  * @retval ::NRF_SUCCESS Successfully initiated authentication procedure.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
+ *                                   - No link has been established.
+ *                                   - An encryption is already executing or queued.
  * @retval ::NRF_ERROR_NO_MEM The maximum number of authentication procedures that can run in parallel for the given role is reached.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_NOT_SUPPORTED Setting of sign or link fields in @ref ble_gap_sec_kdist_t not supported.
@@ -2127,7 +2138,7 @@ SVCALL(SD_BLE_GAP_AUTHENTICATE, uint32_t, sd_ble_gap_authenticate(uint16_t conn_
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_BUSY The stack is busy, process pending events and retry.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Security parameters has not been requested.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_NOT_SUPPORTED Setting of sign or link fields in @ref ble_gap_sec_kdist_t not supported.
  */
@@ -2162,7 +2173,7 @@ SVCALL(SD_BLE_GAP_SEC_PARAMS_REPLY, uint32_t, sd_ble_gap_sec_params_reply(uint16
  * @retval ::NRF_SUCCESS Authentication key successfully set.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Authentication key has not been requested.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_AUTH_KEY_REPLY, uint32_t, sd_ble_gap_auth_key_reply(uint16_t conn_handle, uint8_t key_type, uint8_t const *p_key));
@@ -2196,7 +2207,9 @@ SVCALL(SD_BLE_GAP_AUTH_KEY_REPLY, uint32_t, sd_ble_gap_auth_key_reply(uint16_t c
  * @retval ::NRF_SUCCESS DHKey successfully set.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
+ *                                   - The peer is not authenticated.
+ *                                   - The application has not pulled a @ref BLE_GAP_EVT_LESC_DHKEY_REQUEST event.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_LESC_DHKEY_REPLY, uint32_t, sd_ble_gap_lesc_dhkey_reply(uint16_t conn_handle, ble_gap_lesc_dhkey_t const *p_dhkey));
@@ -2214,7 +2227,10 @@ SVCALL(SD_BLE_GAP_LESC_DHKEY_REPLY, uint32_t, sd_ble_gap_lesc_dhkey_reply(uint16
  *
  * @retval ::NRF_SUCCESS Keypress notification successfully queued for transmission.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either not entering a passkey or keypresses have not been enabled by both peers.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
+ *                                   - Authentication key not requested.
+ *                                   - Passkey has not been entered.
+ *                                   - Keypresses have not been enabled by both peers.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_BUSY The BLE stack is busy. Retry at later time.
  */
@@ -2259,12 +2275,16 @@ SVCALL(SD_BLE_GAP_LESC_OOB_DATA_GET, uint32_t, sd_ble_gap_lesc_oob_data_get(uint
  * @param[in] p_oobd_own The OOB data sent out of band to a peer or NULL if the peer has not received OOB data.
  *                       Must correspond to @ref ble_gap_sec_params_t::oob flag in @ref BLE_GAP_EVT_SEC_PARAMS_REQUEST.
  * @param[in] p_oobd_peer The OOB data received out of band from a peer or NULL if none received.
- *                        Must correspond to @ref ble_gap_sec_params_t::oob flag in @ref sd_ble_gap_authenticate in the central role
- *                        or @ref sd_ble_gap_sec_params_reply in the peripheral role.
+ *                        Must correspond to @ref ble_gap_sec_params_t::oob flag
+ *                        in @ref sd_ble_gap_authenticate in the central role or
+ *                        in @ref sd_ble_gap_sec_params_reply in the peripheral role.
  *
  * @retval ::NRF_SUCCESS OOB data accepted.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
+ *                                   - Authentication key not requested
+ *                                   - Not expecting LESC OOB data
+ *                                   - Have not actually exchanged passkeys.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_LESC_OOB_DATA_SET, uint32_t, sd_ble_gap_lesc_oob_data_set(uint16_t conn_handle, ble_gap_lesc_oob_data_t const *p_oobd_own, ble_gap_lesc_oob_data_t const *p_oobd_peer));
@@ -2291,7 +2311,7 @@ SVCALL(SD_BLE_GAP_LESC_OOB_DATA_SET, uint32_t, sd_ble_gap_lesc_oob_data_set(uint
  *
  * @retval ::NRF_SUCCESS Successfully initiated authentication procedure.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE No link has been established.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::BLE_ERROR_INVALID_ROLE Operation is not supported in the Peripheral role.
  * @retval ::NRF_ERROR_BUSY Procedure already in progress or not allowed at this time, wait for pending procedures to complete and retry.
@@ -2316,7 +2336,10 @@ SVCALL(SD_BLE_GAP_ENCRYPT, uint32_t, sd_ble_gap_encrypt(uint16_t conn_handle, bl
  *
  * @retval ::NRF_SUCCESS Successfully accepted security information.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
+ *                                   - No link has been established.
+ *                                   - No @ref BLE_GAP_EVT_SEC_REQUEST pending.
+ *                                   - LE long term key requested command not allowed.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_SEC_INFO_REPLY, uint32_t, sd_ble_gap_sec_info_reply(uint16_t conn_handle, ble_gap_enc_info_t const *p_enc_info, ble_gap_irk_t const *p_id_info, ble_gap_sign_info_t const *p_sign_info));
@@ -2419,9 +2442,6 @@ SVCALL(SD_BLE_GAP_RSSI_GET, uint32_t, sd_ble_gap_rssi_get(uint16_t conn_handle, 
  * @note    If a @ref BLE_GAP_EVT_ADV_REPORT event is received with @ref ble_gap_adv_report_type_t::status set to
  *          @ref BLE_GAP_ADV_DATA_STATUS_INCOMPLETE_MORE_DATA, the scanner will continue scanning, and the application will
  *          receive more reports from this advertising event. The following reports will include the old and new received data.
- *          The application can stop the scanner from receiving more packets from this advertising event by calling this function.
- *          This might be useful when receiving data from extended advertising events where @ref ble_gap_evt_adv_report_t::aux_pointer
- *          is large.
  *
  * @events
  * @event{@ref BLE_GAP_EVT_ADV_REPORT, An advertising or scan response packet has been received.}
@@ -2467,7 +2487,7 @@ SVCALL(SD_BLE_GAP_SCAN_START, uint32_t, sd_ble_gap_scan_start(ble_gap_scan_param
  * @endmscs
  *
  * @retval ::NRF_SUCCESS Successfully stopped scanning procedure.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Not in the scanning state.
+ * @retval ::NRF_ERROR_INVALID_STATE Not in the scanning state.
  */
 SVCALL(SD_BLE_GAP_SCAN_STOP, uint32_t, sd_ble_gap_scan_stop(void));
 
@@ -2476,6 +2496,11 @@ SVCALL(SD_BLE_GAP_SCAN_STOP, uint32_t, sd_ble_gap_scan_stop(void));
  *
  * @note If a scanning procedure is currently in progress it will be automatically stopped when calling this function.
  *       The scanning procedure will be stopped even if the function returns an error.
+ *
+ * @events
+ * @event{@ref BLE_GAP_EVT_CONNECTED, A connection was established.}
+ * @event{@ref BLE_GAP_EVT_TIMEOUT, Failed to establish a connection.}
+ * @endevents
  *
  * @mscs
  * @mmsc{@ref BLE_GAP_WL_SHARE_MSC}
@@ -2518,7 +2543,8 @@ SVCALL(SD_BLE_GAP_CONNECT, uint32_t, sd_ble_gap_connect(ble_gap_addr_t const *p_
  * @endmscs
  *
  * @retval ::NRF_SUCCESS Successfully canceled an ongoing connection procedure.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE No locally initiated connect procedure started or connection
+ *                                   completed occurred.
  */
 SVCALL(SD_BLE_GAP_CONNECT_CANCEL, uint32_t, sd_ble_gap_connect_cancel(void));
 
@@ -2553,10 +2579,6 @@ SVCALL(SD_BLE_GAP_CONNECT_CANCEL, uint32_t, sd_ble_gap_connect_cancel(void));
  *            If the PHY procedure was rejected by the peer for a different reason, the status will
  *            contain the reason as specified by the peer.
  *
- * @note      @ref BLE_GAP_PHY_CODED is only supported as an experimental feature in this SoftDevice.
- *            When this function is used to reply to a PHY Update, depending on the peers preferences,
- *            @ref BLE_GAP_PHY_AUTO might result in the PHY to be changed to @ref BLE_GAP_PHY_CODED.
- *
  * @events
  * @event{@ref BLE_GAP_EVT_PHY_UPDATE, Result of the PHY Update Procedure.}
  * @endevents
@@ -2573,7 +2595,7 @@ SVCALL(SD_BLE_GAP_CONNECT_CANCEL, uint32_t, sd_ble_gap_connect_cancel(void));
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE No link has been established.
  * @retval ::NRF_ERROR_RESOURCES The connection event length configured for this link is not sufficient for the combination of
  *                               @ref ble_gap_phys_t::tx_phys, @ref ble_gap_phys_t::rx_phys, and @ref ble_gap_data_length_params_t.
  *                               The connection event length is configured with @ref BLE_CONN_CFG_GAP using @ref sd_ble_cfg_set.
@@ -2605,7 +2627,7 @@ SVCALL(SD_BLE_GAP_PHY_UPDATE, uint32_t, sd_ble_gap_phy_update(uint16_t conn_hand
  * @retval ::NRF_SUCCESS Successfully set Data Length Extension initiation/response parameters.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle parameter supplied.
- * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation.
+ * @retval ::NRF_ERROR_INVALID_STATE No link has been established.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameters supplied.
  * @retval ::NRF_ERROR_NOT_SUPPORTED The requested parameters are not supported by the SoftDevice. Inspect
  *                                   p_dl_limitation to see which parameter is not supported.

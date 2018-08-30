@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/diag.h>
+
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -763,8 +765,41 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+void otDiagInit(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+
+void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
+{
+    (void)aString;
+    (void)aOutput;
+    (void)aOutputMaxLen;
+}
+
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    (void)aInstance;
+    (void)aFrame;
+    (void)aError;
+}
+
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    (void)aInstance;
+    (void)aFrame;
+    (void)aError;
+}
+#endif // OPENTHREAD_ENABLE_DIAG
+
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
+extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     // Note: For now this functionality is not supported in Radio Only mode.
     (void)aInstance;
