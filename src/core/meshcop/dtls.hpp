@@ -188,7 +188,7 @@ public:
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     /**
-     * This method sets a reference to the x509 certificate with corresponding private key.
+     * This method sets a reference to the own x509 certificate with corresponding private key.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -200,10 +200,10 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
      */
-    otError SetOwnCertificate(const uint8_t *aX509Certificate,
-                              uint32_t       aX509CertLength,
-                              const uint8_t *aPrivateKey,
-                              uint32_t       aPrivateKeyLength);
+    otError SetCertificate(const uint8_t *aX509Certificate,
+                           uint32_t       aX509CertLength,
+                           const uint8_t *aPrivateKey,
+                           uint32_t       aPrivateKeyLength);
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the

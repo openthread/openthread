@@ -227,10 +227,10 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
      *
      */
-    otError SetOwnCertificate(const uint8_t *aX509Cert,
-                              uint32_t       aX509Length,
-                              const uint8_t *aPrivateKey,
-                              uint32_t       aPrivateKeyLength);
+    otError SetCertificate(const uint8_t *aX509Cert,
+                           uint32_t       aX509Length,
+                           const uint8_t *aPrivateKey,
+                           uint32_t       aPrivateKeyLength);
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the

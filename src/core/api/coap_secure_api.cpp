@@ -50,11 +50,11 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
     return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
 }
 
-otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
-                                      const uint8_t *aX509Cert,
-                                      uint32_t       aX509Length,
-                                      const uint8_t *aPrivateKey,
-                                      uint32_t       aPrivateKeyLength)
+otError otCoapSecureSetCertificate(otInstance *   aInstance,
+                                   const uint8_t *aX509Cert,
+                                   uint32_t       aX509Length,
+                                   const uint8_t *aPrivateKey,
+                                   uint32_t       aPrivateKeyLength)
 {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -64,8 +64,7 @@ otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
         return OT_ERROR_INVALID_ARGS;
     }
 
-    return instance.GetApplicationCoapSecure().SetOwnCertificate(aX509Cert, aX509Length, aPrivateKey,
-                                                                 aPrivateKeyLength);
+    return instance.GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aX509Cert);

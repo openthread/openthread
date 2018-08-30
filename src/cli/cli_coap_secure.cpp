@@ -192,7 +192,7 @@ otError CoapsSecure::Process(int argc, char *argv[])
             else if (strcmp(argv[1], "x509") == 0)
             {
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-                SuccessOrExit(error = otCoapSecureSetOwnCertificate(
+                SuccessOrExit(error = otCoapSecureSetCertificate(
                                   mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
                                   sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
                                   sizeof(OT_CLI_COAPS_PRIV_KEY)));

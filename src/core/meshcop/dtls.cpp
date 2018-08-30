@@ -341,10 +341,10 @@ exit:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-otError Dtls::SetOwnCertificate(const uint8_t *aX509Certificate,
-                                uint32_t       aX509CertLength,
-                                const uint8_t *aPrivateKey,
-                                uint32_t       aPrivateKeyLength)
+otError Dtls::SetCertificate(const uint8_t *aX509Certificate,
+                             uint32_t       aX509CertLength,
+                             const uint8_t *aPrivateKey,
+                             uint32_t       aPrivateKeyLength)
 {
     otError error = OT_ERROR_NONE;
 

@@ -162,11 +162,11 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
  *
  */
-otError otCoapSecureSetOwnCertificate(otInstance *   aInstance,
-                                      const uint8_t *aX509Cert,
-                                      uint32_t       aX509Length,
-                                      const uint8_t *aPrivateKey,
-                                      uint32_t       aPrivateKeyLength);
+otError otCoapSecureSetCertificate(otInstance *   aInstance,
+                                   const uint8_t *aX509Cert,
+                                   uint32_t       aX509Length,
+                                   const uint8_t *aPrivateKey,
+                                   uint32_t       aPrivateKeyLength);
 
 /**
  * This method sets the trusted top level CAs. It is needed for validating the
