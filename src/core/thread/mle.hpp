@@ -569,7 +569,7 @@ public:
      * @returns true if an MLE Thread Discovery is in progress, false otherwise.
      *
      */
-    bool IsDiscoverInProgress(void) { return mIsDiscoverInProgress; }
+    bool IsDiscoverInProgress(void) const { return mIsDiscoverInProgress; }
 
     /**
      * This method is called by the MeshForwarder to indicate that discovery is complete.
