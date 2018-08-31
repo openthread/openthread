@@ -476,7 +476,6 @@ class OpenThread_WpanCtl(IThci):
                     self.isPowerDown = False
                     if self.hasActiveDatasetToCommit:
                         if self.__sendCommand(WPANCTL_CMD + 'setprop Dataset:Command SetActive')[0] == 'Fail':
-                        # if self.__sendCommand(WPANCTL_CMD + 'dataset mgmt-set-active')[0] == 'Fail':
                             raise Exception('failed to commit active dataset')
                         else:
                             self.hasActiveDatasetToCommit = False
