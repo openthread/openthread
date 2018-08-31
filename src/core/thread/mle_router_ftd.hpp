@@ -580,7 +580,7 @@ public:
      * @returns The assigned parent priority value, -2 means not assigned.
      *
      */
-    int8_t GetAssignParentPriority(void) const;
+    int8_t GetAssignParentPriority(void) const { return mParentPriority; }
 
     /**
      * This method sets the parent priority.
