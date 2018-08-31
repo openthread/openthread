@@ -178,7 +178,6 @@ LOCAL_SRC_FILES                                          := \
     src/ncp/spinel_decoder.cpp                              \
     src/ncp/spinel_encoder.cpp                              \
     src/posix/platform/alarm.c                              \
-    src/posix/platform/diag.c                               \
     src/posix/platform/misc.c                               \
     src/posix/platform/logging.c                            \
     src/posix/platform/random.c                             \

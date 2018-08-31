@@ -368,6 +368,11 @@ RadioSpinel::RadioSpinel(void)
     , mIsDecoding(false)
     , mIsPromiscuous(false)
     , mIsReady(false)
+#if OPENTHREAD_ENABLE_DIAG
+    , mDiagMode(false)
+    , mDiagOutput(NULL)
+    , mDiagOutputMaxLen(0)
+#endif
 {
 }
 
@@ -551,6 +556,17 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
         VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
         mError = SpinelStatusToOtError(status);
     }
+#if OPENTHREAD_ENABLE_DIAG
+    else if (aKey == SPINEL_PROP_NEST_STREAM_MFG)
+    {
+        spinel_ssize_t unpacked;
+
+        VerifyOrExit(mDiagOutput != NULL);
+        unpacked =
+            spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
+        VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
+    }
+#endif
     else if (aKey == mWaitingKey)
     {
         if (mPropertyFormat)
@@ -1454,6 +1470,23 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+otError RadioSpinel::PlatDiagProcess(const char *aString, char *aOutput, size_t aOutputMaxLen)
+{
+    otError error;
+
+    mDiagOutput       = aOutput;
+    mDiagOutputMaxLen = aOutputMaxLen;
+
+    error = Set(SPINEL_PROP_NEST_STREAM_MFG, SPINEL_DATATYPE_UTF8_S, aString);
+
+    mDiagOutput       = NULL;
+    mDiagOutputMaxLen = 0;
+
+    return error;
+}
+#endif
+
 } // namespace ot
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -1714,3 +1747,69 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
     OT_UNUSED_VARIABLE(aInstance);
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
+#if OPENTHREAD_ENABLE_DIAG
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    // delivery the platform specific diags commands to radio only ncp.
+    OT_UNUSED_VARIABLE(aInstance);
+    char  cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
+    char *cur                                              = cmd;
+    char *end                                              = cmd + sizeof(cmd);
+
+    for (int index = 0; index < argc; index++)
+    {
+        cur += snprintf(cur, end - cur, "%s ", argv[index]);
+    }
+
+    sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(aMode ? "start" : "stop", NULL, 0));
+    sRadioSpinel.SetDiagMode(aMode);
+
+exit:
+    return;
+}
+
+bool otPlatDiagModeGet(void)
+{
+    return sRadioSpinel.GetDiagMode();
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "power %d", aTxPower);
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
+
+exit:
+    return;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "channel %d", aChannel);
+    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
+
+exit:
+    return;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    (void)aInstance;
+    (void)aFrame;
+    (void)aError;
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    (void)aInstance;
+}
+#endif // OPENTHREAD_ENABLE_DIAG

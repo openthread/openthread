@@ -41,7 +41,6 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    diag.c                                  \
     flash.c                                 \
     frame_queue.cpp                         \
     hdlc.cpp                                \
