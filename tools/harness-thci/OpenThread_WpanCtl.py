@@ -650,8 +650,9 @@ class OpenThread_WpanCtl(IThci):
         print 'call _setChannelMask'
         try:
             cmd = WPANCTL_CMD + 'setprop NCP:ChannelMask %s' % channelMask
+            datasetCmd = WPANCTL_CMD + 'setprop Dataset:ChannelMaskPage0 %s' % channelMask
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd) != 'Fail'
+            return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setChannelMask() Error: ' + str(e))
 
@@ -1838,8 +1839,9 @@ class OpenThread_WpanCtl(IThci):
         print '%s call setMLPrefix' % self.port
         try:
             cmd = WPANCTL_CMD + 'setprop IPv6:MeshLocalPrefix %s' % sMeshLocalPrefix
+            datasetCmd = WPANCTL_CMD + 'setprop Dataset:MeshLocalPrefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] != 'Fail'
+            return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setMLPrefix() Error: ' + str(e))
 
@@ -1943,7 +1945,7 @@ class OpenThread_WpanCtl(IThci):
         # long timeout value to avoid automatic joiner removal (in seconds)
         timeout = 500
 
-        cmd = WPANCTL_CMD + 'commissioner joiner-add %s %s %s' % (strPSKd, eui64, str(timeout))
+        cmd = WPANCTL_CMD + 'commissioner joiner-add %s %s %s' % (eui64, str(timeout), strPSKd)
         print cmd
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()
@@ -1965,12 +1967,12 @@ class OpenThread_WpanCtl(IThci):
             False: fail to set provisioning Url
         """
         print '%s call setProvisioningUrl' % self.port
+        self.provisioningUrl = strURL
         if self.deviceRole == Thread_Device_Role.Commissioner:
             cmd = WPANCTL_CMD + 'setprop Commissioner:ProvisioningUrl %s' %(strURL)
-
-        self.provisioningUrl = strURL
-        print cmd
-        return self.__sendCommand(cmd)[0] != "Fail"
+            print cmd
+            return self.__sendCommand(cmd)[0] != "Fail"
+        return True
 
     def allowCommission(self):
         """start commissioner candidate petition process
@@ -2327,10 +2329,10 @@ class OpenThread_WpanCtl(IThci):
             if BogusTLV != None:
                 setRawTLVCmd += "8202aa55"
 
-            print cmd
             print setRawTLVCmd
+            print cmd
 
-            if self.__sendCommand(cmd)[0] == 'Fail':
+            if self.__sendCommand(setRawTLVCmd)[0] == 'Fail':
                 return False
 
             return self.__sendCommand(cmd)[0] != 'Fail'
@@ -2525,8 +2527,9 @@ class OpenThread_WpanCtl(IThci):
         print '%s call setPSKc' % self.port
         try:
             cmd = WPANCTL_CMD + 'setprop Network:PSKc %s' % strPSKc
+            datasetCmd =  WPANCTL_CMD + 'setprop Dataset:PSKc %s' % strPSKc
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] != 'Fail'
+            return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setPSKc() Error: ' + str(e))
 
