@@ -78,6 +78,9 @@
 #include "thread/panid_query_server.hpp"
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
+#if OPENTHREAD_ENABLE_SERVICE
+#include "utils/unique_service.hpp"
+#endif // OPENTHREAD_ENABLE_SERVICE
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include "utils/jam_detector.hpp"
@@ -262,6 +265,16 @@ public:
      */
     NetworkData::Local &GetNetworkDataLocal(void) { return mNetworkDataLocal; }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+
+#if OPENTHREAD_ENABLE_SERVICE
+    /**
+     * This method returns a reference to the unique service object.
+     *
+     * @returns A reference to the unique service object.
+     *
+     */
+    Utils::UniqueService &GetUniqueService(void) { return mUniqueService; }
+#endif // OPENTHREAD_ENABLE_SERVICE
 
     /**
      * This method returns a reference to the network data leader object.
@@ -466,6 +479,9 @@ private:
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_ENABLE_SERVICE
+    Utils::UniqueService mUniqueService;
+#endif // OPENTHREAD_ENABLE_SERVICE
     NetworkData::Leader mNetworkDataLeader;
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;

@@ -677,6 +677,13 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_ENABLE_SERVICE
+template <> inline Utils::UniqueService &Instance::Get(void)
+{
+    return GetThreadNetif().GetUniqueService();
+}
+#endif // OPENTHREAD_ENABLE_SERVICE
+
 #if OPENTHREAD_ENABLE_BORDER_AGENT
 template <> inline MeshCoP::BorderAgent &Instance::Get(void)
 {
