@@ -79,22 +79,22 @@ otError UniqueService::AddService(uint32_t                aEnterpriseNumber,
 
     if (aCallback != NULL)
     {
-        GetServiceMetadata(config).SetServerCompareCallback(aCallback);
+        GetServiceMetadata(config)->SetServerCompareCallback(aCallback);
     }
     else
     {
-        GetServiceMetadata(config).SetServerCompareCallback(DefaultServerCompare);
+        GetServiceMetadata(config)->SetServerCompareCallback(DefaultServerCompare);
     }
 
     if (!NetworkDataLeaderContainsService(config))
     {
-        GetServiceMetadata(config).SetState(ServiceMetadata::kStateRegisterService);
-        GetServiceMetadata(config).SetTimeout(Random::GetUint8InRange(1, kMaxRegisterServiceDelay));
+        GetServiceMetadata(config)->SetState(ServiceMetadata::kStateRegisterService);
+        GetServiceMetadata(config)->SetTimeout(Random::GetUint8InRange(1, kMaxRegisterServiceDelay));
     }
 
     SuccessOrExit(error = AddNetworkDataUniqueService(config));
 
-    if (GetServiceMetadata(config).GetTimeout() != 0 && !mTimer.IsRunning())
+    if (GetServiceMetadata(config)->GetTimeout() != 0 && !mTimer.IsRunning())
     {
         mTimer.Start(kStateUpdatePeriod);
     }
@@ -114,8 +114,8 @@ otError UniqueService::RemoveService(uint32_t       aEnterpriseNumber,
 
     SuccessOrExit(error = FindNetworkDataUniqueService(aEnterpriseNumber, aServiceData, aServiceDataLength, config));
 
-    GetServiceMetadata(config).SetState(ServiceMetadata::kStateDeleteService);
-    GetServiceMetadata(config).SetTimeout(kMaxUnregisterServiceDelay);
+    GetServiceMetadata(config)->SetState(ServiceMetadata::kStateDeleteService);
+    GetServiceMetadata(config)->SetTimeout(kMaxUnregisterServiceDelay);
     SuccessOrExit(error = UpdateNetworkDataUniqueService(config));
 
     if (!mTimer.IsRunning())
@@ -138,7 +138,7 @@ otError UniqueService::GetNextService(otNetworkDataIterator *aIterator, otServic
 
     while ((error = mNetworkData.GetNextService(aIterator, aConfig)) == OT_ERROR_NONE)
     {
-        if (GetServiceMetadata(*aConfig).GetState() != ServiceMetadata::kStateDeleteService)
+        if (GetServiceMetadata(*aConfig)->GetState() != ServiceMetadata::kStateDeleteService)
         {
             break;
         }
@@ -179,8 +179,8 @@ otError UniqueService::GetNextLeaderService(otNetworkDataIterator *aIterator, ot
                 serviceExistsInNetworkDataLeader = true;
                 preferredConfig                  = leaderConfig;
             }
-            else if (GetServiceMetadata(config).GetServerCompareCallback()(&preferredConfig.mServerConfig,
-                                                                           &leaderConfig.mServerConfig) < 0)
+            else if (GetServiceMetadata(config)->GetServerCompareCallback()(&preferredConfig.mServerConfig,
+                                                                            &leaderConfig.mServerConfig) < 0)
             {
                 preferredConfig = leaderConfig;
             }
@@ -220,7 +220,7 @@ void UniqueService::HandleStateChanged(otChangedFlags aFlags)
 
         while (oldNetworkData.GetNextService(&iterator, &config) == OT_ERROR_NONE)
         {
-            if (GetServiceMetadata(config).GetState() == ServiceMetadata::kStateDeleteService)
+            if (GetServiceMetadata(config)->GetState() == ServiceMetadata::kStateDeleteService)
             {
                 continue;
             }
@@ -241,8 +241,8 @@ void UniqueService::HandleStateChanged(otChangedFlags aFlags)
                     serviceExistsInNetworkDataLeader = true;
                     preferredConfig                  = leaderConfig;
                 }
-                else if (GetServiceMetadata(config).GetServerCompareCallback()(&preferredConfig.mServerConfig,
-                                                                               &leaderConfig.mServerConfig) < 0)
+                else if (GetServiceMetadata(config)->GetServerCompareCallback()(&preferredConfig.mServerConfig,
+                                                                                &leaderConfig.mServerConfig) < 0)
                 {
                     preferredConfig = leaderConfig;
                 }
@@ -256,26 +256,26 @@ void UniqueService::HandleStateChanged(otChangedFlags aFlags)
             if (serviceExistsInNetworkDataLeader)
             {
                 if (rlocIn && preferredConfig.mServerConfig.mRloc16 != GetNetif().GetMle().GetRloc16() &&
-                    GetServiceMetadata(config).GetState() != ServiceMetadata::kStateUnregisterService)
+                    GetServiceMetadata(config)->GetState() != ServiceMetadata::kStateUnregisterService)
                 {
                     // The node has already registered the service to the Leader, but it has not been selected as the
                     // primary server, the node will remove itself from the server list of the service.
 
                     startTimer = true;
 
-                    GetServiceMetadata(config).SetState(ServiceMetadata::kStateUnregisterService);
-                    GetServiceMetadata(config).SetTimeout(Random::GetUint8InRange(1, kMaxUnregisterServiceDelay));
+                    GetServiceMetadata(config)->SetState(ServiceMetadata::kStateUnregisterService);
+                    GetServiceMetadata(config)->SetTimeout(Random::GetUint8InRange(1, kMaxUnregisterServiceDelay));
                     UpdateNetworkDataUniqueService(config);
                 }
             }
-            else if (GetServiceMetadata(config).GetState() != ServiceMetadata::kStateRegisterService)
+            else if (GetServiceMetadata(config)->GetState() != ServiceMetadata::kStateRegisterService)
             {
                 // No one provides the service, the node will register the sevice to the Leader.
 
                 startTimer = true;
 
-                GetServiceMetadata(config).SetState(ServiceMetadata::kStateRegisterService);
-                GetServiceMetadata(config).SetTimeout(Random::GetUint8InRange(1, kMaxRegisterServiceDelay));
+                GetServiceMetadata(config)->SetState(ServiceMetadata::kStateRegisterService);
+                GetServiceMetadata(config)->SetTimeout(Random::GetUint8InRange(1, kMaxRegisterServiceDelay));
                 UpdateNetworkDataUniqueService(config);
             }
         }
@@ -303,19 +303,19 @@ void UniqueService::HandleTimer(void)
 
     while (oldNetworkData.GetNextService(&iterator, &config) == OT_ERROR_NONE)
     {
-        if ((timeout = GetServiceMetadata(config).GetTimeout()) == 0)
+        if ((timeout = GetServiceMetadata(config)->GetTimeout()) == 0)
         {
             continue;
         }
 
         timeout--;
 
-        GetServiceMetadata(config).SetTimeout(timeout);
+        GetServiceMetadata(config)->SetTimeout(timeout);
         UpdateNetworkDataUniqueService(config);
 
         if (timeout == 0)
         {
-            switch (GetServiceMetadata(config).GetState())
+            switch (GetServiceMetadata(config)->GetState())
             {
             case ServiceMetadata::kStateRegisterService:
                 if (!NetworkDataLeaderContainsService(config) && AddNetworkDataLocalService(config) == OT_ERROR_NONE)
@@ -340,9 +340,9 @@ void UniqueService::HandleTimer(void)
                 break;
             }
 
-            if (GetServiceMetadata(config).GetState() != ServiceMetadata::kStateDeleteService)
+            if (GetServiceMetadata(config)->GetState() != ServiceMetadata::kStateDeleteService)
             {
-                GetServiceMetadata(config).SetState(ServiceMetadata::kStateIdle);
+                GetServiceMetadata(config)->SetState(ServiceMetadata::kStateIdle);
                 UpdateNetworkDataUniqueService(config);
             }
         }
@@ -459,10 +459,10 @@ int UniqueService::DefaultServerCompare(const otServerConfig *aServerA, const ot
     return rval;
 }
 
-ServiceMetadata &UniqueService::GetServiceMetadata(otServiceConfig &aConfig)
+ServiceMetadata *UniqueService::GetServiceMetadata(otServiceConfig &aConfig)
 {
-    return *reinterpret_cast<ServiceMetadata *>(aConfig.mServerConfig.mServerData +
-                                                aConfig.mServerConfig.mServerDataLength - sizeof(ServiceMetadata));
+    return reinterpret_cast<ServiceMetadata *>(aConfig.mServerConfig.mServerData +
+                                               aConfig.mServerConfig.mServerDataLength - sizeof(ServiceMetadata));
 }
 
 } // namespace Utils

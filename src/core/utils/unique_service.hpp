@@ -225,7 +225,7 @@ private:
     bool             NetworkDataLeaderContainsService(const otServiceConfig &aConfig);
     bool             ServiceCompare(const otServiceConfig &aServiceA, const otServiceConfig &aServiceB) const;
     static int       DefaultServerCompare(const otServerConfig *aServerA, const otServerConfig *aServerB);
-    ServiceMetadata &GetServiceMetadata(otServiceConfig &aConfig);
+    ServiceMetadata *GetServiceMetadata(otServiceConfig &aConfig);
 
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
     void        HandleStateChanged(otChangedFlags aFlags);
