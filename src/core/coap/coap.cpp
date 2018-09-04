@@ -149,10 +149,9 @@ Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
     // Ensure that header has minimum required length.
     VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength);
 
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength(), aPriority)) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
-    message->SetPriority(aPriority);
 
 exit:
     return message;
