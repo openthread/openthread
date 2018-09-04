@@ -1085,12 +1085,11 @@ Message *Mle::NewMleMessage(void)
 {
     Message *message;
 
-    message = mSocket.NewMessage(0);
+    message = mSocket.NewMessage(0, kMleMessagePriority);
     VerifyOrExit(message != NULL);
 
     message->SetSubType(Message::kSubTypeMleGeneral);
     message->SetLinkSecurityEnabled(false);
-    message->SetPriority(kMleMessagePriority);
 
 exit:
     return message;

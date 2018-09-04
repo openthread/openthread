@@ -65,28 +65,29 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
+Message *MessagePool::New(uint8_t aType, uint16_t aReserved, uint8_t aPriority)
 {
+    otError  error   = OT_ERROR_NONE;
     Message *message = NULL;
 
-    SuccessOrExit(ReclaimBuffers(1));
-
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != NULL);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
     message->SetType(aType);
     message->SetReserved(aReserved);
     message->SetLinkSecurityEnabled(true);
-    message->SetPriority(kDefaultMessagePriority);
 
-    if (message->SetLength(0) != OT_ERROR_NONE)
+    SuccessOrExit(error = message->SetPriority(aPriority));
+    SuccessOrExit(error = message->SetLength(0));
+
+exit:
+    if (error != OT_ERROR_NONE)
     {
         Free(message);
         message = NULL;
     }
 
-exit:
     return message;
 }
 
@@ -99,9 +100,11 @@ void MessagePool::Free(Message *aMessage)
     FreeBuffers(static_cast<Buffer *>(aMessage));
 }
 
-Buffer *MessagePool::NewBuffer(void)
+Buffer *MessagePool::NewBuffer(uint8_t aPriority)
 {
     Buffer *buffer = NULL;
+
+    SuccessOrExit(ReclaimBuffers(1, aPriority));
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
@@ -124,6 +127,7 @@ Buffer *MessagePool::NewBuffer(void)
         otLogInfoMem(GetInstance(), "No available message buffer");
     }
 
+exit:
     return buffer;
 }
 
@@ -143,16 +147,18 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-otError MessagePool::ReclaimBuffers(int aNumBuffers)
+otError MessagePool::ReclaimBuffers(int aNumBuffers, uint8_t aPriority)
 {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     while (aNumBuffers > GetFreeBufferCount())
     {
         MeshForwarder &meshForwarder = GetInstance().GetThreadNetif().GetMeshForwarder();
-        SuccessOrExit(meshForwarder.EvictIndirectMessage());
+        SuccessOrExit(meshForwarder.EvictMessage(aPriority));
     }
 
 exit:
+#else  // OPENTHREAD_MTD || OPENTHREAD_FTD
+    OT_UNUSED_VARIABLE(aPriority);
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // First comparison is to get around issues with comparing
@@ -238,7 +244,7 @@ otError Message::ResizeMessage(uint16_t aLength)
     {
         if (curBuffer->GetNextBuffer() == NULL)
         {
-            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer());
+            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(GetPriority()));
             VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = OT_ERROR_NO_BUFS);
         }
 
@@ -303,7 +309,7 @@ otError Message::SetLength(uint16_t aLength)
         bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
-    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs));
+    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs, GetPriority()));
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mBuffer.mHead.mInfo.mLength = aLength;
@@ -425,7 +431,7 @@ otError Message::Prepend(const void *aBuf, uint16_t aLength)
 
     while (aLength > GetReserved())
     {
-        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer()) != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != NULL, error = OT_ERROR_NO_BUFS);
 
         newBuffer->SetNextBuffer(GetNextBuffer());
         SetNextBuffer(newBuffer);
@@ -651,7 +657,8 @@ Message *Message::Clone(uint16_t aLength) const
     otError  error = OT_ERROR_NONE;
     Message *messageCopy;
 
-    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved(), GetPriority())) != NULL,
+                 error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = messageCopy->SetLength(aLength));
     CopyTo(0, 0, aLength, *messageCopy);
 
@@ -659,7 +666,6 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetOffset(GetOffset());
     messageCopy->SetInterfaceId(GetInterfaceId());
     messageCopy->SetSubType(GetSubType());
-    messageCopy->SetPriority(GetPriority());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     messageCopy->SetTimeSync(IsTimeSync());

@@ -171,13 +171,15 @@ public:
     void RemoveDataResponseMessages(void);
 
     /**
-     * This method evicts the first indirect message in the indirect send queue.
+     * This method evicts the message with lowest priority in the send queue.
      *
-     * @retval OT_ERROR_NONE       Successfully evicted an indirect message.
-     * @retval OT_ERROR_NOT_FOUND  No indirect messages available to evict.
+     * @param[in]  aPriority  The highest priority level of the evicted message.
+     *
+     * @retval OT_ERROR_NONE       Successfully evicted a low priority message.
+     * @retval OT_ERROR_NOT_FOUND  No low priority messages available to evict.
      *
      */
-    otError EvictIndirectMessage(void);
+    otError EvictMessage(uint8_t aPriority);
 
     /**
      * This method returns a reference to the send queue.

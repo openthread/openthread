@@ -235,19 +235,30 @@ void MeshForwarder::UpdateIndirectMessages(void)
     }
 }
 
-otError MeshForwarder::EvictIndirectMessage(void)
+otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error = OT_ERROR_NOT_FOUND;
+    Message *message;
 
-    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    VerifyOrExit((message = mSendQueue.GetTail()) != NULL);
+
+    if (message->GetPriority() > aPriority)
     {
-        if (!message->IsChildPending())
-        {
-            continue;
-        }
-
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
+    }
+    else if (message->GetPriority() == aPriority)
+    {
+        for (message = mSendQueue.GetHead(); message; message = message->GetNext())
+        {
+            if (!message->IsChildPending())
+            {
+                continue;
+            }
+
+            RemoveMessage(*message);
+            ExitNow(error = OT_ERROR_NONE);
+        }
     }
 
 exit:
