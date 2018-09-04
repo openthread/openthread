@@ -52,6 +52,19 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
+otMessage *otUdpNewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message  = instance.GetIp6().GetUdp().NewMessage(0, aPriority);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
     otError         error    = OT_ERROR_INVALID_ARGS;

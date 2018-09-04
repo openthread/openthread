@@ -188,7 +188,7 @@ public:
 private:
     enum
     {
-        kDefaultSocketMessagePriority = Message::kPriorityLow,
+        kDefaultSocketMessagePriority = Message::kPriorityNormal,
     };
 
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
@@ -340,7 +340,7 @@ public:
 private:
     enum
     {
-        kDefaultUdpMessagePriority = Message::kPriorityLow,
+        kDefaultUdpMessagePriority = Message::kPriorityNormal,
     };
 
     enum

@@ -370,13 +370,26 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
  * Allocate a new message buffer for sending an IPv6 message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
 otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+
+/**
+ * Allocate a new message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
+ * @param[in]  aPriority             The message priority level.
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage *otIp6NewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.

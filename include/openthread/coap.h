@@ -455,13 +455,25 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 /**
  * This function creates a new message with a CoAP header.
  *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aHeader  A pointer to a CoAP header that is used to create the message.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
  *
  * @returns A pointer to the message or NULL if failed to allocate message.
  *
  */
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
+
+/**
+ * This function creates a new message with a CoAP header.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
+ * @param[in]  aPriority  The message priority level.
+ *
+ * @returns A pointer to the message or NULL if failed to allocate message.
+ *
+ */
+otMessage *otCoapNewMessage2(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority);
 
 /**
  * This function sends a CoAP request.

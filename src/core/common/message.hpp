@@ -229,10 +229,10 @@ public:
 
     enum
     {
-        kPriorityHigh    = 0, ///< High priority level.
-        kPriorityMedium  = 1, ///< Medium priority level.
-        kPriorityLow     = 2, ///< Low priority level.
-        kPriorityVeryLow = 3, ///< Very low priority level.
+        kPriorityNetworkControl = 0,                          ///< Network Control priority level.
+        kPriorityHigh           = OT_MESSAGE_PRIORITY_HIGH,   ///< High priority level.
+        kPriorityNormal         = OT_MESSAGE_PRIORITY_NORMAL, ///< Normal priority level.
+        kPriorityLow            = OT_MESSAGE_PRIORITY_LOW,    ///< Low priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };
@@ -1291,7 +1291,7 @@ public:
 private:
     enum
     {
-        kDefaultMessagePriority = Message::kPriorityLow,
+        kDefaultMessagePriority = Message::kPriorityNormal,
     };
 
     Buffer *       NewBuffer(uint8_t aPriority);

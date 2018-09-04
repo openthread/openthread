@@ -207,6 +207,19 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
+otMessage *otIp6NewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0, aPriority);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+
 otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
