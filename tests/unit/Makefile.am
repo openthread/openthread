@@ -157,6 +157,7 @@ TESTS                                                               = \
 # made available to all programs and scripts in TESTS.
 
 TESTS_ENVIRONMENT                                                   = \
+    top_srcdir='$(top_srcdir)'                                        \
     $(NULL)
 
 # Source, compiler, and linker options for test programs.

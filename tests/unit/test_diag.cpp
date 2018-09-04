@@ -29,7 +29,10 @@
 #include <openthread/diag.h>
 #include <openthread/platform/radio.h>
 
+#include <signal.h>
 #include <stdlib.h>
+#include <sys/prctl.h>
+#include <unistd.h>
 
 #include "utils/wrap_string.h"
 
@@ -231,6 +234,20 @@ void TestDiag(void)
     // initialize platform layer
 #if OPENTHREAD_ENABLE_POSIX_APP
     char *argv[] = {(char *)"test_diag", getenv("RADIO_DEVICE"), (char *)"1"};
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    char simulator[128];
+
+    sprintf(simulator, "%s/tests/scripts/thread-cert/simulator.py", getenv("top_srcdir"));
+
+    if (0 == fork())
+    {
+        prctl(PR_SET_PDEATHSIG, SIGHUP);
+        exit(execlp("python", "python", simulator, NULL));
+    }
+
+    setenv("NODE_ID", "1", 0);
+    sleep(2);
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 #else
     char *argv[] = {(char *)"test_diag", (char *)"1"};
 #endif

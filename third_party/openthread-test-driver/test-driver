@@ -112,11 +112,11 @@ while true; do
     if [ $? -eq 0 ]; then
         break
     fi
-    OFFSET=$(expr $OFFSET + 1) 
+    OFFSET=$(expr $OFFSET + 1)
 done
 
 # Run a test
-TEST_NAME="${test_name}" PORT_OFFSET=$OFFSET "$@" >$log_file 2>&1
+TEST_NAME="${test_name}" PORT_OFFSET=$OFFSET "$@" >>$log_file 2>&1
 estatus=$?
 
 # Return the offset

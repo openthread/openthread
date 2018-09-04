@@ -41,7 +41,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX"
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
@@ -50,7 +50,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 /**
@@ -59,7 +59,7 @@
  * Define to 1 if you want to support microsecond timer in platform.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
 
 /**
  * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
@@ -71,4 +71,4 @@
 #define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
 #endif
 
-#endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_
+#endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

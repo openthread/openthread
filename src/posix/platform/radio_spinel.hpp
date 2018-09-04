@@ -353,6 +353,24 @@ public:
      */
     void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    /**
+     * This method performs radio spinel processing in simulation mode.
+     *
+     * @param[in]   aEvent  A reference to the current received simulation event.
+     *
+     */
+    void Process(const struct Event &aEvent);
+
+    /**
+     * This method updates the @p aTimeout for processing radio spinel in simulation mode.
+     *
+     * @param[out]   aTimeout    A reference to the current timeout.
+     *
+     */
+    void Update(struct timeval &aTimeout);
+#endif
+
 private:
     enum
     {
@@ -360,6 +378,7 @@ private:
         kMaxWaitTime    = 2000, ///< Max time to wait for response in milliseconds.
     };
 
+    void    DecodeHdlc(const uint8_t *aData, uint16_t aLength);
     void    ReadAll(void);
     otError WriteAll(const uint8_t *aBuffer, uint16_t aLength);
     void    ProcessFrameQueue(void);
