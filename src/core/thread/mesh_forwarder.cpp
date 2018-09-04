@@ -468,34 +468,6 @@ exit:
     return error;
 }
 
-otError MeshForwarder::SkipFragmentHeader(uint8_t *&aFrame, uint8_t &aFrameLength)
-{
-    otError                error = OT_ERROR_NONE;
-    Lowpan::FragmentHeader fragmentHeader;
-
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader());
-
-    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
-    aFrame += fragmentHeader.GetHeaderLength();
-    aFrameLength -= fragmentHeader.GetHeaderLength();
-
-exit:
-    return error;
-}
-
-otError MeshForwarder::GetFragmentHeader(uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
-                 error = OT_ERROR_NOT_FOUND);
-
-    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
-
-exit:
-    return error;
-}
-
 otError MeshForwarder::DecompressIp6Header(uint8_t *           aFrame,
                                            uint8_t             aFrameLength,
                                            const Mac::Address &aMacSource,
@@ -512,13 +484,14 @@ otError MeshForwarder::DecompressIp6Header(uint8_t *           aFrame,
 
     SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
 
-    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    if (aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
     {
-        // only the first fragment header followed by an Ipv6 header
+        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-    }
 
-    SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+        aFrame += fragmentHeader.GetHeaderLength();
+        aFrameLength -= fragmentHeader.GetHeaderLength();
+    }
 
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
     headerLength =

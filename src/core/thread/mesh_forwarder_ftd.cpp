@@ -855,6 +855,11 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
     error = netif.GetMle().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
 
 exit:
+    if (error == OT_ERROR_NOT_FOUND)
+    {
+        error = OT_ERROR_NONE;
+    }
+
     return error;
 }
 
