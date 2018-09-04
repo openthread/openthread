@@ -38,8 +38,11 @@
 #include "common/instance.hpp"
 
 using namespace ot;
-
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+static void HandleActiveScanResult(void *aContext, otBeaconNotify *aBeacon);
+#else
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
+#endif
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 
 uint8_t otLinkGetChannel(otInstance *aInstance)
@@ -358,7 +361,25 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     return instance.GetThreadNetif().GetMac().IsActiveScanInProgress();
 }
 
-void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+void HandleActiveScanResult(void *aContext, otBeaconNotify *aBeacon)
+{
+    Instance &instance = *static_cast<Instance *>(aContext);
+
+    if (aBeacon == NULL)
+    {
+        instance.InvokeActiveScanCallback(NULL);
+    }
+    else
+    {
+        otActiveScanResult result;
+
+        instance.GetThreadNetif().GetMac().ConvertBeaconToActiveScanResult(aBeacon, result);
+        instance.InvokeActiveScanCallback(&result);
+    }
+}
+#else
+void        HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
     Instance &instance = *static_cast<Instance *>(aContext);
 
@@ -374,6 +395,7 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
         instance.InvokeActiveScanCallback(&result);
     }
 }
+#endif
 
 otError otLinkEnergyScan(otInstance *             aInstance,
                          uint32_t                 aScanChannels,
@@ -408,6 +430,15 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
 
     return instance.GetThreadNetif().GetMac().IsInTransmitState();
 }
+
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+void otLinkSyncExternalMac(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetMac().Start();
+}
+#endif
 
 otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame)
 {

@@ -34,7 +34,7 @@
 
 #include "phy.h"
 #include "platform-samr21.h"
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 #include <openthread/platform/random.h>
 
 uint32_t otPlatRandomGet(void)

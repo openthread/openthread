@@ -1427,6 +1427,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
 
 #
+# MAC - What MAC layer is used?
+#
+
+AC_ARG_WITH(
+    [mac],
+    [AS_HELP_STRING([--with-mac],[Specify the MAC used (internal|external) @<:@default=internal@:>@.])],
+    [
+        case "${with_mac}" in
+        "internal")
+            OPENTHREAD_CONFIG_USE_EXTERNAL_MAC=0
+            ;;
+        "external")
+            OPENTHREAD_CONFIG_USE_EXTERNAL_MAC=1
+            ;;
+        *)
+            AC_MSG_ERROR([unexpected --with-mac=${with_mac}])
+            ;;
+        esac
+    ],
+    [
+       OPENTHREAD_CONFIG_USE_EXTERNAL_MAC=0
+    ])
+
+AC_SUBST(OPENTHREAD_CONFIG_USE_EXTERNAL_MAC)
+AM_CONDITIONAL([OPENTHREAD_CONFIG_USE_EXTERNAL_MAC],  [test "${with_mac}"  = "external"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_USE_EXTERNAL_MAC],[${OPENTHREAD_CONFIG_USE_EXTERNAL_MAC}],[Define to 1 to enable external mac interface.])
+AC_MSG_CHECKING([should openthread use external mac])
+AC_MSG_RESULT([${OPENTHREAD_CONFIG_USE_EXTERNAL_MAC}])
+
+#
 # Service
 #
 
@@ -1891,6 +1921,7 @@ AC_MSG_NOTICE([
   OpenThread FTD support                    : ${enable_ftd}
   OpenThread MTD support                    : ${enable_mtd}
   OpenThread Radio Only support             : ${enable_radio_only}
+  OpenThread Mac support                    : ${with_mac}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}

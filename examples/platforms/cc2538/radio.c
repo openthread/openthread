@@ -35,7 +35,7 @@
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 
 #include "platform-cc2538.h"
 #include "common/logging.hpp"

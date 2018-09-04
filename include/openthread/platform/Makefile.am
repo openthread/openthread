@@ -37,6 +37,8 @@ ot_platform_headers                     = \
     misc.h                                \
     logging.h                             \
     radio.h                               \
+    radio-phy.h                           \
+    radio-mac.h                           \
     random.h                              \
     time.h                                \
     uart.h                                \

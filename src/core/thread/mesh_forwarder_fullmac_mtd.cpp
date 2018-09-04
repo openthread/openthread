@@ -31,11 +31,11 @@
  *   This file implements MTD-specific mesh forwarding of IPv6/6LoWPAN messages.
  */
 
-#if OPENTHREAD_MTD
-
-#define WPP_NAME "mesh_forwarder_mtd.tmh"
+#define WPP_NAME "mesh_forwarder_fullmac_mtd.tmh"
 
 #include "mesh_forwarder.hpp"
+
+#if OPENTHREAD_MTD && !OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
 
 namespace ot {
 
@@ -73,4 +73,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_MTD
+#endif // OPENTHREAD_MTD && !OPENTHREAD_CONFIG_USE_EXTERNAL_MAC

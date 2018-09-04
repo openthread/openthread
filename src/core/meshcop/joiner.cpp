@@ -66,6 +66,7 @@ Joiner::Joiner(Instance &aInstance)
     , mContext(NULL)
     , mCcitt(0)
     , mAnsi(0)
+    , mCurJoinerRouter(NULL)
     , mVendorName(NULL)
     , mVendorModel(NULL)
     , mVendorSwVersion(NULL)
@@ -81,6 +82,19 @@ void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
 {
     otPlatRadioGetIeeeEui64(&GetInstance(), aJoinerId.m8);
     ComputeJoinerId(aJoinerId, aJoinerId);
+}
+
+otError Joiner::GetCounterpartAddress(Mac::ExtAddress &aExtAddr) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mState >= OT_JOINER_STATE_CONNECT, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mCurJoinerRouter != NULL, error = OT_ERROR_INVALID_STATE);
+
+    aExtAddr = mCurJoinerRouter->mExtAddr;
+
+exit:
+    return error;
 }
 
 otError Joiner::Start(const char *     aPSKd,
@@ -165,8 +179,10 @@ void Joiner::Close(void)
 void Joiner::Complete(otError aError)
 {
     ThreadNetif &netif = GetNetif();
-    mState             = OT_JOINER_STATE_IDLE;
-    otError error      = OT_ERROR_NOT_FOUND;
+    otError      error = OT_ERROR_NOT_FOUND;
+
+    mState           = OT_JOINER_STATE_IDLE;
+    mCurJoinerRouter = NULL;
     GetNotifier().Signal(OT_CHANGED_JOINER_STATE);
 
     netif.GetCoapSecure().Disconnect();
@@ -287,6 +303,7 @@ otError Joiner::TryNextJoin()
         Ip6::SockAddr sockaddr;
 
         joinerRouter->mPriority = 0;
+        mCurJoinerRouter        = joinerRouter;
 
         netif.GetMac().SetPanId(joinerRouter->mPanId);
         netif.GetMac().SetPanChannel(joinerRouter->mChannel);

@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 #include <openthread/platform/random.h>
 
 #include "platform-cc2538.h"

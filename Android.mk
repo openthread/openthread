@@ -107,7 +107,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/crypto/pbkdf2_cmac.cpp                         \
     src/core/crypto/sha256.cpp                              \
     src/core/mac/channel_mask.cpp                           \
-    src/core/mac/mac.cpp                                    \
+    src/core/mac/mac_full.cpp                               \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
     src/core/meshcop/announce_begin_client.cpp              \
@@ -147,9 +147,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/key_manager.cpp                         \
     src/core/thread/link_quality.cpp                        \
     src/core/thread/lowpan.cpp                              \
-    src/core/thread/mesh_forwarder.cpp                      \
-    src/core/thread/mesh_forwarder_ftd.cpp                  \
-    src/core/thread/mesh_forwarder_mtd.cpp                  \
+    src/core/thread/mesh_forwarder_fullmac.cpp                      \
+    src/core/thread/mesh_forwarder_fullmac_ftd.cpp                  \
+    src/core/thread/mesh_forwarder_fullmac_mtd.cpp                  \
     src/core/thread/mle.cpp                                 \
     src/core/thread/mle_router.cpp                          \
     src/core/thread/network_data.cpp                        \

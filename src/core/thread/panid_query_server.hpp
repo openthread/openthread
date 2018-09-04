@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
@@ -69,8 +70,13 @@ private:
                             const otMessageInfo *aMessageInfo);
     void        HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+    static void HandleScanResult(void *aContext, otBeaconNotify *aBeaconNotify);
+    void        HandleScanResult(otBeaconNotify *aBeaconNotify);
+#else
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
     void        HandleScanResult(Mac::Frame *aFrame);
+#endif
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

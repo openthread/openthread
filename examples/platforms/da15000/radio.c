@@ -32,7 +32,7 @@
  */
 
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 
 #include <string.h>
 

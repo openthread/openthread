@@ -168,7 +168,7 @@
     <ClCompile Include="..\..\src\core\mac\channel_mask.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\mac\mac.cpp">
+    <ClCompile Include="..\..\src\core\mac\mac_full.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_filter.cpp">
@@ -228,13 +228,13 @@
     <ClCompile Include="..\..\src\core\thread\lowpan.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp">
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_ftd.cpp">
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac_ftd.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_mtd.cpp">
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac_mtd.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\mle.cpp">

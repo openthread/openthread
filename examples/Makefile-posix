@@ -55,7 +55,6 @@ configure_OPTIONS                   = \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
-    --enable-diag                     \
     --enable-dns-client               \
     --enable-ftd                      \
     --enable-jam-detection            \
@@ -66,12 +65,21 @@ configure_OPTIONS                   = \
     --enable-mtd-network-diagnostic   \
     --enable-ncp                      \
     --with-ncp-bus=uart               \
-    --enable-radio-only               \
-    --enable-raw-link-api             \
     --enable-service                  \
     --enable-udp-proxy                \
-    --with-examples=posix             \
+    --with-examples=posix
+
+ifeq ($(EXTERN_MAC),1)
+configure_OPTIONS                  += \
+    --with-mac=external               \
     $(NULL)
+else
+configure_OPTIONS                  += \
+    --enable-diag                     \
+    --enable-radio-only               \
+    --enable-raw-link-api             \
+    $(NULL)
+endif
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..

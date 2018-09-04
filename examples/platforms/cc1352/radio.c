@@ -38,7 +38,7 @@
 #include <utils/code_utils.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 #include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include "cc1352_radio.h"

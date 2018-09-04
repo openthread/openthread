@@ -97,7 +97,7 @@
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\core\mac\channel_mask.cpp" />
     <ClCompile Include="..\..\src\core\mac\link_raw.cpp" />
-    <ClCompile Include="..\..\src\core\mac\mac.cpp" />
+    <ClCompile Include="..\..\src\core\mac\mac_full.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_filter.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp" />
@@ -135,9 +135,9 @@
     <ClCompile Include="..\..\src\core\thread\key_manager.cpp" />
     <ClCompile Include="..\..\src\core\thread\link_quality.cpp" />
     <ClCompile Include="..\..\src\core\thread\lowpan.cpp" />
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_ftd.cpp" />
-    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_mtd.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac_ftd.cpp" />
+    <ClCompile Include="..\..\src\core\thread\mesh_forwarder_fullmac_mtd.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
@@ -187,6 +187,7 @@
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
     <ClInclude Include="..\..\src\core\mac\channel_mask.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
+    <ClInclude Include="..\..\src\core\mac\mac_full.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />

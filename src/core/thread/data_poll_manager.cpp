@@ -103,10 +103,11 @@ otError DataPollManager::SendDataPoll(void)
     VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
     parent = netif.GetMle().GetParentCandidate();
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
+#if !OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
     for (message = netif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
     {
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
@@ -121,6 +122,10 @@ otError DataPollManager::SendDataPoll(void)
     {
         message->Free();
     }
+#else
+    (void)message;
+    VerifyOrExit(error = netif.GetMeshForwarder().SendPoll());
+#endif
 
 exit:
 
@@ -157,6 +162,10 @@ exit:
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
+
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+    HandlePollSent(error);
+#endif
 
     return error;
 }

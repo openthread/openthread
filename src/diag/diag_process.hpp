@@ -40,7 +40,7 @@
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 
 namespace ot {
 
@@ -72,29 +72,29 @@ private:
         void (*mHandler)(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     };
 
-    static void AppendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    static void TxPacket(void);
+    static void    AppendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    static void    TxPacket(void);
 
     static otError ParseLong(char *aString, long &aLong);
 
     static const struct Command sCommands[];
     static struct DiagStats     sStats;
 
-    static int8_t        sTxPower;
-    static uint8_t       sChannel;
-    static uint8_t       sTxLen;
-    static uint32_t      sTxPeriod;
-    static uint32_t      sTxPackets;
-    static otRadioFrame *sTxPacket;
-    static otInstance *  sInstance;
-    static bool          sRepeatActive;
+    static int8_t               sTxPower;
+    static uint8_t              sChannel;
+    static uint8_t              sTxLen;
+    static uint32_t             sTxPeriod;
+    static uint32_t             sTxPackets;
+    static otRadioFrame *       sTxPacket;
+    static otInstance *         sInstance;
+    static bool                 sRepeatActive;
 };
 
 } // namespace Diagnostics

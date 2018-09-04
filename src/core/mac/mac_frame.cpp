@@ -66,6 +66,21 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
     return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
 }
 
+void Address::GetExtended(uint8_t *aBuffer, bool aReverse) const
+{
+    if (aReverse)
+    {
+        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
+        {
+            aBuffer[sizeof(ExtAddress) - 1 - i] = mShared.mExtAddress.m8[i];
+        }
+    }
+    else
+    {
+        memcpy(aBuffer, mShared.mExtAddress.m8, sizeof(ExtAddress));
+    }
+}
+
 void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
 {
     mType = kTypeExtended;

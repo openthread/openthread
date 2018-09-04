@@ -40,7 +40,7 @@
 
 #include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 
 #include "utils/code_utils.h"
 

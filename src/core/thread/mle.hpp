@@ -621,6 +621,14 @@ public:
     bool IsAttached(void) const;
 
     /**
+     * This method returns true if the device is currently attaching
+     *
+     * @retval  True if the device is currently in the attach process, false otherwise.
+     *
+     */
+    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+
+    /**
      * This method returns the current Thread interface state.
      *
      * @returns The current Thread interface state.

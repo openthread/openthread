@@ -271,6 +271,16 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
 }
 
+bool otLinkIsPromiscuous(otInstance *aInstance)
+{
+    return otLinkRawGetPromiscuous(aInstance);
+}
+
+otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
+{
+    return otLinkRawSetPromiscuous(aInstance, aPromiscuous);
+}
+
 #if OPENTHREAD_ENABLE_DIAG
 static otInstance *sDiagInstance;
 

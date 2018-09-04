@@ -38,7 +38,7 @@
 #include <stdint.h>
 
 #include <openthread/error.h>
-#include <openthread/platform/radio.h>
+#include <openthread/platform/radio-phy.h>
 
 /**
  * This function initializes the radio.

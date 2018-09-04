@@ -51,6 +51,8 @@ PLATFORM_SOURCES                          = \
     sim/alarm-sim.c                         \
     sim/platform-sim.c                      \
     sim/radio-sim.c                         \
+    externmac/radio-externmac.c             \
+    externmac/radio-stubs-externmac.c       \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \

@@ -99,6 +99,33 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
+void PanIdQueryServer::HandleScanResult(void *aContext, otBeaconNotify *aBeaconNotify)
+{
+    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aBeaconNotify);
+}
+
+void PanIdQueryServer::HandleScanResult(otBeaconNotify *aBeaconNotify)
+{
+    uint16_t panId;
+
+    if (aBeaconNotify != NULL)
+    {
+        panId = Encoding::LittleEndian::ReadUint16(aBeaconNotify->mPanDescriptor.Coord.mPanId);
+
+        if (panId == mPanId)
+        {
+            mChannelMask |= 1 << aBeaconNotify->mPanDescriptor.LogicalChannel;
+        }
+    }
+    else if (mChannelMask != 0)
+    {
+        SendConflict();
+    }
+}
+
+#else
+
 void PanIdQueryServer::HandleScanResult(void *aContext, Mac::Frame *aFrame)
 {
     static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aFrame);
@@ -122,6 +149,7 @@ void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
         SendConflict();
     }
 }
+#endif
 
 otError PanIdQueryServer::SendConflict(void)
 {

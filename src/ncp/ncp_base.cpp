@@ -1394,8 +1394,8 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>(void)
 {
-    return mEncoder.WriteUint8(otPlatRadioGetPromiscuous(mInstance) ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
-                                                                    : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
+    return mEncoder.WriteUint8(otLinkIsPromiscuous(mInstance) ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
+                                                              : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>(void)
@@ -1408,12 +1408,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>
     switch (mode)
     {
     case SPINEL_MAC_PROMISCUOUS_MODE_OFF:
-        otPlatRadioSetPromiscuous(mInstance, false);
+        error = otLinkSetPromiscuous(mInstance, false);
         break;
 
     case SPINEL_MAC_PROMISCUOUS_MODE_NETWORK:
     case SPINEL_MAC_PROMISCUOUS_MODE_FULL:
-        otPlatRadioSetPromiscuous(mInstance, true);
+        error = otLinkSetPromiscuous(mInstance, true);
         break;
 
     default:

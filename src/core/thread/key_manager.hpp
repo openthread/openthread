@@ -176,7 +176,16 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const { return mMacFrameCounter; }
+    uint32_t GetMacFrameCounter(void);
+
+    /**
+     * This method returns the current cached MAC Frame Counter value. Used for external-Mac systems where
+     * GetMacFrameCounter retrieves the value from the MAC.
+     *
+     * @returns The current cached MAC Frame Counter value.
+     *
+     */
+    uint32_t GetCachedMacFrameCounter(void) const { return mMacFrameCounter; }
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -184,7 +193,7 @@ public:
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter) { mMacFrameCounter = aMacFrameCounter; }
+    void SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
