@@ -453,6 +453,84 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     return OT_ERROR_NONE;
 }
 
+otError MeshForwarder::SkipMeshHeader(uint8_t *&aFrame, uint8_t &aFrameLength)
+{
+    otError            error = OT_ERROR_NONE;
+    Lowpan::MeshHeader meshHeader;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::MeshHeader *>(aFrame)->IsMeshHeader());
+
+    SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
+    aFrame += meshHeader.GetHeaderLength();
+    aFrameLength -= meshHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::SkipFragmentHeader(uint8_t *&aFrame, uint8_t &aFrameLength)
+{
+    otError                error = OT_ERROR_NONE;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader());
+
+    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+    aFrame += fragmentHeader.GetHeaderLength();
+    aFrameLength -= fragmentHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::GetFragmentHeader(uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::DecompressIp6Header(uint8_t *           aFrame,
+                                           uint8_t             aFrameLength,
+                                           const Mac::Address &aMacSource,
+                                           const Mac::Address &aMacDest,
+                                           Ip6::Header &       aIp6Header,
+                                           uint8_t &           aHeaderLength,
+                                           bool &              aNextHeaderCompressed)
+{
+    Lowpan::Lowpan &       lowpan = GetNetif().GetLowpan();
+    otError                error  = OT_ERROR_NONE;
+    uint8_t *              start  = aFrame;
+    Lowpan::FragmentHeader fragmentHeader;
+    int                    headerLength;
+
+    SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
+
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    {
+        // only the first fragment header followed by an Ipv6 header
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
+    }
+
+    SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
+    headerLength =
+        lowpan.DecompressBaseHeader(aIp6Header, aNextHeaderCompressed, aMacSource, aMacDest, aFrame, aFrameLength);
+
+    VerifyOrExit(headerLength >= 0, error = OT_ERROR_PARSE);
+    aHeaderLength = static_cast<uint8_t>(aFrame - start) + static_cast<uint8_t>(headerLength);
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame)
 {
     return aSender.GetOwner<MeshForwarder>().HandleFrameRequest(aFrame);

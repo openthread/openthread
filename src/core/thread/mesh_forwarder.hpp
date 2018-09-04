@@ -271,6 +271,21 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
+    otError  SkipMeshHeader(uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  SkipFragmentHeader(uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  DecompressIp6Header(uint8_t *           aFrame,
+                                 uint8_t             aFrameLength,
+                                 const Mac::Address &aMacSource,
+                                 const Mac::Address &aMacDest,
+                                 Ip6::Header &       aIp6Header,
+                                 uint8_t &           aHeaderLength,
+                                 bool &              aNextHeaderCompressed);
+    otError  GetFragmentHeader(uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader);
+    otError  GetIp6Header(uint8_t *           aFrame,
+                          uint8_t             aFrameLength,
+                          const Mac::Address &aMacSource,
+                          const Mac::Address &aMacDest,
+                          Ip6::Header &       aIp6Header);
     otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
