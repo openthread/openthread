@@ -139,6 +139,8 @@ void otSysDeinit(void)
  * @param[inout]    aErrorFdSet  A pointer to the error file descriptors.
  * @param[in]       aMaxFd       The max file descriptor.
  *
+ * @returns The value returned from select().
+ *
  */
 static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int aMaxFd)
 {

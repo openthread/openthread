@@ -167,12 +167,6 @@ class VirtualTime:
         assert not self._is_radio(addr)
         return (addr[0], addr[1] - self.BASE_PORT)
 
-    def _to_peer_addr(self, addr):
-        if self._is_radio(addr):
-            return self._to_core_addr(addr)
-        else:
-            return self._to_radio_addr(addr)
-
     def _core_addr_from(self, nodeid):
         if self.RADIO_ONLY:
             return ('127.0.0.1', self.BASE_PORT + self.port + nodeid)
@@ -193,7 +187,7 @@ class VirtualTime:
                 try:
                     msg, addr = self.sock.recvfrom(self.MAX_MESSAGE)
                 except socket.error:
-                    # fail
+                    # print debug information on failure
                     print('Current nodeid:')
                     print(self.current_nodeid)
                     print('Current awake:')
@@ -213,9 +207,6 @@ class VirtualTime:
                 except socket.error:
                     break
 
-            #print '%u: awake %u paused %u next_event_time %u pause_time %u' % (self.current_time, len(self._awake), self._paused.is_set(), self._next_event_time(), self._pause_time)
-            #print self.current_event
-
             if addr != self._spinel_cli_addr and addr not in self.devices:
                 self.devices[addr] = {}
                 self.devices[addr]['alarm'] = None
@@ -233,10 +224,6 @@ class VirtualTime:
                 dbg_print("New event: ", event_time, addr, type, datalen, binascii.hexlify(data))
             else:
                 dbg_print("New event: ", event_time, addr, type, datalen)
-
-            #if self.current_event:
-            #    current_addr = self.current_event[self.EVENT_ADDR]
-            #    assert addr == current_addr or (self._is_radio(current_addr) and self._to_core_addr(current_addr))
 
             if type == self.OT_SIM_EVENT_ALARM_FIRED:
                 # remove any existing alarm event for device
