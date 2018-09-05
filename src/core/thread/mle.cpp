@@ -782,9 +782,17 @@ otError Mle::SetDeviceMode(uint8_t aDeviceMode)
 
     VerifyOrExit((aDeviceMode & ModeTlv::kModeFFD) == 0 || (aDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0,
                  error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(mDeviceMode != aDeviceMode);
+
+    VerifyOrExit(mDeviceMode != aDeviceMode, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_MODE));
+
+    otLogNoteMle(GetInstance(), "Mode 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ffd:%s, full-netdata:%s]",
+                 mDeviceMode, aDeviceMode, (aDeviceMode & ModeTlv::kModeRxOnWhenIdle) ? "yes" : " no",
+                 (aDeviceMode & ModeTlv::kModeSecureDataRequest) ? "yes" : " no",
+                 (aDeviceMode & ModeTlv::kModeFFD) ? "yes" : "no",
+                 (aDeviceMode & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
 
     mDeviceMode = aDeviceMode;
+    GetNotifier().Signal(OT_CHANGED_THREAD_MODE);
 
     switch (mRole)
     {
