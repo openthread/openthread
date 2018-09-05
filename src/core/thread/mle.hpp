@@ -1057,6 +1057,17 @@ public:
      */
     void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
+    /**
+     * This function registers the client callback which is called upon successfully processing a Parent response frame
+     * to deliver certain info about the Parent of a node.
+     *
+     * @param[in]  aCallback A pointer to a function that is called to deliver certain stats about Parents of a node.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     * @retval None
+     */
+    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1786,6 +1797,9 @@ private:
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
     Notifier::Callback mNotifierCallback;
+
+    otThreadParentResponseCallback mParentResponseCb;
+    void *                         mParentResponseCbContext;
 };
 
 } // namespace Mle

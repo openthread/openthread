@@ -109,6 +109,8 @@ Mle::Mle(Instance &aInstance)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
     , mNotifierCallback(&Mle::HandleStateChanged, this)
+    , mParentResponseCb(NULL)
+    , mParentResponseCbContext(NULL)
 {
     otMeshLocalPrefix meshLocalPrefix;
 
@@ -3126,6 +3128,23 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
     VerifyOrExit(connectivity.IsValid(), error = OT_ERROR_PARSE);
 
+    // Share data with application, if requested.
+    if (mParentResponseCb)
+    {
+        otThreadParentResponseInfo parentinfo;
+
+        parentinfo.mExtAddr      = extAddress;
+        parentinfo.mRloc16       = sourceAddress.GetRloc16();
+        parentinfo.mRssi         = linkInfo->mRss;
+        parentinfo.mPriority     = connectivity.GetParentPriority();
+        parentinfo.mLinkQuality3 = connectivity.GetLinkQuality3();
+        parentinfo.mLinkQuality2 = connectivity.GetLinkQuality2();
+        parentinfo.mLinkQuality1 = connectivity.GetLinkQuality1();
+        parentinfo.mIsAttached   = IsAttached();
+
+        mParentResponseCb(&parentinfo, mParentResponseCbContext);
+    }
+
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice() && (mRole != OT_DEVICE_ROLE_DETACHED))
     {
@@ -4176,6 +4195,12 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 }
 
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
+void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
+{
+    mParentResponseCb        = aCallback;
+    mParentResponseCbContext = aContext;
+}
 
 } // namespace Mle
 } // namespace ot
