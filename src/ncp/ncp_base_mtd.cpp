@@ -682,7 +682,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORT
     otError         error      = OT_ERROR_NONE;
 
     // First, we need to remove all of the current assisting ports.
-    for (; numEntries != 0; ports++, numEntries--)
+    for (; numEntries != 0; ports, numEntries--)
     {
         SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, *ports));
     }
