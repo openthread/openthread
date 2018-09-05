@@ -488,7 +488,7 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
     {
         SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
 
-        // only the first fragment header followed by a LOWPAN_IPHC header
+        // only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
 
         aFrame += fragmentHeader.GetHeaderLength();
