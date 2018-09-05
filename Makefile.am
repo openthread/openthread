@@ -34,18 +34,21 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
     --enable-application-coap         \
     --enable-border-router            \
-    --enable-cli-app=all              \
+    --enable-cli                      \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-diag                     \
     --enable-dns-client               \
+    --enable-ftd                      \
     --enable-joiner                   \
     --enable-mac-filter               \
-    --enable-ncp-app=all              \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --with-ncp-bus=uart               \
+    --enable-radio-only               \
     --enable-service                  \
     --with-examples=posix             \
-    --with-ncp-bus=uart               \
     $(NULL)
 
 SUBDIRS                             = \

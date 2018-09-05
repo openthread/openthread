@@ -43,11 +43,14 @@ BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
 configure_OPTIONS                                 = \
-    --enable-cli-app=all                            \
-    --enable-ncp-app=all                            \
+    --enable-cli                                    \
     --enable-diag                                   \
-    --with-examples=nrf52840                        \
+    --enable-ftd                                    \
+    --enable-mtd                                    \
+    --enable-ncp                                    \
+    --enable-radio-only                             \
     --enable-linker-map                             \
+    --with-examples=nrf52840                        \
     MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 

@@ -76,7 +76,7 @@ endif # OPENTHREAD_ENABLE_DIAG
 bin_PROGRAMS                                                           = \
     $(NULL)
 
-if OPENTHREAD_ENABLE_POSIX_APP_NCP
+if OPENTHREAD_ENABLE_NCP
 bin_PROGRAMS                                                          += \
     ot-ncp                                                               \
     $(NULL)
@@ -107,7 +107,7 @@ ot_ncp_LIBTOOLFLAGS                                                    = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-if OPENTHREAD_ENABLE_POSIX_APP_CLI
+if OPENTHREAD_ENABLE_CLI
 bin_PROGRAMS                                                          += \
     ot-cli                                                               \
     $(NULL)

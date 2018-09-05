@@ -90,12 +90,12 @@ fi
 ./configure                             \
     CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
     --enable-coverage=${coverage}       \
-    --enable-ncp-app=all                \
+    --enable-ncp                        \
     --with-ncp-bus=uart                 \
-    --with-examples=posix               \
     --enable-border-router              \
     --enable-child-supervision          \
     --enable-diag                       \
+    --enable-ftd                        \
     --enable-jam-detection              \
     --enable-legacy                     \
     --enable-mac-filter                 \
@@ -103,6 +103,7 @@ fi
     --enable-channel-monitor            \
     --enable-channel-manager            \
     --enable-commissioner               \
+    --with-examples=posix               \
     --disable-docs                      \
     --disable-test || die
 
