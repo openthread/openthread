@@ -829,7 +829,7 @@ exit:
     return error;
 }
 
-otError MeshForwarder::GetIp6Header(uint8_t *           aFrame,
+otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
                                     uint8_t             aFrameLength,
                                     const Mac::Address &aMacSource,
                                     const Mac::Address &aMacDest,
@@ -855,9 +855,14 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
     error = netif.GetMle().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
 
 exit:
+    // the message may not contain an IPv6 header
     if (error == OT_ERROR_NOT_FOUND)
     {
         error = OT_ERROR_NONE;
+    }
+    else if (error != OT_ERROR_NONE)
+    {
+        error = OT_ERROR_DROP;
     }
 
     return error;

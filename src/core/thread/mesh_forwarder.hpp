@@ -271,15 +271,15 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
-    otError  SkipMeshHeader(uint8_t *&aFrame, uint8_t &aFrameLength);
-    otError  DecompressIp6Header(uint8_t *           aFrame,
+    otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint8_t             aFrameLength,
                                  const Mac::Address &aMacSource,
                                  const Mac::Address &aMacDest,
                                  Ip6::Header &       aIp6Header,
                                  uint8_t &           aHeaderLength,
                                  bool &              aNextHeaderCompressed);
-    otError  GetIp6Header(uint8_t *           aFrame,
+    otError  GetIp6Header(const uint8_t *     aFrame,
                           uint8_t             aFrameLength,
                           const Mac::Address &aMacSource,
                           const Mac::Address &aMacDest,
