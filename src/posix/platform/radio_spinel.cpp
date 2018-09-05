@@ -480,7 +480,14 @@ void RadioSpinel::HandleNotification(const uint8_t *aBuffer, uint16_t aLength)
         // Some spinel properties cannot be handled during `WaitResponse()`, we must cache these events.
         // `mWaitingTid` is released immediately after received the response. And `mWaitingKey` is be set
         // to `SPINEL_PROP_LAST_STATUS` at the end of `WaitResponse()`.
-        VerifyOrExit(IsSafeToHandleNow(key), error = mFrameQueue.Push(aBuffer, aLength));
+
+        if (!IsSafeToHandleNow(key))
+        {
+            assert(aLength <= 255);
+            error = mFrameQueue.Push(aBuffer, static_cast<uint8_t>(aLength));
+            ExitNow();
+        }
+
         HandleValueIs(key, data, static_cast<uint16_t>(len));
         break;
 
@@ -1110,7 +1117,7 @@ otError RadioSpinel::WriteAll(const uint8_t *aBuffer, uint16_t aLength)
 
     while (aLength)
     {
-        int rval = write(mSockFd, aBuffer, aLength);
+        ssize_t rval = write(mSockFd, aBuffer, aLength);
 
         if (rval > 0)
         {
