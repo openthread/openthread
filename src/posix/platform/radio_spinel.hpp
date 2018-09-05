@@ -161,6 +161,14 @@ public:
     otError SetTransmitPower(int8_t aPower);
 
     /**
+     * This method returns the radio capabilities.
+     *
+     * @returns The radio capability bit vector.
+     *
+     */
+    otRadioCaps GetRadioCaps(void) const { return mRadioCaps; }
+
+    /**
      * This method returns the radio receive sensitivity value.
      *
      * @returns The radio receive sensitivity value in dBm.
@@ -494,6 +502,7 @@ private:
     otExtAddress mExtendedAddress;
     uint16_t     mShortAddress;
     uint16_t     mPanid;
+    otRadioCaps  mRadioCaps;
     uint8_t      mChannel;
     int8_t       mRxSensitivity;
     uint8_t      mTxState;
