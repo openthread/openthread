@@ -34,7 +34,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
+#endif
 #include <termios.h>
 #include <unistd.h>
 
