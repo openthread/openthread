@@ -168,6 +168,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/missing_strlcpy.c                        \
     src/core/utils/missing_strlcat.c                        \
     src/core/utils/missing_strnlen.c                        \
+    src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/diag/diag_process.cpp                               \
     src/diag/openthread-diag.cpp                            \

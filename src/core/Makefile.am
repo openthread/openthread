@@ -213,6 +213,7 @@ SOURCES_COMMON                      = \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
     utils/missing_strnlen.c           \
+    utils/parse_cmdline.cpp           \
     utils/slaac_address.cpp           \
     $(NULL)
 
@@ -233,6 +234,7 @@ libopenthread_radio_a_SOURCES       = \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
     utils/missing_strnlen.c           \
+    utils/parse_cmdline.cpp           \
     $(NULL)
 
 libopenthread_mtd_a_SOURCES         = \
@@ -346,6 +348,7 @@ HEADERS_COMMON                      = \
     utils/child_supervision.hpp       \
     utils/heap.hpp                    \
     utils/jam_detector.hpp            \
+    utils/parse_cmdline.hpp           \
     utils/slaac_address.hpp           \
     utils/wrap_stdbool.h              \
     utils/wrap_stdint.h               \
