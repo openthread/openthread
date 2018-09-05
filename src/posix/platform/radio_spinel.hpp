@@ -170,7 +170,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    uint8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
+    int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
 
     /**
      * This method returns a reference to the transmit buffer.
