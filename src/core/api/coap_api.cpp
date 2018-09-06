@@ -149,12 +149,14 @@ exit:
     return message;
 }
 
-otMessage *otCoapNewMessage2(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority)
+otMessage *otCoapNewMessageWithPriority(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority)
 {
     Message * message;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    VerifyOrExit(aPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     VerifyOrExit(aHeader != NULL, message = NULL);
+
     message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)), aPriority);
 exit:
     return message;

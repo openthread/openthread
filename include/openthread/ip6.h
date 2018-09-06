@@ -389,7 +389,7 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  *
  * @sa otFreeMessage
  */
-otMessage *otIp6NewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
+otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.

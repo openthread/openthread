@@ -118,7 +118,7 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  * @sa otFreeMessage
  *
  */
-otMessage *otUdpNewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
+otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
 
 /**
  * Open a UDP/IPv6 socket.

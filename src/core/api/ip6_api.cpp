@@ -207,16 +207,19 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
-otMessage *otIp6NewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+otMessage *otIp6NewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0, aPriority);
+    Message * message;
 
-    if (message)
+    VerifyOrExit(aPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
+
+    if ((message = instance.GetMessagePool().New(Message::kTypeIp6, 0, aPriority)) != NULL)
     {
         message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
     }
 
+exit:
     return message;
 }
 

@@ -52,16 +52,19 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
-otMessage *otUdpNewMessage2(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
+otMessage *otUdpNewMessageWithPriority(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetIp6().GetUdp().NewMessage(0, aPriority);
+    Message * message;
 
-    if (message)
+    VerifyOrExit(aPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
+
+    if ((message = instance.GetIp6().GetUdp().NewMessage(0, aPriority)) != NULL)
     {
         message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
     }
 
+exit:
     return message;
 }
 

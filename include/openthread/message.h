@@ -93,9 +93,9 @@ typedef struct otBufferInfo
  *
  */
 typedef enum otMessagePriority {
-    OT_MESSAGE_PRIORITY_HIGH   = 1, ///< High priority level.
-    OT_MESSAGE_PRIORITY_NORMAL = 2, ///< Normal priority level.
-    OT_MESSAGE_PRIORITY_LOW    = 3, ///< Low priority level.
+    OT_MESSAGE_PRIORITY_LOW    = 0, ///< Low priority level.
+    OT_MESSAGE_PRIORITY_NORMAL = 1, ///< Normal priority level.
+    OT_MESSAGE_PRIORITY_HIGH   = 2, ///< High priority level.
 } otMessagePriority;
 
 /**

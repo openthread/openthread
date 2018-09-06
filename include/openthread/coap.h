@@ -473,7 +473,9 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
  * @returns A pointer to the message or NULL if failed to allocate message.
  *
  */
-otMessage *otCoapNewMessage2(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority);
+otMessage *otCoapNewMessageWithPriority(otInstance *        aInstance,
+                                        const otCoapHeader *aHeader,
+                                        otMessagePriority   aPriority);
 
 /**
  * This function sends a CoAP request.
