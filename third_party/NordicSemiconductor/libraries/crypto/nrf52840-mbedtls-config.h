@@ -37,4 +37,5 @@
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe549")
     _Pragma("diag_suppress=Pa082")
+    _Pragma("diag_suppress=Pa084")
 #endif
