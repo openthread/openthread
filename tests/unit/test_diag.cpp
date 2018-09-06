@@ -84,6 +84,12 @@ extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *aFrame)
     (void)aFrame;
 }
 
+extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
+{
+    (void)aInstance;
+    (void)aEnergyScanMaxRssi;
+}
+
 /**
  * Converts a given string replacing '\n', '\r', '\t', etc. with literal strings "\n", "\r", "\t", etc. to make it
  * printable on console.

@@ -52,6 +52,25 @@ namespace Ncp {
 // MARK: Utility Functions
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+static bool HasOnly1BitSet(uint32_t aValue)
+{
+    return aValue != 0 && ((aValue & (aValue - 1)) == 0);
+}
+
+static uint8_t IndexOfMSB(uint32_t aValue)
+{
+    uint8_t index = 0;
+
+    while (aValue >>= 1)
+    {
+        index++;
+    }
+
+    return index;
+}
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
 spinel_status_t NcpBase::ThreadErrorToSpinelStatus(otError aError)
 {
     spinel_status_t ret;
@@ -1470,6 +1489,170 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     mIsRawStreamEnabled = enabled;
+
+exit:
+    return error;
+}
+
+otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
+{
+    otError error = OT_ERROR_NONE;
+
+    for (uint8_t i = 0; i < 32; i++)
+    {
+        if (0 != (aChannelMask & (1 << i)))
+        {
+            SuccessOrExit(error = mEncoder.WriteUint8(i));
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::DecodeChannelMask(uint32_t &aChannelMask)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t channel;
+
+    aChannelMask = 0;
+
+    while (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUint8(channel));
+        VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
+        aChannelMask |= (1U << channel);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_MASK>(void)
+{
+    return EncodeChannelMask(mScanChannelMask);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>(void)
+{
+    uint32_t newMask = 0;
+    otError  error   = OT_ERROR_NONE;
+
+    SuccessOrExit(error = DecodeChannelMask(newMask));
+    mScanChannelMask = newMask;
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_PERIOD>(void)
+{
+    return mEncoder.WriteUint16(mScanPeriod);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_PERIOD>(void)
+{
+    return mDecoder.ReadUint16(mScanPeriod);
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_STATE>(void)
+{
+    uint8_t scanState = SPINEL_SCAN_STATE_IDLE;
+
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (otLinkRawIsEnabled(mInstance))
+    {
+        scanState = (mCurScanChannel == kInvalidScanChannel) ? SPINEL_SCAN_STATE_IDLE : SPINEL_SCAN_STATE_ENERGY;
+    }
+    else
+
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
+    {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+        if (otLinkIsActiveScanInProgress(mInstance))
+        {
+            scanState = SPINEL_SCAN_STATE_BEACON;
+        }
+        else if (otLinkIsEnergyScanInProgress(mInstance))
+        {
+            scanState = SPINEL_SCAN_STATE_ENERGY;
+        }
+        else if (otThreadIsDiscoverInProgress(mInstance))
+        {
+            scanState = SPINEL_SCAN_STATE_DISCOVER;
+        }
+        else
+        {
+            scanState = SPINEL_SCAN_STATE_IDLE;
+        }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+    }
+
+    return mEncoder.WriteUint8(scanState);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
+{
+    uint8_t state = 0;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    switch (state)
+    {
+    case SPINEL_SCAN_STATE_IDLE:
+        error = OT_ERROR_NONE;
+        break;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    case SPINEL_SCAN_STATE_BEACON:
+        error = otLinkActiveScan(mInstance, mScanChannelMask, mScanPeriod, &HandleActiveScanResult_Jump, this);
+        SuccessOrExit(error);
+        break;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    case SPINEL_SCAN_STATE_ENERGY:
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+        if (otLinkRawIsEnabled(mInstance))
+        {
+            uint8_t scanChannel;
+
+            // Make sure we aren't already scanning and that we have
+            // only 1 bit set for the channel mask.
+            VerifyOrExit(mCurScanChannel == kInvalidScanChannel, error = OT_ERROR_INVALID_STATE);
+            VerifyOrExit(HasOnly1BitSet(mScanChannelMask), error = OT_ERROR_INVALID_ARGS);
+
+            scanChannel     = IndexOfMSB(mScanChannelMask);
+            mCurScanChannel = (int8_t)scanChannel;
+
+            error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
+        }
+        else
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+        {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+            error = otLinkEnergyScan(mInstance, mScanChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+        }
+
+        SuccessOrExit(error);
+        break;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    case SPINEL_SCAN_STATE_DISCOVER:
+        error = otThreadDiscover(mInstance, mScanChannelMask, mDiscoveryScanPanId, mDiscoveryScanJoinerFlag,
+                                 mDiscoveryScanEnableFiltering, &HandleActiveScanResult_Jump, this);
+
+        SuccessOrExit(error);
+        break;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    default:
+        error = OT_ERROR_NOT_IMPLEMENTED;
+        break;
+    }
 
 exit:
     return error;

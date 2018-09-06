@@ -240,6 +240,9 @@ protected:
     static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
     void        HandleRawFrame(const otRadioFrame *aFrame);
 
+    otError EncodeChannelMask(uint32_t aChannelMask);
+    otError DecodeChannelMask(uint32_t &aChannelMask);
+
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
@@ -299,8 +302,6 @@ protected:
     static void SendDoneTask(void *aContext);
     void        SendDoneTask(void);
 
-    otError EncodeChannelMask(uint32_t aChannelMask);
-    otError DecodeChannelMask(uint32_t &aChannelMask);
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
 #if OPENTHREAD_FTD
