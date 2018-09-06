@@ -464,7 +464,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
 
 /**
- * This function creates a new message with a CoAP header.
+ * This function creates a new message with a CoAP header and specified priority.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
