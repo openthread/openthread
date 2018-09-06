@@ -39,7 +39,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#ifdef OPENTHREAD_TARGET_DARWIN
+#include <util.h>
+#else
 #include <pty.h>
+#endif
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
