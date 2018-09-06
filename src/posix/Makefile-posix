@@ -46,6 +46,7 @@ BuildJobs                      ?= 10
 
 configure_OPTIONS                   = \
     --enable-application-coap         \
+    --enable-border-agent             \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
@@ -63,9 +64,13 @@ configure_OPTIONS                   = \
     --enable-mac-filter               \
     --enable-posix-app                \
     --enable-service                  \
-    --enable-tmf-proxy                \
+    --enable-udp-proxy                \
     --with-ncp-bus=uart               \
     $(NULL)
+
+ifeq ($(COVERAGE),1)
+configure_OPTIONS              += --enable-coverage
+endif
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../..
