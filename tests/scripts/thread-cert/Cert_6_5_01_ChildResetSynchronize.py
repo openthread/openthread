@@ -56,7 +56,7 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
 
     def _setUpEd(self):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()        
+        self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
