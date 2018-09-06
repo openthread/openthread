@@ -82,13 +82,13 @@ otError nrf5SdErrorToOtError(uint32_t aSdError)
     }
 }
 
-void PlatformSoftdeviceSocEvtHandler(uint32_t aEvtId)
+void otSysSoftdeviceSocEvtHandler(uint32_t aEvtId)
 {
     nrf5SdSocFlashProcess(aEvtId);
     nrf_raal_softdevice_soc_evt_handler(aEvtId);
 }
 
-void PlatformSoftdeviceRaalConfig(const PlatformSoftdeviceRaalConfigParams *aConfig)
+void otSysSoftdeviceRaalConfig(const otSysSoftdeviceRaalConfigParams *aConfig)
 {
     nrf_raal_softdevice_cfg_t cfg;
     memset(&cfg, 0, sizeof(cfg));
