@@ -129,6 +129,10 @@ ot_cli_mtd_LDFLAGS                                                    += -Wl,-Ma
 endif
 
 if OPENTHREAD_BUILD_COVERAGE
+CPPFLAGS_COMMON                                                       += \
+    -DOPENTHREAD_ENABLE_COVERAGE                                         \
+    $(NULL)
+
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
