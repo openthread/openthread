@@ -106,16 +106,13 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    int32_t        usRemaining = INT32_MAX;
-    int32_t        msRemaining = INT32_MAX;
-    struct timeval now;
+    int32_t usRemaining = INT32_MAX;
+    int32_t msRemaining = INT32_MAX;
 
     if (aTimeout == NULL)
     {
         return;
     }
-
-    otSysGetTime(&now);
 
     if (sIsUsRunning)
     {
@@ -124,6 +121,10 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (sIsMsRunning)
     {
+        struct timeval now;
+
+        otSysGetTime(&now);
+        timersub(&now, &sStart, &now);
         msRemaining = (int64_t)sMsAlarm * US_PER_MS - now.tv_sec * US_PER_S - now.tv_usec;
     }
 
