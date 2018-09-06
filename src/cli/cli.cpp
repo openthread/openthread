@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils/parse_cmdline.hpp"
 #include "utils/wrap_string.h"
 
 #include <openthread/commissioner.h>
@@ -3477,33 +3478,19 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
 
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
-    char *  argv[kMaxArgs];
+    char *  argv[kMaxArgs] = {NULL};
     char *  cmd;
     uint8_t argc = 0, i = 0;
 
     mServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL);
+    VerifyOrExit(aBuf != NULL && strnlen(aBuf, aBufLength + 1) <= aBufLength);
 
-    for (; *aBuf == ' '; aBuf++, aBufLength--)
-        ;
+    VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, argc, argv, kMaxArgs) == OT_ERROR_NONE,
+                 mServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
+    VerifyOrExit(argc >= 1, mServer->OutputFormat("Error: no given command.\r\n"));
 
-    for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
-    {
-        VerifyOrExit(argc < kMaxArgs, mServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
-
-        if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
-        {
-            *cmd = '\0';
-        }
-
-        if (*(cmd - 1) == '\0' && *cmd != ' ')
-        {
-            argv[argc++] = cmd;
-        }
-    }
-
-    cmd = aBuf;
+    cmd = argv[0];
 
 #if OPENTHREAD_ENABLE_DIAG
     VerifyOrExit(
@@ -3515,7 +3502,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
         {
-            (this->*sCommands[i].mCommand)(argc, argv);
+            (this->*sCommands[i].mCommand)(argc - 1, &argv[1]);
             break;
         }
     }
@@ -3528,7 +3515,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         {
             if (strcmp(cmd, mUserCommands[i].mName) == 0)
             {
-                mUserCommands[i].mCommand(argc, argv);
+                mUserCommands[i].mCommand(argc - 1, &argv[1]);
                 break;
             }
         }

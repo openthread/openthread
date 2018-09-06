@@ -42,11 +42,14 @@ OBJCOPY                         = arc-elf32-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli-app=all          \
-    --enable-ncp-app=all          \
+    --enable-cli                  \
+    --enable-ftd                  \
+    --enable-mtd                  \
+    --enable-ncp                  \
     --with-ncp-bus=uart           \
-    --with-examples=emsk          \
+    --enable-radio-only           \
     --enable-linker-map           \
+    --with-examples=emsk          \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..

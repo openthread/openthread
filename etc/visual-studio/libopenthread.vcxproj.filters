@@ -327,6 +327,9 @@
     <ClCompile Include="..\..\src\core\utils\child_supervision.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\parse_cmdline.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
@@ -591,6 +594,9 @@
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\child_supervision.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\parse_cmdline.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
