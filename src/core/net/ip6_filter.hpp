@@ -98,6 +98,14 @@ public:
     otError RemoveUnsecurePort(uint16_t aPort);
 
     /**
+     * This method removes all ports from the allowed unsecure port list.
+     *
+     * @retval OT_ERROR_NONE  All ports are successfully removed from the allowed unsecure port list.
+     *
+     */
+    otError RemoveAllUnsecurePorts(void);
+
+    /**
      * This method returns a pointer to the unsecure port list.
      *
      * @note Port value 0 is used to indicate an invalid entry.

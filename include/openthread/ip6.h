@@ -457,7 +457,7 @@ otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
  *
  * @note This function removes the @p aPort by overwriting the @p aPort with the element after the @p aPort in the
  * internal port list. Be careful to call otIp6GetUnsecurePorts() and then call otIp6RemoveUnsecurePort() to remove
- * all unsecure ports.
+ * the unsecure port.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
@@ -467,6 +467,16 @@ otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
  *
  */
 otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
+
+/**
+ * This function removes all ports from the allowed unsecure port list.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE  All ports are successfully removed from the allowed unsecure port list.
+ *
+ */
+otError otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
 
 /**
  * This function returns a pointer to the unsecure port list.
