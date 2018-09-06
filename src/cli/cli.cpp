@@ -2570,17 +2570,45 @@ void Interpreter::ProcessScan(int argc, char *argv[])
 {
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
+    uint16_t scanDuration = 0;
+    bool     energyScan   = false;
     long     value;
 
     if (argc > 0)
     {
-        SuccessOrExit(error = ParseLong(argv[0], value));
-        scanChannels = 1 << value;
+        if (strcmp(argv[0], "energy") == 0)
+        {
+            energyScan = true;
+
+            if (argc > 1)
+            {
+                SuccessOrExit(error = ParseLong(argv[1], value));
+                scanDuration = static_cast<uint16_t>(value);
+            }
+        }
+        else
+        {
+            SuccessOrExit(error = ParseLong(argv[0], value));
+            scanChannels = 1 << value;
+        }
     }
 
-    mServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
-    mServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
-    SuccessOrExit(error = otLinkActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
+    if (energyScan)
+    {
+        mServer->OutputFormat("| Ch | RSSI |\r\n");
+        mServer->OutputFormat("+----+------+\r\n");
+        SuccessOrExit(error = otLinkEnergyScan(mInstance, scanChannels, scanDuration,
+                                               &Interpreter::s_HandleEnergyScanResult, this));
+    }
+    else
+    {
+        mServer->OutputFormat(
+            "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
+        mServer->OutputFormat(
+            "+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
+        SuccessOrExit(error = otLinkActiveScan(mInstance, scanChannels, scanDuration,
+                                               &Interpreter::s_HandleActiveScanResult, this));
+    }
 
     return;
 
@@ -2614,6 +2642,25 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
     mServer->OutputFormat(" | %2d ", aResult->mChannel);
     mServer->OutputFormat("| %3d ", aResult->mRssi);
     mServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
+
+exit:
+    return;
+}
+
+void OTCALL Interpreter::s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleEnergyScanResult(aResult);
+}
+
+void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult)
+{
+    if (aResult == NULL)
+    {
+        mServer->OutputFormat("Done\r\n");
+        ExitNow();
+    }
+
+    mServer->OutputFormat("| %2d | %4d |\r\n", aResult->mChannel, aResult->mMaxRssi);
 
 exit:
     return;
