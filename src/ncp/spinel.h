@@ -845,6 +845,16 @@ typedef enum {
      */
     SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY = SPINEL_PROP_PHY_EXT__BEGIN + 10,
 
+    /// Radio caps
+    /** Format: `i` (read-only)
+     *
+     * Data per item is:
+     *
+     *  `i`: Radio Capabilities.
+     *
+     */
+    SPINEL_PROP_RADIO_CAPS = SPINEL_PROP_PHY_EXT__BEGIN + 11,
+
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN             = 0x30,

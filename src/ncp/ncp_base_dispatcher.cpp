@@ -617,6 +617,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         // Raw Link API Properties (Get Handler)
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    case SPINEL_PROP_RADIO_CAPS:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_CAPS>;
+        break;
     case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>;
         break;
