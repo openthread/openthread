@@ -58,11 +58,17 @@
 
 #include "openthread-core-config.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum
 {
-    OT_SIM_EVENT_ALARM_FIRED    = 0,
-    OT_SIM_EVENT_RADIO_RECEIVED = 1,
-    OT_EVENT_DATA_MAX_SIZE      = 1024,
+    OT_SIM_EVENT_ALARM_FIRED        = 0,
+    OT_SIM_EVENT_RADIO_RECEIVED     = 1,
+    OT_SIM_EVENT_UART_WRITE         = 2,
+    OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
+    OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -210,4 +216,104 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
  */
 void platformUartRestore(void);
 
+/**
+ * This function initialize simulation.
+ *
+ */
+void otSimInit(void);
+
+/**
+ * This function deinitialize simulation.
+ *
+ */
+void otSimDeinit(void);
+
+/**
+ * This function gets simulation time.
+ *
+ * @param[in] aTime   A pointer to a timeval receiving the current time.
+ *
+ */
+void otSimGetTime(struct timeval *aTime);
+
+/**
+ * This function performs simulation processing.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ *
+ */
+void otSimProcess(otInstance *  aInstance,
+                  const fd_set *aReadFdSet,
+                  const fd_set *aWriteFdSet,
+                  const fd_set *aErrorFdSet);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the simulation.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aErrorFdSet  A pointer to the error file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aTimeout     A pointer to the timeout.
+ *
+ */
+void otSimUpdateFdSet(fd_set *        aReadFdSet,
+                      fd_set *        aWriteFdSet,
+                      fd_set *        aErrorFdSet,
+                      int *           aMaxFd,
+                      struct timeval *aTimeout);
+
+/**
+ * This function sends radio spinel frame through simulation.
+ *
+ * @param[in] aData     A pointer to the spinel frame.
+ * @param[in] aLength   Length of the spinel frame.
+ *
+ */
+void otSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
+
+/**
+ * This function receives a simulation event.
+ *
+ * @param[out]  aEvent  A pointer to the event receiving the event.
+ *
+ */
+void otSimReceiveEvent(struct Event *aEvent);
+
+/**
+ * This function sends sleep event through simulation.
+ *
+ * @param[in]   aTimeout    A pointer to the time sleeping.
+ *
+ */
+void otSimSendSleepEvent(const struct timeval *aTimeout);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by radio spinel.
+ *
+ * @param[out]   aTimeout    A pointer to the timeout event to be updated.
+ *
+ */
+void otSimRadioSpinelUpdate(struct timeval *atimeout);
+
+/**
+ * This function performs radio spinel processing.
+ *
+ * @param[in]   aInstance   A pointer to the OpenThread instance.
+ * @param[in]   aEvent      A pointer to the current event.
+ *
+ */
+void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#define otSysGetTime(aTime) otSimGetTime(aTime)
+#else
+#define otSysGetTime(aTime) gettimeofday(aTime, NULL)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif // PLATFORM_POSIX_H_

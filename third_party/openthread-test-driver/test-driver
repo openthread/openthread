@@ -112,7 +112,7 @@ while true; do
     if [ $? -eq 0 ]; then
         break
     fi
-    OFFSET=$(expr $OFFSET + 1) 
+    OFFSET=$(expr $OFFSET + 1)
 done
 
 # Run a test
