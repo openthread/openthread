@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,54 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
- *   for OpenThread.
+ *   This file includes definitions for command line parser.
  */
 
-#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
-#define OPENTHREAD_CORE_POSIX_CONFIG_H_
+#ifndef PARSE_CMD_LINE_HPP_
+#define PARSE_CMD_LINE_HPP_
+
+#include <stdint.h>
+#include <openthread/error.h>
+
+namespace ot {
+namespace Utils {
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ * @addtogroup utils-parse-cmd-line
  *
- * The platform-specific string to insert into the OpenThread version string.
+ * @brief
+ *   This module includes definitions for command line parser.
  *
+ * @{
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX"
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Specify where the log output should go.
+ * This class implements the command line parser.
  *
  */
-#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-#endif
+class CmdLineParser
+{
+public:
+    /**
+     * This function parses the command line.
+     *
+     * Note: this method may change the input @p aString, it will put a '\0' by the end of each argument,
+     *       and @p aArgv will point to the arguments in the input @p aString.
+     *
+     * @param[in]   aString   A NULL-terminated input string.
+     * @param[out]  aArgc     The argument counter of the command line.
+     * @param[out]  aArgv     The argument vector of the command line.
+     * @param[in]   aArgcMax  The maximum argument counter.
+     *
+     */
+    static otError ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax);
+};
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
- *
- * Define to 1 if you want to support microsecond timer in platform.
- *
+ * @}
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
 
-/**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
- *
- * Define to 1 if you want to support microsecond timer in platform.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
-#endif
+} // namespace Utils
+} // namespace ot
 
-#endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
+#endif // PARSE_CMD_LINE_HPP_

@@ -51,6 +51,7 @@ libopenthread_posix_a_SOURCES             = \
     settings.cpp                            \
     spi-stubs.c                             \
     spinel.c                                \
+    sim.c                                   \
     system.c                                \
     uart.c                                  \
     $(NULL)

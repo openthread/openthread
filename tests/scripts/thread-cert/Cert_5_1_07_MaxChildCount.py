@@ -100,6 +100,6 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
                 if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
                     self.assertTrue(self.nodes[LEADER].ping(addr, size=106))
                     break
-        
+
 if __name__ == '__main__':
     unittest.main()

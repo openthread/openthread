@@ -28,11 +28,19 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = \
-    libopenthread-ftd.a               \
-    libopenthread-mtd.a               \
-    libopenthread-radio.a             \
-    $(NULL)
+lib_LIBRARIES                       = $(NULL)
+
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                      += libopenthread-ftd.a
+endif
+
+if OPENTHREAD_ENABLE_MTD
+lib_LIBRARIES                      += libopenthread-mtd.a
+endif
+
+if OPENTHREAD_ENABLE_RADIO_ONLY
+lib_LIBRARIES                      += libopenthread-radio.a
+endif
 
 CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
@@ -205,6 +213,7 @@ SOURCES_COMMON                      = \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
     utils/missing_strnlen.c           \
+    utils/parse_cmdline.cpp           \
     utils/slaac_address.cpp           \
     $(NULL)
 
@@ -225,6 +234,7 @@ libopenthread_radio_a_SOURCES       = \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
     utils/missing_strnlen.c           \
+    utils/parse_cmdline.cpp           \
     $(NULL)
 
 libopenthread_mtd_a_SOURCES         = \
@@ -338,6 +348,7 @@ HEADERS_COMMON                      = \
     utils/child_supervision.hpp       \
     utils/heap.hpp                    \
     utils/jam_detector.hpp            \
+    utils/parse_cmdline.hpp           \
     utils/slaac_address.hpp           \
     utils/wrap_stdbool.h              \
     utils/wrap_stdint.h               \
