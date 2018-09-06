@@ -389,6 +389,12 @@ typedef struct otPlatBleGattService
     const otPlatBleUuid mUuid;
 
     /**
+     * Handle of service; written to by stack after call to
+     * otPlatBleGattServerServicesRegister.
+     */
+    uint16_t mHandle;
+
+    /**
      * Null-terminated list of characteristic definitions corresponding to
      * characteristics belonging to this service.
      */
@@ -974,14 +980,13 @@ extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint
  *
  * @param[in]   aInstance  The OpenThread instance structure.
  * @param[in]   aServices  Null-terminated array of service structures to register.
- * @param[out]  aHandle    The start handle of a service.
  *
  * @retval ::OT_ERROR_NONE           Service has been successfully registered.
  * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  * @retval ::OT_ERROR_INVALID_ARGS   Invalid service UUID has been provided.
  * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
  */
-otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices, uint16_t *aHandle);
+otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices);
 
 /**
  * Sends ATT Handle Value Indication.
