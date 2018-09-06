@@ -38,6 +38,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -47,6 +48,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/uart.h>
 
 uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
@@ -56,8 +58,29 @@ extern bool gPlatformPseudoResetWasRequested;
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 
+uint64_t sNow = 0; // microseconds
 int      sSockFd;
 uint16_t sPortOffset;
+
+void otSimSendEvent(const struct Event *aEvent)
+{
+    ssize_t            rval;
+    struct sockaddr_in sockaddr;
+
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
+    sockaddr.sin_port = htons(9000 + sPortOffset);
+
+    rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
+                  sizeof(sockaddr));
+
+    if (rval < 0)
+    {
+        perror("sendto");
+        exit(EXIT_FAILURE);
+    }
+}
 
 static void receiveEvent(otInstance *aInstance)
 {
@@ -80,29 +103,19 @@ static void receiveEvent(otInstance *aInstance)
     case OT_SIM_EVENT_RADIO_RECEIVED:
         platformRadioReceive(aInstance, event.mData, event.mDataLength);
         break;
+
+    case OT_SIM_EVENT_UART_WRITE:
+        otPlatUartReceived(event.mData, event.mDataLength);
+        break;
+
+    default:
+        assert(false);
     }
-}
-
-static bool processEvent(otInstance *aInstance)
-{
-    const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = {sSockFd, flags, 0};
-    bool          rval   = false;
-
-    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
-    {
-        receiveEvent(aInstance);
-        rval = true;
-    }
-
-    return rval;
 }
 
 static void platformSendSleepEvent(void)
 {
-    struct sockaddr_in sockaddr;
-    struct Event       event;
-    ssize_t            rval;
+    struct Event event;
 
     assert(platformAlarmGetNext() > 0);
 
@@ -110,20 +123,42 @@ static void platformSendSleepEvent(void)
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
-
-    rval = sendto(sSockFd, (const char *)&event, offsetof(struct Event, mData), 0, (struct sockaddr *)&sockaddr,
-                  sizeof(sockaddr));
-
-    if (rval < 0)
-    {
-        perror("sendto");
-        exit(EXIT_FAILURE);
-    }
+    otSimSendEvent(&event);
 }
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME_UART
+void platformUartRestore(void)
+{
+}
+
+otError otPlatUartEnable(void)
+{
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUartDisable(void)
+{
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
+{
+    otError      error = OT_ERROR_NONE;
+    struct Event event;
+
+    event.mDelay      = 0;
+    event.mEvent      = OT_SIM_EVENT_UART_WRITE;
+    event.mDataLength = aLength;
+
+    memcpy(event.mData, aData, aLength);
+
+    otSimSendEvent(&event);
+
+    otPlatUartSendDone();
+
+    return error;
+}
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME_UART
 
 static void socket_init(void)
 {
@@ -152,7 +187,7 @@ static void socket_init(void)
     sockaddr.sin_port        = htons(9000 + sPortOffset + NODE_ID);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    sSockFd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sSockFd == -1)
     {
@@ -228,7 +263,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     FD_SET(sSockFd, &read_fds);
     max_fd = sSockFd;
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+#endif
 
     if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0)
     {
@@ -242,12 +279,17 @@ void otSysProcessDrivers(otInstance *aInstance)
             exit(EXIT_FAILURE);
         }
 
-        processEvent(aInstance);
+        if (FD_ISSET(sSockFd, &read_fds))
+        {
+            receiveEvent(aInstance);
+        }
     }
 
     platformAlarmProcess(aInstance);
     platformRadioProcess(aInstance);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
     platformUartProcess();
+#endif
 }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME

@@ -91,6 +91,10 @@ ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
 endif
 
+ifeq ($(VIRTUAL_TIME_UART),1)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME_UART=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(NULL)
