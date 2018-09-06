@@ -85,9 +85,11 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 
 enum
 {
-    OT_SIM_EVENT_ALARM_FIRED    = 0,
-    OT_SIM_EVENT_RADIO_RECEIVED = 1,
-    OT_EVENT_DATA_MAX_SIZE      = 1024,
+    OT_SIM_EVENT_ALARM_FIRED        = 0,
+    OT_SIM_EVENT_RADIO_RECEIVED     = 1,
+    OT_SIM_EVENT_UART_WRITE         = 2,
+    OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
+    OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -224,5 +226,22 @@ void platformUartProcess(void);
  *
  */
 void platformUartRestore(void);
+
+/**
+ * This function sends a simulation event.
+ *
+ * @param[in]   aEvent  A pointer to the simulation event to send
+ *
+ */
+void otSimSendEvent(const struct Event *aEvent);
+
+/**
+ * This function sends Uart data through simulation.
+ *
+ * @param[in]   aData       A pointer to the UART data.
+ * @param[in]   aLength     Length of UART data.
+ *
+ */
+void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 #endif // PLATFORM_POSIX_H_
