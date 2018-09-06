@@ -141,7 +141,7 @@ class otCli:
         if self.pexpect and self.pexpect.isalive():
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
-            self._expect(pexpect.EOF)
+            self.pexpect.expect(pexpect.EOF)
             self.pexpect.terminate()
             self.pexpect = None
 
