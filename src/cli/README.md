@@ -64,7 +64,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan-channel)
+* [scan](#scan)
 * [singleton](#singleton)
 * [state](#state)
 * [thread](#thread-start)
@@ -1589,6 +1589,35 @@ Perform an IEEE 802.15.4 Active Scan.
 | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
 +---+------------------+------------------+------+------------------+----+-----+-----+
 | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+Done
+```
+
+### scan energy \[duration\]
+
+Perform an IEEE 802.15.4 Energy Scan.
+
+* duration: The time in milliseconds to spend scanning each channel.
+
+```bash
+> scan energy 10
+| Ch | RSSI |
++----+------+
+| 11 |  -59 |
+| 12 |  -62 |
+| 13 |  -67 |
+| 14 |  -61 |
+| 15 |  -87 |
+| 16 |  -86 |
+| 17 |  -86 |
+| 18 |  -52 |
+| 19 |  -58 |
+| 20 |  -82 |
+| 21 |  -76 |
+| 22 |  -82 |
+| 23 |  -74 |
+| 24 |  -81 |
+| 25 |  -88 |
+| 26 |  -71 |
 Done
 ```
 
