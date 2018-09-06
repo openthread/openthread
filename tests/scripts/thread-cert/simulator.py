@@ -78,6 +78,8 @@ class VirtualTime:
         self.current_event = None;
 
         self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
+        # the addr for spinel-cli sending OT_SIM_EVENT_POSTCMD
+        self._spinel_cli_addr = (ip, self.BASE_PORT + self.port)
 
         self._message_factory = config.create_default_thread_message_factory()
 
@@ -138,7 +140,7 @@ class VirtualTime:
             except socket.error:
                 break
 
-            if addr not in self.devices:
+            if addr != self._spinel_cli_addr and addr not in self.devices:
                 self.devices[addr] = {}
                 self.devices[addr]['alarm'] = None
                 self.devices[addr]['msgs'] = []
