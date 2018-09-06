@@ -547,6 +547,52 @@ set -x
     PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
 }
 
+[ $BUILD_TARGET != posix-app-pty ] || {
+    ./bootstrap
+    make -f examples/Makefile-posix
+    make -f src/posix/Makefile-posix
+
+    SOCAT_OUTPUT=/tmp/ot-socat
+    socat -d -d pty,raw,echo=0 pty,raw,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
+    while true; do
+        if test $(head -n2 $SOCAT_OUTPUT | wc -l) = 2; then
+            RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
+            CORE_PTY=$(head -n2 $SOCAT_OUTPUT | tail -n1 | grep -o '/dev/.\+')
+            break
+        fi
+        echo 'Waiting for socat ready...'
+        sleep 1
+    done
+    echo 'RADIO_PTY' $DEVICE_PTY
+    echo 'CORE_PTY' $CORE_PTY
+
+    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
+    $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
+    OT_CLI_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
+
+    expect <<EOF || die
+spawn $OT_CLI_PATH $CORE_PTY -echo
+set timeout 2
+send "panid 0xface\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect {
+    "leader" {
+        send "exit\r\n"
+        expect eof
+    }
+    timeout abort
+}
+send_user "Success"
+EOF
+    killall socat
+}
+
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
