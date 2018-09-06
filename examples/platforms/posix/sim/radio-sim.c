@@ -550,12 +550,9 @@ void platformRadioProcess(otInstance *aInstance)
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-    struct sockaddr_in sockaddr;
-    struct Event       event;
-    ssize_t            rval;
-
-    uint16_t crc        = 0;
-    uint16_t crc_offset = aFrame->mLength - sizeof(uint16_t);
+    uint16_t     crc        = 0;
+    uint16_t     crc_offset = aFrame->mLength - sizeof(uint16_t);
+    struct Event event;
 
     for (uint32_t i = 0; i < crc_offset; i++)
     {
@@ -570,19 +567,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
-
-    rval = sendto(sSockFd, (const char *)&event, offsetof(struct Event, mData) + event.mDataLength, 0,
-                  (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-
-    if (rval < 0)
-    {
-        perror("sendto");
-        exit(EXIT_FAILURE);
-    }
+    otSimSendEvent(&event);
 }
 
 void radioSendAck(void)

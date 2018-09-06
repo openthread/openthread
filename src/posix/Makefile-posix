@@ -80,6 +80,10 @@ COMMONCFLAGS                   := \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
+ifeq ($(VIRTUAL_TIME),1)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(NULL)

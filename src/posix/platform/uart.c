@@ -237,14 +237,19 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     {
         rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
 
-        if (rval < 0)
-        {
-            perror("read");
-            exit(EXIT_FAILURE);
-        }
-        else if (rval > 0)
+        if (rval > 0)
         {
             otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
+        }
+        else if (rval < 0)
+        {
+            perror("UART read");
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            fprintf(stderr, "UART ended\r\n");
+            exit(0);
         }
     }
 
@@ -254,7 +259,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 
         if (rval <= 0)
         {
-            perror("write");
+            perror("UART write");
             exit(EXIT_FAILURE);
         }
 
