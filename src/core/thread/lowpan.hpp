@@ -97,7 +97,7 @@ public:
      * @retval TRUE   If the header matches the LOWPAN_IPHC dispatch value.
      * @retval FALSE  If the header does not match the LOWPAN_IPHC dispatch value.
      */
-    static bool IsLowpanHc(uint8_t *aHeader)
+    static bool IsLowpanHc(const uint8_t *aHeader)
     {
         return (aHeader[0] & (Lowpan::kHcDispatchMask >> 8)) == (Lowpan::kHcDispatch >> 8);
     }
@@ -477,7 +477,7 @@ public:
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    bool IsFragmentHeader(void) { return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch; }
+    bool IsFragmentHeader(void) const { return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch; }
 
     /**
      * This method returns the Fragment Header length.
