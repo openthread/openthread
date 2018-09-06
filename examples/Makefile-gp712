@@ -46,8 +46,10 @@ OBJCOPY                         = $(CROSS_COMPILE)objcopy
 BuildJobs                      ?= 9
 
 configure_OPTIONS               = \
-    --enable-cli-app=ftd          \
+    --enable-cli                  \
     --enable-diag                 \
+    --enable-ftd                  \
+    --enable-mtd                  \
     --with-examples=$(PPREFIX)    \
     $(NULL)
 

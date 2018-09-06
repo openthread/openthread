@@ -43,6 +43,7 @@
 
 #include "utils/code_utils.h"
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
 int   posix_openpt(int oflag);
@@ -285,6 +286,7 @@ void platformUartProcess(void)
         }
     }
 }
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
 
