@@ -1791,7 +1791,7 @@ AC_MSG_NOTICE([
   OpenThread Border Agent support           : ${enable_border_agent}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
-  OpenThread Examples                       : ${enable_examples}
+  OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 
 ])
