@@ -107,7 +107,7 @@ typedef struct otUdpSocket
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
- * Allocate a new message buffer for sending a UDP message.
+ * Allocate a new message buffer with specified priority for sending a UDP message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
