@@ -542,9 +542,9 @@ set -x
 
 [ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix || die
+    VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     make -f src/posix/Makefile-posix || die
-    OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
+    PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-mtd ] || {
@@ -559,14 +559,14 @@ set -x
 
 [ $BUILD_TARGET != posix-app-ncp ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix || die
+    VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     make -f src/posix/Makefile-posix || die
-    OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
+    PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {

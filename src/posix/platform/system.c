@@ -53,7 +53,7 @@ extern bool gPlatformPseudoResetWasRequested;
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 
-void PrintUsage(const char *aArg0)
+static void PrintUsage(const char *aArg0)
 {
     fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
     exit(EXIT_FAILURE);
@@ -109,6 +109,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    otSimInit();
+#endif
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig);
     platformRandomInit();
@@ -121,25 +124,65 @@ bool otSysPseudoResetWasRequested(void)
 
 void otSysDeinit(void)
 {
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    otSimDeinit();
+#endif
     platformRadioDeinit();
 }
 
-void otSysProcessDrivers(otInstance *aInstance)
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+/**
+ * This function try selecting the given file descriptors in nonblocking mode.
+ *
+ * @param[inout]    aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]    aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]    aErrorFdSet  A pointer to the error file descriptors.
+ * @param[in]       aMaxFd       The max file descriptor.
+ *
+ * @returns The value returned from select().
+ *
+ */
+static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int aMaxFd)
 {
-    fd_set         read_fds;
-    fd_set         write_fds;
-    fd_set         error_fds;
-    struct timeval timeout;
-    int            max_fd = -1;
+    struct timeval timeout          = {0, 0};
+    fd_set         originReadFdSet  = *aReadFdSet;
+    fd_set         originWriteFdSet = *aWriteFdSet;
+    fd_set         originErrorFdSet = *aErrorFdSet;
     int            rval;
 
-    FD_ZERO(&read_fds);
-    FD_ZERO(&write_fds);
-    FD_ZERO(&error_fds);
+    rval = select(aMaxFd + 1, aReadFdSet, aWriteFdSet, aErrorFdSet, &timeout);
+
+    if (rval == 0)
+    {
+        *aReadFdSet  = originReadFdSet;
+        *aWriteFdSet = originWriteFdSet;
+        *aErrorFdSet = originErrorFdSet;
+    }
+
+    return rval;
+}
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
+void otSysProcessDrivers(otInstance *aInstance)
+{
+    fd_set         readFdSet;
+    fd_set         writeFdSet;
+    fd_set         errorFdSet;
+    struct timeval timeout;
+    int            maxFd = -1;
+    int            rval;
+
+    FD_ZERO(&readFdSet);
+    FD_ZERO(&writeFdSet);
+    FD_ZERO(&errorFdSet);
 
     platformAlarmUpdateTimeout(&timeout);
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd, &timeout);
+    platformUartUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    otSimUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd, &timeout);
+#else
+    platformRadioUpdateFdSet(&readFdSet, &writeFdSet, &maxFd, &timeout);
+#endif
 
     if (otTaskletsArePending(aInstance))
     {
@@ -147,7 +190,40 @@ void otSysProcessDrivers(otInstance *aInstance)
         timeout.tv_usec = 0;
     }
 
-    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    if (timerisset(&timeout))
+    {
+        // Make sure there are no data ready in UART
+        rval = trySelect(&readFdSet, &writeFdSet, &errorFdSet, maxFd);
+
+        if (rval == 0)
+        {
+            bool noWrite = true;
+
+            // If there are write requests, the device is supposed to wake soon
+            for (int i = 0; i < maxFd + 1; ++i)
+            {
+                if (FD_ISSET(i, &writeFdSet))
+                {
+                    noWrite = false;
+                    break;
+                }
+            }
+
+            if (noWrite)
+            {
+                otSimSendSleepEvent(&timeout);
+            }
+
+            rval = select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, NULL);
+            assert(rval > 0);
+        }
+    }
+    else
+#endif
+    {
+        rval = select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, &timeout);
+    }
 
     if ((rval < 0) && (errno != EINTR))
     {
@@ -155,7 +231,11 @@ void otSysProcessDrivers(otInstance *aInstance)
         exit(EXIT_FAILURE);
     }
 
-    platformUartProcess(&read_fds, &write_fds, &error_fds);
-    platformRadioProcess(aInstance, &read_fds, &write_fds);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    otSimProcess(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
+#else
+    platformRadioProcess(aInstance, &readFdSet, &writeFdSet);
+#endif
+    platformUartProcess(&readFdSet, &writeFdSet, &errorFdSet);
     platformAlarmProcess(aInstance);
 }
