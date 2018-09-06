@@ -395,6 +395,12 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &NODE_ID));
 
+    {
+        unsigned int caps;
+        SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
+        mRadioCaps = static_cast<otRadioCaps>(caps);
+    }
+
     mRxRadioFrame.mPsdu = mRxPsdu;
     mTxRadioFrame.mPsdu = mTxPsdu;
 
@@ -1518,8 +1524,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return static_cast<otRadioCaps>(OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-                                    OT_RADIO_CAPS_CSMA_BACKOFF);
+    return sRadioSpinel.GetRadioCaps();
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
