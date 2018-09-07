@@ -40,8 +40,6 @@
 #define US_PER_MS 1000
 #define US_PER_S 1000000
 
-#define DEFAULT_TIMEOUT 10 // seconds
-
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
 
@@ -57,15 +55,19 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
     otSysGetTime(&sStart);
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
+uint64_t platformGetNow(void)
 {
     struct timeval tv;
 
     otSysGetTime(&tv);
     timersub(&tv, &sStart, &tv);
 
-    return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
-                      ((uint64_t)tv.tv_usec * sSpeedUpFactor / US_PER_MS));
+    return (uint64_t)tv.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)tv.tv_usec * sSpeedUpFactor;
+}
+
+uint32_t otPlatAlarmMilliGetNow(void)
+{
+    return (uint32_t)(platformGetNow() / US_PER_MS);
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -83,12 +85,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    struct timeval tv;
-
-    otSysGetTime(&tv);
-    timersub(&tv, &sStart, &tv);
-
-    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec) * sSpeedUpFactor;
+    return (uint32_t)platformGetNow();
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -116,16 +113,12 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (sIsUsRunning)
     {
-        usRemaining = (int64_t)(sUsAlarm - otPlatAlarmMicroGetNow());
+        usRemaining = (int32_t)(sUsAlarm - otPlatAlarmMicroGetNow());
     }
 
     if (sIsMsRunning)
     {
-        struct timeval now;
-
-        otSysGetTime(&now);
-        timersub(&now, &sStart, &now);
-        msRemaining = (int64_t)sMsAlarm * US_PER_MS - now.tv_sec * US_PER_S - now.tv_usec;
+        msRemaining = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
     }
 
     if (usRemaining <= 0 || msRemaining <= 0)
@@ -135,7 +128,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     }
     else
     {
-        int64_t remaining = msRemaining;
+        int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
 
         if (usRemaining < remaining)
         {
@@ -196,3 +189,15 @@ void platformAlarmProcess(otInstance *aInstance)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint64_t otPlatTimeGet(void)
+{
+    return platformGetNow();
+}
+
+uint16_t otPlatTimeGetXtalAccuracy(void)
+{
+    return 0;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
