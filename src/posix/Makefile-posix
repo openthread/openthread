@@ -63,7 +63,7 @@ configure_OPTIONS                   = \
     --enable-mac-filter               \
     --enable-posix-app                \
     --enable-service                  \
-    --enable-tmf-proxy                \
+    --enable-udp-proxy                \
     --with-ncp-bus=uart               \
     $(NULL)
 
