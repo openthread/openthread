@@ -473,10 +473,8 @@ otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE  All ports are successfully removed from the allowed unsecure port list.
- *
  */
-otError otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
+void otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
 
 /**
  * This function returns a pointer to the unsecure port list.

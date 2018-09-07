@@ -677,10 +677,10 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
 
     // First, we need to remove all of the current assisting ports.
-    SuccessOrExit(error = otIp6RemoveAllUnsecurePorts(mInstance));
+    otIp6RemoveAllUnsecurePorts(mInstance);
 
     while (mDecoder.GetRemainingLengthInStruct() >= sizeof(uint16_t))
     {
