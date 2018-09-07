@@ -332,6 +332,10 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "ChanMask";
         break;
 
+    case OT_CHANGED_THREAD_MODE:
+        retval = "Mode";
+        break;
+
     default:
         break;
     }
