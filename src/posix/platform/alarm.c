@@ -36,17 +36,19 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "code_utils.h"
+
 #define MS_PER_S 1000
 #define US_PER_MS 1000
 #define US_PER_S 1000000
 
-#define DEFAULT_TIMEOUT 10 // seconds
-
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
 
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
+#endif
 
 static uint32_t       sSpeedUpFactor = 1;
 static struct timeval sStart;
@@ -57,15 +59,19 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
     otSysGetTime(&sStart);
 }
 
+uint64_t platformGetNow(void)
+{
+    struct timeval now;
+
+    otSysGetTime(&now);
+    timersub(&now, &sStart, &now);
+
+    return (uint64_t)now.tv_sec * US_PER_S * sSpeedUpFactor + (uint64_t)now.tv_usec * sSpeedUpFactor;
+}
+
 uint32_t otPlatAlarmMilliGetNow(void)
 {
-    struct timeval tv;
-
-    otSysGetTime(&tv);
-    timersub(&tv, &sStart, &tv);
-
-    return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
-                      ((uint64_t)tv.tv_usec * sSpeedUpFactor / US_PER_MS));
+    return (uint32_t)(platformGetNow() / US_PER_MS);
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -81,14 +87,10 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     sIsMsRunning = false;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    struct timeval tv;
-
-    otSysGetTime(&tv);
-    timersub(&tv, &sStart, &tv);
-
-    return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec) * sSpeedUpFactor;
+    return (uint32_t)(platformGetNow());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -103,45 +105,43 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     (void)aInstance;
     sIsUsRunning = false;
 }
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    int32_t usRemaining = INT32_MAX;
-    int32_t msRemaining = INT32_MAX;
+    int64_t  remaining = INT32_MAX;
+    uint64_t now       = platformGetNow();
 
-    if (aTimeout == NULL)
-    {
-        return;
-    }
-
-    if (sIsUsRunning)
-    {
-        usRemaining = (int64_t)(sUsAlarm - otPlatAlarmMicroGetNow());
-    }
+    assert(aTimeout != NULL);
 
     if (sIsMsRunning)
     {
-        struct timeval now;
-
-        otSysGetTime(&now);
-        timersub(&now, &sStart, &now);
-        msRemaining = (int64_t)sMsAlarm * US_PER_MS - now.tv_sec * US_PER_S - now.tv_usec;
+        remaining = (int32_t)(sMsAlarm - (uint32_t)(now / US_PER_MS));
+        otEXPECT(remaining > 0);
+        remaining *= US_PER_MS;
+        remaining -= (now % US_PER_MS);
     }
 
-    if (usRemaining <= 0 || msRemaining <= 0)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    if (sIsUsRunning)
+    {
+        int32_t usRemaining = (int32_t)(sUsAlarm - (uint32_t)now);
+
+        if (usRemaining < remaining)
+        {
+            remaining = usRemaining;
+        }
+    }
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+
+exit:
+    if (remaining <= 0)
     {
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
     }
     else
     {
-        int64_t remaining = msRemaining;
-
-        if (usRemaining < remaining)
-        {
-            remaining = usRemaining;
-        }
-
         remaining /= sSpeedUpFactor;
 
         if (remaining == 0)
@@ -149,7 +149,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
+        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
         aTimeout->tv_usec = remaining % US_PER_S;
     }
 }
