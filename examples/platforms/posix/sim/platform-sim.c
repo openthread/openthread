@@ -53,7 +53,8 @@
 uint32_t NODE_ID           = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
-extern bool gPlatformPseudoResetWasRequested;
+extern bool          gPlatformPseudoResetWasRequested;
+static volatile bool gTerminate = false;
 
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
@@ -61,6 +62,12 @@ char **gArguments      = NULL;
 uint64_t sNow = 0; // microseconds
 int      sSockFd;
 uint16_t sPortOffset;
+
+static void handleSignal(int aSignal)
+{
+    (void)aSignal;
+    gTerminate = true;
+}
 
 void otSimSendEvent(const struct Event *aEvent)
 {
@@ -236,6 +243,9 @@ void otSysInit(int argc, char *argv[])
     platformAlarmInit(1);
     platformRadioInit();
     platformRandomInit();
+
+    signal(SIGTERM, &handleSignal);
+    signal(SIGHUP, &handleSignal);
 }
 
 bool otSysPseudoResetWasRequested(void)
@@ -255,6 +265,11 @@ void otSysProcessDrivers(otInstance *aInstance)
     fd_set error_fds;
     int    max_fd = -1;
     int    rval;
+
+    if (gTerminate)
+    {
+        exit(0);
+    }
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
@@ -279,7 +294,7 @@ void otSysProcessDrivers(otInstance *aInstance)
             exit(EXIT_FAILURE);
         }
 
-        if (FD_ISSET(sSockFd, &read_fds))
+        if (rval > 0 && FD_ISSET(sSockFd, &read_fds))
         {
             receiveEvent(aInstance);
         }
