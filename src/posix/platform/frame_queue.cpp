@@ -129,7 +129,7 @@ void TestSingle()
         error                   = frameQueue.Push(frame, i);
         assert(OT_ERROR_NONE == error);
         assert(!frameQueue.IsEmpty());
-        retFrame = frameQueue.Peek(outFrame, length);
+        retFrame = frameQueue.Shift(outFrame, length);
         assert(retFrame != NULL);
         assert(length == i);
 
@@ -138,7 +138,6 @@ void TestSingle()
             assert(retFrame[j] == frame[j]);
         }
 
-        frameQueue.Shift();
         assert(frameQueue.IsEmpty());
     }
 }
@@ -149,6 +148,7 @@ void TestMultiple()
     ot::FrameQueue frameQueue;
     uint8_t        length;
     uint8_t        frame[255];
+    int            count = 0;
 
     for (size_t i = 0; i < sizeof(frame); ++i)
     {
@@ -159,29 +159,43 @@ void TestMultiple()
 
     for (size_t i = 0; i < sizeof(frame); ++i)
     {
-        uint8_t        outFrame[255];
-        const uint8_t *retFrame = NULL;
+        uint8_t outFrame[255];
+        int     action = rand();
 
-        int action = rand();
         if (action & 0x01) // push when odd
         {
             error = frameQueue.Push(frame, i);
             if (error == OT_ERROR_NO_BUFS)
+            {
                 continue;
+            }
 
             assert(OT_ERROR_NONE == error);
             assert(!frameQueue.IsEmpty());
-            retFrame = frameQueue.Peek(outFrame, length);
-            assert(retFrame != NULL);
+            ++count;
+        }
+        else
+        {
+            const uint8_t *retFrame = NULL;
+
+            retFrame = frameQueue.Shift(outFrame, length);
+
+            if (count == 0)
+            {
+                assert(retFrame == NULL);
+                continue;
+            }
+            else
+            {
+                assert(retFrame != NULL);
+            }
 
             for (size_t j = 0; j < length; ++j)
             {
                 assert(retFrame[j] == frame[j]);
             }
-        }
-        else
-        {
-            frameQueue.Shift();
+
+            --count;
         }
     }
 }
@@ -197,21 +211,19 @@ void TestRing()
         frame[i] = i;
     }
 
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_FRAME_CACHE_SIZE + 255; i += sizeof(frame))
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_FRAME_QUEUE_SIZE + 255; i += sizeof(frame))
     {
         uint8_t        outFrame[255];
         const uint8_t *retFrame = NULL;
 
         frameQueue.Push(frame, sizeof(frame));
 
-        retFrame = frameQueue.Peek(outFrame, length);
+        retFrame = frameQueue.Shift(outFrame, length);
 
         for (size_t j = 0; j < sizeof(frame); ++j)
         {
             assert(retFrame[j] == frame[j]);
         }
-
-        frameQueue.Shift();
     };
 }
 
