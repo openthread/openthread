@@ -105,7 +105,7 @@ fi
     --enable-commissioner               \
     --with-examples=posix               \
     --disable-docs                      \
-    --disable-test || die
+    --disable-tests || die
 
 make -j 8 || die
 
