@@ -68,9 +68,10 @@
 
 #define MS_PER_S            1000UL
 
-#define MIN_RTC_COMPARE_EVENT_DT  (2 * NRF_802154_US_PER_TICK)   ///< Minimum time delta from now before RTC compare event is guaranteed to fire.
-#define EPOCH_32BIT_US            (1ULL << 32)
-#define EPOCH_FROM_TIME(time)     ((time) & ((uint64_t)UINT32_MAX << 32))
+#define MIN_RTC_COMPARE_EVENT_TICKS  2                                                        ///< Minimum number of RTC ticks delay that guarantees that RTC compare event will fire.
+#define MIN_RTC_COMPARE_EVENT_DT     (MIN_RTC_COMPARE_EVENT_TICKS * NRF_802154_US_PER_TICK)   ///< Minimum time delta from now before RTC compare event is guaranteed to fire.
+#define EPOCH_32BIT_US               (1ULL << 32)
+#define EPOCH_FROM_TIME(time)        ((time) & ((uint64_t)UINT32_MAX << 32))
 
 #define XTAL_ACCURACY       40 // The crystal used on nRF52840PDK has ±20ppm accuracy.
 // clang-format on
@@ -370,6 +371,7 @@ static void AlarmStartAt(uint32_t aT0, uint32_t aDt, AlarmIndex aIndex)
     uint32_t offset;
     uint32_t rtc_value;
     uint64_t now;
+    uint64_t now_rtc_protected;
 
     GetOffsetAndCounter(&offset, &rtc_value);
     now = GetTime(offset, rtc_value, aIndex);
@@ -378,10 +380,12 @@ static void AlarmStartAt(uint32_t aT0, uint32_t aDt, AlarmIndex aIndex)
 
     if (rtc_value != GetRtcCounter())
     {
-        now = GetCurrentTime(aIndex);
+        GetOffsetAndCounter(&offset, &rtc_value);
     }
 
-    if (AlarmShallStrike(now + MIN_RTC_COMPARE_EVENT_DT, aIndex))
+    now_rtc_protected = GetTime(offset, rtc_value + MIN_RTC_COMPARE_EVENT_TICKS, aIndex);
+
+    if (AlarmShallStrike(now_rtc_protected, aIndex))
     {
         HandleCompareMatch(aIndex, true);
 

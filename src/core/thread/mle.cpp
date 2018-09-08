@@ -123,6 +123,7 @@ Mle::Mle(Instance &aInstance)
     memset(&mRealmLocalAllThreadNodes, 0, sizeof(mRealmLocalAllThreadNodes));
     memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
     memset(&mParentCandidate, 0, sizeof(mParentCandidate));
+    ResetCounters();
 
     // link-local 64
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
@@ -304,6 +305,26 @@ void Mle::SetRole(otDeviceRole aRole)
 
     mRole = aRole;
     GetNotifier().Signal(OT_CHANGED_THREAD_ROLE);
+
+    switch (mRole)
+    {
+    case OT_DEVICE_ROLE_DISABLED:
+        mCounters.mDisabledRole++;
+        break;
+    case OT_DEVICE_ROLE_DETACHED:
+        mCounters.mDetachedRole++;
+        break;
+    case OT_DEVICE_ROLE_CHILD:
+        mCounters.mChildRole++;
+        break;
+    case OT_DEVICE_ROLE_ROUTER:
+        mCounters.mRouterRole++;
+        break;
+    case OT_DEVICE_ROLE_LEADER:
+        mCounters.mLeaderRole++;
+        break;
+    }
+
 #if OPENTHREAD_ENABLE_BORDER_AGENT
     // Start border agent
     if (aRole == OT_DEVICE_ROLE_ROUTER || aRole == OT_DEVICE_ROLE_LEADER || aRole == OT_DEVICE_ROLE_CHILD)
@@ -525,11 +546,6 @@ exit:
     return error;
 }
 
-bool Mle::IsDiscoverInProgress(void)
-{
-    return mIsDiscoverInProgress;
-}
-
 void Mle::HandleDiscoverComplete(void)
 {
     mIsDiscoverInProgress = false;
@@ -600,6 +616,10 @@ otError Mle::BecomeChild(AttachMode aMode)
             netif.GetMle().StopAdvertiseTimer();
         }
     }
+    else
+    {
+        mCounters.mBetterPartitionAttachAttempts++;
+    }
 
     mAttachTimer.Start(GetAttachStartDelay());
 
@@ -611,6 +631,8 @@ otError Mle::BecomeChild(AttachMode aMode)
         {
             mAttachCounter--;
         }
+
+        mCounters.mAttachAttempts++;
 
         if (!IsRxOnWhenIdle())
         {
@@ -821,11 +843,6 @@ exit:
     return error;
 }
 
-const Ip6::Address &Mle::GetLinkLocalAddress(void) const
-{
-    return mLinkLocal64.GetAddress();
-}
-
 otError Mle::UpdateLinkLocalAddress(void)
 {
     ThreadNetif &netif = GetNetif();
@@ -837,11 +854,6 @@ otError Mle::UpdateLinkLocalAddress(void)
     GetNotifier().Signal(OT_CHANGED_THREAD_LL_ADDR);
 
     return OT_ERROR_NONE;
-}
-
-const otMeshLocalPrefix &Mle::GetMeshLocalPrefix(void) const
-{
-    return reinterpret_cast<const otMeshLocalPrefix &>(mMeshLocal16.GetAddress());
 }
 
 otError Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
@@ -908,16 +920,6 @@ exit:
     return OT_ERROR_NONE;
 }
 
-const Ip6::Address &Mle::GetLinkLocalAllThreadNodesAddress(void) const
-{
-    return mLinkLocalAllThreadNodes.GetAddress();
-}
-
-const Ip6::Address &Mle::GetRealmLocalAllThreadNodesAddress(void) const
-{
-    return mRealmLocalAllThreadNodes.GetAddress();
-}
-
 uint16_t Mle::GetRloc16(void) const
 {
     return GetNetif().GetMac().GetShortAddress();
@@ -942,17 +944,13 @@ otError Mle::SetRloc16(uint16_t aRloc16)
     return OT_ERROR_NONE;
 }
 
-uint8_t Mle::GetLeaderId(void) const
-{
-    return mLeaderData.GetLeaderRouterId();
-}
-
 void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId)
 {
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
         GetNetif().GetMle().HandlePartitionChange();
         GetNotifier().Signal(OT_CHANGED_THREAD_PARTITION_ID);
+        mCounters.mParitionIdChanges++;
     }
     else
     {
@@ -962,16 +960,6 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetPartitionId(aPartitionId);
     mLeaderData.SetWeighting(aWeighting);
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
-}
-
-const Ip6::Address &Mle::GetMeshLocal16(void) const
-{
-    return mMeshLocal16.GetAddress();
-}
-
-const Ip6::Address &Mle::GetMeshLocal64(void) const
-{
-    return mMeshLocal64.GetAddress();
 }
 
 otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
@@ -3899,6 +3887,8 @@ otError Mle::InformPreviousParent(void)
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()));
+
+    mCounters.mParentChanges++;
 
     VerifyOrExit((message = netif.GetIp6().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(0));

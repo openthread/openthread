@@ -47,10 +47,13 @@ after_success:
 
 matrix:
   include:
-    - env: BUILD_TARGET="posix-app-cli" VERBOSE=1
+    - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1
+    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1

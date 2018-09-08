@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils/parse_cmdline.hpp"
 #include "utils/wrap_string.h"
 
 #include <openthread/diag.h>
@@ -54,16 +55,6 @@ void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t a
     Diag::ProcessCmd(aArgCount, aArgVector, aOutput, aOutputMaxLen);
 }
 
-static bool IsSpace(char aChar)
-{
-    return (aChar == ' ') || (aChar == '\t');
-}
-
-static bool IsNullOrNewline(char aChar)
-{
-    return (aChar == 0) || (aChar == '\n') || (aChar == '\r');
-}
-
 void otDiagProcessCmdLine(const char *aInput, char *aOutput, size_t aOutputMaxLen)
 {
     enum
@@ -75,34 +66,12 @@ void otDiagProcessCmdLine(const char *aInput, char *aOutput, size_t aOutputMaxLe
     otError error = OT_ERROR_NONE;
     char buffer[kMaxCommandBuffer];
     char *argVector[kMaxArgs];
-    int argCount = 0;
-    char *bufPtr = &buffer[0];
-    uint16_t bufLen = sizeof(buffer);
+    uint8_t argCount = 0;
 
-    while (!IsNullOrNewline(*aInput))
-    {
-        while (IsSpace(*aInput))
-        {
-            aInput++;
-        }
+    VerifyOrExit(strnlen(aInput, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
 
-        argVector[argCount] = bufPtr;
-
-        while (!IsSpace(*aInput) && !IsNullOrNewline(*aInput))
-        {
-            *bufPtr++ = *aInput++;
-            VerifyOrExit(--bufLen > 0, error = OT_ERROR_NO_BUFS);
-        }
-
-        if (argVector[argCount] != bufPtr)
-        {
-            *bufPtr++ = 0;
-            VerifyOrExit(--bufLen > 0, error = OT_ERROR_NO_BUFS);
-
-            argCount++;
-            VerifyOrExit(argCount < kMaxArgs, error = OT_ERROR_INVALID_ARGS);
-        }
-    }
+    strcpy(buffer, aInput);
+    error = ot::Utils::CmdLineParser::ParseCmd(buffer, argCount, argVector, kMaxArgs);
 
 exit:
 

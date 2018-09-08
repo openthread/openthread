@@ -196,16 +196,17 @@ private:
     enum // Poll period under different conditions (in milliseconds).
     {
         kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
-        kRetxPollPeriod         = 1000,                                      ///< Poll retx period due to tx failure.
+        kRetxPollPeriod         = OPENTHREAD_CONFIG_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
         kNoBufferRetxPollPeriod = 200,                                       ///< Poll retx due to no buffer space.
         kFastPollPeriod         = 188,                                       ///< Period used for fast polls.
-        kMinPollPeriod          = 10,                                        ///< Minimum allowed poll period.
+        kMinPollPeriod          = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
     };
 
     enum
     {
         kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
-        kMaxPollRetxAttempts    = 5, ///< Maximum number of retransmit attempts of data poll (mac data request).
+        kMaxPollRetxAttempts = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< Maximum number of retransmit attempts
+                                                                             ///< of data poll (mac data request).
     };
 
     enum PollPeriodSelector

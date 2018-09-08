@@ -57,6 +57,10 @@ cd /tmp || die
         clang-format --version || die
     }
 
+    [ $BUILD_TARGET != posix-app-pty ] || {
+        sudo apt-get install socat expect || die
+    }
+
     [ $BUILD_TARGET != scan-build ] || {
         sudo apt-get install clang || die
     }

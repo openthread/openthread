@@ -42,11 +42,13 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli-app=mtd          \
-    --enable-ncp-app=mtd          \
+    --enable-cli                  \
+    --enable-mtd                  \
+    --enable-ncp                  \
     --with-ncp-bus=uart           \
-    --with-examples=cc2650        \
+    --enable-radio-only           \
     --enable-linker-map           \
+    --with-examples=cc2650        \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 

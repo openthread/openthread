@@ -65,7 +65,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(3)
+        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rsn')

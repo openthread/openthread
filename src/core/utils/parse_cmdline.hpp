@@ -26,16 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DISABLE_CC310
-#define MBEDTLS_AES_ALT
-#define MBEDTLS_ECP_ALT
-#define MBEDTLS_SHA256_ALT
-#endif // DISABLE_CC310
+/**
+ * @file
+ *   This file includes definitions for command line parser.
+ */
 
-#define MBEDTLS_ECDH_C
+#ifndef PARSE_CMD_LINE_HPP_
+#define PARSE_CMD_LINE_HPP_
 
-#if defined(__ICCARM__)
-    _Pragma("diag_suppress=Pe549")
-    _Pragma("diag_suppress=Pa082")
-    _Pragma("diag_suppress=Pa084")
-#endif
+#include <stdint.h>
+#include <openthread/error.h>
+
+namespace ot {
+namespace Utils {
+
+/**
+ * @addtogroup utils-parse-cmd-line
+ *
+ * @brief
+ *   This module includes definitions for command line parser.
+ *
+ * @{
+ */
+
+/**
+ * This class implements the command line parser.
+ *
+ */
+class CmdLineParser
+{
+public:
+    /**
+     * This function parses the command line.
+     *
+     * Note: this method may change the input @p aString, it will put a '\0' by the end of each argument,
+     *       and @p aArgv will point to the arguments in the input @p aString.
+     *
+     * @param[in]   aString   A NULL-terminated input string.
+     * @param[out]  aArgc     The argument counter of the command line.
+     * @param[out]  aArgv     The argument vector of the command line.
+     * @param[in]   aArgcMax  The maximum argument counter.
+     *
+     */
+    static otError ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax);
+};
+
+/**
+ * @}
+ */
+
+} // namespace Utils
+} // namespace ot
+
+#endif // PARSE_CMD_LINE_HPP_

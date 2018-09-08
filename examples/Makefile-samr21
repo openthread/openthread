@@ -42,12 +42,15 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli-app=all          \
-    --enable-ncp-app=all          \
-    --with-ncp-bus=uart           \
+    --enable-cli                  \
     --enable-diag                 \
-    --with-examples=samr21        \
+    --enable-ftd                  \
+    --enable-mtd                  \
+    --enable-ncp                  \
+    --with-ncp-bus=uart           \
+    --enable-radio-only           \
     --enable-linker-map           \
+    --with-examples=samr21        \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..

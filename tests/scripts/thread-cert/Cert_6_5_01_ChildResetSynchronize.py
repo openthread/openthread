@@ -51,12 +51,12 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].set_timeout(3)
+        self.nodes[ED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
         self._setUpEd()
 
     def _setUpEd(self):
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()        
+        self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):

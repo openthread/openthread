@@ -36,6 +36,7 @@ libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/src/ncp                 \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
+    $(OPENTHREAD_TARGET_DEFINES)            \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
@@ -51,6 +52,7 @@ libopenthread_posix_a_SOURCES             = \
     settings.cpp                            \
     spi-stubs.c                             \
     spinel.c                                \
+    sim.c                                   \
     system.c                                \
     uart.c                                  \
     $(NULL)

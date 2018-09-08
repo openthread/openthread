@@ -75,7 +75,7 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
-if OPENTHREAD_ENABLE_NCP_FTD
+if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-ncp-ftd                                                           \
     $(NULL)
@@ -109,7 +109,7 @@ ot_ncp_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if OPENTHREAD_ENABLE_NCP_MTD
+if OPENTHREAD_ENABLE_MTD
 bin_PROGRAMS                                                          += \
     ot-ncp-mtd                                                           \
     $(NULL)
@@ -143,7 +143,7 @@ ot_ncp_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if OPENTHREAD_ENABLE_NCP_RADIO
+if OPENTHREAD_ENABLE_RADIO_ONLY
 bin_PROGRAMS                                                          += \
     ot-ncp-radio                                                         \
     $(NULL)

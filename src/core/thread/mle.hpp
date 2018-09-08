@@ -569,7 +569,7 @@ public:
      * @returns true if an MLE Thread Discovery is in progress, false otherwise.
      *
      */
-    bool IsDiscoverInProgress(void);
+    bool IsDiscoverInProgress(void) const { return mIsDiscoverInProgress; }
 
     /**
      * This method is called by the MeshForwarder to indicate that discovery is complete.
@@ -694,7 +694,10 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const;
+    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const
+    {
+        return reinterpret_cast<const otMeshLocalPrefix &>(mMeshLocal16.GetAddress());
+    }
 
     /**
      * This method sets the Mesh Local Prefix.
@@ -714,7 +717,7 @@ public:
      * @returns A reference to the Thread link local address.
      *
      */
-    const Ip6::Address &GetLinkLocalAddress(void) const;
+    const Ip6::Address &GetLinkLocalAddress(void) const { return mLinkLocal64.GetAddress(); }
 
     /**
      * This method updates the link local address.
@@ -732,7 +735,7 @@ public:
      * @returns A reference to the link-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const { return mLinkLocalAllThreadNodes.GetAddress(); }
 
     /**
      * This method returns a reference to the realm-local all Thread nodes multicast address.
@@ -740,7 +743,10 @@ public:
      * @returns A reference to the realm-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address &GetRealmLocalAllThreadNodesAddress(void) const;
+    const Ip6::Address &GetRealmLocalAllThreadNodesAddress(void) const
+    {
+        return mRealmLocalAllThreadNodes.GetAddress();
+    }
 
     /**
      * This method returns a pointer to the parent when operating in End Device mode.
@@ -816,7 +822,7 @@ public:
      * @returns A reference to the RLOC assigned to the Thread interface.
      *
      */
-    const Ip6::Address &GetMeshLocal16(void) const;
+    const Ip6::Address &GetMeshLocal16(void) const { return mMeshLocal16.GetAddress(); }
 
     /**
      * This method returns a reference to the ML-EID assigned to the Thread interface.
@@ -824,7 +830,7 @@ public:
      * @returns A reference to the ML-EID assigned to the Thread interface.
      *
      */
-    const Ip6::Address &GetMeshLocal64(void) const;
+    const Ip6::Address &GetMeshLocal64(void) const { return mMeshLocal64.GetAddress(); }
 
     /**
      * This method returns the Router ID of the Leader.
@@ -832,7 +838,7 @@ public:
      * @returns The Router ID of the Leader.
      *
      */
-    uint8_t GetLeaderId(void) const;
+    uint8_t GetLeaderId(void) const { return mLeaderData.GetLeaderRouterId(); }
 
     /**
      * This method retrieves the Leader's RLOC.
@@ -1036,6 +1042,20 @@ public:
      *
      */
     static const char *RoleToString(otDeviceRole aRole);
+
+    /**
+     * This method gets the MLE counters.
+     *
+     * @returns A reference to the MLE counters.
+     *
+     */
+    const otMleCounters &GetCounters(void) const { return mCounters; }
+
+    /**
+     * This method resets the MLE counters.
+     *
+     */
+    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
 protected:
     /**
@@ -1756,6 +1776,8 @@ private:
 #if OPENTHREAD_ENABLE_SERVICE
     Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVER_ALOCS];
 #endif
+
+    otMleCounters mCounters;
 
     Ip6::NetifUnicastAddress   mLinkLocal64;
     Ip6::NetifUnicastAddress   mMeshLocal64;

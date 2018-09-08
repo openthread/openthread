@@ -40,6 +40,7 @@ import config
 class Node:
     def __init__(self, nodeid, is_mtd=False, simulator=None):
         self.simulator = simulator
+        self.interface = None
 
         if sys.platform != 'win32':
             self.interface = node_cli.otCli(nodeid, is_mtd, simulator=simulator)

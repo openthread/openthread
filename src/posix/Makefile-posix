@@ -49,18 +49,21 @@ configure_OPTIONS                   = \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
+    --enable-cli                      \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-diag                     \
     --enable-dns-client               \
+    --enable-ftd                      \
     --enable-jam-detection            \
     --enable-joiner                   \
+    --enable-ncp                      \
     --enable-legacy                   \
     --enable-mac-filter               \
-    --enable-posix-app=all            \
+    --enable-posix-app                \
     --enable-service                  \
-    --enable-tmf-proxy                \
+    --enable-udp-proxy                \
     --with-ncp-bus=uart               \
     $(NULL)
 
@@ -76,6 +79,10 @@ COMMONCFLAGS                   := \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
+
+ifeq ($(VIRTUAL_TIME),1)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
+endif
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \

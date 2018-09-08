@@ -26,16 +26,54 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DISABLE_CC310
-#define MBEDTLS_AES_ALT
-#define MBEDTLS_ECP_ALT
-#define MBEDTLS_SHA256_ALT
-#endif // DISABLE_CC310
+/**
+ * @file
+ *   This file implements the command line parser.
+ */
 
-#define MBEDTLS_ECDH_C
+#include "parse_cmdline.hpp"
 
-#if defined(__ICCARM__)
-    _Pragma("diag_suppress=Pe549")
-    _Pragma("diag_suppress=Pa082")
-    _Pragma("diag_suppress=Pa084")
-#endif
+#include "common/code_utils.hpp"
+
+namespace ot {
+namespace Utils {
+
+static bool IsSpaceOrNewLine(char aChar)
+{
+    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
+}
+
+otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
+{
+    otError error = OT_ERROR_NONE;
+    char *  cmd;
+
+    aArgc = 0;
+
+    for (cmd = aString; IsSpaceOrNewLine(*cmd) && *cmd; cmd++)
+        ;
+
+    if (*cmd)
+    {
+        aArgv[aArgc++] = cmd++; // the first argument
+    }
+
+    for (; *cmd; cmd++)
+    {
+        if (IsSpaceOrNewLine(*cmd))
+        {
+            *cmd = '\0';
+        }
+        else if (*(cmd - 1) == '\0')
+        {
+            VerifyOrExit(aArgc < aArgcMax, error = OT_ERROR_INVALID_ARGS);
+            aArgv[aArgc++] = cmd;
+        }
+    }
+
+exit:
+    return error;
+}
+
+} // namespace Utils
+} // namespace ot

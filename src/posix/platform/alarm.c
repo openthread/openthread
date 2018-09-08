@@ -48,21 +48,20 @@ static uint32_t sMsAlarm     = 0;
 static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 
-static uint32_t sSpeedUpFactor = 1;
-
+static uint32_t       sSpeedUpFactor = 1;
 static struct timeval sStart;
 
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
     sSpeedUpFactor = aSpeedUpFactor;
-    gettimeofday(&sStart, NULL);
+    otSysGetTime(&sStart);
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     struct timeval tv;
 
-    gettimeofday(&tv, NULL);
+    otSysGetTime(&tv);
     timersub(&tv, &sStart, &tv);
 
     return (uint32_t)(((uint64_t)tv.tv_sec * sSpeedUpFactor * MS_PER_S) +
@@ -86,7 +85,7 @@ uint32_t otPlatAlarmMicroGetNow(void)
 {
     struct timeval tv;
 
-    gettimeofday(&tv, NULL);
+    otSysGetTime(&tv);
     timersub(&tv, &sStart, &tv);
 
     return (uint32_t)(tv.tv_sec * US_PER_S + tv.tv_usec) * sSpeedUpFactor;
@@ -107,8 +106,8 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    int32_t usRemaining = DEFAULT_TIMEOUT * US_PER_S;
-    int32_t msRemaining = DEFAULT_TIMEOUT * MS_PER_S;
+    int32_t usRemaining = INT32_MAX;
+    int32_t msRemaining = INT32_MAX;
 
     if (aTimeout == NULL)
     {
@@ -117,12 +116,16 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (sIsUsRunning)
     {
-        usRemaining = (int32_t)(sUsAlarm - otPlatAlarmMicroGetNow());
+        usRemaining = (int64_t)(sUsAlarm - otPlatAlarmMicroGetNow());
     }
 
     if (sIsMsRunning)
     {
-        msRemaining = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
+        struct timeval now;
+
+        otSysGetTime(&now);
+        timersub(&now, &sStart, &now);
+        msRemaining = (int64_t)sMsAlarm * US_PER_MS - now.tv_sec * US_PER_S - now.tv_usec;
     }
 
     if (usRemaining <= 0 || msRemaining <= 0)
@@ -132,7 +135,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     }
     else
     {
-        int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
+        int64_t remaining = msRemaining;
 
         if (usRemaining < remaining)
         {

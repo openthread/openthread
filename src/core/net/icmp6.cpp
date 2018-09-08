@@ -159,7 +159,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     if (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest)
     {
-        HandleEchoRequest(aMessage, aMessageInfo);
+        ExitNow(error = HandleEchoRequest(aMessage, aMessageInfo));
     }
 
     aMessage.MoveOffset(sizeof(icmp6Header));
@@ -204,7 +204,9 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     MessageInfo replyMessageInfo;
     uint16_t    payloadLength;
 
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo));
+    // always handle Echo Request destined for RLOC or ALOC
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().IsRoutingLocator() ||
+                 aMessageInfo.GetSockAddr().IsAnycastRoutingLocator());
 
     otLogInfoIcmp(GetInstance(), "Received Echo Request");
 
