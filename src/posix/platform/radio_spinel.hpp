@@ -279,6 +279,19 @@ public:
     otError ClearSrcMatchExtEntries(void);
 
     /**
+     * This method begins the energy scan sequence on the radio.
+     *
+     * @param[in]  aScanChannel     The channel to perform the energy scan on.
+     * @param[in]  aScanDuration    The duration, in milliseconds, for the channel to be scanned.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
+
+    /**
      * This method switches the radio state from Receive to Transmit.
      *
      * @param[in] aFrame     A reference to the transmitted frame.

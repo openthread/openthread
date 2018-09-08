@@ -524,3 +524,17 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
 
     return &instance.GetThreadNetif().GetMeshForwarder().GetCounters();
 }
+
+const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.GetThreadNetif().GetMle().GetCounters();
+}
+
+void otThreadResetMleCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetMle().ResetCounters();
+}

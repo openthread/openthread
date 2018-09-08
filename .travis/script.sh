@@ -484,7 +484,9 @@ set -x
     git clean -xfd || die
     ./bootstrap || die
     ./configure                             \
-        --enable-ncp-app=all                \
+        --enable-ncp                        \
+        --enable-ftd                        \
+        --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
         --enable-border-router              \
@@ -504,7 +506,8 @@ set -x
     git clean -xfd || die
     ./bootstrap || die
     ./configure                             \
-        --enable-cli-app=mtd                \
+        --enable-cli                        \
+        --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
         --enable-border-router              \
@@ -520,8 +523,11 @@ set -x
     git clean -xfd || die
     ./bootstrap || die
     ./configure                             \
-        --enable-cli-app=all                \
-        --enable-ncp-app=all                \
+        --enable-cli                        \
+        --enable-ncp                        \
+        --enable-ftd                        \
+        --enable-mtd                        \
+        --enable-radio-only                 \
         --with-ncp-bus=uart                 \
         --with-examples=posix || die
     make -j 8 || die
@@ -601,7 +607,7 @@ EOF
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-ncp-bus=spi --with-examples=posix" || die
 }
 
 [ $BUILD_TARGET != posix-app-ncp ] || {

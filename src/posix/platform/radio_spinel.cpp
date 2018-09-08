@@ -39,7 +39,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#ifdef OPENTHREAD_TARGET_DARWIN
+#include <util.h>
+#else
 #include <pty.h>
+#endif
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
@@ -614,9 +618,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, "Cc", &scanChannel, &maxRssi);
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-#if !OPENTHREAD_ENABLE_DIAG
         otPlatRadioEnergyScanDone(mInstance, maxRssi);
-#endif
     }
     else if (aKey == SPINEL_PROP_STREAM_DEBUG)
     {
@@ -920,6 +922,18 @@ otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
     LogIfFail(mInstance, "Set transmit power failed", error);
+    return error;
+}
+
+otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
+{
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_MASK, SPINEL_DATATYPE_DATA_S, &aScanChannel, sizeof(uint8_t)));
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY));
+
+exit:
     return error;
 }
 
@@ -1603,10 +1617,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aScanChannel);
-    OT_UNUSED_VARIABLE(aScanDuration);
-
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return sRadioSpinel.EnergyScan(aScanChannel, aScanDuration);
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)

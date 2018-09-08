@@ -110,6 +110,15 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_PROMISCUOUS_MODE>;
         break;
+    case SPINEL_PROP_MAC_SCAN_STATE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_STATE>;
+        break;
+    case SPINEL_PROP_MAC_SCAN_MASK:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_MASK>;
+        break;
+    case SPINEL_PROP_MAC_SCAN_PERIOD:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_PERIOD>;
+        break;
     case SPINEL_PROP_NCP_VERSION:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_NCP_VERSION>;
         break;
@@ -132,15 +141,6 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         break;
     case SPINEL_PROP_MAC_EXTENDED_ADDR:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_EXTENDED_ADDR>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_STATE:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_STATE>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_MASK:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_MASK>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_PERIOD:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_PERIOD>;
         break;
     case SPINEL_PROP_MAC_CCA_FAILURE_RATE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_CCA_FAILURE_RATE>;
@@ -668,6 +668,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLED>;
         break;
+    case SPINEL_PROP_MAC_SCAN_MASK:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>;
+        break;
+    case SPINEL_PROP_MAC_SCAN_STATE:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>;
+        break;
+    case SPINEL_PROP_MAC_SCAN_PERIOD:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_PERIOD>;
+        break;
 
         // --------------------------------------------------------------------------
         // MTD (or FTD) Properties (Set Handler)
@@ -678,15 +687,6 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         break;
     case SPINEL_PROP_MAC_DATA_POLL_PERIOD:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_MASK:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_MASK>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_STATE:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>;
-        break;
-    case SPINEL_PROP_MAC_SCAN_PERIOD:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_PERIOD>;
         break;
     case SPINEL_PROP_NET_IF_UP:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_IF_UP>;
