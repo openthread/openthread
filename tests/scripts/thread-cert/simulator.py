@@ -58,7 +58,7 @@ class RealTime:
     def get_messages_sent_by(self, nodeid):
         return self._sniffer.get_messages_sent_by(nodeid)
 
-    def go(self, duration):
+    def go(self, duration, nodeid=None):
         time.sleep(duration)
 
     def stop(self):
