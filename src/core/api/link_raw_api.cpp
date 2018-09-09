@@ -284,7 +284,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
                 InvokeTransmitDone(aFrame, NULL, error);
             }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-            goto exit;
+            ExitNow();
         }
     }
     else
@@ -308,7 +308,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
                 InvokeTransmitDone(aFrame, NULL, error);
             }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-            goto exit;
+            ExitNow();
         }
     }
 
@@ -346,18 +346,23 @@ otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLink
     {
         mEnergyScanDoneCallback = aCallback;
 
+        if (otPlatRadioGetCaps(&mInstance) & OT_RADIO_CAPS_ENERGY_SCAN)
+        {
+            // Do the HW offloaded energy scan
+            error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
+        }
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-        // Start listening on the scan channel
-        otPlatRadioReceive(&mInstance, aScanChannel);
+        else
+        {
+            // Start listening on the scan channel
+            otPlatRadioReceive(&mInstance, aScanChannel);
 
-        // Reset the RSSI value and start scanning
-        mEnergyScanRssi = kInvalidRssiValue;
-        mTimerReason    = kTimerReasonEnergyScanComplete;
-        mTimer.Start(aScanDuration);
-        mEnergyScanTask.Post();
-#else
-        // Do the HW offloaded energy scan
-        error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
+            // Reset the RSSI value and start scanning
+            mEnergyScanRssi = kInvalidRssiValue;
+            mTimerReason    = kTimerReasonEnergyScanComplete;
+            mTimer.Start(aScanDuration);
+            mEnergyScanTask.Post();
+        }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     }
 
@@ -507,9 +512,11 @@ void LinkRaw::HandleEnergyScanTask(void)
             }
         }
 
-        // Post another instance of tha task, since we are
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+        // Post another instance of the task, since we are
         // still doing the energy scan.
         mEnergyScanTask.Post();
+#endif
     }
 }
 
