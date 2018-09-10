@@ -918,6 +918,15 @@ otError RadioSpinel::GetTransmitPower(int8_t &aPower)
     return error;
 }
 
+int8_t RadioSpinel::GetRssi(void)
+{
+    int8_t  rssi  = OT_RADIO_RSSI_INVALID;
+    otError error = Get(SPINEL_PROP_PHY_RSSI, SPINEL_DATATYPE_INT8_S, &rssi);
+
+    LogIfFail(mInstance, "Get RSSI failed", error);
+    return rssi;
+}
+
 otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
@@ -1532,7 +1541,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return 0;
+    return sRadioSpinel.GetRssi();
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
