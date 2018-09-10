@@ -59,7 +59,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor)
     otSysGetTime(&sStart);
 }
 
-uint64_t platformGetNow(void)
+static uint64_t platformGetNow(void)
 {
     struct timeval now;
 
