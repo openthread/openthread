@@ -520,11 +520,13 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 
 otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
 {
-    ThreadNetif &netif = aInstance.GetThreadNetif();
-    Mac::Mac &   mac   = netif.GetMac();
-    otError      error = OT_ERROR_NONE;
-    const Tlv *  cur   = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *  end   = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+    ThreadNetif &netif         = aInstance.GetThreadNetif();
+    Mac::Mac &   mac           = netif.GetMac();
+    otError      error         = OT_ERROR_NONE;
+    const Tlv *  cur           = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv *  end           = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+    uint8_t      channel       = 0;
+    bool         hasChannelTlv = false;
 
     VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
 
@@ -538,20 +540,13 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         switch (cur->GetType())
         {
         case Tlv::kChannel:
-        {
-            uint8_t channel = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
-
-            error = mac.SetPanChannel(channel);
-
-            if (error != OT_ERROR_NONE)
-            {
-                otLogWarnMeshCoP(aInstance, "DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)",
-                                 channel, otThreadErrorToString(error));
-                ExitNow();
-            }
-
+            // Channel is applied after all other TLVs are parsed
+            // to ensure that if the dataset contains a channel mask
+            // entry, the channel mask gets updated at MAC layer
+            // before the new channel is applied.
+            channel       = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
+            hasChannelTlv = true;
             break;
-        }
 
         case Tlv::kChannelMask:
         {
@@ -627,6 +622,17 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         }
 
         cur = cur->GetNext();
+    }
+
+    if (hasChannelTlv)
+    {
+        error = mac.SetPanChannel(channel);
+
+        if (error != OT_ERROR_NONE)
+        {
+            otLogWarnMeshCoP(aInstance, "DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)",
+                             channel, otThreadErrorToString(error));
+        }
     }
 
 exit:
