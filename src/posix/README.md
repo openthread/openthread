@@ -1,0 +1,84 @@
+OpenThread POSIX app
+====================
+
+OpenThread supports running its core on POSIX and transmits radio frames through a radio transceiver.
+
+Current most platforms in [examples/platforms](../../examples/platforms) supports transceiver mode.
+
+The figure below shows the architecture of running OpenThread in such mode.
+
+```
++-------------------------+
+|     MLE TMF UDP IP      |
+|  MeshForwarder 6LoWPAN  |
+| _ _ _ _ _ _ _ _ _ _ _ _ |      spinel         +------------------+
+|    OpenThread Core      | <---------------->  | OpenThread Radio |
++-------------------------+     UART|SPI        +------------------+
+         POSIX                                          Chip
+```
+
+Build
+-----
+
+```sh
+# build core for POSIX
+make -f src/posix/Makefile-posix
+# build transceiver, where xxxx is the platform name, such as cc2538, nrf52840 and so on
+make -f examples/Makefile-xxxx
+```
+
+Test
+----
+
+**NOTE** Assuming build system is 64bit Linux. You can play just like the normal OpenThread as described in the [command line document](../../src/cli/README.md).
+You can also do radio diagnostic using the command [diag](../../src/cli/README.md#diag).
+
+### With Simulation
+
+```sh
+make -f examples/Makefile-posix
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1
+```
+
+### With Real Device
+
+#### nRF52840
+
+```sh
+# without USB=1 may result in failure for serial port issue
+make -f examples/Makefile-nrf52840 USB=1
+arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-ncp-radio ot-ncp-radio.hex
+nrfjprog -f nrf52 --chiperase --reset --program ot-ncp-radio.hex
+# plug the CDC serial USB port
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 '115200 raw -echo'
+```
+
+#### CC2538
+
+```sh
+make -f examples/Makefile-cc2538
+arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-ncp-radio ot-ncp-radio.bin
+# see https://github.com/JelmerT/cc2538-bsl
+python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-ncp-radio.bin
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyUSB0 '115200 raw -echo'
+```
+
+Test With Wpantund
+------------------
+
+**NOTE** Assuming build system is 64bit Linux and *wpantund* is already installed and **stopped**.
+
+### With simulation
+
+```sh
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1'
+```
+
+### With simulation
+
+```sh
+# nRF52840
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyACM0 "115200 raw -echo"'
+# CC2538
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyUSB0 "115200 raw -echo"'
+```
