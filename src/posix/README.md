@@ -3,7 +3,7 @@ OpenThread POSIX app
 
 OpenThread supports running its core on POSIX and transmits radio frames through a radio transceiver.
 
-Current most platforms in [examples/platforms](../../examples/platforms) supports transceiver mode.
+Currently most platforms in [examples/platforms](../../examples/platforms) support transceiver mode.
 
 The figure below shows the architecture of running OpenThread in such mode.
 
