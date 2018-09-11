@@ -141,6 +141,7 @@ EXTRA_DIST                                                         = \
     test_coap.py                                                     \
     test_common.py                                                   \
     test_crypto.py                                                   \
+    test_diag.py                                                     \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -255,6 +256,12 @@ check_SCRIPTS                                                      = \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_DIAG
+check_SCRIPTS                                                     += \
+    test_diag.py                                                     \
+    $(NULL)
+endif
+
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
@@ -267,6 +274,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    test_diag.py                                                     \
     test_service.py                                                  \
     Cert_5_2_05_AddressQuery.py                                      \
     Cert_5_3_08_ChildAddressSet.py                                   \
