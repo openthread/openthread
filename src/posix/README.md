@@ -30,7 +30,7 @@ make -f examples/Makefile-xxxx
 Test
 ----
 
-**NOTE** Assuming the build system is 64bit Linux, you can play just like the normal OpenThread as described in the [command line document](../../src/cli/README.md).
+**NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md).
 You can also perform radio diagnostics using the command [diag](../../src/diag/README.md).
 
 ### With Simulation
