@@ -32,7 +32,7 @@ import unittest
 import node_cli
 import config
 
-class Test_Service(unittest.TestCase):
+class TestDiag(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
         self.node_cli = node_cli.otCli(1, False, simulator=self.simulator)
