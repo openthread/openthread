@@ -113,8 +113,8 @@ otError otPlatUartEnable(void)
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_1;
 
     // rx pin
-    HWREG(IOC_PA0_SEL)  = IOC_UARTRXD_UART0;
-    HWREG(IOC_PA0_OVER) = IOC_OVERRIDE_DIS;
+    HWREG(IOC_UARTRXD_UART0) = IOC_PAD_IN_SEL_PA0;
+    HWREG(IOC_PA0_OVER)      = IOC_OVERRIDE_DIS;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_0;
 
     HWREG(UART0_BASE + UART_O_CTL) = 0;
@@ -287,8 +287,8 @@ void cc2538DebugUartInit(void)
 
     // UART1 - rx pin we don't really use but we setup anyway
     // PA2 => is jumper position RF1.16
-    HWREG(IOC_PA2_SEL)  = IOC_UARTRXD_UART1;
-    HWREG(IOC_PA2_OVER) = IOC_OVERRIDE_DIS;
+    HWREG(IOC_UARTRXD_UART1) = IOC_PAD_IN_SEL_PA2;
+    HWREG(IOC_PA2_OVER)      = IOC_OVERRIDE_DIS;
     HWREG(GPIO_A_BASE + GPIO_O_AFSEL) |= GPIO_PIN_2;
 
     HWREG(UART1_BASE + UART_O_CC) = 0;
