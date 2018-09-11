@@ -272,7 +272,7 @@ static int OpenPty(const char *aFile, const char *aConfig)
             close(static_cast<int>(i));
         }
 
-        rval = snprintf(cmd, sizeof(cmd), "%s %s", aFile, aConfig);
+        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aFile, aConfig);
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      otLogCritPlat(mInstance, "NCP file and configuration is too long!"));
 

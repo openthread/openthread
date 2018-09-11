@@ -141,11 +141,9 @@ class otCli:
         if self.pexpect and self.pexpect.isalive():
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
+            self.pexpect.expect(pexpect.EOF)
             self.pexpect.terminate()
-            self._expect(pexpect.EOF)
-            self.pexpect.wait()
             self.pexpect = None
-            sys.stdout.flush()
 
     def send_command(self, cmd, go=True):
         print("%d: %s" % (self.nodeid, cmd))
