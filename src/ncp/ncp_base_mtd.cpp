@@ -656,15 +656,10 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
 {
-    uint8_t         numEntries = 0;
-    const uint16_t *ports      = otIp6GetUnsecurePorts(mInstance, &numEntries);
-    otError         error      = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
     // First, we need to remove all of the current assisting ports.
-    for (; numEntries != 0; ports++, numEntries--)
-    {
-        SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, *ports));
-    }
+    otIp6RemoveAllUnsecurePorts(mInstance);
 
     while (mDecoder.GetRemainingLengthInStruct() >= sizeof(uint16_t))
     {
