@@ -63,8 +63,8 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-ncp-radio.
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyUSB0 '115200 raw -echo'
 ```
 
-Test With Wpantund
-------------------
+Wpantund Support
+----------------
 
 **NOTE** Assuming the build system is 64bit Linux and *wpantund* is already installed and **stopped**.
 
