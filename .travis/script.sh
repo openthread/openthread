@@ -548,15 +548,16 @@ set -x
 
 [ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
-    VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
-    make -f src/posix/Makefile-posix || die
-    PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 make -f src/posix/Makefile-posix check || die
+    # enable code coverage for OpenThread transceiver only
+    COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    COVERAGE=1 make -f src/posix/Makefile-posix || die
+    COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
     ./bootstrap
-    make -f examples/Makefile-posix
-    make -f src/posix/Makefile-posix
+    COVERAGE=1 make -f examples/Makefile-posix
+    COVERAGE=1 make -f src/posix/Makefile-posix
 
     SOCAT_OUTPUT=/tmp/ot-socat
     socat -d -d pty,raw,echo=0 pty,raw,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
@@ -611,14 +612,15 @@ EOF
 
 [ $BUILD_TARGET != posix-app-ncp ] || {
     ./bootstrap || die
-    VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
-    make -f src/posix/Makefile-posix || die
-    PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" COVERAGE=1 NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
+    COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    # enable code coverage for OpenThread posix radio
+    COVERAGE=1 make -f src/posix/Makefile-posix || die
+    COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
