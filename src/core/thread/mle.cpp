@@ -811,6 +811,12 @@ otError Mle::SetDeviceMode(uint8_t aDeviceMode)
                  error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mDeviceMode != aDeviceMode);
 
+    otLogNoteMle(GetInstance(), "Mode 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ffd:%s, full-netdata:%s]",
+                 mDeviceMode, aDeviceMode, (aDeviceMode & ModeTlv::kModeRxOnWhenIdle) ? "yes" : " no",
+                 (aDeviceMode & ModeTlv::kModeSecureDataRequest) ? "yes" : " no",
+                 (aDeviceMode & ModeTlv::kModeFFD) ? "yes" : "no",
+                 (aDeviceMode & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
+
     mDeviceMode = aDeviceMode;
 
     switch (mRole)
