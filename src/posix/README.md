@@ -30,7 +30,7 @@ make -f examples/Makefile-xxxx
 Test
 ----
 
-**NOTE** Assuming build system is 64bit Linux. You can play just like the normal OpenThread as described in the [command line document](../../src/cli/README.md).
+**NOTE** Assuming the build system is 64bit Linux, you can play just like the normal OpenThread as described in the [command line document](../../src/cli/README.md).
 You can also perform radio diagnostics using the command [diag](../../src/diag/README.md).
 
 ### With Simulation
@@ -66,7 +66,7 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-ncp-radio.
 Test With Wpantund
 ------------------
 
-**NOTE** Assuming build system is 64bit Linux and *wpantund* is already installed and **stopped**.
+**NOTE** Assuming the build system is 64bit Linux and *wpantund* is already installed and **stopped**.
 
 ### With Simulation
 
