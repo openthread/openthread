@@ -72,7 +72,7 @@ public:
 #if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
         kApplicationDataMaxLength = 512,
 #else
-        kApplicationDataMaxLength = 1400,
+        kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
 

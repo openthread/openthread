@@ -1085,6 +1085,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
+ *
+ * The size of dtls application data when the CoAP Secure API is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
+#define OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH 1400
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
  *
  * Enable setting steering data out of band.
