@@ -1292,7 +1292,11 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return (GetLength() == sizeof(*this) - sizeof(Tlv) || IsValidDefaultSedCapacity()); }
+    bool IsValid(void) const
+    {
+        return IsSedBufferingIncluded() ||
+               (GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+    }
 
     /**
      * This method indicates whether or not the sed buffer size and datagram count are included.
@@ -1301,10 +1305,7 @@ public:
      * @retval FALSE  If the sed buffer size and datagram count are not included.
      *
      */
-    bool IsValidDefaultSedCapacity(void) const
-    {
-        return GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount);
-    }
+    bool IsSedBufferingIncluded(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Parent Priority value.
@@ -1434,7 +1435,7 @@ public:
     {
         uint16_t buffersize = OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE;
 
-        if (!IsValidDefaultSedCapacity())
+        if (IsSedBufferingIncluded())
         {
             buffersize = HostSwap16(mSedBufferSize);
         }
@@ -1459,7 +1460,7 @@ public:
     {
         uint8_t count = OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT;
 
-        if (!IsValidDefaultSedCapacity())
+        if (IsSedBufferingIncluded())
         {
             count = mSedDatagramCount;
         }
