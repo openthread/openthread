@@ -1,1 +1,0 @@
-../../ncp/spinel.c
