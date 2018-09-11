@@ -5,7 +5,7 @@ OpenThread supports running its core on POSIX and transmits radio frames through
 
 Currently most platforms in [examples/platforms](../../examples/platforms) support transceiver mode.
 
-The figure below shows the architecture of running OpenThread in such mode.
+The figure below shows the architecture of OpenThread running in transceiver mode.
 
 ```
 +-------------------------+
@@ -31,7 +31,7 @@ Test
 ----
 
 **NOTE** Assuming build system is 64bit Linux. You can play just like the normal OpenThread as described in the [command line document](../../src/cli/README.md).
-You can also do radio diagnostic using the command [diag](../../src/cli/README.md#diag).
+You can also perform radio diagnostics using the command [diag](../../src/diag/README.md).
 
 ### With Simulation
 
@@ -68,13 +68,13 @@ Test With Wpantund
 
 **NOTE** Assuming build system is 64bit Linux and *wpantund* is already installed and **stopped**.
 
-### With simulation
+### With Simulation
 
 ```sh
 sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1'
 ```
 
-### With simulation
+### With Real Device
 
 ```sh
 # nRF52840
