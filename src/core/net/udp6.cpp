@@ -102,17 +102,6 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 
     messageInfoLocal = aMessageInfo;
 
-    if (messageInfoLocal.GetSockAddr().IsUnspecified())
-    {
-        messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
-    }
-
-    if (GetSockName().mPort == 0)
-    {
-        GetSockName().mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
-    }
-    messageInfoLocal.SetSockPort(GetSockName().mPort);
-
     if (messageInfoLocal.GetPeerAddr().IsUnspecified())
     {
         VerifyOrExit(!GetPeerName().GetAddress().IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
@@ -125,6 +114,17 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
         VerifyOrExit(GetPeerName().mPort != 0, error = OT_ERROR_INVALID_ARGS);
         messageInfoLocal.mPeerPort = GetPeerName().mPort;
     }
+
+    if (messageInfoLocal.GetSockAddr().IsUnspecified())
+    {
+        messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
+    }
+
+    if (GetSockName().mPort == 0)
+    {
+        GetSockName().mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
+    }
+    messageInfoLocal.SetSockPort(GetSockName().mPort);
 
     SuccessOrExit(error = static_cast<Udp *>(mTransport)->SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
 
