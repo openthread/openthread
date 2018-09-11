@@ -3012,9 +3012,9 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv)
+int Mle::CompareParents(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv)
 {
-    bool rval = false;
+    int rval = 0;
 
     uint8_t candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
     uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.GetLinkQualityOut())
@@ -3023,35 +3023,35 @@ bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMa
 
     if (aLinkQuality != candidateTwoWayLinkQuality)
     {
-        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
+        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality) ? 1 : -1);
     }
 
     if (IsActiveRouter(aRloc16) != IsActiveRouter(mParentCandidate.GetRloc16()))
     {
-        ExitNow(rval = IsActiveRouter(aRloc16));
+        ExitNow(rval = IsActiveRouter(aRloc16) ? 1 : -1);
     }
 
     if (aConnectivityTlv.GetParentPriority() != mParentPriority)
     {
-        ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority));
+        ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority) ? 1 : -1);
     }
 
     if (aConnectivityTlv.GetLinkQuality3() != mParentLinkQuality3)
     {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3));
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3) ? 1 : -1);
     }
 
     if (aConnectivityTlv.GetLinkQuality2() != mParentLinkQuality2)
     {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2));
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2) ? 1 : -1);
     }
 
     if (aConnectivityTlv.GetLinkQuality1() != mParentLinkQuality1)
     {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1));
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1) ? 1 : -1);
     }
 
-    rval = (aLinkMargin > mParentLinkMargin);
+    rval = (aLinkMargin > mParentLinkMargin) ? 1 : -1;
 
 exit:
     return rval;
@@ -3168,7 +3168,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         VerifyOrExit(compare >= 0);
 
         // only consider better parents if the partitions are the same
-        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, linkMargin, connectivity));
+        VerifyOrExit(compare != 0 ||
+                     CompareParents(sourceAddress.GetRloc16(), linkQuality, linkMargin, connectivity) > 0);
     }
 
     // Link Frame Counter
