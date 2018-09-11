@@ -74,4 +74,20 @@ if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
+check_PROGRAMS = test-frame-queue
+
+test_frame_queue_CPPFLAGS                 = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
+    -DSELF_TEST                             \
+    $(NULL)
+
+test_frame_queue_SOURCES                  = \
+    frame_queue.cpp                         \
+    $(NULL)
+
+TESTS                                     = \
+    test-frame-queue                        \
+    $(NULL)
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
