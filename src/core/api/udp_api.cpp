@@ -36,6 +36,7 @@
 #include <openthread/udp.h>
 
 #include "common/instance.hpp"
+#include "common/new.hpp"
 
 using namespace ot;
 
@@ -56,13 +57,9 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
 {
     otError         error    = OT_ERROR_INVALID_ARGS;
     Instance &      instance = *static_cast<Instance *>(aInstance);
-    Ip6::UdpSocket &socket   = *static_cast<Ip6::UdpSocket *>(aSocket);
+    Ip6::UdpSocket &socket   = *new (aSocket) Ip6::UdpSocket(instance.GetIp6().GetUdp());
 
-    if (socket.mTransport == NULL)
-    {
-        socket.mTransport = &instance.GetIp6().GetUdp();
-        error             = socket.Open(aCallback, aCallbackContext);
-    }
+    error = socket.Open(aCallback, aCallbackContext);
 
     return error;
 }
@@ -72,15 +69,7 @@ otError otUdpClose(otUdpSocket *aSocket)
     otError         error  = OT_ERROR_INVALID_STATE;
     Ip6::UdpSocket &socket = *static_cast<Ip6::UdpSocket *>(aSocket);
 
-    if (socket.mTransport != NULL)
-    {
-        error = socket.Close();
-
-        if (error == OT_ERROR_NONE)
-        {
-            socket.mTransport = NULL;
-        }
-    }
+    error = socket.Close();
 
     return error;
 }

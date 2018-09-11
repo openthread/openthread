@@ -93,7 +93,7 @@ private:
  * This class implements a UDP/IPv6 socket.
  *
  */
-class UdpSocket : public otUdpSocket
+class UdpSocket : public otUdpSocket, public InstanceLocator
 {
     friend class Udp;
 
@@ -192,6 +192,8 @@ private:
     {
         mHandler(mContext, &aMessage, &aMessageInfo);
     }
+
+    Udp &GetUdp(void);
 };
 
 /**
@@ -336,6 +338,7 @@ private:
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
+
     uint16_t     mEphemeralPort;
     UdpReceiver *mReceivers;
     UdpSocket *  mSockets;
