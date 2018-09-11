@@ -2308,8 +2308,9 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
     ChannelTlv         channel;
     PanIdTlv           panid;
     ActiveTimestampTlv activeTimestamp;
-    Message *          message;
+    Message *          message = NULL;
 
+    VerifyOrExit(netif.GetMac().GetSupportedChannelMask().ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(true);
     message->SetSubType(Message::kSubTypeMleAnnounce);
