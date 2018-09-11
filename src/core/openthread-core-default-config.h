@@ -1807,4 +1807,27 @@
 #define OPENTHREAD_CONFIG_RETX_POLL_PERIOD 1000
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE
+ *
+ * This setting configures the default buffer size for IPv6 datagram destined for an attached SED.
+ * A Thread Router MUST be able to buffer at least one 1280-octet IPv6 datagram for an attached SED according to
+ * the Thread Conformance Specification.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE 1280
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT
+ *
+ * This setting configures the default datagram count of 106-octet IPv6 datagram per attached SED.
+ * A Thread Router MUST be able to buffer at least one 106-octet IPv6 datagram per attached SED according to
+ * the Thread Conformance Specification.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT
+#define OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT 1
+#endif
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
