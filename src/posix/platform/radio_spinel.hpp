@@ -169,6 +169,13 @@ public:
     otRadioCaps GetRadioCaps(void) const { return mRadioCaps; }
 
     /**
+     * This method gets the most recent RSSI measurement.
+     *
+     * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
+     */
+    int8_t GetRssi(void);
+
+    /**
      * This method returns the radio receive sensitivity value.
      *
      * @returns The radio receive sensitivity value in dBm.
