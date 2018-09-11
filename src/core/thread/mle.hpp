@@ -1692,7 +1692,7 @@ private:
     otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
     uint32_t Reattach(void);
 
-    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
+    int  CompareParents(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
