@@ -222,6 +222,11 @@
 #define IOC_OVERRIDE_OE                         0x00000008  // PAD Config Override Output Enable
 #define IOC_OVERRIDE_DIS                        0x00000000  // PAD Config Override Disabled
 
+#define IOC_PAD_IN_SEL_PA0                      0x00000000  // PA0
+#define IOC_PAD_IN_SEL_PA1                      0x00000001  // PA1
+#define IOC_PAD_IN_SEL_PA2                      0x00000002  // PA2
+#define IOC_PAD_IN_SEL_PA3                      0x00000003  // PA3
+
 #define UART0_BASE                              0x4000C000
 #define UART1_BASE                              0x4000D000
 #define GPIO_A_BASE                             0x400D9000  // GPIO
