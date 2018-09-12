@@ -85,7 +85,7 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
             }
         }
 
-        if (!found)
+        if (found)
         {
             otIp6RemoveUnicastAddress(aInstance, &address->mAddress);
             address->mValid = false;
