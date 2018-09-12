@@ -399,6 +399,38 @@ public:
     void Update(struct timeval &aTimeout);
 #endif
 
+#if OPENTHREAD_ENABLE_DIAG
+    /**
+     * This method enables/disables the factory diagnostics mode.
+     *
+     * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
+     *
+     */
+    void SetDiagEnabled(bool aMode) { mDiagMode = aMode; }
+
+    /**
+     * This method indicates whether or not factory diagnostics mode is enabled.
+     *
+     * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+     *
+     */
+    bool IsDiagEnabled(void) const { return mDiagMode; }
+
+    /**
+     * This method processes platform diagnostics commands.
+     *
+     * @param[in]   aString         A NULL-terminated input string.
+     * @param[out]  aOutput         The diagnostics execution result.
+     * @param[in]   aOutputMaxLen   The output buffer size.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError PlatDiagProcess(const char *aString, char *aOutput, size_t aOutputMaxLen);
+#endif
+
 private:
     enum
     {
@@ -553,6 +585,12 @@ private:
     bool         mIsDecoding : 1;     ///< Decoding hdlc frames.
     bool         mIsPromiscuous : 1;  ///< Promiscuous mode.
     bool         mIsReady : 1;        ///< NCP ready.
+
+#if OPENTHREAD_ENABLE_DIAG
+    bool   mDiagMode;
+    char * mDiagOutput;
+    size_t mDiagOutputMaxLen;
+#endif
 };
 
 } // namespace ot
