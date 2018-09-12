@@ -1751,7 +1751,7 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 #if OPENTHREAD_ENABLE_DIAG
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    // delivery the platform specific diags commands to radio only ncp.
+    // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
     char  cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
     char *cur                                              = cmd;
@@ -1768,7 +1768,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
 void otPlatDiagModeSet(bool aMode)
 {
     SuccessOrExit(sRadioSpinel.PlatDiagProcess(aMode ? "start" : "stop", NULL, 0));
-    sRadioSpinel.SetDiagMode(aMode);
+    sRadioSpinel.SetDiagEnabled(aMode);
 
 exit:
     return;
@@ -1776,7 +1776,7 @@ exit:
 
 bool otPlatDiagModeGet(void)
 {
-    return sRadioSpinel.GetDiagMode();
+    return sRadioSpinel.IsDiagEnabled();
 }
 
 void otPlatDiagTxPowerSet(int8_t aTxPower)

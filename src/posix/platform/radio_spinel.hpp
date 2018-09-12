@@ -406,7 +406,7 @@ public:
      * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
      *
      */
-    void SetDiagMode(bool aMode) { mDiagMode = aMode; }
+    void SetDiagEnabled(bool aMode) { mDiagMode = aMode; }
 
     /**
      * This method indicates whether or not factory diagnostics mode is enabled.
@@ -414,7 +414,7 @@ public:
      * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
      *
      */
-    bool GetDiagMode(void) const { return mDiagMode; }
+    bool IsDiagEnabled(void) const { return mDiagMode; }
 
     /**
      * This method processes platform diagnostics commands.
