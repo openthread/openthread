@@ -1376,6 +1376,12 @@ otError RadioSpinel::Receive(uint8_t aChannel)
         VerifyOrExit(error == OT_ERROR_NONE);
     }
 
+    if (mTxRadioTid != 0)
+    {
+        FreeTid(mTxRadioTid);
+        mTxRadioTid = 0;
+    }
+
     mTxState = kIdle;
     mState   = OT_RADIO_STATE_RECEIVE;
 
