@@ -553,18 +553,6 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
             break;
         }
 
-        case Tlv::kChannelMask:
-        {
-            const ChannelMask0Entry *mask0Entry = static_cast<const ChannelMaskTlv *>(cur)->GetMask0Entry();
-
-            if (mask0Entry != NULL)
-            {
-                mac.SetSupportedChannelMask(mask0Entry->GetMask());
-            }
-
-            break;
-        }
-
         case Tlv::kPanId:
             mac.SetPanId(static_cast<const PanIdTlv *>(cur)->GetPanId());
             break;
