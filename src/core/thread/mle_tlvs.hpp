@@ -1294,9 +1294,18 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() == sizeof(*this) - sizeof(Tlv) ||
-                GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+        return IsSedBufferingIncluded() ||
+               (GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
     }
+
+    /**
+     * This method indicates whether or not the sed buffer size and datagram count are included.
+     *
+     * @retval TRUE   If the sed buffer size and datagram count are included.
+     * @retval FALSE  If the sed buffer size and datagram count are not included.
+     *
+     */
+    bool IsSedBufferingIncluded(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Parent Priority value.
@@ -1422,7 +1431,16 @@ public:
      * @returns The SED Buffer Size value.
      *
      */
-    uint16_t GetSedBufferSize(void) const { return HostSwap16(mSedBufferSize); }
+    uint16_t GetSedBufferSize(void) const
+    {
+        uint16_t buffersize = OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE;
+
+        if (IsSedBufferingIncluded())
+        {
+            buffersize = HostSwap16(mSedBufferSize);
+        }
+        return buffersize;
+    }
 
     /**
      * This method sets the SED Buffer Size value.
@@ -1438,7 +1456,16 @@ public:
      * @returns The SED Datagram Count value.
      *
      */
-    uint8_t GetSedDatagramCount(void) const { return mSedDatagramCount; }
+    uint8_t GetSedDatagramCount(void) const
+    {
+        uint8_t count = OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT;
+
+        if (IsSedBufferingIncluded())
+        {
+            count = mSedDatagramCount;
+        }
+        return count;
+    }
 
     /**
      * This method sets the SED Datagram Count value.
