@@ -85,12 +85,11 @@ typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessag
  */
 typedef struct otUdpSocket
 {
-    otSockAddr          mSockName;  ///< The local IPv6 socket address.
-    otSockAddr          mPeerName;  ///< The peer IPv6 socket address.
-    otUdpReceive        mHandler;   ///< A function pointer to the application callback.
-    void *              mContext;   ///< A pointer to application-specific context.
-    void *              mTransport; ///< A pointer to the transport object (internal use only).
-    struct otUdpSocket *mNext;      ///< A pointer to the next UDP socket (internal use only).
+    otSockAddr          mSockName; ///< The local IPv6 socket address.
+    otSockAddr          mPeerName; ///< The peer IPv6 socket address.
+    otUdpReceive        mHandler;  ///< A function pointer to the application callback.
+    void *              mContext;  ///< A pointer to application-specific context.
+    struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
 /**
