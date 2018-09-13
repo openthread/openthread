@@ -1812,5 +1812,4 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     (void)aInstance;
 }
-
 #endif // OPENTHREAD_ENABLE_DIAG
