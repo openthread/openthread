@@ -56,15 +56,14 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mTimerReason(kTimerReasonNone)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     , mTimerMicro(aInstance, &LinkRaw::HandleTimer, this)
+#else
+    , mEnergyScanTimer(aInstance, &LinkRaw::HandleTimer, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     , mTransmitRetries(0)
     , mCsmaBackoffs(0)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    , mEnergyScanTask(aInstance, &LinkRaw::HandleEnergyScanTask, this)
-#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mReceiveDoneCallback(NULL)
     , mTransmitDoneCallback(NULL)
@@ -361,7 +360,11 @@ otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLink
             mEnergyScanRssi = kInvalidRssiValue;
             mTimerReason    = kTimerReasonEnergyScanComplete;
             mTimer.Start(aScanDuration);
-            mEnergyScanTask.Post();
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+            mTimerMicro.Start(0);
+#else
+            mEnergyScanTimer.Start(0);
+#endif
         }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     }
@@ -401,7 +404,15 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
 
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<LinkRaw>().HandleTimer();
+    LinkRaw &linkRaw = aTimer.GetOwner<LinkRaw>();
+    if (&aTimer != &linkRaw.mTimer && linkRaw.mTimerReason == kTimerReasonEnergyScanComplete)
+    {
+        linkRaw.HandleEnergyScanTimer();
+    }
+    else
+    {
+        linkRaw.HandleTimer();
+    }
 }
 
 void LinkRaw::HandleTimer(void)
@@ -491,15 +502,10 @@ void LinkRaw::StartCsmaBackoff(void)
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
-void LinkRaw::HandleEnergyScanTask(Tasklet &aTasklet)
+void LinkRaw::HandleEnergyScanTimer(void)
 {
-    aTasklet.GetOwner<LinkRaw>().HandleEnergyScanTask();
-}
-
-void LinkRaw::HandleEnergyScanTask(void)
-{
-    // Only process task if we are still energy scanning
-    if (mTimerReason == kTimerReasonEnergyScanComplete)
+    // Only process if we are still energy scanning
+    if (mTimer.IsRunning() && mTimerReason == kTimerReasonEnergyScanComplete)
     {
         int8_t rssi = otPlatRadioGetRssi(&mInstance);
 
@@ -512,10 +518,10 @@ void LinkRaw::HandleEnergyScanTask(void)
             }
         }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
-        // Post another instance of the task, since we are
-        // still doing the energy scan.
-        mEnergyScanTask.Post();
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        mTimerMicro.Start(kEnergyScanRssiSampleInterval);
+#else
+        mEnergyScanTimer.Start(kEnergyScanRssiSampleInterval);
 #endif
     }
 }

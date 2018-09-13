@@ -923,15 +923,14 @@ private:
         kInvalidRssiValue  = 127,
         kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
         kMaxAcquisitionId  = 0xffff,
-
-    /**
-     * Interval between RSSI samples when performing Energy Scan.
-     *
-     * `mBackoffTimer` is used for adding delay between RSSI samples. If microsecond timer is supported, 128 usec
-     * time between samples is used, otherwise with a millisecond timer the minimum value of 1 msec is used.
-     *
-     */
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        /**
+         * Interval between RSSI samples when performing Energy Scan.
+         *
+         * `mBackoffTimer` is used for adding delay between RSSI samples. If microsecond timer is supported, 128 usec
+         * time between samples is used, otherwise with a millisecond timer the minimum value of 1 msec is used.
+         *
+         */
         kEnergyScanRssiSampleInterval = 128,
 #else
         kEnergyScanRssiSampleInterval = 1,
