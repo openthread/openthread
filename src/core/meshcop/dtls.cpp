@@ -286,16 +286,16 @@ otError Dtls::Stop(void)
 {
     mbedtls_ssl_close_notify(&mSsl);
     Close();
-    // guard time, that the possible close notify
-    // not open an invalid (new) connection
-    mGuardTimerSet = true;
-    mTimer.Start(kGuardTimeNewConnectionMilli);
 
     return OT_ERROR_NONE;
 }
 
 void Dtls::Close(void)
 {
+    // guard time, that the possible close notify
+    // not open an invalid (new) connection
+    mGuardTimerSet = true;
+    mTimer.Start(kGuardTimeNewConnectionMilli);
     VerifyOrExit(mStarted);
     mStarted = false;
     mbedtls_ssl_free(&mSsl);
