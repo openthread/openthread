@@ -3946,6 +3946,7 @@ otJoinerGetId(
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    ZeroMemory(aJoinerId, sizeof(otExtAddress));
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_ID, aJoinerId));
 }
 
