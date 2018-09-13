@@ -359,12 +359,12 @@ otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLink
             // Reset the RSSI value and start scanning
             mEnergyScanRssi = kInvalidRssiValue;
             mTimerReason    = kTimerReasonEnergyScanComplete;
-            mTimer.Start(aScanDuration);
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
             mTimerMicro.Start(0);
 #else
             mEnergyScanTimer.Start(0);
 #endif
+            mTimer.Start(aScanDuration);
         }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     }
@@ -405,11 +405,14 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
     LinkRaw &linkRaw = aTimer.GetOwner<LinkRaw>();
+
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     if (&aTimer != &linkRaw.mTimer && linkRaw.mTimerReason == kTimerReasonEnergyScanComplete)
     {
         linkRaw.HandleEnergyScanTimer();
     }
     else
+#endif
     {
         linkRaw.HandleTimer();
     }
