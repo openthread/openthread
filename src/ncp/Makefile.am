@@ -34,12 +34,19 @@ EXTRA_DIST                                        = \
 
 # Pull in the sources that comprise the OpenThread NCP library.
 
-lib_LIBRARIES                                     = \
-    libopenthread-ncp-mtd.a                         \
-    libopenthread-ncp-ftd.a                         \
-    libopenthread-ncp-radio.a                       \
-    $(NULL)
+lib_LIBRARIES                                     = $(NULL)
 
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                                    += libopenthread-ncp-ftd.a
+endif
+
+if OPENTHREAD_ENABLE_MTD
+lib_LIBRARIES                                    += libopenthread-ncp-mtd.a
+endif
+
+if OPENTHREAD_ENABLE_RADIO_ONLY
+lib_LIBRARIES                                    += libopenthread-ncp-radio.a
+endif
 
 COMMON_CPPFLAGS                                   = \
     -I$(top_srcdir)/include                         \
