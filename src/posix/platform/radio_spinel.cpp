@@ -794,7 +794,7 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
         }
     }
 
-    if (!mFrameQueue.IsEmpty())
+    if (!mFrameQueue.IsEmpty() || (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone))
     {
         aTimeout.tv_sec  = 0;
         aTimeout.tv_usec = 0;
@@ -813,24 +813,24 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
             ReadAll();
             ProcessFrameQueue();
         }
+    }
 
-        if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
-        {
-            mState = OT_RADIO_STATE_RECEIVE;
+    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
+    {
+        mState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagRadioTransmitDone(mInstance, mTransmitFrame, mTxError);
-            }
-            else
-#endif
-            {
-                otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
-            }
-
-            mTxState = kIdle;
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(mInstance, mTransmitFrame, mTxError);
         }
+        else
+#endif
+        {
+            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+        }
+
+        mTxState = kIdle;
     }
 
     if (FD_ISSET(mSockFd, &aWriteFdSet))
