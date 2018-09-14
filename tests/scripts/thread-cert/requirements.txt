@@ -1,4 +1,5 @@
-enum34==1.1.2
+enum34==1.1.2;python_version<"3.4"
+future==0.16.0
 ipaddress==1.0.16
-pexpect==4.0.1
+pexpect==4.6
 pycryptodome==3.6.6

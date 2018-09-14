@@ -44,7 +44,7 @@ import pcap
 
 def dbg_print(*args):
     if False:
-        print args
+        print(args)
 
 class RealTime:
 

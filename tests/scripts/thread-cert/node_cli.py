@@ -56,7 +56,10 @@ class otCli:
             self.__init_sim(nodeid, mode)
 
         if self.verbose:
-            self.pexpect.logfile_read = sys.stdout
+            if sys.version_info[0] == 2:
+                self.pexpect.logfile_read = sys.stdout
+            else:
+                self.pexpect.logfile_read = sys.stdout.buffer
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
