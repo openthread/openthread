@@ -138,6 +138,7 @@ run test-020-router-table.py
 run test-021-address-cache-table.py
 run test-022-multicast-ip6-address.py
 run test-023-multicast-traffic.py
+run test-024-partition-merge.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
