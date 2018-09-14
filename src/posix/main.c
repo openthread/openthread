@@ -29,6 +29,8 @@
 #include <assert.h>
 
 #include <openthread-core-config.h>
+#include <setjmp.h>
+#include <unistd.h>
 #include <openthread/config.h>
 
 #define OPENTHREAD_POSIX_APP_NCP 1
@@ -47,6 +49,10 @@
 
 #include "openthread-system.h"
 
+jmp_buf gResetJump;
+
+void __gcov_flush();
+
 void otTaskletsSignalPending(otInstance *aInstance)
 {
     (void)aInstance;
@@ -56,7 +62,14 @@ int main(int argc, char *argv[])
 {
     otInstance *sInstance;
 
-pseudo_reset:
+    if (setjmp(gResetJump))
+    {
+        alarm(0);
+#if OPENTHREAD_ENABLE_COVERAGE
+        __gcov_flush();
+#endif
+        execvp(argv[0], argv);
+    }
 
     otSysInit(argc, argv);
 
@@ -80,8 +93,6 @@ pseudo_reset:
     }
 
     otInstanceFinalize(sInstance);
-
-    goto pseudo_reset;
 
     return 0;
 }

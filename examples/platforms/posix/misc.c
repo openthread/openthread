@@ -29,6 +29,7 @@
 #include "platform-posix.h"
 
 #ifndef _WIN32
+#include <setjmp.h>
 #include <unistd.h>
 #endif
 
@@ -37,8 +38,7 @@
 #include "openthread-system.h"
 
 #ifndef _WIN32
-extern int    gArgumentsCount;
-extern char **gArguments;
+extern jmp_buf gResetJump;
 #endif
 
 static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
@@ -56,23 +56,11 @@ void otPlatReset(otInstance *aInstance)
 
 #else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     // Restart the process using execvp.
-    char *argv[gArgumentsCount + 1];
-
-    for (int i = 0; i < gArgumentsCount; ++i)
-    {
-        argv[i] = gArguments[i];
-    }
-
-    argv[gArgumentsCount] = NULL;
-
     otSysDeinit();
     platformUartRestore();
 
-    alarm(0);
-
-    execvp(argv[0], argv);
-    perror("reset failed");
-    exit(EXIT_FAILURE);
+    longjmp(gResetJump, 1);
+    assert(false);
 
 #endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 

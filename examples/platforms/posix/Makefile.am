@@ -71,6 +71,10 @@ libopenthread_posix_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
+libopenthread_posix_a_CPPFLAGS           += \
+    -DOPENTHREAD_ENABLE_COVERAGE            \
+    $(NULL)
+
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
