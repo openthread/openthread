@@ -254,6 +254,8 @@ private:
     TimerReason mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     TimerMicro mTimerMicro;
+#else
+    TimerMilli mEnergyScanTimer;
 #endif
 
     static void HandleTimer(Timer &aTimer);
@@ -278,14 +280,25 @@ private:
 
     enum
     {
-        kInvalidRssiValue = 127
+        kInvalidRssiValue = 127,
+    /**
+     * Interval between RSSI samples when performing Energy Scan.
+     *
+     * `mTimerMicro` or `mEnergyScanTimer` is used for adding delay between RSSI samples. If microsecond timer is
+     * supported, 128 usec time between samples is used, otherwise with the millisecond timer `mEnergyScanTimer` the
+     * minimum value of 1 msec is used.
+     *
+     */
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        kEnergyScanRssiSampleInterval = 128,
+#else
+        kEnergyScanRssiSampleInterval = 1,
+#endif
     };
 
-    Tasklet mEnergyScanTask;
-    int8_t  mEnergyScanRssi;
+    int8_t mEnergyScanRssi;
 
-    static void HandleEnergyScanTask(Tasklet &aTasklet);
-    void        HandleEnergyScanTask(void);
+    void HandleEnergyScanTimer(void);
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 

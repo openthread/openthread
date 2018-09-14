@@ -41,7 +41,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX"
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
@@ -50,7 +50,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 #if OPENTHREAD_RADIO
@@ -60,7 +60,21 @@
  * Define to 1 if you want to enable software ACK timeout logic.
  *
  */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+ *
+ * Define to 1 if you want to enable software energy scanning logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN 1
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -70,7 +84,9 @@
  * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
  *
  */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -80,7 +96,9 @@
  * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          1
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
+#endif
 #endif // OPENTHREAD_RADIO
 
 /**
@@ -89,6 +107,6 @@
  * Define to 1 if you want to support microsecond timer in platform.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
 
-#endif  // OPENTHREAD_CORE_POSIX_CONFIG_H_
+#endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
