@@ -407,6 +407,7 @@ void LinkRaw::HandleTimer(Timer &aTimer)
     LinkRaw &linkRaw = aTimer.GetOwner<LinkRaw>();
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+    // Energy scan uses a different timer for adding delay between RSSI samples.
     if (&aTimer != &linkRaw.mTimer && linkRaw.mTimerReason == kTimerReasonEnergyScanComplete)
     {
         linkRaw.HandleEnergyScanTimer();

@@ -285,8 +285,8 @@ private:
      * Interval between RSSI samples when performing Energy Scan.
      *
      * `mTimerMicro` or `mEnergyScanTimer` is used for adding delay between RSSI samples. If microsecond timer is
-     * supported, 128 usec time between samples is used, otherwise with a millisecond timer the minimum value of 1 msec
-     * is used.
+     * supported, 128 usec time between samples is used, otherwise with the millisecond timer `mEnergyScanTimer` the
+     * minimum value of 1 msec is used.
      *
      */
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
