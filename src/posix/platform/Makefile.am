@@ -43,18 +43,28 @@ libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
     flash.c                                 \
     frame_queue.cpp                         \
-    hdlc.cpp                                \
     logging.c                               \
     misc.c                                  \
     radio_spinel.cpp                        \
     random.c                                \
     settings.cpp                            \
     spi-stubs.c                             \
-    spinel.c                                \
     sim.c                                   \
     system.c                                \
     uart.c                                  \
     $(NULL)
+
+INC_NCP_SOURCES                           = \
+    inc_spinel.c                            \
+    inc_hdlc.cpp                            \
+    $(NULL)
+
+nodist_libopenthread_posix_a_SOURCES      = \
+    $(INC_NCP_SOURCES)                      \
+    $(NULL)
+
+inc_%: ../../ncp/%
+	echo '#include "$<"' > $@
 
 noinst_HEADERS                            = \
     flash.h                                 \
