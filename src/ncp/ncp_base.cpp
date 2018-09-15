@@ -2071,6 +2071,11 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RSSI>(void)
+{
+    return mEncoder.WriteInt8(otPlatRadioGetRssi(mInstance));
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RX_SENSITIVITY>(void)
 {
     return mEncoder.WriteInt8(otPlatRadioGetReceiveSensitivity(mInstance));

@@ -221,11 +221,6 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RSSI>(void)
-{
-    return mEncoder.WriteInt8(otPlatRadioGetRssi(mInstance));
-}
-
 otError NcpBase::CommandHandler_NET_SAVE(uint8_t aHeader)
 {
     return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
