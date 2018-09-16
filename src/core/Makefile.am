@@ -333,7 +333,6 @@ HEADERS_COMMON                      = \
     thread/network_data.hpp           \
     thread/network_data_leader.hpp    \
     thread/network_data_leader_ftd.hpp \
-    thread/network_data_leader_mtd.hpp \
     thread/network_data_local.hpp     \
     thread/network_data_tlvs.hpp      \
     thread/network_diagnostic.hpp     \

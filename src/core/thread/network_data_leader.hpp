@@ -253,7 +253,11 @@ private:
 } // namespace ot
 
 #if OPENTHREAD_MTD
-#include "network_data_leader_mtd.hpp"
+namespace ot {
+namespace NetworkData {
+typedef class LeaderBase Leader;
+} // namespace NetworkData
+} // namespace ot
 #elif OPENTHREAD_FTD
 #include "network_data_leader_ftd.hpp"
 #else
