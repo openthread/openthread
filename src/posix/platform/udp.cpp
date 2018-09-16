@@ -49,7 +49,7 @@
 static int         sPlatNetifIndex = 0;
 static otInstance *sInstance       = NULL;
 
-static const void * kInvalidHandle = reinterpret_cast<void *>(-1);
+static void *const  kInvalidHandle = reinterpret_cast<void *const>(-1);
 static const size_t kMaxUdpSize    = 1280;
 
 static void *GetHandleFromFd(int aFd)
@@ -75,9 +75,14 @@ exit:
     return;
 }
 
-static bool isLinkLocal(const struct in6_addr &aAddress)
+static bool IsLinkLocal(const struct in6_addr &aAddress)
 {
     return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80;
+}
+
+static bool IsMulticast(const struct in6_addr &aAddress)
+{
+    return aAddress.s6_addr[0] == 0xff;
 }
 
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
@@ -122,9 +127,6 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     }
 
     {
-        unsigned int hops = 255;
-        VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops, sizeof(hops)),
-                     error = OT_ERROR_FAILED);
         int on = 1;
         VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_RECVHOPLIMIT, &on, sizeof(on)), error = OT_ERROR_FAILED);
         VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OT_ERROR_FAILED);
@@ -190,16 +192,29 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     }
 
     assert(fd != -1);
-    assert(aMessageInfo->mHopLimit > 0);
 
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo->mPeerPort);
     peerAddr.sin6_family = AF_INET6;
     memcpy(&peerAddr.sin6_addr, &aMessageInfo->mPeerAddr, sizeof(peerAddr.sin6_addr));
 
-    if (isLinkLocal(peerAddr.sin6_addr))
+    if (IsLinkLocal(peerAddr.sin6_addr))
     {
+        // sin6_scope_id only works for link local destinations
         peerAddr.sin6_scope_id = sPlatNetifIndex;
+    }
+
+    if (IsMulticast(peerAddr.sin6_addr))
+    {
+        int hoplimit = aMessageInfo->mHopLimit;
+        VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hoplimit, sizeof(hoplimit)),
+                     error = OT_ERROR_FAILED);
+    }
+    else
+    {
+        int hoplimit = aMessageInfo->mHopLimit;
+        VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &hoplimit, sizeof(hoplimit)),
+                     error = OT_ERROR_FAILED);
     }
 
     len = otMessageGetLength(aMessage);
