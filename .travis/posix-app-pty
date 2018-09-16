@@ -83,11 +83,16 @@ main() {
     netstat -an | grep -q 61631 || die 'TMF port is not available!'
     xaddress=$(sudo wpanctl get 'NCP:ExtendedAddress' | cut -d= -f2 | tr -d ' []')
     echo "Extended address is: ${xaddress}"
-    # Try retrieving extended address
+
+    # Retrievie extended address through network diagnostic get
     coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${mleid}]:61631/d/dg -f- | xxd -p -u | grep 0008)
     echo "CoAP response is: ${coap_response}"
+
     # Verify CoAP response contains the extended address
-    [[ "${coap_response}" = *${xaddress}* ]] || die 'failed to get extended address through TMF'
+    [[ "${coap_response}" = *${xaddress}* ]] || die 'failed to get extended address'
+
+    # Leave so that code coverage will be flushed
+    sudo wpanctl leave || true
 }
 
 main "$@"
