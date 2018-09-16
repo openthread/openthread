@@ -103,8 +103,8 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = 64,
-        kMaxDatagramLength = 1280,
+        kDefaultHopLimit   = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
+        kMaxDatagramLength = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
     };
 
     /**
