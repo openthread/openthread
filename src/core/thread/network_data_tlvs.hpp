@@ -226,6 +226,14 @@ public:
         mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
     }
 
+    /**
+     * This method returns a pointer to the next HasRouteEntry.
+     *
+     * @returns A pointer to the next HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetNext(void) { return (this + 1); }
+
 private:
     enum
     {
@@ -275,6 +283,27 @@ public:
     HasRouteEntry *GetEntry(uint8_t i)
     {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
+    }
+
+    /**
+     * This method returns a pointer to the first HasRouteEntry (at index 0'th).
+     *
+     * @returns A pointer to the first HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetFirstEntry(void) { return reinterpret_cast<HasRouteEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the last HasRouteEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetLastEntry(void)
+    {
+        return reinterpret_cast<HasRouteEntry *>(GetValue() + GetLength() - sizeof(HasRouteEntry));
     }
 } OT_TOOL_PACKED_END;
 
@@ -586,6 +615,14 @@ public:
      */
     void SetOnMesh(void) { mFlags |= kOnMeshFlag; }
 
+    /**
+     * This method returns a pointer to the next BorderRouterEntry
+     *
+     * @returns A pointer to the next BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetNext(void) { return (this + 1); }
+
 private:
     uint16_t mRloc;
     uint8_t  mFlags;
@@ -630,6 +667,27 @@ public:
     BorderRouterEntry *GetEntry(uint8_t i)
     {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
+    }
+
+    /**
+     * This method returns a pointer to the first BorderRouterEntry (at index 0'th).
+     *
+     * @returns A pointer to the first BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetFirstEntry(void) { return reinterpret_cast<BorderRouterEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the last BorderRouterEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetLastEntry(void)
+    {
+        return reinterpret_cast<BorderRouterEntry *>(GetValue() + GetLength() - sizeof(BorderRouterEntry));
     }
 } OT_TOOL_PACKED_END;
 
