@@ -249,7 +249,7 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
     }
     else if (message->GetPriority() == aPriority)
     {
-        while (aPriority >= Message::kPriorityHigh)
+        while (1)
         {
             for (message = mSendQueue.GetHeadForPriority(aPriority); message; message = message->GetNext())
             {
