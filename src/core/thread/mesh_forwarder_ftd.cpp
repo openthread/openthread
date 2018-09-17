@@ -249,15 +249,22 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
     }
     else if (message->GetPriority() == aPriority)
     {
-        for (message = mSendQueue.GetHead(); message; message = message->GetNext())
+        while (aPriority >= Message::kPriorityHigh)
         {
-            if (!message->IsChildPending())
+            for (message = mSendQueue.GetHeadForPriority(aPriority); message; message = message->GetNext())
             {
-                continue;
+                if (!message->IsChildPending())
+                {
+                    continue;
+                }
+
+                RemoveMessage(*message);
+                ExitNow(error = OT_ERROR_NONE);
             }
 
-            RemoveMessage(*message);
-            ExitNow(error = OT_ERROR_NONE);
+            VerifyOrExit(aPriority != Message::kPriorityHigh);
+
+            aPriority--;
         }
     }
 
