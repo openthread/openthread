@@ -74,7 +74,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mNetworkDataLocal(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_SERVICE
-    , mUniqueService(aInstance)
+    , mUniqueServiceManager(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC

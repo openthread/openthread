@@ -266,6 +266,20 @@ public:
      *
      */
     bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
+
+    /**
+     * This method indicates whether or not the Thread Network Data contains the service with given Enterprise
+     * Number and Server Data
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A pointer to a Service Data.
+     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     *
+     * @returns TRUE if this object contains the service with given Enterprise Number and Server Data,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
 #endif
 
     /**

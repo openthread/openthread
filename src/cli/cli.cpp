@@ -1628,8 +1628,7 @@ exit:
 
 void Interpreter::ProcessService(int argc, char *argv[])
 {
-    otError error     = OT_ERROR_NONE;
-    uint8_t argOffset = 1;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -1640,29 +1639,16 @@ void Interpreter::ProcessService(int argc, char *argv[])
 
         VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
 
-        if (strcmp(argv[1], "unique") == 0)
-        {
-            VerifyOrExit(argc > 4, error = OT_ERROR_INVALID_ARGS);
-            argOffset = 2;
-        }
+        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
 
-        SuccessOrExit(error = ParseLong(argv[argOffset], enterpriseNumber));
-
-        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[argOffset + 1]));
-        memcpy(cfg.mServiceData, argv[argOffset + 1], cfg.mServiceDataLength);
+        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[2]));
+        memcpy(cfg.mServiceData, argv[2], cfg.mServiceDataLength);
         cfg.mEnterpriseNumber               = static_cast<uint32_t>(enterpriseNumber);
         cfg.mServerConfig.mStable           = true;
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[argOffset + 2]));
-        memcpy(cfg.mServerConfig.mServerData, argv[argOffset + 2], cfg.mServerConfig.mServerDataLength);
+        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[3]));
+        memcpy(cfg.mServerConfig.mServerData, argv[3], cfg.mServerConfig.mServerDataLength);
 
-        if (argOffset == 1)
-        {
-            SuccessOrExit(error = otServerAddService(mInstance, &cfg));
-        }
-        else
-        {
-            SuccessOrExit(error = otServerAddUniqueService(mInstance, &cfg, NULL));
-        }
+        SuccessOrExit(error = otServerAddService(mInstance, &cfg));
     }
     else if (strcmp(argv[0], "remove") == 0)
     {
@@ -1670,26 +1656,11 @@ void Interpreter::ProcessService(int argc, char *argv[])
 
         VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
 
-        if (strcmp(argv[1], "unique") == 0)
-        {
-            VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
-            argOffset = 2;
-        }
+        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
 
-        SuccessOrExit(error = ParseLong(argv[argOffset], enterpriseNumber));
-
-        if (argOffset == 1)
-        {
-            SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
-                                                        reinterpret_cast<uint8_t *>(argv[argOffset + 1]),
-                                                        static_cast<uint8_t>(strlen(argv[argOffset + 1]))));
-        }
-        else
-        {
-            SuccessOrExit(error = otServerRemoveUniqueService(mInstance, static_cast<uint32_t>(enterpriseNumber),
-                                                              reinterpret_cast<uint8_t *>(argv[argOffset + 1]),
-                                                              static_cast<uint8_t>(strlen(argv[argOffset + 1]))));
-        }
+        SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
+                                                    reinterpret_cast<uint8_t *>(argv[2]),
+                                                    static_cast<uint8_t>(strlen(argv[2]))));
     }
     else
     {

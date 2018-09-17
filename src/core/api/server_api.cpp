@@ -108,55 +108,26 @@ otError otServerRegister(otInstance *aInstance)
     return instance.GetThreadNetif().GetNetworkDataLocal().SendServerDataNotification();
 }
 
-otError otServerAddUniqueService(otInstance *            aInstance,
-                                 const otServiceConfig * aConfig,
-                                 otServerCompareCallback aCallback)
+otError otServerRegisterUniqueService(otInstance *            aInstance,
+                                      const otServiceConfig * aConfig,
+                                      otServiceUpdateCallback aServiceUpdateCallback,
+                                      otServerCompareCallback aServerCompareCallback,
+                                      void *                  aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetUniqueService().AddService(
-        aConfig->mEnterpriseNumber, &aConfig->mServiceData[0], aConfig->mServiceDataLength,
-        aConfig->mServerConfig.mStable, &aConfig->mServerConfig.mServerData[0],
-        aConfig->mServerConfig.mServerDataLength, aCallback);
+    return instance.GetThreadNetif().GetUniqueServiceManager().RegisterService(aConfig, aServiceUpdateCallback,
+                                                                               aServerCompareCallback, aContext);
 }
 
-otError otServerRemoveUniqueService(otInstance *aInstance,
-                                    uint32_t    aEnterpriseNumber,
-                                    uint8_t *   aServiceData,
-                                    uint8_t     aServiceDataLength)
+otError otServerUnregisterUniqueService(otInstance *   aInstance,
+                                        uint32_t       aEnterpriseNumber,
+                                        const uint8_t *aServiceData,
+                                        uint8_t        aServiceDataLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetUniqueService().RemoveService(aEnterpriseNumber, aServiceData,
-                                                                      aServiceDataLength);
+    return instance.GetThreadNetif().GetUniqueServiceManager().UnregisterService(aEnterpriseNumber, aServiceData,
+                                                                                 aServiceDataLength);
 }
-
-otError otServerGetNextUniqueService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
-
-    error = instance.GetThreadNetif().GetUniqueService().GetNextService(aIterator, aConfig);
-
-exit:
-    return error;
-}
-
-otError otServerGetNextUniqueLeaderService(otInstance *           aInstance,
-                                           otNetworkDataIterator *aIterator,
-                                           otServiceConfig *      aConfig)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
-
-    error = instance.GetThreadNetif().GetUniqueService().GetNextLeaderService(aIterator, aConfig);
-
-exit:
-    return error;
-}
-
 #endif // OPENTHREAD_ENABLE_SERVICE

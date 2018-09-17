@@ -81,17 +81,26 @@ typedef struct otServiceConfig
 } otServiceConfig;
 
 /**
- * This method indicates whether or not the given Server attributes are preferred.
+ * This function pointer is called when comparing two servers.
  *
  * @param[in]  aServerA  A pointer to the Server A object.
  * @param[in]  aServerB  A pointer to the Server B object.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
- * @retval 1   If server A is preferred.
- * @retval 0   If server A and B have equal preference.
- * @retval -1  If server B is preferred.
+ * @retval TRUE  If server A is preferred.
+ * @retval FALSE If server B is preferred.
  *
  */
-typedef int (*otServerCompareCallback)(const otServerConfig *aServerA, const otServerConfig *aServerB);
+typedef bool (*otServerCompareCallback)(const otServerConfig *aServerA, const otServerConfig *aServerB, void *aContext);
+
+/**
+ * This function pointer is called when the server of the servive is updated.
+ *
+ * @param[in]  aConfig   A pointer to a Service object. NULL means no server provides the service.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otServiceUpdateCallback)(const otServiceConfig *aConfig, void *aContext);
 
 /**
  * This method provides a full or stable copy of the local Thread Network Data.
@@ -187,76 +196,48 @@ OTAPI otError OTCALL otServerGetNextLeaderService(otInstance *           aInstan
 OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
 
 /**
- * Add a service configuration to the unique Network Data. Register the service to the leader if no server provides
- * the service.
+ * This function registers a unique service to the Leader.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aConfig   A pointer to the service configuration.
- * @param[in]  aCallback A pointer to a function called when comparing the servers.
+ * The memory pointed by @p aConfig must not be freed or modified before calling 'RemoveService()'.
  *
- * @retval OT_ERROR_NONE          Successfully added the configuration to the unique Network Data.
+ * @param[in]  aInstance              A pointer to an OpenThread instance.
+ * @param[in]  aConfig                A pointer to the service configuration.
+ * @param[in]  aServiceUpdateCallback A pointer to a function that is called when the server changes.
+ * @param[in]  aServerCompareCallback A pointer to a function for comparing servers.
+ * @param[in]  aContext               A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE          Successfully added and registered the service configuration.
  * @retval OT_ERROR_INVALID_ARGS  One or more configuration parameters were invalid.
- * @retval OT_ERROR_NO_BUFS       Not enough room is available to add the configuration to the unique Network Data.
+ * @retval OT_ERROR_NO_BUFS       Not enough room is available to add the service configuration.
  *
  * @sa otServerRemoveUniqueService
  *
  */
-OTAPI otError OTCALL otServerAddUniqueService(otInstance *            aInstance,
-                                              const otServiceConfig * aConfig,
-                                              otServerCompareCallback aCallback);
+OTAPI otError OTCALL otServerRegisterUniqueService(otInstance *            aInstance,
+                                                   const otServiceConfig * aConfig,
+                                                   otServiceUpdateCallback aServiceUpdateCallback,
+                                                   otServerCompareCallback aServerCompareCallback,
+                                                   void *                  aContext);
 
 /**
- * Remove a service configuration from the unique Network Data. Unregister the service form the leader if the server
- * has registered the service.
+ * This function unregisters the unique service to the Leader.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
- * @param[in]  aEnterpriseNumber  Enterprise Number of the service entry to be deleted.
+ * @param[in]  aEnterpriseNumber  Enterprise Number of the service to be deleted.
  * @param[in]  aServiceData       A pointer to an Service Data to look for during deletion.
  * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
  *
- * @retval OT_ERROR_NONE       Successfully removed the configuration from the unique Network Data.
- * @retval OT_ERROR_NOT_FOUND  Could not find the service entry.
+ * @retval OT_ERROR_NONE       Successfully removed and unregistered the service configuration.
+ * @retval OT_ERROR_NOT_FOUND  Could not find the service service.
  *
  * @sa otServerAddService
  *
  */
-OTAPI otError OTCALL otServerRemoveUniqueService(otInstance *aInstance,
-                                                 uint32_t    aEnterpriseNumber,
-                                                 uint8_t *   aServiceData,
-                                                 uint8_t     aServiceDataLength);
 
-/**
- * This function gets the next service in the unique Network Data.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the service information will be placed.
- *
- * @retval OT_ERROR_NONE       Successfully found the next service.
- * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the unique Network Data.
- *
- */
-OTAPI otError OTCALL otServerGetNextUniqueService(otInstance *           aInstance,
-                                                  otNetworkDataIterator *aIterator,
-                                                  otServiceConfig *      aConfig);
-
-/**
- * This function gets the next service exists in both unique Network Data and leader Network Data.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the service information will be placed.
- *
- * @retval OT_ERROR_NONE       Successfully found the next service.
- * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in both unique Network Data and leader Network Data.
- *
- */
-OTAPI otError OTCALL otServerGetNextUniqueLeaderService(otInstance *           aInstance,
-                                                        otNetworkDataIterator *aIterator,
-                                                        otServiceConfig *      aConfig);
-
+OTAPI otError OTCALL otServerUnregisterUniqueService(otInstance *   aInstance,
+                                                     uint32_t       aEnterpriseNumber,
+                                                     const uint8_t *aServiceData,
+                                                     uint8_t        aServiceDataLength);
 /**
  * @}
  *

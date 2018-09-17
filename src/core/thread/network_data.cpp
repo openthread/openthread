@@ -526,6 +526,12 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
 exit:
     return rval;
 }
+
+bool NetworkData::ContainsService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+{
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength) != NULL;
+}
+
 #endif
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)

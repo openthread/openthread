@@ -224,7 +224,7 @@ SOURCES_COMMON                      = \
     utils/missing_strnlen.c           \
     utils/parse_cmdline.cpp           \
     utils/slaac_address.cpp           \
-    utils/unique_service.cpp          \
+    utils/unique_service_manager.cpp  \
     $(NULL)
 
 EXTRA_DIST                          = \
@@ -394,7 +394,7 @@ HEADERS_COMMON                      = \
     utils/jam_detector.hpp            \
     utils/parse_cmdline.hpp           \
     utils/slaac_address.hpp           \
-    utils/unique_service.hpp          \
+    utils/unique_service_manager.hpp  \
     utils/wrap_stdbool.h              \
     utils/wrap_stdint.h               \
     utils/wrap_string.h               \

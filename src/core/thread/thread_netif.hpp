@@ -79,7 +79,7 @@
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
 #if OPENTHREAD_ENABLE_SERVICE
-#include "utils/unique_service.hpp"
+#include "utils/unique_service_manager.hpp"
 #endif // OPENTHREAD_ENABLE_SERVICE
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -268,12 +268,12 @@ public:
 
 #if OPENTHREAD_ENABLE_SERVICE
     /**
-     * This method returns a reference to the unique service object.
+     * This method returns a reference to the unique service manager object.
      *
-     * @returns A reference to the unique service object.
+     * @returns A reference to the unique service manager object.
      *
      */
-    Utils::UniqueService &GetUniqueService(void) { return mUniqueService; }
+    Utils::UniqueServiceManager &GetUniqueServiceManager(void) { return mUniqueServiceManager; }
 #endif // OPENTHREAD_ENABLE_SERVICE
 
     /**
@@ -480,7 +480,7 @@ private:
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 #if OPENTHREAD_ENABLE_SERVICE
-    Utils::UniqueService mUniqueService;
+    Utils::UniqueServiceManager mUniqueServiceManager;
 #endif // OPENTHREAD_ENABLE_SERVICE
     NetworkData::Leader mNetworkDataLeader;
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
