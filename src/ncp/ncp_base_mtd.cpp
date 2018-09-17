@@ -221,11 +221,6 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RSSI>(void)
-{
-    return mEncoder.WriteInt8(otPlatRadioGetRssi(mInstance));
-}
-
 otError NcpBase::CommandHandler_NET_SAVE(uint8_t aHeader)
 {
     return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
@@ -656,15 +651,10 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
 {
-    uint8_t         numEntries = 0;
-    const uint16_t *ports      = otIp6GetUnsecurePorts(mInstance, &numEntries);
-    otError         error      = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
     // First, we need to remove all of the current assisting ports.
-    for (; numEntries != 0; ports++, numEntries--)
-    {
-        SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, *ports));
-    }
+    otIp6RemoveAllUnsecurePorts(mInstance);
 
     while (mDecoder.GetRemainingLengthInStruct() >= sizeof(uint16_t))
     {

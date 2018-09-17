@@ -41,21 +41,30 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    diag.c                                  \
     flash.c                                 \
     frame_queue.cpp                         \
-    hdlc.cpp                                \
     logging.c                               \
     misc.c                                  \
     radio_spinel.cpp                        \
     random.c                                \
     settings.cpp                            \
     spi-stubs.c                             \
-    spinel.c                                \
     sim.c                                   \
     system.c                                \
     uart.c                                  \
     $(NULL)
+
+INC_NCP_SOURCES                           = \
+    inc_spinel.c                            \
+    inc_hdlc.cpp                            \
+    $(NULL)
+
+nodist_libopenthread_posix_a_SOURCES      = \
+    $(INC_NCP_SOURCES)                      \
+    $(NULL)
+
+inc_%: ../../ncp/%
+	echo '#include "$<"' > $@
 
 noinst_HEADERS                            = \
     flash.h                                 \
@@ -73,5 +82,21 @@ PRETTY_FILES                              = \
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
+
+check_PROGRAMS = test-frame-queue
+
+test_frame_queue_CPPFLAGS                 = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
+    -DSELF_TEST                             \
+    $(NULL)
+
+test_frame_queue_SOURCES                  = \
+    frame_queue.cpp                         \
+    $(NULL)
+
+TESTS                                     = \
+    test-frame-queue                        \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

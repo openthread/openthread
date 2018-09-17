@@ -34,12 +34,19 @@ EXTRA_DIST                                        = \
 
 # Pull in the sources that comprise the OpenThread NCP library.
 
-lib_LIBRARIES                                     = \
-    libopenthread-ncp-mtd.a                         \
-    libopenthread-ncp-ftd.a                         \
-    libopenthread-ncp-radio.a                       \
-    $(NULL)
+lib_LIBRARIES                                     = $(NULL)
 
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                                    += libopenthread-ncp-ftd.a
+endif
+
+if OPENTHREAD_ENABLE_MTD
+lib_LIBRARIES                                    += libopenthread-ncp-mtd.a
+endif
+
+if OPENTHREAD_ENABLE_RADIO_ONLY
+lib_LIBRARIES                                    += libopenthread-ncp-radio.a
+endif
 
 COMMON_CPPFLAGS                                   = \
     -I$(top_srcdir)/include                         \
@@ -127,7 +134,7 @@ include_HEADERS                                   = \
 
 if OPENTHREAD_BUILD_TESTS
 
-noinst_PROGRAMS                                   = spinel-test
+check_PROGRAMS                                    = spinel-test
 spinel_test_SOURCES                               = spinel.c
 spinel_test_CFLAGS                                = \
     $(COMMON_CPPFLAGS)                              \

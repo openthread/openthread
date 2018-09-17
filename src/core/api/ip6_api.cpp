@@ -221,6 +221,13 @@ otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
     return instance.GetThreadNetif().GetIp6Filter().RemoveUnsecurePort(aPort);
 }
 
+void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetIp6Filter().RemoveAllUnsecurePorts();
+}
+
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

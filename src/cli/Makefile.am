@@ -108,10 +108,15 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Unless and until these libraries do not "accidently" suck in
 # a "flavored" header file somewhere.
 
-lib_LIBRARIES =                       \
-    libopenthread-cli-mtd.a           \
-    libopenthread-cli-ftd.a           \
-    $(NULL)
+lib_LIBRARIES                       = $(NULL)
+
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                      += libopenthread-cli-ftd.a
+endif
+
+if OPENTHREAD_ENABLE_MTD
+lib_LIBRARIES                      += libopenthread-cli-mtd.a
+endif
 
 CPPFLAGS_COMMON =                     \
     -I$(top_srcdir)/include           \

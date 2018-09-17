@@ -28,14 +28,14 @@
 
 #include "platform-posix.h"
 
+#include <setjmp.h>
 #include <unistd.h>
 
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"
 
-extern int    gArgumentsCount;
-extern char **gArguments;
+extern jmp_buf gResetJump;
 
 static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
 bool                       gPlatformPseudoResetWasRequested;
@@ -43,31 +43,17 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-    int i = 0;
-    // Restart the process using execvp.
-    char *argv[gArgumentsCount + 1];
-
 #if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     gPlatformPseudoResetWasRequested = true;
     sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
 
 #else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 
-    for (i = 0; i < gArgumentsCount; ++i)
-    {
-        argv[i] = gArguments[i];
-    }
-
-    argv[gArgumentsCount] = NULL;
-
     otSysDeinit();
     platformUartRestore();
 
-    alarm(0);
-
-    execvp(argv[0], argv);
-    perror("reset failed");
-    exit(EXIT_FAILURE);
+    longjmp(gResetJump, 1);
+    assert(false);
 
 #endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 

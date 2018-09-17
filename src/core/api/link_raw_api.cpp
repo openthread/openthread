@@ -33,7 +33,9 @@
 
 #include "openthread-core-config.h"
 
+#include <string.h>
 #include <openthread/diag.h>
+#include <openthread/platform/diag.h>
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -41,6 +43,7 @@
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -53,15 +56,14 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mTimerReason(kTimerReasonNone)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     , mTimerMicro(aInstance, &LinkRaw::HandleTimer, this)
+#else
+    , mEnergyScanTimer(aInstance, &LinkRaw::HandleTimer, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     , mTransmitRetries(0)
     , mCsmaBackoffs(0)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    , mEnergyScanTask(aInstance, &LinkRaw::HandleEnergyScanTask, this)
-#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mReceiveDoneCallback(NULL)
     , mTransmitDoneCallback(NULL)
@@ -281,7 +283,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
                 InvokeTransmitDone(aFrame, NULL, error);
             }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-            goto exit;
+            ExitNow();
         }
     }
     else
@@ -305,7 +307,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
                 InvokeTransmitDone(aFrame, NULL, error);
             }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-            goto exit;
+            ExitNow();
         }
     }
 
@@ -343,18 +345,27 @@ otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLink
     {
         mEnergyScanDoneCallback = aCallback;
 
+        if (otPlatRadioGetCaps(&mInstance) & OT_RADIO_CAPS_ENERGY_SCAN)
+        {
+            // Do the HW offloaded energy scan
+            error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
+        }
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-        // Start listening on the scan channel
-        otPlatRadioReceive(&mInstance, aScanChannel);
+        else
+        {
+            // Start listening on the scan channel
+            otPlatRadioReceive(&mInstance, aScanChannel);
 
-        // Reset the RSSI value and start scanning
-        mEnergyScanRssi = kInvalidRssiValue;
-        mTimerReason    = kTimerReasonEnergyScanComplete;
-        mTimer.Start(aScanDuration);
-        mEnergyScanTask.Post();
+            // Reset the RSSI value and start scanning
+            mEnergyScanRssi = kInvalidRssiValue;
+            mTimerReason    = kTimerReasonEnergyScanComplete;
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+            mTimerMicro.Start(0);
 #else
-        // Do the HW offloaded energy scan
-        error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
+            mEnergyScanTimer.Start(0);
+#endif
+            mTimer.Start(aScanDuration);
+        }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     }
 
@@ -393,7 +404,19 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
 
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<LinkRaw>().HandleTimer();
+    LinkRaw &linkRaw = aTimer.GetOwner<LinkRaw>();
+
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+    // Energy scan uses a different timer for adding delay between RSSI samples.
+    if (&aTimer != &linkRaw.mTimer && linkRaw.mTimerReason == kTimerReasonEnergyScanComplete)
+    {
+        linkRaw.HandleEnergyScanTimer();
+    }
+    else
+#endif
+    {
+        linkRaw.HandleTimer();
+    }
 }
 
 void LinkRaw::HandleTimer(void)
@@ -483,15 +506,10 @@ void LinkRaw::StartCsmaBackoff(void)
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
-void LinkRaw::HandleEnergyScanTask(Tasklet &aTasklet)
+void LinkRaw::HandleEnergyScanTimer(void)
 {
-    aTasklet.GetOwner<LinkRaw>().HandleEnergyScanTask();
-}
-
-void LinkRaw::HandleEnergyScanTask(void)
-{
-    // Only process task if we are still energy scanning
-    if (mTimerReason == kTimerReasonEnergyScanComplete)
+    // Only process if we are still energy scanning
+    if (mTimer.IsRunning() && mTimerReason == kTimerReasonEnergyScanComplete)
     {
         int8_t rssi = otPlatRadioGetRssi(&mInstance);
 
@@ -504,9 +522,11 @@ void LinkRaw::HandleEnergyScanTask(void)
             }
         }
 
-        // Post another instance of tha task, since we are
-        // still doing the energy scan.
-        mEnergyScanTask.Post();
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        mTimerMicro.Start(kEnergyScanRssiSampleInterval);
+#else
+        mEnergyScanTimer.Start(kEnergyScanRssiSampleInterval);
+#endif
     }
 }
 
@@ -766,35 +786,94 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
 }
 
 #if OPENTHREAD_ENABLE_DIAG
+static otInstance *sDiagInstance;
+
 void otDiagInit(otInstance *aInstance)
 {
-    (void)aInstance;
+    sDiagInstance = aInstance;
 }
 
 void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aString;
-    (void)aOutput;
-    (void)aOutputMaxLen;
+    enum
+    {
+        kMaxArgs          = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
+        kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
+    };
+
+    otError error = OT_ERROR_NONE;
+    char    buffer[kMaxCommandBuffer];
+    char *  argVector[kMaxArgs];
+    uint8_t argCount = 0;
+
+    VerifyOrExit(strnlen(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
+
+    strcpy(buffer, aString);
+    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(buffer, argCount, argVector, kMaxArgs));
+    VerifyOrExit(argCount >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argVector[0], "power") == 0)
+    {
+        char * endptr;
+        int8_t power;
+
+        VerifyOrExit(argCount == 2, error = OT_ERROR_INVALID_ARGS);
+        power = static_cast<int8_t>(strtol(argVector[1], &endptr, 0));
+        VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+
+        otPlatDiagTxPowerSet(power);
+    }
+    else if (strcmp(argVector[0], "channel") == 0)
+    {
+        char *  endptr;
+        uint8_t channel;
+
+        VerifyOrExit(argCount == 2, error = OT_ERROR_INVALID_ARGS);
+        channel = static_cast<uint8_t>(strtol(argVector[1], &endptr, 0));
+        VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+
+        otPlatDiagChannelSet(channel);
+    }
+    else if (strcmp(argVector[0], "start") == 0)
+    {
+        otPlatDiagModeSet(true);
+    }
+    else if (strcmp(argVector[0], "stop") == 0)
+    {
+        otPlatDiagModeSet(false);
+    }
+    else
+    {
+        otPlatDiagProcess(sDiagInstance, argCount, argVector, aOutput, aOutputMaxLen);
+    }
+
+exit:
+    switch (error)
+    {
+    case OT_ERROR_NONE:
+        break;
+
+    default:
+        snprintf(aOutput, aOutputMaxLen, "failed: invalid command: %s\r\n", otThreadErrorToString(error));
+        break;
+    }
 }
 
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 {
-    (void)aInstance;
+    otPlatDiagAlarmCallback(aInstance);
 }
 
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
-    (void)aFrame;
-    (void)aError;
+    // notify OpenThread Diags module on host side
+    otPlatRadioTxDone(aInstance, aFrame, NULL, aError);
 }
 
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
-    (void)aFrame;
-    (void)aError;
+    // notify OpenThread Diags module on host side
+    otPlatRadioReceiveDone(aInstance, aFrame, aError);
 }
 #endif // OPENTHREAD_ENABLE_DIAG
 

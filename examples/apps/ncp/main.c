@@ -36,6 +36,15 @@
 
 #include "openthread-system.h"
 
+#if OPENTHREAD_EXAMPLES_POSIX
+#include <setjmp.h>
+#include <unistd.h>
+
+jmp_buf gResetJump;
+
+void __gcov_flush();
+#endif
+
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
@@ -56,6 +65,17 @@ void otTaskletsSignalPending(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *sInstance;
+
+#if OPENTHREAD_EXAMPLES_POSIX
+    if (setjmp(gResetJump))
+    {
+        alarm(0);
+#if OPENTHREAD_ENABLE_COVERAGE
+        __gcov_flush();
+#endif
+        execvp(argv[0], argv);
+    }
+#endif
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t   otInstanceBufferLength = 0;

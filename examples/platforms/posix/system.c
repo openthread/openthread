@@ -59,9 +59,6 @@ extern bool gPlatformPseudoResetWasRequested;
 static volatile bool gTerminate = false;
 
 #ifndef _WIN32
-int    gArgumentsCount = 0;
-char **gArguments      = NULL;
-
 static void handleSignal(int aSignal)
 {
     (void)aSignal;
@@ -89,9 +86,6 @@ void otSysInit(int aArgCount, char *aArgVector[])
 #ifndef _WIN32
     openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
-
-    gArgumentsCount = aArgCount;
-    gArguments      = aArgVector;
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);

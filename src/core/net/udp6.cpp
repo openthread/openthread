@@ -46,13 +46,18 @@ namespace ot {
 namespace Ip6 {
 
 UdpSocket::UdpSocket(Udp &aUdp)
+    : InstanceLocator(aUdp.GetInstance())
 {
-    mTransport = &aUdp;
+}
+
+Udp &UdpSocket::GetUdp(void)
+{
+    return GetInstance().GetIp6().GetUdp();
 }
 
 Message *UdpSocket::NewMessage(uint16_t aReserved)
 {
-    return static_cast<Udp *>(mTransport)->NewMessage(aReserved);
+    return GetUdp().NewMessage(aReserved);
 }
 
 otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
@@ -62,7 +67,7 @@ otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
     mHandler = aHandler;
     mContext = aContext;
 
-    return static_cast<Udp *>(mTransport)->AddSocket(*this);
+    return GetUdp().AddSocket(*this);
 }
 
 otError UdpSocket::Bind(const SockAddr &aSockAddr)
@@ -71,7 +76,7 @@ otError UdpSocket::Bind(const SockAddr &aSockAddr)
 
     if (GetSockName().mPort == 0)
     {
-        mSockName.mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
+        mSockName.mPort = GetUdp().GetEphemeralPort();
     }
 
     return OT_ERROR_NONE;
@@ -87,7 +92,7 @@ otError UdpSocket::Close(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = static_cast<Udp *>(mTransport)->RemoveSocket(*this));
+    SuccessOrExit(error = GetUdp().RemoveSocket(*this));
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
 
@@ -102,17 +107,6 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 
     messageInfoLocal = aMessageInfo;
 
-    if (messageInfoLocal.GetSockAddr().IsUnspecified())
-    {
-        messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
-    }
-
-    if (GetSockName().mPort == 0)
-    {
-        GetSockName().mPort = static_cast<Udp *>(mTransport)->GetEphemeralPort();
-    }
-    messageInfoLocal.SetSockPort(GetSockName().mPort);
-
     if (messageInfoLocal.GetPeerAddr().IsUnspecified())
     {
         VerifyOrExit(!GetPeerName().GetAddress().IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
@@ -126,7 +120,18 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
         messageInfoLocal.mPeerPort = GetPeerName().mPort;
     }
 
-    SuccessOrExit(error = static_cast<Udp *>(mTransport)->SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+    if (messageInfoLocal.GetSockAddr().IsUnspecified())
+    {
+        messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
+    }
+
+    if (GetSockName().mPort == 0)
+    {
+        GetSockName().mPort = GetUdp().GetEphemeralPort();
+    }
+    messageInfoLocal.SetSockPort(GetSockName().mPort);
+
+    SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
 
 exit:
     return error;

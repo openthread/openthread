@@ -629,11 +629,13 @@ void BorderAgent::HandleConnected(bool aConnected)
     }
     else
     {
-        ThreadNetif &netif = GetNetif();
+        ThreadNetif &     netif = GetNetif();
+        Coap::CoapSecure &coaps = netif.GetCoapSecure();
 
         otLogInfoMeshCoP(GetInstance(), "Commissioner disconnected");
         netif.GetIp6().GetUdp().RemoveReceiver(mProxyReceiver);
         netif.RemoveUnicastAddress(mCommissionerAloc);
+        coaps.Stop();
         mTimer.Start(kRestartDelay);
     }
 }
