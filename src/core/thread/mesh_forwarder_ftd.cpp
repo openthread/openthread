@@ -247,7 +247,7 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
     }
-    else if (message->GetPriority() == aPriority)
+    else
     {
         while (1)
         {

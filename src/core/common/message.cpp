@@ -167,12 +167,18 @@ exit:
     return (aNumBuffers < 0 || aNumBuffers <= GetFreeBufferCount()) ? OT_ERROR_NONE : OT_ERROR_NO_BUFS;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
-    return otPlatMessagePoolNumFreeBuffers(&GetInstance());
-}
+    uint16_t rval;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
+#else
+    rval = mNumFreeBuffers;
 #endif
+
+    return rval;
+}
 
 Message *MessagePool::Iterator::Next(void) const
 {

@@ -1276,17 +1276,13 @@ public:
      */
     Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
 
-        /**
-         * This method returns the number of free buffers.
-         *
-         * @returns The number of free buffers.
-         *
-         */
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * This method returns the number of free buffers.
+     *
+     * @returns The number of free buffers.
+     *
+     */
     uint16_t GetFreeBufferCount(void) const;
-#else
-    uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
-#endif
 
 private:
     enum
