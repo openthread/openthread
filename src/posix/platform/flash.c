@@ -65,7 +65,7 @@ otError utilsFlashInit(void)
 
     if (stat(path, &st) == -1)
     {
-        mkdir(path, 0777);
+        mkdir(path, 0775);
     }
 
     if (offset == NULL)
