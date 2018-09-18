@@ -65,7 +65,7 @@ otError utilsFlashInit(void)
 
     if (stat(path, &st) == -1)
     {
-        mkdir(path, 0775);
+        mkdir(path, 0777);
     }
 
     if (offset == NULL)
@@ -80,7 +80,7 @@ otError utilsFlashInit(void)
         create = true;
     }
 
-    sFlashFd = open(fileName, O_RDWR | O_CREAT, 0666);
+    sFlashFd = open(fileName, O_RDWR | O_CREAT, 0600);
     lseek(sFlashFd, 0, SEEK_SET);
 
     otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
