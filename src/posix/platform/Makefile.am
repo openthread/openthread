@@ -41,7 +41,6 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    flash.c                                 \
     frame_queue.cpp                         \
     logging.c                               \
     misc.c                                  \
@@ -67,7 +66,6 @@ inc_%: ../../ncp/%
 	echo '#include "$<"' > $@
 
 noinst_HEADERS                            = \
-    flash.h                                 \
     frame_queue.hpp                         \
     openthread-system.h                     \
     platform-posix.h                        \
@@ -83,7 +81,7 @@ if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
-check_PROGRAMS = test-frame-queue
+check_PROGRAMS = test-frame-queue test-settings
 
 test_frame_queue_CPPFLAGS                 = \
     -I$(top_srcdir)/include                 \
@@ -95,8 +93,19 @@ test_frame_queue_SOURCES                  = \
     frame_queue.cpp                         \
     $(NULL)
 
+test_settings_CPPFLAGS                    = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
+    -DSELF_TEST                             \
+    $(NULL)
+
+test_settings_SOURCES                     = \
+    settings.cpp                            \
+    $(NULL)
+
 TESTS                                     = \
     test-frame-queue                        \
+    test-settings                           \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

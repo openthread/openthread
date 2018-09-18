@@ -240,4 +240,4 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif
+#endif // SELF_TEST

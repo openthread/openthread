@@ -183,7 +183,6 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/random.c                             \
     src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
-    src/posix/platform/flash.c                              \
     src/posix/platform/spi-stubs.c                          \
     src/posix/platform/frame_queue.cpp                      \
     src/posix/platform/radio_spinel.cpp                     \
