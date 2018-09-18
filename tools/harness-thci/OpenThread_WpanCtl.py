@@ -39,6 +39,7 @@ import logging
 from Queue import Queue
 
 import serial
+import paramiko
 from IThci import IThci
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
@@ -69,13 +70,19 @@ class OpenThread_WpanCtl(IThci):
         try:
             self.UIStatusMsg = ''
             self.mac = kwargs.get('EUI')
-            self.port = kwargs.get('SerialPort')
             self.handle = None
             self.AutoDUTEnable = False
             self._is_net = False                  # whether device is through ser2net
             self.logStatus = {'stop':'stop', 'running':'running', 'pauseReq':'pauseReq', 'paused':'paused'}
             self.joinStatus = {'notstart':'idle', 'ongoing':'discover', 'succeed':'joined', 'failed':'failed'}
             self.logThreadStatus = self.logStatus['stop']
+            self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else "usb"
+            if self.connectType == 'ip':
+                self.dutIpv4 = kwargs.get('TelnetIP')
+                self.dutPort = kwargs.get('TelnetPort')
+                self.port = self.dutIpv4 + ":" + self.dutPort
+            else:
+                self.port = kwargs.get('SerialPort')
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('initialize() Error: ' + str(e))
@@ -119,9 +126,6 @@ class OpenThread_WpanCtl(IThci):
         if self._is_net:
             return self.handle.recv(size)
         else:
-            #read_data =  self.handle.read(size)
-            #print "read_data : %s" % read_data
-            #return read_data
             return self.handle.read(size)
 
     def _write(self, data):
@@ -192,46 +196,78 @@ class OpenThread_WpanCtl(IThci):
             while self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']:
                 pass
 
+        ssh_stdin = None
+        ssh_stdout = None
+        ssh_stderr = None
         try:
             # command retransmit times
             retry_times = 3
             while retry_times > 0:
                 retry_times -= 1
                 try:
-                    self._sendline(cmd)
-                    self._expect(cmd)
+                    if self._is_net:
+                        ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(cmd)
+                    else:
+                        self._sendline(cmd)
+                        self._expect(cmd)
                 except Exception as e:
                     logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
                     if retry_times == 0:
                         raise
-                else:
-                    break
+                    else:
+                        break
 
             line = None
             response = []
             retry_times = 10
-            while retry_times > 0:
-                line = self._readline()
-                print "read line: %s" % line
-                logging.info('%s: the read line is[%s]', self.port, line)
-                if line:
-                    response.append(line)
-                    print "response: %s" % response
-                    if re.match(WPAN_CARRIER_PROMPT, line):
-                        break
-                    elif re.search(r'Not\s+Found|failed\s+with\s+error', line, re.M|re.I):
-                        print "Command failed"
-                        return 'Fail'
+            stdout_lines = []
+            stderr_lines = []
+            if self._is_net:
+
+                stdout_lines = ssh_stdout.readlines()
+                stderr_lines = ssh_stderr.readlines()
+                if stderr_lines:
+                    for stderr_line in stderr_lines:
+                        if re.search(r'Not\s+Found|failed\s+with\s+error', stderr_line.strip(), re.M | re.I):
+                            print "Command failed:" + stderr_line
+                            return 'Fail'
+                        print "Got line: " + stderr_line
+                        logging.info('%s: the read line is[%s]', self.port, stderr_line)
+                        response.append(str(stderr_line.strip()))
+                elif stdout_lines:
+                    for stdout_line in stdout_lines:
+                        logging.info('%s: the read line is[%s]', self.port, stdout_line)
+                        if re.search(r'Not\s+Found|failed\s+with\s+error', stdout_line.strip(), re.M | re.I):
+                            print "Command failed"
+                            return 'Fail'
+                        print "Got line: " + stdout_line
+                        logging.info('%s: send command[%s] done!', self.port, cmd)
+                        response.append(str(stdout_line.strip()))
+                response.append(WPAN_CARRIER_PROMPT)
+                return response
+            else:
+                while retry_times > 0:
+                    line = self._readline()
+                    print "read line: %s" % line
+                    logging.info('%s: the read line is[%s]', self.port, line)
+                    if line:
+                        response.append(line)
+                        print "response: %s" % response
+                        if re.match(WPAN_CARRIER_PROMPT, line):
+                            break
+                        elif re.search(r'Not\s+Found|failed\s+with\s+error', line, re.M | re.I):
+                            print "Command failed"
+                            return 'Fail'
+                        else:
+                            retry_times -= 1
+                            time.sleep(0.1)
                     else:
                         retry_times -= 1
-                        time.sleep(0.1)
-                else:
-                    retry_times -= 1
-                    time.sleep(1)
-            if not re.match(WPAN_CARRIER_PROMPT, line):
-                raise Exception('%s: failed to find end of response' % self.port)
-            logging.info('%s: send command[%s] done!', self.port, cmd)
-            return response
+                        time.sleep(1)
+                if not re.match(WPAN_CARRIER_PROMPT, line):
+                    raise Exception('%s: failed to find end of response' % self.port)
+                logging.info('%s: send command[%s] done!', self.port, cmd)
+                return response
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
@@ -698,8 +734,8 @@ class OpenThread_WpanCtl(IThci):
         return self.__sendCommand(WPANCTL_CMD + 'getprop -v Commissioner:SessionId')[0]
 
     def _connect(self):
-        print 'My port is %s' % self.port
-        if self.port.startswith('COM'):
+        if self.connectType == 'usb':
+            print 'My port is %s' % self.port
             self.handle = serial.Serial(self.port, 115200, timeout=0.1)
             input_data = self.handle.read(self.handle.inWaiting())
             if not input_data:
@@ -717,15 +753,19 @@ class OpenThread_WpanCtl(IThci):
             time.sleep(3)
             self._is_net = False
 
-        elif ':' in self.port:
-            host, port = self.port.split(':')
-            self.handle = socket.create_connection((host, port))
-            self.handle.setblocking(0)
-            self._is_net = True
+        elif self.connectType == 'ip':
+            print "My IP: %s Port: %s" % (self.dutIpv4, self.dutPort)
+            try:
+                self.handle = paramiko.SSHClient()
+                self.handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                self.handle.connect(self.dutIpv4, port=self.dutPort, username=WPAN_CARRIER_USER, password=WPAN_CARRIER_PASSWD)
+                self.handle.exec_command("stty cols 128")
+                self._is_net = True
+            except Exception, e:
+                ModuleHelper.WriteIntoDebugLogger('connect to ssh Error: ' + str(e))
         else:
             raise Exception('Unknown port schema')
         self.UIStatusMsg = self.getVersionNumber()
-
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -1304,13 +1344,18 @@ class OpenThread_WpanCtl(IThci):
 
     def reset(self):
         """factory reset"""
+        """factory reset"""
         print '%s call reset' % self.port
         try:
-            self._sendline(WPANCTL_CMD + 'leave')
+            if self._is_net:
+                self.__sendCommand(WPANCTL_CMD + 'leave')
+            else:
+                self._sendline(WPANCTL_CMD + 'leave')
+
             self.__sendCommand(WPANCTL_CMD + 'dataset erase')
             time.sleep(2)
-            self._read()
-
+            if not self._is_net:
+                self._read()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('reset() Error: ' + str(e))
 
