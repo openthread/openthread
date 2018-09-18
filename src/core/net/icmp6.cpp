@@ -159,7 +159,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     if (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest)
     {
-        ExitNow(error = HandleEchoRequest(aMessage, aMessageInfo));
+        SuccessOrExit(error = HandleEchoRequest(aMessage, aMessageInfo));
     }
 
     aMessage.MoveOffset(sizeof(icmp6Header));
