@@ -39,15 +39,12 @@
 #include <stdlib.h>
 #include <sys/select.h>
 
-#include <openthread/instance.h>
-#include <openthread/thread.h>
 #include <openthread/udp.h>
 #include <openthread/platform/udp.h>
 
 #include "common/code_utils.hpp"
 
-static int         sPlatNetifIndex = 0;
-static otInstance *sInstance       = NULL;
+static int sPlatNetifIndex = 0;
 
 static void *const  kInvalidHandle = reinterpret_cast<void *const>(-1);
 static const size_t kMaxUdpSize    = 1280;
@@ -151,7 +148,7 @@ exit:
     {
         if (error == OT_ERROR_FAILED)
         {
-            perror("otUdpBind");
+            perror("otPlatUdpBind");
             closeFd(fd);
         }
     }
@@ -255,7 +252,7 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
     }
 }
 
-void platformUdpInit(otInstance *aInstance)
+void platformUdpInit(void)
 {
     const char *platformNetif = getenv("PLATFORM_NETIF");
     sPlatNetifIndex           = if_nametoindex(platformNetif);
@@ -264,8 +261,6 @@ void platformUdpInit(otInstance *aInstance)
     {
         perror("if_nametoindex");
     }
-
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
 static otError readSocket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
@@ -319,12 +314,6 @@ exit:
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
-    if (sInstance == NULL)
-    {
-        sInstance = aInstance;
-        platformUdpInit(aInstance);
-    }
-
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
         int fd = GetFdFromHandle(socket->mHandle);

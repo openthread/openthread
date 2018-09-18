@@ -316,6 +316,12 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 #endif
 
 /**
+ * This function initializes platform UDP driver.
+ *
+ */
+void platformUdpInit(void);
+
+/**
  * This function performs platform UDP driver processing.
  *
  * @param[in]   aInstance   The OpenThread instance structure.

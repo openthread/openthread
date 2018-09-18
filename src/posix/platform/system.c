@@ -107,6 +107,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig);
     platformRandomInit();
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    platformUdpInit();
+#endif
 }
 
 bool otSysPseudoResetWasRequested(void)
