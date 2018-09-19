@@ -39,6 +39,7 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/new.hpp"
 #include "utils/slaac_address.hpp"
 
 using namespace ot;
@@ -260,4 +261,9 @@ exit:
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
 {
     return static_cast<const Ip6::Address *>(aAddress)->IsUnspecified();
+}
+
+void otMessageInfoInit(otMessageInfo *aMessageInfo)
+{
+    new (aMessageInfo) Ip6::MessageInfo();
 }
