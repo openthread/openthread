@@ -57,11 +57,7 @@ matrix:
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
-      language: android
-      android:
-        components:
-          - tools
-          - platform-tools
+      os: linux
     - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       addons:
