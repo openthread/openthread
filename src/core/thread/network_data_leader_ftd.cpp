@@ -438,7 +438,8 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                            bool &   aStable,
                            uint8_t *aTlvs,
                            uint8_t  aTlvsLength,
-                           bool     aExactMatch)
+                           bool     aExactMatch,
+                           bool     aAllowOtherEntries)
 {
     otError            error = OT_ERROR_NONE;
     NetworkDataTlv *   cur   = reinterpret_cast<NetworkDataTlv *>(aTlvs);
@@ -494,6 +495,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                                 aStable = true;
                             }
                         }
+                        else
+                        {
+                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
+                        }
                     }
 
                     break;
@@ -515,6 +520,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                                 aStable = true;
                             }
                         }
+                        else
+                        {
+                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
+                        }
                     }
 
                     break;
@@ -523,7 +532,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     break;
                 }
 
-                if (aIn && aStable)
+                if (aIn && aStable && aAllowOtherEntries)
                 {
                     ExitNow();
                 }
@@ -565,6 +574,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                             aStable = true;
                         }
                     }
+                    else
+                    {
+                        VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
+                    }
 
                     break;
 
@@ -572,7 +585,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     break;
                 }
 
-                if (aIn && aStable)
+                if (aIn && aStable && aAllowOtherEntries)
                 {
                     ExitNow();
                 }
@@ -740,10 +753,14 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     bool    rlocIn        = false;
     bool    rlocStable    = false;
     bool    stableUpdated = false;
+    bool    unused;
     uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
-    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, true);
+    // Verify that `aTlvs` only contains entries matching `aRloc16`.
+    SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, true, false));
+
+    RlocLookup(aRloc16, rlocIn, unused, mTlvs, mLength, true);
 
     if (rlocIn)
     {
@@ -767,8 +784,6 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     }
     else
     {
-        SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, true));
-
         // No old data to be preserved, lets avoid memcpy() & FindService calls.
         SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, 0));
 

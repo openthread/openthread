@@ -196,7 +196,8 @@ private:
                        bool &   aStable,
                        uint8_t *aTlvs,
                        uint8_t  aTlvsLength,
-                       bool     aExactMatch);
+                       bool     aExactMatch,
+                       bool     aAllowOtherEntries = true);
 
     bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
 
