@@ -40,10 +40,13 @@ at_exit() {
     killall socat
 }
 
-main() {
+build() {
     ./bootstrap
     COVERAGE=1 make -f examples/Makefile-posix
     COVERAGE=1 make -f src/posix/Makefile-posix PLATFORM_UDP=1
+}
+
+check() {
     trap at_exit INT TERM EXIT
 
     SOCAT_OUTPUT=/tmp/ot-socat
@@ -93,6 +96,18 @@ main() {
 
     # Leave so that code coverage will be flushed
     sudo wpanctl leave || true
+}
+
+main() {
+    case $1 in
+        check)
+            check
+            ;;
+        *)
+            build
+            check
+            ;;
+    esac
 }
 
 main "$@"
