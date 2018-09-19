@@ -106,7 +106,9 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
 
+    assert(sPlatNetifIndex != 0);
     assert(fd == -1);
+    VerifyOrExit(sPlatNetifIndex != 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(fd == -1, error = OT_ERROR_ALREADY);
 
     fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
@@ -234,6 +236,8 @@ exit:
 
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
 {
+    VerifyOrExit(sPlatNetifIndex != 0);
+
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
         int fd = GetFdFromHandle(socket->mHandle);
@@ -250,6 +254,9 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
             *aMaxFd = fd;
         }
     }
+
+exit:
+    return;
 }
 
 void platformUdpInit(void)
@@ -314,6 +321,8 @@ exit:
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
+    VerifyOrExit(sPlatNetifIndex != 0);
+
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
         int fd = GetFdFromHandle(socket->mHandle);
@@ -353,4 +362,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
             break;
         }
     }
+
+exit:
+    return;
 }
