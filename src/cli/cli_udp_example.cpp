@@ -140,7 +140,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     otMessage *   message = NULL;
     int           curArg  = 0;
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
+    otMessageInfoInit(&messageInfo);
 
     VerifyOrExit(argc == 1 || argc == 3, error = OT_ERROR_INVALID_ARGS);
 

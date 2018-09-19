@@ -301,7 +301,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         SuccessOrExit(error = otMessageAppend(message, argv[4], payloadLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
+    otMessageInfoInit(&messageInfo);
     messageInfo.mPeerAddr    = coapDestinationIp;
     messageInfo.mPeerPort    = OT_DEFAULT_COAP_PORT;
     messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;

@@ -163,6 +163,8 @@ typedef struct otSockAddr
 /**
  * This structure represents the local and peer IPv6 socket addresses.
  *
+ * @note This structure must be initialized with otMessageInfoInit() before using.
+ *
  */
 typedef struct otMessageInfo
 {
@@ -180,6 +182,16 @@ typedef struct otMessageInfo
      */
     const void *mLinkInfo;
 } otMessageInfo;
+
+/**
+ * This function initializes the message info object.
+ *
+ * This function will set hop limit to #OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT.
+ *
+ * @param[out]  aMessageInfo   A pointer to the message info object.
+ *
+ */
+void otMessageInfoInit(otMessageInfo *aMessageInfo);
 
 /**
  * This function brings up the IPv6 interface.
