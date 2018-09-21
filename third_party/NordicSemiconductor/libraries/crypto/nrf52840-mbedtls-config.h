@@ -33,6 +33,7 @@
 #endif // DISABLE_CC310
 
 #define MBEDTLS_ECDH_C
+#define MBEDTLS_ECDSA_C
 
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe549")

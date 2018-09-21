@@ -191,12 +191,15 @@ private:
     otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, bool aExactMatch);
     otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, bool aExactMatch);
 
+    static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, bool aExactMatch);
+
     otError RlocLookup(uint16_t aRloc16,
                        bool &   aIn,
                        bool &   aStable,
                        uint8_t *aTlvs,
                        uint8_t  aTlvsLength,
-                       bool     aExactMatch);
+                       bool     aExactMatch,
+                       bool     aAllowOtherEntries = true);
 
     bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
 
