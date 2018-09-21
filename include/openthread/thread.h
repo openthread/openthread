@@ -735,8 +735,7 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
 void otThreadResetMleCounters(otInstance *aInstance);
 
 /**
- * This function pointer is called everytime a parent response frame is received to notify the caller about certain
- * stats.
+ * This function pointer is called every time an MLE Parent Response message is received.
  *
  * @param[in]  aStats    pointer to a location on stack holding the stats data.
  * @param[in]  aContext  A pointer to callback client-specific context.
