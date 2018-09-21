@@ -183,8 +183,7 @@ typedef struct otMleCounters
 } otMleCounters;
 
 /**
- * This structure represents the MLE Parent Response data that a client can receive on each successful Parent
- * Response message received.
+ * This structure represents the MLE Parent Response data.
  *
  */
 typedef struct otThreadParentResponseInfo
@@ -747,7 +746,7 @@ typedef void(OTCALL *otThreadParentResponseCallback)(otThreadParentResponseInfo 
  * This function registers a callback to receive MLE Parent Response data.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called when receiving an MLE Parent Response message.
+ * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Parent Response message.
  * @param[in]  aContext   A pointer to callback client-specific context.
  *
  * @retval OT_ERROR_NONE              On successful registration
