@@ -169,17 +169,6 @@ public:
     MeshCoP::Dtls &GetDtls(void);
 
     /**
-     * This method sets the connected callback to indicate, when
-     * a Client connect to the CoAP Secure server.
-     *
-     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
-     * established.
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     *
-     */
-    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
-
-    /**
      * This method sets the PSK.
      *
      * @param[in]  aPSK        A pointer to the PSK.
@@ -263,6 +252,17 @@ public:
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 #endif // MBEDTLS_BASE64_C
+
+    /**
+     * This method sets the connected callback to indicate, when
+     * a Client connect to the CoAP Secure server.
+     *
+     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
+     * established.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     */
+    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
 
     /**
      * This method set the authentication mode for the coap secure connection.

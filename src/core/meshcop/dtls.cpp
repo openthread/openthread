@@ -73,6 +73,7 @@ Dtls::Dtls(Instance &aInstance)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     mPreSharedKey         = NULL;
     mPreSharedKeyIdentity = NULL;
@@ -94,6 +95,7 @@ Dtls::Dtls(Instance &aInstance)
     mbedtls_x509_crt_init(&mOwnCert);
     mbedtls_pk_init(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     memset(mCipherSuites, 0, sizeof(mCipherSuites));
     memset(mPsk, 0, sizeof(mPsk));
@@ -169,6 +171,7 @@ otError Dtls::Start(bool             aClient,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     if (mVerifyPeerCertificate && mCipherSuites[0] == MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8)
     {
         mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_REQUIRED);
@@ -177,6 +180,7 @@ otError Dtls::Start(bool             aClient,
     {
         mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
@@ -206,10 +210,12 @@ otError Dtls::Start(bool             aClient,
     {
         rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        SetApplicationCoapSecureKeys();
+        rval = SetApplicationCoapSecureKeys();
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     VerifyOrExit(rval == 0);
 
     mStarted = true;
@@ -219,16 +225,19 @@ otError Dtls::Start(bool             aClient,
     {
         otLogInfoMeshCoP(GetInstance(), "DTLS started");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "Application Coap Secure DTLS started");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 exit:
     return MapError(rval);
 }
 
-otError Dtls::SetApplicationCoapSecureKeys(void)
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+int Dtls::SetApplicationCoapSecureKeys(void)
 {
     int rval = 0;
 
@@ -274,13 +283,15 @@ otError Dtls::SetApplicationCoapSecureKeys(void)
     }
 
 exit:
-    return MapError(rval);
+    return rval;
 }
 
 void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 {
     mVerifyPeerCertificate = aVerifyPeerCertificate;
 }
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 otError Dtls::Stop(void)
 {
@@ -304,11 +315,13 @@ void Dtls::Close(void)
     mbedtls_entropy_free(&mEntropy);
     mbedtls_ssl_cookie_free(&mCookieCtx);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     mbedtls_x509_crt_free(&mCaChain);
     mbedtls_x509_crt_free(&mOwnCert);
     mbedtls_pk_free(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     if (mConnectedHandler != NULL)
     {
@@ -339,6 +352,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 otError Dtls::SetCertificate(const uint8_t *aX509Certificate,
@@ -423,6 +437,7 @@ exit:
 }
 
 #endif // MBEDTLS_BASE64_C
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
 {
@@ -483,10 +498,12 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     error = mSendHandler(mContext, aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
 
@@ -524,10 +541,12 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsReceive");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
 
@@ -557,10 +576,12 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsGetTimer");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     if (!mTimerSet)
     {
@@ -593,10 +614,12 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
     {
         otLogInfoMeshCoP(GetInstance(), "Dtls::SetTimer");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "Dtls::ApplicationCoapSecure SetTimer");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     if (aFinish == 0)
     {
@@ -641,10 +664,12 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     {
         otLogInfoMeshCoP(GetInstance(), "Generated KEK");
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         otLogInfoCoap(GetInstance(), "ApplicationCoapSecure Generated KEK");
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     OT_UNUSED_VARIABLE(aMasterSecret);
     return 0;
@@ -858,6 +883,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
             break;
         }
     }
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
         switch (level)
@@ -877,6 +903,7 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
             break;
         }
     }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 }
 
 } // namespace MeshCoP

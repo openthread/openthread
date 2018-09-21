@@ -148,12 +148,6 @@ MeshCoP::Dtls &CoapSecure::GetDtls(void)
     return GetNetif().GetDtls();
 }
 
-void CoapSecure::SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
-{
-    mConnectedCallback = aCallback;
-    mConnectedContext  = aContext;
-}
-
 otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
     return GetNetif().GetDtls().SetPsk(aPsk, aPskLength);
@@ -192,6 +186,12 @@ otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *a
     return GetNetif().GetDtls().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
 #endif // MBEDTLS_BASE64_C
+
+void CoapSecure::SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
+{
+    mConnectedCallback = aCallback;
+    mConnectedContext  = aContext;
+}
 
 void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
 {

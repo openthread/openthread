@@ -432,6 +432,7 @@ void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
     SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
 const char *Header::CodeToString(void) const
 {
     const char *mCodeString;
@@ -526,6 +527,7 @@ const char *Header::CodeToString(void) const
 
     return mCodeString;
 }
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 } // namespace Coap
 } // namespace ot

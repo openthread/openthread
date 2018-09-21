@@ -44,6 +44,7 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/base64.h>
 #include <mbedtls/x509.h>
@@ -51,6 +52,7 @@
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -163,6 +165,7 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
@@ -248,6 +251,7 @@ public:
      *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
@@ -311,13 +315,15 @@ public:
 private:
     static otError MapError(int rval);
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     * @retval mbedtls error, 0 if successfully.
      *
      */
-    otError SetApplicationCoapSecureKeys(void);
+    int SetApplicationCoapSecureKeys(void);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
@@ -357,6 +363,7 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     const uint8_t *    mCaChainSrc;
@@ -376,6 +383,7 @@ private:
     uint16_t       mPreSharedKeyLength;
     uint16_t       mPreSharedKeyIdLength;
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     bool mVerifyPeerCertificate;
 

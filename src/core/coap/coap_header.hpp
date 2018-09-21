@@ -175,6 +175,7 @@ public:
      */
     void SetCode(Code aCode) { mHeader.mFields.mCode = static_cast<uint8_t>(aCode); }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
     /**
      * This method returns the CoAP Code as human readable string.
      *
@@ -182,6 +183,7 @@ public:
      *
      */
     const char *CodeToString(void) const;
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
     /**
      * This method returns the Message ID value.
