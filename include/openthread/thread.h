@@ -744,10 +744,10 @@ void otThreadResetMleCounters(otInstance *aInstance);
 typedef void(OTCALL *otThreadParentResponseCallback)(otThreadParentResponseInfo *aInfo, void *aContext);
 
 /**
- * This function registers a callback to receive certain stats during a parent response frame handling
+ * This function registers a callback to receive MLE Parent Response data.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called with certain parent response frame content.
+ * @param[in]  aCallback  A pointer to a function that is called when receiving an MLE Parent Response message.
  * @param[in]  aContext   A pointer to callback client-specific context.
  *
  * @retval OT_ERROR_NONE              On successful registration
