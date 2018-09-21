@@ -183,8 +183,8 @@ typedef struct otMleCounters
 } otMleCounters;
 
 /**
- * This structure represents the parent response data which a client can request on each successful parent
- * response frame reception by ot stack.
+ * This structure represents the MLE Parent Response data that a client can receive on each successful Parent
+ * Response message received.
  *
  */
 typedef struct otThreadParentResponseInfo
