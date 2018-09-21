@@ -50,7 +50,12 @@ cd /tmp || die
 
     [ $BUILD_TARGET != android-build ] || {
         sudo apt-get install -y bison gcc-multilib g++-multilib
-        echo y | sdkmanager "ndk-bundle"
+        (
+        cd $HOME
+        wget https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip
+        unzip android-ndk-r17c-linux-x86_64.zip > /dev/null
+        mv android-ndk-r17c ndk-bundle
+        ) || die
     }
 
     [ $BUILD_TARGET != pretty-check ] || {

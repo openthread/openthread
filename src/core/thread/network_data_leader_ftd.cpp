@@ -433,12 +433,19 @@ exit:
     }
 }
 
+bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, bool aExactMatch)
+{
+    return ((aExactMatch && aFirstRloc16 == aSecondRloc16) ||
+            (!aExactMatch && Mle::Mle::RouterIdMatch(aFirstRloc16, aSecondRloc16)));
+}
+
 otError Leader::RlocLookup(uint16_t aRloc16,
                            bool &   aIn,
                            bool &   aStable,
                            uint8_t *aTlvs,
                            uint8_t  aTlvsLength,
-                           bool     aExactMatch)
+                           bool     aExactMatch,
+                           bool     aAllowOtherEntries)
 {
     otError            error = OT_ERROR_NONE;
     NetworkDataTlv *   cur   = reinterpret_cast<NetworkDataTlv *>(aTlvs);
@@ -484,8 +491,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     {
                         borderRouterEntry = borderRouter->GetEntry(i);
 
-                        if ((aExactMatch && borderRouterEntry->GetRloc() == aRloc16) ||
-                            (!aExactMatch && (Mle::Mle::RouterIdMatch(borderRouterEntry->GetRloc(), aRloc16))))
+                        if (RlocMatch(borderRouterEntry->GetRloc(), aRloc16, aExactMatch))
                         {
                             aIn = true;
 
@@ -493,6 +499,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                             {
                                 aStable = true;
                             }
+                        }
+                        else
+                        {
+                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
                         }
                     }
 
@@ -505,8 +515,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     {
                         hasRouteEntry = hasRoute->GetEntry(i);
 
-                        if ((aExactMatch && hasRouteEntry->GetRloc() == aRloc16) ||
-                            (!aExactMatch && (Mle::Mle::RouterIdMatch(hasRouteEntry->GetRloc(), aRloc16))))
+                        if (RlocMatch(hasRouteEntry->GetRloc(), aRloc16, aExactMatch))
                         {
                             aIn = true;
 
@@ -514,6 +523,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                             {
                                 aStable = true;
                             }
+                        }
+                        else
+                        {
+                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
                         }
                     }
 
@@ -523,7 +536,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     break;
                 }
 
-                if (aIn && aStable)
+                if (aIn && aStable && aAllowOtherEntries)
                 {
                     ExitNow();
                 }
@@ -555,8 +568,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     server = static_cast<ServerTlv *>(subCur);
                     VerifyOrExit(server->IsValid(), error = OT_ERROR_PARSE);
 
-                    if ((aExactMatch && server->GetServer16() == aRloc16) ||
-                        (!aExactMatch && (Mle::Mle::RouterIdMatch(server->GetServer16(), aRloc16))))
+                    if (RlocMatch(server->GetServer16(), aRloc16, aExactMatch))
                     {
                         aIn = true;
 
@@ -565,6 +577,10 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                             aStable = true;
                         }
                     }
+                    else
+                    {
+                        VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
+                    }
 
                     break;
 
@@ -572,7 +588,7 @@ otError Leader::RlocLookup(uint16_t aRloc16,
                     break;
                 }
 
-                if (aIn && aStable)
+                if (aIn && aStable && aAllowOtherEntries)
                 {
                     ExitNow();
                 }
@@ -740,10 +756,14 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     bool    rlocIn        = false;
     bool    rlocStable    = false;
     bool    stableUpdated = false;
+    bool    unused;
     uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
-    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, true);
+    // Verify that `aTlvs` only contains entries matching `aRloc16`.
+    SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, true, false));
+
+    RlocLookup(aRloc16, rlocIn, unused, mTlvs, mLength, true);
 
     if (rlocIn)
     {
@@ -767,8 +787,6 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     }
     else
     {
-        SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, true));
-
         // No old data to be preserved, lets avoid memcpy() & FindService calls.
         SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, 0));
 
@@ -1372,8 +1390,7 @@ otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, bool aExactMat
         case NetworkDataTlv::kTypeServer:
             server = static_cast<ServerTlv *>(cur);
 
-            if ((aExactMatch && server->GetServer16() == aRloc16) ||
-                (!aExactMatch && (Mle::Mle::RouterIdMatch(server->GetServer16(), aRloc16))))
+            if (RlocMatch(server->GetServer16(), aRloc16, aExactMatch))
             {
                 removeLength = sizeof(ServerTlv) + server->GetServerDataLength();
                 service.SetSubTlvsLength(service.GetSubTlvsLength() - removeLength);
@@ -1396,23 +1413,19 @@ otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, bool aExactMat
 
 otError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, bool aExactMatch)
 {
-    HasRouteEntry *entry;
+    HasRouteEntry *entry = aHasRoute.GetFirstEntry();
 
-    // remove rloc from has route tlv
-    for (uint8_t i = 0; i < aHasRoute.GetNumEntries(); i++)
+    while (entry <= aHasRoute.GetLastEntry())
     {
-        entry = aHasRoute.GetEntry(i);
-
-        if ((aExactMatch && entry->GetRloc() != aRloc16) ||
-            (!aExactMatch && !(Mle::Mle::RouterIdMatch(entry->GetRloc(), aRloc16))))
+        if (RlocMatch(entry->GetRloc(), aRloc16, aExactMatch))
         {
+            aHasRoute.SetLength(aHasRoute.GetLength() - sizeof(HasRouteEntry));
+            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteEntry));
+            Remove(reinterpret_cast<uint8_t *>(entry), sizeof(HasRouteEntry));
             continue;
         }
 
-        aHasRoute.SetLength(aHasRoute.GetLength() - sizeof(HasRouteEntry));
-        aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteEntry));
-        Remove(reinterpret_cast<uint8_t *>(entry), sizeof(*entry));
-        break;
+        entry = entry->GetNext();
     }
 
     return OT_ERROR_NONE;
@@ -1420,23 +1433,19 @@ otError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t 
 
 otError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, bool aExactMatch)
 {
-    BorderRouterEntry *entry;
+    BorderRouterEntry *entry = aBorderRouter.GetFirstEntry();
 
-    // remove rloc from border router tlv
-    for (uint8_t i = 0; i < aBorderRouter.GetNumEntries(); i++)
+    while (entry <= aBorderRouter.GetLastEntry())
     {
-        entry = aBorderRouter.GetEntry(i);
-
-        if ((aExactMatch && entry->GetRloc() != aRloc16) ||
-            (!aExactMatch && !(Mle::Mle::RouterIdMatch(entry->GetRloc(), aRloc16))))
+        if (RlocMatch(entry->GetRloc(), aRloc16, aExactMatch))
         {
+            aBorderRouter.SetLength(aBorderRouter.GetLength() - sizeof(BorderRouterEntry));
+            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterEntry));
+            Remove(reinterpret_cast<uint8_t *>(entry), sizeof(*entry));
             continue;
         }
 
-        aBorderRouter.SetLength(aBorderRouter.GetLength() - sizeof(BorderRouterEntry));
-        aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterEntry));
-        Remove(reinterpret_cast<uint8_t *>(entry), sizeof(*entry));
-        break;
+        entry = entry->GetNext();
     }
 
     return OT_ERROR_NONE;

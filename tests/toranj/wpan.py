@@ -1015,10 +1015,11 @@ class OnMeshPrefix(object):
         # Example of expected text:
         #
         # '\t"fd00:abba:cafe::       prefix_len:64   origin:user     stable:yes flags:0x31'
-        # ' [on-mesh:1 def-route:0 config:0 dhcp:0 slaac:1 pref:1 prio:med]"'
+        # ' [on-mesh:1 def-route:0 config:0 dhcp:0 slaac:1 pref:1 prio:med] rloc:0x0000"'
 
-        m = re.match('\t"([0-9a-fA-F:]+)\s*prefix_len:(\d+)\s+origin:(\w*)\s+stable:(\w*).*' +
-                    '\[on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]',
+        m = re.match('\t"([0-9a-fA-F:]+)\s*prefix_len:(\d+)\s+origin:(\w*)\s+stable:(\w*).* \[' +
+                    'on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]' +
+                    '\s+rloc:(0x[0-9a-fA-F]+)',
                      text)
         verify(m is not None)
         data = m.groups()
@@ -1034,6 +1035,7 @@ class OnMeshPrefix(object):
         self._slaac      = (data[8] == '1')
         self._preferred  = (data[9] == '1')
         self._priority   = (data[10])
+        self._rloc16     = (data[11])
 
     @property
     def prefix(self):
@@ -1071,6 +1073,9 @@ class OnMeshPrefix(object):
 
     def is_preferred(self):
         return self._preferred
+
+    def rloc16(self):
+        return self._rloc16
 
     def __repr__(self):
         return 'OnMeshPrefix({})'.format(self.__dict__)
