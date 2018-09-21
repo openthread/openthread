@@ -1064,7 +1064,6 @@ public:
      * @param[in]  aCallback A pointer to a function that is called to deliver certain stats about Parents of a node.
      * @param[in]  aContext  A pointer to application-specific context.
      *
-     * @retval None
      */
     void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
 
