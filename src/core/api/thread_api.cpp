@@ -538,3 +538,22 @@ void otThreadResetMleCounters(otInstance *aInstance)
 
     instance.GetThreadNetif().GetMle().ResetCounters();
 }
+
+otError otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+                                               otThreadParentResponseCallback aCallback,
+                                               void *                         aContext)
+{
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetMle().RegisterParentResponseStatsCallback(aCallback, aContext);
+
+    return OT_ERROR_NONE;
+#else
+    (void)aInstance;
+    (void)aCallback;
+    (void)aContext;
+
+    return OT_ERROR_DISABLED_FEATURE;
+#endif
+}
