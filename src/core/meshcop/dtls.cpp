@@ -180,6 +180,8 @@ otError Dtls::Start(bool             aClient,
     {
         mbedtls_ssl_conf_authmode(&mConf, MBEDTLS_SSL_VERIFY_NONE);
     }
+#else
+    OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
