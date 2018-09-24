@@ -28,6 +28,7 @@
 #
 
 import sys
+import os
 import time
 import re
 import random
@@ -207,10 +208,18 @@ class Node(object):
     _VERBOSE = False        # defines the default verbosity setting (can be changed per `Node`)
     _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
 
-    # path to `wpantund`, `wpanctl` and `ot-ncp-ftd` code
+    # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-ncp-radio`
     _WPANTUND = '/usr/local/sbin/wpantund'
     _WPANCTL  = '/usr/local/bin/wpanctl'
     _OT_NCP_FTD = '../../examples/apps/ncp/ot-ncp-ftd'
+
+    _OT_NCP_FTD_POSIX_APP = '../../src/posix/ot-ncp'
+    _OT_NCP_RADIO = '../../examples/apps/ncp/ot-ncp-radio'
+
+    # Environment variable used to determine how to run OpenThread
+    # If set to 1, then posix-app (`ot-ncp`) is used along with a posix RCP `ot-ncp-radio`.
+    # Otherwise, the posix NCP `ot-ncp-ftd` is used
+    _POSIX_APP_ENV_VAR = 'TORANJ_POSIX_APP_RCP_MODEL'
 
     _TUND_LOG_TO_FILE = True            # determines if the wpantund logs are saved in file or sent to stdout
     _TUND_LOG_FNAME = 'wpantund-logs'   # name of wpantund log file (if # name of wpantund _TUND_LOG_TO_FILE is True)
@@ -232,7 +241,18 @@ class Node(object):
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
         self._verbose = verbose
 
-        ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
+        # Check if env variable `TORANJ_POSIX_APP_RCP_MODEL` is defined
+        # and use it to determine if to use operate in "posix-ncp-app".
+        if self._POSIX_APP_ENV_VAR in os.environ:
+            use_posix_app_with_rcp = (os.environ[self._POSIX_APP_ENV_VAR] in ['1', 'yes'])
+        else:
+            use_posix_app_with_rcp = False
+
+        if use_posix_app_with_rcp:
+            ncp_socket_path = 'system:{} -s {} {} {}'.format(self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR,
+                self._OT_NCP_RADIO, index)
+        else:
+            ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
 
         cmd = self._WPANTUND + \
                ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \
