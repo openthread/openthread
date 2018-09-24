@@ -123,7 +123,7 @@ if [ "$use_posix_app_with_rcp" = "no" ]; then
 
     ./bootstrap || die
     ./configure                             \
-        CPPFLAGS="$cppflags_config"                \
+        CPPFLAGS="$cppflags_config"         \
         --with-examples=posix               \
         $configure_options || die           \
 
@@ -137,7 +137,7 @@ else
 
     ./bootstrap || die
     ./configure                             \
-        CPPFLAGS="$cppflags_config"                \
+        CPPFLAGS="$cppflags_config"         \
         --enable-coverage=${coverage}       \
         --enable-ncp                        \
         --with-ncp-bus=uart                 \
