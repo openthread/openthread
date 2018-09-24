@@ -1570,12 +1570,12 @@ protected:
     void InformPreviousChannel(void);
 
     /**
-     * This method returns whether in announce attach process.
+     * This method indicates whether or not in announce attach process.
      *
      * @retval true if attaching/attached on the announced parameters, false otherwise.
      *
      */
-    bool IsAnnounceAttach(void) { return mAlternatePanId != Mac::kPanIdBroadcast; }
+    bool IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
