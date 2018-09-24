@@ -59,11 +59,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    MessageInfo(void)
-    {
-        memset(this, 0, sizeof(*this));
-        mHopLimit = kDefaultHopLimit;
-    }
+    MessageInfo(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the local socket address.
@@ -184,12 +180,6 @@ public:
      *
      */
     void SetLinkInfo(const void *aLinkInfo) { mLinkInfo = aLinkInfo; }
-
-private:
-    enum
-    {
-        kDefaultHopLimit = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
-    };
 };
 
 /**
