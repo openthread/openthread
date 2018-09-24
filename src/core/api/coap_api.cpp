@@ -113,6 +113,11 @@ otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader)
     return static_cast<const Coap::Header *>(aHeader)->GetCode();
 }
 
+const char *otCoapHeaderCodeToString(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->CodeToString();
+}
+
 uint16_t otCoapHeaderGetMessageId(const otCoapHeader *aHeader)
 {
     return static_cast<const Coap::Header *>(aHeader)->GetMessageId();

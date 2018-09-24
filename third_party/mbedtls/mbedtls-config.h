@@ -527,6 +527,15 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Enable the PSK ciphersuite for Application Coap Secure.
+ */
+#ifndef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 /**
  * \def MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
  *
@@ -698,6 +707,29 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
  */
 //#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Enables ciphersuite ECDHE ECDSA with x.509 certificate
+ * for Application Coap Secure.
+ */
+#ifndef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+
+/**
+ * To increase the security with ECDHE ECDSA enable
+ * X509 CHECK KEY USAGE.
+ * Not required!
+ */
+
+#ifndef MBEDTLS_X509_CHECK_KEY_USAGE
+//#define MBEDTLS_X509_CHECK_KEY_USAGE
+#endif // MBEDTLS_X509_CHECK_KEY_USAGE
+
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
@@ -1569,6 +1601,18 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  */
 //#define MBEDTLS_BASE64_C
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Requiered by ciphersuite ECDHE ECDSA with x.509 certificate
+ * used by Application CoAP Secure.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_BASE64_C
+#define MBEDTLS_BASE64_C
+#endif // MBEDTLS_BASE64_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 /**
  * \def MBEDTLS_BIGNUM_C
  *
@@ -1786,6 +1830,17 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_ECDH_C
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+/**
+ * Required for ECDHE_ECDSA by Application CoAPS.
+ */
+#ifndef MBEDTLS_ECDH_C
+#define MBEDTLS_ECDH_C
+#endif // MBEDTLS_ECDH_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 /**
  * \def MBEDTLS_ECDSA_C
  *
@@ -1802,6 +1857,17 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 #define MBEDTLS_ECDSA_C
 #endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHA ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_ECDSA_C
+#define MBEDTLS_ECDSA_C
+#endif // MBEDTLS_ECDSA_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_ECJPAKE_C
@@ -2055,6 +2121,18 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * This modules adds support for decoding / parsing PEM files.
  */
 //#define MBEDTLS_PEM_PARSE_C
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Requiered by ciphersuite ECDHE ECDSA with x.509 certificate
+ * used by Application CoAP Secure.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PEM_PARSE_C
+#endif // MBEDTLS_PEM_PARSE_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_PEM_WRITE_C
@@ -2411,6 +2489,17 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_X509_USE_C
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHE ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_X509_USE_C
+#define MBEDTLS_X509_USE_C
+#endif // MBEDTLS_X509_USE_C
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
 /**
  * \def MBEDTLS_X509_CRT_PARSE_C
  *
@@ -2428,6 +2517,17 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 #define MBEDTLS_X509_CRT_PARSE_C
 #endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+/**
+ * Required for ECDHE ECDSA by Application CoAPS.
+ */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#ifndef MBEDTLS_X509_CRT_PARSE_C
+#define MBEDTLS_X509_CRT_PARSE_C
+#endif // MBEDTLS_X509_CRT_PARSE_C
+#endif  // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 /**
  * \def MBEDTLS_X509_CRL_PARSE_C
@@ -2591,7 +2691,11 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 //#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#define MBEDTLS_SSL_MAX_CONTENT_LEN             900 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
+#else
 #define MBEDTLS_SSL_MAX_CONTENT_LEN             768 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
+#endif
 //#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 //#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */

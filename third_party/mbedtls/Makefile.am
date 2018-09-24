@@ -62,6 +62,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/md_wrap.c                      \
     repo/library/memory_buffer_alloc.c          \
     repo/library/oid.c                          \
+    repo/library/pem.c                          \
     repo/library/pk.c                           \
     repo/library/pk_wrap.c                      \
     repo/library/pkparse.c                      \

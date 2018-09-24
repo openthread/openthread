@@ -14,6 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
 * [coap](#coap-start)
+* [coaps](#coaps-start-checkpeercert)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -233,7 +234,7 @@ Coap service started: Done
 Stops the application coap service.
 
 ```bash
-> coap start
+> coap stop
 Coap service stopped: Done
 ```
 
@@ -270,6 +271,104 @@ Sending coap message: Done
 Received coap request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: 31 32 33
 coap response sent successfully!
 Received coap response
+```
+
+### coaps start \<checkPeerCert\>
+
+Starts the Application CoAP Secure Service.
+
+* checkPeerCert: Peer Certificate Check can be disabled by typing false.
+
+```bash
+> coaps start false
+Verify Peer Certificate: false. Coap Secure service started: Done
+> coaps start
+Verify Peer Certificate: true. Coap Secure service started: Done
+```
+
+### coaps stop
+
+Stops the Application CoAP Secure Service.
+
+```bash
+> coaps stop
+Coap Secure service stopped:  Done
+```
+
+### coaps set psk \<preSharedKey\> \<keyIdentity\>
+
+Set a pre-shared key with his identifier and the ciphersuite 
+"DTLS_PSK_WITH_AES_128_CCM_8" for the dtls session.
+
+* preSharedKey: The pre-shared key (PSK) for dtls session.
+* keyIdentity: The identifier for the PSK.
+
+```bash
+> coaps set psk myPreSharedSecret myIdentifier
+Coap Secure set PSK: Done
+```
+
+### coaps set x509
+
+Set X.509 Certificate with his private key, which is saved in
+src/cli/x509_cert_key.hpp.
+
+```bash
+> coaps set x509
+Coap Secure set own .X509 certificate: Done
+```
+
+### coaps connect \<serverAddress\> \[port\]
+
+Open a dtls session to a CoAP Secure Server.
+
+* serverAddress: IPv6 address of Server
+
+```bash
+> coaps connect 2001:1234::321
+Coap Secure connect: Done
+CoAP Secure connected!
+```
+
+### coaps disconnect
+
+Terminate the dtls session to the Server.
+
+```bash
+> coaps disconnect
+CoAP Secure not connected or disconnected.
+Done
+```
+
+### coaps \<method\> \<address\> \<uri\> \[type\] \[payload\]
+
+* method: CoAP method to be used (GET/PUT/POST/DELETE).
+* address: IPv6 address of the CoAP Secure server to query.
+* uri: URI String of the resource on the CoAP server.
+* type: Switch between confirmable ("con") and non-confirmable (default).
+* payload: In case of PUT/POST/DELETE a payload can be encapsulated.
+
+```bash
+> coaps get 2001:1234::321 secret
+Sending coap secure request: Done
+Received coap secure response
+    CoapSecure RX Header Informations:
+        Type 16 (NON CONF)
+        Code 69 (Coap Code CONTENT)
+    With payload (hex):
+4a756e2031322031353a30373a3336
+> coaps put 2001:1234::321 test non-con hello
+Sending coap secure request: Done
+> coaps post 2001:1234::321 test con
+Sending coap secure request: Done
+Received coap secure response
+    CoapSecure RX Header Informations:
+        Type 32 (NON CONF)
+        Code 69 (Coap Code CONTENT)
+    With payload (hex):
+4a756e2031322031353a30373a3336
+> coaps delete 2001:1234::321 test
+Sending coap secure request: Done
 ```
 
 ### commissioner start \<provisioningUrl\>

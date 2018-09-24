@@ -52,6 +52,7 @@ set -x
         --with-ncp-bus=uart               \
         --with-examples=posix             \
         --enable-application-coap         \
+        --enable-application-coap-secure  \
         --enable-border-router            \
         --enable-cert-log                 \
         --enable-child-supervision        \

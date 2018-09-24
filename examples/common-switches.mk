@@ -43,6 +43,10 @@ ifeq ($(COAP),1)
 configure_OPTIONS              += --enable-application-coap
 endif
 
+ifeq ($(COAPS),1)
+configure_OPTIONS              += --enable-application-coap-secure
+endif
+
 ifeq ($(COMMISSIONER),1)
 configure_OPTIONS              += --enable-commissioner
 endif
