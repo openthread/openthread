@@ -275,5 +275,31 @@
 #define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
 
 
+#if OPENTHREAD_RADIO
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          1
+#endif // OPENTHREAD_RADIO
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
 
