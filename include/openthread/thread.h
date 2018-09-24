@@ -183,6 +183,22 @@ typedef struct otMleCounters
 } otMleCounters;
 
 /**
+ * This structure represents the MLE Parent Response data.
+ *
+ */
+typedef struct otThreadParentResponseInfo
+{
+    otExtAddress mExtAddr;      ///< IEEE 802.15.4 Extended Address of the Parent
+    uint16_t     mRloc16;       ///< Short address of the Parent
+    int8_t       mRssi;         ///< Rssi of the Parent
+    int8_t       mPriority;     ///< Parent priority
+    uint8_t      mLinkQuality3; ///< Parent Link Quality 3
+    uint8_t      mLinkQuality2; ///< Parent Link Quality 2
+    uint8_t      mLinkQuality1; ///< Parent Link Quality 1
+    bool         mIsAttached;   ///< Is the node receiving parent response attached
+} otThreadParentResponseInfo;
+
+/**
  * This function starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
@@ -716,6 +732,30 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
  *
  */
 void otThreadResetMleCounters(otInstance *aInstance);
+
+/**
+ * This function pointer is called every time an MLE Parent Response message is received.
+ *
+ * @param[in]  aStats    pointer to a location on stack holding the stats data.
+ * @param[in]  aContext  A pointer to callback client-specific context.
+ *
+ */
+typedef void(OTCALL *otThreadParentResponseCallback)(otThreadParentResponseInfo *aInfo, void *aContext);
+
+/**
+ * This function registers a callback to receive MLE Parent Response data.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Parent Response message.
+ * @param[in]  aContext   A pointer to callback client-specific context.
+ *
+ * @retval OT_ERROR_NONE              On successful registration
+ * @retval OT_ERROR_DISABLED_FEATURE  If the feature is not supported
+ *
+ */
+OTAPI otError OTCALL otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+                                                            otThreadParentResponseCallback aCallback,
+                                                            void *                         aContext);
 
 /**
  * @}

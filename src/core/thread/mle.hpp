@@ -1057,6 +1057,15 @@ public:
      */
     void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
+    /**
+     * This function registers the client callback that is called when processing an MLE Parent Response message.
+     *
+     * @param[in]  aCallback A pointer to a function that is called to deliver MLE Parent Response data.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1786,6 +1795,9 @@ private:
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
     Notifier::Callback mNotifierCallback;
+
+    otThreadParentResponseCallback mParentResponseCb;
+    void *                         mParentResponseCbContext;
 };
 
 } // namespace Mle
