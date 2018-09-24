@@ -107,6 +107,7 @@ SOURCES_COMMON                      = \
     api/channel_monitor_api.cpp       \
     api/child_supervision_api.cpp     \
     api/coap_api.cpp                  \
+    api/coap_secure_api.cpp           \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \

@@ -80,6 +80,10 @@
 #include "cli_coap.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include "cli_coap_secure.hpp"
+#endif
+
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
@@ -105,6 +109,9 @@ const struct Command Interpreter::sCommands[] = {
     {"childtimeout", &Interpreter::ProcessChildTimeout},
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     {"coap", &Interpreter::ProcessCoap},
+#endif
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
@@ -286,6 +293,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
+#endif
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    , mCoapSecure(*this)
 #endif
 {
 #ifdef OTDLL
@@ -648,6 +658,17 @@ void Interpreter::ProcessCoap(int argc, char *argv[])
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+void Interpreter::ProcessCoapSecure(int argc, char *argv[])
+{
+    otError error;
+    error = mCoapSecure.Process(argc, argv);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

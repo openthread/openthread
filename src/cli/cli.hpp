@@ -50,6 +50,11 @@
 #include "cli/cli_coap.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include <coap/coap_header.hpp>
+#include "cli/cli_coap_secure.hpp"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
@@ -94,6 +99,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
+    friend class CoapsSecure;
     friend class UdpExample;
 
 public:
@@ -191,6 +197,9 @@ private:
     void ProcessChildTimeout(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
@@ -436,6 +445,11 @@ private:
     Coap mCoap;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+    CoapsSecure mCoapSecure;
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 };
 
 } // namespace Cli

@@ -160,6 +160,9 @@ typedef enum otCoapOptionContentFormat {
     OT_COAP_OPTION_CONTENT_FORMAT_OCTET_STREAM = 42, ///< application/octet-stream
     OT_COAP_OPTION_CONTENT_FORMAT_EXI          = 47, ///< application/exi
     OT_COAP_OPTION_CONTENT_FORMAT_JSON         = 50, ///< application/json
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS10       = 70, ///< application/pkcs10
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7        = 80, ///< application/pkcs7
+    OT_COAP_OPTION_CONTENT_FORMAT_JWS          = 101 ///< application/json-web-signature
 } otCoapOptionContentFormat;
 
 #define OT_COAP_HEADER_MAX_LENGTH 128 ///< Max CoAP header length (bytes)
@@ -401,6 +404,16 @@ otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader);
  *
  */
 otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader);
+
+/**
+ * This method returns the CoAP Code as human readable string.
+ *
+ * @param[in]  aHeader    A pointer to the CoAP header.
+ *
+ * @ returns The CoAP Code as string.
+ *
+ */
+const char *otCoapHeaderCodeToString(const otCoapHeader *aHeader);
 
 /**
  * This function returns the Message ID value.
