@@ -268,6 +268,21 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
         break;
 
     case kAttachAny:
+        // if attach was started due to receiving MLE Annouce Messageas, all rx-on-when-idle devices would
+        // start attach immediately when receiving such Announce message as in Thread 1.1 specification,
+        // Section 4.8.1,
+        // "If the received value is newer and the channel and/or PAN ID in the Announce message differ
+        //  from those currently in use, the receiving device attempts to attach using the channel and
+        //  PAN ID received from the Announce message."
+        //
+        // That is, Parent-child relationship is highly unlikely to be kept in the new partition, so here
+        // removes all children, leaving whether to become router according to the new partition status.
+        if (IsAnnounceAttach() && HasChildren())
+        {
+            RemoveChildren();
+        }
+
+        // fall through
     case kAttachBetter:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
