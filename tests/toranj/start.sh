@@ -53,7 +53,7 @@ run() {
     counter=0
     while true; do
 
-        if sudo python $1; then
+        if sudo -E python $1; then
             cleanup
             return
         fi
@@ -78,41 +78,91 @@ run() {
 cd $(dirname $0)
 cd ../..
 
-# Build OpenThread posix mode with required configuration
-
+# On Travis CI, the $BUILD_TARGET is defined as "toranj-test-framework".
 if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
     coverage=yes
 else
     coverage=no
 fi
 
-./bootstrap || die
-./configure                             \
-    CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
-    --enable-coverage=${coverage}       \
-    --enable-ncp                        \
-    --with-ncp-bus=uart                 \
-    --enable-border-router              \
-    --enable-child-supervision          \
-    --enable-diag                       \
-    --enable-ftd                        \
-    --enable-jam-detection              \
-    --enable-legacy                     \
-    --enable-mac-filter                 \
-    --enable-service                    \
-    --enable-channel-monitor            \
-    --enable-channel-manager            \
-    --enable-commissioner               \
-    --with-examples=posix               \
-    --disable-docs                      \
-    --disable-tests || die
+case $TORANJ_POSIX_APP_RCP_MODEL in
+    1|yes)
+        use_posix_app_with_rcp=yes
+        ;;
+    *)
+        use_posix_app_with_rcp=no
+        ;;
+esac
 
-make -j 8 || die
+configure_options="                \
+    --disable-docs                 \
+    --disable-tests                \
+    --enable-border-router         \
+    --enable-channel-manager       \
+    --enable-channel-monitor       \
+    --enable-child-supervision     \
+    --enable-commissioner          \
+    --enable-coverage=$coverage    \
+    --enable-diag                  \
+    --enable-ftd                   \
+    --enable-jam-detection         \
+    --enable-legacy                \
+    --enable-mac-filter            \
+    --enable-ncp                   \
+    --enable-service               \
+    --with-ncp-bus=uart            \
+    "
 
-# Run all the tests
+cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
+
+if [ "$use_posix_app_with_rcp" = "no" ]; then
+
+    echo "==================================================================================================="
+    echo "Building OpenThread NCP FTD mode with POSIX platform"
+    echo "==================================================================================================="
+
+    ./bootstrap || die
+    ./configure                             \
+        CPPFLAGS="$cppflags_config"         \
+        --with-examples=posix               \
+        $configure_options || die           \
+
+    make -j 8 || die
+
+else
+
+    echo "===================================================================================================="
+    echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
+    echo "===================================================================================================="
+
+    ./bootstrap || die
+    ./configure                             \
+        CPPFLAGS="$cppflags_config"         \
+        --enable-coverage=${coverage}       \
+        --enable-ncp                        \
+        --with-ncp-bus=uart                 \
+        --enable-radio-only                 \
+        --with-examples=posix               \
+        --disable-docs                      \
+        --disable-tests || die
+
+    make -j 8 || die
+
+    echo "===================================================================================================="
+    echo "Building OpenThread POSIX App NCP"
+    echo "===================================================================================================="
+
+    ./bootstrap || die
+    ./configure                             \
+        CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1" \
+        --enable-posix-app                  \
+        $configure_options || die           \
+
+    make -j 8 || die
+
+fi
 
 cd tests/toranj
-
 cleanup
 
 run test-001-get-set.py

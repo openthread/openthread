@@ -80,8 +80,8 @@ chan_15_to_17_mask = int('0x0038000', 0)
 node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask))
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) == all_channls_mask)
 
-# Sleep for 4 second with speedup factor of 10,000 this is more than 11 hours.
-time.sleep(4)
+# Sleep for 4.5 second with speedup factor of 10,000 this is more than 12 hours.
+time.sleep(4.5)
 
 verify(int(node.get(wpan.WPAN_CHANNEL_MONITOR_SAMPLE_COUNT), 0) > 970)
 
