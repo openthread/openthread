@@ -76,11 +76,11 @@ class OpenThread_WpanCtl(IThci):
             self.logStatus = {'stop':'stop', 'running':'running', 'pauseReq':'pauseReq', 'paused':'paused'}
             self.joinStatus = {'notstart':'idle', 'ongoing':'discover', 'succeed':'joined', 'failed':'failed'}
             self.logThreadStatus = self.logStatus['stop']
-            self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else "usb"
+            self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else 'usb'
             if self.connectType == 'ip':
                 self.dutIpv4 = kwargs.get('TelnetIP')
                 self.dutPort = kwargs.get('TelnetPort')
-                self.port = self.dutIpv4 + ":" + self.dutPort
+                self.port = self.dutIpv4 + ':' + self.dutPort
             else:
                 self.port = kwargs.get('SerialPort')
             self.intialize()
@@ -214,8 +214,8 @@ class OpenThread_WpanCtl(IThci):
                     logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
                     if retry_times == 0:
                         raise
-                    else:
-                        break
+                else:
+                    break
 
             line = None
             response = []
@@ -223,7 +223,6 @@ class OpenThread_WpanCtl(IThci):
             stdout_lines = []
             stderr_lines = []
             if self._is_net:
-
                 stdout_lines = ssh_stdout.readlines()
                 stderr_lines = ssh_stderr.readlines()
                 if stderr_lines:
@@ -761,11 +760,12 @@ class OpenThread_WpanCtl(IThci):
                 self.handle.connect(self.dutIpv4, port=self.dutPort, username=WPAN_CARRIER_USER, password=WPAN_CARRIER_PASSWD)
                 self.handle.exec_command("stty cols 128")
                 self._is_net = True
-            except Exception, e:
+            except Exception as e:
                 ModuleHelper.WriteIntoDebugLogger('connect to ssh Error: ' + str(e))
         else:
             raise Exception('Unknown port schema')
         self.UIStatusMsg = self.getVersionNumber()
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -1343,7 +1343,6 @@ class OpenThread_WpanCtl(IThci):
         return self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:PANID')[0]
 
     def reset(self):
-        """factory reset"""
         """factory reset"""
         print '%s call reset' % self.port
         try:
