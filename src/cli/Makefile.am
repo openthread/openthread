@@ -168,6 +168,7 @@ noinst_HEADERS                      = \
     cli_server.hpp                    \
     cli_uart.hpp                      \
     cli_udp_example.hpp               \
+    x509_cert_key.hpp                 \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
