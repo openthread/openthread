@@ -414,7 +414,7 @@ public:
 
     /**
      * This method returns a pointer to a Neighbor object if a one-way link is maintained
-     * as in the instance of an FFD child with neighbor routers.
+     * as in the instance of an FTD child with neighbor routers.
      *
      * @param[in]  aAddress  The address of the Neighbor.
      *

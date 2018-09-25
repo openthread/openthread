@@ -541,7 +541,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
                 mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
                 mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
-                mServer->OutputFormat("|%1d", childInfo.mFullFunction);
+                mServer->OutputFormat("|%1d", childInfo.mFullThreadDevice);
                 mServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
                 mServer->OutputFormat("| ");
 
@@ -587,7 +587,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
         mServer->OutputFormat("s");
     }
 
-    if (childInfo.mFullFunction)
+    if (childInfo.mFullThreadDevice)
     {
         mServer->OutputFormat("d");
     }
@@ -1459,7 +1459,7 @@ void Interpreter::ProcessNeighbor(int argc, char *argv[])
                 mServer->OutputFormat("| %9d ", neighborInfo.mLastRssi);
                 mServer->OutputFormat("|%1d", neighborInfo.mRxOnWhenIdle);
                 mServer->OutputFormat("|%1d", neighborInfo.mSecureDataRequest);
-                mServer->OutputFormat("|%1d", neighborInfo.mFullFunction);
+                mServer->OutputFormat("|%1d", neighborInfo.mFullThreadDevice);
                 mServer->OutputFormat("|%1d", neighborInfo.mFullNetworkData);
                 mServer->OutputFormat("| ");
 

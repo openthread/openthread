@@ -278,7 +278,7 @@ public:
     {
         kModeRxOnWhenIdle      = 1 << 3,
         kModeSecureDataRequest = 1 << 2,
-        kModeFFD               = 1 << 1,
+        kModeFullThreadDevice  = 1 << 1,
         kModeFullNetworkData   = 1 << 0,
     };
 

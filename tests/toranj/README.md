@@ -202,12 +202,12 @@ Script below shows how to create a 3-node network topology with `node1` and `nod
 
 >>> print node2.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
 [
-    "EAC1672C3EAB30A4, RLOC16:9401, LQIn:3, AveRssi:-20, LastRssi:-20, Age:30, LinkFC:6, MleFC:0, IsChild:yes, RxOnIdle:yes, FFD:yes, SecDataReq:yes, FullNetData:yes"
-    "A2042C8762576FD5, RLOC16:dc00, LQIn:3, AveRssi:-20, LastRssi:-20, Age:5, LinkFC:21, MleFC:18, IsChild:no, RxOnIdle:yes, FFD:yes, SecDataReq:no, FullNetData:yes"
+    "EAC1672C3EAB30A4, RLOC16:9401, LQIn:3, AveRssi:-20, LastRssi:-20, Age:30, LinkFC:6, MleFC:0, IsChild:yes, RxOnIdle:yes, FTD:yes, SecDataReq:yes, FullNetData:yes"
+    "A2042C8762576FD5, RLOC16:dc00, LQIn:3, AveRssi:-20, LastRssi:-20, Age:5, LinkFC:21, MleFC:18, IsChild:no, RxOnIdle:yes, FTD:yes, SecDataReq:no, FullNetData:yes"
 ]
 >>> print node1.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
 [
-    "960947C53415DAA1, RLOC16:9400, LQIn:3, AveRssi:-20, LastRssi:-20, Age:18, LinkFC:15, MleFC:11, IsChild:no, RxOnIdle:yes, FFD:yes, SecDataReq:no, FullNetData:yes"
+    "960947C53415DAA1, RLOC16:9400, LQIn:3, AveRssi:-20, LastRssi:-20, Age:18, LinkFC:15, MleFC:11, IsChild:no, RxOnIdle:yes, FTD:yes, SecDataReq:no, FullNetData:yes"
 ]
 
 ```

@@ -71,7 +71,7 @@ public enum class otLinkModeFlags : unsigned int
     None                = 0,
     RxOnWhenIdle        = 0x1,  /* 1, if the sender has its receiver on when not transmitting.  0, otherwise. */
     SecureDataRequests  = 0x2,  /* 1, if the sender will use IEEE 802.15.4 to secure all data requests.  0, otherwise. */
-    DeviceType          = 0x4,  /* 1, if the sender is an FFD.  0, otherwise. */
+    DeviceType          = 0x4,  /* 1, if the sender is an FTD.  0, otherwise. */
     NetworkData         = 0x8   /* 1, if the sender requires the full Network Data.  0, otherwise. */
 };
 

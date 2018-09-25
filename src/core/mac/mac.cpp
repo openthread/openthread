@@ -1888,7 +1888,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
                          ((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == mShortAddress),
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
-        // Allow  multicasts from neighbor routers if FFD
+        // Allow  multicasts from neighbor routers if FTD
         if (neighbor == NULL && dstaddr.IsBroadcast() && netif.GetMle().IsFullThreadDevice())
         {
             neighbor = netif.GetMle().GetRxOnlyNeighborRouter(srcaddr);

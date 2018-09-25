@@ -287,7 +287,7 @@ class OpenThread(IThci):
            mode: thread device mode
            r: rx-on-when-idle
            s: secure IEEE 802.15.4 data request
-           d: full function device
+           d: full thread device
            n: full network data
 
         Returns:

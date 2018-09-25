@@ -333,7 +333,7 @@ class OpenThread_WpanCtl(IThci):
            mode: thread device mode. 15=rsdn, 13=rsn, 4=s
            r: rx-on-when-idle
            s: secure IEEE 802.15.4 data request
-           d: full function device
+           d: full thread device
            n: full network data
 
         Returns:
