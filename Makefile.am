@@ -33,6 +33,7 @@ AM_MAKEFLAGS                        = --no-print-directory
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
     --enable-application-coap         \
+    --enable-application-coap-secure  \
     --enable-border-router            \
     --enable-cli                      \
     --enable-commissioner             \

@@ -56,51 +56,51 @@ extern "C" {
  * place your X.509 certificate (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
-#define OT_CLI_COAPS_X509_CERT                                         \
-"-----BEGIN CERTIFICATE-----\r\n"                                      \
-"MIIBrTCCAVICBgDRArfDJTAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTESMBAG\r\n" \
-"A1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZb3Vy\r\n" \
-"T3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTIzNzA3WhgPMjI5\r\n" \
-"MjA0MjYxMjM3MDdaMGExCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3RhdGUx\r\n" \
-"EDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MRYwFAYDVQQD\r\n" \
-"DA1QWEMzLkU3NS0xMDBBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIUtlV99w\r\n" \
-"OggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwcbJHWlvxGPxNIQw6i8kzK\r\n" \
-"bkC642ZWgBT5MzAKBggqhkjOPQQDAgNJADBGAiEA/1yk69A+37kLBvdOWPDRXGwe\r\n" \
-"0AoICTGaLqzB3cF5mtACIQC28WwmzHb5gqe3nOPAM73py1v17EXZj07PU89BAEcb\r\n" \
-"yg==\r\n"                                                             \
-"-----END CERTIFICATE-----\r\n"
+#define OT_CLI_COAPS_X509_CERT                                             \
+    "-----BEGIN CERTIFICATE-----\r\n"                                      \
+    "MIIBrTCCAVICBgDRArfDJTAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTESMBAG\r\n" \
+    "A1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZb3Vy\r\n" \
+    "T3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTIzNzA3WhgPMjI5\r\n" \
+    "MjA0MjYxMjM3MDdaMGExCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3RhdGUx\r\n" \
+    "EDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MRYwFAYDVQQD\r\n" \
+    "DA1QWEMzLkU3NS0xMDBBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIUtlV99w\r\n" \
+    "OggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwcbJHWlvxGPxNIQw6i8kzK\r\n" \
+    "bkC642ZWgBT5MzAKBggqhkjOPQQDAgNJADBGAiEA/1yk69A+37kLBvdOWPDRXGwe\r\n" \
+    "0AoICTGaLqzB3cF5mtACIQC28WwmzHb5gqe3nOPAM73py1v17EXZj07PU89BAEcb\r\n" \
+    "yg==\r\n"                                                             \
+    "-----END CERTIFICATE-----\r\n"
 
 /**
  * place your private key (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
-#define OT_CLI_COAPS_PRIV_KEY                                          \
-"-----BEGIN EC PRIVATE KEY-----\r\n"                                   \
-"MHcCAQEEIFYQh2R7M48qOHePw+VE4b034UlZmWWC/iNAK34sQbucoAoGCCqGSM49\r\n" \
-"AwEHoUQDQgAEIUtlV99wOggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwc\r\n" \
-"bJHWlvxGPxNIQw6i8kzKbkC642ZWgBT5Mw==\r\n"                             \
-"-----END EC PRIVATE KEY-----\r\n"
+#define OT_CLI_COAPS_PRIV_KEY                                              \
+    "-----BEGIN EC PRIVATE KEY-----\r\n"                                   \
+    "MHcCAQEEIFYQh2R7M48qOHePw+VE4b034UlZmWWC/iNAK34sQbucoAoGCCqGSM49\r\n" \
+    "AwEHoUQDQgAEIUtlV99wOggiASflg6CVsGMzXMXYrNgQ1piLIybCkrq+YoqJ3mwc\r\n" \
+    "bJHWlvxGPxNIQw6i8kzKbkC642ZWgBT5Mw==\r\n"                             \
+    "-----END EC PRIVATE KEY-----\r\n"
 
 /**
  * Place peers CA certificate (PEM format) here.
  * It's necessary to validate the peers certificate. If you haven't a
  * CA certificate, you must run the coaps without checking certificate.
  */
-#define OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE                          \
-"-----BEGIN CERTIFICATE-----\r\n"                                      \
-"MIICDzCCAbWgAwIBAgIESZYC0jAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTES\r\n" \
-"MBAGA1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZ\r\n" \
-"b3VyT3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTE1NjA5WhgP\r\n" \
-"MjI5MjA0MjYxMTU2MDlaMFwxCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3Rh\r\n" \
-"dGUxEDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MREwDwYD\r\n" \
-"VQQDDAhWZW5kb3JDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGAAuYcBIgP0\r\n" \
-"fMC1Bd+1nAH5S1goR0TaDAIadK4hULQr5LwziuDk9XTQaOTwmWB9iR1eiHC6RY8W\r\n" \
-"wyrGBbnEbzujYzBhMB0GA1UdDgQWBBQ+yCpIszhzbmXe2At1GofREjnBxjAfBgNV\r\n" \
-"HSMEGDAWgBQ+yCpIszhzbmXe2At1GofREjnBxjAPBgNVHRMBAf8EBTADAQH/MA4G\r\n" \
-"A1UdDwEB/wQEAwIBhjAKBggqhkjOPQQDAgNIADBFAiBW60XgdSRD24rbTgdneS+V\r\n" \
-"SHVix8LuXunPYW50LmxbrwIhAOw4gMroRIOS26y0TcND03FnyO3wBNF9MjM0hWKQ\r\n" \
-"JXk3\r\n"                                                             \
-"-----END CERTIFICATE-----\r\n"                                        \
+#define OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE                              \
+    "-----BEGIN CERTIFICATE-----\r\n"                                      \
+    "MIICDzCCAbWgAwIBAgIESZYC0jAKBggqhkjOPQQDAjBcMQswCQYDVQQGEwJaWTES\r\n" \
+    "MBAGA1UECAwJWW91clN0YXRlMRAwDgYDVQQKDAdZb3VyT3JnMRQwEgYDVQQLDAtZ\r\n" \
+    "b3VyT3JnVW5pdDERMA8GA1UEAwwIVmVuZG9yQ0EwIBcNMTgwNzEzMTE1NjA5WhgP\r\n" \
+    "MjI5MjA0MjYxMTU2MDlaMFwxCzAJBgNVBAYTAlpZMRIwEAYDVQQIDAlZb3VyU3Rh\r\n" \
+    "dGUxEDAOBgNVBAoMB1lvdXJPcmcxFDASBgNVBAsMC1lvdXJPcmdVbml0MREwDwYD\r\n" \
+    "VQQDDAhWZW5kb3JDQTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGAAuYcBIgP0\r\n" \
+    "fMC1Bd+1nAH5S1goR0TaDAIadK4hULQr5LwziuDk9XTQaOTwmWB9iR1eiHC6RY8W\r\n" \
+    "wyrGBbnEbzujYzBhMB0GA1UdDgQWBBQ+yCpIszhzbmXe2At1GofREjnBxjAfBgNV\r\n" \
+    "HSMEGDAWgBQ+yCpIszhzbmXe2At1GofREjnBxjAPBgNVHRMBAf8EBTADAQH/MA4G\r\n" \
+    "A1UdDwEB/wQEAwIBhjAKBggqhkjOPQQDAgNIADBFAiBW60XgdSRD24rbTgdneS+V\r\n" \
+    "SHVix8LuXunPYW50LmxbrwIhAOw4gMroRIOS26y0TcND03FnyO3wBNF9MjM0hWKQ\r\n" \
+    "JXk3\r\n"                                                             \
+    "-----END CERTIFICATE-----\r\n"
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -111,7 +111,7 @@ extern "C" {
  */
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif /* SRC_CLI_X509_CERT_KEY_HPP_ */
