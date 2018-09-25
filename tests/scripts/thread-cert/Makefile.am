@@ -139,6 +139,7 @@ EXTRA_DIST                                                         = \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
     test_coap.py                                                     \
+    test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
@@ -156,6 +157,7 @@ check_PROGRAMS                                                     = \
 
 check_SCRIPTS                                                      = \
     test_coap.py                                                     \
+    test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_ipv6.py                                                     \
@@ -274,6 +276,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    test_coaps.py                                                    \
     test_diag.py                                                     \
     test_service.py                                                  \
     Cert_5_2_05_AddressQuery.py                                      \
