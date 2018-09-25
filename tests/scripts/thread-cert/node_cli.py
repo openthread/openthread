@@ -776,3 +776,68 @@ class otCli:
 
         self.send_command(cmd)
         self._expect('Done')
+
+    def coaps_start_psk(self, psk, pskIdentity):
+        cmd = 'coaps set psk ' + psk + ' ' + pskIdentity
+        self.send_command(cmd)
+        self._expect('Done')
+
+        cmd = 'coaps start'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coaps_start_x509(self):
+        cmd = 'coaps set x509'
+        self.send_command(cmd)
+        self._expect('Done')
+
+        cmd = 'coaps start'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coaps_set_resource_path(self, path):
+        cmd = 'coaps resource ' + path
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coaps_stop(self):
+        cmd = 'coaps stop'
+        self.send_command(cmd)
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect('Done', timeout=timeout)
+
+    def coaps_connect(self, ipaddr):
+        cmd = 'coaps connect ' + ipaddr
+        self.send_command(cmd)
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect('CoAP Secure connected!', timeout=timeout)
+
+    def coaps_disconnect(self):
+        cmd = 'coaps disconnect'
+        self.send_command(cmd)
+        self._expect('Done')
+        self.simulator.go(5)
+
+    def coaps_get(self):
+        cmd = 'coaps get test'
+        self.send_command(cmd)
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect('Received coap secure response', timeout=timeout)

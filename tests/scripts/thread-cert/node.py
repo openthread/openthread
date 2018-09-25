@@ -275,5 +275,26 @@ class Node:
         self.interface.send_mgmt_pending_set(pending_timestamp, active_timestamp, delay_timer, channel, panid,
                                              master_key, mesh_local, network_name)
 
+    def coaps_start_psk(self, psk, pskIdentity):
+        self.interface.coaps_start_psk(psk, pskIdentity)
+
+    def coaps_start_x509(self):
+        self.interface.coaps_start_x509()
+
+    def coaps_set_resource_path(self, path):
+        self.interface.coaps_set_resource_path(path)
+
+    def coaps_stop(self):
+        self.interface.coaps_stop()
+
+    def coaps_connect(self, ipaddr):
+        self.interface.coaps_connect(ipaddr)
+
+    def coaps_disconnect(self):
+        self.interface.coaps_disconnect()
+
+    def coaps_get(self):
+        self.interface.coaps_get()
+
 if __name__ == '__main__':
     unittest.main()
