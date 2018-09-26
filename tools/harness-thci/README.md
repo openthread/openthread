@@ -59,7 +59,7 @@ Alternatively, platform developers may follow the instructions below to add a ne
 10. Select one or more test cases to execute.
 
 
-The above is for the serial connection mode between the DUT and the Host PC. The ethernet connection (only for SSH) mode is
+The above is for the serial connection mode between the DUT and the Host PC. The ssh connection mode is
 also supported for OpenThread WpanCtl, but it can not be auto-discovered and only can be used via ‘Drag and Add’ way
 in the ‘Configure Test Bed’ Page of Test Harness. The configuration is as following:
 
