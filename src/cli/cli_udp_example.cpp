@@ -180,15 +180,22 @@ otError UdpExample::Process(int argc, char *argv[])
 {
     otError error = OT_ERROR_PARSE;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    if (argc < 1)
     {
-        if (strcmp(argv[0], sCommands[i].mName) == 0)
+        ProcessHelp(0, NULL);
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
         {
-            error = (this->*sCommands[i].mCommand)(argc - 1, argv + 1);
-            break;
+            if (strcmp(argv[0], sCommands[i].mName) == 0)
+            {
+                error = (this->*sCommands[i].mCommand)(argc - 1, argv + 1);
+                break;
+            }
         }
     }
-
     return error;
 }
 
