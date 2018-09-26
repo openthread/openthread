@@ -85,6 +85,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     otLogInfoMeshCoP(GetInstance(), "received petition");
 
+    VerifyOrExit(GetNetif().GetMle().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
     VerifyOrExit(commissionerId.IsValid());
 
