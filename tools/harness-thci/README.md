@@ -76,9 +76,9 @@ in the ‘Configure Test Bed’ Page of Test Harness. The configuration is as fo
 
 6. Copy "OpenThread_WpanCtl.py" to `C:\GRL\Thread1.1\Thread_Harness\THCI`.
 
-8. Launch the Thread Test Harness Software, modify the default configuration if needed, and select **Start**.
+7. Launch the Thread Test Harness Software, modify the default configuration if needed, and select **Start**.
 
-9. Drag the "OpenThread_WpanCtl: Wpantund + NCP" reference device to the **Test Bed** section with the desired number.
+8. Drag the "OpenThread_WpanCtl: Wpantund + NCP" reference device to the **Test Bed** section with the desired number.
    Then fill in the Raspberry Pi IPv4 address and port and click `connect` icon button to get the NCP version.
 
-10. Select one or more test cases to execute.
+9. Select one or more test cases to execute.
