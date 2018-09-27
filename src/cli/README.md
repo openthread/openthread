@@ -1196,7 +1196,7 @@ Get the Thread Device Mode value.
 
 * r: rx-on-when-idle
 * s: Secure IEEE 802.15.4 data requests
-* d: Full Function Device
+* d: Full Thread Device
 * n: Full Network Data
 
 ```bash
@@ -1211,7 +1211,7 @@ Set the Thread Device Mode value.
 
 * r: rx-on-when-idle
 * s: Secure IEEE 802.15.4 data requests
-* d: Full Function Device
+* d: Full Thread Device
 * n: Full Network Data
 
 ```bash

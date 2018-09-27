@@ -1113,7 +1113,7 @@ class ChildEntry(object):
         # Example of expected text:
         #
         # `\t"E24C5F67F4B8CBB9, RLOC16:d402, NetDataVer:175, LQIn:3, AveRssi:-20, LastRssi:-20, Timeout:120, Age:0, `
-        # `RxOnIdle:no, FFD:no, SecDataReq:yes, FullNetData:yes"`
+        # `RxOnIdle:no, FTD:no, SecDataReq:yes, FullNetData:yes"`
         #
 
         # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
@@ -1129,7 +1129,7 @@ class ChildEntry(object):
         self._rloc16     = dict['RLOC16']
         self._timeout    = dict['Timeout']
         self._rx_on_idle = (dict['RxOnIdle'] == 'yes')
-        self._ffd        = (dict['FFD'] == 'yes')
+        self._ftd        = (dict['FTD'] == 'yes')
 
     @property
     def ext_address(self):
@@ -1146,8 +1146,8 @@ class ChildEntry(object):
     def is_rx_on_when_idle(self):
         return self._rx_on_idle
 
-    def is_ffd(self):
-        return self._ffd
+    def is_ftd(self):
+        return self._ftd
 
     def __repr__(self):
         return 'ChildEntry({})'.format(self.__dict__)
@@ -1165,7 +1165,7 @@ class NeighborEntry(object):
         # Example of expected text:
         #
         # `\t"5AC95ED4646D6565, RLOC16:9403, LQIn:3, AveRssi:-20, LastRssi:-20, Age:0, LinkFC:8, MleFC:0, IsChild:yes, '
-        # 'RxOnIdle:no, FFD:no, SecDataReq:yes, FullNetData:yes"'
+        # 'RxOnIdle:no, FTD:no, SecDataReq:yes, FullNetData:yes"'
         #
 
         # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
@@ -1181,7 +1181,7 @@ class NeighborEntry(object):
         self._rloc16     = dict['RLOC16']
         self._is_child   = (dict['IsChild'] == 'yes')
         self._rx_on_idle = (dict['RxOnIdle'] == 'yes')
-        self._ffd        = (dict['FFD'] == 'yes')
+        self._ftd        = (dict['FTD'] == 'yes')
 
     @property
     def ext_address(self):
@@ -1194,8 +1194,8 @@ class NeighborEntry(object):
     def is_rx_on_when_idle(self):
         return self._rx_on_idle
 
-    def is_ffd(self):
-        return self._ffd
+    def is_ftd(self):
+        return self._ftd
 
     def is_child(self):
         return self._is_child

@@ -1540,7 +1540,7 @@ enum
 {
     kThreadMode_RxOnWhenIdle        = (1 << 3),
     kThreadMode_SecureDataRequest   = (1 << 2),
-    kThreadMode_FullFunctionDevice  = (1 << 1),
+    kThreadMode_FullThreadDevice  = (1 << 1),
     kThreadMode_FullNetworkData     = (1 << 0),
 };
 
@@ -1564,7 +1564,7 @@ otLwfTunIoCtl_otLinkMode(
 
         if (aLinkMode->mRxOnWhenIdle)       numeric_mode |= kThreadMode_RxOnWhenIdle;
         if (aLinkMode->mSecureDataRequests) numeric_mode |= kThreadMode_SecureDataRequest;
-        if (aLinkMode->mDeviceType)         numeric_mode |= kThreadMode_FullFunctionDevice;
+        if (aLinkMode->mDeviceType)         numeric_mode |= kThreadMode_FullThreadDevice;
         if (aLinkMode->mNetworkData)        numeric_mode |= kThreadMode_FullNetworkData;
 
         status =
@@ -1615,7 +1615,7 @@ otLwfTunIoCtl_otLinkMode_Handler(
 
             aLinkMode->mRxOnWhenIdle = ((numeric_mode & kThreadMode_RxOnWhenIdle) == kThreadMode_RxOnWhenIdle);
             aLinkMode->mSecureDataRequests = ((numeric_mode & kThreadMode_SecureDataRequest) == kThreadMode_SecureDataRequest);
-            aLinkMode->mDeviceType = ((numeric_mode & kThreadMode_FullFunctionDevice) == kThreadMode_FullFunctionDevice);
+            aLinkMode->mDeviceType = ((numeric_mode & kThreadMode_FullThreadDevice) == kThreadMode_FullThreadDevice);
             aLinkMode->mNetworkData = ((numeric_mode & kThreadMode_FullNetworkData) == kThreadMode_FullNetworkData);
 
             *OutBufferLength = sizeof(otLinkModeConfig);

@@ -658,7 +658,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFFD) != 0; }
+    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFullThreadDevice) != 0; }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -684,8 +684,8 @@ public:
      */
     bool IsMinimalEndDevice(void) const
     {
-        return (mDeviceMode & (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle)) !=
-               (ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle);
+        return (mDeviceMode & (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle)) !=
+               (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle);
     }
 
     /**

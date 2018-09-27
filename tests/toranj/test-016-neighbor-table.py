@@ -125,7 +125,7 @@ for child in children:
 
     verify(int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16), 16))
     verify(entry.is_rx_on_when_idle() == False)
-    verify(entry.is_ffd() == False)
+    verify(entry.is_ftd() == False)
     verify(entry.is_child() == True)
 
 # Verify that all other routers are seen in the neighbor table
@@ -139,7 +139,7 @@ for router in routers[1:]:
 
     verify(int(entry.rloc16, 16) == int(router.get(wpan.WPAN_THREAD_RLOC16), 16))
     verify(entry.is_rx_on_when_idle() == True)
-    verify(entry.is_ffd() == True)
+    verify(entry.is_ftd() == True)
     verify(entry.is_child() == False)
 
 

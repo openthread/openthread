@@ -72,7 +72,7 @@ typedef struct
     uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool         mSecureDataRequest : 1; ///< Secure Data Requests
-    bool         mFullFunction : 1;      ///< Full Function Device
+    bool         mFullThreadDevice : 1;  ///< Full Thread Device
     bool         mFullNetworkData : 1;   ///< Full Network Data
     bool         mIsStateRestoring : 1;  ///< Is in restoring state
 } otChildInfo;

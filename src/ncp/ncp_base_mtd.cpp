@@ -149,7 +149,7 @@ uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequest
 
     if (aDeviceType)
     {
-        flags |= SPINEL_THREAD_MODE_FULL_FUNCTION_DEV;
+        flags |= SPINEL_THREAD_MODE_FULL_THREAD_DEV;
     }
 
     if (aNetworkData)
@@ -583,8 +583,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEIGHBOR_TABLE
 
     while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
     {
-        modeFlags = LinkFlagsToFlagByte(neighInfo.mRxOnWhenIdle, neighInfo.mSecureDataRequest, neighInfo.mFullFunction,
-                                        neighInfo.mFullNetworkData);
+        modeFlags = LinkFlagsToFlagByte(neighInfo.mRxOnWhenIdle, neighInfo.mSecureDataRequest,
+                                        neighInfo.mFullThreadDevice, neighInfo.mFullNetworkData);
 
         SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -2207,8 +2207,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MODE>(void)
         ((numericMode & SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE) == SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE);
     modeConfig.mSecureDataRequests =
         ((numericMode & SPINEL_THREAD_MODE_SECURE_DATA_REQUEST) == SPINEL_THREAD_MODE_SECURE_DATA_REQUEST);
-    modeConfig.mDeviceType =
-        ((numericMode & SPINEL_THREAD_MODE_FULL_FUNCTION_DEV) == SPINEL_THREAD_MODE_FULL_FUNCTION_DEV);
+    modeConfig.mDeviceType = ((numericMode & SPINEL_THREAD_MODE_FULL_THREAD_DEV) == SPINEL_THREAD_MODE_FULL_THREAD_DEV);
     modeConfig.mNetworkData =
         ((numericMode & SPINEL_THREAD_MODE_FULL_NETWORK_DATA) == SPINEL_THREAD_MODE_FULL_NETWORK_DATA);
 

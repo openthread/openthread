@@ -119,7 +119,7 @@ otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
         config.mSecureDataRequests = 1;
     }
 
-    if (mode & Mle::ModeTlv::kModeFFD)
+    if (mode & Mle::ModeTlv::kModeFullThreadDevice)
     {
         config.mDeviceType = 1;
     }
@@ -149,7 +149,7 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
 
     if (aConfig.mDeviceType)
     {
-        mode |= Mle::ModeTlv::kModeFFD;
+        mode |= Mle::ModeTlv::kModeFullThreadDevice;
     }
 
     if (aConfig.mNetworkData)

@@ -88,7 +88,7 @@ for child in children:
     verify(int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16), 16))
     verify(int(entry.timeout, 0) == 120)
     verify(entry.is_rx_on_when_idle() == False)
-    verify(entry.is_ffd() == False)
+    verify(entry.is_ftd() == False)
 
 
 #-----------------------------------------------------------------------------------------------------------------------

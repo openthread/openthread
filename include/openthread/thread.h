@@ -75,7 +75,7 @@ typedef struct otLinkModeConfig
 {
     bool mRxOnWhenIdle : 1;       ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
     bool mSecureDataRequests : 1; ///< 1, if the sender uses IEEE 802.15.4 to secure all data requests. 0, otherwise.
-    bool mDeviceType : 1;         ///< 1, if the sender is an FFD. 0, otherwise.
+    bool mDeviceType : 1;         ///< 1, if the sender is an FTD. 0, otherwise.
     bool mNetworkData : 1;        ///< 1, if the sender requires the full Network Data. 0, otherwise.
 } otLinkModeConfig;
 
@@ -100,7 +100,7 @@ typedef struct
     uint16_t     mMessageErrorRate;      ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     bool         mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool         mSecureDataRequest : 1; ///< Secure Data Requests
-    bool         mFullFunction : 1;      ///< Full Function Device
+    bool         mFullThreadDevice : 1;  ///< Full Thread Device
     bool         mFullNetworkData : 1;   ///< Full Network Data
     bool         mIsChild : 1;           ///< Is the neighbor a child
 } otNeighborInfo;
