@@ -523,7 +523,7 @@ public:
      * This method creates a new message with a CoAP header.
      *
      * @param[in]  aHeader      A reference to a CoAP header that is used to create the message.
-     * @param[in]  aPrority     The message priority level.
+     * @param[in]  aPriority    The message priority level.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
