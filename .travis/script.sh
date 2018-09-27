@@ -432,7 +432,7 @@ set -x
         --enable-channel-manager            \
         --enable-channel-monitor            \
         --disable-docs                      \
-        --disable-test || die
+        --disable-tests || die
     make -j 8 || die
 
     git checkout -- . || die
@@ -449,7 +449,7 @@ set -x
         --enable-mac-filter                 \
         --enable-service                    \
         --disable-docs                      \
-        --disable-test || die
+        --disable-tests || die
     make -j 8 || die
 
     git checkout -- . || die
