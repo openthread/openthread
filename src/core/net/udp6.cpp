@@ -132,10 +132,7 @@ otError UdpSocket::Close(void)
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-    if (!IsMle(GetInstance(), mSockName.mPort))
-    {
-        SuccessOrExit(error = otPlatUdpClose(this));
-    }
+    SuccessOrExit(error = otPlatUdpClose(this));
 #endif
     SuccessOrExit(error = GetUdp().RemoveSocket(*this));
     memset(&mSockName, 0, sizeof(mSockName));
