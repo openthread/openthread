@@ -404,7 +404,7 @@ enum
     SPINEL_CMD_HBO_DROP      = 14,
     SPINEL_CMD_HBO_OFFLOADED = 15,
     SPINEL_CMD_HBO_RECLAIMED = 16,
-    SPINEL_CMD_HBO_DROPED    = 17,
+    SPINEL_CMD_HBO_DROPPED   = 17,
 
     SPINEL_CMD_PEEK     = 18,
     SPINEL_CMD_PEEK_RET = 19,
@@ -2558,6 +2558,8 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_format);
 
 // ----------------------------------------------------------------------------
+
+SPINEL_API_EXTERN const char *spinel_command_to_cstr(unsigned int command);
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
 
