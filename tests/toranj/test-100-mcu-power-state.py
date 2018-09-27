@@ -56,6 +56,23 @@ verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check power state wpantund property get and set
 
+WAIT_TIME = 5
+
+def check_wpan_is_in_offline_state():
+    verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+
+def check_wpan_is_in_deep_sleep_state():
+    verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+
+def check_wpan_is_in_commissioned_state():
+    verify(node.get(wpan.WPAN_STATE) == wpan.STATE_COMMISSIONED)
+
+def check_wpan_is_in_associated_state():
+    verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+
+def check_wpan_is_in_associating_state():
+    verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATING)
+
 node.form("mcu-power-state")
 verify(node.is_associated())
 
@@ -95,7 +112,7 @@ verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 # Setting the power state to `low-power` should change wpantund state to `DEEP_SLEEP`
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_LOW_POWER)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 
 # Verify that reading/getting a property does not impact the wpantund state.
 
@@ -106,17 +123,17 @@ verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
 # Setting the power state to `on` should change wpantund state to `OFFLINE`
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+wpan.verify_within(check_wpan_is_in_offline_state, WAIT_TIME)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Verify the behavior of `begin-low-power` wpanctl command
 
 node.wpanctl('begin-low-power')
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+wpan.verify_within(check_wpan_is_in_offline_state, WAIT_TIME)
 
 # Check the `wpantund` state changes between "offline:commissioned" and "deep-sleep"
 
@@ -134,14 +151,13 @@ verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 # be `DEEP_SLEEP`.
 
 node.reset()
-time.sleep(2)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_COMMISSIONED)
+wpan.verify_within(check_wpan_is_in_commissioned_state, WAIT_TIME)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_LOW_POWER)
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 
 node.set(wpan.WPAN_NCP_MCU_POWER_STATE, wpan.MCU_POWER_STATE_ON)
 node.leave()
@@ -156,12 +172,12 @@ verify(node.get('Daemon:Enabled') == 'true')
 # Disabling `wpantund` should put the NCP to deep sleep
 node.set('Daemon:Enabled', 'false');
 verify(node.get('Daemon:Enabled') == 'false')
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 # Enabling `wpantund` should update the `MCU_POWER_STATE` back to `ON`.
 node.set('Daemon:Enabled', 'true');
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+wpan.verify_within(check_wpan_is_in_offline_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -173,11 +189,11 @@ verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 
 node.set('Daemon:Enabled', 'false');
 verify(node.get('Daemon:Enabled') == 'false')
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_DEEP_SLEEP)
+wpan.verify_within(check_wpan_is_in_deep_sleep_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
 
 node.set('Daemon:Enabled', 'true');
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_COMMISSIONED)
+wpan.verify_within(check_wpan_is_in_commissioned_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_ON)
 
 node.leave()
@@ -200,10 +216,8 @@ node.reset()
 # on NCP) and  wpantund state should start as "deep-sleep" but since AutoAssociateAfterReset
 # is enabled, network should be recovered.
 
-time.sleep(1)
+wpan.verify_within(check_wpan_is_in_associating_state, WAIT_TIME)
 verify(node.get(wpan.WPAN_NCP_MCU_POWER_STATE) == wpan.MCU_POWER_STATE_LOW_POWER)
-wpan_state = node.get(wpan.WPAN_STATE)
-verify(wpan_state == wpan.STATE_ASSOCIATED or wpan_state == wpan.STATE_ASSOCIATING)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
