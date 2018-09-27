@@ -289,7 +289,7 @@ otError RouterTable::Release(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
 
     netif.GetAddressResolver().Remove(aRouterId);
-    netif.GetNetworkDataLeader().RemoveBorderRouter(rloc16, false);
+    netif.GetNetworkDataLeader().RemoveBorderRouter(rloc16, NetworkData::Leader::kMatchModeRouterId);
     netif.GetMle().ResetAdvertiseInterval();
 
     otLogNoteMle(GetInstance(), "Release router id %d", aRouterId);
