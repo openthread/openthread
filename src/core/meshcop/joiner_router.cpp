@@ -244,8 +244,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
-    message->SetPriority(kMeshCoPMessagePriority);
+    VerifyOrExit((message = mSocket.NewMessage(0, kMeshCoPMessagePriority)) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(false);
 
     while (length)

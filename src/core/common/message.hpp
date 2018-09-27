@@ -359,7 +359,7 @@ public:
      * If the message is already queued in a priority queue, changing the priority ensures to
      * update the message in the associated queue.
      *
-     * @param[in]  aPrority  The message priority level.
+     * @param[in]  aPriority  The message priority level.
      *
      * @retval OT_ERROR_NONE           Successfully set the priority for the message.
      * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
@@ -1075,7 +1075,6 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
-private:
     /**
      * This method returns the tail of the list (last message in the list)
      *
@@ -1084,6 +1083,7 @@ private:
      */
     Message *GetTail(void) const;
 
+private:
     /**
      * This method adds a message to a list.
      *
@@ -1243,11 +1243,12 @@ public:
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aPriority       The priority level of the message.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader);
+    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.
@@ -1275,17 +1276,13 @@ public:
      */
     Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
 
-        /**
-         * This method returns the number of free buffers.
-         *
-         * @returns The number of free buffers.
-         *
-         */
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * This method returns the number of free buffers.
+     *
+     * @returns The number of free buffers.
+     *
+     */
     uint16_t GetFreeBufferCount(void) const;
-#else
-    uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
-#endif
 
 private:
     enum
@@ -1293,9 +1290,9 @@ private:
         kDefaultMessagePriority = Message::kPriorityLow,
     };
 
-    Buffer *       NewBuffer(void);
+    Buffer *       NewBuffer(uint8_t aPriority);
     void           FreeBuffers(Buffer *aBuffer);
-    otError        ReclaimBuffers(int aNumBuffers);
+    otError        ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0

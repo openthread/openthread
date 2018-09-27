@@ -67,10 +67,10 @@ Ip6::Ip6(Instance &aInstance)
 {
 }
 
-Message *Ip6::NewMessage(uint16_t aReserved)
+Message *Ip6::NewMessage(uint16_t aReserved, uint8_t aPriority)
 {
-    return GetInstance().GetMessagePool().New(Message::kTypeIp6,
-                                              sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
+    return GetInstance().GetMessagePool().New(
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aPriority);
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
