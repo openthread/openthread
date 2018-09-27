@@ -128,7 +128,7 @@ otError otPlatUartEnable(void)
         termios.c_cc[VTIME] = 0;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetispeed(&termios, OPENTHREAD_CONFIG_POSIX_UART_BAUDRATE) == 0, perror("cfsetispeed");
+        otEXPECT_ACTION(cfsetispeed(&termios, OPENTHREAD_POSIX_UART_BAUDRATE) == 0, perror("cfsetispeed");
                         error = OT_ERROR_GENERIC);
 
         // set configuration
@@ -151,7 +151,7 @@ otError otPlatUartEnable(void)
         termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetospeed(&termios, OPENTHREAD_CONFIG_POSIX_UART_BAUDRATE) == 0, perror("cfsetospeed");
+        otEXPECT_ACTION(cfsetospeed(&termios, OPENTHREAD_POSIX_UART_BAUDRATE) == 0, perror("cfsetospeed");
                         error = OT_ERROR_GENERIC);
 
         // set configuration
