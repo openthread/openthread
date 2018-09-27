@@ -76,7 +76,7 @@
               hint="eg: 115200">115200
         </ITEM>
     </DEVICE>
-    <DEVICE name="OpenThread_WpanCtl" thumbnail="OpenThread.png" description = "OpenThread_WpanCtl: wpantund + NCP" THCI="OpenThread_WpanCtl">
+    <DEVICE name="OpenThread_WpanCtl" thumbnail="OpenThread_WpanCtl.png" description = "OpenThread_WpanCtl: Wpantund + NCP" THCI="OpenThread_WpanCtl">
         <ITEM label="Serial Line"
               type="text"
               forParam="SerialPort"
@@ -90,4 +90,21 @@
               hint="eg: 115200">115200
         </ITEM>
     </DEVICE>
+    <DEVICE name="OpenThread_WpanCtl_SSH" thumbnail="OpenThread_WpanCtl.png" description = "OpenThread_WpanCtl: Wpantund + NCP (SSH)" THCI="OpenThread_WpanCtl">
+        <ITEM label="IP addr"
+              type="text"
+              forParam="TelnetIP"
+              validation="ipv4"
+              hint="eg: 192.168.1.111">192.168.1.100
+        </ITEM>
+        <ITEM label="PORT"
+              type="text"
+              forParam="TelnetPort"
+              validation="port"
+              hint="eg: 4901">22
+        </ITEM>
+        <ITEM type="hidden" label = ""
+              forParam="Param5">ip
+        </ITEM>
+     </DEVICE>
 </DEVICE_FIELDS>

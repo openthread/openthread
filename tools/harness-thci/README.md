@@ -57,3 +57,27 @@ Alternatively, platform developers may follow the instructions below to add a ne
 9. Drag the "OpenThread_WpanCtl: Wpantund + NCP" reference device to the **Test Bed** section with the desired number.
 
 10. Select one or more test cases to execute.
+
+
+The above is for the serial connection mode between the DUT and the Host PC. The ssh connection mode is
+also supported for OpenThread WpanCtl, but it can not be auto-discovered and only can be used via ‘Drag and Add’ way
+in the ‘Configure Test Bed’ Page of Test Harness. The configuration is as following:
+
+1. Make Raspberry Pi and Host PC in the same LAN.
+
+2. Login Raspberry Pi, sudo raspi-config, then -> interfacing options -> enable ssh.
+
+3. Install python paramiko package to `C:\GRL\Pyton2.7`
+
+4. Copy "OpenThread_WpanCtl.png" to `C:\GRL\Thread1.1\Web\images`.
+
+5. Copy "deviceInputFields.xml" to `C:\GRL\Thread1.1\Web\data`.
+
+6. Copy "OpenThread_WpanCtl.py" to `C:\GRL\Thread1.1\Thread_Harness\THCI`.
+
+7. Launch the Thread Test Harness Software, modify the default configuration if needed, and select **Start**.
+
+8. Drag the "OpenThread_WpanCtl: Wpantund + NCP (SSH)" reference device to the **Test Bed** section with the desired number.
+   Then fill in the Raspberry Pi IPv4 address and port and click `connect` icon button to get the NCP version.
+
+9. Select one or more test cases to execute.
