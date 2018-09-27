@@ -136,7 +136,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mMode & Mle::ModeTlv::kModeFFD) != 0; }
+    bool IsFullThreadDevice(void) const { return (mMode & Mle::ModeTlv::kModeFullThreadDevice) != 0; }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.

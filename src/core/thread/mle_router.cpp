@@ -83,7 +83,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
 {
-    mDeviceMode |= ModeTlv::kModeFFD | ModeTlv::kModeFullNetworkData;
+    mDeviceMode |= ModeTlv::kModeFullThreadDevice | ModeTlv::kModeFullNetworkData;
 
     SetRouterId(kInvalidRouterId);
 }
@@ -991,7 +991,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     router->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     router->SetLastHeard(TimerMilli::GetNow());
-    router->SetDeviceMode(ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData);
+    router->SetDeviceMode(ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData);
     router->GetLinkInfo().Clear();
     router->GetLinkInfo().AddRss(GetNetif().GetMac().GetNoiseFloor(), linkInfo->mRss);
     router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
@@ -2150,7 +2150,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
         VerifyOrExit(pendingTimestamp.IsValid(), error = OT_ERROR_PARSE);
     }
 
-    if ((mode.GetMode() & ModeTlv::kModeFFD) == 0)
+    if ((mode.GetMode() & ModeTlv::kModeFullThreadDevice) == 0)
     {
         SuccessOrExit(error = Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset));
         SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
@@ -3153,7 +3153,7 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             netif.GetMeshForwarder().ClearChildIndirectMessages(static_cast<Child &>(aNeighbor));
             netif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
 
-            if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFFD)
+            if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFullThreadDevice)
             {
                 // Clear all EID-to-RLOC entries assossiated with the child.
                 netif.GetAddressResolver().Remove(aNeighbor.GetRloc16());
@@ -3614,7 +3614,7 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
 
     aChildInfo.mRxOnWhenIdle      = aChild.IsRxOnWhenIdle();
     aChildInfo.mSecureDataRequest = aChild.IsSecureDataRequest();
-    aChildInfo.mFullFunction      = aChild.IsFullThreadDevice();
+    aChildInfo.mFullThreadDevice  = aChild.IsFullThreadDevice();
     aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
     aChildInfo.mIsStateRestoring  = aChild.IsStateRestoring();
 
@@ -3693,7 +3693,7 @@ exit:
 #endif
         aNeighInfo.mRxOnWhenIdle      = neighbor->IsRxOnWhenIdle();
         aNeighInfo.mSecureDataRequest = neighbor->IsSecureDataRequest();
-        aNeighInfo.mFullFunction      = neighbor->IsFullThreadDevice();
+        aNeighInfo.mFullThreadDevice  = neighbor->IsFullThreadDevice();
         aNeighInfo.mFullNetworkData   = neighbor->IsFullNetworkData();
     }
 
