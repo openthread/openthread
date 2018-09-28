@@ -2,6 +2,8 @@
 
 OpenThread includes Windows 10 drivers necessary for interfacing with UART NCP devices. The design allows for support of both simple radio devices and devices running the complete OpenThread stack.
 
+> **NOTE:** OpenThread's Windows integration has not been actively maintained for some time. While Windows builds are still a part of OpenThread's continuous integration (CI), the Windows CI only tests basic compilation.
+
 ## Architecture ##
 
 Details on the architecture can be found [here](https://openthread.io/platforms/windows10).
@@ -99,7 +101,11 @@ Since most of these drivers are still under development, it is recommended to al
 
 The filter driver `otlwf.sys` exposes the IOCTL interface that `otapi.dll` uses and houses the bulk of the actual Thread logic. `otapi.dll` exposes the C interface for user mode applications to use to control the Thread interfaces.
 
-1. Download the latest binaries ([x86](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/release.zip?job=Platform%3A+x86), [x64](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/release.zip?job=Platform%3A+x64), [arm](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/release.zip?job=Platform%3A+arm))
+1. Download the latest platform binary on AppVeyor:
+	1. Go to the [latest build](https://ci.appveyor.com/project/jwhui/openthread) page
+	1. Select the desired platform (x64, x86, arm)
+	1. On the platform page, select **ARTIFACTS**
+	1. Download the release.zip file for that platform
 1. Extract the files to a temporary location
 1. Open an admin command prompt in the temporary location
 1. Run the `install_otlwf.cmd` file
@@ -146,7 +152,7 @@ The `instancelist` command queries for all available instances/interfaces on the
 
 ### Sample Universal App
 
-The latest build of the sample universal app can be downloaded from ([x86](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/build/bin/app.zip?job=Platform%3A+x86), [x64](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/build/bin/app.zip?job=Platform%3A+x64), [arm](https://ci.appveyor.com/api/projects/jwhui/openthread/artifacts/build/bin/app.zip?job=Platform%3A+arm)).
+The latest builds of the sample universal app can be downloaded from the [latest AppVeyor build](https://ci.appveyor.com/project/jwhui/openthread).
 
 ### Running Python Certification Tests
 
