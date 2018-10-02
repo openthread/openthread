@@ -43,8 +43,8 @@
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-#include "api/link_raw.hpp"
 #include "common/message.hpp"
+#include "mac/link_raw.hpp"
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "coap/coap.hpp"

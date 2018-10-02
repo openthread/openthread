@@ -686,7 +686,7 @@
     <ClInclude Include="..\..\include\openthread\udp.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\api\link_raw.hpp">
+    <ClInclude Include="..\..\src\core\mac\link_raw.hpp">
       <Filter>Header Files\api</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\wrapper_string.h">
