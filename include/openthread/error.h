@@ -111,7 +111,15 @@ extern "C" {
  * @defgroup api-channel-manager     Channel Manager
  * @defgroup api-channel-monitor     Channel Monitoring
  * @defgroup api-child-supervision   Child Supervision
+ * @defgroup api-coap-group          CoAP
+ *
+ * @{
+ *
  * @defgroup api-coap                CoAP
+ * @defgroup api-coap-secure         CoAP Secure
+ *
+ * @}
+ *
  * @defgroup api-cli                 Command Line Interface
  * @defgroup api-crypto              Crypto
  * @defgroup api-factory-diagnostics Factory Diagnostics
