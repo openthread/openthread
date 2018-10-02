@@ -39,163 +39,125 @@
 #include <stddef.h>
 #include <sys/stat.h>
 
+#include <openthread/platform/misc.h>
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
 
+#define VerifyOrDie(aCondition) \
+    do                          \
+    {                           \
+        if (!(aCondition))      \
+        {                       \
+            perror(__func__);   \
+            exit(EXIT_FAILURE); \
+        }                       \
+    } while (false)
+
+static const size_t kMaxFileNameSize = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32;
+
 static int sFd = -1;
 
-static otError offsetWrite(off_t &aOffset, uint16_t aLength)
+static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
+{
+    const char *offset = getenv("PORT_OFFSET");
+
+    snprintf(aFileName, kMaxFileNameSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s_%" PRIx64 ".%s",
+             offset == NULL ? "0" : offset, NODE_ID, (aSwap ? "swap" : "data"));
+}
+
+static int swapOpen(void)
+{
+    char fileName[kMaxFileNameSize];
+    int  fd;
+
+    getSettingsFileName(fileName, true);
+    fd = open(fileName, O_RDWR | O_CREAT | O_TRUNC, 0600);
+    VerifyOrDie(fd != -1);
+
+    return fd;
+}
+
+/**
+ * This function reads @p aLength bytes from the data file and appends to the swap file.
+ *
+ * @param[in]   aFd     The file descriptor of the current swap file.
+ * @param[in]   aLength Number of bytes to copy.
+ *
+ */
+static void swapWrite(int aFd, uint16_t aLength)
 {
     const size_t kBlockSize = 512;
     uint8_t      buffer[kBlockSize];
-    otError      error = OT_ERROR_NONE;
 
     while (aLength > 0)
     {
         uint16_t count = aLength >= sizeof(buffer) ? sizeof(buffer) : aLength;
         ssize_t  rval  = read(sFd, buffer, count);
 
+        VerifyOrDie(rval > 0);
+        count = static_cast<uint16_t>(rval);
+        rval  = write(aFd, buffer, count);
         assert(rval == count);
-        VerifyOrExit(rval == count, error = OT_ERROR_PARSE);
-        rval = pwrite(sFd, buffer, count, aOffset);
-        assert(rval == count);
-        VerifyOrExit(rval == count, error = OT_ERROR_PARSE);
-        aOffset += count;
+        VerifyOrDie(rval == count);
         aLength -= count;
     }
+}
 
-exit:
-    return error;
+static void swapPersist(int aFd)
+{
+    char swapFile[kMaxFileNameSize];
+    char dataFile[kMaxFileNameSize];
+
+    getSettingsFileName(swapFile, true);
+    getSettingsFileName(dataFile, false);
+
+    VerifyOrDie(0 == rename(swapFile, dataFile));
+    VerifyOrDie(0 == close(sFd));
+
+    sFd = aFd;
+}
+
+static void swapDiscard(int aFd)
+{
+    char swapFileName[kMaxFileNameSize];
+
+    VerifyOrDie(0 == close(aFd));
+    getSettingsFileName(swapFileName, true);
+    VerifyOrDie(0 == unlink(swapFileName));
 }
 
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    const char *path = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
-    char        fileName[sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32];
-    struct stat st;
-    const char *offset = getenv("PORT_OFFSET");
+    char fileName[kMaxFileNameSize];
 
     OT_UNUSED_VARIABLE(aInstance);
-    assert(sFd == -1);
 
-    memset(&st, 0, sizeof(st));
-
-    if (stat(path, &st) == -1)
     {
-        mkdir(path, 0755);
+        struct stat st;
+
+        if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
+        {
+            mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
+        }
     }
 
-    if (offset == NULL)
-    {
-        offset = "0";
-    }
-
-    snprintf(fileName, sizeof(fileName), "%s/%s_%" PRIx64 ".flash", path, offset, NODE_ID);
+    getSettingsFileName(fileName, false);
 
     sFd = open(fileName, O_RDWR | O_CREAT, 0600);
 
-    if (sFd < 0)
-    {
-        perror("open");
-        exit(EXIT_FAILURE);
-    }
+    VerifyOrDie(sFd != -1);
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError     error  = OT_ERROR_NOT_FOUND;
+    const off_t size   = lseek(sFd, 0, SEEK_END);
+    off_t       offset = lseek(sFd, 0, SEEK_SET);
 
-    OT_UNUSED_VARIABLE(aInstance);
+    VerifyOrExit(offset == 0 && size >= 0, error = OT_ERROR_PARSE);
 
-    VerifyOrExit(lseek(sFd, 0, SEEK_SET) == 0);
-
-    do
-    {
-        uint16_t key;
-        uint16_t length;
-        ssize_t  rval;
-
-        rval = read(sFd, &key, sizeof(key));
-        VerifyOrExit(rval == sizeof(key));
-
-        rval = read(sFd, &length, sizeof(length));
-        VerifyOrExit(rval == sizeof(length));
-
-        if (key == aKey)
-        {
-            if (aIndex == 0)
-            {
-                error = OT_ERROR_NONE;
-
-                if (aValueLength)
-                {
-                    if (*aValueLength >= length)
-                    {
-                        *aValueLength = length;
-                    }
-
-                    if (aValue)
-                    {
-                        VerifyOrExit(read(sFd, aValue, *aValueLength) == *aValueLength);
-                    }
-                }
-
-                break;
-            }
-            else
-            {
-                --aIndex;
-            }
-        }
-
-        VerifyOrExit(lseek(sFd, length, SEEK_CUR) > 0);
-    } while (true);
-
-exit:
-    return error;
-}
-
-otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-{
-    otPlatSettingsDelete(aInstance, aKey, -1);
-    return otPlatSettingsAdd(aInstance, aKey, aValue, aValueLength);
-}
-
-otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
-{
-    otError error  = OT_ERROR_PARSE;
-    off_t   offset = lseek(sFd, 0, SEEK_END);
-
-    OT_UNUSED_VARIABLE(aInstance);
-
-    VerifyOrExit(offset >= 0);
-    VerifyOrExit(write(sFd, &aKey, sizeof(aKey)) == sizeof(aKey));
-    VerifyOrExit(write(sFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength));
-    VerifyOrExit(write(sFd, aValue, aValueLength) == aValueLength);
-
-    error = OT_ERROR_NONE;
-
-exit:
-    if (error != OT_ERROR_NONE)
-    {
-        if (ftruncate(sFd, offset) != 0)
-        {
-            perror("ftruncate");
-        }
-    }
-    return error;
-}
-
-otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
-{
-    otError error  = OT_ERROR_NOT_FOUND;
-    off_t   size   = lseek(sFd, 0, SEEK_END);
-    off_t   offset = lseek(sFd, 0, SEEK_SET);
-
-    VerifyOrExit(offset == 0);
-
-    for (off_t readOffset = offset; readOffset < size;)
+    while (offset < size)
     {
         uint16_t key;
         uint16_t length;
@@ -207,19 +169,111 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
         rval = read(sFd, &length, sizeof(length));
         VerifyOrExit(rval == sizeof(length), error = OT_ERROR_PARSE);
 
-        readOffset += sizeof(key) + sizeof(length) + length;
+        if (key == aKey)
+        {
+            if (aIndex == 0)
+            {
+                error = OT_ERROR_NONE;
+
+                if (aValueLength)
+                {
+                    assert(*aValueLength >= length);
+
+                    *aValueLength = length;
+
+                    if (aValue)
+                    {
+                        VerifyOrExit(read(sFd, aValue, *aValueLength) == *aValueLength, error = OT_ERROR_PARSE);
+                    }
+                }
+
+                break;
+            }
+            else
+            {
+                --aIndex;
+            }
+        }
+
+        offset += sizeof(key) + sizeof(length) + length;
+        VerifyOrExit(offset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
+    }
+
+exit:
+    if (error == OT_ERROR_PARSE)
+    {
+        otPlatSettingsWipe(aInstance);
+        exit(EXIT_FAILURE);
+    }
+
+    return error;
+}
+
+otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    otPlatSettingsDelete(aInstance, aKey, -1);
+    return otPlatSettingsAdd(aInstance, aKey, aValue, aValueLength);
+}
+
+otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    off_t size = lseek(sFd, 0, SEEK_END);
+    int   fd   = swapOpen();
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    if (size > 0)
+    {
+        VerifyOrDie(0 == lseek(sFd, 0, SEEK_SET));
+        swapWrite(fd, size);
+    }
+
+    VerifyOrDie(write(fd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
+                write(fd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
+                write(fd, aValue, aValueLength) == aValueLength);
+
+    swapPersist(fd);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+{
+    otError error  = OT_ERROR_NOT_FOUND;
+    off_t   size   = lseek(sFd, 0, SEEK_END);
+    off_t   offset = lseek(sFd, 0, SEEK_SET);
+    int     fd     = swapOpen();
+
+    assert(fd != -1);
+    assert(offset == 0);
+    VerifyOrExit(offset == 0 && size >= 0, error = OT_ERROR_PARSE);
+
+    while (offset < size)
+    {
+        uint16_t key;
+        uint16_t length;
+        ssize_t  rval;
+
+        rval = read(sFd, &key, sizeof(key));
+        VerifyOrExit(rval == sizeof(key), error = OT_ERROR_PARSE);
+
+        rval = read(sFd, &length, sizeof(length));
+        VerifyOrExit(rval == sizeof(length), error = OT_ERROR_PARSE);
+
+        offset += sizeof(key) + sizeof(length) + length;
 
         if (aKey == key)
         {
             if (aIndex == 0)
             {
-                VerifyOrExit(readOffset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
-                error = offsetWrite(offset, size - readOffset);
+                VerifyOrExit(offset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
+                swapWrite(fd, size - offset);
+                error = OT_ERROR_NONE;
                 break;
             }
             else if (aIndex == -1)
             {
-                VerifyOrExit(readOffset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
+                VerifyOrExit(offset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
                 error = OT_ERROR_NONE;
                 continue;
             }
@@ -229,36 +283,30 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
             }
         }
 
-        if (error == OT_ERROR_NONE)
-        {
-            rval = pwrite(sFd, &key, sizeof(key), offset);
-            assert(rval == sizeof(key));
-            VerifyOrExit(rval == sizeof(key), error = OT_ERROR_PARSE);
-            offset += rval;
+        rval = write(fd, &key, sizeof(key));
+        assert(rval == sizeof(key));
+        VerifyOrDie(rval == sizeof(key));
 
-            rval = pwrite(sFd, &length, sizeof(length), offset);
-            assert(rval == sizeof(length));
-            VerifyOrExit(rval == sizeof(length), error = OT_ERROR_PARSE);
-            offset += rval;
+        rval = write(fd, &length, sizeof(length));
+        assert(rval == sizeof(length));
+        VerifyOrDie(rval == sizeof(length));
 
-            SuccessOrExit(error = offsetWrite(offset, length));
-        }
-        else
-        {
-            VerifyOrExit(readOffset == lseek(sFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
-            offset = readOffset;
-        }
-    }
-
-    if (error == OT_ERROR_NONE)
-    {
-        VerifyOrExit(0 == ftruncate(sFd, offset), error = OT_ERROR_PARSE);
+        swapWrite(fd, length);
     }
 
 exit:
-    if (error == OT_ERROR_PARSE)
+    if (error == OT_ERROR_NONE)
+    {
+        swapPersist(fd);
+    }
+    else if (error == OT_ERROR_NOT_FOUND)
+    {
+        swapDiscard(fd);
+    }
+    else if (error == OT_ERROR_PARSE)
     {
         otPlatSettingsWipe(aInstance);
+        exit(EXIT_FAILURE);
     }
 
     return error;
@@ -267,10 +315,11 @@ exit:
 void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    ftruncate(sFd, 0);
+    VerifyOrDie(0 == ftruncate(sFd, 0));
 }
 
 #if SELF_TEST
+
 uint64_t NODE_ID = 1;
 
 int main()
@@ -278,7 +327,7 @@ int main()
     otInstance *instance = NULL;
     uint8_t     data[60];
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(data); ++i)
+    for (size_t i = 0; i < sizeof(data); ++i)
     {
         data[i] = i;
     }
@@ -292,20 +341,29 @@ int main()
         uint16_t length = sizeof(value);
 
         assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 0, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NOT_FOUND);
     }
 
     // verify write one record
     assert(otPlatSettingsSet(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
     {
-        uint8_t  value[OT_ARRAY_LENGTH(data)];
+        uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
         assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NONE);
         assert(otPlatSettingsGet(instance, 0, 0, NULL, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
+
+        length = sizeof(value);
         assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
         assert(0 == memcmp(value, data, length));
+
+        // wrong index
+        assert(otPlatSettingsGet(instance, 0, 1, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        // wrong key
+        assert(otPlatSettingsGet(instance, 1, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
 
@@ -313,11 +371,16 @@ int main()
     assert(otPlatSettingsSet(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
     assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
     {
-        uint8_t  value[OT_ARRAY_LENGTH(data)];
+        uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
         assert(otPlatSettingsGet(instance, 0, 1, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        length = sizeof(value);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data));
         assert(0 == memcmp(value, data, length));
     }
     otPlatSettingsWipe(instance);
@@ -326,11 +389,16 @@ int main()
     assert(otPlatSettingsSet(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
     assert(otPlatSettingsAdd(instance, 1, data, sizeof(data) / 2) == OT_ERROR_NONE);
     {
-        uint8_t  value[OT_ARRAY_LENGTH(data)];
+        uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
         assert(otPlatSettingsGet(instance, 1, 0, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        length = sizeof(value);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data));
         assert(0 == memcmp(value, data, length));
     }
     otPlatSettingsWipe(instance);
@@ -340,13 +408,25 @@ int main()
     assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
     assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 3) == OT_ERROR_NONE);
     {
-        uint8_t  value[OT_ARRAY_LENGTH(data)];
+        uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
+        // wrong key
+        assert(otPlatSettingsDelete(instance, 1, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 1, -1) == OT_ERROR_NOT_FOUND);
+
+        // wrong index
+        assert(otPlatSettingsDelete(instance, 0, 3) == OT_ERROR_NOT_FOUND);
+
+        // delete one record
         assert(otPlatSettingsDelete(instance, 0, 1) == OT_ERROR_NONE);
         assert(otPlatSettingsGet(instance, 0, 1, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 3);
         assert(0 == memcmp(value, data, length));
+
+        // delete all records
+        assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
 
@@ -355,7 +435,7 @@ int main()
     assert(otPlatSettingsAdd(instance, 1, data, sizeof(data) / 2) == OT_ERROR_NONE);
     assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 3) == OT_ERROR_NONE);
     {
-        uint8_t  value[OT_ARRAY_LENGTH(data)];
+        uint8_t  value[sizeof(data)];
         uint16_t length = sizeof(value);
 
         assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NONE);
@@ -363,6 +443,9 @@ int main()
         assert(otPlatSettingsGet(instance, 1, 0, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
         assert(0 == memcmp(value, data, length));
+
+        assert(otPlatSettingsDelete(instance, 0, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
 
