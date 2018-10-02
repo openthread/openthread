@@ -603,7 +603,7 @@ class OpenThread_WpanCtl(IThci):
     def __convertIp6PrefixStringToIp6Address(self, strIp6Prefix):
         """convert IPv6 prefix string to IPv6 dotted-quad format
            for example:
-           2001000000000000 -> 2001::
+           2001000000000000 -> 2001:0000:0000:0000::
 
         Args:
             strIp6Prefix: IPv6 address string
@@ -618,7 +618,7 @@ class OpenThread_WpanCtl(IThci):
         finalMac = ':'.join(a + b + c + d for a, b, c, d in zip(hexIter, hexIter, hexIter, hexIter))
         prefix = str(finalMac)
         strIp6Prefix = prefix[:20]
-        return strIp6Prefix + ':'
+        return strIp6Prefix + '::'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
