@@ -1595,7 +1595,7 @@ class OpenThread_WpanCtl(IThci):
             parameter = ''
 
             if P_slaac_preferred == 1:
-                parameter += ' -a'
+                parameter += ' -a -f'
 
             if P_stable == 1:
                 parameter += ' -s'
