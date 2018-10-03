@@ -41,7 +41,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
@@ -103,8 +102,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         radioConfig = aArgVector[i + 1];
     }
 
-    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+    platformLoggingInit(basename(aArgVector[0]));
 
     gArgumentsCount = aArgCount;
     gArguments      = aArgVector;
