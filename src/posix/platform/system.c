@@ -50,9 +50,6 @@ uint64_t NODE_ID = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 
-int    gArgumentsCount = 0;
-char **gArguments      = NULL;
-
 static void PrintUsage(const char *aArg0)
 {
     fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
@@ -105,9 +102,6 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
-
-    gArgumentsCount = aArgCount;
-    gArguments      = aArgVector;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     otSimInit();
