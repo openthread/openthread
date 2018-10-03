@@ -55,6 +55,7 @@
 #include <unistd.h>
 
 #include <common/code_utils.hpp>
+#include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -402,7 +403,9 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
-    SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &NODE_ID));
+
+    SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
+    gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
 
     {
         unsigned int caps;

@@ -51,8 +51,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint32_t NODE_ID           = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+uint32_t gNodeId = 1;
 
 extern bool gPlatformPseudoResetWasRequested;
 
@@ -91,9 +90,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
     signal(SIGHUP, &handleSignal);
 #endif
 
-    NODE_ID = (uint32_t)strtol(aArgVector[1], &endptr, 0);
+    gNodeId = (uint32_t)strtol(aArgVector[1], &endptr, 0);
 
-    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId >= WELLKNOWN_NODE_ID)
     {
         fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[1]);
         exit(EXIT_FAILURE);
