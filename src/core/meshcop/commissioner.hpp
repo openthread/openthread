@@ -324,8 +324,6 @@ private:
     otError SendPetition(void);
     otError SendKeepAlive(void);
 
-    otCommissionerState mState;
-
     struct Joiner
     {
         Mac::ExtAddress mEui64;
@@ -352,6 +350,10 @@ private:
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
     PanIdQueryClient    mPanIdQuery;
+
+    Ip6::NetifUnicastAddress mCommissionerAloc;
+
+    otCommissionerState mState;
 };
 
 } // namespace MeshCoP
