@@ -629,7 +629,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
  *       via @p aFrame, but should not read/write any state within OpenThread.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aFrame      The radio frame which neeeds to process transmit security.
+ * @param[in]  aFrame      The radio frame which needs to process transmit security.
  *
  */
 extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);

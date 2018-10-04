@@ -156,7 +156,7 @@ const char *otGetVersionString(void)
  * intended to be used to specify compiler directives to indicate
  * what linker section the platform version string should be stored.
  *
- * This is useful for specifying an exact locaiton of where the version
+ * This is useful for specifying an exact location of where the version
  * string will be located so that it can be easily retrieved from the
  * raw firmware image.
  *

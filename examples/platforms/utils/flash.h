@@ -71,7 +71,7 @@ uint32_t utilsFlashGetSize(void);
  *
  * @retval OT_ERROR_NONE           Erase flash operation is started.
  * @retval OT_ERROR_FAILED         Erase flash operation is not started.
- * @retval OT_ERROR_INVALID_ARGS    aAddress is out of range of flash or not aligend.
+ * @retval OT_ERROR_INVALID_ARGS    aAddress is out of range of flash or not aligned.
  */
 otError utilsFlashErasePage(uint32_t aAddress);
 
