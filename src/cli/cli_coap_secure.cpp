@@ -366,7 +366,7 @@ void CoapsSecure::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessag
 {
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
-    otMessage *  responseMessage;
+    otMessage *  responseMessage   = NULL;
     otCoapCode   responseCode      = OT_COAP_CODE_EMPTY;
     char         responseContent[] = "helloWorld";
 
