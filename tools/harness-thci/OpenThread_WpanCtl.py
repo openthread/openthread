@@ -419,7 +419,7 @@ class OpenThread_WpanCtl(IThci):
         """
         print 'call __setRouterDowngradeThreshold'
         try:
-            cmd = WPANCTL_CMD + 'setprop Thread:RouterDowngradeThreshold %s %s' % str(iThreshold)
+            cmd = WPANCTL_CMD + 'setprop Thread:RouterDowngradeThreshold %s' % str(iThreshold)
             return self.__sendCommand(cmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setRouterDowngradeThreshold() Error: ' + str(e))
