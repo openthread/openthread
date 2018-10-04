@@ -40,11 +40,11 @@ cd /tmp || die
     sudo apt-get update || die
 
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
-        pip install --user --upgrade pip || die
-        pip install --user -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
+        pip install --upgrade pip || die
+        pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
         [ $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
             # Packages used by ncp tools.
-            pip install --user git+https://github.com/openthread/pyspinel || die
+            pip install git+https://github.com/openthread/pyspinel || die
         }
     }
 
