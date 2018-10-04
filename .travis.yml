@@ -26,7 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: generic
+language: python
+python: "3.6"
 
 sudo: required
 dist: trusty
@@ -58,6 +59,7 @@ matrix:
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
+      python: "2.7"
     - env: BUILD_TARGET="posix-distcheck" CC=clang-6.0 CXX=clang++-6.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       addons:
@@ -70,6 +72,7 @@ matrix:
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+      python: "2.7"
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -163,3 +166,4 @@ matrix:
     - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
       os: linux
       compiler: gcc
+      python: "2.7"

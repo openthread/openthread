@@ -34,6 +34,8 @@ die() {
 
 set -x
 
+python --version || die
+
 [ $BUILD_TARGET != pretty-check ] || {
     ./bootstrap || die
     ./configure || die
