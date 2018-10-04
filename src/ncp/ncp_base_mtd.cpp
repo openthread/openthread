@@ -2484,6 +2484,15 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
+#if OPENTHREAD_ENABLE_POSIX_APP
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
+{
+    return mEncoder.WriteUtf8(otGetRadioVersionString(mInstance));
+}
+
+#endif // OPENTHREAD_ENABLE_POSIX_APP
+
 #if OPENTHREAD_ENABLE_LEGACY
 
 void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)

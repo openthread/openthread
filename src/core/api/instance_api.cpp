@@ -37,6 +37,7 @@
 
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -182,4 +183,15 @@ const char *otGetVersionString(void)
         ; // Trailing semicolon to end statement.
 
     return sVersion;
+}
+
+const char *otGetRadioVersionString(otInstance *aInstance)
+{
+    return otPlatRadioGetVersionString(aInstance);
+}
+
+OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return otGetVersionString();
 }

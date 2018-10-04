@@ -40,7 +40,13 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-RCP-toranj"
+#elif OPENTHREAD_ENABLE_POSIX_APP
+#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-App-toranj"
+#else
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-toranj"
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS

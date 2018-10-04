@@ -635,6 +635,19 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
 extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
+ * Get the radio version string.
+ *
+ * This is an optional radio driver platform function. If not provided by platform radio driver, OpenThread uses
+ * the OpenThread version instead (@sa otGetVersionString()).
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ * @returns A pointer to the OpenThread radio version.
+ *
+ */
+const char *otPlatRadioGetVersionString(otInstance *aInstance);
+
+/**
  * @}
  *
  */

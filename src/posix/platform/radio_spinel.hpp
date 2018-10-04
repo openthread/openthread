@@ -161,6 +161,14 @@ public:
     otError SetTransmitPower(int8_t aPower);
 
     /**
+     * This method returns the radio sw version string.
+     *
+     * @returns A pointer to the radio version string.
+     *
+     */
+    const char *GetVersion(void) const { return mVersion; }
+
+    /**
      * This method returns the radio capabilities.
      *
      * @returns The radio capability bit vector.
@@ -434,8 +442,9 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame = 2048, ///< Max size in bytes for transferring spinel frames.
-        kMaxWaitTime    = 2000, ///< Max time to wait for response in milliseconds.
+        kMaxSpinelFrame    = 2048, ///< Max size in bytes for transferring spinel frames.
+        kMaxWaitTime       = 2000, ///< Max time to wait for response in milliseconds.
+        kVersionStringSize = 128,  ///< Max size of version string.
     };
 
     void    DecodeHdlc(const uint8_t *aData, uint16_t aLength);
@@ -578,6 +587,7 @@ private:
     int8_t       mRxSensitivity;
     uint8_t      mTxState;
     otError      mTxError;
+    char         mVersion[kVersionStringSize];
 
     int          mSockFd;
     otRadioState mState;
