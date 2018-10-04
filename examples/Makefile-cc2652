@@ -56,7 +56,8 @@ configure_OPTIONS                                          = \
 DEFAULT_LOGGING                                           ?= 1
 
 CC2652_MBEDTLS_CPPFLAGS                                    = \
-    -DMBEDTLS_CONFIG_FILE='\"cc2652-mbedtls-config.h\"'      \
+    -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'             \
+    -DMBEDTLS_USER_CONFIG_FILE='\"cc2652-mbedtls-config.h\"' \
     -I$(PWD)/examples/platforms/cc2652/crypto                \
     -I$(PWD)/third_party/ti/devices/cc13x2_cc26x2            \
     -I$(PWD)/third_party/mbedtls                             \
