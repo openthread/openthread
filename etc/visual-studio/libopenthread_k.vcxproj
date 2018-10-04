@@ -188,7 +188,6 @@
     <ClInclude Include="..\..\include\openthread\thread_ftd.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
     <ClInclude Include="..\..\include\openthread\udp.h" />
-    <ClInclude Include="..\..\src\core\api\link_raw.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_secure.hpp" />
@@ -214,6 +213,7 @@
     <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp" />
     <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h" />
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
+    <ClInclude Include="..\..\src\core\mac\link_raw.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />
