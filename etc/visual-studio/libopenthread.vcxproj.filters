@@ -165,6 +165,9 @@
     <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\mac\link_raw.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
