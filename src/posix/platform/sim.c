@@ -46,7 +46,7 @@ static const int kUsPerSecond     = 1000000; ///< Number of microseconds per sec
 static uint64_t sNow        = 0;  ///< Time of simulation.
 static int      sSockFd     = -1; ///< Socket used to communicating with simulator.
 static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
-int             sNodeId     = 0;  ///< Node id of this simulated device.
+static int      sNodeId     = 0;  ///< Node id of this simulated device.
 
 void otSimInit(void)
 {

@@ -63,7 +63,7 @@ static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
     const char *offset = getenv("PORT_OFFSET");
 
     snprintf(aFileName, kMaxFileNameSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s_%" PRIx64 ".%s",
-             offset == NULL ? "0" : offset, NODE_ID, (aSwap ? "swap" : "data"));
+             offset == NULL ? "0" : offset, gNodeId, (aSwap ? "swap" : "data"));
 }
 
 static int swapOpen(void)
@@ -204,9 +204,11 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 
                 if (aValueLength)
                 {
-                    if (aValue && length <= *aValueLength)
+                    if (aValue)
                     {
-                        VerifyOrExit(read(sSettingsFd, aValue, length) == length, error = OT_ERROR_PARSE);
+                        uint16_t readLength = (length <= *aValueLength ? length : *aValueLength);
+
+                        VerifyOrExit(read(sSettingsFd, aValue, readLength) == readLength, error = OT_ERROR_PARSE);
                     }
 
                     *aValueLength = length;
@@ -338,7 +340,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
 #if SELF_TEST
 
-uint64_t NODE_ID = 1;
+uint64_t gNodeId = 1;
 
 int main()
 {
@@ -377,6 +379,15 @@ int main()
         assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
         assert(length == sizeof(data) / 2);
         assert(0 == memcmp(value, data, length));
+
+        // insufficient buffer
+        length -= 1;
+        value[length] = 0;
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        // verify length becomes the actual length of the record
+        assert(length == sizeof(data) / 2);
+        // verify this byte is not changed
+        assert(value[length] == 0);
 
         // wrong index
         assert(otPlatSettingsGet(instance, 0, 1, NULL, NULL) == OT_ERROR_NOT_FOUND);
