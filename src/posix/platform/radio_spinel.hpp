@@ -312,7 +312,7 @@ public:
     otError Transmit(otRadioFrame &aFrame);
 
     /**
-     * This method swithes the radio state from Sleep to Receive.
+     * This method switches the radio state from Sleep to Receive.
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
@@ -434,7 +434,7 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame = 2048, ///< Max size in bytes for transfering spinel frames.
+        kMaxSpinelFrame = 2048, ///< Max size in bytes for transferring spinel frames.
         kMaxWaitTime    = 2000, ///< Max time to wait for response in milliseconds.
     };
 
@@ -555,7 +555,7 @@ private:
     spinel_tid_t      mWaitingTid;      ///< The transaction id of current transaction.
     spinel_prop_key_t mWaitingKey;      ///< The property key of current transaction.
     const char *      mPropertyFormat;  ///< The spinel property format of current transaction.
-    va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transcation.
+    va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
 

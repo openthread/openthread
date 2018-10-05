@@ -1612,7 +1612,7 @@ typedef enum {
      *   `D`: Log metadata (optional).
      *
      * Any data after the log string is considered metadata and is OPTIONAL.
-     * Pretense of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
+     * Presence of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
      * indicates that OpenThread log metadata format is used as defined
      * below:
      *
