@@ -102,7 +102,10 @@ Dtls::Dtls(Instance &aInstance)
     memset(&mCtrDrbg, 0, sizeof(mCtrDrbg));
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
+
+#ifdef MBEDTLS_SSL_COOKIE_C
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
+#endif
 
     mProvisioningUrl.Init();
 }
@@ -190,6 +193,7 @@ otError Dtls::Start(bool             aClient,
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     if (!aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
@@ -199,6 +203,7 @@ otError Dtls::Start(bool             aClient,
 
         mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
     }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0);
@@ -313,7 +318,10 @@ void Dtls::Close(void)
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ctr_drbg_free(&mCtrDrbg);
     mbedtls_entropy_free(&mEntropy);
+
+#ifdef MBEDTLS_SSL_COOKIE_C
     mbedtls_ssl_cookie_free(&mCookieCtx);
+#endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -439,11 +447,13 @@ exit:
 #endif // MBEDTLS_BASE64_C
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
 otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
 {
     int rval = mbedtls_ssl_set_client_transport_id(&mSsl, aClientId, aLength);
     return MapError(rval);
 }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
 
 bool Dtls::IsConnected(void)
 {

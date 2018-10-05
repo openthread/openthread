@@ -253,6 +253,7 @@ public:
     void SetSslAuthMode(bool aVerifyPeerCertificate);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
      *
@@ -263,6 +264,7 @@ public:
      *
      */
     otError SetClientId(const uint8_t *aClientId, uint8_t aLength);
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
 
     /**
      * This method indicates whether or not the DTLS session is connected.
@@ -391,8 +393,12 @@ private:
     mbedtls_ctr_drbg_context mCtrDrbg;
     mbedtls_ssl_context      mSsl;
     mbedtls_ssl_config       mConf;
-    mbedtls_ssl_cookie_ctx   mCookieCtx;
-    bool                     mStarted;
+
+#ifdef MBEDTLS_SSL_COOKIE_C
+    mbedtls_ssl_cookie_ctx mCookieCtx;
+#endif
+
+    bool mStarted;
 
     TimerMilli mTimer;
     uint32_t   mTimerIntermediate;
