@@ -28,7 +28,6 @@
 
 #include "platform-posix.h"
 #include <openthread-core-config.h>
-#include <openthread/config.h>
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -42,26 +41,36 @@
 
 #include "code_utils.h"
 
-// Macro to append content to end of the log string.
+#define LOGGING_MAX_LOG_STRING_SIZE 512
 
-#define LOG_PRINTF(...)                                                                   \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__); \
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                            \
-    offset += (unsigned int)charsWritten;                                                 \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
+void platformLoggingInit(const char *aName)
+{
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+
+    openlog(aName, LOG_PID, LOG_USER);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+
+#else
+    (void)aName;
+#endif
+}
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    char         logString[512];
+    char         logString[LOGGING_MAX_LOG_STRING_SIZE];
     unsigned int offset;
     int          charsWritten;
     va_list      args;
 
     offset = 0;
 
-    LOG_PRINTF("[%" PRIx64 "] ", NODE_ID);
+    charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", NODE_ID);
+    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
+    offset += (unsigned int)charsWritten;
+    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0);
 
     va_start(args, aFormat);
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
@@ -70,11 +79,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-#ifndef _WIN32
     syslog(LOG_CRIT, "%s", logString);
-#else
-    printf("%s\r\n", logString);
-#endif
 
     (void)aLogLevel;
     (void)aLogRegion;
