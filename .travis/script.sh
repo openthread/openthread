@@ -322,7 +322,7 @@ set -x
 }
 
 [ $BUILD_TARGET != arm-gcc-7 ] || {
-    export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
+    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -386,17 +386,17 @@ set -x
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 
-    git checkout -- . || die
-    git clean -xfd || die
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    mv xdk-asf-3.36.0 third_party/microchip/asf || die
-    ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
-    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
-    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
-    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
+    # git checkout -- . || die
+    # git clean -xfd || die
+    # wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    # unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    # mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    # ./bootstrap || die
+    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    # arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != posix ] || {
