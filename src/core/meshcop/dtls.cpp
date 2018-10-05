@@ -68,7 +68,6 @@ Dtls::Dtls(Instance &aInstance)
     , mReceiveHandler(NULL)
     , mSendHandler(NULL)
     , mContext(NULL)
-    , mClient(false)
     , mGuardTimerSet(false)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
@@ -146,7 +145,6 @@ otError Dtls::Start(bool             aClient,
     mReceiveHandler   = aReceiveHandler;
     mSendHandler      = aSendHandler;
     mContext          = aContext;
-    mClient           = aClient;
     mReceiveMessage   = NULL;
     mMessageSubType   = Message::kSubTypeNone;
 
@@ -167,7 +165,7 @@ otError Dtls::Start(bool             aClient,
     rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
     VerifyOrExit(rval == 0);
 
-    rval = mbedtls_ssl_config_defaults(&mConf, mClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
+    rval = mbedtls_ssl_config_defaults(&mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
     VerifyOrExit(rval == 0);
 
@@ -192,7 +190,7 @@ otError Dtls::Start(bool             aClient,
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
 
-    if (!mClient)
+    if (!aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
 
