@@ -2407,6 +2407,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "NET_THREAD_1_0";
         break;
 
+    case SPINEL_CAP_NET_THREAD_1_1:
+        ret = "NET_THREAD_1_1";
+        break;
+
     case SPINEL_CAP_MAC_WHITELIST:
         ret = "MAC_WHITELIST";
         break;
