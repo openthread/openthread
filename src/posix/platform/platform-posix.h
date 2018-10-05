@@ -191,6 +191,14 @@ void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWr
 void platformRandomInit(void);
 
 /**
+ * This function initializes the logging service used by OpenThread.
+ *
+ * @param[in] aName   A name string which will be prefixed to each log line.
+ *
+ */
+void platformLoggingInit(const char *aName);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
