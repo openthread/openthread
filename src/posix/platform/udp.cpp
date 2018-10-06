@@ -85,23 +85,12 @@ static bool IsMulticast(const struct in6_addr &aAddress)
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
     struct sockaddr_in6 peerAddr;
-    uint8_t             control[kMaxUdpSize];
+    uint8_t             control[CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))];
     ssize_t             controlLength = 0;
     struct iovec        iov;
     struct msghdr       msg;
     struct cmsghdr *    cmsg;
     ssize_t             rval;
-
-    iov.iov_base = aPayload;
-    iov.iov_len  = aLength;
-
-    msg.msg_name       = &peerAddr;
-    msg.msg_namelen    = sizeof(peerAddr);
-    msg.msg_control    = control;
-    msg.msg_controllen = sizeof(control);
-    msg.msg_iov        = &iov;
-    msg.msg_iovlen     = 1;
-    msg.msg_flags      = 0;
 
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);
@@ -114,6 +103,19 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         peerAddr.sin6_scope_id = sPlatNetifIndex;
     }
 
+    memset(control, 0, sizeof(control));
+
+    iov.iov_base = aPayload;
+    iov.iov_len  = aLength;
+
+    msg.msg_name       = &peerAddr;
+    msg.msg_namelen    = sizeof(peerAddr);
+    msg.msg_control    = control;
+    msg.msg_controllen = sizeof(control);
+    msg.msg_iov        = &iov;
+    msg.msg_iovlen     = 1;
+    msg.msg_flags      = 0;
+
     cmsg = CMSG_FIRSTHDR(&msg);
 
     {
@@ -121,7 +123,8 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_PKTINFO;
-        cmsg->cmsg_len   = CMSG_LEN(sizeof(struct in6_pktinfo));
+        cmsg->cmsg_len   = CMSG_LEN(sizeof(*pktinfo));
+        controlLength += CMSG_SPACE(sizeof(*pktinfo));
 
         pktinfo               = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
         pktinfo->ipi6_ifindex = (aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD ? sPlatNetifIndex : 0);
@@ -137,16 +140,15 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         }
 
         cmsg = CMSG_NXTHDR(&msg, cmsg);
-        controlLength += CMSG_SPACE(sizeof(*pktinfo));
     }
 
     {
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
+        controlLength += CMSG_SPACE(sizeof(int));
 
         *reinterpret_cast<int *>(CMSG_DATA(cmsg)) = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
-        controlLength += CMSG_SPACE(sizeof(int));
     }
 
     msg.msg_controllen = controlLength;
