@@ -93,7 +93,7 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
 
-    VerifyOrExit(fd > 0);
+    VerifyOrExit(fd != -1 && aUdpSocket->mSockName.mPort != 0);
     closeFd(fd);
 
 exit:
@@ -327,7 +327,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
     {
         int fd = GetFdFromHandle(socket->mHandle);
 
-        if (FD_ISSET(fd, aReadFdSet))
+        if (fd != -1 && FD_ISSET(fd, aReadFdSet))
         {
             otMessageInfo messageInfo;
             otMessage *   message = NULL;
