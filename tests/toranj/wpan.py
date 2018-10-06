@@ -183,12 +183,19 @@ NODE_TYPE_COMMISSIONER                         = '"commissioner"'
 NODE_TYPE_NEST_LURKER                          = '"nl-lurker"'
 
 #-----------------------------------------------------------------------------------------------------------------------
-
 # Node types used by `Node.join()`
 
 JOIN_TYPE_ROUTER                               = 'r'
 JOIN_TYPE_END_DEVICE                           = 'e'
 JOIN_TYPE_SLEEPY_END_DEVICE                    = 's'
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Bit Flags for Thread Device Mode `WPAN_THREAD_DEVICE_MODE`
+
+THREAD_MODE_FLAG_FULL_NETWORK_DATA   = (1 << 0)
+THREAD_MODE_FLAG_FULL_THREAD_DEV     = (1 << 1)
+THREAD_MODE_FLAG_SECURE_DATA_REQUEST = (1 << 2)
+THREAD_MODE_FLAG_RX_ON_WHEN_IDLE     = (1 << 3)
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -1126,10 +1133,12 @@ class ChildEntry(object):
         # Convert the rest into a dictionary by splitting using ':' as separator
         dict = {item.split(':')[0] : item.split(':')[1] for item in items[1:]}
 
-        self._rloc16     = dict['RLOC16']
-        self._timeout    = dict['Timeout']
-        self._rx_on_idle = (dict['RxOnIdle'] == 'yes')
-        self._ftd        = (dict['FTD'] == 'yes')
+        self._rloc16        = dict['RLOC16']
+        self._timeout       = dict['Timeout']
+        self._rx_on_idle    = (dict['RxOnIdle'] == 'yes')
+        self._ftd           = (dict['FTD'] == 'yes')
+        self._sec_data_req  = (dict['SecDataReq'] == 'yes')
+        self._full_net_data = (dict['FullNetData'] == 'yes')
 
     @property
     def ext_address(self):
@@ -1148,6 +1157,12 @@ class ChildEntry(object):
 
     def is_ftd(self):
         return self._ftd
+
+    def is_sec_data_req(self):
+        return self._sec_data_req
+
+    def is_full_net_data(self):
+        return self._full_net_data
 
     def __repr__(self):
         return 'ChildEntry({})'.format(self.__dict__)
