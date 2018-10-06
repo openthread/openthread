@@ -82,6 +82,131 @@ static bool IsMulticast(const struct in6_addr &aAddress)
     return aAddress.s6_addr[0] == 0xff;
 }
 
+static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
+{
+    struct sockaddr_in6 peerAddr;
+    uint8_t             control[kMaxUdpSize];
+    ssize_t             controlLength = 0;
+    struct iovec        iov;
+    struct msghdr       msg;
+    struct cmsghdr *    cmsg;
+    ssize_t             rval;
+
+    iov.iov_base = aPayload;
+    iov.iov_len  = aLength;
+
+    msg.msg_name       = &peerAddr;
+    msg.msg_namelen    = sizeof(peerAddr);
+    msg.msg_control    = control;
+    msg.msg_controllen = sizeof(control);
+    msg.msg_iov        = &iov;
+    msg.msg_iovlen     = 1;
+    msg.msg_flags      = 0;
+
+    memset(&peerAddr, 0, sizeof(peerAddr));
+    peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);
+    peerAddr.sin6_family = AF_INET6;
+    memcpy(&peerAddr.sin6_addr, &aMessageInfo.mPeerAddr, sizeof(peerAddr.sin6_addr));
+
+    if (IsLinkLocal(peerAddr.sin6_addr) && aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD)
+    {
+        // sin6_scope_id only works for link local destinations
+        peerAddr.sin6_scope_id = sPlatNetifIndex;
+    }
+
+    cmsg = CMSG_FIRSTHDR(&msg);
+
+    {
+        struct in6_pktinfo *pktinfo = NULL;
+
+        cmsg->cmsg_level = IPPROTO_IPV6;
+        cmsg->cmsg_type  = IPV6_PKTINFO;
+        cmsg->cmsg_len   = CMSG_LEN(sizeof(struct in6_pktinfo));
+
+        pktinfo               = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
+        pktinfo->ipi6_ifindex = (aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD ? sPlatNetifIndex : 0);
+
+        if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
+            memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
+        {
+            memcpy(&pktinfo->ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo->ipi6_addr));
+        }
+        else
+        {
+            memset(&pktinfo->ipi6_addr, 0, sizeof(pktinfo->ipi6_addr));
+        }
+
+        cmsg = CMSG_NXTHDR(&msg, cmsg);
+        controlLength += CMSG_SPACE(sizeof(*pktinfo));
+    }
+
+    {
+        cmsg->cmsg_level = IPPROTO_IPV6;
+        cmsg->cmsg_type  = IPV6_HOPLIMIT;
+        cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
+
+        *reinterpret_cast<int *>(CMSG_DATA(cmsg)) = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
+        controlLength += CMSG_SPACE(sizeof(int));
+    }
+
+    msg.msg_controllen = controlLength;
+
+    rval = sendmsg(aFd, &msg, 0);
+    VerifyOrExit(rval > 0, perror("sendmsg"));
+
+exit:
+    return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
+static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
+{
+    struct sockaddr_in6 peerAddr;
+    uint8_t             control[kMaxUdpSize];
+    struct iovec        iov;
+    struct msghdr       msg;
+    ssize_t             rval;
+
+    iov.iov_base = aPayload;
+    iov.iov_len  = aLength;
+
+    msg.msg_name       = &peerAddr;
+    msg.msg_namelen    = sizeof(peerAddr);
+    msg.msg_control    = control;
+    msg.msg_controllen = sizeof(control);
+    msg.msg_iov        = &iov;
+    msg.msg_iovlen     = 1;
+    msg.msg_flags      = 0;
+
+    rval = recvmsg(aFd, &msg, 0);
+    VerifyOrExit(rval > 0, perror("recvmsg"));
+    aLength = static_cast<uint16_t>(rval);
+
+    for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg))
+    {
+        if (cmsg->cmsg_level == IPPROTO_IPV6)
+        {
+            if (cmsg->cmsg_type == IPV6_HOPLIMIT)
+            {
+                int hoplimit           = *reinterpret_cast<int *>(CMSG_DATA(cmsg));
+                aMessageInfo.mHopLimit = hoplimit;
+            }
+            else if (cmsg->cmsg_type == IPV6_PKTINFO)
+            {
+                struct in6_pktinfo *pktinfo;
+
+                pktinfo = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsg));
+                memcpy(&aMessageInfo.mSockAddr, &pktinfo->ipi6_addr, sizeof(aMessageInfo.mSockAddr));
+            }
+        }
+    }
+
+    aMessageInfo.mPeerPort = ntohs(peerAddr.sin6_port);
+    memcpy(&aMessageInfo.mPeerAddr, &peerAddr.sin6_addr, sizeof(aMessageInfo.mPeerAddr));
+
+exit:
+    return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 {
     aUdpSocket->mHandle = kInvalidHandle;
@@ -179,11 +304,8 @@ exit:
 
 otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError             error = OT_ERROR_NONE;
-    int                 fd    = GetFdFromHandle(aUdpSocket->mHandle);
-    struct sockaddr_in6 peerAddr;
-    uint8_t             payload[kMaxUdpSize];
-    uint16_t            len;
+    otError error = OT_ERROR_NONE;
+    int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
 
     if (fd == -1)
     {
@@ -192,43 +314,18 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
 
     assert(fd != -1);
 
-    memset(&peerAddr, 0, sizeof(peerAddr));
-    peerAddr.sin6_port   = htons(aMessageInfo->mPeerPort);
-    peerAddr.sin6_family = AF_INET6;
-    memcpy(&peerAddr.sin6_addr, &aMessageInfo->mPeerAddr, sizeof(peerAddr.sin6_addr));
-
-    if (IsLinkLocal(peerAddr.sin6_addr))
     {
-        // sin6_scope_id only works for link local destinations
-        peerAddr.sin6_scope_id = sPlatNetifIndex;
-    }
+        uint16_t len = otMessageGetLength(aMessage);
+        uint8_t  payload[kMaxUdpSize];
 
-    if (IsMulticast(peerAddr.sin6_addr))
-    {
-        int hoplimit = aMessageInfo->mHopLimit;
-        VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hoplimit, sizeof(hoplimit)),
-                     error = OT_ERROR_FAILED);
+        VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = transmitPacket(fd, payload, len, *aMessageInfo));
     }
-    else
-    {
-        int hoplimit = aMessageInfo->mHopLimit;
-        VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &hoplimit, sizeof(hoplimit)),
-                     error = OT_ERROR_FAILED);
-    }
-
-    len = otMessageGetLength(aMessage);
-    otMessageRead(aMessage, 0, payload, len);
-    VerifyOrExit(len == sendto(fd, payload, len, 0, reinterpret_cast<struct sockaddr *>(&peerAddr), sizeof(peerAddr)),
-                 error = OT_ERROR_FAILED);
 
 exit:
     if (error == OT_ERROR_NONE)
     {
         otMessageFree(aMessage);
-    }
-    else
-    {
-        perror("sendto");
     }
 
     return error;
@@ -270,55 +367,6 @@ void platformUdpInit(void)
     }
 }
 
-static otError readSocket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
-{
-    struct sockaddr_in6 peerAddr;
-    uint8_t             control[kMaxUdpSize];
-    struct iovec        iov;
-    struct msghdr       msg;
-    ssize_t             rval;
-
-    iov.iov_base = aPayload;
-    iov.iov_len  = aLength;
-
-    msg.msg_name       = &peerAddr;
-    msg.msg_namelen    = sizeof(peerAddr);
-    msg.msg_control    = control;
-    msg.msg_controllen = sizeof(control);
-    msg.msg_iov        = &iov;
-    msg.msg_iovlen     = 1;
-    msg.msg_flags      = 0;
-
-    rval = recvmsg(aFd, &msg, 0);
-    VerifyOrExit(rval > 0, perror("recvmsg"));
-    aLength = static_cast<uint16_t>(rval);
-
-    for (struct cmsghdr *hdr = CMSG_FIRSTHDR(&msg); hdr != NULL; hdr = CMSG_NXTHDR(&msg, hdr))
-    {
-        if (hdr->cmsg_level == IPPROTO_IPV6)
-        {
-            if (hdr->cmsg_type == IPV6_HOPLIMIT)
-            {
-                int hoplimit           = *reinterpret_cast<int *>(CMSG_DATA(hdr));
-                aMessageInfo.mHopLimit = hoplimit;
-            }
-            else if (hdr->cmsg_type == IPV6_PKTINFO)
-            {
-                struct in6_pktinfo *pktinfo;
-
-                pktinfo = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(hdr));
-                memcpy(&aMessageInfo.mSockAddr, &pktinfo->ipi6_addr, sizeof(aMessageInfo.mSockAddr));
-            }
-        }
-    }
-
-    aMessageInfo.mPeerPort = ntohs(peerAddr.sin6_port);
-    memcpy(&aMessageInfo.mPeerAddr, &peerAddr.sin6_addr, sizeof(aMessageInfo.mPeerAddr));
-
-exit:
-    return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
-}
-
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     VerifyOrExit(sPlatNetifIndex != 0);
@@ -338,7 +386,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
             messageInfo.mSockPort    = socket->mSockName.mPort;
             messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_HOST;
 
-            if (OT_ERROR_NONE != readSocket(fd, payload, length, messageInfo))
+            if (OT_ERROR_NONE != receivePacket(fd, payload, length, messageInfo))
             {
                 continue;
             }
