@@ -34,7 +34,7 @@
 #ifndef POSIX_APP_HDLC_INTERFACE_HPP_
 #define POSIX_APP_HDLC_INTERFACE_HPP_
 
-#include "platform-posix.h"
+#include "platform-config.h"
 
 #include "hdlc.hpp"
 

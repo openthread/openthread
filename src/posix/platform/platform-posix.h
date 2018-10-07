@@ -40,15 +40,13 @@
 
 #include <openthread/instance.h>
 
+#include "platform-config.h"
+
 /**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
- *
- * Define as 1 to enable PTY device support in POSIX app.
+ * This is the socket name used by daemon mode.
  *
  */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
-#endif
+#define OPENTHREAD_POSIX_APP_SOCKET_NAME OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".sock"
 
 #ifdef __cplusplus
 extern "C" {
