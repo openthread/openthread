@@ -61,11 +61,10 @@ void platformLoggingInit(const char *aName)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     char         logString[LOGGING_MAX_LOG_STRING_SIZE];
-    unsigned int offset;
     int          charsWritten;
     va_list      args;
-
-    offset = 0;
+    int          logLevel;
+    unsigned int offset = 0;
 
     charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", NODE_ID);
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
@@ -79,9 +78,33 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-    syslog(LOG_CRIT, "%s", logString);
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        logLevel = LOG_ALERT;
+        break;
+    case OT_LOG_LEVEL_CRIT:
+        logLevel = LOG_CRIT;
+        break;
+    case OT_LOG_LEVEL_WARN:
+        logLevel = LOG_WARNING;
+        break;
+    case OT_LOG_LEVEL_NOTE:
+        logLevel = LOG_NOTICE;
+        break;
+    case OT_LOG_LEVEL_INFO:
+        logLevel = LOG_INFO;
+        break;
+    case OT_LOG_LEVEL_DEBG:
+        logLevel = LOG_DEBUG;
+        break;
+    default:
+        assert(false);
+        logLevel = LOG_DEBUG;
+        break;
+    }
+    syslog(logLevel, "%s", logString);
 
-    (void)aLogLevel;
     (void)aLogRegion;
 }
 
