@@ -677,6 +677,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
     }
     else
     {
+        otError txError = aError;
         uint8_t childIndex;
 
         if (mSendMessage == child->GetIndirectMessage())
@@ -695,6 +696,22 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
             // address mode for source address matching.
 
             mSourceMatchController.SetSrcMatchAsShort(*child, true);
+
+#if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+
+            // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
+            // disabled, all fragment frames of a larger message are
+            // sent even if the transmission of an earlier fragment fail.
+            // Note that `GetIndirectTxSuccess() tracks the tx success of
+            // the entire message to the child, while `txError = aError`
+            // represents the error status of the last fragment frame
+            // transmission.
+
+            if (!child->GetIndirectTxSuccess() && (txError == OT_ERROR_NONE))
+            {
+                txError = OT_ERROR_FAILED;
+            }
+#endif
         }
 
         childIndex = netif.GetMle().GetChildTable().GetChildIndex(*child);
@@ -703,6 +720,20 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         {
             mSendMessage->ClearChildMask(childIndex);
             mSourceMatchController.DecrementMessageCount(*child);
+        }
+
+        LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
+
+        if (mSendMessage->GetType() == Message::kTypeIp6)
+        {
+            if (mSendMessage->GetTxSuccess())
+            {
+                mIpCounters.mTxSuccess++;
+            }
+            else
+            {
+                mIpCounters.mTxFailure++;
+            }
         }
     }
 
