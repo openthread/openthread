@@ -439,7 +439,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbed
 
 AC_MSG_CHECKING([whether to build POSIX applicaton])
 AC_ARG_ENABLE(posix-app,
-    [AS_HELP_STRING([--enable-posix-app], [Build POSIX application <:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-posix-app], [Build POSIX application @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
