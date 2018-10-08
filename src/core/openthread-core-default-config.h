@@ -1758,7 +1758,7 @@
  * to support following features:
  *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
  *
- * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
+ * @note If it's enabled, platform must support interrupt context and concurrent access AES.
  *
  */
 #ifndef OPENTHREAD_CONFIG_HEADER_IE_SUPPORT

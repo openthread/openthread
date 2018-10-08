@@ -60,7 +60,6 @@ namespace MeshCoP {
 
 Commissioner::Commissioner(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mState(OT_COMMISSIONER_STATE_DISABLED)
     , mJoinerPort(0)
     , mJoinerRloc(0)
     , mJoinerExpirationTimer(aInstance, HandleJoinerExpirationTimer, this)
@@ -73,6 +72,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
+    , mState(OT_COMMISSIONER_STATE_DISABLED)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
 }
@@ -121,6 +121,7 @@ otError Commissioner::Stop(void)
     GetNetif().GetCoapSecure().Stop();
 
     mState = OT_COMMISSIONER_STATE_DISABLED;
+    GetNetif().RemoveUnicastAddress(mCommissionerAloc);
     GetNotifier().Signal(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     ClearJoiners();
@@ -649,11 +650,12 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *          aHeader,
                                                 const Ip6::MessageInfo *aMessageInfo,
                                                 otError                 aResult)
 {
-    (void)aMessageInfo;
-
+    ThreadNetif &            netif = GetNetif();
     StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
     bool                     retransmit = false;
+
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_PETITION, mState = OT_COMMISSIONER_STATE_DISABLED);
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED, retransmit = true);
@@ -668,6 +670,9 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *          aHeader,
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
     VerifyOrExit(sessionId.IsValid());
     mSessionId = sessionId.GetCommissionerSessionId();
+
+    netif.GetMle().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId);
+    netif.AddUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
     mState = OT_COMMISSIONER_STATE_ACTIVE;
@@ -772,6 +777,7 @@ exit:
 
     if (mState != OT_COMMISSIONER_STATE_ACTIVE)
     {
+        GetNetif().RemoveUnicastAddress(mCommissionerAloc);
         RemoveCoapResources();
     }
 }

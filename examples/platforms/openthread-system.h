@@ -45,7 +45,7 @@ extern "C" {
  * This function performs all platform-specific initialization of OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
- *       when initialization of OpenThread's drivers is most approriate.
+ *       when initialization of OpenThread's drivers is most appropriate.
  *
  * @param[in]  argc  Number of arguments in @p argv.
  * @param[in]  argv  Argument vector.

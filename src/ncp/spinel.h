@@ -464,6 +464,7 @@ enum
 
     SPINEL_CAP_NET__BEGIN     = 52,
     SPINEL_CAP_NET_THREAD_1_0 = (SPINEL_CAP_NET__BEGIN + 0),
+    SPINEL_CAP_NET_THREAD_1_1 = (SPINEL_CAP_NET__BEGIN + 1),
     SPINEL_CAP_NET__END       = 64,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
@@ -1612,7 +1613,7 @@ typedef enum {
      *   `D`: Log metadata (optional).
      *
      * Any data after the log string is considered metadata and is OPTIONAL.
-     * Pretense of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
+     * Presence of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
      * indicates that OpenThread log metadata format is used as defined
      * below:
      *
