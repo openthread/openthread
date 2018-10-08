@@ -1567,6 +1567,21 @@ AC_SUBST(OPENTHREAD_EXAMPLES_SAMR21)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21], [test "${with_examples}" = "samr21"])
 
 #
+# libstdc++
+#
+AC_ARG_WITH(
+    [libstdcxx],
+    [AS_HELP_STRING([--with-libstdcxx], [Specify the C++ standard library to link to @<:@default=none@:>@.])],
+    [],
+    [with_libstdcxx=none])
+
+if test "${with_libstdcxx}" = "none"; then
+    CXXFLAGS="${CXXFLAGS} -fno-exceptions -fno-rtti"
+else
+    AC_CHECK_LIB([${with_libstdcxx}], [__cxa_pure_virtual], , [AC_MSG_ERROR([Uanble to find standard C++ library])])
+fi
+
+#
 # Tools
 #
 
