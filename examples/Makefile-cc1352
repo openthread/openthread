@@ -56,7 +56,8 @@ configure_OPTIONS                                          = \
 DEFAULT_LOGGING                                           ?= 1
 
 CC1352_MBEDTLS_CPPFLAGS                                    = \
-    -DMBEDTLS_CONFIG_FILE='\"cc1352-mbedtls-config.h\"'      \
+    -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'             \
+    -DMBEDTLS_USER_CONFIG_FILE='\"cc1352-mbedtls-config.h\"' \
     -I$(PWD)/examples/platforms/cc1352/crypto                \
     -I$(PWD)/third_party/ti/devices/cc13x2_cc26x2            \
     -I$(PWD)/third_party/mbedtls                             \

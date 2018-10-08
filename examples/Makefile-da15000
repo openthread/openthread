@@ -56,7 +56,8 @@ configure_OPTIONS               = \
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-DA15000_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"da15000-mbedtls-config.h\"'
+DA15000_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+DA15000_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"da15000-mbedtls-config.h\"'
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/da15000/crypto
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/include
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/peripherals/include
