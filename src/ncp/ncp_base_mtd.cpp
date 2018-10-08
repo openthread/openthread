@@ -43,6 +43,9 @@
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 #include <openthread/child_supervision.h>
 #endif
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+#include <openthread/dhcp6_server.h>
+#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -3016,6 +3019,10 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
                 otDhcp6ClientUpdate(mInstance, mDhcpAddresses, OT_ARRAY_LENGTH(mDhcpAddresses), NULL);
+#endif
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+                otDhcp6ServerUpdate(mInstance);
 #endif
             }
 
