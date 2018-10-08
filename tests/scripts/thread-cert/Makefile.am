@@ -279,9 +279,6 @@ XFAIL_NCP_TESTS                                                    = \
     test_coaps.py                                                    \
     test_diag.py                                                     \
     test_service.py                                                  \
-    Cert_5_2_05_AddressQuery.py                                      \
-    Cert_5_3_08_ChildAddressSet.py                                   \
-    Cert_5_3_09_AddressQuery.py                                      \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
