@@ -58,14 +58,15 @@ matrix:
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
-    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-distcheck" CC=clang-6.0 CXX=clang++-6.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
+            - clang-6.0
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -83,14 +84,15 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
+    - env: BUILD_TARGET="scan-build" CC="clang-6.0" CXX="clang++-6.0"
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
+            - clang-6.0
     - env: BUILD_TARGET="arm-gcc-4"
       os: linux
       compiler: gcc
@@ -103,14 +105,15 @@ matrix:
     - env: BUILD_TARGET="arm-gcc-7"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
+    - env: BUILD_TARGET="posix" CC=clang-6.0 CXX=clang++-6.0
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
+            - clang-6.0
     - env: BUILD_TARGET="posix" CC="gcc-5" CXX="g++-5"
       os: linux
       compiler: gcc
