@@ -50,8 +50,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/uart.h>
 
-uint32_t NODE_ID           = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+uint32_t gNodeId = 1;
 
 extern bool          gPlatformPseudoResetWasRequested;
 static volatile bool gTerminate = false;
@@ -191,7 +190,7 @@ static void socket_init(void)
         sPortOffset *= WELLKNOWN_NODE_ID;
     }
 
-    sockaddr.sin_port        = htons(9000 + sPortOffset + NODE_ID);
+    sockaddr.sin_port        = htons(9000 + sPortOffset + gNodeId);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -230,11 +229,11 @@ void otSysInit(int argc, char *argv[])
     gArgumentsCount = argc;
     gArguments      = argv;
 
-    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
+    gNodeId = (uint32_t)strtol(argv[1], &endptr, 0);
 
-    if (*endptr != '\0' || NODE_ID < 1 || NODE_ID >= WELLKNOWN_NODE_ID)
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId >= WELLKNOWN_NODE_ID)
     {
-        fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
+        fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
         exit(EXIT_FAILURE);
     }
 
