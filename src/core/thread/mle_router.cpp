@@ -2243,6 +2243,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     uint8_t         tlvs[kMaxResponseTlvs];
     uint8_t         tlvslength                = 0;
     uint16_t        addressRegistrationOffset = 0;
+    bool            childDidChange            = false;
 
     LogMleMessage("Receive Child Update Request from child", aMessageInfo.GetPeerAddr());
 
@@ -2270,7 +2271,25 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         ExitNow();
     }
 
-    child->SetDeviceMode(mode.GetMode());
+    if (child->GetDeviceMode() != mode.GetMode())
+    {
+        otLogNoteMle(GetInstance(),
+                     "Child 0x%04x mode change 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ftd:%s, full-netdata:%s]",
+                     child->GetRloc16(), child->GetDeviceMode(), mode.GetMode(),
+                     (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) ? "yes" : " no",
+                     (mode.GetMode() & ModeTlv::kModeSecureDataRequest) ? "yes" : " no",
+                     (mode.GetMode() & ModeTlv::kModeFullThreadDevice) ? "yes" : "no",
+                     (mode.GetMode() & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
+
+        child->SetDeviceMode(mode.GetMode());
+        childDidChange = true;
+
+        if (!(mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) && (child->GetState() == Neighbor::kStateValid))
+        {
+            GetNetif().GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*child, true);
+        }
+    }
+
     tlvs[tlvslength++] = Tlv::kMode;
 
     // Parent MUST include Leader Data TLV in Child Update Response
@@ -2302,7 +2321,13 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     if (Tlv::GetTlv(aMessage, Tlv::kTimeout, sizeof(timeout), timeout) == OT_ERROR_NONE)
     {
         VerifyOrExit(timeout.IsValid(), error = OT_ERROR_PARSE);
-        child->SetTimeout(timeout.GetTimeout());
+
+        if (child->GetTimeout() != timeout.GetTimeout())
+        {
+            child->SetTimeout(timeout.GetTimeout());
+            childDidChange = true;
+        }
+
         tlvs[tlvslength++] = Tlv::kTimeout;
     }
 
@@ -2331,6 +2356,13 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     {
         SetChildStateToValid(*child);
         child->SetKeySequence(aKeySequence);
+    }
+    else if (child->GetState() == Neighbor::kStateValid)
+    {
+        if (childDidChange)
+        {
+            StoreChild(*child);
+        }
     }
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
