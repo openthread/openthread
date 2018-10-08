@@ -102,17 +102,16 @@ struct Event
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
+enum
+{
+    WELLKNOWN_NODE_ID = 34, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+};
+
 /**
  * Unique node ID.
  *
  */
-extern uint32_t NODE_ID;
-
-/**
- * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
- *
- */
-extern uint32_t WELLKNOWN_NODE_ID;
+extern uint32_t gNodeId;
 
 /**
  * This function initializes the alarm service used by OpenThread.

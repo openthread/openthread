@@ -67,7 +67,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
 
     offset = 0;
 
-    charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", NODE_ID);
+    charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", gNodeId);
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
     offset += (unsigned int)charsWritten;
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0);

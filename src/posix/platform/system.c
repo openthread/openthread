@@ -45,7 +45,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
-uint64_t NODE_ID = 0;
+uint64_t gNodeId = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 

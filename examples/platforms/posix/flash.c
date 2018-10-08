@@ -71,7 +71,7 @@ otError utilsFlashInit(void)
         offset = "0";
     }
 
-    snprintf(fileName, sizeof(fileName), "%s/%s_%d.flash", path, offset, NODE_ID);
+    snprintf(fileName, sizeof(fileName), "%s/%s_%d.flash", path, offset, gNodeId);
 
     if (access(fileName, 0))
     {

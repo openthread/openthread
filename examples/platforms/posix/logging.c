@@ -65,7 +65,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
 
     offset = 0;
 
-    LOG_PRINTF("[%d] ", NODE_ID);
+    LOG_PRINTF("[%d] ", gNodeId);
 
     va_start(args, aFormat);
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);

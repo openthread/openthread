@@ -84,13 +84,7 @@ struct Event
  * Unique node ID.
  *
  */
-extern uint64_t NODE_ID;
-
-/**
- * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
- *
- */
-#define WELLKNOWN_NODE_ID 34
+extern uint64_t gNodeId;
 
 /**
  * This function initializes the alarm service used by OpenThread.
