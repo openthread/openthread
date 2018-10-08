@@ -242,14 +242,14 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
 
     VerifyOrExit((message = mSendQueue.GetTail()) != NULL);
 
-    if (message->GetPriority() > aPriority)
+    if (message->GetPriority() < aPriority)
     {
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
     }
     else
     {
-        while (1)
+        while (aPriority <= Message::kPriorityHigh)
         {
             for (message = mSendQueue.GetHeadForPriority(aPriority); message && (message->GetPriority() == aPriority);
                  message = message->GetNext())
@@ -261,9 +261,7 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
                 }
             }
 
-            VerifyOrExit(aPriority != Message::kPriorityHigh);
-
-            aPriority--;
+            aPriority++;
         }
     }
 
