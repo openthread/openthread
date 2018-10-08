@@ -406,7 +406,6 @@ private:
     ReceiveHandler   mReceiveHandler;
     SendHandler      mSendHandler;
     void *           mContext;
-    bool             mClient;
     bool             mGuardTimerSet;
 
     uint8_t mMessageSubType;
