@@ -66,7 +66,6 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
 {
-    mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     GetNetif().GetCoap().AddResource(mRelayTransmit);
     aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
