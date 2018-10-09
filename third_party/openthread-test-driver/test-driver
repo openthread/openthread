@@ -122,7 +122,7 @@ estatus=$?
 # Return the offset
 rm -rf "${lock_path}.${OFFSET}.lock.d"
 # Remove the flash files
-rm -f tmp/${OFFSET}_*.flash
+rm -f tmp/${OFFSET}_*.flash tmp/${OFFSET}_*.data tmp/${OFFSET}_*.swap
 
 if test $enable_hard_errors = no && test $estatus -eq 99; then
   tweaked_estatus=1

@@ -34,7 +34,7 @@ die() {
 
 cleanup() {
     # Clear logs and flash files
-    sudo rm tmp/*.flash > /dev/null 2>&1
+    sudo rm tmp/*.flash tmp/*.data tmp/*.swap > /dev/null 2>&1
     sudo rm *.log > /dev/null 2>&1
 
     # Clear any wpantund instances
