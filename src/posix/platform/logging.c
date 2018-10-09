@@ -49,7 +49,7 @@ void platformLoggingInit(const char *aName)
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 
     openlog(aName, LOG_PID, LOG_USER);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
 
 #else
     (void)aName;
