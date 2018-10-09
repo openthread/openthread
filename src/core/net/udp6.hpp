@@ -104,7 +104,7 @@ public:
      * @param[in]  aUdp  A reference to the UDP transport object.
      *
      */
-    UdpSocket(Udp &aUdp);
+    explicit UdpSocket(Udp &aUdp);
 
     /**
      * This method returns a new UDP message with sufficient header space reserved.

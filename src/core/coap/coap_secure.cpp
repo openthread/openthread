@@ -48,13 +48,14 @@ namespace ot {
 namespace Coap {
 
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
-    : Coap(aInstance)
+    : CoapBase(aInstance, &CoapSecure::Send)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
     , mTransmitQueue()
     , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
+    , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
     , mLayerTwoSecurity(aLayerTwoSecurity)
 {
 }
@@ -71,9 +72,14 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
     // to transmit/receive messages, so do not open it in that case.
     if (mTransportCallback == NULL)
     {
-        error = Coap::Start(aPort);
+        Ip6::SockAddr sockaddr;
+
+        sockaddr.mPort = aPort;
+        SuccessOrExit(error = mSocket.Open(&CoapSecure::HandleUdpReceive, this));
+        SuccessOrExit(error = mSocket.Bind(sockaddr));
     }
 
+exit:
     return error;
 }
 
@@ -85,6 +91,10 @@ void CoapSecure::SetConnectedCallback(ConnectedCallback aCallback, void *aContex
 
 otError CoapSecure::Stop(void)
 {
+    otError error;
+
+    SuccessOrExit(error = mSocket.Close());
+
     if (IsConnectionActive())
     {
         Disconnect();
@@ -99,7 +109,10 @@ otError CoapSecure::Stop(void)
     mTransportCallback = NULL;
     mTransportContext  = NULL;
 
-    return Coap::Stop();
+    FlushCaches();
+
+exit:
+    return error;
 }
 
 otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
@@ -209,7 +222,7 @@ otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandle
 
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
-    error = Coap::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
+    error = CoapBase::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
 
 exit:
     return error;
@@ -220,7 +233,7 @@ otError CoapSecure::SendMessage(Message &               aMessage,
                                 otCoapResponseHandler   aHandler,
                                 void *                  aContext)
 {
-    return Coap::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
+    return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -232,7 +245,13 @@ otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
     return OT_ERROR_NONE;
 }
 
-void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapSecure::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    static_cast<CoapSecure *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
+                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void CoapSecure::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -299,7 +318,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    Coap::Receive(*message, mPeerAddress);
+    CoapBase::Receive(*message, mPeerAddress);
 
 exit:
 

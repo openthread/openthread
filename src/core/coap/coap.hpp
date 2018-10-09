@@ -91,7 +91,7 @@ enum
 OT_TOOL_PACKED_BEGIN
 class CoapMetadata
 {
-    friend class Coap;
+    friend class CoapBase;
 
 public:
     /**
@@ -198,7 +198,7 @@ private:
  */
 class Resource : public otCoapResource
 {
-    friend class Coap;
+    friend class CoapBase;
 
 public:
     enum
@@ -427,11 +427,21 @@ private:
  * This class implements the CoAP client and server.
  *
  */
-class Coap : public InstanceLocator
+class CoapBase : public InstanceLocator
 {
     friend class ResponsesQueue;
 
 public:
+    /**
+     * This function pointer is called to send a CoAP message.
+     *
+     * @param[in]  aCoapBase     A pointer to the CoAP agent.
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     */
+    typedef otError (*SendCallback)(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
      *
@@ -448,30 +458,10 @@ public:
     typedef otError (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance    A reference to the OpenThread instance.
+     * This method clears caches used by this CoAP agent.
      *
      */
-    explicit Coap(Instance &aInstance);
-
-    /**
-     * This method starts the CoAP service.
-     *
-     * @param[in]  aPort  The local UDP port to bind to.
-     *
-     * @retval OT_ERROR_NONE  Successfully started the CoAP service.
-     *
-     */
-    otError Start(uint16_t aPort);
-
-    /**
-     * This method stops the CoAP service.
-     *
-     * @retval OT_ERROR_NONE  Successfully stopped the CoAP service.
-     *
-     */
-    otError Stop(void);
+    void FlushCaches(void);
 
     /**
      * This method adds a resource to the CoAP server.
@@ -658,30 +648,36 @@ public:
 
 protected:
     /**
-     * This method sends a message.
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance        A reference to the OpenThread instance.
+     * @param[in]  aSendCallback    A function pointer to send CoAP message, which SHOULD be a static
+     *                              member method of a descendent of this class.
+     *
+     */
+    explicit CoapBase(Instance &aInstance, SendCallback aSendCallback);
+
+    /**
+     * This method sends a CoAP message.
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This method receives a message.
+     * This method receives a CoAP message.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Ip6::UdpSocket mSocket;
+    void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
-
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const CoapMetadata &aCoapMetadata);
     void     DequeueMessage(Message &aMessage);
@@ -714,6 +710,53 @@ private:
 
     otCoapRequestHandler mDefaultHandler;
     void *               mDefaultHandlerContext;
+
+    SendCallback mSendCallback;
+};
+
+/**
+ * This class implements the CoAP client and server.
+ *
+ */
+class Coap : public CoapBase
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     *
+     */
+    explicit Coap(Instance &aInstance);
+
+    /**
+     * This method starts the CoAP service.
+     *
+     * @param[in]  aPort  The local UDP port to bind to.
+     *
+     * @retval OT_ERROR_NONE  Successfully started the CoAP service.
+     *
+     */
+    otError Start(uint16_t aPort);
+
+    /**
+     * This method stops the CoAP service.
+     *
+     * @retval OT_ERROR_NONE  Successfully stopped the CoAP service.
+     *
+     */
+    otError Stop(void);
+
+private:
+    static otError Send(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    {
+        return static_cast<Coap *>(aCoapBase)->Send(aMessage, aMessageInfo);
+    }
+    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    Ip6::UdpSocket mSocket;
 };
 
 } // namespace Coap
