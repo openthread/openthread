@@ -1623,11 +1623,15 @@ void Mle::HandleAttachTimer(void)
         mReceivedResponseFromParent = false;
         GetNetif().GetMeshForwarder().SetRxOnWhenIdle(true);
 
+        // initial MLE Parent Request has both E and R flags set in Scan Mask TLV
+        // during reattach when losing connectivity.
         if (mParentRequestMode == kAttachSame1 || mParentRequestMode == kAttachSame2)
         {
             SendParentRequest(kParentRequestTypeRoutersAndReeds);
             delay = kParentRequestReedTimeout;
         }
+        // initial MLE Parent Request has only R flag set in Scan Mask TLV for
+        // during initial attach or downgrade process
         else
         {
             SendParentRequest(kParentRequestTypeRouters);
@@ -1784,6 +1788,7 @@ uint32_t Mle::Reattach(void)
         break;
 
     case kAttachSame2:
+    case kAttachSameDowngrade:
         BecomeChild(kAttachAny);
         break;
 
@@ -3159,8 +3164,12 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         case kAttachSame1:
         case kAttachSame2:
             VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
-            VerifyOrExit(diff > 0 || (diff == 0 && netif.GetMle().GetRouterTable().GetLeaderAge() <
-                                                       netif.GetMle().GetNetworkIdTimeout()));
+            VerifyOrExit(diff > 0);
+            break;
+
+        case kAttachSameDowngrade:
+            VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
+            VerifyOrExit(diff >= 0);
             break;
 
         case kAttachBetter:
@@ -4119,6 +4128,10 @@ const char *Mle::AttachModeToString(AttachMode aMode)
 
     case kAttachBetter:
         str = "better-partition";
+        break;
+
+    case kAttachSameDowngrade:
+        str = "same-partition-downgrade";
         break;
     }
 
