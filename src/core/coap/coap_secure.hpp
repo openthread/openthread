@@ -125,14 +125,14 @@ public:
     /**
      * This method initializes DTLS session with a peer.
      *
-     * @param[in]  aMessageInfo            A pointer to a message info structure.
+     * @param[in]  aSockAddr               A reference to the remote sockaddr.
      * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
      * established.
      *
      * @retval OT_ERROR_NONE  Successfully started DTLS connection.
      *
      */
-    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext);
+    otError Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether or not the DTLS session is active.

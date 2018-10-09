@@ -34,6 +34,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/coap_secure.h>
+#include <openthread/ip6.h>
 
 #include "coap/coap_header.hpp"
 #include "coap/coap_secure.hpp"
@@ -152,13 +153,13 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
 }
 
 otError otCoapSecureConnect(otInstance *                    aInstance,
-                            const otMessageInfo *           aMessageInfo,
+                            const otSockAddr *              aSockAddr,
                             otHandleCoapSecureClientConnect aHandler,
                             void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,
+    return instance.GetApplicationCoapSecure().Connect(*static_cast<const Ip6::SockAddr *>(aSockAddr), aHandler,
                                                        aContext);
 }
 
