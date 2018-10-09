@@ -243,24 +243,22 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
 
     switch (aMode)
     {
+    case kAttachSameDowngrade:
+        SendAddressRelease();
+
+        // reset children info if any
+        if (HasChildren())
+        {
+            RemoveChildren();
+        }
+
+        // reset routerId info
+        SetRouterId(kInvalidRouterId);
+        break;
+
     case kAttachSame1:
     case kAttachSame2:
-
-        // downgrade
-        if (mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
-        {
-            SendAddressRelease();
-
-            // reset children info if any
-            if (HasChildren())
-            {
-                RemoveChildren();
-            }
-
-            // reset routerId info
-            SetRouterId(kInvalidRouterId);
-        }
-        else if (HasChildren())
+        if (HasChildren())
         {
             BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         }
@@ -1768,7 +1766,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             // downgrade to REED
             otLogNoteMle(GetInstance(), "Downgrade to REED");
-            BecomeChild(kAttachSame1);
+            BecomeChild(kAttachSameDowngrade);
         }
 
         break;

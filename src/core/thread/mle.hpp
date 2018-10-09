@@ -88,10 +88,11 @@ namespace Mle {
  */
 enum AttachMode
 {
-    kAttachAny    = 0, ///< Attach to any Thread partition.
-    kAttachSame1  = 1, ///< Attach to the same Thread partition (attempt 1).
-    kAttachSame2  = 2, ///< Attach to the same Thread partition (attempt 2).
-    kAttachBetter = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+    kAttachAny           = 0, ///< Attach to any Thread partition.
+    kAttachSame1         = 1, ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
+    kAttachSame2         = 2, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
+    kAttachBetter        = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+    kAttachSameDowngrade = 4, ///< Attach to the same Thread partition during downgrade process.
 };
 
 /**
