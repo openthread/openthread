@@ -36,8 +36,10 @@ die() {
 }
 
 at_exit() {
-    sudo killall wpantund
-    killall socat
+    EXIT_CODE=$?
+    sudo killall wpantund || true
+    killall socat || true
+    exit $EXIT_CODE
 }
 
 build() {
