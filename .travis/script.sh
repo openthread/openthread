@@ -511,7 +511,7 @@ set -x
     OT_CLI_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
 
     expect <<EOF || die
-spawn $OT_CLI_PATH $CORE_PTY -echo
+spawn $OT_CLI_PATH $CORE_PTY
 set timeout 2
 send "panid 0xface\r\n"
 expect "Done"
