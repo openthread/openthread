@@ -233,7 +233,7 @@ AC_PATH_PROG(CMP, cmp)
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions -fno-rtti"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
@@ -1565,21 +1565,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${with_examples}" = "nrf52
 
 AC_SUBST(OPENTHREAD_EXAMPLES_SAMR21)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21], [test "${with_examples}" = "samr21"])
-
-#
-# libstdc++
-#
-AC_ARG_WITH(
-    [libstdcxx],
-    [AS_HELP_STRING([--with-libstdcxx], [Specify the C++ standard library to link to @<:@default=none@:>@.])],
-    [],
-    [with_libstdcxx=none])
-
-if test "${with_libstdcxx}" = "none"; then
-    CXXFLAGS="${CXXFLAGS} -fno-exceptions -fno-rtti"
-else
-    AC_CHECK_LIB([${with_libstdcxx}], [__cxa_pure_virtual], , [AC_MSG_ERROR([Uanble to find standard C++ library])])
-fi
 
 #
 # Tools
