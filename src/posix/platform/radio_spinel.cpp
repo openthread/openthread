@@ -146,7 +146,7 @@ static inline void SuccessOrDie(otError aError)
     if (aError != OT_ERROR_NONE)
     {
         // fprintf(stderr, "Operation failed: %s\r\n", otThreadErrorToString(aError));
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 }
 
@@ -279,7 +279,7 @@ static int ForkPty(const char *aCommand, const char *aArguments)
 
         execl(getenv("SHELL"), getenv("SHELL"), "-c", cmd, NULL);
         perror("open pty failed");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_INVALID_ARGUMENTS);
     }
     else
     {
@@ -345,7 +345,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
         default:
             // not supported
             assert(false);
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -359,7 +359,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             assert(false);
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -447,7 +447,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
 #endif
         default:
             assert(false);
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -459,7 +459,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
 exit:
     if (rval != 0)
     {
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
     return fd;
@@ -555,7 +555,7 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
             otLogCritPlat(mInstance, "Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d",
                           SPINEL_PROTOCOL_VERSION_THREAD_MAJOR, SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor,
                           versionMinor);
-            ExitNow(error = OT_ERROR_FAILED);
+            exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
         }
     }
 
@@ -1237,12 +1237,12 @@ otError RadioSpinel::WaitResponse(void)
             else if (FD_ISSET(mSockFd, &error_fds))
             {
                 fprintf(stderr, "NCP error\r\n");
-                exit(EXIT_FAILURE);
+                exit(OT_EXIT_FAILURE);
             }
             else
             {
                 assert(false);
-                exit(EXIT_FAILURE);
+                exit(OT_EXIT_FAILURE);
             }
         }
         else if (rval == 0)
@@ -1254,7 +1254,7 @@ otError RadioSpinel::WaitResponse(void)
         else if (errno != EINTR)
         {
             perror("wait response");
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_FAILURE);
         }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
