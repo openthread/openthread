@@ -408,6 +408,24 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
 
     {
+        unsigned int versionMajor;
+        unsigned int versionMinor;
+
+        SuccessOrExit(error = Get(SPINEL_PROP_PROTOCOL_VERSION,
+                                  (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S), &versionMajor,
+                                  &versionMinor));
+
+        if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
+            (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
+        {
+            otLogCritPlat(mInstance, "Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d",
+                          SPINEL_PROTOCOL_VERSION_THREAD_MAJOR, SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor,
+                          versionMinor);
+            ExitNow(error = OT_ERROR_FAILED);
+        }
+    }
+
+    {
         unsigned int caps;
         SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
         mRadioCaps = static_cast<otRadioCaps>(caps);
