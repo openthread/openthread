@@ -1087,6 +1087,7 @@ typedef enum {
 
     /// Thread Child Timeout
     /** Format: `L`
+     *  Unit: Seconds
      *
      *  Used when operating in the Child role.
      */
