@@ -61,7 +61,7 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
 
     VerifyOrExit((message = mSendQueue.GetTail()) != NULL);
 
-    if (message->GetPriority() > aPriority)
+    if (message->GetPriority() < aPriority)
     {
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);

@@ -955,7 +955,7 @@ Message *PriorityQueue::GetHead(void) const
 {
     Message *tail;
 
-    tail = FindFirstNonNullTail(Message::kNumPriorities - 1);
+    tail = FindFirstNonNullTail(0);
 
     return (tail == NULL) ? NULL : tail->Next(MessageInfo::kListInterface);
 }
@@ -983,7 +983,7 @@ Message *PriorityQueue::GetHeadForPriority(uint8_t aPriority) const
 
 Message *PriorityQueue::GetTail(void) const
 {
-    return FindFirstNonNullTail(Message::kNumPriorities - 1);
+    return FindFirstNonNullTail(0);
 }
 
 void PriorityQueue::AddToList(uint8_t aList, Message &aMessage)
