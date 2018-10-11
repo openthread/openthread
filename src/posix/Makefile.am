@@ -58,7 +58,6 @@ LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 
 LDADD_COMMON                                                           = \
     $(top_builddir)/src/posix/platform/libopenthread-posix.a             \
-    -lstdc++                                                             \
     -lutil                                                               \
     $(NULL)
 

@@ -408,7 +408,11 @@ public:
      * @retval OT_ERROR_NONE  Successfully enqueued the IPv6 message.
      *
      */
-    virtual otError SendMessage(Message &aMessage) = 0;
+    virtual otError SendMessage(Message &aMessage)
+    {
+        OT_UNUSED_VARIABLE(aMessage);
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * This virtual method fills out @p aAddress with the link address.
@@ -418,7 +422,11 @@ public:
      * @retval OT_ERROR_NONE  Successfully retrieved the link address.
      *
      */
-    virtual otError GetLinkAddress(LinkAddress &aAddress) const = 0;
+    virtual otError GetLinkAddress(LinkAddress &aAddress) const
+    {
+        OT_UNUSED_VARIABLE(aAddress);
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * This virtual method performs a source-destination route lookup.
@@ -431,7 +439,13 @@ public:
      * @retval OT_ERROR_NO_ROUTE  No route to destination.
      *
      */
-    virtual otError RouteLookup(const Address &aSource, const Address &aDestination, uint8_t *aPrefixMatch) = 0;
+    virtual otError RouteLookup(const Address &aSource, const Address &aDestination, uint8_t *aPrefixMatch)
+    {
+        OT_UNUSED_VARIABLE(aSource);
+        OT_UNUSED_VARIABLE(aDestination);
+        OT_UNUSED_VARIABLE(aPrefixMatch);
+        return OT_ERROR_NOT_IMPLEMENTED;
+    }
 
 private:
     NetifUnicastAddress *  mUnicastAddresses;

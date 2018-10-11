@@ -54,19 +54,32 @@ public:
      *
      * @returns The number of bytes placed in the output queue.
      *
+     * @retval  -1  Driver is broken.
+     *
      */
-    virtual int Output(const char *aBuf, uint16_t aBufLength) = 0;
+    virtual int Output(const char *aBuf, uint16_t aBufLength)
+    {
+        OT_UNUSED_VARIABLE(aBuf);
+        OT_UNUSED_VARIABLE(aBufLength);
+        return -1;
+    }
 
     /**
      * This method delivers formatted output to the client.
      *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
+     * @param[in]  aFormat  A pointer to the format string.
+     * @param[in]  ...      A variable list of arguments to format.
      *
      * @returns The number of bytes placed in the output queue.
      *
+     * @retval  -1  Driver is broken.
+     *
      */
-    virtual int OutputFormat(const char *fmt, ...) = 0;
+    virtual int OutputFormat(const char *aFormat, ...)
+    {
+        OT_UNUSED_VARIABLE(aFormat);
+        return -1;
+    }
 };
 
 } // namespace Cli
