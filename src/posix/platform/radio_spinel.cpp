@@ -320,7 +320,6 @@ static int OpenFile(const char *aFile, const char *aConfig)
         struct termios tios;
 
         int  speed  = 115200;
-        int  csize  = 8;
         int  cstopb = 1;
         char parity = 'N';
 
@@ -328,28 +327,10 @@ static int OpenFile(const char *aFile, const char *aConfig)
 
         cfmakeraw(&tios);
 
-        // example: 115200 8N1
-        sscanf(aConfig, "%u %d%c%d", &speed, &csize, &parity, &cstopb);
+        tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        switch (csize)
-        {
-        case 5:
-            tios.c_cflag |= CS5;
-            break;
-        case 6:
-            tios.c_cflag |= CS6;
-            break;
-        case 7:
-            tios.c_cflag |= CS7;
-            break;
-        case 8:
-            tios.c_cflag |= CS8;
-            break;
-        default:
-            assert(false);
-            exit(EXIT_FAILURE);
-            break;
-        }
+        // example: 115200N1
+        sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
 
         switch (parity)
         {
