@@ -99,9 +99,9 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != arm-gcc-7 ] || {
-        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
-        tar xjf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2 || die
-        export PATH=/tmp/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH || die
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die
         arm-none-eabi-gcc --version || die
     }
 
