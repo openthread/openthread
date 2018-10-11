@@ -1074,12 +1074,43 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         }
         else
         {
+            otError txError = aError;
+
             mSendMessage->ClearDirectTransmission();
             mSendMessage->SetOffset(0);
 
             if (neighbor != NULL)
             {
                 neighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
+            }
+
+#if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
+
+            // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
+            // disabled, all fragment frames of a larger message are
+            // sent even if the transmission of an earlier fragment fail.
+            // Note that `GetTxSuccess() tracks the tx success of the
+            // entire message, while `aError` represents the error
+            // status of the last fragment frame transmission.
+
+            if (!mSendMessage->GetTxSuccess() && (txError == OT_ERROR_NONE))
+            {
+                txError = OT_ERROR_FAILED;
+            }
+#endif
+
+            LogMessage(kMessageTransmit, *mSendMessage, &macDest, txError);
+
+            if (mSendMessage->GetType() == Message::kTypeIp6)
+            {
+                if (mSendMessage->GetTxSuccess())
+                {
+                    mIpCounters.mTxSuccess++;
+                }
+                else
+                {
+                    mIpCounters.mTxFailure++;
+                }
             }
         }
 
@@ -1103,20 +1134,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         else
         {
             mDataPollManager.HandlePollSent(aError);
-        }
-    }
-
-    if (mMessageNextOffset >= mSendMessage->GetLength())
-    {
-        LogMessage(kMessageTransmit, *mSendMessage, &macDest, aError);
-
-        if (aError == OT_ERROR_NONE)
-        {
-            mIpCounters.mTxSuccess++;
-        }
-        else
-        {
-            mIpCounters.mTxFailure++;
         }
     }
 
@@ -1425,7 +1442,11 @@ void MeshForwarder::ClearReassemblyList(void)
         mReassemblyList.Dequeue(*message);
 
         LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
-        mIpCounters.mRxFailure++;
+
+        if (message->GetType() == Message::kTypeIp6)
+        {
+            mIpCounters.mRxFailure++;
+        }
 
         message->Free();
     }
@@ -1455,7 +1476,11 @@ void MeshForwarder::HandleReassemblyTimer(void)
             mReassemblyList.Dequeue(*message);
 
             LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
-            mIpCounters.mRxFailure++;
+
+            if (message->GetType() == Message::kTypeIp6)
+            {
+                mIpCounters.mRxFailure++;
+            }
 
             message->Free();
         }
@@ -1528,7 +1553,11 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
     ThreadNetif &netif = GetNetif();
 
     LogMessage(kMessageReceive, aMessage, &aMacSource, OT_ERROR_NONE);
-    mIpCounters.mRxSuccess++;
+
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        mIpCounters.mRxSuccess++;
+    }
 
     return netif.GetIp6().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
 }
