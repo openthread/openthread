@@ -267,7 +267,7 @@ class VirtualTime:
             elif type == self.OT_SIM_EVENT_RADIO_SPINEL_WRITE:
                 assert not self._is_radio(addr)
                 radio_addr = self._to_radio_addr(addr)
-                if not self.devices.has_key(radio_addr):
+                if not radio_addr in self.devices:
                     self.awake_devices.add(radio_addr)
 
                 event = (event_time, self.event_sequence, radio_addr, self.OT_SIM_EVENT_UART_WRITE, datalen, data)
@@ -279,7 +279,7 @@ class VirtualTime:
             elif type == self.OT_SIM_EVENT_UART_WRITE:
                 assert self._is_radio(addr)
                 core_addr = self._to_core_addr(addr)
-                if not self.devices.has_key(core_addr):
+                if not core_addr in self.devices:
                     self.awake_devices.add(core_addr)
 
                 event = (event_time, self.event_sequence, core_addr, self.OT_SIM_EVENT_RADIO_SPINEL_WRITE, datalen, data)

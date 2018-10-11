@@ -441,13 +441,17 @@ class otCli:
         return addrs
 
     def get_addr(self, prefix):
-        network = ipaddress.ip_network(unicode(prefix))
+        network = ipaddress.ip_network(u'%s' % str(prefix))
         addrs = self.get_addrs()
 
         for addr in addrs:
-            ipv6_address = ipaddress.ip_address(addr.decode("utf-8"))
+            if isinstance(addr, bytearray):
+                addr = bytes(addr)
+            elif isinstance(addr, str) and sys.version_info[0] == 2:
+                addr = addr.decode("utf-8")
+            ipv6_address = ipaddress.ip_address(addr)
             if ipv6_address in network:
-                return ipv6_address.exploded.encode('utf-8')
+                return ipv6_address.exploded
 
         return None
 
