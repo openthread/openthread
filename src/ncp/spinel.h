@@ -51,16 +51,6 @@
 #define SPINEL_API_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #endif // ifdef __GNUC__
 
-#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-#if defined(__cplusplus)
-#define __BEGIN_DECLS extern "C" {
-#define __END_DECLS }
-#else // if defined(__cplusplus)
-#define __BEGIN_DECLS
-#define __END_DECLS
-#endif // else defined(__cplusplus)
-#endif // if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-
 #endif // ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifndef SPINEL_API_EXTERN
@@ -105,7 +95,9 @@
 
 // ----------------------------------------------------------------------------
 
-__BEGIN_DECLS
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 typedef enum {
     SPINEL_STATUS_OK      = 0, ///< Operation has completed successfully.
@@ -2587,6 +2579,8 @@ SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability)
 
 // ----------------------------------------------------------------------------
 
-__END_DECLS
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* defined(SPINEL_HEADER_INCLUDED) */
