@@ -391,7 +391,6 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     {
         mSockFd = OpenUart(aRadioFile, aRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = SendReset());
     }
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
@@ -401,6 +400,7 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 
+    SuccessOrExit(error = SendReset());
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
