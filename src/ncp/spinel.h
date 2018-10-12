@@ -477,6 +477,7 @@ enum
     SPINEL_CAP_OPENTHREAD_LOG_METADATA = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
+    SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN       = 1024,
@@ -2002,6 +2003,18 @@ typedef enum {
      *
      */
     SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT = SPINEL_PROP_OPENTHREAD__BEGIN + 11,
+
+    // RCP (NCP in radio only mode) version
+    /** Format `U` - Read only
+     *
+     * Required capability: SPINEL_CAP_POSIX_APP
+     *
+     * This property gives the version string of RCP (NCP in radio mode) which is being controlled by the POSIX
+     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_ENABLE_POSIX_APP` is
+     * enabled).
+     *
+     */
+    SPINEL_PROP_RCP_VERSION = SPINEL_PROP_OPENTHREAD__BEGIN + 12,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

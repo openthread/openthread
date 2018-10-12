@@ -1838,6 +1838,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "CHILD_SUPERVISION_CHECK_TIMEOUT";
         break;
 
+    case SPINEL_PROP_RCP_VERSION:
+        ret = "RCP_VERSION";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "UART_BITRATE";
         break;
@@ -2441,6 +2445,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_CHILD_SUPERVISION:
         ret = "CHILD_SUPERVISION";
+        break;
+
+    case SPINEL_CAP_POSIX_APP:
+        ret = "POSIX_APP";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:

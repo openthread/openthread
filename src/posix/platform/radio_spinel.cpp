@@ -506,6 +506,7 @@ RadioSpinel::RadioSpinel(void)
     , mDiagOutputMaxLen(0)
 #endif
 {
+    mVersion[0] = '\0';
 }
 
 void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
@@ -534,6 +535,8 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
+
+    SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
 
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
@@ -1723,6 +1726,12 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetRadioCaps();
+}
+
+const char *otPlatRadioGetVersionString(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetVersion();
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)

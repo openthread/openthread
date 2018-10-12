@@ -379,12 +379,22 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
 otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
- * Get the OpenThread version string.
+ * This function gets the OpenThread version string.
  *
  * @returns A pointer to the OpenThread version.
  *
  */
 OTAPI const char *OTCALL otGetVersionString(void);
+
+/**
+ * This function gets the OpenThread radio version string.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the OpenThread radio version.
+ *
+ */
+const char *otGetRadioVersionString(otInstance *aInstance);
 
 /**
  * @}
