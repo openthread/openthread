@@ -239,7 +239,7 @@ static void LogIfFail(otInstance *aInstance, const char *aText, otError aError)
 }
 
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-static int OpenPty(const char *aFile, const char *aConfig)
+static int ForkPty(const char *aCommand, const char *aArguments)
 {
     int fd  = -1;
     int pid = -1;
@@ -273,7 +273,7 @@ static int OpenPty(const char *aFile, const char *aConfig)
             close(static_cast<int>(i));
         }
 
-        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aFile, aConfig);
+        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      otLogCritPlat(mInstance, "NCP file and configuration is too long!"));
 
@@ -303,34 +303,165 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 
-static int OpenUart(const char *aRadioFile, const char *aRadioConfig)
+static int OpenFile(const char *aFile, const char *aConfig)
 {
-    const int kMaxSttyCommand = 128;
-    char      cmd[kMaxSttyCommand];
-    int       fd = -1;
-    int       rval;
+    int fd   = -1;
+    int rval = 0;
 
-    VerifyOrExit(!strchr(aRadioConfig, '&') && !strchr(aRadioConfig, '|') && !strchr(aRadioConfig, ';'),
-                 otLogCritPlat(mInstance, "Illegal NCP config arguments!"));
-
-    rval = snprintf(cmd, sizeof(cmd), "stty -F %s %s", aRadioFile, aRadioConfig);
-    VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
-                 otLogCritPlat(mInstance, "NCP file and configuration is too long!"));
-
-    rval = system(cmd);
-    VerifyOrExit(rval == 0, otLogCritPlat(mInstance, "Unable to configure serial port"));
-
-    fd = open(aRadioFile, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (fd == -1)
     {
         perror("open uart failed");
         ExitNow();
     }
 
-    rval = tcflush(fd, TCIOFLUSH);
-    VerifyOrExit(rval == 0, otLogCritPlat(mInstance, "Unable to flush serial port"));
+    if (isatty(fd))
+    {
+        struct termios tios;
+
+        int  speed  = 115200;
+        int  cstopb = 1;
+        char parity = 'N';
+
+        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
+
+        cfmakeraw(&tios);
+
+        tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
+
+        // example: 115200N1
+        sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+
+        switch (parity)
+        {
+        case 'N':
+            break;
+        case 'E':
+            tios.c_cflag |= PARENB;
+            break;
+        case 'O':
+            tios.c_cflag |= (PARENB | PARODD);
+            break;
+        default:
+            // not supported
+            assert(false);
+            exit(EXIT_FAILURE);
+            break;
+        }
+
+        switch (cstopb)
+        {
+        case 1:
+            tios.c_cflag &= ~CSTOPB;
+            break;
+        case 2:
+            tios.c_cflag |= CSTOPB;
+            break;
+        default:
+            assert(false);
+            exit(EXIT_FAILURE);
+            break;
+        }
+
+        switch (speed)
+        {
+        case 9600:
+            speed = B9600;
+            break;
+        case 19200:
+            speed = B19200;
+            break;
+        case 38400:
+            speed = B38400;
+            break;
+        case 57600:
+            speed = B57600;
+            break;
+        case 115200:
+            speed = B115200;
+            break;
+#ifdef B230400
+        case 230400:
+            speed = B230400;
+            break;
+#endif
+#ifdef B460800
+        case 460800:
+            speed = B460800;
+            break;
+#endif
+#ifdef B500000
+        case 500000:
+            speed = B500000;
+            break;
+#endif
+#ifdef B576000
+        case 576000:
+            speed = B576000;
+            break;
+#endif
+#ifdef B921600
+        case 921600:
+            speed = B921600;
+            break;
+#endif
+#ifdef B1000000
+        case 1000000:
+            speed = B1000000;
+            break;
+#endif
+#ifdef B1152000
+        case 1152000:
+            speed = B1152000;
+            break;
+#endif
+#ifdef B1500000
+        case 1500000:
+            speed = B1500000;
+            break;
+#endif
+#ifdef B2000000
+        case 2000000:
+            speed = B2000000;
+            break;
+#endif
+#ifdef B2500000
+        case 2500000:
+            speed = B2500000;
+            break;
+#endif
+#ifdef B3000000
+        case 3000000:
+            speed = B3000000;
+            break;
+#endif
+#ifdef B3500000
+        case 3500000:
+            speed = B3500000;
+            break;
+#endif
+#ifdef B4000000
+        case 4000000:
+            speed = B4000000;
+            break;
+#endif
+        default:
+            assert(false);
+            exit(EXIT_FAILURE);
+            break;
+        }
+
+        VerifyOrExit((rval = cfsetispeed(&tios, speed)) == 0, perror("cfsetispeed"));
+        VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
+        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
+    }
 
 exit:
+    if (rval != 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+
     return fd;
 }
 
@@ -389,14 +520,14 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenUart(aRadioFile, aRadioConfig);
+        mSockFd = OpenFile(aRadioFile, aRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = SendReset());
     }
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = OpenPty(aRadioFile, aRadioConfig);
+        mSockFd = ForkPty(aRadioFile, aRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
