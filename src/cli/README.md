@@ -1347,11 +1347,12 @@ Done
 ### parent
 
 Get the diagnostic information for a Thread Router as parent.
-Note: There should be no parent for Thread Router. However here the attaching
-      parent information would still be returned for Thread Router out of
-      certification test purpose. As for 8.2.x, Test Harness needs the attaching
-      parent (i.e. Joiner Router)'s MAC address no matter the Joiner is Child or
-      becomes Router already.
+
+Note: When operating as a Thread Router, this command will return the cached
+      information from when the device was previously attached as a Thread
+      Child. Returning cached information is necessary to support the Thread
+      Test Harness - Test Scenario 8.2.x requests the former parent (i.e. Joiner
+      Router's) MAC address even if the device has already promoted to a router.
 
 ```bash
 > parent
