@@ -806,7 +806,7 @@ public:
     /**
      * This method sets the MLE Timeout value.
      *
-     * aTimeout  The Timeout value in seconds.
+     * @param[in]  aTimeout  The Timeout value in seconds.
      *
      */
     otError SetTimeout(uint32_t aTimeout);
