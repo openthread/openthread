@@ -692,6 +692,26 @@ class OpenThread_WpanCtl(IThci):
 
         return maskSet
 
+    def __ChannelMaskListToStr(self, channelList):
+        """convert a channel list to a string
+
+        Args:
+            channelList: channel list (i.e. [21, 22, 23])
+
+        Returns:
+            a string with range-like format (i.e. '21-23')
+        """
+        chan_mask_range = ''
+        if isinstance(channelList, list):
+            if len(channelList) == 1:
+                chan_mask_range = str(channelList[0])
+            elif len(channelList) > 1:
+                chan_mask_range = str(channelList[0]) + '-' + str(channelList[-1])
+        else:
+            print 'not a list:', channelList
+
+        return chan_mask_range
+
     def __setChannelMask(self, channelMask):
         print 'call _setChannelMask'
         try:
@@ -2161,7 +2181,7 @@ class OpenThread_WpanCtl(IThci):
         """
         print '%s call MGMT_ED_SCAN' % self.port
         channelMask = ''
-        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+        channelMask = self.__ChannelMaskListToStr(listChannelMask)
         try:
             cmd = WPANCTL_CMD + 'commissioner energy-scan %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
             print cmd
@@ -2182,7 +2202,7 @@ class OpenThread_WpanCtl(IThci):
         print '%s call MGMT_PANID_QUERY' % self.port
         panid = ''
         channelMask = ''
-        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+        channelMask = self.__ChannelMaskListToStr(listChannelMask)
 
         if not isinstance(xPanId, str):
             panid = str(hex(xPanId))
@@ -2203,7 +2223,7 @@ class OpenThread_WpanCtl(IThci):
         """
         print '%s call MGMT_ANNOUNCE_BEGIN' % self.port
         channelMask = ''
-        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+        channelMask = self.__ChannelMaskListToStr(listChannelMask)
         try:
             cmd = WPANCTL_CMD + 'commissioner announce-begin %s %s %s %s' % (channelMask, xCount, xPeriod, sAddr)
             print cmd
