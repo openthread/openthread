@@ -500,6 +500,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_POSIX_APP
+    case SPINEL_PROP_RCP_VERSION:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -614,7 +619,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif // OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
-        // Raw Link API Properties (Get Handler)
+        // Raw Link or Radio Mode Properties (Get Handler)
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     case SPINEL_PROP_RADIO_CAPS:
