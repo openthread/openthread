@@ -1842,6 +1842,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "RCP_VERSION";
         break;
 
+    case SPINEL_PROP_PARENT_RESPONSE_INFO:
+        ret = "PARENT_RESPONSE_INFO";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "UART_BITRATE";
         break;
