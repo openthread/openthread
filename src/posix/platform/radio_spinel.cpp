@@ -154,7 +154,7 @@ static inline void VerifyOrDie(bool aCondition)
 {
     if (!aCondition)
     {
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 }
 
@@ -525,7 +525,7 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     // not allowed to initialize again.
     assert(mSockFd == -1);
 
-    VerifyOrExit(stat(aRadioFile, &st) == 0, perror("stat ncp file failed"));
+    VerifyOrExit(stat(aRadioFile, &st) == 0, perror("stat ncp file failed"); error = OT_ERROR_INVALID_ARGS);
 
     if (S_ISCHR(st.st_mode))
     {
@@ -574,7 +574,10 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
         SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
         mRadioCaps = static_cast<otRadioCaps>(caps);
-        VerifyOrExit((mRadioCaps & kRequiredRadioCaps) == kRequiredRadioCaps, error = OT_ERROR_NOT_CAPABLE);
+        if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
+        {
+            exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+        }
     }
 
     mRxRadioFrame.mPsdu = mRxPsdu;

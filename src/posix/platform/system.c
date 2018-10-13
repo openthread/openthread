@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -49,18 +50,25 @@ uint64_t gNodeId = 0;
 
 extern bool gPlatformPseudoResetWasRequested;
 
-static void PrintUsage(const char *aArg0)
+static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
-    fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
+    fprintf(aStream,
+            "Syntax:\n"
+            "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
+            "Options:\n"
+            "    -s  --time-speed factor     Time speed up factor.\n"
+            "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
+            "    -h  --help                  Display this usage information.\n",
+            aProgramName);
+    exit(aExitCode);
 }
 
 void otSysInit(int aArgCount, char *aArgVector[])
 {
-    int         i;
     uint32_t    speedUpFactor = 1;
-    char *      endptr;
-    const char *radioFile   = NULL;
-    const char *radioConfig = "";
+    bool        isDryRun      = false;
+    const char *radioFile     = NULL;
+    const char *radioConfig   = "";
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -68,36 +76,59 @@ void otSysInit(int aArgCount, char *aArgVector[])
         return;
     }
 
-    if (aArgCount < 2)
+    while (true)
     {
-        PrintUsage(aArgVector[0]);
-        exit(OT_EXIT_INVALID_ARGUMENTS);
-    }
+        int                 option;
+        const struct option options[] = {{"dry-run", no_argument, NULL, 'n'},
+                                         {"help", no_argument, NULL, 'h'},
+                                         {"time-speed", required_argument, NULL, 's'},
+                                         {0, 0, 0, 0}};
 
-    i = 1;
-    if (!strcmp(aArgVector[i], "-s"))
-    {
-        ++i;
-        speedUpFactor = (uint32_t)strtol(aArgVector[i], &endptr, 0);
+        option = getopt_long(aArgCount, aArgVector, "hns:", options, NULL);
 
-        if (*endptr != '\0' || speedUpFactor == 0)
+        if (option == -1)
         {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[i]);
-            exit(OT_EXIT_INVALID_ARGUMENTS);
+            break;
         }
-        ++i;
+
+        switch (option)
+        {
+        case 'h':
+            PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
+            break;
+        case 'n':
+            isDryRun = true;
+            break;
+        case 's':
+        {
+            char *endptr  = NULL;
+            speedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+
+            if (*endptr != '\0' || speedUpFactor == 0)
+            {
+                fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
+                exit(OT_EXIT_INVALID_ARGUMENTS);
+            }
+            break;
+        }
+        case '?':
+            PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
+            break;
+        default:
+            assert(false);
+            break;
+        }
     }
 
-    if (i >= aArgCount)
+    if (optind >= aArgCount)
     {
-        PrintUsage(aArgVector[0]);
-        exit(OT_EXIT_INVALID_ARGUMENTS);
+        PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    radioFile = aArgVector[i];
-    if (i + 1 < aArgCount)
+    radioFile = aArgVector[optind];
+    if (optind + 1 < aArgCount)
     {
-        radioConfig = aArgVector[i + 1];
+        radioConfig = aArgVector[optind + 1];
     }
 
     platformLoggingInit(basename(aArgVector[0]));
@@ -111,6 +142,11 @@ void otSysInit(int aArgCount, char *aArgVector[])
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     platformUdpInit();
 #endif
+
+    if (isDryRun)
+    {
+        exit(OT_EXIT_SUCCESS);
+    }
 }
 
 bool otSysPseudoResetWasRequested(void)
