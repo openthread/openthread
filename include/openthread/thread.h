@@ -281,7 +281,7 @@ OTAPI bool OTCALL otThreadIsDiscoverInProgress(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns The Thread Child Timeout value.
+ * @returns The Thread Child Timeout value in seconds.
  *
  * @sa otThreadSetChildTimeout
  */
@@ -291,7 +291,7 @@ OTAPI uint32_t OTCALL otThreadGetChildTimeout(otInstance *aInstance);
  * Set the Thread Child Timeout used when operating in the Child role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aTimeout  The timeout value.
+ * @param[in]  aTimeout  The timeout value in seconds.
  *
  * @sa otThreadSetChildTimeout
  *
