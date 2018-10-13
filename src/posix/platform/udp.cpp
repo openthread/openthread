@@ -240,7 +240,6 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     VerifyOrExit(fd == -1, error = OT_ERROR_ALREADY);
 
     fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    assert(fd > 0);
     VerifyOrExit(fd > 0, error = OT_ERROR_FAILED);
 
     {
@@ -274,13 +273,10 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     aUdpSocket->mHandle = GetHandleFromFd(fd);
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error == OT_ERROR_FAILED)
     {
-        if (error == OT_ERROR_FAILED)
-        {
-            perror("otPlatUdpBind");
-            closeFd(fd);
-        }
+        perror("otPlatUdpBind");
+        closeFd(fd);
     }
 
     return error;
@@ -314,8 +310,6 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     {
         SuccessOrExit(error = otPlatUdpBind(aUdpSocket));
     }
-
-    assert(fd != -1);
 
     {
         uint16_t len = otMessageGetLength(aMessage);
