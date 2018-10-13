@@ -560,9 +560,13 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     }
 
     {
+        const otRadioCaps kRequiredRadioCaps =
+            OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
         unsigned int caps;
+
         SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
         mRadioCaps = static_cast<otRadioCaps>(caps);
+        VerifyOrExit((mRadioCaps & kRequiredRadioCaps) == kRequiredRadioCaps, error = OT_ERROR_NOT_CAPABLE);
     }
 
     mRxRadioFrame.mPsdu = mRxPsdu;
