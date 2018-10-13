@@ -258,7 +258,10 @@ void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
                      (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
     }
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
     netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields));
+#endif
+
     netif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
 exit:
