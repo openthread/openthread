@@ -45,32 +45,36 @@ python --version || die
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
 
-    # avoids "third_party/mbedtls/repo/library/ssl_srv.c:2904:9: warning: Value stored to 'p' is never read"
-    export CPPFLAGS=-DMBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
     scan-build ./configure                \
-        --enable-cli-app=all              \
-        --enable-ncp-app=all              \
-        --with-ncp-bus=uart               \
-        --with-examples=posix             \
         --enable-application-coap         \
         --enable-application-coap-secure  \
+        --enable-border-agent             \
         --enable-border-router            \
         --enable-cert-log                 \
+        --enable-channel-manager          \
+        --enable-channel-monitor          \
         --enable-child-supervision        \
+        --enable-cli                      \
         --enable-commissioner             \
         --enable-dhcp6-client             \
         --enable-dhcp6-server             \
         --enable-diag                     \
         --enable-dns-client               \
+        --enable-ftd                      \
         --enable-jam-detection            \
         --enable-joiner                   \
         --enable-legacy                   \
         --enable-mac-filter               \
+        --enable-mtd                      \
         --enable-mtd-network-diagnostic   \
+        --enable-ncp                      \
+        --with-ncp-bus=uart               \
+        --enable-radio-only               \
         --enable-raw-link-api             \
         --enable-service                  \
-        --enable-tmf-proxy || die
+        --enable-udp-proxy                \
+        --with-examples=posix || die
+
     scan-build --status-bugs -analyze-headers -v make || die
 }
 
