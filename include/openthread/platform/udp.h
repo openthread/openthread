@@ -45,7 +45,7 @@ extern "C" {
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
  * @retval  OT_ERROR_NONE   Successfully initialized UDP socket by platform.
- * @retval  OT_ERROR_FAILED Failed to initializ UDP Socket.
+ * @retval  OT_ERROR_FAILED Failed to initialize UDP Socket.
  *
  */
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket);
@@ -56,7 +56,7 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket);
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
  * @retval  OT_ERROR_NONE   Successfully closed UDP socket by platform.
- * @retval  OT_ERROR_FAILED Failed to clos UDP Socket.
+ * @retval  OT_ERROR_FAILED Failed to close UDP Socket.
  *
  */
 otError otPlatUdpClose(otUdpSocket *aUdpSocket);
