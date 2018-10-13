@@ -623,6 +623,10 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
 
         case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         case OT_ERROR_ABORT:
+
+            otLogInfoMac(GetInstance(), "Indirect tx to child %04x failed, attempt %d/%d, error:%s", child->GetRloc16(),
+                         child->GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts, otThreadErrorToString(aError));
+
             if (child->GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
             {
                 // We save the frame counter, key id, and data sequence number of
