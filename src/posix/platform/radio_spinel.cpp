@@ -451,7 +451,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
             break;
         }
 
-        VerifyOrExit((rval = cfsetispeed(&tios, speed)) == 0, perror("cfsetispeed"));
+        VerifyOrExit((rval = cfsetspeed(&tios, speed)) == 0, perror("cfsetispeed"));
         VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
         VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
     }
