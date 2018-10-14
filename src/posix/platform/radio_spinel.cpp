@@ -150,6 +150,14 @@ static inline void SuccessOrDie(otError aError)
     }
 }
 
+static inline void VerifyOrDie(bool aCondition)
+{
+    if (!aCondition)
+    {
+        exit(EXIT_FAILURE);
+    }
+}
+
 namespace ot {
 
 static otError SpinelStatusToOtError(spinel_status_t aError)
@@ -776,12 +784,15 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
-            otLogInfoPlat(mInstance, "NCP reset: %s", spinel_status_to_cstr(status));
+            otLogCritPlat(mInstance, "RCP reset: %s", spinel_status_to_cstr(status));
             mIsReady = true;
+
+            // If RCP crashes/resets while radio was enabled, posix app exits.
+            VerifyOrDie(!IsEnabled());
         }
         else
         {
-            otLogInfoPlat(mInstance, "NCP last status: %s", spinel_status_to_cstr(status));
+            otLogInfoPlat(mInstance, "RCP last status: %s", spinel_status_to_cstr(status));
         }
     }
     else if (aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
@@ -805,7 +816,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
         assert(len < sizeof(logStream));
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         logStream[len] = '\0';
-        otLogDebgPlat(mInstance, "NCP DEBUG INFO: %s", logStream);
+        otLogDebgPlat(mInstance, "RCP DEBUG INFO: %s", logStream);
     }
 
 exit:
