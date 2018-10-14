@@ -61,6 +61,7 @@ static bool IsMle(Instance &aInstance, uint16_t aPort)
 UdpSocket::UdpSocket(Udp &aUdp)
     : InstanceLocator(aUdp.GetInstance())
 {
+    mHandle = NULL;
 }
 
 Udp &UdpSocket::GetUdp(void)
@@ -96,16 +97,21 @@ otError UdpSocket::Bind(const SockAddr &aSockAddr)
     otError error = OT_ERROR_NONE;
 
     mSockName = aSockAddr;
+
+    if (mSockName.mPort == 0)
+    {
+        do
+        {
+            mSockName.mPort = GetUdp().GetEphemeralPort();
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-    if (!IsMle(GetInstance(), mSockName.mPort))
+            error = otPlatUdpBind(this);
+#endif
+        } while (error != OT_ERROR_NONE);
+    }
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    else if (!IsMle(GetInstance(), mSockName.mPort))
     {
         error = otPlatUdpBind(this);
-    }
-#else
-
-    if (GetSockName().mPort == 0)
-    {
-        mSockName.mPort = GetUdp().GetEphemeralPort();
     }
 #endif
 
@@ -117,13 +123,13 @@ otError UdpSocket::Connect(const SockAddr &aSockAddr)
     otError error = OT_ERROR_NONE;
 
     mPeerName = aSockAddr;
+
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     if (!IsMle(GetInstance(), mSockName.mPort))
     {
         error = otPlatUdpConnect(this);
     }
 #endif
-
     return error;
 }
 
@@ -147,13 +153,6 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
 
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
-    if (!IsMle(GetInstance(), mSockName.mPort) &&
-        !(mSockName.mPort == ot::kCoapUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
-    {
-        ExitNow(error = otPlatUdpSend(this, &aMessage, &aMessageInfo));
-    }
-#endif
     messageInfoLocal = aMessageInfo;
 
     if (messageInfoLocal.GetPeerAddr().IsUnspecified())
@@ -176,11 +175,21 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 
     if (GetSockName().mPort == 0)
     {
-        GetSockName().mPort = GetUdp().GetEphemeralPort();
+        SuccessOrExit(error = Bind(GetSockName()));
     }
     messageInfoLocal.SetSockPort(GetSockName().mPort);
 
-    SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    if (!IsMle(GetInstance(), mSockName.mPort) &&
+        !(mSockName.mPort == ot::kCoapUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
+    {
+        SuccessOrExit(error = otPlatUdpSend(this, &aMessage, &messageInfoLocal));
+    }
+    else
+#endif
+    {
+        SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+    }
 
 exit:
     return error;

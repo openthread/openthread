@@ -490,7 +490,7 @@ python --version || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
-    .travis/posix-app-pty || die
+    .travis/check-posix-app-pty || die
 }
 
 [ $BUILD_TARGET != posix-mtd ] || {

@@ -68,7 +68,7 @@ check() {
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
     OT_NCP_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-ncp)"
-    PLATFORM_NETIF=wpan0 sudo -E wpantund -I wpan0 -o Thread:Config:FilterRLOCAddresses 0 -s "system:${OT_NCP_PATH} ${CORE_PTY} -echo" &
+    PLATFORM_NETIF=wpan0 sudo -E wpantund -I wpan0 -o Thread:Config:FilterRLOCAddresses 0 -s "system:${OT_NCP_PATH} ${CORE_PTY}" &
 
     while true; do
         sleep 5

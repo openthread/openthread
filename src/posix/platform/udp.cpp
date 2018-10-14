@@ -46,30 +46,16 @@
 
 static int sPlatNetifIndex = 0;
 
-static void *const  kInvalidHandle = reinterpret_cast<void *const>(-1);
-static const size_t kMaxUdpSize    = 1280;
+static const size_t kMaxUdpSize = 1280;
 
-static void *GetHandleFromFd(int aFd)
+static void *FdToHandle(int aFd)
 {
     return reinterpret_cast<void *>(aFd);
 }
 
-static int GetFdFromHandle(void *aHandle)
+static int FdFromHandle(void *aHandle)
 {
     return reinterpret_cast<long>(aHandle);
-}
-
-static void closeFd(int aFd)
-{
-    VerifyOrExit(aFd != -1);
-
-    if (close(aFd))
-    {
-        perror("close");
-    }
-
-exit:
-    return;
 }
 
 static bool IsLinkLocal(const struct in6_addr &aAddress)
@@ -212,35 +198,46 @@ exit:
 
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 {
-    aUdpSocket->mHandle = kInvalidHandle;
-    return OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
+    int     fd;
+
+    assert(aUdpSocket->mHandle == NULL);
+
+    fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    VerifyOrExit(fd > 0, error = OT_ERROR_FAILED);
+
+    aUdpSocket->mHandle = FdToHandle(fd);
+
+exit:
+    return error;
 }
 
 otError otPlatUdpClose(otUdpSocket *aUdpSocket)
 {
     otError error = OT_ERROR_NONE;
-    int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
+    int     fd;
 
-    VerifyOrExit(fd != -1 && aUdpSocket->mSockName.mPort != 0);
-    closeFd(fd);
+    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    fd = FdFromHandle(aUdpSocket->mHandle);
+    VerifyOrExit(0 == close(fd), error = OT_ERROR_FAILED);
+
+    aUdpSocket->mHandle = NULL;
 
 exit:
-    aUdpSocket->mHandle = kInvalidHandle;
     return error;
 }
 
 otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 {
     otError error = OT_ERROR_NONE;
-    int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
+    int     fd;
 
     assert(sPlatNetifIndex != 0);
-    assert(fd == -1);
+    assert(aUdpSocket->mHandle != NULL);
     VerifyOrExit(sPlatNetifIndex != 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(fd == -1, error = OT_ERROR_ALREADY);
-
-    fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    VerifyOrExit(fd > 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
+    fd = FdFromHandle(aUdpSocket->mHandle);
 
     {
         struct sockaddr_in6 sin6;
@@ -261,22 +258,10 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     VerifyOrExit(0 == setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &sPlatNetifIndex, sizeof(sPlatNetifIndex)),
                  error = OT_ERROR_FAILED);
 
-    if (aUdpSocket->mSockName.mPort == 0)
-    {
-        struct sockaddr_in6 sin6;
-        socklen_t           len = sizeof(sin6);
-
-        VerifyOrExit(0 == getsockname(fd, reinterpret_cast<struct sockaddr *>(&sin6), &len), error = OT_ERROR_FAILED);
-        aUdpSocket->mSockName.mPort = ntohs(sin6.sin6_port);
-    }
-
-    aUdpSocket->mHandle = GetHandleFromFd(fd);
-
 exit:
     if (error == OT_ERROR_FAILED)
     {
         perror("otPlatUdpBind");
-        closeFd(fd);
     }
 
     return error;
@@ -286,9 +271,11 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 {
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 sin6;
-    int                 fd = GetFdFromHandle(aUdpSocket->mHandle);
+    int                 fd;
 
-    VerifyOrExit(fd > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    fd = FdFromHandle(aUdpSocket->mHandle);
 
     memset(&sin6, 0, sizeof(struct sockaddr_in6));
     sin6.sin6_port   = htons(aUdpSocket->mPeerName.mPort);
@@ -304,16 +291,14 @@ exit:
 otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
-    int     fd    = GetFdFromHandle(aUdpSocket->mHandle);
+    int     fd;
 
-    if (fd == -1)
-    {
-        SuccessOrExit(error = otPlatUdpBind(aUdpSocket));
-    }
+    VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
+    fd = FdFromHandle(aUdpSocket->mHandle);
 
     {
-        uint16_t len = otMessageGetLength(aMessage);
         uint8_t  payload[kMaxUdpSize];
+        uint16_t len = otMessageGetLength(aMessage);
 
         VerifyOrExit(len == otMessageRead(aMessage, 0, payload, len), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = transmitPacket(fd, payload, len, *aMessageInfo));
@@ -334,13 +319,14 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
-        int fd = GetFdFromHandle(socket->mHandle);
+        int fd;
 
-        if (fd == -1)
+        if (socket->mHandle == NULL)
         {
             continue;
         }
 
+        fd = FdFromHandle(socket->mHandle);
         FD_SET(fd, aReadFdSet);
 
         if (aMaxFd != NULL && *aMaxFd < fd)
@@ -370,9 +356,9 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
-        int fd = GetFdFromHandle(socket->mHandle);
+        int fd = FdFromHandle(socket->mHandle);
 
-        if (fd != -1 && FD_ISSET(fd, aReadFdSet))
+        if (fd > 0 && FD_ISSET(fd, aReadFdSet))
         {
             otMessageInfo messageInfo;
             otMessage *   message = NULL;
@@ -381,7 +367,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 
             memset(&messageInfo, 0, sizeof(messageInfo));
             messageInfo.mSockPort    = socket->mSockName.mPort;
-            messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_HOST;
+            messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
             if (OT_ERROR_NONE != receivePacket(fd, payload, length, messageInfo))
             {
