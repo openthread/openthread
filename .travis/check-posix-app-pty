@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+#  Copyright (c) 2018, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -e
+set -x
+
+die() {
+	echo " *** ERROR: " $*
+	exit 1
+}
+
+at_exit() {
+    EXIT_CODE=$?
+    sudo killall wpantund || true
+    killall socat || true
+    exit $EXIT_CODE
+}
+
+build() {
+    ./bootstrap
+    COVERAGE=1 make -f examples/Makefile-posix
+    COVERAGE=1 make -f src/posix/Makefile-posix PLATFORM_UDP=1
+}
+
+check() {
+    trap at_exit INT TERM EXIT
+
+    SOCAT_OUTPUT=/tmp/ot-socat
+    socat -d -d pty,raw,b115200,echo=0 pty,raw,b115200,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
+    while true; do
+        if test $(head -n2 $SOCAT_OUTPUT | wc -l) = 2; then
+            RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
+            CORE_PTY=$(head -n2 $SOCAT_OUTPUT | tail -n1 | grep -o '/dev/.\+')
+            break
+        fi
+        echo 'Waiting for socat ready...'
+        sleep 1
+    done
+    echo 'RADIO_PTY' $DEVICE_PTY
+    echo 'CORE_PTY' $CORE_PTY
+
+    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
+    $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
+    OT_NCP_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-ncp)"
+    PLATFORM_NETIF=wpan0 sudo -E wpantund -I wpan0 -o Thread:Config:FilterRLOCAddresses 0 -s "system:${OT_NCP_PATH} ${CORE_PTY}" &
+
+    while true; do
+        sleep 5
+        if sudo wpanctl status; then
+            break
+        else
+            echo 'Still waiting for wpantund'
+        fi
+    done
+
+    sudo wpanctl leave || true
+    sudo wpanctl form -c 18 OpenThreadTest
+
+    mleid=$(sudo wpanctl status | grep MeshLocalAddress | cut -d'"' -f4)
+    echo "ML-EID is: ${mleid}"
+
+    netstat -an | grep -q 61631 || die 'TMF port is not available!'
+    xaddress=$(sudo wpanctl get 'NCP:ExtendedAddress' | cut -d= -f2 | tr -d ' []')
+    echo "Extended address is: ${xaddress}"
+
+    # Retrievie extended address through network diagnostic get
+    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${mleid}]:61631/d/dg -f- | xxd -p -u | grep 0008)
+    echo "CoAP response is: ${coap_response}"
+
+    # Verify CoAP response contains the extended address
+    [[ "${coap_response}" = *${xaddress}* ]] || die 'failed to get extended address'
+
+    # Leave so that code coverage will be flushed
+    sudo wpanctl leave || true
+}
+
+main() {
+    case $1 in
+        check)
+            check
+            ;;
+        *)
+            build
+            check
+            ;;
+    esac
+}
+
+main "$@"

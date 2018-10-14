@@ -124,3 +124,12 @@ void otUdpProxyReceive(otInstance *        aInstance,
     static_cast<ot::Message *>(aMessage)->Free();
 }
 #endif // OPENTHREAD_ENABLE_UDP_PROXY
+
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+otUdpSocket *otUdpGetSockets(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Ip6>().GetUdp().GetUdpSockets();
+}
+#endif
