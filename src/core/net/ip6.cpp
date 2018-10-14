@@ -644,6 +644,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
                 break;
 
+#if OPENTHREAD_ENABLE_PLATFORM_UDP == 0
             case kCoapUdpPort:
 
                 // do not pass TMF messages
@@ -653,8 +654,15 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 }
 
                 break;
+#endif // OPENTHREAD_ENABLE_PLATFORM_UDP
 
             default:
+#if OPENTHREAD_FTD
+                if (udp.GetDestinationPort() == GetInstance().Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
+                {
+                    ExitNow(error = OT_ERROR_NO_ROUTE);
+                }
+#endif
                 break;
             }
 

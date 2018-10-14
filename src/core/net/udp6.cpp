@@ -35,6 +35,8 @@
 
 #include <stdio.h>
 
+#include <openthread/platform/udp.h>
+
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -45,9 +47,21 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Ip6 {
 
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+static bool IsMle(Instance &aInstance, uint16_t aPort)
+{
+#if OPENTHREAD_FTD
+    return aPort == ot::Mle::kUdpPort || aPort == aInstance.Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort();
+#else
+    return aPort == ot::Mle::kUdpPort;
+#endif
+}
+#endif
+
 UdpSocket::UdpSocket(Udp &aUdp)
     : InstanceLocator(aUdp.GetInstance())
 {
+    mHandle = NULL;
 }
 
 Udp &UdpSocket::GetUdp(void)
@@ -62,36 +76,70 @@ Message *UdpSocket::NewMessage(uint16_t aReserved, uint8_t aPriority)
 
 otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
 {
+    otError error;
+
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
     mHandler = aHandler;
     mContext = aContext;
 
-    return GetUdp().AddSocket(*this);
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    SuccessOrExit(error = otPlatUdpSocket(this));
+#endif
+    SuccessOrExit(error = GetUdp().AddSocket(*this));
+
+exit:
+    return error;
 }
 
 otError UdpSocket::Bind(const SockAddr &aSockAddr)
 {
+    otError error = OT_ERROR_NONE;
+
     mSockName = aSockAddr;
 
-    if (GetSockName().mPort == 0)
+    if (mSockName.mPort == 0)
     {
-        mSockName.mPort = GetUdp().GetEphemeralPort();
+        do
+        {
+            mSockName.mPort = GetUdp().GetEphemeralPort();
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+            error = otPlatUdpBind(this);
+#endif
+        } while (error != OT_ERROR_NONE);
     }
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    else if (!IsMle(GetInstance(), mSockName.mPort))
+    {
+        error = otPlatUdpBind(this);
+    }
+#endif
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError UdpSocket::Connect(const SockAddr &aSockAddr)
 {
+    otError error = OT_ERROR_NONE;
+
     mPeerName = aSockAddr;
-    return OT_ERROR_NONE;
+
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    if (!IsMle(GetInstance(), mSockName.mPort))
+    {
+        error = otPlatUdpConnect(this);
+    }
+#endif
+    return error;
 }
 
 otError UdpSocket::Close(void)
 {
     otError error = OT_ERROR_NONE;
 
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    SuccessOrExit(error = otPlatUdpClose(this));
+#endif
     SuccessOrExit(error = GetUdp().RemoveSocket(*this));
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
@@ -127,11 +175,21 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 
     if (GetSockName().mPort == 0)
     {
-        GetSockName().mPort = GetUdp().GetEphemeralPort();
+        SuccessOrExit(error = Bind(GetSockName()));
     }
     messageInfoLocal.SetSockPort(GetSockName().mPort);
 
-    SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    if (!IsMle(GetInstance(), mSockName.mPort) &&
+        !(mSockName.mPort == ot::kCoapUdpPort && aMessage.GetSubType() == Message::kSubTypeJoinerEntrust))
+    {
+        SuccessOrExit(error = otPlatUdpSend(this, &aMessage, &messageInfoLocal));
+    }
+    else
+#endif
+    {
+        SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+    }
 
 exit:
     return error;
@@ -304,6 +362,10 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
+
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
+    VerifyOrExit(IsMle(GetInstance(), aMessageInfo.mSockPort));
+#endif
 
     for (UdpReceiver *receiver = mReceivers; receiver; receiver = receiver->GetNext())
     {

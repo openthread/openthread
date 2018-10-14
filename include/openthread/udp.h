@@ -89,6 +89,7 @@ typedef struct otUdpSocket
     otSockAddr          mPeerName; ///< The peer IPv6 socket address.
     otUdpReceive        mHandler;  ///< A function pointer to the application callback.
     void *              mContext;  ///< A pointer to application-specific context.
+    void *              mHandle;   ///< A handle to platform's UDP
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
@@ -252,6 +253,16 @@ void otUdpProxyReceive(otInstance *        aInstance,
                        uint16_t            aPeerPort,
                        const otIp6Address *aPeerAddr,
                        uint16_t            aSockPort);
+
+/**
+ * This function gets the existing UDP Sockets.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the first UDP Socket.
+ *
+ */
+otUdpSocket *otUdpGetSockets(otInstance *aInstance);
 
 /**
  * @}
