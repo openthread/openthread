@@ -69,7 +69,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [singleton](#singleton)
 * [state](#state)
 * [thread](#thread-start)
-* [txpowermax](#txpowermax)
+* [txpower](#txpower)
 * [version](#version)
 * [diag](#diag)
 * [service](#service)
@@ -1770,7 +1770,7 @@ Disable Thread protocol operation and detach from a Thread network.
 Done
 ```
 
-### txpowermax
+### txpower
 
 Get the transmit power in dBm.
 
@@ -1780,7 +1780,7 @@ Get the transmit power in dBm.
 Done
 ```
 
-### txpowermax \<txpowermax\>
+### txpower \<txpower\>
 
 Set the transmit power.
 
