@@ -733,7 +733,7 @@ class OpenThread_WpanCtl(IThci):
             joinerState = self.__stripValue(self.__sendCommand('sudo wpanctl getprop -v NCP:State')[0])
             if joinerState == 'offline:commissioned':
                 return True
-            elif joinerState == 'offline':
+            elif joinerState == 'associating:credentials-needed':
                 return False
             else:
                 time.sleep(5)
@@ -2007,8 +2007,7 @@ class OpenThread_WpanCtl(IThci):
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()
         if self.__sendCommand(cmd)[0] != 'Fail':
-            if self.__getJoinerState(self):
-                return True
+            return True
         else:
             return False
 
