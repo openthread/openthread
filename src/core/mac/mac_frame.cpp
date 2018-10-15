@@ -1000,7 +1000,7 @@ otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
         cur += aIeList[i].GetLength();
     }
 
-    SetPsduLength(GetPsduLength() + cur - base);
+    SetPsduLength(GetPsduLength() + static_cast<uint8_t>(cur - base));
 
 exit:
     return error;

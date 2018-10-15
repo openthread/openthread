@@ -610,7 +610,7 @@ void radioSendMessage(otInstance *aInstance)
     if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
     {
         uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
-        uint64_t time   = otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset;
+        uint64_t time   = (uint64_t)((int64_t)otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset);
 
         *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
 
