@@ -727,7 +727,7 @@ protected:
 private:
     enum
     {
-        kDefaultCoapMessagePriority = Message::kPriorityLow,
+        kDefaultCoapMessagePriority = Message::kPriorityNormal,
     };
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

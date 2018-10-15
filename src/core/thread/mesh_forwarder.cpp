@@ -1655,20 +1655,20 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 
     switch (aMessage.GetPriority())
     {
+    case Message::kPriorityNet:
+        priorityText = "net";
+        break;
+
     case Message::kPriorityHigh:
         priorityText = "high";
         break;
 
-    case Message::kPriorityMedium:
-        priorityText = "medium";
+    case Message::kPriorityNormal:
+        priorityText = "normal";
         break;
 
     case Message::kPriorityLow:
         priorityText = "low";
-        break;
-
-    case Message::kPriorityVeryLow:
-        priorityText = "verylow";
         break;
     }
 

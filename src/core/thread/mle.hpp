@@ -1641,7 +1641,7 @@ protected:
 private:
     enum
     {
-        kMleMessagePriority = Message::kPriorityHigh,
+        kMleMessagePriority = Message::kPriorityNet,
         kMleHopLimit        = 255,
 
         // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).

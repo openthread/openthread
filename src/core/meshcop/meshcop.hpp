@@ -48,7 +48,7 @@ namespace MeshCoP {
 
 enum
 {
-    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
+    kMeshCoPMessagePriority = Message::kPriorityNet, ///< The priority for MeshCoP message
 };
 
 /**
