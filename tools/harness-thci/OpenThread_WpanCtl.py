@@ -39,7 +39,6 @@ import logging
 from Queue import Queue
 
 import serial
-import paramiko
 from IThci import IThci
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
@@ -78,10 +77,10 @@ class OpenThread_WpanCtl(IThci):
             self.AutoDUTEnable = False
             self._is_net = False                  # whether device is through ser2net
             self.logStatus = {'stop':'stop', 'running':'running', 'pauseReq':'pauseReq', 'paused':'paused'}
-            self.joinStatus = {'notstart':'idle', 'ongoing':'discover', 'succeed':'joined', 'failed':'failed'}
             self.logThreadStatus = self.logStatus['stop']
             self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else 'usb'
             if self.connectType == 'ip':
+                import paramiko
                 self.dutIpv4 = kwargs.get('TelnetIP')
                 self.dutPort = kwargs.get('TelnetPort')
                 self.port = self.dutIpv4 + ':' + self.dutPort
@@ -638,43 +637,6 @@ class OpenThread_WpanCtl(IThci):
 
         return string
 
-    def __readCommissioningLogs(self, durationInSeconds):
-        """read logs during the commissioning process
-
-        Args:
-            durationInSeconds: time duration for reading commissioning logs
-
-        Returns:
-            Commissioning logs
-        """
-        self.logThreadStatus = self.logStatus['running']
-        logs = Queue()
-        t_end = time.time() + durationInSeconds
-        while time.time() < t_end:
-            time.sleep(0.3)
-            if self.logThreadStatus == self.logStatus['paused']:
-                continue
-
-            try:
-                line = self._readline()
-                if line:
-                    print line
-                    logs.put(line)
-
-                    if "Join success" in line:
-                        self.joinCommissionedStatus = self.joinStatus['succeed']
-                    elif "Join failed" in line:
-                        self.joinCommissionedStatus = self.joinStatus['failed']
-
-            except Exception:
-                pass
-
-            if self.logThreadStatus == self.logStatus['pauseReq']:
-                self.logThreadStatus = self.logStatus['paused']
-
-        self.logThreadStatus = self.logStatus['stop']
-        return logs
-
     def __convertChannelMask(self, channelsArray):
         """convert channelsArray to bitmask format
 
@@ -762,6 +724,21 @@ class OpenThread_WpanCtl(IThci):
         """ get the commissioner session id allocated from Leader """
         print '%s call getCommissionerSessionId' % self.port
         return self.__sendCommand(WPANCTL_CMD + 'getprop -v Commissioner:SessionId')[0]
+
+    def __getJoinerState(self):
+        """ get joiner state """
+        maxDuration = 150  # seconds
+        t_end = time.time() + maxDuration
+        while time.time() < t_end:
+            joinerState = self.__stripValue(self.__sendCommand('sudo wpanctl getprop -v NCP:State')[0])
+            if joinerState == 'offline:commissioned':
+                return True
+            elif joinerState == 'offline':
+                return False
+            else:
+                time.sleep(5)
+                continue
+        return False
 
     def _connect(self):
         if self.connectType == 'usb':
@@ -1444,7 +1421,6 @@ class OpenThread_WpanCtl(IThci):
         self.hasActiveDatasetToCommit = False
         self.logThread = Queue()
         self.logThreadStatus = self.logStatus['stop']
-        self.joinCommissionedStatus = self.joinStatus['notstart']
         self.networkDataRequirement = ''      # indicate Thread device requests full or stable network data
         self.isPowerDown = False              # indicate if Thread device experiences a power down event
         self._addressfilterMode = 'disable'   # indicate AddressFilter mode ['disable', 'whitelist', 'blacklist']
@@ -2031,9 +2007,8 @@ class OpenThread_WpanCtl(IThci):
         if not self.isActiveCommissioner:
             self.startCollapsedCommissioner()
         if self.__sendCommand(cmd)[0] != 'Fail':
-            if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(120,))
-            return True
+            if self.__getJoinerState(self):
+                return True
         else:
             return False
 
@@ -2091,24 +2066,12 @@ class OpenThread_WpanCtl(IThci):
         cmd = WPANCTL_CMD + 'joiner --start %s %s' %(strPSKd, self.provisioningUrl)
         print cmd
         if self.__sendCommand(cmd)[0] != "Fail":
-            maxDuration = 150 # seconds
-            self.joinCommissionedStatus = self.joinStatus['ongoing']
-
-            if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(maxDuration,))
-
-            t_end = time.time() + maxDuration
-            while time.time() < t_end:
-                if self.joinCommissionedStatus == self.joinStatus['succeed']:
-                    break
-                elif self.joinCommissionedStatus == self.joinStatus['failed']:
-                    return False
-
-                time.sleep(1)
-
-            self.__sendCommand(WPANCTL_CMD + 'joiner --attach')
-            time.sleep(30)
-            return True
+            if self.__getJoinerState():
+                self.__sendCommand(WPANCTL_CMD + 'joiner --attach')
+                time.sleep(30)
+                return True
+            else:
+                return False
         else:
             return False
 
