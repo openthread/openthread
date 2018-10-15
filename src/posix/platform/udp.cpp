@@ -32,6 +32,10 @@
  *   This file includes the platform UDP driver.
  */
 
+#ifdef __APPLE__
+#define __APPLE_USE_RFC_3542
+#endif
+
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
@@ -44,7 +48,7 @@
 
 #include "common/code_utils.hpp"
 
-static int sPlatNetifIndex = 0;
+static uint32_t sPlatNetifIndex = 0;
 
 static const size_t kMaxUdpSize = 1280;
 
@@ -55,7 +59,7 @@ static void *FdToHandle(int aFd)
 
 static int FdFromHandle(void *aHandle)
 {
-    return reinterpret_cast<long>(aHandle);
+    return static_cast<int>(reinterpret_cast<long>(aHandle));
 }
 
 static bool IsLinkLocal(const struct in6_addr &aAddress)
@@ -72,7 +76,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
 {
     struct sockaddr_in6 peerAddr;
     uint8_t             control[CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))];
-    ssize_t             controlLength = 0;
+    size_t              controlLength = 0;
     struct iovec        iov;
     struct msghdr       msg;
     struct cmsghdr *    cmsg;
@@ -138,7 +142,11 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         }
     }
 
+#ifdef __APPLE__
+    msg.msg_controllen = static_cast<socklen_t>(controlLength);
+#else
     msg.msg_controllen = controlLength;
+#endif
 
     rval = sendmsg(aFd, &msg, 0);
     VerifyOrExit(rval > 0, perror("sendmsg"));
@@ -177,7 +185,7 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
             if (cmsg->cmsg_type == IPV6_HOPLIMIT)
             {
                 int hoplimit           = *reinterpret_cast<int *>(CMSG_DATA(cmsg));
-                aMessageInfo.mHopLimit = hoplimit;
+                aMessageInfo.mHopLimit = static_cast<uint8_t>(hoplimit);
             }
             else if (cmsg->cmsg_type == IPV6_PKTINFO)
             {
