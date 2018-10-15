@@ -247,7 +247,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     if (size > 0)
     {
         VerifyOrDie(0 == lseek(sSettingsFd, 0, SEEK_SET));
-        swapWrite(swapFd, size);
+        swapWrite(swapFd, static_cast<uint16_t>(size));
     }
 
     VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
@@ -290,7 +290,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
             if (aIndex == 0)
             {
                 VerifyOrExit(offset == lseek(sSettingsFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
-                swapWrite(swapFd, size - offset);
+                swapWrite(swapFd, static_cast<uint16_t>(size - offset));
                 error = OT_ERROR_NONE;
                 break;
             }
