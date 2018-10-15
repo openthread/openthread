@@ -233,7 +233,7 @@ AC_PATH_PROG(CMP, cmp)
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions -fno-rtti"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
@@ -319,6 +319,11 @@ AC_ARG_ENABLE(fuzz-targets,
 AC_MSG_RESULT(${enable_fuzz_targets})
 
 AM_CONDITIONAL([OPENTHREAD_ENABLE_FUZZ_TARGETS], [test "${enable_fuzz_targets}" = "yes"])
+
+if test "${enable_fuzz_targets}" = "no" ; then
+    PROSPECTIVE_CXXFLAGS="-fno-rtti"
+    AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
+fi
 
 # Address Sanitizer
 
