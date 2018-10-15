@@ -360,7 +360,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
         switch (cstopb)
         {
         case 1:
-            tios.c_cflag &= ~CSTOPB;
+            tios.c_cflag &= static_cast<unsigned long>(~CSTOPB);
             break;
         case 2:
             tios.c_cflag |= CSTOPB;
@@ -459,7 +459,7 @@ static int OpenFile(const char *aFile, const char *aConfig)
             break;
         }
 
-        VerifyOrExit((rval = cfsetspeed(&tios, speed)) == 0, perror("cfsetspeed"));
+        VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
         VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
         VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
     }
@@ -1937,7 +1937,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
 
     for (int index = 0; index < argc; index++)
     {
-        cur += snprintf(cur, end - cur, "%s ", argv[index]);
+        cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", argv[index]);
     }
 
     sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
