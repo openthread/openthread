@@ -160,10 +160,11 @@ Mac::Mac(Instance &aInstance)
     , mPendingWaitingForData(false)
     , mRxOnWhenIdle(false)
     , mBeaconsEnabled(false)
+    , mTransmitAborted(false)
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     , mDelaySleep(false)
 #endif
-    , mOperationTask(aInstance, &Mac::PerformOperation, this)
+    , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
     , mMacTimer(aInstance, &Mac::HandleMacTimer, this)
     , mBackoffTimer(aInstance, &Mac::HandleBackoffTimer, this)
     , mReceiveTimer(aInstance, &Mac::HandleReceiveTimer, this)
@@ -755,9 +756,29 @@ void Mac::StartOperation(Operation aOperation)
     }
 }
 
-void Mac::PerformOperation(Tasklet &aTasklet)
+void Mac::HandleOperationTask(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Mac>().PerformOperation();
+    aTasklet.GetOwner<Mac>().HandleOperationTask();
+}
+
+void Mac::HandleOperationTask(void)
+{
+    // `mOperationTask` tasklet is used for two separate purposes:
+    //
+    // 1) To invoke `HandleTransmitDone()` from a tasklet with
+    //    `OT_ERROR_ABORT` error.
+    //
+    // 2) To perform a scheduled MAC operation.
+
+    if (mTransmitAborted)
+    {
+        mTransmitAborted = false;
+        HandleTransmitDone(GetOperationFrame(), NULL, OT_ERROR_ABORT);
+    }
+    else
+    {
+        PerformOperation();
+    }
 }
 
 void Mac::PerformOperation(void)
@@ -1242,7 +1263,11 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        HandleTransmitDone(&sendFrame, NULL, OT_ERROR_ABORT);
+        // `HandleTrasnmitDone()` will be invoked from `mOperationTask`
+        // tasklet handler with error `OT_ERROR_ABORT`.
+
+        mTransmitAborted = true;
+        mOperationTask.Post();
     }
 }
 
