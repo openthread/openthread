@@ -458,6 +458,8 @@ python --version || die
         --disable-tests || die
     make -j 8 || die
 
+    export CPPFLAGS=-DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die

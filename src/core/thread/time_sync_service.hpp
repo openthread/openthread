@@ -144,11 +144,13 @@ private:
      */
     void IncrementTimeSyncSeq(void);
 
-    bool     mTimeSyncRequired;     ///< Indicate whether or not a time synchronization message is required.
-    uint8_t  mTimeSyncSeq;          ///< The time synchronization sequence.
-    uint16_t mTimeSyncPeriod;       ///< The time synchronization period.
-    uint16_t mXtalThreshold;        ///< The XTAL accuracy threshold for a device to become a Router, in PPM.
-    uint32_t mLastTimeSyncSent;     ///< The time when the last time synchronization message was sent.
+    bool     mTimeSyncRequired; ///< Indicate whether or not a time synchronization message is required.
+    uint8_t  mTimeSyncSeq;      ///< The time synchronization sequence.
+    uint16_t mTimeSyncPeriod;   ///< The time synchronization period.
+    uint16_t mXtalThreshold;    ///< The XTAL accuracy threshold for a device to become a Router, in PPM.
+#if OPENTHREAD_FTD
+    uint32_t mLastTimeSyncSent; ///< The time when the last time synchronization message was sent.
+#endif
     uint32_t mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
     int64_t  mNetworkTimeOffset;    ///< The time offset to the Thread Network time
 };

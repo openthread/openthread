@@ -52,7 +52,9 @@ TimeSync::TimeSync(Instance &aInstance)
     , mTimeSyncSeq(OT_TIME_SYNC_INVALID_SEQ)
     , mTimeSyncPeriod(OPENTHREAD_CONFIG_TIME_SYNC_PERIOD)
     , mXtalThreshold(OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD)
+#if OPENTHREAD_FTD
     , mLastTimeSyncSent(0)
+#endif
     , mLastTimeSyncReceived(0)
     , mNetworkTimeOffset(0)
 {
@@ -83,7 +85,7 @@ otNetworkTimeStatus TimeSync::GetTime(uint64_t &aNetworkTime) const
         break;
     }
 
-    aNetworkTime = otPlatTimeGet() + mNetworkTimeOffset;
+    aNetworkTime = static_cast<uint64_t>(static_cast<int64_t>(otPlatTimeGet()) + mNetworkTimeOffset);
 
     return networkTimeStatus;
 }

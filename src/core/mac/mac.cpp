@@ -2389,7 +2389,7 @@ uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
     VerifyOrExit(cur != NULL);
 
     cur += sizeof(VendorIeHeader);
-    offset = cur - base;
+    offset = static_cast<uint8_t>(cur - base);
 
 exit:
     return offset;
