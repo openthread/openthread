@@ -81,6 +81,11 @@ void otSysInit(int argc, char *argv[])
         nrf5UartInit();
         nrf5CryptoInit();
     }
+    else
+    {
+        nrf5UartClearPendingData();
+    }
+
 #ifndef SPIS_TRANSPORT_DISABLE
     nrf5SpiSlaveInit();
 #endif

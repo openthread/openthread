@@ -150,6 +150,11 @@ void nrf5UartInit(void)
     // Intentionally empty.
 }
 
+void nrf5UartClearPendingData(void)
+{
+    // Intentionally empty.
+}
+
 void nrf5UartDeinit(void)
 {
     if (sUartEnabled)
