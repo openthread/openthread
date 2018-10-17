@@ -167,3 +167,6 @@ matrix:
       os: linux
       compiler: gcc
       python: "2.7"
+    - env: BUILD_TARGET="osx" VERBOSE=1
+      os: osx
+      language: generic

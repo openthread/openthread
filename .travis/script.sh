@@ -525,3 +525,15 @@ python --version || die
 [ $BUILD_TARGET != toranj-test-framework ] || {
     ./tests/toranj/start.sh
 }
+
+[ $BUILD_TARGET != osx ] || {
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f src/posix/Makefile-posix || die
+}
