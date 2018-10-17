@@ -118,9 +118,20 @@ otError CoapSecure::Stop(void)
     return CoapBase::Stop();
 }
 
-otError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
+otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
 {
-    mPeerAddress       = aMessageInfo;
+    memcpy(&mPeerAddress.mPeerAddr, &aSockAddr.mAddress, sizeof(mPeerAddress.mPeerAddr));
+    mPeerAddress.mPeerPort = aSockAddr.mPort;
+
+    if (aSockAddr.GetAddress().IsLinkLocal() || aSockAddr.GetAddress().IsMulticast())
+    {
+        mPeerAddress.mInterfaceId = aSockAddr.mScopeId;
+    }
+    else
+    {
+        mPeerAddress.mInterfaceId = 0;
+    }
+
     mConnectedCallback = aCallback;
     mConnectedContext  = aContext;
 
