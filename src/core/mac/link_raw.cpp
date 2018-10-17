@@ -291,7 +291,7 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
         mCsmaBackoffs = 0;
     }
 
-    if (aError == OT_ERROR_NO_ACK)
+    if (aError != OT_ERROR_NONE)
     {
         if (mTransmitRetries < aFrame->mInfo.mTxInfo.mMaxFrameRetries)
         {
