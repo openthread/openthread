@@ -109,7 +109,9 @@ exit:
 } // namespace ot
 
 #if SELF_TEST
+#include <stdio.h>
 #include <stdlib.h>
+
 void TestSingle()
 {
     otError        error;
