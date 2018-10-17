@@ -35,9 +35,13 @@
 #include "platform-posix.h"
 
 #include <assert.h>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <openthread/platform/misc.h>
 #include <openthread/platform/settings.h>

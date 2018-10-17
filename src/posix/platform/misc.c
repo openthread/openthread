@@ -28,6 +28,7 @@
 
 #include "platform-posix.h"
 
+#include <assert.h>
 #include <setjmp.h>
 #include <unistd.h>
 
