@@ -188,7 +188,7 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  * This method initializes DTLS session with a peer.
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
- * @param[in]  aMessageInfo            A pointer to a message info structure.
+ * @param[in]  aSockAddr               A pointer to the remote sockaddr.
  * @param[in]  aCallback               A pointer to a function that will be called when the DTLS connection
  *                                     state changes.
  * @param[in]  aContext                A pointer to arbitrary context information.
@@ -197,7 +197,7 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  *
  */
 otError otCoapSecureConnect(otInstance *                    aInstance,
-                            const otMessageInfo *           aMessageInfo,
+                            const otSockAddr *              aSockAddr,
                             otHandleCoapSecureClientConnect aHandler,
                             void *                          aContext);
 

@@ -35,16 +35,12 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-#include <ctype.h>
+#include <mbedtls/debug.h>
+#include <openthread/ip6.h>
 
 #include "cli/cli.hpp"
-#include "coap/coap_header.hpp"
-#include "coap/coap_secure.hpp"
-
 // header for place your x509 certificate and private key
 #include "x509_cert_key.hpp"
-
-#include <mbedtls/debug.h>
 
 namespace ot {
 namespace Cli {
@@ -130,11 +126,9 @@ void CoapsSecure::PrintPayload(otMessage *aMessage) const
 
 otError CoapsSecure::Process(int argc, char *argv[])
 {
-    otError       error = OT_ERROR_NONE;
-    otIp6Address  coapDestinationIp;
-    otMessageInfo messageInfo;
-    bool          mVerifyPeerCert = true;
-    long          value;
+    otError error           = OT_ERROR_NONE;
+    bool    mVerifyPeerCert = true;
+    long    value;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -222,22 +216,22 @@ otError CoapsSecure::Process(int argc, char *argv[])
         // Destination IPv6 address
         if (argc > 1)
         {
-            // parse ipAddr
-            SuccessOrExit(error = otIp6AddressFromString(argv[1], &coapDestinationIp));
-            memset(&messageInfo, 0, sizeof(messageInfo));
-            messageInfo.mPeerAddr    = coapDestinationIp;
-            messageInfo.mPeerPort    = OT_DEFAULT_COAP_SECURE_PORT;
-            messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+            otSockAddr sockaddr;
+
+            memset(&sockaddr, 0, sizeof(sockaddr));
+            SuccessOrExit(error = otIp6AddressFromString(argv[1], &sockaddr.mAddress));
+            sockaddr.mPort    = OT_DEFAULT_COAP_SECURE_PORT;
+            sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
             // check for port specification
             if (argc > 2)
             {
                 error = Interpreter::ParseLong(argv[2], value);
                 SuccessOrExit(error);
-                messageInfo.mPeerPort = static_cast<uint16_t>(value);
+                sockaddr.mPort = static_cast<uint16_t>(value);
             }
 
-            SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &messageInfo,
+            SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &sockaddr,
                                                       &CoapsSecure::HandleClientConnect, this));
             mInterpreter.mServer->OutputFormat("Coap Secure connect: ");
         }

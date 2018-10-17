@@ -193,7 +193,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    SockAddr(void) { memset(&mAddress, 0, sizeof(mAddress)), mPort = 0, mScopeId = 0; }
+    SockAddr(void) { memset(&mAddress, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the IPv6 address.

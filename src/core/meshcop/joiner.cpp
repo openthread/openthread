@@ -284,7 +284,7 @@ otError Joiner::TryNextJoin()
 
     if (joinerRouter->mPriority > 0)
     {
-        Ip6::MessageInfo messageInfo;
+        Ip6::SockAddr sockaddr;
 
         joinerRouter->mPriority = 0;
 
@@ -292,12 +292,12 @@ otError Joiner::TryNextJoin()
         netif.GetMac().SetPanChannel(joinerRouter->mChannel);
         netif.GetIp6Filter().AddUnsecurePort(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
 
-        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
-        messageInfo.GetPeerAddr().SetIid(joinerRouter->mExtAddr);
-        messageInfo.mPeerPort    = joinerRouter->mJoinerUdpPort;
-        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+        sockaddr.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
+        sockaddr.GetAddress().SetIid(joinerRouter->mExtAddr);
+        sockaddr.mPort    = joinerRouter->mJoinerUdpPort;
+        sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
-        netif.GetCoapSecure().Connect(messageInfo, Joiner::HandleSecureCoapClientConnect, this);
+        netif.GetCoapSecure().Connect(sockaddr, Joiner::HandleSecureCoapClientConnect, this);
         mState = OT_JOINER_STATE_CONNECT;
         error  = OT_ERROR_NONE;
     }
