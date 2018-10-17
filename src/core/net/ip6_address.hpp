@@ -297,10 +297,10 @@ public:
     /**
      * This method sets the Interface Identifier.
      *
-     * @param[in]  aEui64  A reference to the IEEE EUI-64 address.
+     * @param[in]  aExtAddress  A reference to the extended address.
      *
      */
-    void SetIid(const Mac::ExtAddress &aEui64);
+    void SetIid(const Mac::ExtAddress &aExtAddress);
 
     /**
      * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.

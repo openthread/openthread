@@ -161,9 +161,9 @@ void Address::SetIid(const uint8_t *aIid)
     memcpy(mFields.m8 + kInterfaceIdentifierOffset, aIid, kInterfaceIdentifierSize);
 }
 
-void Address::SetIid(const Mac::ExtAddress &aEui64)
+void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aEui64.m8, kInterfaceIdentifierSize);
+    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aExtAddress.m8, kInterfaceIdentifierSize);
     mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
 }
 
