@@ -290,6 +290,13 @@ void nrf5UartDeinit(void)
     app_usbd_uninit();
 }
 
+void nrf5UartClearPendingData(void)
+{
+    sUsbState.mTransferInProgress = false;
+    sUsbState.mTxBuffer           = NULL;
+    sUsbState.mTxSize             = 0;
+}
+
 void nrf5UartProcess(void)
 {
     while (app_usbd_event_queue_process())
