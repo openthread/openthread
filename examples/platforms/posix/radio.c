@@ -124,6 +124,7 @@ static uint16_t sPortOffset = 0;
 static int      sSockFd;
 static bool     sPromiscuous = false;
 static bool     sAckWait     = false;
+static int8_t   sTxPower     = 0;
 
 static uint8_t      sShortAddressMatchTableCount = 0;
 static uint8_t      sExtAddressMatchTableCount   = 0;
@@ -932,15 +933,17 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     (void)aInstance;
-    (void)aPower;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    *aPower = sTxPower;
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
-    (void)aPower;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    sTxPower = aPower;
+
+    return OT_ERROR_NONE;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
