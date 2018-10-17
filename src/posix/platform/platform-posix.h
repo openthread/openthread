@@ -81,6 +81,33 @@ struct Event
 } OT_TOOL_PACKED_END;
 
 /**
+ * This enumeration represents exit codes used when OpenThread exits.
+ *
+ */
+enum
+{
+    /**
+     * Success.
+     */
+    OT_EXIT_SUCCESS = 0,
+
+    /**
+     * Generic failure.
+     */
+    OT_EXIT_FAILURE = 1,
+
+    /**
+     * Invalid arguments.
+     */
+    OT_EXIT_INVALID_ARGUMENTS = 2,
+
+    /**
+     * Incompatible radio spinel.
+     */
+    OT_EXIT_INCOMPATIBLE_RADIO_SPINEL = 3,
+};
+
+/**
  * Unique node ID.
  *
  */

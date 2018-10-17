@@ -67,7 +67,7 @@ void otSimInit(void)
         if (*endptr != '\0')
         {
             fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_INVALID_ARGUMENTS);
         }
 
         sPortOffset *= kWellKnownNodeId;
@@ -84,13 +84,13 @@ void otSimInit(void)
     if (sSockFd == -1)
     {
         perror("socket");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
     if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
     {
         perror("bind");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
     // fprintf(stderr, "[%s] sim fd is %d\r\n", getenv("NODE_ID"), sSockFd);
 }
@@ -119,7 +119,7 @@ static void otSimSendEvent(struct Event *aEvent, size_t aLength)
     if (rval < 0)
     {
         perror("sendto");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 }
 
@@ -130,7 +130,7 @@ void otSimReceiveEvent(struct Event *aEvent)
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
         perror("recvfrom");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
     sNow += aEvent->mDelay;
