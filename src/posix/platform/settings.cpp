@@ -44,14 +44,14 @@
 
 #include "common/code_utils.hpp"
 
-#define VerifyOrDie(aCondition) \
-    do                          \
-    {                           \
-        if (!(aCondition))      \
-        {                       \
-            perror(__func__);   \
-            exit(EXIT_FAILURE); \
-        }                       \
+#define VerifyOrDie(aCondition)    \
+    do                             \
+    {                              \
+        if (!(aCondition))         \
+        {                          \
+            perror(__func__);      \
+            exit(OT_EXIT_FAILURE); \
+        }                          \
     } while (false)
 
 static const size_t kMaxFileNameSize = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32;

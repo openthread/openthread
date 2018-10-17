@@ -225,13 +225,13 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     if (FD_ISSET(s_in_fd, aErrorFdSet))
     {
         perror("s_in_fd");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(s_out_fd, aErrorFdSet))
     {
         perror("s_out_fd");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(s_in_fd, aReadFdSet))
@@ -245,12 +245,12 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         else if (rval < 0)
         {
             perror("UART read");
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_FAILURE);
         }
         else
         {
             fprintf(stderr, "UART ended\r\n");
-            exit(0);
+            exit(OT_EXIT_SUCCESS);
         }
     }
 
@@ -261,7 +261,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         if (rval <= 0)
         {
             perror("UART write");
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_FAILURE);
         }
 
         s_write_buffer += (uint16_t)rval;

@@ -52,7 +52,6 @@ extern bool gPlatformPseudoResetWasRequested;
 static void PrintUsage(const char *aArg0)
 {
     fprintf(stderr, "Syntax:\n    %s [-s TimeSpeedUpFactor] {NodeId|Device DeviceConfig|Command CommandArgs}\n", aArg0);
-    exit(EXIT_FAILURE);
 }
 
 void otSysInit(int aArgCount, char *aArgVector[])
@@ -72,6 +71,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
     if (aArgCount < 2)
     {
         PrintUsage(aArgVector[0]);
+        exit(OT_EXIT_INVALID_ARGUMENTS);
     }
 
     i = 1;
@@ -83,7 +83,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         if (*endptr != '\0' || speedUpFactor == 0)
         {
             fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[i]);
-            exit(EXIT_FAILURE);
+            exit(OT_EXIT_INVALID_ARGUMENTS);
         }
         ++i;
     }
@@ -91,6 +91,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
     if (i >= aArgCount)
     {
         PrintUsage(aArgVector[0]);
+        exit(OT_EXIT_INVALID_ARGUMENTS);
     }
 
     radioFile = aArgVector[i];
@@ -226,7 +227,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     if ((rval < 0) && (errno != EINTR))
     {
         perror("select");
-        exit(EXIT_FAILURE);
+        exit(OT_EXIT_FAILURE);
     }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
