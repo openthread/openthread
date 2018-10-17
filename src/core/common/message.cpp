@@ -124,7 +124,7 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
 
     if (buffer == NULL)
     {
-        otLogInfoMem(GetInstance(), "No available message buffer");
+        otLogInfoMem("No available message buffer");
     }
 
 exit:

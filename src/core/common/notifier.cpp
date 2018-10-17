@@ -223,7 +223,7 @@ void Notifier::LogChangedFlags(otChangedFlags aFlags) const
     }
 
 exit:
-    otLogInfoCore(GetInstance(), "Notifier: StateChanged (0x%04x) [%s] ", aFlags, string.AsCString());
+    otLogInfoCore("Notifier: StateChanged (0x%04x) [%s] ", aFlags, string.AsCString());
 }
 
 const char *Notifier::FlagToString(otChangedFlags aFlag) const

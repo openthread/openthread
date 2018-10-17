@@ -217,12 +217,11 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             if ((messageCopy = aMessage.Clone()) != NULL)
             {
                 HandleDatagram(*messageCopy, NULL, aMessageInfo.GetInterfaceId(), NULL, true);
-                otLogInfoIp6(GetInstance(), "Message copy for indirect transmission to sleepy children");
+                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
             }
             else
             {
-                otLogWarnIp6(GetInstance(),
-                             "No enough buffer for message copy for indirect transmission to sleepy children");
+                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 
@@ -412,14 +411,13 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
             if ((messageCopy = aMessage.Clone()) != NULL)
             {
-                otLogInfoIp6(GetInstance(), "Message copy for indirect transmission to sleepy children");
+                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
                 messageCopy->SetInterfaceId(aMessageInfo.GetInterfaceId());
                 EnqueueDatagram(*messageCopy);
             }
             else
             {
-                otLogWarnIp6(GetInstance(),
-                             "No enough buffer for message copy for indirect transmission to sleepy children");
+                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 
@@ -684,13 +682,11 @@ exit:
     switch (error)
     {
     case OT_ERROR_NO_BUFS:
-        otLogWarnIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
-                     aMessage.GetLength());
+        otLogWarnIp6("Failed to pass up message (len: %d) to host - out of message buffer.", aMessage.GetLength());
         break;
 
     case OT_ERROR_DROP:
-        otLogNoteIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
-                     aMessage.GetLength());
+        otLogNoteIp6("Dropping message (len: %d) from local host since next hop is the host.", aMessage.GetLength());
         break;
 
     default:

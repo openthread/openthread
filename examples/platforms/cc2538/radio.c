@@ -106,7 +106,7 @@ void enableReceiver(void)
 {
     if (!sIsReceiverEnabled)
     {
-        otLogInfoPlat(sInstance, "Enabling receiver", NULL);
+        otLogInfoPlat("Enabling receiver", NULL);
 
         // flush rxfifo
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
@@ -122,7 +122,7 @@ void disableReceiver(void)
 {
     if (sIsReceiverEnabled)
     {
-        otLogInfoPlat(sInstance, "Disabling receiver", NULL);
+        otLogInfoPlat("Disabling receiver", NULL);
 
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
             ;
@@ -153,7 +153,7 @@ void setChannel(uint8_t aChannel)
             enabled = true;
         }
 
-        otLogInfoPlat(sInstance, "Channel=%d", aChannel);
+        otLogInfoPlat("Channel=%d", aChannel);
 
         HWREG(RFCORE_XREG_FREQCTRL) = 11 + (aChannel - 11) * 5;
         sChannel                    = aChannel;
@@ -171,7 +171,7 @@ void setTxPower(int8_t aTxPower)
 
     if (sTxPower != aTxPower)
     {
-        otLogInfoPlat(sInstance, "TxPower=%d", aTxPower);
+        otLogInfoPlat("TxPower=%d", aTxPower);
 
         for (i = sizeof(sTxPowerTable) / sizeof(TxPowerTable) - 1; i > 0; i--)
         {
@@ -219,7 +219,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "PANID=%X", aPanid);
+    otLogInfoPlat("PANID=%X", aPanid);
 
     HWREG(RFCORE_FFSM_PAN_ID0) = aPanid & 0xFF;
     HWREG(RFCORE_FFSM_PAN_ID1) = aPanid >> 8;
@@ -229,8 +229,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5],
-                  aAddress->m8[4], aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
+    otLogInfoPlat("ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
+                  aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
     for (int i = 0; i < 8; i++)
     {
@@ -242,7 +242,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ShortAddr=%X", aAddress);
+    otLogInfoPlat("ShortAddr=%X", aAddress);
 
     HWREG(RFCORE_FFSM_SHORT_ADDR0) = aAddress & 0xFF;
     HWREG(RFCORE_FFSM_SHORT_ADDR1) = aAddress >> 8;
@@ -276,7 +276,7 @@ void cc2538RadioInit(void)
     HWREG(RFCORE_XREG_TXPOWER) = sTxPowerTable[0].mTxPowerReg;
     sTxPower                   = sTxPowerTable[0].mTxPowerVal;
 
-    otLogInfoPlat(sInstance, "Initialized", NULL);
+    otLogInfoPlat("Initialized", NULL);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -289,7 +289,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        otLogDebgPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+        otLogDebgPlat("State=OT_RADIO_STATE_SLEEP", NULL);
         sState = OT_RADIO_STATE_SLEEP;
     }
 
@@ -300,7 +300,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     if (otPlatRadioIsEnabled(aInstance))
     {
-        otLogDebgPlat(sInstance, "State=OT_RADIO_STATE_DISABLED", NULL);
+        otLogDebgPlat("State=OT_RADIO_STATE_DISABLED", NULL);
         sState = OT_RADIO_STATE_DISABLED;
     }
 
@@ -314,7 +314,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
-        otLogDebgPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+        otLogDebgPlat("State=OT_RADIO_STATE_SLEEP", NULL);
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
         disableReceiver();
@@ -330,7 +330,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
-        otLogDebgPlat(sInstance, "State=OT_RADIO_STATE_RECEIVE", NULL);
+        otLogDebgPlat("State=OT_RADIO_STATE_RECEIVE", NULL);
 
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_RECEIVE;
@@ -395,7 +395,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             }
             else
             {
-                otLogCritPlat(sInstance, "Radio is stuck!!! FSMSTAT0=0x%08x FSMSTAT1=0x%08x RFERRF=0x%08x",
+                otLogCritPlat("Radio is stuck!!! FSMSTAT0=0x%08x FSMSTAT1=0x%08x RFERRF=0x%08x",
                               HWREG(RFCORE_XREG_FSMSTAT0), HWREG(RFCORE_XREG_FSMSTAT1), HWREG(RFCORE_SFR_RFERRF));
                 i = 1000000;
             }
@@ -407,12 +407,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             {
                 if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXOVERF)
                 {
-                    otLogCritPlat(sInstance, "RX Buffer Overflow detected", NULL);
+                    otLogCritPlat("RX Buffer Overflow detected", NULL);
                 }
 
                 if (HWREG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXABO)
                 {
-                    otLogCritPlat(sInstance, "Aborted RX detected", NULL);
+                    otLogCritPlat("Aborted RX detected", NULL);
                 }
 
                 // Flush the RX buffer
@@ -423,7 +423,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
             // Check for idle state.  After flushing the RX buffer, we may wind up here.
             if (!(HWREG(RFCORE_XREG_FSMSTAT1) & (RFCORE_XREG_FSMSTAT1_TX_ACTIVE | RFCORE_XREG_FSMSTAT1_RX_ACTIVE)))
             {
-                otLogCritPlat(sInstance, "Idle state detected", NULL);
+                otLogCritPlat("Idle state detected", NULL);
 
                 // In this case, the state of our driver mis-matches our state.  So force
                 // matters by clearing our channel variable and calling setChannel.  This
@@ -450,7 +450,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE)
             ;
 
-        otLogDebgPlat(sInstance, "Transmitted %d bytes", aFrame->mLength);
+        otLogDebgPlat("Transmitted %d bytes", aFrame->mLength);
     }
 
 exit:
@@ -485,7 +485,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "PromiscuousMode=%d", aEnable ? 1 : 0);
+    otLogInfoPlat("PromiscuousMode=%d", aEnable ? 1 : 0);
 
     if (aEnable)
     {
@@ -537,7 +537,7 @@ void readFrame(otInstance *aInstance)
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
 
-        otLogDebgPlat(sInstance, "Dropping %d received bytes (Invalid CRC)", length);
+        otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", length);
     }
 
     // check for rxfifo overflow
@@ -573,7 +573,7 @@ void cc2538RadioProcess(otInstance *aInstance)
             if (((HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0) ||
                 (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
             {
-                otLogDebgPlat(sInstance, "Received %d bytes", sReceiveFrame.mLength);
+                otLogDebgPlat("Received %d bytes", sReceiveFrame.mLength);
                 otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
             }
         }
@@ -585,7 +585,7 @@ void cc2538RadioProcess(otInstance *aInstance)
         {
             if (sTransmitError != OT_ERROR_NONE)
             {
-                otLogDebgPlat(sInstance, "Transmit failed ErrorCode=%d", sTransmitError);
+                otLogDebgPlat("Transmit failed ErrorCode=%d", sTransmitError);
             }
 
             sState = OT_RADIO_STATE_RECEIVE;
@@ -734,8 +734,8 @@ int8_t findSrcMatchAvailEntry(bool aShort)
     uint32_t shortEnableStatus = getSrcMatchEntriesEnableStatus(true);
     uint32_t extEnableStatus   = getSrcMatchEntriesEnableStatus(false);
 
-    otLogDebgPlat(sInstance, "Short enable status: 0x%x", shortEnableStatus);
-    otLogDebgPlat(sInstance, "Ext enable status: 0x%x", extEnableStatus);
+    otLogDebgPlat("Short enable status: 0x%x", shortEnableStatus);
+    otLogDebgPlat("Ext enable status: 0x%x", extEnableStatus);
 
     if (aShort)
     {
@@ -784,7 +784,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "EnableSrcMatch=%d", aEnable ? 1 : 0);
+    otLogInfoPlat("EnableSrcMatch=%d", aEnable ? 1 : 0);
 
     if (aEnable)
     {
@@ -806,7 +806,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     uint32_t *addr  = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Add ShortAddr entry: %d", entry);
+    otLogDebgPlat("Add ShortAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0, error = OT_ERROR_NO_BUFS);
 
@@ -830,7 +830,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     uint32_t *addr  = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Add ExtAddr entry: %d", entry);
+    otLogDebgPlat("Add ExtAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0, error = OT_ERROR_NO_BUFS);
 
@@ -853,7 +853,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     int8_t  entry = findSrcMatchShortEntry(aShortAddress);
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ShortAddr entry: %d", entry);
+    otLogDebgPlat("Clear ShortAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0, error = OT_ERROR_NO_ADDRESS);
 
@@ -869,7 +869,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     int8_t  entry = findSrcMatchExtEntry(aExtAddress);
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ExtAddr entry: %d", entry);
+    otLogDebgPlat("Clear ExtAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0, error = OT_ERROR_NO_ADDRESS);
 
@@ -885,7 +885,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCSHORTPENDEN0;
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ShortAddr entries", NULL);
+    otLogDebgPlat("Clear ShortAddr entries", NULL);
 
     for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
     {
@@ -900,7 +900,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCEXTPENDEN0;
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ExtAddr entries", NULL);
+    otLogDebgPlat("Clear ExtAddr entries", NULL);
 
     for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
     {

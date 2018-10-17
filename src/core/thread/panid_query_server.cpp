@@ -92,7 +92,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, responseInfo));
-        otLogInfoMeshCoP(GetInstance(), "sent panid query response");
+        otLogInfoMeshCoP("sent panid query response");
     }
 
 exit:
@@ -153,7 +153,7 @@ otError PanIdQueryServer::SendConflict(void)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent panid conflict");
+    otLogInfoMeshCoP("sent panid conflict");
 
 exit:
 

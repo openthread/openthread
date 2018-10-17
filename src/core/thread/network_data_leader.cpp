@@ -429,7 +429,7 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
         RemoveTemporaryData(mTlvs, mLength);
     }
 
-    otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
+    otDumpDebgNetData("set network data", mTlvs, mLength);
 
     GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
 

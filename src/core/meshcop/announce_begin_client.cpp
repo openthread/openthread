@@ -104,7 +104,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     SuccessOrExit(error = GetNetif().GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent announce begin query");
+    otLogInfoMeshCoP("sent announce begin query");
 
 exit:
 

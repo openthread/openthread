@@ -187,7 +187,7 @@ public:
      * @returns the currently set dynamic log level.
      *
      */
-    otLogLevel GetDynamicLogLevel(void) const { return mLogLevel; }
+    static otLogLevel GetDynamicLogLevel(void) { return mLogLevel; }
 
     /**
      * This method sets the dynamic log level.
@@ -195,7 +195,7 @@ public:
      * @param[in]  aLogLevel The dynamic log level.
      *
      */
-    void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
+    static void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
 #endif
 
     /**
@@ -204,7 +204,7 @@ public:
      * @returns The log level.
      *
      */
-    otLogLevel GetLogLevel(void) const
+    static otLogLevel GetLogLevel(void)
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     {
         return GetDynamicLogLevel();
@@ -471,7 +471,7 @@ private:
     LinkRaw mLinkRaw;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    otLogLevel mLogLevel;
+    static otLogLevel mLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;

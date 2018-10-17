@@ -359,17 +359,14 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance);
 /**
  * This function returns the current dynamic log level.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
  * @returns the currently set dynamic log level.
  *
  */
-otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
+otLogLevel otGetDynamicLogLevel(void);
 
 /**
  * This function sets the dynamic log level.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aLogLevel The dynamic log level.
  *
  * @retval OT_ERROR_NONE               The log level was changed successfully.
@@ -377,7 +374,7 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  *                                     (see `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
  *
  */
-otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+otError otSetDynamicLogLevel(otLogLevel aLogLevel);
 
 /**
  * This function gets the OpenThread version string.

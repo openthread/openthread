@@ -579,8 +579,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otTh
 
     mScheduleTransmissionTask.Post();
 
-    otLogInfoMac(GetInstance(), "Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount,
-                 aLinkInfo.mRss);
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
 
 exit:
     return;
@@ -624,7 +623,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
         case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         case OT_ERROR_ABORT:
 
-            otLogInfoMac(GetInstance(), "Indirect tx to child %04x failed, attempt %d/%d, error:%s", child->GetRloc16(),
+            otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d, error:%s", child->GetRloc16(),
                          child->GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts, otThreadErrorToString(aError));
 
             if (child->GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
@@ -985,9 +984,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoMac(GetInstance(), "Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s",
-                     otThreadErrorToString(error), aFrameLength, aMacSource.ToString().AsCString(),
-                     aLinkInfo.mLinkSecurity ? "yes" : "no");
+        otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", otThreadErrorToString(error),
+                     aFrameLength, aMacSource.ToString().AsCString(), aLinkInfo.mLinkSecurity ? "yes" : "no");
 
         if (message != NULL)
         {
@@ -1117,7 +1115,7 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
 
     otLogMac(
-        GetInstance(), aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s",
+        aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s",
         MessageActionToString(aAction, aError), aMessage.GetLength(),
         (aMacAddress == NULL) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
         (aMacAddress == NULL) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
@@ -1128,7 +1126,7 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 
     if (hasFragmentHeader)
     {
-        otLogMac(GetInstance(), aLogLevel, "\tFrag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
+        otLogMac(aLogLevel, "\tFrag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
                  fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
@@ -1227,8 +1225,8 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
     SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
                                             destPort));
 
-    otLogMac(GetInstance(), aLogLevel, "\tIPv6 %s msg, chksum:%04x, prio:%s",
-             Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), checksum, MessagePriorityToString(aMessage));
+    otLogMac(aLogLevel, "\tIPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
+             checksum, MessagePriorityToString(aMessage));
 
     LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
 

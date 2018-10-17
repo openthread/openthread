@@ -118,7 +118,7 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     messageInfo.SetInterfaceId(netif.GetInterfaceId());
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent energy scan query");
+    otLogInfoMeshCoP("sent energy scan query");
 
     mCallback = aCallback;
     mContext  = aContext;
@@ -158,7 +158,7 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST);
 
-    otLogInfoMeshCoP(GetInstance(), "received energy scan report");
+    otLogInfoMeshCoP("received energy scan report");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
     VerifyOrExit(channelMask.IsValid());
@@ -173,7 +173,7 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
 
     SuccessOrExit(netif.GetCoap().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent energy scan report response");
+    otLogInfoMeshCoP("sent energy scan report response");
 
 exit:
     return;
