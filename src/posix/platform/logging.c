@@ -29,12 +29,11 @@
 #include "platform-posix.h"
 #include <openthread-core-config.h>
 
-#include <ctype.h>
+#include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <syslog.h>
 
 #include <openthread/platform/logging.h>

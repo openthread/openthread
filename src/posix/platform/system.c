@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
