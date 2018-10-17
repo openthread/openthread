@@ -159,7 +159,7 @@ void Joiner::Close(void)
     ThreadNetif &netif = GetNetif();
 
     netif.GetCoapSecure().Disconnect();
-    netif.GetIp6Filter().RemoveUnsecurePort(netif.GetCoapSecure().GetPort());
+    netif.GetIp6Filter().RemoveUnsecurePort(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
 }
 
 void Joiner::Complete(otError aError)
@@ -290,7 +290,7 @@ otError Joiner::TryNextJoin()
 
         netif.GetMac().SetPanId(joinerRouter->mPanId);
         netif.GetMac().SetPanChannel(joinerRouter->mChannel);
-        netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
+        netif.GetIp6Filter().AddUnsecurePort(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
 
         messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
         messageInfo.GetPeerAddr().SetIid(joinerRouter->mExtAddr);
