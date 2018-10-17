@@ -508,6 +508,7 @@ RadioSpinel::RadioSpinel(void)
     , mIsDecoding(false)
     , mIsPromiscuous(false)
     , mIsReady(false)
+    , mSupportsLogStream(false)
 #if OPENTHREAD_ENABLE_DIAG
     , mDiagMode(false)
     , mDiagOutput(NULL)
@@ -544,46 +545,109 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
+    SuccessOrExit(error = CheckSpinelVersion());
+    SuccessOrExit(error = CheckCapabilities());
+    SuccessOrExit(error = CheckRadioCapabilities());
+
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
 
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
-
-    {
-        unsigned int versionMajor;
-        unsigned int versionMinor;
-
-        SuccessOrExit(error = Get(SPINEL_PROP_PROTOCOL_VERSION,
-                                  (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S), &versionMajor,
-                                  &versionMinor));
-
-        if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
-            (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
-        {
-            otLogCritPlat("Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
-                          SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
-            exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
-        }
-    }
-
-    {
-        const otRadioCaps kRequiredRadioCaps =
-            OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
-        unsigned int caps;
-
-        SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
-        mRadioCaps = static_cast<otRadioCaps>(caps);
-        if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
-        {
-            exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
-        }
-    }
 
     mRxRadioFrame.mPsdu = mRxPsdu;
     mTxRadioFrame.mPsdu = mTxPsdu;
 
 exit:
     SuccessOrDie(error);
+}
+
+otError RadioSpinel::CheckSpinelVersion(void)
+{
+    otError      error = OT_ERROR_NONE;
+    unsigned int versionMajor;
+    unsigned int versionMinor;
+
+    SuccessOrExit(error =
+                      Get(SPINEL_PROP_PROTOCOL_VERSION, (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S),
+                          &versionMajor, &versionMinor));
+
+    if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
+        (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
+    {
+        otLogCritPlat("Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
+                      SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
+        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+    }
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::CheckCapabilities(void)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        capsBuffer[kCapsBufferSize];
+    const uint8_t *capsData         = capsBuffer;
+    spinel_size_t  capsLength       = sizeof(capsBuffer);
+    bool           supportsRawRadio = false;
+
+    SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
+
+    while (capsLength > 0)
+    {
+        unsigned int   capability;
+        spinel_ssize_t unpacked;
+
+        unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_FAILED);
+
+        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
+        {
+            mSupportsLogStream = true;
+        }
+
+        if (capability == SPINEL_CAP_MAC_RAW)
+        {
+            supportsRawRadio = true;
+        }
+
+        capsData += unpacked;
+        capsLength -= static_cast<spinel_size_t>(unpacked);
+    }
+
+    if (!supportsRawRadio)
+    {
+        otLogCritPlat("RCP capability list does not include support for radio/raw mode");
+        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+    }
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::CheckRadioCapabilities(void)
+{
+    const otRadioCaps kRequiredRadioCaps =
+        OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
+
+    otError      error = OT_ERROR_NONE;
+    unsigned int caps;
+
+    SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
+    mRadioCaps = static_cast<otRadioCaps>(caps);
+
+    if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
+    {
+        otLogCritPlat("RCP does not support required capabilities: ack-timeout:%s, tx-retries:%s, CSMA-backoff:%s",
+                      (mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "yes" : "no",
+                      (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "yes" : "no",
+                      (mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "yes" : "no");
+
+        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+    }
+
+exit:
+    return error;
 }
 
 void RadioSpinel::Deinit(void)
@@ -817,7 +881,48 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
         assert(len < sizeof(logStream));
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         logStream[len] = '\0';
-        otLogDebgPlat("RCP DEBUG INFO: %s", logStream);
+        otLogDebgPlat("RCP => %s", logStream);
+    }
+    else if ((aKey == SPINEL_PROP_STREAM_LOG) && mSupportsLogStream)
+    {
+        const char *   logString;
+        spinel_ssize_t unpacked;
+        uint8_t        logLevel;
+
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &logString);
+        VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
+        aBuffer += unpacked;
+        aLength -= unpacked;
+
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S, &logLevel);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        switch (logLevel)
+        {
+        case SPINEL_NCP_LOG_LEVEL_EMERG:
+        case SPINEL_NCP_LOG_LEVEL_ALERT:
+        case SPINEL_NCP_LOG_LEVEL_CRIT:
+            otLogCritPlat("RCP => %s", logString);
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_ERR:
+        case SPINEL_NCP_LOG_LEVEL_WARN:
+            otLogWarnPlat("RCP => %s", logString);
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_NOTICE:
+            otLogNotePlat("RCP => %s", logString);
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_INFO:
+            otLogInfoPlat("RCP => %s", logString);
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_DEBUG:
+        default:
+            otLogDebgPlat("RCP => %s", logString);
+            break;
+        }
     }
 
 exit:
