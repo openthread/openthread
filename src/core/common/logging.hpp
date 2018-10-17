@@ -1360,19 +1360,55 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
-#define otLogCritPlat(aInstance, aFormat, ...) \
-    otLogCrit(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogWarnPlat(aInstance, aFormat, ...) \
-    otLogWarn(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogNotePlat(aInstance, aFormat, ...) \
-    otLogNote(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogInfoPlat(aInstance, aFormat, ...) \
-    otLogInfo(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogDebgPlat(aInstance, aFormat, ...) \
-    otLogDebg(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogCritPlat(aInstance, aFormat, ...)                                                               \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (aInstance != NULL)                                                                               \
+        {                                                                                                    \
+            otLogCrit(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (false)
+
+#define otLogWarnPlat(aInstance, aFormat, ...)                                                               \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (aInstance != NULL)                                                                               \
+        {                                                                                                    \
+            otLogWarn(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (false)
+
+#define otLogNotePlat(aInstance, aFormat, ...)                                                               \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (aInstance != NULL)                                                                               \
+        {                                                                                                    \
+            otLogNote(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (false)
+
+#define otLogInfoPlat(aInstance, aFormat, ...)                                                               \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (aInstance != NULL)                                                                               \
+        {                                                                                                    \
+            otLogInfo(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (false)
+
+#define otLogDebgPlat(aInstance, aFormat, ...)                                                               \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (aInstance != NULL)                                                                               \
+        {                                                                                                    \
+            otLogDebg(aInstance, OT_LOG_REGION_PLATFORM, _OT_REGION_PLATFORM_PREFIX aFormat, ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (false)
+
 #else
 #define otLogCritPlat(aInstance, aFormat, ...)
 #define otLogWarnPlat(aInstance, aFormat, ...)
+#define otLogNotePlat(aInstance, aFormat, ...)
 #define otLogInfoPlat(aInstance, aFormat, ...)
 #define otLogDebgPlat(aInstance, aFormat, ...)
 #endif

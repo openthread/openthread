@@ -283,7 +283,7 @@ static int ForkPty(const char *aCommand, const char *aArguments)
 
         rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
-                     otLogCritPlat(mInstance, "NCP file and configuration is too long!"));
+                     fprintf(stderr, "NCP file and configuration is too long!"));
 
         execl(getenv("SHELL"), getenv("SHELL"), "-c", cmd, NULL);
         perror("open pty failed");
@@ -560,9 +560,8 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
         if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
             (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
         {
-            otLogCritPlat(mInstance, "Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d",
-                          SPINEL_PROTOCOL_VERSION_THREAD_MAJOR, SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor,
-                          versionMinor);
+            fprintf(stderr, "Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
+                    SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
             ExitNow(error = OT_ERROR_FAILED);
         }
     }
