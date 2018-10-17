@@ -486,14 +486,6 @@ public:
     otError Stop(void);
 
     /**
-     * This method returns a port number used by CoAP service.
-     *
-     * @returns A port number.
-     *
-     */
-    uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
-
-    /**
      * This method adds a resource to the CoAP server.
      *
      * @param[in]  aResource  A reference to the resource.
