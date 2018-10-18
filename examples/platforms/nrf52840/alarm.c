@@ -124,7 +124,7 @@ static const AlarmChannelData sChannelData[kNumTimers] = //
             .mChannelNumber    = 3,
             .mCompareEventMask = RTC_EVTEN_COMPARE3_Msk,
             .mCompareEvent     = NRF_RTC_EVENT_COMPARE_3,
-            .mCompareInt       = NRF_RTC_INT_COMPARE2_MASK,
+            .mCompareInt       = NRF_RTC_INT_COMPARE3_MASK,
         }};
 
 static inline bool MutexGet(void)
