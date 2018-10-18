@@ -83,6 +83,38 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
+void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
+{
+    VerifyOrExit(aInfo && aContext);
+
+    static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(aInfo);
+
+exit:
+    return;
+}
+
+void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo)
+{
+    VerifyOrExit(aInfo);
+
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_PARENT_RESPONSE_INFO));
+
+    SuccessOrExit(mEncoder.WriteEui64(aInfo->mExtAddr));
+    SuccessOrExit(mEncoder.WriteUint16(aInfo->mRloc16));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo->mRssi));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo->mPriority));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality3));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality2));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality1));
+    SuccessOrExit(mEncoder.WriteBool(aInfo->mIsAttached));
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
 void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo)
 {
     GetNcpInstance()->HandleChildTableChanged(aEvent, *aChildInfo);

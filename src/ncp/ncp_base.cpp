@@ -279,6 +279,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     memset(&mSteeringDataAddress, 0, sizeof(mSteeringDataAddress));
 #endif
+    otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_LEGACY
     mLegacyNodeDidJoin = false;

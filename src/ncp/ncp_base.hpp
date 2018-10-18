@@ -266,6 +266,9 @@ protected:
 #if OPENTHREAD_FTD
     static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
     void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+
+    static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
+    void        HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo);
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
