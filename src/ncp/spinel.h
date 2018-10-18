@@ -2009,6 +2009,24 @@ typedef enum {
      */
     SPINEL_PROP_RCP_VERSION = SPINEL_PROP_OPENTHREAD__BEGIN + 12,
 
+    /// Thread Parent Response info
+    /** Format: `ESccCCCb` - Asynchronous event only
+     *
+     *  `E`: Extended address
+     *  `S`: RLOC16
+     *  `c`: Instant RSSI
+     *  'c': Parent Priority
+     *  `C`: Link Quality3
+     *  `C`: Link Quality2
+     *  `C`: Link Quality1
+     *  'b': Is the node receiving parent response frame attached
+     *
+     * This property sends Parent Response frame information to the Host.
+     * This property is available for FTD build only.
+     *
+     */
+    SPINEL_PROP_PARENT_RESPONSE_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 13,
+
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
