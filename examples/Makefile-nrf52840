@@ -29,10 +29,10 @@
 .NOTPARALLEL:
 
 AR                              = arm-none-eabi-ar
-CCAS                            = arm-none-eabi-gcc
+CCAS                            = $(CCPREFIX) arm-none-eabi-gcc
 CPP                             = arm-none-eabi-cpp
-CC                              = arm-none-eabi-gcc
-CXX                             = arm-none-eabi-g++
+CC                              = $(CCPREFIX) arm-none-eabi-gcc
+CXX                             = $(CCPREFIX) arm-none-eabi-g++
 LD                              = arm-none-eabi-ld
 STRIP                           = arm-none-eabi-strip
 NM                              = arm-none-eabi-nm

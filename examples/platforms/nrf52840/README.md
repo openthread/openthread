@@ -57,6 +57,15 @@ Please see [nRF52840 Dongle Programming][nrf52840-dongle-programming] for more d
 
 [nrf52840-dongle-programming]: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52%2Fdita%2Fnrf52%2Fdevelopment%2Fnrf52840_dongle%2Fprogramming.html&cp=2_0_4_4
 
+## Prefixing compiler command
+You can prefix compiler command using CCPREFIX parameter. This is useful when you utilize tools like [ccache][ccache-website] to speed up compilation. Example usage:
+
+[ccache-website]: https://ccache.samba.org/
+
+```
+$ make -f examples/Makefile-nrf52840 USB=1 CCPREFIX=ccache
+```
+
 ## Native SPI Slave support
 
 You can build the libraries with support for native SPI Slave.
