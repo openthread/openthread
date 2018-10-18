@@ -67,6 +67,9 @@
 #include "utils/channel_monitor.hpp"
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+#include "common/extension.hpp"
+#endif
 
 /**
  * @addtogroup core-instance
@@ -376,6 +379,16 @@ public:
      */
     MessagePool &GetMessagePool(void) { return mMessagePool; }
 
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    /**
+     * This method returns a reference to vendor extension object.
+     *
+     * @returns A reference to the vendor extension object.
+     *
+     */
+    Extension::ExtensionBase &GetExtension(void) { return mExtension; }
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
@@ -459,6 +472,9 @@ private:
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLogLevel mLogLevel;
+#endif
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    Extension::ExtensionBase &mExtension;
 #endif
     bool mIsInitialized;
 };
@@ -690,6 +706,13 @@ template <> inline TaskletScheduler &Instance::Get(void)
 {
     return GetTaskletScheduler();
 }
+
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+template <> inline Extension::ExtensionBase &Instance::Get(void)
+{
+    return GetExtension();
+}
+#endif
 
 /**
  * @}

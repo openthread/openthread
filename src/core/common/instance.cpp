@@ -87,6 +87,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
 #endif
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    , mExtension(Extension::ExtensionBase::Init(*this))
+#endif
     , mIsInitialized(false)
 {
 }
@@ -169,6 +172,10 @@ void Instance::AfterInit(void)
 
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    GetExtension().SignalInstanceInit();
+#endif
 }
 
 void Instance::Finalize(void)
