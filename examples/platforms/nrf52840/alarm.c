@@ -76,7 +76,14 @@
 #define XTAL_ACCURACY       40 // The crystal used on nRF52840PDK has ±20ppm accuracy.
 // clang-format on
 
-typedef enum { kMsTimer, kUsTimer, k802154Timer, k802154Sync, kNumTimers } AlarmIndex;
+typedef enum
+{
+    kMsTimer,
+    kUsTimer,
+    k802154Timer,
+    k802154Sync,
+    kNumTimers
+} AlarmIndex;
 
 typedef struct
 {

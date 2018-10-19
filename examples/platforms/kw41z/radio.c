@@ -70,7 +70,8 @@
                                       ZLL_RX_FRAME_FILTER_BEACON_FT_MASK)
 // clang-format on
 
-typedef enum xcvr_state_tag {
+typedef enum xcvr_state_tag
+{
     XCVR_Idle_c,
     XCVR_RX_c,
     XCVR_TX_c,
@@ -79,7 +80,8 @@ typedef enum xcvr_state_tag {
     XCVR_CCCA_c,
 } xcvr_state_t;
 
-typedef enum xcvr_cca_type_tag {
+typedef enum xcvr_cca_type_tag
+{
     XCVR_ED_c,        /* energy detect - CCA bit not active, not to be used for T and CCCA sequences */
     XCVR_CCA_MODE1_c, /* energy detect - CCA bit ACTIVE */
     SCVR_CCA_MODE2_c, /* 802.15.4 compliant signal detect - CCA bit ACTIVE */

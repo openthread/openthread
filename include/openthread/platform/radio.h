@@ -204,7 +204,8 @@ typedef struct otRadioFrame
  * This structure represents the state of a radio.
  * Initially, a radio is in the Disabled state.
  */
-typedef enum otRadioState {
+typedef enum otRadioState
+{
     OT_RADIO_STATE_DISABLED = 0,
     OT_RADIO_STATE_SLEEP    = 1,
     OT_RADIO_STATE_RECEIVE  = 2,

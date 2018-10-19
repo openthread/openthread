@@ -83,7 +83,8 @@ public:
      * Status of IdentityAssociation
      *
      */
-    typedef enum Status {
+    typedef enum Status
+    {
         kStatusInvalid,
         kStatusSolicit,
         kStatusSoliciting,

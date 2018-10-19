@@ -49,9 +49,9 @@
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 
+using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-using ot::Encoding::Reverse32;
 
 namespace ot {
 namespace MeshCoP {

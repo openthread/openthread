@@ -150,7 +150,8 @@ typedef struct otExternalRouteConfig
  * Defines valid values for member mPreference in otExternalRouteConfig and otBorderRouterConfig.
  *
  */
-typedef enum otRoutePreference {
+typedef enum otRoutePreference
+{
     OT_ROUTE_PREFERENCE_LOW  = -1, ///< Low route preference.
     OT_ROUTE_PREFERENCE_MED  = 0,  ///< Medium route preference.
     OT_ROUTE_PREFERENCE_HIGH = 1,  ///< High route preference.

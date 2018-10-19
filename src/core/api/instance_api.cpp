@@ -119,21 +119,21 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 
 const char *otGetVersionString(void)
 {
-/**
- * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
- * intended to be used to specify compiler directives to indicate
- * what linker section the platform version string should be stored.
- *
- * This is useful for specifying an exact location of where the version
- * string will be located so that it can be easily retrieved from the
- * raw firmware image.
- *
- * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
- * is used instead.
- *
- * If both are unspecified, the location of the string in the firmware
- * image will be undefined and may change.
- */
+    /**
+     * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
+     * intended to be used to specify compiler directives to indicate
+     * what linker section the platform version string should be stored.
+     *
+     * This is useful for specifying an exact location of where the version
+     * string will be located so that it can be easily retrieved from the
+     * raw firmware image.
+     *
+     * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
+     * is used instead.
+     *
+     * If both are unspecified, the location of the string in the firmware
+     * image will be undefined and may change.
+     */
 
 #ifdef PLATFORM_VERSION_ATTR_PREFIX
     PLATFORM_VERSION_ATTR_PREFIX

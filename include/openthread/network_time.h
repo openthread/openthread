@@ -56,7 +56,8 @@ extern "C" {
  * This enum represents OpenThread time synchronization status.
  *
  */
-typedef enum otNetworkTimeStatus {
+typedef enum otNetworkTimeStatus
+{
     OT_NETWORK_TIME_UNSYNCHRONIZED = -1, ///< The device hasn't attached to a network.
     OT_NETWORK_TIME_RESYNC_NEEDED  = 0,  ///< The device hasn’t received time sync for more than two periods time.
     OT_NETWORK_TIME_SYNCHRONIZED   = 1,  ///< The device network time is synchronized.

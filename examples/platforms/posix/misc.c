@@ -48,7 +48,7 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 void otPlatReset(otInstance *aInstance)
 {
 #if _WIN32
-// This function does nothing on the Windows platform.
+    // This function does nothing on the Windows platform.
 
 #elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET // if _WIN32
     gPlatformPseudoResetWasRequested = true;

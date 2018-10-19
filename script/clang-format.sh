@@ -41,7 +41,7 @@ elif which clang-format > /dev/null; then
         "$CLANG_FORMAT_VERSION"*)
             ;;
         *)
-            die "clang-format 6.0 required"
+            die "$(clang-format --version); clang-format 6.0 required"
             ;;
     esac
 else

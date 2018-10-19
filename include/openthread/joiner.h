@@ -56,7 +56,8 @@ extern "C" {
  * This enumeration defines the Joiner State.
  *
  */
-typedef enum otJoinerState {
+typedef enum otJoinerState
+{
     OT_JOINER_STATE_IDLE      = 0,
     OT_JOINER_STATE_DISCOVER  = 1,
     OT_JOINER_STATE_CONNECT   = 2,
