@@ -313,7 +313,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mProxyTransmit(OT_URI_PATH_PROXY_TX, BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>, this)
     , mProxyReceiver(BorderAgent::HandleProxyReceive, this)
     , mTimer(aInstance, HandleTimeout, this)
-    , mIsStarted(false)
+    , mState(OT_BORDER_AGENT_STATE_STOPPED)
 {
 }
 
@@ -625,6 +625,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     if (aConnected)
     {
         otLogInfoMeshCoP(GetInstance(), "Commissioner connected");
+        SetState(OT_BORDER_AGENT_STATE_ACTIVE);
         mTimer.Start(kKeepAliveTimeout);
     }
     else
@@ -636,6 +637,7 @@ void BorderAgent::HandleConnected(bool aConnected)
         netif.GetIp6().GetUdp().RemoveReceiver(mProxyReceiver);
         netif.RemoveUnicastAddress(mCommissionerAloc);
         coaps.Stop();
+        SetState(OT_BORDER_AGENT_STATE_STARTED);
         mTimer.Start(kRestartDelay);
     }
 }
@@ -661,7 +663,7 @@ otError BorderAgent::Start(void)
     Coap::CoapSecure &coaps = netif.GetCoapSecure();
     Coap::Coap &      coap  = netif.GetCoap();
 
-    VerifyOrExit(!mIsStarted, error = OT_ERROR_ALREADY);
+    VerifyOrExit(mState == OT_BORDER_AGENT_STATE_STOPPED, error = OT_ERROR_ALREADY);
 
     SuccessOrExit(error = StartCoaps());
 
@@ -678,7 +680,7 @@ otError BorderAgent::Start(void)
 
     coap.AddResource(mRelayReceive);
 
-    mIsStarted = true;
+    SetState(OT_BORDER_AGENT_STATE_STARTED);
 
 exit:
     return error;
@@ -720,7 +722,7 @@ otError BorderAgent::Stop(void)
     Coap::CoapSecure &coaps = netif.GetCoapSecure();
     Coap::Coap &      coap  = netif.GetCoap();
 
-    VerifyOrExit(mIsStarted, error = OT_ERROR_ALREADY);
+    VerifyOrExit(mState != OT_BORDER_AGENT_STATE_STOPPED, error = OT_ERROR_ALREADY);
 
     mTimer.Stop();
 
@@ -740,10 +742,19 @@ otError BorderAgent::Stop(void)
     error = coaps.Stop();
     assert(error == OT_ERROR_NONE);
 
-    mIsStarted = false;
+    SetState(OT_BORDER_AGENT_STATE_STOPPED);
 
 exit:
     return error;
+}
+
+void BorderAgent::SetState(otBorderAgentState aState)
+{
+    if (mState != aState)
+    {
+        mState = aState;
+        GetNotifier().Signal(OT_CHANGED_BORDER_AGENT_STATE);
+    }
 }
 
 } // namespace MeshCoP
