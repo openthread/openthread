@@ -49,7 +49,7 @@ install_packages_apt()
     sudo apt-get install gcc-arm-embedded
 
     # add clang-format for pretty
-    sudo apt-get install clang-format-5.0
+    sudo apt-get install clang-format-6.0
 }
 
 install_packages_opkg()
