@@ -38,7 +38,7 @@
 
 #define kNumNewPriorityTestMessages 2
 #define kNumSetPriorityTestMessages 2
-#define kNumTestMessages            (kNumNewPriorityTestMessages + kNumSetPriorityTestMessages)
+#define kNumTestMessages (kNumNewPriorityTestMessages + kNumSetPriorityTestMessages)
 
 // This function verifies the content of the priority queue to match the passed in messages
 void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
@@ -334,7 +334,7 @@ void TestPriorityQueue(void)
     SuccessOrQuit(queue.Dequeue(*msgLow[0]), "PriorityQueue::Dequeue() failed.\n");
     VerifyPriorityQueueContent(queue, 3, msgNet[1], msgHigh[0], msgHigh[3]);
     SuccessOrQuit(queue.Dequeue(*msgNet[1]), "PriorityQueue::Dequeue() failed.\n");
-    VerifyPriorityQueueContent(queue, 2, msgHigh[0],  msgHigh[3]);
+    VerifyPriorityQueueContent(queue, 2, msgHigh[0], msgHigh[3]);
     SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.\n");
     VerifyPriorityQueueContent(queue, 1, msgHigh[3]);
     SuccessOrQuit(queue.Dequeue(*msgHigh[3]), "PriorityQueue::Dequeue() failed.\n");
@@ -370,7 +370,7 @@ void TestPriorityQueue(void)
                   "SetPriority failed for an already queued message.\n");
     VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityHigh),
-                 "SetPriority failed for an already queued message.\n");
+                  "SetPriority failed for an already queued message.\n");
     VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
     VerifyAllMessagesContent(messagePool, 3, msgNor[0], msgHigh[0], msgLow[0]);
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityNet),
