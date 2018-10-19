@@ -55,7 +55,8 @@ extern "C" {
  * This enumeration defines the Border Agent state.
  *
  */
-typedef enum otBorderAgentState {
+typedef enum otBorderAgentState
+{
     OT_BORDER_AGENT_STATE_STOPPED = 0, ///< Border agent role is disabled.
     OT_BORDER_AGENT_STATE_STARTED = 1, ///< Border agent is started.
     OT_BORDER_AGENT_STATE_ACTIVE  = 2, ///< Border agent is connected with external commissioner.

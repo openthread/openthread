@@ -65,7 +65,8 @@ extern "C" {
  * CoAP Type values.
  *
  */
-typedef enum otCoapType {
+typedef enum otCoapType
+{
     OT_COAP_TYPE_CONFIRMABLE     = 0x00, ///< Confirmable
     OT_COAP_TYPE_NON_CONFIRMABLE = 0x10, ///< Non-confirmable
     OT_COAP_TYPE_ACKNOWLEDGMENT  = 0x20, ///< Acknowledgment
@@ -82,7 +83,8 @@ typedef enum otCoapType {
  * CoAP Code values.
  *
  */
-typedef enum otCoapCode {
+typedef enum otCoapCode
+{
     OT_COAP_CODE_EMPTY  = OT_COAP_CODE(0, 0), ///< Empty message code
     OT_COAP_CODE_GET    = OT_COAP_CODE(0, 1), ///< Get
     OT_COAP_CODE_POST   = OT_COAP_CODE(0, 2), ///< Post
@@ -118,7 +120,8 @@ typedef enum otCoapCode {
 /**
  * CoAP Option Numbers
  */
-typedef enum otCoapOptionType {
+typedef enum otCoapOptionType
+{
     OT_COAP_OPTION_IF_MATCH       = 1,  ///< If-Match
     OT_COAP_OPTION_URI_HOST       = 3,  ///< Uri-Host
     OT_COAP_OPTION_E_TAG          = 4,  ///< ETag
@@ -153,7 +156,8 @@ typedef struct otCoapOption
  * https://tools.ietf.org/html/rfc7252#page-92
  *
  */
-typedef enum otCoapOptionContentFormat {
+typedef enum otCoapOptionContentFormat
+{
     OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN   = 0,  ///< text/plain
     OT_COAP_OPTION_CONTENT_FORMAT_LINK_FORMAT  = 40, ///< application/link-format
     OT_COAP_OPTION_CONTENT_FORMAT_XML          = 41, ///< application/xml

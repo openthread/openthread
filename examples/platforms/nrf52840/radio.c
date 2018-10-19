@@ -93,7 +93,8 @@ static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
 
-typedef enum {
+typedef enum
+{
     kPendingEventSleep,                // Requested to enter Sleep state.
     kPendingEventFrameTransmitted,     // Transmitted frame and received ACK (if requested).
     kPendingEventChannelAccessFailure, // Failed to transmit frame (channel busy).

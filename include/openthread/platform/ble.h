@@ -203,7 +203,8 @@ enum
  * This enum represents BLE Device Address types.
  *
  */
-typedef enum otPlatBleAddressType {
+typedef enum otPlatBleAddressType
+{
     OT_BLE_ADDRESS_TYPE_PUBLIC                        = 0, ///< Bluetooth public device address.
     OT_BLE_ADDRESS_TYPE_RANDOM_STATIC                 = 1, ///< Bluetooth random static address.
     OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_RESOLVABLE     = 2, ///< Bluetooth random private resolvable address.
@@ -216,7 +217,8 @@ typedef enum otPlatBleAddressType {
  *
  * See v4.2 [Vol 3, Part G] 3.3.1.1 Characteristic Properties - Table 3.5
  */
-typedef enum otPlatBleCccdFlags {
+typedef enum otPlatBleCccdFlags
+{
     /**
      * If set, permits broadcasts of the Characteristic Value using Characteristic Configuration Descriptor.
      */
@@ -273,7 +275,8 @@ typedef struct otPlatBleDeviceAddr
  * This enumeration defines flags for BLE advertisement mode.
  *
  */
-typedef enum otPlatBleAdvMode {
+typedef enum otPlatBleAdvMode
+{
     /**
      * If set, advertising device will allow connections to be initiated.
      */
@@ -321,7 +324,8 @@ typedef struct otPlatBleGapConnParams
  * This enumeration represents BLE UUID value.
  *
  */
-typedef enum otPlatBleUuidType {
+typedef enum otPlatBleUuidType
+{
     OT_BLE_UUID_TYPE_16  = 0, ///< UUID represented by 16-bit value.
     OT_BLE_UUID_TYPE_32  = 1, ///< UUID represented by 32-bit value.
     OT_BLE_UUID_TYPE_128 = 2, ///< UUID represented by 128-bit value.

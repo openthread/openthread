@@ -67,7 +67,8 @@ void otPlatReset(otInstance *aInstance);
  * These are in the same order as the Spinel reset reason codes.
  *
  */
-typedef enum {
+typedef enum
+{
     OT_PLAT_RESET_REASON_POWER_ON = 0,
     OT_PLAT_RESET_REASON_EXTERNAL = 1,
     OT_PLAT_RESET_REASON_SOFTWARE = 2,
@@ -120,7 +121,8 @@ void otPlatWakeHost(void);
  * After a reset, the MCU power state MUST be `OT_PLAT_POWER_STATE_ON`.
  *
  */
-typedef enum {
+typedef enum
+{
     /**
      * NCP's MCU stays on and active all the time.
      *

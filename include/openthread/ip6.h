@@ -126,7 +126,8 @@ typedef struct otNetifMulticastAddress
  * This enumeration represents the list of allowable values for an InterfaceId.
  *
  */
-typedef enum otNetifInterfaceId {
+typedef enum otNetifInterfaceId
+{
     OT_NETIF_INTERFACE_ID_HOST   = -1, ///< The interface ID telling packets received by host side interfaces.
     OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
 } otNetifInterfaceId;

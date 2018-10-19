@@ -222,7 +222,8 @@ typedef struct otOperationalDataset
  * This enumeration represents meshcop TLV types.
  *
  */
-typedef enum otMeshcopTlvType {
+typedef enum otMeshcopTlvType
+{
     OT_MESHCOP_TLV_CHANNEL                  = 0,   ///< meshcop Channel TLV
     OT_MESHCOP_TLV_PANID                    = 1,   ///< meshcop Pan Id TLV
     OT_MESHCOP_TLV_EXTPANID                 = 2,   ///< meshcop Extended Pan Id TLV
