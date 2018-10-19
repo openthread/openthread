@@ -84,9 +84,10 @@ matrix:
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
+            - clang-format-6.0
     - env: BUILD_TARGET="scan-build" CC="clang-6.0" CXX="clang++-6.0"
       os: linux
       addons:
