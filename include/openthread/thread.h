@@ -59,7 +59,8 @@ extern "C" {
  * Represents a Thread device role.
  *
  */
-typedef enum {
+typedef enum
+{
     OT_DEVICE_ROLE_DISABLED = 0, ///< The Thread stack is disabled.
     OT_DEVICE_ROLE_DETACHED = 1, ///< Not currently participating in a Thread network/partition.
     OT_DEVICE_ROLE_CHILD    = 2, ///< The Thread Child role.

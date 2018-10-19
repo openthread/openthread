@@ -546,7 +546,8 @@ OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aPa
  * removed.
  *
  */
-typedef enum otThreadChildTableEvent {
+typedef enum otThreadChildTableEvent
+{
     OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,   ///< A child is being added.
     OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, ///< A child is being removed.
 } otThreadChildTableEvent;
