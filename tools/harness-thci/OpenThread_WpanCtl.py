@@ -80,7 +80,6 @@ class OpenThread_WpanCtl(IThci):
             self.logThreadStatus = self.logStatus['stop']
             self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else 'usb'
             if self.connectType == 'ip':
-                import paramiko
                 self.dutIpv4 = kwargs.get('TelnetIP')
                 self.dutPort = kwargs.get('TelnetPort')
                 self.port = self.dutIpv4 + ':' + self.dutPort
@@ -763,6 +762,7 @@ class OpenThread_WpanCtl(IThci):
         elif self.connectType == 'ip':
             print "My IP: %s Port: %s" % (self.dutIpv4, self.dutPort)
             try:
+                import paramiko
                 self.handle = paramiko.SSHClient()
                 self.handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 self.handle.connect(self.dutIpv4, port=self.dutPort, username=WPAN_CARRIER_USER, password=WPAN_CARRIER_PASSWD)
