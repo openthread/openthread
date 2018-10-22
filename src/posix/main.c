@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     otDiagInit(sInstance);
 #endif
 
-    while (!otSysPseudoResetWasRequested())
+    while (true)
     {
         otTaskletsProcess(sInstance);
         otSysProcessDrivers(sInstance);

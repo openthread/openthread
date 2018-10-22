@@ -49,8 +49,6 @@
 
 uint64_t gNodeId = 0;
 
-extern bool gPlatformPseudoResetWasRequested;
-
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
     fprintf(aStream,
@@ -70,12 +68,6 @@ void otSysInit(int aArgCount, char *aArgVector[])
     bool        isDryRun      = false;
     const char *radioFile     = NULL;
     const char *radioConfig   = "";
-
-    if (gPlatformPseudoResetWasRequested)
-    {
-        gPlatformPseudoResetWasRequested = false;
-        return;
-    }
 
     while (true)
     {
@@ -148,11 +140,6 @@ void otSysInit(int aArgCount, char *aArgVector[])
     {
         exit(OT_EXIT_SUCCESS);
     }
-}
-
-bool otSysPseudoResetWasRequested(void)
-{
-    return gPlatformPseudoResetWasRequested;
 }
 
 void otSysDeinit(void)
