@@ -1337,6 +1337,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DNS_CLIENT], [test "${enable_dns_client}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DNS_CLIENT],[${OPENTHREAD_ENABLE_DNS_CLIENT}],[Define to 1 if you want to enable DNS Client])
 
 #
+# SNTP Client
+#
+
+AC_ARG_ENABLE(sntp_client,
+    [AS_HELP_STRING([--enable-sntp-client],[Enable SNTP client support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_sntp_client=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_sntp_client} for --enable-sntp-client])
+            ;;
+        esac
+    ],
+    [enable_sntp_client=no])
+
+if test "$enable_sntp_client" = "yes"; then
+    OPENTHREAD_ENABLE_SNTP_CLIENT=1
+else
+    OPENTHREAD_ENABLE_SNTP_CLIENT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_SNTP_CLIENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_SNTP_CLIENT], [test "${enable_sntp_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SNTP_CLIENT],[${OPENTHREAD_ENABLE_SNTP_CLIENT}],[Define to 1 if you want to enable SNTP Client])
+
+#
 # Application CoAP
 #
 
@@ -1882,6 +1912,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
+  OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Application CoAP Secure support: ${enable_application_coap_secure}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}

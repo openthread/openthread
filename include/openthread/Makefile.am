@@ -78,6 +78,7 @@ openthread_headers                      = \
     netdata.h                             \
     network_time.h                        \
     server.h                              \
+    sntp.h                                \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \

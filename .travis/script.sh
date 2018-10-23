@@ -74,6 +74,7 @@ python --version || die
         --enable-radio-only               \
         --enable-raw-link-api             \
         --enable-service                  \
+        --enable-sntp-client              \
         --enable-udp-proxy                \
         --with-examples=posix || die
 
@@ -117,7 +118,7 @@ python --version || die
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
+    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
@@ -195,7 +196,7 @@ python --version || die
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
+    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
@@ -273,7 +274,7 @@ python --version || die
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
+    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
@@ -362,7 +363,7 @@ python --version || die
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
+    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_PROXY=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die

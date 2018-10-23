@@ -648,6 +648,13 @@ template <> inline Utils::JamDetector &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+template <> inline Sntp::Client &Instance::Get(void)
+{
+    return GetThreadNetif().GetSntpClient();
+}
+#endif
+
 template <> inline Utils::ChildSupervisor &Instance::Get(void)
 {
     return GetThreadNetif().GetChildSupervisor();
