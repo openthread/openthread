@@ -33,10 +33,12 @@
 
 #include "openthread-core-config.h"
 #include <openthread/crypto.h>
+#include <openthread/error.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
+#include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"
 
 using namespace ot::Crypto;
@@ -91,3 +93,17 @@ void otCryptoAesCcm(const uint8_t *aKey,
 exit:
     return;
 }
+
+#if OPENTHREAD_ENABLE_ECDSA
+
+otError otCryptoEcdsaSign(uint8_t *      aOutput,
+                          uint16_t *     aOutputLength,
+                          const uint8_t *aInputHash,
+                          uint16_t       aInputHashLength,
+                          const uint8_t *aPrivateKey,
+                          uint16_t       aPrivateKeyLength)
+{
+    return Ecdsa::Sign(aOutput, aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
+}
+
+#endif // OPENTHREAD_ENABLE_ECDSA
