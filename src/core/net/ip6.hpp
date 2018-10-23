@@ -382,7 +382,7 @@ public:
 private:
     enum
     {
-        kDefaultIp6MessagePriority = Message::kPriorityLow,
+        kDefaultIp6MessagePriority = Message::kPriorityNormal,
     };
 
     static void HandleSendQueue(Tasklet &aTasklet);
