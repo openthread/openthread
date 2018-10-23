@@ -63,17 +63,6 @@ void otSysInit(int argc, char *argv[]);
 void otSysDeinit(void);
 
 /**
- * This function returns true if a pseudo-reset was requested.
- *
- * In such a case, the main loop should shut down and re-initialize the OpenThread instance.
- *
- * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
- *       in the main loop to determine when to shut down and re-initialize the OpenThread instance.
- *
- */
-bool otSysPseudoResetWasRequested(void);
-
-/**
  * This function performs all platform-specific processing for OpenThread's example applications.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function

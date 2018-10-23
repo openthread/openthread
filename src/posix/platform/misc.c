@@ -38,25 +38,16 @@
 
 extern jmp_buf gResetJump;
 
-static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
-bool                       gPlatformPseudoResetWasRequested;
+static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    gPlatformPseudoResetWasRequested = true;
-    sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
-
-#else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-
     otSysDeinit();
     platformUartRestore();
 
     longjmp(gResetJump, 1);
     assert(false);
-
-#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 
     (void)aInstance;
 }
