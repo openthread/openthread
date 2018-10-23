@@ -1258,8 +1258,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         {
 #if OPENTHREAD_FTD
             HandleMesh(payload, payloadLength, macSource, linkInfo);
-#else
-            assert(false);
 #endif
         }
         else if (payloadLength >= sizeof(Lowpan::FragmentHeader) &&
