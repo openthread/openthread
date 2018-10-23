@@ -284,6 +284,7 @@ enum
     OT_CHANGED_SECURITY_POLICY             = 1 << 22, ///< Security Policy changed
     OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 23, ///< Channel Manager new pending Thread channel changed
     OT_CHANGED_SUPPORTED_CHANNEL_MASK      = 1 << 24, ///< Supported channel mask changed
+    OT_CHANGED_BORDER_AGENT_STATE          = 1 << 25, ///< Border agent state changed
 };
 
 /**
