@@ -180,39 +180,31 @@ public:
      */
     TaskletScheduler &GetTaskletScheduler(void) { return mTaskletScheduler; }
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    /**
-     * This method returns the current dynamic log level.
-     *
-     * @returns the currently set dynamic log level.
-     *
-     */
-    static otLogLevel GetDynamicLogLevel(void) { return mLogLevel; }
-
-    /**
-     * This method sets the dynamic log level.
-     *
-     * @param[in]  aLogLevel The dynamic log level.
-     *
-     */
-    static void SetDynamicLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
-#endif
-
     /**
      * This method returns the active log level.
      *
      * @returns The log level.
      *
      */
-    static otLogLevel GetLogLevel(void)
+    otLogLevel GetLogLevel(void) const
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     {
-        return GetDynamicLogLevel();
+        return mLogLevel;
     }
 #else
     {
         return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    /**
+     * This method sets the log level.
+     *
+     * @param[in] aLogLevel  A log level.
+     *
+     */
+    void SetLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
 #endif
 
     /**
@@ -470,8 +462,9 @@ private:
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     LinkRaw mLinkRaw;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    static otLogLevel mLogLevel;
+    otLogLevel mLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;

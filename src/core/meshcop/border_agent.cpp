@@ -623,7 +623,6 @@ void BorderAgent::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-
         otLogInfoMeshCoP("Commissioner connected");
         SetState(OT_BORDER_AGENT_STATE_ACTIVE);
         mTimer.Start(kKeepAliveTimeout);

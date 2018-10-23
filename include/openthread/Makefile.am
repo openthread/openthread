@@ -72,6 +72,7 @@ openthread_headers                      = \
     joiner.h                              \
     link.h                                \
     link_raw.h                            \
+    logging.h                             \
     message.h                             \
     ncp.h                                 \
     netdata.h                             \

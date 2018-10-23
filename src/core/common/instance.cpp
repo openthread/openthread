@@ -50,10 +50,6 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-otLogLevel Instance::mLogLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-#endif
-
 Instance::Instance(void)
     : mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

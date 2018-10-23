@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes functions for debugging.
+ *   This file includes logging related macro/function definitions.
  */
 
 #ifndef LOGGING_HPP_
@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/instance.h>
+#include <openthread/logging.h>
 #include <openthread/platform/logging.h>
 
 #ifdef WINDOWS_LOGGING
@@ -741,7 +741,7 @@ extern "C" {
 #define otLogMac(aLogLevel, aFormat, ...)                                                     \
     do                                                                                        \
     {                                                                                         \
-        if (Instance::GetLogLevel() >= aLogLevel)                                             \
+        if (otLoggingGetLevel() >= aLogLevel)                                                 \
         {                                                                                     \
             _otLogFormatter(aLogLevel, OT_LOG_REGION_MAC, "%s" _OT_REGION_MAC_PREFIX aFormat, \
                             otLogLevelToPrefixString(aLogLevel), ##__VA_ARGS__);              \
@@ -1231,6 +1231,7 @@ extern "C" {
 #else
 #define otLogCritPlat(aFormat, ...)
 #define otLogWarnPlat(aFormat, ...)
+#define otLogNotePlat(aFormat, ...)
 #define otLogInfoPlat(aFormat, ...)
 #define otLogDebgPlat(aFormat, ...)
 #endif
@@ -1913,7 +1914,7 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 #define _otDynamicLog(aLogLevel, aRegion, aFormat, ...)             \
     do                                                              \
     {                                                               \
-        if (otGetDynamicLogLevel() >= aLogLevel)                    \
+        if (otLoggingGetLevel() >= aLogLevel)                       \
             _otPlatLog(aLogLevel, aRegion, aFormat, ##__VA_ARGS__); \
     } while (false)
 

@@ -117,33 +117,6 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-otLogLevel otGetDynamicLogLevel(void)
-{
-    otLogLevel logLevel;
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    logLevel = Instance::GetDynamicLogLevel();
-#else
-    logLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-#endif
-
-    return logLevel;
-}
-
-otError otSetDynamicLogLevel(otLogLevel aLogLevel)
-{
-    otError error = OT_ERROR_NONE;
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    Instance::SetDynamicLogLevel(aLogLevel);
-#else
-    error    = OT_ERROR_DISABLED_FEATURE;
-    OT_UNUSED_VARIABLE(aLogLevel);
-#endif
-
-    return error;
-}
-
 const char *otGetVersionString(void)
 {
 /**
