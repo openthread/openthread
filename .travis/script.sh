@@ -523,7 +523,7 @@ python --version || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
-    ./tests/toranj/start.sh
+    ./tests/toranj/start.sh || die
 }
 
 [ $BUILD_TARGET != osx ] || {
