@@ -249,7 +249,7 @@ otError Header::AppendOption(const Option &aOption)
     memcpy(cur, aOption.mValue, aOption.mLength);
     cur += aOption.mLength;
 
-    mHeaderLength += static_cast<uint8_t>(cur - buf);
+    mHeaderLength += static_cast<uint16_t>(cur - buf);
     mOptionLast = aOption.mNumber;
 
 exit:

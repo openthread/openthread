@@ -402,7 +402,7 @@ public:
      * @returns The header length in bytes.
      *
      */
-    uint8_t GetLength(void) const { return mHeaderLength; }
+    uint16_t GetLength(void) const { return mHeaderLength; }
 
     /**
      * This method sets a default response header based on request header.
