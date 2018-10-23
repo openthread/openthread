@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/border_agent.h>
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"
@@ -58,20 +60,28 @@ public:
     explicit BorderAgent(Instance &aInstance);
 
     /**
-     * This method starts the BorderAgent service.
+     * This method starts the Border Agent service.
      *
-     * @retval OT_ERROR_NONE  Successfully started the BorderAgent service.
+     * @retval OT_ERROR_NONE  Successfully started the Border Agent service.
      *
      */
     otError Start(void);
 
     /**
-     * This method stops the BorderAgent service.
+     * This method stops the Border Agent service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the BorderAgent service.
+     * @retval OT_ERROR_NONE  Successfully stopped the Border Agent service.
      *
      */
     otError Stop(void);
+
+    /**
+     * This method gets the state of the Border Agent service.
+     *
+     * @returns The state of the the Border Agent service.
+     *
+     */
+    otBorderAgentState GetState(void) const { return mState; }
 
 private:
     static void HandleConnected(bool aConnected, void *aContext)
@@ -121,6 +131,8 @@ private:
     }
     bool HandleProxyReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void SetState(otBorderAgentState aState);
+
     enum
     {
         kBorderAgentUdpPort = 49191,     ///< UDP port of border agent service.
@@ -145,8 +157,8 @@ private:
     Ip6::UdpReceiver         mProxyReceiver; ///< The UDP receiver to handle proxy packets to Commissioner
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
-    TimerMilli mTimer;
-    bool       mIsStarted;
+    TimerMilli         mTimer;
+    otBorderAgentState mState;
 };
 
 } // namespace MeshCoP
