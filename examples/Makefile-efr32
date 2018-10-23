@@ -77,7 +77,7 @@ else
 ifeq ($(BOARD),BRD4170A)
 MCU = EFR32MG12P433F1024GM68
 else
-$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A, BRD4166A or BRD4170A) )
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A, BRD4166A or BRD4170A))
 endif
 endif
 endif
