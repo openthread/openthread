@@ -168,15 +168,15 @@ otError DatasetManager::Set(const Dataset &aDataset)
 
     if (isMasterkeyUpdated || compare > 0)
     {
-        ThreadNetif &netif = GetNetif();
-
         mLocal.Set(aDataset);
 
-        if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+#if OPENTHREAD_FTD
+        if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
         {
-            netif.GetNetworkDataLeader().IncrementVersion();
-            netif.GetNetworkDataLeader().IncrementStableVersion();
+            GetNetif().GetNetworkDataLeader().IncrementVersion();
+            GetNetif().GetNetworkDataLeader().IncrementStableVersion();
         }
+#endif
     }
     else if (compare < 0)
     {

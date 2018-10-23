@@ -147,10 +147,12 @@ exit:
 
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
+#if OPENTHREAD_FTD
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
+#endif
 
     if (mSendMessage == &aMessage)
     {
@@ -173,10 +175,12 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
     mSendMessageIsARetransmission = false;
 
+#if OPENTHREAD_FTD
     if (GetIndirectTransmission() == OT_ERROR_NONE)
     {
         ExitNow();
     }
+#endif // OPENTHREAD_FTD
 
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
@@ -1045,7 +1049,9 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         }
     }
 
+#if OPENTHREAD_FTD
     HandleSentFrameToChild(aFrame, aError, macDest);
+#endif
 
     VerifyOrExit(mSendMessage != NULL);
 
@@ -1250,7 +1256,9 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         if (payloadLength >= sizeof(Lowpan::MeshHeader) &&
             reinterpret_cast<Lowpan::MeshHeader *>(payload)->IsMeshHeader())
         {
+#if OPENTHREAD_FTD
             HandleMesh(payload, payloadLength, macSource, linkInfo);
+#endif
         }
         else if (payloadLength >= sizeof(Lowpan::FragmentHeader) &&
                  reinterpret_cast<Lowpan::FragmentHeader *>(payload)->IsFragmentHeader())
