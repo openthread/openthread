@@ -60,7 +60,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     isSecure = (data[0] & 0x1) != 0;
 
-    message = otIp6NewMessage(instance, isSecure);
+    message = otIp6NewMessage(instance, isSecure, OT_MESSAGE_PRIORITY_NORMAL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otMessageAppend(message, data + 1, static_cast<uint16_t>(size - 1));

@@ -183,7 +183,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
             otCoapHeaderSetPayloadMarker(&responseHeader);
         }
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, OT_MESSAGE_PRIORITY_NORMAL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
         if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
@@ -292,7 +292,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         }
     }
 
-    message = otCoapNewMessage(mInterpreter.mInstance, &header);
+    message = otCoapNewMessage(mInterpreter.mInstance, &header, OT_MESSAGE_PRIORITY_NORMAL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // Embed content into message if given

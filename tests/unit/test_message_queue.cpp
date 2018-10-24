@@ -90,7 +90,7 @@ void TestMessageQueue(void)
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0);
+        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0, OT_MESSAGE_PRIORITY_NORMAL);
         VerifyOrQuit(msg[i] != NULL, "Message::New failed\n");
     }
 
@@ -236,7 +236,7 @@ void TestMessageQueueOtApis(void)
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = otIp6NewMessage(sInstance, true);
+        msg[i] = otIp6NewMessage(sInstance, true, OT_MESSAGE_PRIORITY_NORMAL);
         VerifyOrQuit(msg[i] != NULL, "otIp6NewMessage() failed.\n");
     }
 

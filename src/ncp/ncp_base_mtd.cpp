@@ -1420,7 +1420,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     otError        error    = OT_ERROR_NONE;
 
     // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, true);
+    message = otIp6NewMessage(mInstance, true, OT_MESSAGE_PRIORITY_NORMAL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
@@ -2263,7 +2263,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     otError        error    = OT_ERROR_NONE;
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, false);
+    message = otIp6NewMessage(mInstance, false, OT_MESSAGE_PRIORITY_NORMAL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
@@ -2852,7 +2852,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STRE
     otMessage *         message;
     otError             error = OT_ERROR_NONE;
 
-    message = otIp6NewMessage(mInstance, false);
+    message = otIp6NewMessage(mInstance, false, OT_MESSAGE_PRIORITY_NORMAL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));

@@ -40,16 +40,21 @@
 
 using namespace ot;
 
-otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
+otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetIp6().GetUdp().NewMessage(0);
+    Message * message;
+
+    VerifyOrExit(aPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
+
+    message = instance.GetIp6().GetUdp().NewMessage(0, static_cast<uint8_t>(aPriority));
 
     if (message)
     {
         message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
     }
 
+exit:
     return message;
 }
 

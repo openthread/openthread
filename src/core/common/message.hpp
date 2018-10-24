@@ -229,10 +229,10 @@ public:
 
     enum
     {
-        kPriorityLow    = 0, ///< Low priority level.
-        kPriorityNormal = 1, ///< Normal priority level.
-        kPriorityHigh   = 2, ///< High priority level.
-        kPriorityNet    = 3, ///< Network Control priority level.
+        kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
+        kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
+        kPriorityHigh   = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };

@@ -98,13 +98,14 @@ typedef struct otUdpSocket
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
+ * @param[in]  aPriority             The message priority level.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  *
  */
-otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
 
 /**
  * Open a UDP/IPv6 socket.

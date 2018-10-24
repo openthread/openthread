@@ -194,16 +194,21 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     return error;
 }
 
-otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
+otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetMessagePool().New(Message::kTypeIp6, 0);
+    Message * message;
+
+    VerifyOrExit(aPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
+
+    message = instance.GetMessagePool().New(Message::kTypeIp6, 0, static_cast<uint8_t>(aPriority));
 
     if (message)
     {
         message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
     }
 
+exit:
     return message;
 }
 

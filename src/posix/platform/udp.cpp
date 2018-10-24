@@ -413,7 +413,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
                 continue;
             }
 
-            message = otUdpNewMessage(aInstance, false);
+            message = otUdpNewMessage(aInstance, false, OT_MESSAGE_PRIORITY_NORMAL);
 
             if (message == NULL)
             {
