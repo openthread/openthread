@@ -1309,6 +1309,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
     Lowpan::FragmentHeader fragmentHeader;
     Message *              message = NULL;
     int                    headerLength;
+    uint8_t                priority;
 
     // Check the fragment header
     VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
@@ -1317,7 +1318,8 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
+        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
@@ -1492,12 +1494,14 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
     otError      error   = OT_ERROR_NONE;
     Message *    message = NULL;
     int          headerLength;
+    uint8_t      priority;
 
 #if OPENTHREAD_FTD
     UpdateRoutes(aFrame, aFrameLength, aMacSource, aMacDest);
 #endif
 
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
+    SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL,
                  error = OT_ERROR_NO_BUFS);
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     message->SetPanId(aLinkInfo.mPanId);
@@ -1550,6 +1554,46 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
     }
 
     return netif.GetIp6().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
+}
+
+otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
+                                        uint8_t             aFrameLength,
+                                        const Mac::Address &aMacSource,
+                                        const Mac::Address &aMacDest,
+                                        uint8_t &           aPriority)
+{
+    otError        error = OT_ERROR_NONE;
+    Ip6::Header    ip6Header;
+    Ip6::UdpHeader udpHeader;
+    uint8_t        headerLength;
+    bool           nextHeaderCompressed;
+
+    SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
+                                              nextHeaderCompressed));
+    aPriority = GetNetif().GetIp6().DscpToPriority(ip6Header.GetDscp());
+    VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp);
+
+    aFrame += headerLength;
+    aFrameLength -= headerLength;
+
+    if (nextHeaderCompressed)
+    {
+        VerifyOrExit(GetNetif().GetLowpan().DecompressUdpHeader(udpHeader, aFrame, aFrameLength) >= 0);
+    }
+    else
+    {
+        memcpy(&udpHeader, aFrame, sizeof(Ip6::UdpHeader));
+    }
+
+    if (udpHeader.GetDestinationPort() == Mle::kUdpPort ||
+        udpHeader.GetDestinationPort() == OPENTHREAD_CONFIG_JOINER_UDP_PORT ||
+        udpHeader.GetDestinationPort() == kCoapUdpPort)
+    {
+        aPriority = Message::kPriorityNet;
+    }
+
+exit:
+    return error;
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

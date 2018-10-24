@@ -336,6 +336,12 @@ private:
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void        ScheduleTransmissionTask(void);
 
+    otError GetFramePriority(uint8_t *           aFrame,
+                             uint8_t             aFrameLength,
+                             const Mac::Address &aMacSource,
+                             const Mac::Address &aMacDest,
+                             uint8_t &           aPriority);
+
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
     void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, otError aError);
