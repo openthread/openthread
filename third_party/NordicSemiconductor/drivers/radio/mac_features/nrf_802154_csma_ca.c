@@ -48,6 +48,8 @@
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
+#if NRF_802154_CSMA_CA_ENABLED
+
 static uint8_t m_nb;  ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
 static uint8_t m_be;  ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
 
@@ -252,3 +254,4 @@ bool nrf_802154_csma_ca_tx_started_hook(const uint8_t * p_frame)
     return true;
 }
 
+#endif // NRF_802154_CSMA_CA_ENABLED

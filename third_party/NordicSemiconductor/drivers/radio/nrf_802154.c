@@ -191,7 +191,7 @@ uint8_t nrf_802154_ccaedthres_from_dbm_calculate(int8_t dbm)
 
 uint32_t nrf_802154_first_symbol_timestamp_get(uint32_t end_timestamp, uint8_t psdu_length)
 {
-    uint32_t frame_symbols = PHY_SHR_DURATION;
+    uint32_t frame_symbols = PHY_SHR_SYMBOLS;
     frame_symbols += (PHR_SIZE + psdu_length) * PHY_SYMBOLS_PER_OCTET;
 
     return end_timestamp - (frame_symbols * PHY_US_PER_SYMBOL);

@@ -33,6 +33,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include "nrf.h"
 
 /**
  * @defgroup nrf_802154_utils Utils definitions used in the 802.15.4 driver.
@@ -136,6 +137,19 @@ static inline uint64_t NRF_802154_US_TO_RTC_TICKS(uint64_t time)
     result += u1;
 
     return result;
+}
+
+/**@brief Checks if the provided interrupt is currently enabled.
+ *
+ * @note This function is valid only for ARM Cortex-M4 core.
+ *
+ * @params IRQn  Interrupt number.
+ *
+ * @returns  Zero if interrupt is disabled, non-zero value otherwise.
+ */
+static inline uint32_t nrf_is_nvic_irq_enabled(IRQn_Type IRQn)
+{
+    return (NVIC->ISER[(((uint32_t)(int32_t)IRQn) >> 5UL)]) & ((uint32_t)(1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL)));
 }
 
 /**
