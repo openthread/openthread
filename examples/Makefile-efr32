@@ -60,9 +60,10 @@ AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST)
 
 #
 # Differentiate between boards
-# - BRD4304A / SLWSTK6000B / MGM12P Module
-# - BRD4161A / SLWSTK6000B / Wireless Starter Kit
-# - BRD4166A / SLTB004A / Thunderboard Sense 2
+# - BRD4304A / SLWSTK6000B / MGM12P Module / 2.4GHz@19dBm
+# - BRD4161A / SLWSTK6000B / Wireless Starter Kit / 2.4GHz@19dBm
+# - BRD4166A / SLTB004A / Thunderboard Sense 2 / 2.4GHz@10dBm
+# - BRD4170A / SLWSTK6000B / Multiband Wireless Starter Kit / 2.4GHz@19dBm, 915MHz@19dBm, 868MHz@19dBm
 #
 ifeq ($(BOARD),BRD4304A)
 MCU = EFR32MG12P432F1024GM48
@@ -73,7 +74,11 @@ else
 ifeq ($(BOARD),BRD4166A)
 MCU = EFR32MG12P332F1024GL125
 else
-$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A or BRD4166A) )
+ifeq ($(BOARD),BRD4170A)
+MCU = EFR32MG12P433F1024GM68
+else
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A, BRD4166A or BRD4170A))
+endif
 endif
 endif
 endif
