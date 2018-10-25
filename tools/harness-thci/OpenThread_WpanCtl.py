@@ -222,7 +222,7 @@ class OpenThread_WpanCtl(IThci):
 
             line = None
             response = []
-            retry_times = 10
+            retry_times = 20
             stdout_lines = []
             stderr_lines = []
             if self._is_net:
