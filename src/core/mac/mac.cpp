@@ -946,6 +946,35 @@ void Mac::SendBeacon(Frame &aFrame)
     LogBeacon("Sending", *beaconPayload);
 }
 
+bool Mac::ShouldSendBeacon(void) const
+{
+    bool shouldSend = false;
+
+    VerifyOrExit(mEnabled);
+
+    shouldSend = IsBeaconEnabled();
+
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+    if (!shouldSend)
+    {
+        // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
+        // the device should transmit IEEE 802.15.4 Beacons in response
+        // to IEEE 802.15.4 Beacon Requests even while the device is not
+        // router capable and detached (i.e., `IsBeaconeEnabled()` is
+        // false) but only if it is in joinable state (unsecure port
+        // list is not empty).
+
+        uint8_t numUnsecurePorts;
+
+        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+        shouldSend = (numUnsecurePorts != 0);
+    }
+#endif
+
+exit:
+    return shouldSend;
+}
+
 void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
 {
     uint32_t       frameCounter = 0;
@@ -2198,11 +2227,7 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         mCounters.mRxBeaconRequest++;
         otLogInfoMac("Received Beacon Request");
 
-        if (mEnabled && (mBeaconsEnabled
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-                         || IsBeaconJoinable()
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-                             ))
+        if (ShouldSendBeacon())
         {
             StartOperation(kOperationTransmitBeacon);
         }
@@ -2288,27 +2313,6 @@ int8_t Mac::GetNoiseFloor(void)
 {
     return otPlatRadioGetReceiveSensitivity(&GetInstance());
 }
-
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-bool Mac::IsBeaconJoinable(void)
-{
-    uint8_t numUnsecurePorts;
-    bool    joinable = false;
-
-    GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
-
-    if (numUnsecurePorts)
-    {
-        joinable = true;
-    }
-    else
-    {
-        joinable = false;
-    }
-
-    return joinable;
-}
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
 
 const char *Mac::OperationToString(Operation aOperation)
 {
