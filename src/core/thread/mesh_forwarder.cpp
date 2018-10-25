@@ -58,8 +58,6 @@ namespace ot {
 
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this)
-    , mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this)
     , mDiscoverTimer(aInstance, &MeshForwarder::HandleDiscoverTimer, this)
     , mReassemblyTimer(aInstance, &MeshForwarder::HandleReassemblyTimer, this)
     , mMessageNextOffset(0)
@@ -88,7 +86,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mDataPollManager(aInstance)
 {
     mFragTag = Random::GetUint16();
-    GetNetif().GetMac().RegisterReceiver(mMacReceiver);
 
     mIpCounters.mTxSuccess = 0;
     mIpCounters.mRxSuccess = 0;
@@ -191,7 +188,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
         mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsDirect;
         mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesDirect;
-        GetNetif().GetMac().SendFrameRequest(mMacSender);
+        GetNetif().GetMac().SendFrameRequest();
         ExitNow();
     }
 
@@ -508,11 +505,6 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
 
 exit:
     return error;
-}
-
-otError MeshForwarder::HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame)
-{
-    return aSender.GetOwner<MeshForwarder>().HandleFrameRequest(aFrame);
 }
 
 otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
@@ -997,11 +989,6 @@ otError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     return OT_ERROR_NONE;
 }
 
-void MeshForwarder::HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError)
-{
-    aSender.GetOwner<MeshForwarder>().HandleSentFrame(aFrame, aError);
-}
-
 void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 {
     ThreadNetif &netif = GetNetif();
@@ -1210,11 +1197,6 @@ void MeshForwarder::HandleDiscoverComplete(void)
     mScanning = false;
     netif.GetMle().HandleDiscoverComplete();
     mDiscoverTimer.Stop();
-}
-
-void MeshForwarder::HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame)
-{
-    aReceiver.GetOwner<MeshForwarder>().HandleReceivedFrame(aFrame);
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
@@ -1568,11 +1550,6 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
     }
 
     return netif.GetIp6().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
-}
-
-void MeshForwarder::HandleDataPollTimeout(Mac::Receiver &aReceiver)
-{
-    aReceiver.GetOwner<MeshForwarder>().GetDataPollManager().HandlePollTimeout();
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

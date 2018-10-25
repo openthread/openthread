@@ -434,7 +434,7 @@ otError MeshForwarder::GetIndirectTransmission(void)
 
         mIndirectStartingChild = &child;
 
-        netif.GetMac().SendFrameRequest(mMacSender);
+        netif.GetMac().SendFrameRequest();
         ExitNow(error = OT_ERROR_NONE);
     }
 
