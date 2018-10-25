@@ -44,6 +44,9 @@
 #include "em_core.h"
 #include "rail.h"
 
+#define XTAL_ACCURACY 200
+#define US_IN_MS 1000
+
 static uint32_t sTimerHi   = 0;
 static uint32_t sTimerLo   = 0;
 static uint32_t sAlarmT0   = 0;
@@ -54,10 +57,10 @@ void efr32AlarmInit(void)
 {
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
+uint64_t otPlatTimeGet(void)
 {
     uint32_t timer_lo;
-    uint32_t timer_ms;
+    uint64_t timer_us;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
@@ -71,11 +74,21 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
     sTimerLo = timer_lo;
 
-    timer_ms = (((uint64_t)sTimerHi << 32) | sTimerLo) / 1000;
+    timer_us = (((uint64_t)sTimerHi << 32) | sTimerLo);
 
     CORE_EXIT_CRITICAL();
 
-    return timer_ms;
+    return timer_us;
+}
+
+uint32_t otPlatAlarmMilliGetNow(void)
+{
+    return otPlatTimeGet() / US_IN_MS;
+}
+
+uint32_t otPlatTimeGetXtalAccuracy(void)
+{
+    return XTAL_ACCURACY;
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
