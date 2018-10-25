@@ -438,7 +438,8 @@ python --version || die
         --enable-channel-manager            \
         --enable-channel-monitor            \
         --disable-docs                      \
-        --disable-tests || die
+        --disable-tests                     \
+        --with-vendor-extension=./src/core/common/extension_example.cpp || die
     make -j 8 || die
 
     git checkout -- . || die

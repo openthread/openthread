@@ -1068,6 +1068,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to use diagnostics module])
 
 #
+# Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
+#
+
+AC_ARG_WITH(
+    [vendor-extension],
+    [AS_HELP_STRING([--with-vendor-extension=<VENDOR_EXT.CPP>],[Specify a C++ source file built as part of OpenThread core library. @<:@default=none@:>@.])],
+    [
+        if test "${withval}" = "no"
+        then OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
+        elif test '!' -f "${withval}"
+        then AC_MSG_ERROR([Can't open ${withval} for --with-vendor-extension])
+        else
+            OPENTHREAD_ENABLE_VENDOR_EXTENSION=1
+
+            # Get the absolute path.
+            OPENTHREAD_VENDOR_EXTENSION_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
+        fi
+    ],
+    [
+        OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
+        with_vendor_extension=none
+    ])
+
+AC_MSG_CHECKING([for vendor extension])
+AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
+AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_VENDOR_EXTENSION],[${OPENTHREAD_ENABLE_VENDOR_EXTENSION}],[Define to 1 if using vendor extension])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_VENDOR_EXTENSION}" = "1"])
+
+#
 # Legacy Network
 #
 
@@ -1833,6 +1863,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
+  OpenThread Vendor Extension Source        : ${with_vendor_extension}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
