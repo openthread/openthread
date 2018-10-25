@@ -145,7 +145,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Header::Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
+    Type GetType(void) const { return static_cast<Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
 
     /**
      * This method sets the Type value.
