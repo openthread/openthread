@@ -123,27 +123,21 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         controlLength += CMSG_SPACE(sizeof(int));
     }
 
+    if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
+        memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
     {
-        struct in6_pktinfo *pktinfo = NULL;
+        struct in6_pktinfo &pktinfo = *reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_PKTINFO;
-        cmsg->cmsg_len   = CMSG_LEN(sizeof(*pktinfo));
+        cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        pktinfo               = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
-        pktinfo->ipi6_ifindex = (aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD ? sPlatNetifIndex : 0);
+        pktinfo.ipi6_ifindex = (aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD ? sPlatNetifIndex : 0);
 
-        if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
-            memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
-        {
-            memcpy(&pktinfo->ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo->ipi6_addr));
-        }
+        memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
 
-        if (pktinfo->ipi6_ifindex || memcmp(&pktinfo->ipi6_addr, &in6addr_any, sizeof(pktinfo->ipi6_addr)))
-        {
-            controlLength += CMSG_SPACE(sizeof(*pktinfo));
-            cmsg = CMSG_NXTHDR(&msg, cmsg);
-        }
+        controlLength += CMSG_SPACE(sizeof(pktinfo));
+        cmsg = CMSG_NXTHDR(&msg, cmsg);
     }
 
 #ifdef __APPLE__
@@ -196,6 +190,9 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
                 struct in6_pktinfo *pktinfo;
 
                 pktinfo = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsg));
+
+                aMessageInfo.mInterfaceId =
+                    (pktinfo->ipi6_ifindex == sPlatNetifIndex ? static_cast<int8_t>(OT_NETIF_INTERFACE_ID_THREAD) : 0);
                 memcpy(&aMessageInfo.mSockAddr, &pktinfo->ipi6_addr, sizeof(aMessageInfo.mSockAddr));
             }
         }
@@ -378,8 +375,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
             uint16_t      length = sizeof(payload);
 
             memset(&messageInfo, 0, sizeof(messageInfo));
-            messageInfo.mSockPort    = socket->mSockName.mPort;
-            messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+            messageInfo.mSockPort = socket->mSockName.mPort;
 
             if (OT_ERROR_NONE != receivePacket(fd, payload, length, messageInfo))
             {
