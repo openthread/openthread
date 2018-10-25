@@ -82,7 +82,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     MeshCoP::CountTlv        count;
     MeshCoP::PeriodTlv       period;
     MeshCoP::ScanDurationTlv scanDuration;
-    MeshCoP::ChannelMask0Tlv channelMask;
+    MeshCoP::ChannelMaskTlv  channelMask;
     Ip6::MessageInfo         responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
@@ -97,7 +97,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     VerifyOrExit(scanDuration.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid());
+    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
 
     mChannelMask        = channelMask.GetMask();
     mChannelMaskCurrent = mChannelMask;
@@ -184,12 +184,12 @@ exit:
 
 otError EnergyScanServer::SendReport(void)
 {
-    otError                  error = OT_ERROR_NONE;
-    Coap::Header             header;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::EnergyListTlv   energyList;
-    Ip6::MessageInfo         messageInfo;
-    Message *                message;
+    otError                 error = OT_ERROR_NONE;
+    Coap::Header            header;
+    MeshCoP::ChannelMaskTlv channelMask;
+    MeshCoP::EnergyListTlv  energyList;
+    Ip6::MessageInfo        messageInfo;
+    Message *               message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -200,6 +200,7 @@ otError EnergyScanServer::SendReport(void)
                  error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
+    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
     channelMask.SetMask(mChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
 

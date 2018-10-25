@@ -347,7 +347,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     }
     else
     {
-        ChannelMaskTlv channelMask;
+        ChannelMaskBaseTlv channelMask;
         channelMask.Init();
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }

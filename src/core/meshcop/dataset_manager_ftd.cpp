@@ -156,8 +156,8 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     // check channel
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
-        VerifyOrExit(channel.IsValid() && channel.GetChannel() >= OT_RADIO_CHANNEL_MIN &&
-                         channel.GetChannel() <= OT_RADIO_CHANNEL_MAX,
+        VerifyOrExit(channel.IsValid() && channel.GetChannelPage() == OT_RADIO_CHANNEL_PAGE &&
+                         channel.GetChannel() >= OT_RADIO_CHANNEL_MIN && channel.GetChannel() <= OT_RADIO_CHANNEL_MAX,
                      state = StateTlv::kReject);
 
         if (channel.GetChannel() != netif.GetMac().GetPanChannel())
@@ -430,15 +430,16 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ChannelTlv channel;
         channel.Init();
-        channel.SetChannelPage(0);
+        channel.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         channel.SetChannel(aDataset.mChannel);
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
 
     if (aDataset.mComponents.mIsChannelMaskPage0Present)
     {
-        ChannelMask0Tlv channelMask;
+        ChannelMaskTlv channelMask;
         channelMask.Init();
+        channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         channelMask.SetMask(aDataset.mChannelMaskPage0);
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
@@ -661,7 +662,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ChannelTlv tlv;
         tlv.Init();
-        tlv.SetChannelPage(0);
+        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         tlv.SetChannel(netif.GetMac().GetPanChannel());
         dataset.Set(tlv);
     }
@@ -669,8 +670,9 @@ otError ActiveDataset::GenerateLocal(void)
     // channelMask
     if (dataset.Get(Tlv::kChannelMask) == NULL)
     {
-        ChannelMask0Tlv tlv;
+        ChannelMaskTlv tlv;
         tlv.Init();
+        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         tlv.SetMask(netif.GetMac().GetSupportedChannelMask().GetMask());
         dataset.Set(tlv);
     }

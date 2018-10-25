@@ -68,11 +68,12 @@ extern "C" {
 enum
 {
     OT_RADIO_FRAME_MAX_SIZE     = 127,                            ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_CHANNEL_PAGE       = 0,                              ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_MIN        = 11,                             ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_MAX        = 26,                             ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_SUPPORTED_CHANNELS = 0xffff << OT_RADIO_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_SYMBOLS_PER_OCTET  = 2,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_BIT_RATE           = 250000,                         ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
+    OT_RADIO_BIT_RATE           = 250000,                         ///< 2.4 GHz IEEE 802.15.4 (bits per second)
 
     OT_RADIO_BITS_PER_OCTET = 8, ///< Number of bits per octet
     OT_RADIO_SYMBOL_TIME    = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
