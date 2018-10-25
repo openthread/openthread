@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread DNSv6 API.
  */
 
 #include "openthread-core-config.h"
