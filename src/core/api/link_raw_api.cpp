@@ -75,7 +75,7 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat(aInstance, "LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
+    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
 
     otPlatRadioSetPromiscuous(aInstance, aEnable);
 
@@ -89,7 +89,7 @@ otError otLinkRawSleep(otInstance *aInstance)
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat(aInstance, "LinkRaw Sleep");
+    otLogInfoPlat("LinkRaw Sleep");
 
     error = otPlatRadioSleep(aInstance);
 
@@ -99,7 +99,7 @@ exit:
 
 otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
-    otLogInfoPlat(aInstance, "LinkRaw Recv");
+    otLogInfoPlat("LinkRaw Recv");
     return static_cast<Instance *>(aInstance)->GetLinkRaw().Receive(aCallback);
 }
 
@@ -117,7 +117,7 @@ exit:
 
 otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 {
-    otLogInfoPlat(aInstance, "LinkRaw Transmit (%d bytes on channel %d)", aFrame->mLength, aFrame->mChannel);
+    otLogInfoPlat("LinkRaw Transmit (%d bytes on channel %d)", aFrame->mLength, aFrame->mChannel);
     return static_cast<Instance *>(aInstance)->GetLinkRaw().Transmit(aFrame, aCallback);
 }
 

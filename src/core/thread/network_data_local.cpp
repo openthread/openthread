@@ -84,7 +84,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
 
     ClearResubmitDelayTimer();
 
-    otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
+    otDumpDebgNetData("add prefix done", mTlvs, mLength);
 
 exit:
     return error;
@@ -101,7 +101,7 @@ otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
     ClearResubmitDelayTimer();
 
 exit:
-    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
+    otDumpDebgNetData("remove done", mTlvs, mLength);
     return error;
 }
 
@@ -132,7 +132,7 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
 
     ClearResubmitDelayTimer();
 
-    otDumpDebgNetData(GetInstance(), "add route done", mTlvs, mLength);
+    otDumpDebgNetData("add route done", mTlvs, mLength);
     return OT_ERROR_NONE;
 }
 
@@ -147,7 +147,7 @@ otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLengt
     ClearResubmitDelayTimer();
 
 exit:
-    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
+    otDumpDebgNetData("remove done", mTlvs, mLength);
     return error;
 }
 
@@ -194,7 +194,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
 
     ClearResubmitDelayTimer();
 
-    otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
+    otDumpDebgNetData("add service done", mTlvs, mLength);
 
     // exit:
     return error;
@@ -211,7 +211,7 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
     ClearResubmitDelayTimer();
 
 exit:
-    otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+    otDumpDebgNetData("remove service done", mTlvs, mLength);
     return error;
 }
 #endif

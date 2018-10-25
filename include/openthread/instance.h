@@ -357,29 +357,6 @@ OTAPI void OTCALL otInstanceFactoryReset(otInstance *aInstance);
 otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
- * This function returns the current dynamic log level.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns the currently set dynamic log level.
- *
- */
-otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
-
-/**
- * This function sets the dynamic log level.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aLogLevel The dynamic log level.
- *
- * @retval OT_ERROR_NONE               The log level was changed successfully.
- * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is disabled.
- *                                     (see `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
- *
- */
-otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
-
-/**
  * This function gets the OpenThread version string.
  *
  * @returns A pointer to the OpenThread version.

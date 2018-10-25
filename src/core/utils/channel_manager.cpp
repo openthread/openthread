@@ -65,11 +65,11 @@ ChannelManager::ChannelManager(Instance &aInstance)
 
 void ChannelManager::RequestChannelChange(uint8_t aChannel)
 {
-    otLogInfoUtil(GetInstance(), "ChannelManager: Request to change to channel %d with delay %d sec", aChannel, mDelay);
+    otLogInfoUtil("ChannelManager: Request to change to channel %d with delay %d sec", aChannel, mDelay);
 
     if (aChannel == GetInstance().Get<Mac::Mac>().GetPanChannel())
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Already operating on the requested channel %d", aChannel);
+        otLogInfoUtil("ChannelManager: Already operating on the requested channel %d", aChannel);
         ExitNow();
     }
 
@@ -149,8 +149,7 @@ void ChannelManager::PreparePendingDataset(void)
         }
         else
         {
-            otLogInfoUtil(GetInstance(), "ChannelManager: Request to change to channel %d failed. Device is disabled",
-                          mChannel);
+            otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
 
             mState = kStateIdle;
             StartAutoSelectTimer();
@@ -169,7 +168,7 @@ void ChannelManager::PreparePendingDataset(void)
     {
         if (dataset.mActiveTimestamp < pendingActiveTimestamp)
         {
-            otLogInfoUtil(GetInstance(), "ChannelManager: Pending Dataset is valid for change channel to %d", mChannel);
+            otLogInfoUtil("ChannelManager: Pending Dataset is valid for change channel to %d", mChannel);
             mState = kStateSentMgmtPendingDataset;
             mTimer.Start(delayInMs + kChangeCheckWaitInterval);
             ExitNow();
@@ -188,8 +187,7 @@ void ChannelManager::PreparePendingDataset(void)
     {
         if (dataset.mActiveTimestamp >= mActiveTimestamp)
         {
-            otLogInfoUtil(GetInstance(),
-                          "ChannelManager: Canceling channel change to %d since current ActiveDataset is more recent",
+            otLogInfoUtil("ChannelManager: Canceling channel change to %d since current ActiveDataset is more recent",
                           mChannel);
 
             ExitNow();
@@ -213,14 +211,14 @@ void ChannelManager::PreparePendingDataset(void)
 
     if (error == OT_ERROR_NONE)
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Sent PendingDatasetSet to change channel to %d", mChannel);
+        otLogInfoUtil("ChannelManager: Sent PendingDatasetSet to change channel to %d", mChannel);
 
         mState = kStateSentMgmtPendingDataset;
         mTimer.Start(delayInMs + kChangeCheckWaitInterval);
     }
     else
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
+        otLogInfoUtil("ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
                       otThreadErrorToString(error), mChannel, TimerMilli::MsecToSec(kPendingDatasetTxRetryInterval));
 
         mTimer.Start(kPendingDatasetTxRetryInterval);
@@ -240,13 +238,13 @@ void ChannelManager::HandleTimer(void)
     switch (mState)
     {
     case kStateIdle:
-        otLogInfoUtil(GetInstance(), "ChannelManager: Auto-triggered channel select");
+        otLogInfoUtil("ChannelManager: Auto-triggered channel select");
         IgnoreReturnValue(RequestChannelSelect(false));
         StartAutoSelectTimer();
         break;
 
     case kStateSentMgmtPendingDataset:
-        otLogInfoUtil(GetInstance(), "ChannelManager: Timed out waiting for change to %d, trying again.", mChannel);
+        otLogInfoUtil("ChannelManager: Timed out waiting for change to %d, trying again.", mChannel);
         mState = kStateChangeRequested;
 
         // fall through
@@ -270,7 +268,7 @@ void ChannelManager::HandleStateChanged(otChangedFlags aFlags)
     mState = kStateIdle;
     StartAutoSelectTimer();
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Channel successfully changed to %d", mChannel);
+    otLogInfoUtil("ChannelManager: Channel successfully changed to %d", mChannel);
 
 exit:
     return;
@@ -325,8 +323,8 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
 
     if (monitor.GetSampleCount() <= kMinChannelMonitorSampleCount)
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Too few samples (%d <= %d) to select channel",
-                      monitor.GetSampleCount(), kMinChannelMonitorSampleCount);
+        otLogInfoUtil("ChannelManager: Too few samples (%d <= %d) to select channel", monitor.GetSampleCount(),
+                      kMinChannelMonitorSampleCount);
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }
 
@@ -336,10 +334,10 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
     favoredBest   = monitor.FindBestChannels(favoredAndSupported, favoredOccupancy);
     supportedBest = monitor.FindBestChannels(mSupportedChannelMask, supportedOccupancy);
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Best favored %s, occupancy 0x%04x",
-                  favoredBest.ToString().AsCString(), favoredOccupancy);
-    otLogInfoUtil(GetInstance(), "ChannelManager: Best overall %s, occupancy 0x%04x",
-                  supportedBest.ToString().AsCString(), supportedOccupancy);
+    otLogInfoUtil("ChannelManager: Best favored %s, occupancy 0x%04x", favoredBest.ToString().AsCString(),
+                  favoredOccupancy);
+    otLogInfoUtil("ChannelManager: Best overall %s, occupancy 0x%04x", supportedBest.ToString().AsCString(),
+                  supportedOccupancy);
 
     // Prefer favored channels unless there is no favored channel,
     // or the occupancy rate of the best favored channel is worse
@@ -350,8 +348,7 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
     {
         if (!favoredBest.IsEmpty())
         {
-            otLogInfoUtil(GetInstance(),
-                          "ChannelManager: Preferring an unfavored channel due to high occupancy rate diff");
+            otLogInfoUtil("ChannelManager: Preferring an unfavored channel due to high occupancy rate diff");
         }
 
         favoredBest      = supportedBest;
@@ -372,8 +369,8 @@ bool ChannelManager::ShouldAttamptChannelChange(void)
     uint16_t ccaFailureRate = GetInstance().Get<Mac::Mac>().GetCcaFailureRate();
     bool     shouldAttempt  = (ccaFailureRate >= kCcaFailureRateThreshold);
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: CCA-err-rate: 0x%04x %s 0x%04x, selecting channel: %s",
-                  ccaFailureRate, shouldAttempt ? ">=" : "<", kCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
+    otLogInfoUtil("ChannelManager: CCA-err-rate: 0x%04x %s 0x%04x, selecting channel: %s", ccaFailureRate,
+                  shouldAttempt ? ">=" : "<", kCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
 
     return shouldAttempt;
 }
@@ -384,7 +381,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     uint8_t  curChannel, newChannel;
     uint16_t curOccupancy, newOccupancy;
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Request to select channel (skip quality check: %s)",
+    otLogInfoUtil("ChannelManager: Request to select channel (skip quality check: %s)",
                   aSkipQualityCheck ? "yes" : "no");
 
     VerifyOrExit(GetInstance().Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
@@ -398,12 +395,12 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     if (newChannel == curChannel)
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Already on best possible channel %d", curChannel);
+        otLogInfoUtil("ChannelManager: Already on best possible channel %d", curChannel);
         ExitNow();
     }
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Cur channel %d, occupancy 0x%04x - Best channel %d, occupancy 0x%04x",
-                  curChannel, curOccupancy, newChannel, newOccupancy);
+    otLogInfoUtil("ChannelManager: Cur channel %d, occupancy 0x%04x - Best channel %d, occupancy 0x%04x", curChannel,
+                  curOccupancy, newChannel, newOccupancy);
 
     // Switch only if new channel's occupancy rate is better than current
     // channel's occupancy rate by threshold `kThresholdToChangeChannel`.
@@ -411,7 +408,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     if ((newOccupancy >= curOccupancy) ||
         (static_cast<uint16_t>(curOccupancy - newOccupancy) < kThresholdToChangeChannel))
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Occupancy rate diff too small to change channel");
+        otLogInfoUtil("ChannelManager: Occupancy rate diff too small to change channel");
         ExitNow();
     }
 
@@ -421,7 +418,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoUtil(GetInstance(), "ChannelManager: Request to select better channel failed, error: %s",
+        otLogInfoUtil("ChannelManager: Request to select better channel failed, error: %s",
                       otThreadErrorToString(error));
     }
 
@@ -432,7 +429,7 @@ exit:
 
 otError ChannelManager::RequestChannelSelect(bool)
 {
-    otLogInfoUtil(GetInstance(), "ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
+    otLogInfoUtil("ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
     return OT_ERROR_DISABLED_FEATURE;
 }
 
@@ -487,15 +484,14 @@ void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {
     mSupportedChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Supported channels: %s",
-                  mSupportedChannelMask.ToString().AsCString());
+    otLogInfoUtil("ChannelManager: Supported channels: %s", mSupportedChannelMask.ToString().AsCString());
 }
 
 void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 {
     mFavoredChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
 
-    otLogInfoUtil(GetInstance(), "ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
+    otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
 }
 
 } // namespace Utils

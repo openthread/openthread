@@ -51,7 +51,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     Instance *instance;
 
     instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
-    otLogInfoApi(*instance, "otInstance Initialized");
+    otLogInfoApi("otInstance Initialized");
 
     return instance;
 }
@@ -116,39 +116,6 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
     return instance.ErasePersistentInfo();
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-
-otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
-{
-    otLogLevel logLevel;
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    logLevel = instance.GetDynamicLogLevel();
-#else
-    logLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-    OT_UNUSED_VARIABLE(aInstance);
-#endif
-
-    return logLevel;
-}
-
-otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
-{
-    otError error = OT_ERROR_NONE;
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.SetDynamicLogLevel(aLogLevel);
-#else
-    error = OT_ERROR_DISABLED_FEATURE;
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aLogLevel);
-#endif
-
-    return error;
-}
 
 const char *otGetVersionString(void)
 {

@@ -459,7 +459,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent dataset set request to leader");
+    otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
 
@@ -588,7 +588,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent dataset get request");
+    otLogInfoMeshCoP("sent dataset get request");
 
 exit:
 
@@ -621,7 +621,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &    aRequestHeader,
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent dataset set response");
+    otLogInfoMeshCoP("sent dataset set response");
 
 exit:
 
@@ -742,7 +742,7 @@ otError ActiveDataset::GenerateLocal(void)
     SuccessOrExit(error = mLocal.Set(dataset));
     Restore();
 
-    otLogInfoMeshCoP(GetInstance(), "Generated local dataset");
+    otLogInfoMeshCoP("Generated local dataset");
 
 exit:
     return error;

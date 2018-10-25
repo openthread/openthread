@@ -77,7 +77,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogInfoPlat(&mInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
+    otLogInfoPlat("LinkRaw Enabled=%d", aEnabled ? 1 : 0);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!static_cast<Instance &>(mInstance).GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
@@ -214,12 +214,12 @@ void LinkRaw::InvokeReceiveDone(otRadioFrame *aFrame, otError aError)
     {
         if (aError == OT_ERROR_NONE)
         {
-            otLogInfoPlat(&mInstance, "LinkRaw Invoke Receive Done (%d bytes)", aFrame->mLength);
+            otLogInfoPlat("LinkRaw Invoke Receive Done (%d bytes)", aFrame->mLength);
             mReceiveDoneCallback(&mInstance, aFrame, aError);
         }
         else
         {
-            otLogWarnPlat(&mInstance, "LinkRaw Invoke Receive Done (err=0x%x)", aError);
+            otLogWarnPlat("LinkRaw Invoke Receive Done (err=0x%x)", aError);
         }
     }
 }
@@ -258,7 +258,7 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 
 void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    otLogDebgPlat(&mInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
+    otLogDebgPlat("LinkRaw Transmit Done (err=0x%x)", aError);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     mTimer.Stop();
@@ -320,11 +320,11 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
     {
         if (aError == OT_ERROR_NONE)
         {
-            otLogInfoPlat(&mInstance, "LinkRaw Invoke Transmit Done");
+            otLogInfoPlat("LinkRaw Invoke Transmit Done");
         }
         else
         {
-            otLogWarnPlat(&mInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
+            otLogWarnPlat("LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
         }
 
         mTransmitDoneCallback(&mInstance, aFrame, aAckFrame, aError);
@@ -390,7 +390,7 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
     if (static_cast<Mac::Frame *>(aFrame)->GetAckRequest() &&
         !(otPlatRadioGetCaps(&mInstance) & OT_RADIO_CAPS_ACK_TIMEOUT))
     {
-        otLogDebgPlat(&mInstance, "LinkRaw Starting AckTimeout Timer");
+        otLogDebgPlat("LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
         mTimer.Start(Mac::kAckTimeout);
     }
@@ -492,7 +492,7 @@ void LinkRaw::StartCsmaBackoff(void)
     backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
     backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
-    otLogDebgPlat(&mInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
+    otLogDebgPlat("LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonCsmaBackoffComplete;
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

@@ -241,7 +241,7 @@ otError DatasetManager::Register(void)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent dataset to leader");
+    otLogInfoMeshCoP("sent dataset to leader");
 
 exit:
 
@@ -359,7 +359,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &    aRequestHeader,
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent dataset get response");
+    otLogInfoMeshCoP("sent dataset get response");
 
 exit:
 
@@ -490,7 +490,7 @@ void PendingDataset::StartDelayTimer(void)
         }
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
-        otLogInfoMeshCoP(GetInstance(), "delay timer started %d", delay);
+        otLogInfoMeshCoP("delay timer started %d", delay);
     }
 }
 
@@ -520,7 +520,7 @@ void PendingDataset::HandleDelayTimer(void)
         }
     }
 
-    otLogInfoMeshCoP(GetInstance(), "pending delay timer expired");
+    otLogInfoMeshCoP("pending delay timer expired");
 
     dataset.ConvertToActive();
     GetNetif().GetActiveDataset().Set(dataset);
