@@ -28,8 +28,7 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
- *   for OpenThread.
+ *   This file includes posix app compile-time configuration constants for OpenThread core.
  */
 
 #ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
@@ -41,30 +40,12 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX"
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Specify where the log output should go.
- *
- */
-#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
- *
- * Define to 1 if you want to support microsecond timer in platform.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-APP"
 
 /**
  * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
  *
- * Define to 1 if you want to support microsecond timer in platform.
+ * Define as 1 to enable PTY device support in POSIX app.
  *
  */
 #ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
