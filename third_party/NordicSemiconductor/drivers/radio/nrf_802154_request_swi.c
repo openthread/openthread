@@ -44,11 +44,18 @@
 #include "nrf_802154_core.h"
 #include "nrf_802154_critical_section.h"
 #include "nrf_802154_debug.h"
+#include "nrf_802154_utils.h"
 #include "nrf_802154_rx_buffer.h"
 #include "nrf_802154_swi.h"
 #include "hal/nrf_radio.h"
 
 #include <nrf.h>
+
+/** Assert if SWI interrupt is disabled. */
+static inline void assert_interrupt_status(void)
+{
+    assert(nrf_is_nvic_irq_enabled(NRF_802154_SWI_IRQN));
+}
 
 #define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
     bool result = false;                                                                           \
@@ -59,6 +66,7 @@
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
+        assert_interrupt_status();                                                                 \
         func_swi(__VA_ARGS__, &result);                                                            \
     }                                                                                              \
                                                                                                    \
@@ -73,6 +81,7 @@
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
+        assert_interrupt_status();                                                                 \
         func_swi(&result);                                                                         \
     }                                                                                              \
                                                                                                    \

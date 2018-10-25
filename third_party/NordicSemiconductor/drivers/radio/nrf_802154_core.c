@@ -177,12 +177,12 @@ static rx_buffer_t * mp_current_rx_buffer;
 static rx_buffer_t * const mp_current_rx_buffer = &nrf_802154_rx_buffers[0];
 #endif
 
-static uint8_t         m_ack_psdu[ACK_LENGTH + 1]; ///< Ack frame buffer.
-static const uint8_t * mp_tx_data;                 ///< Pointer to data to transmit.
-static uint32_t        m_ed_time_left;             ///< Remaining time of current energy detection procedure [us].
-static uint8_t         m_ed_result;                ///< Result of current energy detection procedure.
+static uint8_t         m_ack_psdu[IMM_ACK_LENGTH + 1]; ///< ACK frame buffer.
+static const uint8_t * mp_tx_data;                     ///< Pointer to the data to transmit.
+static uint32_t        m_ed_time_left;                 ///< Remaining time of the current energy detection procedure [us].
+static uint8_t         m_ed_result;                    ///< Result of the current energy detection procedure.
 
-static volatile radio_state_t m_state;             ///< State of the radio driver
+static volatile radio_state_t m_state; ///< State of the radio driver.
 
 typedef struct
 {
@@ -905,14 +905,26 @@ static bool remaining_timeslot_time_is_enough_for_crit_sect(void)
     return nrf_802154_rsch_timeslot_us_left_get() >= MAX_CRIT_SECT_TIME;
 }
 
+/** Check if critical section can be processed at the moment.
+ *
+ * @note This function returns valid result only inside critical section.
+ *
+ * @retval true   There is enough time in current timeslot or timeslot is denied at the moment.
+ * @retval false  Current timeslot ends too shortly to process critical section inside.
+ */
+static bool critical_section_can_be_processed_now(void)
+{
+    return !timeslot_is_granted() || remaining_timeslot_time_is_enough_for_crit_sect();
+}
+
 /** Enter critical section and verify if there is enough time to complete operations within. */
-static bool critical_section_enter(void)
+static bool critical_section_enter_and_verify_timeslot_length(void)
 {
     bool result = nrf_802154_critical_section_enter();
 
     if (result)
     {
-        if (timeslot_is_granted() && !remaining_timeslot_time_is_enough_for_crit_sect())
+        if (!critical_section_can_be_processed_now())
         {
             result = false;
 
@@ -2679,18 +2691,27 @@ radio_state_t nrf_802154_core_state_get(void)
 
 bool nrf_802154_core_sleep(nrf_802154_term_t term_lvl)
 {
-    bool result = critical_section_enter();
+    bool result = nrf_802154_critical_section_enter();
 
     if (result)
     {
         if ((m_state != RADIO_STATE_SLEEP) && (m_state != RADIO_STATE_FALLING_ASLEEP))
         {
-            result = current_operation_terminate(term_lvl, REQ_ORIG_CORE, true);
-
-            if (result)
+            if (critical_section_can_be_processed_now())
             {
-                state_set(RADIO_STATE_FALLING_ASLEEP);
-                falling_asleep_init();
+                result = current_operation_terminate(term_lvl, REQ_ORIG_CORE, true);
+
+                if (result)
+                {
+                    state_set(RADIO_STATE_FALLING_ASLEEP);
+                    falling_asleep_init();
+                }
+            }
+            else
+            {
+                nrf_radio_reset();
+                state_set(RADIO_STATE_SLEEP);
+                sleep_init();
             }
         }
 
@@ -2705,18 +2726,25 @@ bool nrf_802154_core_receive(nrf_802154_term_t              term_lvl,
                              nrf_802154_notification_func_t notify_function,
                              bool                           notify_abort)
 {
-    bool result = critical_section_enter();
+    bool result = nrf_802154_critical_section_enter();
 
     if (result)
     {
         if ((m_state != RADIO_STATE_RX) && (m_state != RADIO_STATE_TX_ACK))
         {
-            result = current_operation_terminate(term_lvl, req_orig, notify_abort);
-
-            if (result)
+            if (critical_section_can_be_processed_now())
             {
-                state_set(RADIO_STATE_RX);
-                rx_init(true);
+                result = current_operation_terminate(term_lvl, req_orig, notify_abort);
+
+                if (result)
+                {
+                    state_set(RADIO_STATE_RX);
+                    rx_init(true);
+                }
+            }
+            else
+            {
+                result = false;
             }
 
             if (notify_function != NULL)
@@ -2745,7 +2773,7 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
                               bool                           immediate,
                               nrf_802154_notification_func_t notify_function)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {
@@ -2790,7 +2818,7 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
 
 bool nrf_802154_core_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_us)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {
@@ -2812,7 +2840,7 @@ bool nrf_802154_core_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_
 
 bool nrf_802154_core_cca(nrf_802154_term_t term_lvl)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {
@@ -2832,7 +2860,7 @@ bool nrf_802154_core_cca(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_core_continuous_carrier(nrf_802154_term_t term_lvl)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {
@@ -2853,7 +2881,7 @@ bool nrf_802154_core_continuous_carrier(nrf_802154_term_t term_lvl)
 bool nrf_802154_core_notify_buffer_free(uint8_t * p_data)
 {
     rx_buffer_t * p_buffer     = (rx_buffer_t *)p_data;
-    bool          in_crit_sect = critical_section_enter();
+    bool          in_crit_sect = critical_section_enter_and_verify_timeslot_length();
 
     p_buffer->free = true;
 
@@ -2907,7 +2935,7 @@ bool nrf_802154_core_notify_buffer_free(uint8_t * p_data)
 
 bool nrf_802154_core_channel_update(void)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {
@@ -2968,7 +2996,7 @@ bool nrf_802154_core_channel_update(void)
 
 bool nrf_802154_core_cca_cfg_update(void)
 {
-    bool result = critical_section_enter();
+    bool result = critical_section_enter_and_verify_timeslot_length();
 
     if (result)
     {

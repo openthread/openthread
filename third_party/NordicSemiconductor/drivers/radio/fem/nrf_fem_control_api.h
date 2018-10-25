@@ -57,10 +57,10 @@ extern "C" {
 #define NRF_FEM_CONTROL_DEFAULT_LNA_PIN                     27
 
 /** Default PPI channel for pin setting. */
-#define NRF_FEM_CONTROL_DEFAULT_SET_PPI_CHANNEL             18
+#define NRF_FEM_CONTROL_DEFAULT_SET_PPI_CHANNEL             15
 
 /** Default PPI channel for pin clearing. */
-#define NRF_FEM_CONTROL_DEFAULT_CLR_PPI_CHANNEL             19
+#define NRF_FEM_CONTROL_DEFAULT_CLR_PPI_CHANNEL             16
 
 /** Default GPIOTE channel for FEM control. */
 #define NRF_FEM_CONTROL_DEFAULT_LNA_GPIOTE_CHANNEL          6

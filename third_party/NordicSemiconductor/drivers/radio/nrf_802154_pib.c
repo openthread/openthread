@@ -124,7 +124,7 @@ int8_t nrf_802154_pib_tx_power_get(void)
 
 void nrf_802154_pib_tx_power_set(int8_t dbm)
 {
-    const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8, 9};
+    const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8};
     const int8_t highest_value    = allowed_values[(sizeof(allowed_values) / sizeof(allowed_values[0])) - 1];
     if (dbm > highest_value)
     {
