@@ -93,6 +93,27 @@ $ (gdb) c
 
 Note: Support for the "EFR32MG12PxxxF1024" device was added to JLinkGDBServer V6.14d.
 
+Or
+
+Compiled binaries also may be flashed onto the specified EFR32 dev borad using [J-Link Commander][j-link-commander].
+
+[j-link-commander]: https://www.segger.com/products/debug-probes/j-link/tools/j-link-commander/
+
+```bash
+$ cd <path-to-openthread>/output/efr32/bin
+$ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
+$ JLinkExe -device EFR32MG12PxxxF1024 -speed 4000 -if SWD -autoconnect 1 -SelectEmuBySN <SerialNo>
+$ J-Link>loadfile ot-cli-ftd.hex
+$ J-Link>r
+$ J-Link>q
+```
+
+Note: SerialNo is J-Link serial number. Use the following command to get the serial number of the connected J-Link.
+
+```bash
+$ JLinkExe
+```
+
 ## Run the example with EFR32 boards
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).
 2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1).
