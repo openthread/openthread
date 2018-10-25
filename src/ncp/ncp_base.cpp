@@ -290,6 +290,10 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
     mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
     mUpdateChangedPropsTask.Post();
+
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    aInstance->GetExtension().SignalNcpInit(*this);
+#endif
 }
 
 NcpBase *NcpBase::GetNcpInstance(void)
