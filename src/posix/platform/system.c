@@ -46,6 +46,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
 uint64_t gNodeId = 0;
 
@@ -55,29 +56,34 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
-            "    -s  --time-speed factor     Time speed up factor.\n"
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
+            "        --radio-version         Print radio firmware version\n"
+            "    -s  --time-speed factor     Time speed up factor.\n"
             "    -h  --help                  Display this usage information.\n",
             aProgramName);
     exit(aExitCode);
 }
 
-void otSysInit(int aArgCount, char *aArgVector[])
+otInstance *otSysInit(int aArgCount, char *aArgVector[])
 {
-    uint32_t    speedUpFactor = 1;
-    bool        isDryRun      = false;
-    const char *radioFile     = NULL;
-    const char *radioConfig   = "";
+    const char *radioFile         = NULL;
+    const char *radioConfig       = "";
+    otInstance *instance          = NULL;
+    uint32_t    speedUpFactor     = 1;
+    bool        isDryRun          = false;
+    bool        printRadioVersion = false;
 
     while (true)
     {
+        int                 index = 0;
         int                 option;
         const struct option options[] = {{"dry-run", no_argument, NULL, 'n'},
+                                         {"radio-version", no_argument, NULL, 0},
                                          {"help", no_argument, NULL, 'h'},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {0, 0, 0, 0}};
 
-        option = getopt_long(aArgCount, aArgVector, "hns:", options, NULL);
+        option = getopt_long(aArgCount, aArgVector, "hns:", options, &index);
 
         if (option == -1)
         {
@@ -104,6 +110,12 @@ void otSysInit(int aArgCount, char *aArgVector[])
             }
             break;
         }
+        case 0:
+            if (!strcmp(options[index].name, "radio-version"))
+            {
+                printRadioVersion = true;
+            }
+            break;
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -136,10 +148,20 @@ void otSysInit(int aArgCount, char *aArgVector[])
     platformUdpInit();
 #endif
 
+    instance = otInstanceInitSingle();
+    assert(instance);
+
+    if (printRadioVersion)
+    {
+        printf("%s\n", otPlatRadioGetVersionString(instance));
+    }
+
     if (isDryRun)
     {
         exit(OT_EXIT_SUCCESS);
     }
+
+    return instance;
 }
 
 void otSysDeinit(void)
