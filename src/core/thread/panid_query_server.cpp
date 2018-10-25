@@ -141,7 +141,7 @@ otError PanIdQueryServer::SendConflict(void)
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
-    channelMask.SetMask(OT_RADIO_CHANNEL_PAGE);
+    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
     channelMask.SetMask(mChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
 
