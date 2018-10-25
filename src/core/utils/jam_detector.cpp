@@ -75,7 +75,7 @@ otError JamDetector::Start(Handler aHandler, void *aContext)
     mContext = aContext;
     mEnabled = true;
 
-    otLogInfoUtil(GetInstance(), "JamDetector - Started");
+    otLogInfoUtil("JamDetector - Started");
 
     CheckState();
 
@@ -94,7 +94,7 @@ otError JamDetector::Stop(void)
 
     mTimer.Stop();
 
-    otLogInfoUtil(GetInstance(), "JamDetector - Stopped");
+    otLogInfoUtil("JamDetector - Stopped");
 
 exit:
     return error;
@@ -130,7 +130,7 @@ exit:
 otError JamDetector::SetRssiThreshold(int8_t aThreshold)
 {
     mRssiThreshold = aThreshold;
-    otLogInfoUtil(GetInstance(), "JamDetector - RSSI threshold set to %d", mRssiThreshold);
+    otLogInfoUtil("JamDetector - RSSI threshold set to %d", mRssiThreshold);
 
     return OT_ERROR_NONE;
 }
@@ -143,7 +143,7 @@ otError JamDetector::SetWindow(uint8_t aWindow)
     VerifyOrExit(aWindow <= kMaxWindow, error = OT_ERROR_INVALID_ARGS);
 
     mWindow = aWindow;
-    otLogInfoUtil(GetInstance(), "JamDetector - window set to %d", mWindow);
+    otLogInfoUtil("JamDetector - window set to %d", mWindow);
 
 exit:
     return error;
@@ -157,7 +157,7 @@ otError JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
     VerifyOrExit(aBusyPeriod <= mWindow, error = OT_ERROR_INVALID_ARGS);
 
     mBusyPeriod = aBusyPeriod;
-    otLogInfoUtil(GetInstance(), "JamDetector - busy period set to %d", mBusyPeriod);
+    otLogInfoUtil("JamDetector - busy period set to %d", mBusyPeriod);
 
 exit:
     return error;
@@ -267,7 +267,7 @@ void JamDetector::SetJamState(bool aNewState)
     {
         mJamState           = aNewState;
         shouldInvokeHandler = true;
-        otLogInfoUtil(GetInstance(), "JamDetector - jamming %s", mJamState ? "detected" : "cleared");
+        otLogInfoUtil("JamDetector - jamming %s", mJamState ? "detected" : "cleared");
     }
 
     if (shouldInvokeHandler)

@@ -177,7 +177,7 @@ exit:
             message->Free();
         }
 
-        otLogWarnMeshCoP(GetInstance(), "Failed to send CoAP message: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to send CoAP message: %s", otThreadErrorToString(error));
     }
 }
 
@@ -230,7 +230,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(GetInstance(), "Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
+        otLogWarnMeshCoP("Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
                          otThreadErrorToString(aResult));
         forwardContext.ToHeader(header, CoapCodeFromError(error));
         borderAgent.SendErrorMessage(header);
@@ -350,12 +350,12 @@ void BorderAgent::HandleProxyTransmit(const Coap::Header &aHeader, const Message
     }
 
     SuccessOrExit(error = GetInstance().GetIp6().GetUdp().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
-    otLogInfoMeshCoP(GetInstance(), "Proxy transmit sent");
+    otLogInfoMeshCoP("Proxy transmit sent");
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(GetInstance(), "Failed to send proxy stream: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to send proxy stream: %s", otThreadErrorToString(error));
 
         if (message != NULL)
         {
@@ -408,12 +408,12 @@ bool BorderAgent::HandleProxyReceive(const Message &aMessage, const Ip6::Message
 
     SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()));
 
-    otLogInfoMeshCoP(GetInstance(), "Sent to commissioner on %s", OT_URI_PATH_PROXY_RX);
+    otLogInfoMeshCoP("Sent to commissioner on %s", OT_URI_PATH_PROXY_RX);
 
 exit:
     if (message != NULL && error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(GetInstance(), "Failed notify commissioner on %s", OT_URI_PATH_PROXY_RX);
+        otLogWarnMeshCoP("Failed notify commissioner on %s", OT_URI_PATH_PROXY_RX);
         message->Free();
     }
 
@@ -435,7 +435,7 @@ void BorderAgent::HandleRelayReceive(const Coap::Header &aHeader, const Message 
     }
 
     SuccessOrExit(ForwardToCommissioner(header, aMessage));
-    otLogInfoMeshCoP(GetInstance(), "Sent to commissioner on %s", OT_URI_PATH_RELAY_RX);
+    otLogInfoMeshCoP("Sent to commissioner on %s", OT_URI_PATH_RELAY_RX);
 
 exit:
     return;
@@ -456,12 +456,12 @@ otError BorderAgent::ForwardToCommissioner(const Coap::Header &aHeader, const Me
 
     SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()));
 
-    otLogInfoMeshCoP(GetInstance(), "Sent to commissioner");
+    otLogInfoMeshCoP("Sent to commissioner");
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(GetInstance(), "Failed to send to commissioner: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to send to commissioner: %s", otThreadErrorToString(error));
         if (message != NULL)
         {
             message->Free();
@@ -519,13 +519,12 @@ void BorderAgent::HandleRelayTransmit(const Coap::Header &aHeader, const Message
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(borderAgent->GetInstance(), "Sent to joiner router request on %s", OT_URI_PATH_RELAY_TX);
+    otLogInfoMeshCoP("Sent to joiner router request on %s", OT_URI_PATH_RELAY_TX);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(borderAgent->GetInstance(),
-                         "Failed to sent to joiner router request " OT_URI_PATH_RELAY_TX " %s",
+        otLogWarnMeshCoP("Failed to sent to joiner router request " OT_URI_PATH_RELAY_TX " %s",
                          otThreadErrorToString(error));
         if (message != NULL)
         {
@@ -585,12 +584,12 @@ otError BorderAgent::ForwardToLeader(const Coap::Header &    aHeader,
     // HandleCoapResponse is responsible to free this forward context.
     forwardContext = NULL;
 
-    otLogInfoMeshCoP(GetInstance(), "Forwarded request to leader on %s", aPath);
+    otLogInfoMeshCoP("Forwarded request to leader on %s", aPath);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP(GetInstance(), "Failed to forward to leader: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to forward to leader: %s", otThreadErrorToString(error));
 
         if (forwardContext != NULL)
         {
@@ -624,7 +623,7 @@ void BorderAgent::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        otLogInfoMeshCoP(GetInstance(), "Commissioner connected");
+        otLogInfoMeshCoP("Commissioner connected");
         SetState(OT_BORDER_AGENT_STATE_ACTIVE);
         mTimer.Start(kKeepAliveTimeout);
     }
@@ -633,7 +632,7 @@ void BorderAgent::HandleConnected(bool aConnected)
         ThreadNetif &     netif = GetNetif();
         Coap::CoapSecure &coaps = netif.GetCoapSecure();
 
-        otLogInfoMeshCoP(GetInstance(), "Commissioner disconnected");
+        otLogInfoMeshCoP("Commissioner disconnected");
         netif.GetIp6().GetUdp().RemoveReceiver(mProxyReceiver);
         netif.RemoveUnicastAddress(mCommissionerAloc);
         coaps.Stop();
@@ -700,12 +699,12 @@ void BorderAgent::HandleTimeout(void)
     if (coaps.IsConnected())
     {
         error = coaps.Stop();
-        otLogWarnMeshCoP(GetInstance(), "Reset commissioner session: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Reset commissioner session: %s", otThreadErrorToString(error));
     }
     else if (!coaps.IsConnectionActive())
     {
         error = StartCoaps();
-        otLogWarnMeshCoP(GetInstance(), "Restart border agent secure CoAP service: %s", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Restart border agent secure CoAP service: %s", otThreadErrorToString(error));
     }
     else
     {

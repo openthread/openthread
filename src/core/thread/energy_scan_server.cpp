@@ -113,7 +113,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, responseInfo));
-        otLogInfoMeshCoP(GetInstance(), "sent energy scan query response");
+        otLogInfoMeshCoP("sent energy scan query response");
     }
 
 exit:
@@ -213,7 +213,7 @@ otError EnergyScanServer::SendReport(void)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = GetNetif().GetCoap().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent scan results");
+    otLogInfoMeshCoP("sent scan results");
 
 exit:
 

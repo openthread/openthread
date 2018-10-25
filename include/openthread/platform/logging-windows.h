@@ -158,358 +158,358 @@
 // ==API==
 
 // begin_wpp config
-// USEPREFIX (otLogCritApi, "[%p]API%!SPACE!", &CTX);
-// otLogCritApi{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_API}(CTX, MSG, ...);
+// USEPREFIX (otLogCritApi, "API%!SPACE!");
+// otLogCritApi{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_API}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnApi, "[%p]API%!SPACE!", &CTX);
-// otLogWarnApi{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_API}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnApi, "API%!SPACE!");
+// otLogWarnApi{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_API}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteApi, "[%p]API%!SPACE!", &CTX);
-// otLogNoteApi{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_API}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteApi, "API%!SPACE!");
+// otLogNoteApi{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_API}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoApi, "[%p]API%!SPACE!", &CTX);
-// otLogInfoApi{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_API}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoApi, "API%!SPACE!");
+// otLogInfoApi{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_API}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgApi, "[%p]API%!SPACE!", &CTX);
-// otLogDebgApi{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_API}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgApi, "API%!SPACE!");
+// otLogDebgApi{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_API}(MSG, ...);
 // end_wpp
 
 // ==NCP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritNcp, "[%p]NCP%!SPACE!", &CTX);
-// otLogCritNcp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NCP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritNcp, "NCP%!SPACE!");
+// otLogCritNcp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NCP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnNcp, "[%p]NCP%!SPACE!", &CTX);
-// otLogWarnNcp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NCP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnNcp, "NCP%!SPACE!");
+// otLogWarnNcp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NCP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteNcp, "[%p]NCP%!SPACE!", &CTX);
-// otLogNoteNcp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NCP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteNcp, "NCP%!SPACE!");
+// otLogNoteNcp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NCP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoNcp, "[%p]NCP%!SPACE!", &CTX);
-// otLogInfoNcp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NCP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoNcp, "NCP%!SPACE!");
+// otLogInfoNcp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NCP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgNcp, "[%p]NCP%!SPACE!", &CTX);
-// otLogDebgNcp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NCP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgNcp, "NCP%!SPACE!");
+// otLogDebgNcp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NCP}(MSG, ...);
 // end_wpp
 
 // ==MESHCOP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogCritMeshCoP{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMeshCoP, "MESHCOP%!SPACE!");
+// otLogCritMeshCoP{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogWarnMeshCoP{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMeshCoP, "MESHCOP%!SPACE!");
+// otLogWarnMeshCoP{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogNoteMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteMeshCoP, "MESHCOP%!SPACE!");
+// otLogNoteMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogInfoMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMeshCoP, "MESHCOP%!SPACE!");
+// otLogInfoMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogDebgMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMeshCoP, "MESHCOP%!SPACE!");
+// otLogDebgMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogCertMeshCoP, "[%p]MESHCOP%!SPACE!", &CTX);
-// otLogCertMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
+// USEPREFIX (otLogCertMeshCoP, "MESHCOP%!SPACE!");
+// otLogCertMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(MSG, ...);
 // end_wpp
 
 // ==MBEDTLS==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMbedTls, "[%p]MBED%!SPACE!", &CTX);
-// otLogCritMbedTls{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MBEDTLS}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMbedTls, "MBED%!SPACE!");
+// otLogCritMbedTls{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MBEDTLS}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMbedTls, "[%p]MBED%!SPACE!", &CTX);
-// otLogWarnMbedTls{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MBEDTLS}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMbedTls, "MBED%!SPACE!");
+// otLogWarnMbedTls{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MBEDTLS}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteMbedTls, "[%p]MBED%!SPACE!", &CTX);
-// otLogNoteMbedTls{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MBEDTLS}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteMbedTls, "MBED%!SPACE!");
+// otLogNoteMbedTls{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MBEDTLS}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMbedTls, "[%p]MBED%!SPACE!", &CTX);
-// otLogInfoMbedTls{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MBEDTLS}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMbedTls, "MBED%!SPACE!");
+// otLogInfoMbedTls{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MBEDTLS}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMbedTls, "[%p]MBED%!SPACE!", &CTX);
-// otLogDebgMbedTls{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MBEDTLS}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMbedTls, "MBED%!SPACE!");
+// otLogDebgMbedTls{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MBEDTLS}(MSG, ...);
 // end_wpp
 
 // ==MLE==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMle, "[%p]MLE%!SPACE!", &CTX);
-// otLogCritMle{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MLE}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMle, "MLE%!SPACE!");
+// otLogCritMle{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MLE}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMle, "[%p]MLE%!SPACE!", &CTX);
-// otLogWarnMle{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MLE}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMle, "MLE%!SPACE!");
+// otLogWarnMle{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MLE}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMleErr, "[%p]MLE%!SPACE!", &CTX);
-// otLogWarnMleErr{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MLE}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogWarnMleErr, "MLE%!SPACE!");
+// otLogWarnMleErr{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MLE}(EXP, MSG, ...);
 // USESUFFIX(otLogWarnMleErr, ", %!otError!", EXP);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteMle, "[%p]MLE%!SPACE!", &CTX);
-// otLogNoteMle{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MLE}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteMle, "MLE%!SPACE!");
+// otLogNoteMle{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MLE}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMle, "[%p]MLE%!SPACE!", &CTX);
-// otLogInfoMle{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MLE}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMle, "MLE%!SPACE!");
+// otLogInfoMle{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MLE}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMle, "[%p]MLE%!SPACE!", &CTX);
-// otLogDebgMle{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MLE}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMle, "MLE%!SPACE!");
+// otLogDebgMle{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MLE}(MSG, ...);
 // end_wpp
 
 // ==ARP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritArp, "[%p]ARP%!SPACE!", &CTX);
-// otLogCritArp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_ARP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritArp, "ARP%!SPACE!");
+// otLogCritArp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_ARP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnArp, "[%p]ARP%!SPACE!", &CTX);
-// otLogWarnArp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_ARP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnArp, "ARP%!SPACE!");
+// otLogWarnArp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_ARP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteArp, "[%p]ARP%!SPACE!", &CTX);
-// otLogNoteArp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ARP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteArp, "ARP%!SPACE!");
+// otLogNoteArp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ARP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoArp, "[%p]ARP%!SPACE!", &CTX);
-// otLogInfoArp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ARP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoArp, "ARP%!SPACE!");
+// otLogInfoArp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ARP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgArp, "[%p]ARP%!SPACE!", &CTX);
-// otLogDebgArp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_ARP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgArp, "ARP%!SPACE!");
+// otLogDebgArp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_ARP}(MSG, ...);
 // end_wpp
 
 // ==NETD==
 
 // begin_wpp config
-// USEPREFIX (otLogCritNetData, "[%p]NETD%!SPACE!", &CTX);
-// otLogCritNetData{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NETD}(CTX, MSG, ...);
+// USEPREFIX (otLogCritNetData, "NETD%!SPACE!");
+// otLogCritNetData{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NETD}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnNetData, "[%p]NETD%!SPACE!", &CTX);
-// otLogWarnNetData{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NETD}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnNetData, "NETD%!SPACE!");
+// otLogWarnNetData{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NETD}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteNetData, "[%p]NETD%!SPACE!", &CTX);
-// otLogNoteNetData{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NETD}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteNetData, "NETD%!SPACE!");
+// otLogNoteNetData{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NETD}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoNetData, "[%p]NETD%!SPACE!", &CTX);
-// otLogInfoNetData{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NETD}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoNetData, "NETD%!SPACE!");
+// otLogInfoNetData{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NETD}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgNetData, "[%p]NETD%!SPACE!", &CTX);
-// otLogDebgNetData{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NETD}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgNetData, "NETD%!SPACE!");
+// otLogDebgNetData{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NETD}(MSG, ...);
 // end_wpp
 
 // ==ICMP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritIcmp, "[%p]ICMP%!SPACE!", &CTX);
-// otLogCritIcmp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_ICMP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritIcmp, "ICMP%!SPACE!");
+// otLogCritIcmp{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_ICMP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnIcmp, "[%p]ICMP%!SPACE!", &CTX);
-// otLogWarnIcmp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_ICMP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnIcmp, "ICMP%!SPACE!");
+// otLogWarnIcmp{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_ICMP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteIcmp, "[%p]ICMP%!SPACE!", &CTX);
-// otLogNoteIcmp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ICMP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteIcmp, "ICMP%!SPACE!");
+// otLogNoteIcmp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ICMP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoIcmp, "[%p]ICMP%!SPACE!", &CTX);
-// otLogInfoIcmp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ICMP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoIcmp, "ICMP%!SPACE!");
+// otLogInfoIcmp{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_ICMP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgIcmp, "[%p]ICMP%!SPACE!", &CTX);
-// otLogDebgIcmp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_ICMP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgIcmp, "ICMP%!SPACE!");
+// otLogDebgIcmp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_ICMP}(MSG, ...);
 // end_wpp
 
 // ==IPV6==
 
 // begin_wpp config
-// USEPREFIX (otLogCritIp6, "[%p]IP6%!SPACE!", &CTX);
-// otLogCritIp6{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_IPV6}(CTX, MSG, ...);
+// USEPREFIX (otLogCritIp6, "IP6%!SPACE!");
+// otLogCritIp6{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_IPV6}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnIp6, "[%p]IP6%!SPACE!", &CTX);
-// otLogWarnIp6{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_IPV6}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnIp6, "IP6%!SPACE!");
+// otLogWarnIp6{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_IPV6}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteIp6, "[%p]IP6%!SPACE!", &CTX);
-// otLogNoteIp6{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_IPV6}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteIp6, "IP6%!SPACE!");
+// otLogNoteIp6{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_IPV6}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoIp6, "[%p]IP6%!SPACE!", &CTX);
-// otLogInfoIp6{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_IPV6}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoIp6, "IP6%!SPACE!");
+// otLogInfoIp6{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_IPV6}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgIp6, "[%p]IP6%!SPACE!", &CTX);
-// otLogDebgIp6{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_IPV6}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgIp6, "IP6%!SPACE!");
+// otLogDebgIp6{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_IPV6}(MSG, ...);
 // end_wpp
 
 // ==MAC==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogCritMac{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMac, "MAC%!SPACE!");
+// otLogCritMac{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogWarnMac{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMac, "MAC%!SPACE!");
+// otLogWarnMac{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogNoteMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteMac, "MAC%!SPACE!");
+// otLogNoteMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogInfoMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMac, "MAC%!SPACE!");
+// otLogInfoMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogDebgMac{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMac, "MAC%!SPACE!");
+// otLogDebgMac{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMacErr, "[%p]MAC%!SPACE!", &CTX);
-// otLogDebgMacErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogDebgMacErr, "MAC%!SPACE!");
+// otLogDebgMacErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(EXP, MSG, ...);
 // USESUFFIX(otLogDebgMacErr, ", %!otError!", EXP);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogMac, "[%p]MAC%!SPACE!", &CTX);
-// otLogMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogMac, "MAC%!SPACE!");
+// otLogMac{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(EXP, MSG, ...);
 // end_wpp
 
 // ==CORE==
 
 // begin_wpp config
-// USEPREFIX (otLogCritCore, "[%p]CORE%!SPACE!", &CTX);
-// otLogCritCore{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogCritCore, "CORE%!SPACE!");
+// otLogCritCore{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnCore, "[%p]CORE%!SPACE!", &CTX);
-// otLogWarnCore{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnCore, "CORE%!SPACE!");
+// otLogWarnCore{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteCore, "[%p]CORE%!SPACE!", &CTX);
-// otLogNoteCore{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteCore, "CORE%!SPACE!");
+// otLogNoteCore{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoCore, "[%p]CORE%!SPACE!", &CTX);
-// otLogInfoCore{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoCore, "CORE%!SPACE!");
+// otLogInfoCore{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgCore, "[%p]CORE%!SPACE!", &CTX);
-// otLogDebgCore{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgCore, "CORE%!SPACE!");
+// otLogDebgCore{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgCoreErr, "[%p]CORE%!SPACE!", &CTX);
-// otLogDebgCoreErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogDebgCoreErr, "CORE%!SPACE!");
+// otLogDebgCoreErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(EXP, MSG, ...);
 // USESUFFIX(otLogDebgCoreErr, ", %!otError!", EXP);
 // end_wpp
 
 // ==UTIL==
 
 // begin_wpp config
-// USEPREFIX (otLogCritUtil, "[%p]UTIL%!SPACE!", &CTX);
-// otLogCritUtil{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogCritUtil, "UTIL%!SPACE!");
+// otLogCritUtil{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnUtil, "[%p]UTIL%!SPACE!", &CTX);
-// otLogWarnUtil{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnUtil, "UTIL%!SPACE!");
+// otLogWarnUtil{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteUtil, "[%p]UTIL%!SPACE!", &CTX);
-// otLogNoteUtil{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteUtil, "UTIL%!SPACE!");
+// otLogNoteUtil{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoUtil, "[%p]UTIL%!SPACE!", &CTX);
-// otLogInfoUtil{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoUtil, "UTIL%!SPACE!");
+// otLogInfoUtil{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgUtil, "[%p]UTIL%!SPACE!", &CTX);
-// otLogDebgUtil{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgUtil, "UTIL%!SPACE!");
+// otLogDebgUtil{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgUtilErr, "[%p]UTIL%!SPACE!", &CTX);
-// otLogDebgUtilErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogDebgUtilErr, "UTIL%!SPACE!");
+// otLogDebgUtilErr{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MAC}(EXP, MSG, ...);
 // USESUFFIX(otLogDebgUtilErr, ", %!otError!", EXP);
 // end_wpp
 
@@ -517,28 +517,28 @@
 // ==MEM==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMem, "[%p]MEM%!SPACE!", &CTX);
-// otLogCritMem{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MEM}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMem, "MEM%!SPACE!");
+// otLogCritMem{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MEM}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMem, "[%p]MEM%!SPACE!", &CTX);
-// otLogWarnMem{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MEM}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMem, "MEM%!SPACE!");
+// otLogWarnMem{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MEM}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteMem, "[%p]MEM%!SPACE!", &CTX);
-// otLogNoteMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteMem, "MEM%!SPACE!");
+// otLogNoteMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMem, "[%p]MEM%!SPACE!", &CTX);
-// otLogInfoMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMem, "MEM%!SPACE!");
+// otLogInfoMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMem, "[%p]MEM%!SPACE!", &CTX);
-// otLogDebgMem{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MEM}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMem, "MEM%!SPACE!");
+// otLogDebgMem{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MEM}(MSG, ...);
 // end_wpp
 
 // ==DUMP==
@@ -550,94 +550,94 @@
 // ==MEM==
 
 // begin_wpp config
-// USEPREFIX (otLogCritNetDiag, "[%p]NETD%!SPACE!", &CTX);
-// otLogCritNetDiag{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// USEPREFIX (otLogCritNetDiag, "NETD%!SPACE!");
+// otLogCritNetDiag{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_NDIAG}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnNetDiag, "[%p]NETD%!SPACE!", &CTX);
-// otLogWarnNetDiag{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnNetDiag, "NETD%!SPACE!");
+// otLogWarnNetDiag{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_NDIAG}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteNetDiag, "[%p]NETD%!SPACE!", &CTX);
-// otLogNoteNetDiag{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteNetDiag, "NETD%!SPACE!");
+// otLogNoteNetDiag{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NDIAG}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoNetDiag, "[%p]NETD%!SPACE!", &CTX);
-// otLogInfoNetDiag{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoNetDiag, "NETD%!SPACE!");
+// otLogInfoNetDiag{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_NDIAG}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgNetDiag, "[%p]NETD%!SPACE!", &CTX);
-// otLogDebgNetDiag{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgNetDiag, "NETD%!SPACE!");
+// otLogDebgNetDiag{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NDIAG}(MSG, ...);
 // end_wpp
 
 // ==COAP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritCoap, "[%p]COAP%!SPACE!", &CTX);
-// otLogCritCoap{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritCoap, "COAP%!SPACE!");
+// otLogCritCoap{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnCoap, "[%p]COAP%!SPACE!", &CTX);
-// otLogWarnCoap{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnCoap, "COAP%!SPACE!");
+// otLogWarnCoap{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteCoap, "[%p]COAP%!SPACE!", &CTX);
-// otLogNoteCoap{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteCoap, "COAP%!SPACE!");
+// otLogNoteCoap{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoCoap, "[%p]COAP%!SPACE!", &CTX);
-// otLogInfoCoap{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoCoap, "COAP%!SPACE!");
+// otLogInfoCoap{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoCoapErr, "[%p]COAP%!SPACE!", &CTX);
-// otLogInfoCoapErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogInfoCoapErr, "COAP%!SPACE!");
+// otLogInfoCoapErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(EXP, MSG, ...);
 // USESUFFIX(otLogInfoCoapErr, ", %!otError!", EXP);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgCoap, "[%p]COAP%!SPACE!", &CTX);
-// otLogDebgCoap{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgCoap, "COAP%!SPACE!");
+// otLogDebgCoap{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // ==CLI==
 
 // begin_wpp config
-// USEPREFIX (otLogCritCli, "[%p]COAP%!SPACE!", &CTX);
-// otLogCritCli{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritCli, "COAP%!SPACE!");
+// otLogCritCli{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnCli, "[%p]COAP%!SPACE!", &CTX);
-// otLogWarnCli{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnCli, "COAP%!SPACE!");
+// otLogWarnCli{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogNoteCli, "[%p]COAP%!SPACE!", &CTX);
-// otLogNoteCli{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogNoteCli, "COAP%!SPACE!");
+// otLogNoteCli{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoCli, "[%p]COAP%!SPACE!", &CTX);
-// otLogInfoCli{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoCli, "COAP%!SPACE!");
+// otLogInfoCli{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoCliErr, "[%p]COAP%!SPACE!", &CTX);
-// otLogInfoCliErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, EXP, MSG, ...);
+// USEPREFIX (otLogInfoCliErr, "COAP%!SPACE!");
+// otLogInfoCliErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(EXP, MSG, ...);
 // USESUFFIX(otLogInfoCliErr, ", %!otError!", EXP);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgCli, "[%p]COAP%!SPACE!", &CTX);
-// otLogDebgCli{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgCli, "COAP%!SPACE!");
+// otLogDebgCli{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(MSG, ...);
 // end_wpp
 
 // ==FUNC==

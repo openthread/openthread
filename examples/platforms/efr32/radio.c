@@ -192,7 +192,7 @@ void efr32RadioInit(void)
     sTransmitFrame.mLength = 0;
     sTransmitFrame.mPsdu   = sTransmitPsdu;
 
-    otLogInfoPlat(sInstance, "Initialized", NULL);
+    otLogInfoPlat("Initialized", NULL);
 }
 
 void efr32RadioDeinit(void)
@@ -226,7 +226,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "PANID=%X", aPanId);
+    otLogInfoPlat("PANID=%X", aPanId);
 
     sPanId = aPanId;
     status = RAIL_IEEE802154_SetPanId(sRailHandle, aPanId, 0);
@@ -239,8 +239,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5],
-                  aAddress->m8[4], aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
+    otLogInfoPlat("ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
+                  aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
     status = RAIL_IEEE802154_SetLongAddress(sRailHandle, (uint8_t *)aAddress->m8, 0);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -252,7 +252,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ShortAddr=%X", aAddress);
+    otLogInfoPlat("ShortAddr=%X", aAddress);
 
     status = RAIL_IEEE802154_SetShortAddress(sRailHandle, aAddress, 0);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -268,7 +268,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
-    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+    otLogInfoPlat("State=OT_RADIO_STATE_SLEEP", NULL);
     sState = OT_RADIO_STATE_SLEEP;
 
 exit:
@@ -279,7 +279,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     otEXPECT(otPlatRadioIsEnabled(aInstance));
 
-    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_DISABLED", NULL);
+    otLogInfoPlat("State=OT_RADIO_STATE_DISABLED", NULL);
     sState = OT_RADIO_STATE_DISABLED;
 
 exit:
@@ -294,7 +294,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
     otEXPECT_ACTION((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED),
                     error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+    otLogInfoPlat("State=OT_RADIO_STATE_SLEEP", NULL);
     sState = OT_RADIO_STATE_SLEEP;
 
     RAIL_Idle(sRailHandle, RAIL_IDLE, true);
@@ -314,7 +314,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     status = RAIL_StartRx(sRailHandle, aChannel, NULL);
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
-    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_RECEIVE", NULL);
+    otLogInfoPlat("State=OT_RADIO_STATE_RECEIVE", NULL);
     sState                 = OT_RADIO_STATE_RECEIVE;
     sReceiveFrame.mChannel = aChannel;
 
@@ -513,7 +513,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     int8_t  entry = -1;
 
     entry = findSrcMatchAvailEntry(true);
-    otLogDebgPlat(sInstance, "Add ShortAddr entry: %d", entry);
+    otLogDebgPlat("Add ShortAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
@@ -530,7 +530,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     (void)aInstance;
 
     entry = findSrcMatchAvailEntry(false);
-    otLogDebgPlat(sInstance, "Add ExtAddr entry: %d", entry);
+    otLogDebgPlat("Add ExtAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
@@ -547,7 +547,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     (void)aInstance;
 
     entry = findSrcMatchShortEntry(aShortAddress);
-    otLogDebgPlat(sInstance, "Clear ShortAddr entry: %d", entry);
+    otLogDebgPlat("Clear ShortAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
@@ -564,7 +564,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     (void)aInstance;
 
     entry = findSrcMatchExtEntry(aExtAddress);
-    otLogDebgPlat(sInstance, "Clear ExtAddr entry: %d", entry);
+    otLogDebgPlat("Clear ExtAddr entry: %d", entry);
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
@@ -578,7 +578,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ShortAddr entries", NULL);
+    otLogDebgPlat("Clear ShortAddr entries", NULL);
 
     memset(srcMatchShortEntry, 0, sizeof(srcMatchShortEntry));
 }
@@ -587,7 +587,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Clear ExtAddr entries", NULL);
+    otLogDebgPlat("Clear ExtAddr entries", NULL);
 
     memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
@@ -617,7 +617,7 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
     // check the length validity of recv packet
     otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
-    otLogInfoPlat(aInstance, "Received data:%d", length);
+    otLogInfoPlat("Received data:%d", length);
 
     // skip length byte
     assert(packetInfo.firstPortionBytes > 0);
@@ -673,7 +673,7 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
-                otLogInfoPlat(aInstance, "Received %d bytes", sReceiveFrame.mLength);
+                otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
                 otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
             }
         }
@@ -776,7 +776,7 @@ void efr32RadioProcess(otInstance *aInstance)
     {
         if (sTransmitError != OT_ERROR_NONE)
         {
-            otLogDebgPlat(sInstance, "Transmit failed ErrorCode=%d", sTransmitError);
+            otLogDebgPlat("Transmit failed ErrorCode=%d", sTransmitError);
         }
 
         sState = OT_RADIO_STATE_RECEIVE;

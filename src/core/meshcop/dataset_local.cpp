@@ -169,12 +169,12 @@ otError DatasetLocal::Set(const Dataset &aDataset)
     if (aDataset.GetSize() == 0)
     {
         error = GetInstance().GetSettings().DeleteOperationalDataset(IsActive());
-        otLogInfoMeshCoP(GetInstance(), "%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
         error = GetInstance().GetSettings().SaveOperationalDataset(IsActive(), aDataset);
-        otLogInfoMeshCoP(GetInstance(), "%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 
     SuccessOrExit(error);
