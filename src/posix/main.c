@@ -60,7 +60,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 int main(int argc, char *argv[])
 {
-    otInstance *sInstance;
+    otInstance *instance;
 
     if (setjmp(gResetJump))
     {
@@ -71,28 +71,25 @@ int main(int argc, char *argv[])
         execvp(argv[0], argv);
     }
 
-    otSysInit(argc, argv);
-
-    sInstance = otInstanceInitSingle();
-    assert(sInstance);
+    instance = otSysInit(argc, argv);
 
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
-    otNcpInit(sInstance);
+    otNcpInit(instance);
 #elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
-    otCliUartInit(sInstance);
+    otCliUartInit(instance);
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
+    otDiagInit(instance);
 #endif
 
     while (true)
     {
-        otTaskletsProcess(sInstance);
-        otSysProcessDrivers(sInstance);
+        otTaskletsProcess(instance);
+        otSysProcessDrivers(instance);
     }
 
-    otInstanceFinalize(sInstance);
+    otInstanceFinalize(instance);
 
     return 0;
 }

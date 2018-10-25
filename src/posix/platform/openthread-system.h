@@ -50,8 +50,10 @@ extern "C" {
  * @param[in]  argc  Number of arguments in @p argv.
  * @param[in]  argv  Argument vector.
  *
+ * @returns A pointer to the OpenThread instance.
+ *
  */
-void otSysInit(int argc, char *argv[]);
+otInstance *otSysInit(int argc, char *argv[]);
 
 /**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
