@@ -55,6 +55,18 @@ ifeq ($(COVERAGE),1)
 configure_OPTIONS              += --enable-coverage
 endif
 
+ifeq ($(CHANNEL_MANAGER),1)
+configure_OPTIONS              += --enable-channel-manager
+endif
+
+ifeq ($(CHANNEL_MONITOR),1)
+configure_OPTIONS              += --enable-channel-monitor
+endif
+
+ifeq ($(CHILD_SUPERVISION),1)
+configure_OPTIONS              += --enable-child-supervision
+endif
+
 ifeq ($(DEBUG),1)
 configure_OPTIONS              += --enable-debug --enable-optimization=no
 endif
