@@ -70,7 +70,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CMAC_C
 #define MBEDTLS_CTR_DRBG_C
-#define MBEDTLS_DEBUG_C
 #define MBEDTLS_ECJPAKE_C
 #define MBEDTLS_ECP_C
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
