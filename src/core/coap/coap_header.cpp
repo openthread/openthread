@@ -282,10 +282,10 @@ otError Header::AppendObserveOption(uint32_t aObserve)
 
 otError Header::AppendUriPathOptions(const char *aUriPath)
 {
-    otError        error = OT_ERROR_NONE;
-    const char *   cur   = aUriPath;
-    const char *   end;
-    Header::Option coapOption;
+    otError     error = OT_ERROR_NONE;
+    const char *cur   = aUriPath;
+    const char *end;
+    Option      coapOption;
 
     coapOption.mNumber = OT_COAP_OPTION_URI_PATH;
 
@@ -397,7 +397,7 @@ const Header::Option *Header::GetNextOption(void)
     mOption.mLength = optionLength;
     mOption.mValue  = mHeader.mBytes + mNextOptionOffset;
     mNextOptionOffset += optionLength;
-    rval = static_cast<Header::Option *>(&mOption);
+    rval = static_cast<Option *>(&mOption);
 
 exit:
     return rval;
