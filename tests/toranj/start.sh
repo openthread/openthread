@@ -76,13 +76,12 @@ run() {
 }
 
 cd $(dirname $0)
-cd ../..
 
 # On Travis CI, the $BUILD_TARGET is defined as "toranj-test-framework".
 if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
-    coverage=yes
+    coverage_option="--enable-coverage"
 else
-    coverage=no
+    coverage_option=""
 fi
 
 case $TORANJ_POSIX_APP_RCP_MODEL in
@@ -94,75 +93,14 @@ case $TORANJ_POSIX_APP_RCP_MODEL in
         ;;
 esac
 
-configure_options="                \
-    --disable-docs                 \
-    --disable-tests                \
-    --enable-border-router         \
-    --enable-channel-manager       \
-    --enable-channel-monitor       \
-    --enable-child-supervision     \
-    --enable-commissioner          \
-    --enable-coverage=$coverage    \
-    --enable-diag                  \
-    --enable-ftd                   \
-    --enable-jam-detection         \
-    --enable-legacy                \
-    --enable-mac-filter            \
-    --enable-ncp                   \
-    --enable-service               \
-    --with-ncp-bus=uart            \
-    "
-
-cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
-
 if [ "$use_posix_app_with_rcp" = "no" ]; then
-
-    echo "==================================================================================================="
-    echo "Building OpenThread NCP FTD mode with POSIX platform"
-    echo "==================================================================================================="
-
-    ./bootstrap || die
-    ./configure                             \
-        CPPFLAGS="$cppflags_config"         \
-        --with-examples=posix               \
-        $configure_options || die           \
-
-    make -j 8 || die
+    ./build.sh ${coverage_option} ncp || die
 
 else
-
-    echo "===================================================================================================="
-    echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
-    echo "===================================================================================================="
-
-    ./bootstrap || die
-    ./configure                             \
-        CPPFLAGS="$cppflags_config"         \
-        --enable-coverage=${coverage}       \
-        --enable-ncp                        \
-        --with-ncp-bus=uart                 \
-        --enable-radio-only                 \
-        --with-examples=posix               \
-        --disable-docs                      \
-        --disable-tests || die
-
-    make -j 8 || die
-
-    echo "===================================================================================================="
-    echo "Building OpenThread POSIX App NCP"
-    echo "===================================================================================================="
-
-    ./bootstrap || die
-    ./configure                             \
-        CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1" \
-        --enable-posix-app                  \
-        $configure_options || die           \
-
-    make -j 8 || die
-
+    ./build.sh ${coverage_option} rcp || die
+    ./build.sh ${coverage_option} posix-app || die
 fi
 
-cd tests/toranj
 cleanup
 
 run test-001-get-set.py
