@@ -471,10 +471,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
 
-    if (responseHeader.GetResponseCode() != Header::kResponseSuccess)
-    {
-        ExitNow(error = OT_ERROR_FAILED);
-    }
+    VerifyOrExit(responseHeader.GetResponseCode() == Header::kResponseSuccess, error = OT_ERROR_FAILED);
 
     // Parse and check the question section.
     SuccessOrExit(error = CompareQuestions(aMessage, *message, offset));
