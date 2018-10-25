@@ -77,6 +77,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/joiner_api.cpp                             \
     src/core/api/link_api.cpp                               \
     src/core/api/link_raw_api.cpp                           \
+    src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
     src/core/api/netdata_api.cpp                            \
     src/core/api/server_api.cpp                             \
