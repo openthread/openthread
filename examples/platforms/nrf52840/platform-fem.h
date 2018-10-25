@@ -41,8 +41,8 @@
 
 #define PLATFORM_FEM_DEFAULT_PA_PIN                      26  /**< Default Power Amplifier pin. */
 #define PLATFORM_FEM_DEFAULT_LNA_PIN                     27  /**< Default Low Noise Amplifier pin. */
-#define PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL             18  /**< Default PPI channel for pin setting. */
-#define PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL             19  /**< Default PPI channel for pin clearing. */
+#define PLATFORM_FEM_DEFAULT_SET_PPI_CHANNEL             15  /**< Default PPI channel for pin setting. */
+#define PLATFORM_FEM_DEFAULT_CLR_PPI_CHANNEL             16  /**< Default PPI channel for pin clearing. */
 #define PLATFORM_FEM_DEFAULT_TIMER_MATCH_PPI_GROUP       4   /**< Default PPI channel group used to disable timer match PPI. */
 #define PLATFORM_FEM_DEFAULT_RADIO_DISABLED_PPI_GROUP    5   /**< Default PPI channel group used to disable radio disabled PPI. */
 #define PLATFORM_FEM_DEFAULT_LNA_GPIOTE_CHANNEL          6   /**< Default LNA GPIOTE channel for FEM control. */

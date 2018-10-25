@@ -304,7 +304,7 @@ bool nrf_802154_receive(void);
  * Depending on @ref NRF_802154_ACK_TIMEOUT_ENABLED, the radio driver automatically
  * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to
  * wait, the MAC layer is responsible for calling @ref nrf_802154_receive or
- * @ref nrf_802154_sleep after the ACK time-out.
+ * @ref nrf_802154_sleep after the ACK timeout.
  * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted
  * or @ref nrf_802154_transmit_failed.
  *
@@ -345,7 +345,7 @@ bool nrf_802154_transmit_raw(const uint8_t * p_data, bool cca);
  * Depending on @ref NRF_802154_ACK_TIMEOUT_ENABLED, the radio driver automatically
  * stops waiting for an ACK frame or waits indefinitely for an ACK frame. If it is configured to
  * wait, the MAC layer is responsible for calling @ref nrf_802154_receive or
- * @ref nrf_802154_sleep after the ACK time-out.
+ * @ref nrf_802154_sleep after the ACK timeout.
  * The transmission result is reported to the higher layer by calls to @ref nrf_802154_transmitted
  * or @ref nrf_802154_transmit_failed.
  *
@@ -1015,7 +1015,7 @@ void nrf_802154_cca_cfg_get(nrf_802154_cca_cfg_t * p_cca_cfg);
  * @ref nrf_802154_transmit_failed.
  *
  * @note The driver may be configured to automatically time out waiting for an ACK frame depending
- *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is disabled, the CSMA-CA
+ *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK timeout is disabled, the CSMA-CA
  *       procedure does not time out waiting for an ACK frame if a frame with the ACK request bit
  *       set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
  *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer expires,
@@ -1037,7 +1037,7 @@ void nrf_802154_transmit_csma_ca_raw(const uint8_t * p_data);
  * @ref nrf_802154_transmit_failed.
  *
  * @note The driver may be configured to automatically time out waiting for an ACK frame depending
- *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK time-out is disabled, the CSMA-CA
+ *       on @ref NRF_802154_ACK_TIMEOUT_ENABLED. If automatic ACK timeout is disabled, the CSMA-CA
  *       procedure does not time out waiting for an ACK frame if a frame with the ACK request bit
  *       set was transmitted. The MAC layer should manage the timer to time out waiting for the ACK
  *       frame. This timer can be started by @ref nrf_802154_tx_started. When the timer expires,
@@ -1056,19 +1056,18 @@ void nrf_802154_transmit_csma_ca(const uint8_t * p_data, uint8_t length);
 
 /**
  * @}
- * @defgroup nrf_802154_timeout ACK time-out procedure
+ * @defgroup nrf_802154_timeout ACK timeout procedure
  * @{
  */
 #if NRF_802154_ACK_TIMEOUT_ENABLED
 
 /**
- * @brief Set time-out for the ACK time-out feature.
+ * @brief Set timeout for the ACK timeout feature.
  * 
- * A time-out is notified by @ref nrf_802154_transmit_failed.
+ * A timeout is notified by @ref nrf_802154_transmit_failed.
  * 
- * @param[in]  time  Time-out in us. The time-out is started at the beginning of frame transmission
- *                   (after transmission of PHR). A default value is defined in nrf_802154_config.h
- *                   (@ref NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT).
+ * @param[in]  time  Timeout in us.
+ *                   A default value is defined in nrf_802154_config.h.
  */
 void nrf_802154_ack_timeout_set(uint32_t time);
 

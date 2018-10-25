@@ -89,9 +89,10 @@ static const compare_channel_descriptor_t m_cmp_ch[CHANNEL_CNT] = {{RTC_LP_TIMER
 static uint64_t m_target_times[CHANNEL_CNT]; ///< Target time of given channel [us].
 
 
-static volatile uint32_t m_offset_counter; ///< Counter of RTC overflows, incremented by 2 on each OVERFLOW event.
-static volatile uint8_t  m_mutex;          ///< Mutex for write access to @ref m_offset_counter.
-static volatile bool     m_clock_ready;    ///< Information that LFCLK is ready.
+static volatile uint32_t m_offset_counter;       ///< Counter of RTC overflows, incremented by 2 on each OVERFLOW event.
+static volatile uint8_t  m_mutex;                ///< Mutex for write access to @ref m_offset_counter.
+static volatile bool     m_clock_ready;          ///< Information that LFCLK is ready.
+static volatile uint32_t m_lp_timer_irq_enabled; ///< Information that RTC interrupt was enabled while entering critical section.
 
 static uint32_t overflow_counter_get(void);
 
@@ -390,6 +391,7 @@ void nrf_802154_lp_timer_init(void)
     m_offset_counter                 = 0;
     m_target_times[LP_TIMER_CHANNEL] = 0;
     m_clock_ready                    = false;
+    m_lp_timer_irq_enabled           = 0;
 
     // Setup low frequency clock.
     nrf_802154_clock_lfclk_start();
@@ -439,12 +441,21 @@ void nrf_802154_lp_timer_deinit(void)
 
 void nrf_802154_lp_timer_critical_section_enter(void)
 {
+    if (nrf_is_nvic_irq_enabled(NRF_802154_RTC_IRQN))
+    {
+        m_lp_timer_irq_enabled = 1;
+    }
+
     NVIC_DisableIRQ(NRF_802154_RTC_IRQN);
 }
 
 void nrf_802154_lp_timer_critical_section_exit(void)
 {
-    NVIC_EnableIRQ(NRF_802154_RTC_IRQN);
+    if (m_lp_timer_irq_enabled)
+    {
+        m_lp_timer_irq_enabled = 0;
+        NVIC_EnableIRQ(NRF_802154_RTC_IRQN);
+    }
 }
 
 uint32_t nrf_802154_lp_timer_time_get(void)

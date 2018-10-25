@@ -65,7 +65,7 @@ typedef uint8_t nrf_802154_tx_error_t;
 #define NRF_802154_TX_ERROR_INVALID_ACK       0x02 //!< Received ACK frame is other than expected.
 #define NRF_802154_TX_ERROR_NO_MEM            0x03 //!< No receive buffer is available to receive an ACK.
 #define NRF_802154_TX_ERROR_TIMESLOT_ENDED    0x04 //!< Radio timeslot ended during transmission procedure.
-#define NRF_802154_TX_ERROR_NO_ACK            0x05 //!< ACK frame was not received during time-out period.
+#define NRF_802154_TX_ERROR_NO_ACK            0x05 //!< ACK frame was not received during timeout period.
 #define NRF_802154_TX_ERROR_ABORTED           0x06 //!< Procedure was aborted by another driver operation with FORCE priority.
 #define NRF_802154_TX_ERROR_TIMESLOT_DENIED   0x07 //!< Transmission did not start due to denied timeslot request.
 

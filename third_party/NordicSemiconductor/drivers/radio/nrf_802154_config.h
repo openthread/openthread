@@ -426,14 +426,14 @@ extern "C" {
 
 /**
  * @}
- * @defgroup nrf_802154_config_timeout ACK time-out feature configuration
+ * @defgroup nrf_802154_config_timeout ACK timeout feature configuration
  * @{
  */
 
 /**
  * @def NRF_802154_ACK_TIMEOUT_ENABLED
  *
- * If the ACK time-out feature should be enabled in the driver.
+ * If the ACK timeout feature should be enabled in the driver.
  *
  */
 #ifndef NRF_802154_ACK_TIMEOUT_ENABLED
@@ -443,11 +443,21 @@ extern "C" {
 /**
  * @def NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
  *
- * Default time-out in us for the ACK time-out feature.
+ * Default timeout in us for the ACK timeout feature.
  *
  */
 #ifndef NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
 #define NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT 7000
+#endif
+
+/**
+ * @def NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
+ *
+ * Default time-out in us for the precise ACK time-out feature.
+ *
+ */
+#ifndef NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT
+#define NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT 210
 #endif
 
 /**
@@ -461,7 +471,7 @@ extern "C" {
  *
  * If notifications of started transmissions should be enabled in the driver.
  *
- * @note This feature is enabled by default if the ACK time-out feature or CSMA-CA is enabled.
+ * @note This feature is enabled by default if the ACK timeout feature or CSMA-CA is enabled.
  *       These features depend on notifications of transmission start.
  */
 #ifndef NRF_802154_TX_STARTED_NOTIFY_ENABLED
