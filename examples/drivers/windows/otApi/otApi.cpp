@@ -1506,7 +1506,7 @@ otLinkSetExtendedAddress(
 }
 
 OTAPI 
-const uint8_t *
+const otExtendedPanId *
 OTCALL
 otThreadGetExtendedPanId(
     _In_ otInstance *aInstance
@@ -1515,12 +1515,13 @@ otThreadGetExtendedPanId(
     if (aInstance == nullptr) return nullptr;
 
     otExtendedPanId *Result = (otExtendedPanId*)malloc(sizeof(otExtendedPanId));
-    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, Result) != ERROR_SUCCESS)
+    if (Result == nullptr) return nullptr;
+    if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, Result) != ERROR_SUCCESS)
     {
         free(Result);
         Result = nullptr;
     }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI 
@@ -1528,11 +1529,11 @@ otError
 OTCALL
 otThreadSetExtendedPanId(
     _In_ otInstance *aInstance, 
-    const uint8_t *aExtendedPanId
+    const otExtendedPanId *aExtendedPanId
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, (const otExtendedPanId*)aExtendedPanId));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, aExtendedPanId));
 }
 
 OTAPI 
@@ -1670,7 +1671,7 @@ otThreadGetMeshLocalEid(
 }
 
 OTAPI
-const uint8_t *
+const otMeshLocalPrefix *
 OTCALL
 otThreadGetMeshLocalPrefix(
     _In_ otInstance *aInstance
@@ -1684,7 +1685,7 @@ otThreadGetMeshLocalPrefix(
         free(Result);
         Result = nullptr;
     }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI
@@ -1692,11 +1693,11 @@ otError
 OTCALL
 otThreadSetMeshLocalPrefix(
     _In_ otInstance *aInstance, 
-    const uint8_t *aMeshLocalPrefix
+    const otMeshLocalPrefix *aMeshLocalPrefix
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MESH_LOCAL_PREFIX, (const otMeshLocalPrefix*)aMeshLocalPrefix));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MESH_LOCAL_PREFIX, aMeshLocalPrefix));
 }
 
 OTAPI
@@ -1835,6 +1836,42 @@ otBorderRouterGetNextOnMeshPrefix(
     else
     {
         ZeroMemory(aConfig, sizeof(otBorderRouterConfig));
+    }
+
+    return aError;
+}
+
+OTAPI
+otError
+OTCALL
+otBorderRouterGetNextRoute(
+    _In_ otInstance *aInstance,
+    _Inout_ otNetworkDataIterator *aIterator,
+    _Out_ otExternalRouteConfig *aConfig
+    )
+{
+    if (aInstance == nullptr || aConfig == nullptr) return OT_ERROR_INVALID_ARGS;
+
+    BOOLEAN aLocal = TRUE;
+    PackedBuffer3<GUID,BOOLEAN,otNetworkDataIterator> InBuffer(aInstance->InterfaceGuid, aLocal, *aIterator);
+    BYTE OutBuffer[sizeof(uint8_t) + sizeof(otExternalRouteConfig)];
+
+    otError aError =
+        DwordToThreadError(
+            SendIOCTL(
+                aInstance->ApiHandle,
+                IOCTL_OTLWF_OT_NEXT_ROUTE,
+                &InBuffer, sizeof(InBuffer),
+                OutBuffer, sizeof(OutBuffer)));
+
+    if (aError == OT_ERROR_NONE)
+    {
+        memcpy(aIterator, OutBuffer, sizeof(uint8_t));
+        memcpy(aConfig, OutBuffer + sizeof(uint8_t), sizeof(otExternalRouteConfig));
+    }
+    else
+    {
+        ZeroMemory(aConfig, sizeof(otExternalRouteConfig));
     }
 
     return aError;
@@ -2251,13 +2288,14 @@ OTAPI
 otError 
 OTCALL
 otDatasetSendMgmtActiveGet(
-    _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance,
+    const otOperationalDatasetComponents *aDatasetComponents,
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aInstance == nullptr || aDatasetComponents == nullptr) return OT_ERROR_INVALID_ARGS;
     if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
@@ -2266,6 +2304,7 @@ otDatasetSendMgmtActiveGet(
     if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
+    memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDatasetComponents, sizeof(otOperationalDatasetComponents));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
@@ -2284,7 +2323,7 @@ otError
 OTCALL
 otDatasetSendMgmtActiveSet(
     _In_ otInstance *aInstance, 
-    const otOperationalDataset *aDataset, 
+    const otOperationalDataset *aDataset,
     const uint8_t *aTlvs,
     uint8_t aLength
     )
@@ -2313,13 +2352,14 @@ OTAPI
 otError 
 OTCALL
 otDatasetSendMgmtPendingGet(
-    _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance,
+    const otOperationalDatasetComponents *aDatasetComponents,
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aInstance == nullptr || aDatasetComponents == nullptr) return OT_ERROR_INVALID_ARGS;
     if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
@@ -2328,6 +2368,7 @@ otDatasetSendMgmtPendingGet(
     if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
+    memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDatasetComponents, sizeof(otOperationalDatasetComponents));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
@@ -3170,6 +3211,18 @@ otThreadGetRouterIdSequence(
 }
 
 OTAPI
+uint8_t
+OTCALL
+otThreadGetMaxRouterId(
+    _In_ otInstance *aInstance
+    )
+{
+    uint8_t Result = 0;
+    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_ROUTER_ID, &Result);
+    return Result;
+}
+
+OTAPI
 otError
 OTCALL
 otThreadGetRouterInfo(
@@ -3392,7 +3445,7 @@ otThreadErrorToString(
     switch (aError)
     {
     case OT_ERROR_NONE:
-        retval = "None";
+        retval = "OK";
         break;
 
     case OT_ERROR_FAILED:
@@ -3893,6 +3946,7 @@ otJoinerGetId(
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    ZeroMemory(aJoinerId, sizeof(otExtAddress));
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_ID, aJoinerId));
 }
 

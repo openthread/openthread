@@ -161,9 +161,9 @@ void Address::SetIid(const uint8_t *aIid)
     memcpy(mFields.m8 + kInterfaceIdentifierOffset, aIid, kInterfaceIdentifierSize);
 }
 
-void Address::SetIid(const Mac::ExtAddress &aEui64)
+void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aEui64.m8, kInterfaceIdentifierSize);
+    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aExtAddress.m8, kInterfaceIdentifierSize);
     mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
 }
 
@@ -181,20 +181,26 @@ void Address::ToExtAddress(Mac::Address &aMacAddress) const
 
 uint8_t Address::GetScope(void) const
 {
+    uint8_t rval;
+
     if (IsMulticast())
     {
-        return mFields.m8[1] & 0xf;
+        rval = mFields.m8[1] & 0xf;
     }
     else if (IsLinkLocal())
     {
-        return kLinkLocalScope;
+        rval = kLinkLocalScope;
     }
     else if (IsLoopback())
     {
-        return kNodeLocalScope;
+        rval = kNodeLocalScope;
+    }
+    else
+    {
+        rval = kGlobalScope;
     }
 
-    return kGlobalScope;
+    return rval;
 }
 
 uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength)
@@ -318,13 +324,11 @@ exit:
     return error;
 }
 
-const char *Address::ToString(char *aBuf, uint16_t aSize) const
+Address::InfoString Address::ToString(void) const
 {
-    snprintf(aBuf, aSize, "%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-             HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-             HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
-
-    return aBuf;
+    return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
+                      HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
+                      HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
 }
 
 } // namespace Ip6

@@ -26,14 +26,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <openthread/config.h>
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <openthread/platform/diag.h>
 
 #if OPENTHREAD_ENABLE_DIAG
 
+#include "platform-cc2650.h"
 /**
  * Diagnostics mode variables.
  *

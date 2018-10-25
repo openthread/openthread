@@ -42,6 +42,7 @@
 #endif
 
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #include "utils/code_utils.h"
 
@@ -53,8 +54,9 @@
     offset += (unsigned int)charsWritten;                                                 \
     otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     char         logString[512];
     unsigned int offset;
@@ -63,7 +65,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     offset = 0;
 
-    LOG_PRINTF("[%d] ", NODE_ID);
+    LOG_PRINTF("[%d] ", gNodeId);
 
     va_start(args, aFormat);
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);

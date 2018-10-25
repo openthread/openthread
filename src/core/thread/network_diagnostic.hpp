@@ -36,19 +36,14 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"
+#include "thread/network_diagnostic_tlvs.hpp"
 
 namespace ot {
 
 namespace NetworkDiagnostic {
-
-class Ip6AddressListTlv;
-class ChildTableTlv;
-class NetworkDiagnosticTlv;
 
 /**
  * @addtogroup core-netdiag

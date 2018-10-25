@@ -35,8 +35,6 @@
 #ifndef __OTLWFIOCTL_H__
 #define __OTLWFIOCTL_H__
 
-#include <openthread/types.h>
-
 __inline LONG ThreadErrorToNtstatus(otError error) { return (LONG)-((int)error); }
 
 // User-mode IOCTL path for CreateFile
@@ -717,8 +715,21 @@ typedef struct otCommissionConfig
     OTLWF_CTL_CODE(200, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
 
+#define IOCTL_OTLWF_OT_NEXT_ROUTE \
+    OTLWF_CTL_CODE(201, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // BOOLEAN - aLocal (input)
+    // uint8_t - aIterator (input)
+    // uint8_t - aNewIterator (output)
+    // otExternalRouteConfig - aConfig (output)
+
+#define IOCTL_OTLWF_OT_MAX_ROUTER_ID \
+    OTLWF_CTL_CODE(202, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // uint8_t - aMaxRouterId
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 200
+#define MAX_OTLWF_IOCTL_FUNC_CODE 202
 
 #endif //__OTLWFIOCTL_H__

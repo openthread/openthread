@@ -114,6 +114,11 @@ struct MessageInfo
     uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+#endif
 };
 
 /**
@@ -224,10 +229,10 @@ public:
 
     enum
     {
-        kPriorityHigh    = 0, ///< High priority level.
-        kPriorityMedium  = 1, ///< Medium priority level.
-        kPriorityLow     = 2, ///< Low priority level.
-        kPriorityVeryLow = 3, ///< Very low priority level.
+        kPriorityLow    = 0, ///< Low priority level.
+        kPriorityNormal = 1, ///< Normal priority level.
+        kPriorityHigh   = 2, ///< High priority level.
+        kPriorityNet    = 3, ///< Network Control priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };
@@ -354,7 +359,7 @@ public:
      * If the message is already queued in a priority queue, changing the priority ensures to
      * update the message in the associated queue.
      *
-     * @param[in]  aPrority  The message priority level.
+     * @param[in]  aPriority  The message priority level.
      *
      * @retval OT_ERROR_NONE           Successfully set the priority for the message.
      * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
@@ -438,23 +443,28 @@ public:
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     * This method creates a copy of the message.
      *
-     * The `Type`, `SubType`, `LinkSecurity` and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
+     * cloned message are also copied from the original one.
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies a full payload.
+     * This method creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
     Message *Clone(void) const { return Clone(GetLength()); };
 
@@ -709,6 +719,60 @@ public:
     {
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    /**
+     * This method indicates whether or not the message is also used for time sync purpose.
+     *
+     * @retval TRUE   If the message is also used for time sync purpose.
+     * @retval FALSE  If the message is not used for time sync purpose.
+     *
+     */
+    bool IsTimeSync(void) const { return mBuffer.mHead.mInfo.mTimeSync; }
+
+    /**
+     * This method sets whether or not the message is also used for time sync purpose.
+     *
+     * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
+     *
+     */
+    void SetTimeSync(bool aEnabled) { mBuffer.mHead.mInfo.mTimeSync = aEnabled; }
+
+    /**
+     * This method sets the offset to network time.
+     *
+     * @param[in]  aNetworkTimeOffset  The offset to network time.
+     *
+     */
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
+    {
+        mBuffer.mHead.mInfo.mNetworkTimeOffset = aNetworkTimeOffset;
+    }
+
+    /**
+     * This method gets the offset to network time.
+     *
+     * @returns  The offset to network time.
+     *
+     */
+    int64_t GetNetworkTimeOffset(void) const { return mBuffer.mHead.mInfo.mNetworkTimeOffset; }
+
+    /**
+     * This method sets the time sync sequence.
+     *
+     * @param[in]  aTimeSyncSeq  The time sync sequence.
+     *
+     */
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mBuffer.mHead.mInfo.mTimeSyncSeq = aTimeSyncSeq; }
+
+    /**
+     * This method gets the time sync sequence.
+     *
+     * @returns  The time sync sequence.
+     *
+     */
+    uint8_t GetTimeSyncSeq(void) const { return mBuffer.mHead.mInfo.mTimeSyncSeq; }
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 private:
     /**
@@ -1011,7 +1075,6 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
-private:
     /**
      * This method returns the tail of the list (last message in the list)
      *
@@ -1020,6 +1083,7 @@ private:
      */
     Message *GetTail(void) const;
 
+private:
     /**
      * This method adds a message to a list.
      *
@@ -1039,21 +1103,21 @@ private:
     void RemoveFromList(uint8_t aListId, Message &aMessage);
 
     /**
-     * This method decreases (moves back) the given priority while ensuring to wrap from
-     * priority value 0 back to `kNumPriorities` -1.
+     * This method increases (moves forward) the given priority while ensuring to wrap from
+     * priority value `kNumPriorities` -1 back to 0.
      *
      * @param[in] aPriority  A given priority level
      *
-     * @returns Decreased/Moved back priority level
+     * @returns Increased/Moved forward priority level
      */
     uint8_t PrevPriority(uint8_t aPriority) const
     {
-        return (aPriority == 0) ? (Message::kNumPriorities - 1) : (aPriority - 1);
+        return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
     }
 
     /**
-     * This private method finds the first non-NULL tail starting from the given priority level and moving back.
-     * It wraps from priority value 0 back to `kNumPriorities` -1.
+     * This private method finds the first non-NULL tail starting from the given priority level and moving forward.
+     * It wraps from priority value `kNumPriorities` -1 back to 0.
      *
      * aStartPriorityLevel  Starting priority level.
      *
@@ -1179,11 +1243,12 @@ public:
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aPriority       The priority level of the message.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader);
+    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.
@@ -1211,27 +1276,23 @@ public:
      */
     Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
 
-        /**
-         * This method returns the number of free buffers.
-         *
-         * @returns The number of free buffers.
-         *
-         */
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * This method returns the number of free buffers.
+     *
+     * @returns The number of free buffers.
+     *
+     */
     uint16_t GetFreeBufferCount(void) const;
-#else
-    uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
-#endif
 
 private:
     enum
     {
-        kDefaultMessagePriority = Message::kPriorityLow,
+        kDefaultMessagePriority = Message::kPriorityNormal,
     };
 
-    Buffer *       NewBuffer(void);
+    Buffer *       NewBuffer(uint8_t aPriority);
     void           FreeBuffers(Buffer *aBuffer);
-    otError        ReclaimBuffers(int aNumBuffers);
+    otError        ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0

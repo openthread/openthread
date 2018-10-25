@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 #include <openthread/platform/random.h>
 
 #include "utils/code_utils.h"

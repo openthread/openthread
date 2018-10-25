@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,19 +35,22 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef NRF_DRV_USBD_H__
 #define NRF_DRV_USBD_H__
 
-#include "nrf_drv_common.h"
 #include "sdk_errors.h"
 #include "nrf_usbd.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "app_util.h"
 #include "nrf_drv_usbd_errata.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup nrf_drv_usbd USB Device HAL and driver
@@ -656,6 +659,11 @@ void nrf_drv_usbd_active_irq_config(void);
 bool nrf_drv_usbd_bus_suspend_check(void);
 
 /**
+ * @brief Force the bus state to active
+ */
+void nrf_drv_usbd_force_bus_wakeup(void);
+
+/**
  * @brief Configure packet size that should be supported by the endpoint
  *
  * The real endpoint buffer size is always the same.
@@ -711,6 +719,13 @@ void nrf_drv_usbd_ep_enable(nrf_drv_usbd_ep_t ep);
  * @param ep Endpoint number to disable
  */
 void nrf_drv_usbd_ep_disable(nrf_drv_usbd_ep_t ep);
+
+/**
+ * @brief Disable all endpoints except for EP0
+ *
+ * Disable all endpoints that can be disabled in USB device while it is still active.
+ */
+void nrf_drv_usbd_ep_default_config(void);
 
 /**
  * @brief Start sending data over endpoint
@@ -856,6 +871,13 @@ void nrf_drv_usbd_ep_stall_clear(nrf_drv_usbd_ep_t ep);
 bool nrf_drv_usbd_ep_stall_check(nrf_drv_usbd_ep_t ep);
 
 /**
+ * @brief Clear current endpoint data toggle
+ *
+ * @param ep Endpoint number to clear
+ */
+void nrf_drv_usbd_ep_dtoggle_clear(nrf_drv_usbd_ep_t ep);
+
+/**
  * @brief Get parsed setup data
  *
  * Function fills the parsed setup data structure.
@@ -880,9 +902,6 @@ void nrf_drv_usbd_setup_data_clear(void);
  *
  * This function acknowledges setup when SETUP command was received and processed.
  * It has to be called if no data respond for the SETUP command is sent.
- *
- * When there is any data transmission after SETUP command the data transmission
- * itself would clear the endpoint.
  */
 void nrf_drv_usbd_setup_clear(void);
 
@@ -902,7 +921,7 @@ void nrf_drv_usbd_setup_stall(void);
 * @endcode
 * This function would check it again, but it makes it inside critical section.
 */
-void usbd_drv_ep_abort(nrf_drv_usbd_ep_t ep);
+void nrf_drv_usbd_ep_abort(nrf_drv_usbd_ep_t ep);
 
 /**
  * @brief Get the information about expected transfer SETUP data direction
@@ -920,6 +939,10 @@ nrf_drv_usbd_ep_t nrf_drv_usbd_last_setup_dir_get(void);
  * @param[in] ep  OUT endpoint ID
  */
 void nrf_drv_usbd_transfer_out_drop(nrf_drv_usbd_ep_t ep);
+
+#ifdef __cplusplus
+}
+#endif
 
 /** @} */
 #endif /* NRF_DRV_USBD_H__ */

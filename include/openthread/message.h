@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,11 +46,47 @@ extern "C" {
  * @addtogroup api-message
  *
  * @brief
- *   This module includes functions that manipulate OpenThread message buffers
+ *   This module includes functions that manipulate OpenThread message buffers.
  *
  * @{
  *
  */
+
+/**
+ * This structure points to an OpenThread message buffer.
+ */
+typedef struct otMessage
+{
+    struct otMessage *mNext; ///< A pointer to the next Message buffer.
+} otMessage;
+
+/**
+ * This structure represents the message buffer information.
+ *
+ */
+typedef struct otBufferInfo
+{
+    uint16_t mTotalBuffers;            ///< The number of buffers in the pool.
+    uint16_t mFreeBuffers;             ///< The number of free message buffers.
+    uint16_t m6loSendMessages;         ///< The number of messages in the 6lo send queue.
+    uint16_t m6loSendBuffers;          ///< The number of buffers in the 6lo send queue.
+    uint16_t m6loReassemblyMessages;   ///< The number of messages in the 6LoWPAN reassembly queue.
+    uint16_t m6loReassemblyBuffers;    ///< The number of buffers in the 6LoWPAN reassembly queue.
+    uint16_t mIp6Messages;             ///< The number of messages in the IPv6 send queue.
+    uint16_t mIp6Buffers;              ///< The number of buffers in the IPv6 send queue.
+    uint16_t mMplMessages;             ///< The number of messages in the MPL send queue.
+    uint16_t mMplBuffers;              ///< The number of buffers in the MPL send queue.
+    uint16_t mMleMessages;             ///< The number of messages in the MLE send queue.
+    uint16_t mMleBuffers;              ///< The number of buffers in the MLE send queue.
+    uint16_t mArpMessages;             ///< The number of messages in the ARP send queue.
+    uint16_t mArpBuffers;              ///< The number of buffers in the ARP send queue.
+    uint16_t mCoapMessages;            ///< The number of messages in the CoAP send queue.
+    uint16_t mCoapBuffers;             ///< The number of buffers in the CoAP send queue.
+    uint16_t mCoapSecureMessages;      ///< The number of messages in the CoAP secure send queue.
+    uint16_t mCoapSecureBuffers;       ///< The number of buffers in the CoAP secure send queue.
+    uint16_t mApplicationCoapMessages; ///< The number of messages in the application CoAP send queue.
+    uint16_t mApplicationCoapBuffers;  ///< The number of buffers in the application CoAP send queue.
+} otBufferInfo;
 
 /**
  * Free an allocated message buffer.
@@ -63,6 +100,7 @@ extern "C" {
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 void otMessageFree(otMessage *aMessage);
 
@@ -81,6 +119,7 @@ void otMessageFree(otMessage *aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  * @sa otMessageSetLength
+ *
  */
 uint16_t otMessageGetLength(otMessage *aMessage);
 
@@ -100,6 +139,7 @@ uint16_t otMessageGetLength(otMessage *aMessage);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
 
@@ -117,6 +157,7 @@ otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 uint16_t otMessageGetOffset(otMessage *aMessage);
 
@@ -136,6 +177,7 @@ uint16_t otMessageGetOffset(otMessage *aMessage);
  * @sa otMessageGetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
@@ -155,8 +197,8 @@ bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
  * Default setting for a new message is `false`.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
- * @param[in]  aEnabled  If `true`, the message is forced to use direct transmission. If `false`, the
- *                       message follows the normal procedure.
+ * @param[in]  aEnabled  If `true`, the message is forced to use direct transmission. If `false`, the message follows
+ *                       the normal procedure.
  *
  */
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
@@ -164,7 +206,7 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
 /**
  * This function returns the average RSS (received signal strength) associated with the message.
  *
- * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average/RSS is available.
+ * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average RSS is available.
  *
  */
 int8_t otMessageGetRss(otMessage *aMessage);
@@ -186,6 +228,7 @@ int8_t otMessageGetRss(otMessage *aMessage);
  * @sa otMessageSetOffset
  * @sa otMessageRead
  * @sa otMessageWrite
+ *
  */
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength);
 
@@ -206,6 +249,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
  * @sa otMessageGetOffset
  * @sa otMessageSetOffset
  * @sa otMessageWrite
+ *
  */
 int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
@@ -226,6 +270,7 @@ int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aL
  * @sa otMessageGetOffset
  * @sa otMessageSetOffset
  * @sa otMessageRead
+ *
  */
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
 

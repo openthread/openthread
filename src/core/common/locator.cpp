@@ -47,6 +47,7 @@ Instance &InstanceLocator::GetInstance(void) const
 }
 #endif
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 Ip6::Ip6 &InstanceLocator::GetIp6(void) const
 {
     return GetInstance().GetIp6();
@@ -61,5 +62,6 @@ Notifier &InstanceLocator::GetNotifier(void) const
 {
     return GetInstance().GetNotifier();
 }
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace ot

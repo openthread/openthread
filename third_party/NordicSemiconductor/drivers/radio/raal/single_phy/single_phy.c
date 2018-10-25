@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "platform/clock/nrf_drv_radio802154_clock.h"
-
 static bool m_continuous;
 
 void nrf_raal_init(void)
@@ -60,8 +58,8 @@ void nrf_raal_continuous_mode_enter(void)
 {
     assert(!m_continuous);
 
-    nrf_drv_radio802154_clock_hfclk_start();
     m_continuous = true;
+    nrf_raal_timeslot_started();
 }
 
 void nrf_raal_continuous_mode_exit(void)
@@ -69,7 +67,6 @@ void nrf_raal_continuous_mode_exit(void)
     assert(m_continuous);
 
     m_continuous = false;
-    nrf_drv_radio802154_clock_hfclk_stop();
 }
 
 bool nrf_raal_timeslot_request(uint32_t length_us)
@@ -86,17 +83,3 @@ uint32_t nrf_raal_timeslot_us_left_get(void)
     return UINT32_MAX;
 }
 
-void nrf_raal_critical_section_enter(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_raal_critical_section_exit(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_drv_radio802154_clock_hfclk_ready(void)
-{
-    nrf_raal_timeslot_started();
-}

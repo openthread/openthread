@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/openthread.h>
-
 #include "common/message.hpp"
 
 namespace ot {
@@ -98,6 +96,12 @@ public:
      *
      */
     otError RemoveUnsecurePort(uint16_t aPort);
+
+    /**
+     * This method removes all ports from the allowed unsecure port list.
+     *
+     */
+    void RemoveAllUnsecurePorts(void);
 
     /**
      * This method returns a pointer to the unsecure port list.

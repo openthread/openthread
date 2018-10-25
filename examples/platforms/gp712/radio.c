@@ -34,8 +34,6 @@
 
 #include <string.h>
 
-#include <openthread/openthread.h>
-
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
@@ -217,7 +215,7 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        sLastReceivedPower = aPacket->mRssi;
+        sLastReceivedPower = aPacket->mInfo.mRxInfo.mRssi;
     }
 
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);

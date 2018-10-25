@@ -1,10 +1,11 @@
 # OpenThread on EFR32 Example
 
 This directory contains example platform drivers for the [Silicon Labs EFR32][efr32mg]
-based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B].
+based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B] or [Thunderboard™ Sense 2 Sensor-to-Cloud Advanced IoT Development Kit][SLTB004A].
 
 [efr32mg]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc
 [SLWSTK6000B]: http://www.silabs.com/products/development-tools/wireless/mesh-networking/mighty-gecko-starter-kit
+[SLTB004A]: https://www.silabs.com/products/development-tools/thunderboard/thunderboard-sense-two-kit
 
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread. [EFR32MG12P SoC][efr32mg12p]
@@ -58,7 +59,15 @@ $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-efr32
+```
+For EFR32™ Mighty Gecko Wireless Starter Kit:
+```bash
+$ make -f examples/Makefile-efr32 BOARD=BRD4161A
+```
+or alternatively for the Thunderboard™ Sense 2:
+
+```bash
+$ make -f examples/Makefile-efr32 BOARD=BRD4166A
 ```
 
 After a successful build, the `elf` files are found in
@@ -83,6 +92,27 @@ $ (gdb) c
 ```
 
 Note: Support for the "EFR32MG12PxxxF1024" device was added to JLinkGDBServer V6.14d.
+
+Or
+
+Compiled binaries also may be flashed onto the specified EFR32 dev borad using [J-Link Commander][j-link-commander].
+
+[j-link-commander]: https://www.segger.com/products/debug-probes/j-link/tools/j-link-commander/
+
+```bash
+$ cd <path-to-openthread>/output/efr32/bin
+$ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
+$ JLinkExe -device EFR32MG12PxxxF1024 -speed 4000 -if SWD -autoconnect 1 -SelectEmuBySN <SerialNo>
+$ J-Link>loadfile ot-cli-ftd.hex
+$ J-Link>r
+$ J-Link>q
+```
+
+Note: SerialNo is J-Link serial number. Use the following command to get the serial number of the connected J-Link.
+
+```bash
+$ JLinkExe
+```
 
 ## Run the example with EFR32 boards
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).

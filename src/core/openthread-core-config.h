@@ -46,4 +46,6 @@
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 
+#include "openthread-core-config-check.h"
+
 #endif // OPENTHREAD_CORE_CONFIG_H_

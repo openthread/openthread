@@ -112,17 +112,17 @@ while true; do
     if [ $? -eq 0 ]; then
         break
     fi
-    OFFSET=$(expr $OFFSET + 1) 
+    OFFSET=$(expr $OFFSET + 1)
 done
 
 # Run a test
-PORT_OFFSET=$OFFSET "$@" >$log_file 2>&1
+TEST_NAME="${test_name}" PORT_OFFSET=$OFFSET "$@" >$log_file 2>&1
 estatus=$?
 
 # Return the offset
 rm -rf "${lock_path}.${OFFSET}.lock.d"
 # Remove the flash files
-rm -f tmp/${OFFSET}_*.flash
+rm -f tmp/${OFFSET}_*.flash tmp/${OFFSET}_*.data tmp/${OFFSET}_*.swap
 
 if test $enable_hard_errors = no && test $estatus -eq 99; then
   tweaked_estatus=1

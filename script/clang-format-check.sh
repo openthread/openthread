@@ -33,11 +33,9 @@
 # replacements.
 #
 
-die() {
-    echo " *** ERROR: " $*
-    exit 1
-}
-
 set -x
 
-[ -z "`clang-format -style=file -output-replacements-xml $@ | grep \"<replacement \"`" ] || die
+# from `man diff`:
+# Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
+
+$(dirname "$0")/clang-format.sh -style=file $@  | diff -u $@ -

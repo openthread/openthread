@@ -68,7 +68,7 @@ void LeaderBase::Reset(void)
     mVersion       = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength        = 0;
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
@@ -79,9 +79,9 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
+    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix().m8, aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
@@ -129,7 +129,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 
     if (aContextId == 0)
     {
-        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix();
+        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = 0;
         aContext.mCompressFlag = true;
@@ -200,7 +200,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool       rval = false;
 
-    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix)) == 0)
     {
         ExitNow(rval = true);
     }
@@ -404,16 +404,25 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
     return error;
 }
 
-void LeaderBase::SetNetworkData(uint8_t        aVersion,
-                                uint8_t        aStableVersion,
-                                bool           aStable,
-                                const uint8_t *aData,
-                                uint8_t        aDataLength)
+otError LeaderBase::SetNetworkData(uint8_t        aVersion,
+                                   uint8_t        aStableVersion,
+                                   bool           aStable,
+                                   const Message &aMessage,
+                                   uint16_t       aMessageOffset)
 {
+    otError  error = OT_ERROR_NONE;
+    Mle::Tlv tlv;
+    uint16_t length;
+
+    length = aMessage.Read(aMessageOffset, sizeof(tlv), &tlv);
+    VerifyOrExit(length == sizeof(tlv), error = OT_ERROR_PARSE);
+
+    length = aMessage.Read(aMessageOffset + sizeof(tlv), tlv.GetLength(), mTlvs);
+    VerifyOrExit(length == tlv.GetLength(), error = OT_ERROR_PARSE);
+
+    mLength        = tlv.GetLength();
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
-    memcpy(mTlvs, aData, aDataLength);
-    mLength = aDataLength;
 
     if (aStable)
     {
@@ -422,7 +431,10 @@ void LeaderBase::SetNetworkData(uint8_t        aVersion,
 
     otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+
+exit:
+    return error;
 }
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
@@ -445,7 +457,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     }
 
     mVersion++;
-    GetNotifier().SetFlags(OT_CHANGED_THREAD_NETDATA);
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;

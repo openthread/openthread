@@ -36,22 +36,15 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"
+#include "thread/thread_tlvs.hpp"
 
 namespace ot {
-
-class MeshForwarder;
-class ThreadLastTransactionTimeTlv;
-class ThreadMeshLocalEidTlv;
-class ThreadNetif;
-class ThreadTargetTlv;
 
 /**
  * @addtogroup core-arp
@@ -85,10 +78,10 @@ public:
      * This method gets an EID cache entry.
      *
      * @param[in]   aIndex  An index into the EID cache table.
-     * @param[out]  aEntry  A pointer to where the EID information is placed.
+     * @param[out]  aEntry  A reference to where the EID information is placed.
      *
      * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
-     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
+     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds.
      *
      */
     otError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
@@ -102,7 +95,7 @@ public:
     void Remove(uint16_t aRloc16);
 
     /**
-     * This method removes all EID-to-RLOC cache entries assossiated with a Router ID.
+     * This method removes all EID-to-RLOC cache entries associated with a Router ID.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -126,6 +119,7 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
      * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_DROP           Earlier Address Query for the EID timed out. In retry timeout interval.
      * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
      *
      */
@@ -156,6 +150,13 @@ private:
 
     struct Cache
     {
+        enum State
+        {
+            kStateInvalid,
+            kStateQuery,
+            kStateCached,
+        };
+
         Ip6::Address      mTarget;
         uint8_t           mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
         uint32_t          mLastTransactionTime;
@@ -164,14 +165,7 @@ private:
         uint8_t           mTimeout;
         uint8_t           mFailures;
         uint8_t           mAge;
-
-        enum State
-        {
-            kStateInvalid,
-            kStateQuery,
-            kStateCached,
-        };
-        State mState;
+        State             mState;
     };
 
     enum InvalidationReason

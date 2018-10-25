@@ -26,6 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+ifeq ($(BORDER_AGENT),1)
+configure_OPTIONS              += --enable-border-agent
+endif
+
 ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
 endif
@@ -37,6 +41,10 @@ endif
 
 ifeq ($(COAP),1)
 configure_OPTIONS              += --enable-application-coap
+endif
+
+ifeq ($(COAPS),1)
+configure_OPTIONS              += --enable-application-coap-secure
 endif
 
 ifeq ($(COMMISSIONER),1)
@@ -79,6 +87,10 @@ ifeq ($(LEGACY),1)
 configure_OPTIONS              += --enable-legacy
 endif
 
+ifeq ($(LINK_RAW),1)
+configure_OPTIONS              += --enable-raw-link-api
+endif
+
 ifeq ($(MAC_FILTER),1)
 configure_OPTIONS              += --enable-mac-filter
 endif
@@ -91,8 +103,8 @@ ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
 
-ifeq ($(TMF_PROXY),1)
-configure_OPTIONS              += --enable-tmf-proxy
+ifeq ($(UDP_PROXY),1)
+configure_OPTIONS              += --enable-udp-proxy
 endif
 
 ifeq ($(DEBUG_UART),1)

@@ -54,12 +54,23 @@
  *
  */
 
-#ifndef TOOLCHAIN_H_
-#define TOOLCHAIN_H_
+#ifndef OPENTHREAD_PLATFORM_TOOLCHAIN_H_
+#define OPENTHREAD_PLATFORM_TOOLCHAIN_H_
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef _WIN32
+#pragma warning(disable : 4214) // nonstandard extension used: bit field types other than int
+#ifdef _KERNEL_MODE
+#include <ntdef.h>
+#else
+#include <windows.h>
+#endif
+#endif /* _WIN32 */
 
 /**
  * @def OT_TOOL_PACKED_BEGIN
@@ -258,6 +269,25 @@ extern "C" {
 
 #define OT_UNREACHABLE_CODE(CODE) CODE
 
+#elif defined(__TI_ARM__)
+
+#include <stddef.h>
+
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        if (&VARIABLE == NULL)       \
+        {                            \
+        }                            \
+    } while (false)
+
+/*
+ * #112-D statement is unreachable
+ * #129-D loop is not reachable
+ */
+#define OT_UNREACHABLE_CODE(CODE) \
+    _Pragma("diag_push") _Pragma("diag_suppress 112") _Pragma("diag_suppress 129") CODE _Pragma("diag_pop")
+
 #else
 
 #define OT_UNUSED_VARIABLE(VARIABLE) \
@@ -279,4 +309,4 @@ extern "C" {
 } // extern "C"
 #endif
 
-#endif // TOOLCHAIN_H_
+#endif // OPENTHREAD_PLATFORM_TOOLCHAIN_H_

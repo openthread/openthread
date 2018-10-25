@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,35 +35,23 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 #ifndef NRF_DRV_CLOCK_H__
 #define NRF_DRV_CLOCK_H__
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "sdk_errors.h"
-#include "nrf_assert.h"
-#include "nrf_clock.h"
-#include "sdk_config.h"
-#include "nrf_drv_common.h"
+#include <nrfx_clock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- *
- * @addtogroup nrf_clock Clock HAL and driver
- * @ingroup nrf_drivers
- * @brief Clock APIs.
- * @details The clock HAL provides basic APIs for accessing the registers of the clock.
- * The clock driver provides APIs on a higher level.
- *
- * @defgroup nrf_drv_clock Clock driver
+ * @defgroup nrf_drv_clock Clock driver - legacy layer
  * @{
  * @ingroup nrf_clock
- * @brief Driver for managing the low-frequency clock (LFCLK) and the high-frequency clock (HFCLK).
+ *
+ * @brief Layer providing compatibility with the former API.
  */
 
 /**
@@ -96,9 +84,6 @@ struct nrf_drv_clock_handler_item_s
 /**
  * @brief Function for checking if driver is already initialized
  *
- * This function is used to check whatever common POWER_CLOCK common interrupt
- * should be disabled or not if @ref nrf_drv_power tries to disable the interrupt.
- *
  * @retval true  Driver is initialized
  * @retval false Driver is uninitialized
  */
@@ -109,8 +94,8 @@ bool nrf_drv_clock_init_check(void);
  *
  * After initialization, the module is in power off state (clocks are not requested).
  *
- * @retval     NRF_SUCCESS                           If the procedure was successful.
- * @retval     NRF_ERROR_MODULE_ALREADY_INITIALIZED  If the driver was already initialized.
+ * @retval NRF_SUCCESS                          If the procedure was successful.
+ * @retval NRF_ERROR_MODULE_ALREADY_INITIALIZED If the driver was already initialized.
  */
 ret_code_t nrf_drv_clock_init(void);
 
@@ -155,7 +140,7 @@ void nrf_drv_clock_lfclk_release(void);
 /**
  * @brief Function for checking the LFCLK state.
  *
- * @retval true If the LFCLK is running.
+ * @retval true  If the LFCLK is running.
  * @retval false If the LFCLK is not running.
  */
 bool nrf_drv_clock_lfclk_is_running(void);
@@ -209,13 +194,13 @@ bool nrf_drv_clock_hfclk_is_running(void);
  * - Requesting the high-accuracy HFCLK
  * - Hardware-supported calibration
  *
- * @param[in]  delay   Time after which the calibration will be started (in 0.25 s units).
- * @param[in]  handler NULL or user function to be called when calibration is completed or aborted.
+ * @param[in] delay   Time after which the calibration will be started (in 0.25 s units).
+ * @param[in] handler NULL or user function to be called when calibration is completed or aborted.
  *
- * @retval     NRF_SUCCESS                        If the procedure was successful.
- * @retval     NRF_ERROR_FORBIDDEN                If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
- * @retval     NRF_ERROR_INVALID_STATE            If the low-frequency clock is off.
- * @retval     NRF_ERROR_BUSY                     If calibration is in progress.
+ * @retval NRF_SUCCESS             If the procedure was successful.
+ * @retval NRF_ERROR_FORBIDDEN     If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
+ * @retval NRF_ERROR_INVALID_STATE If the low-frequency clock is off.
+ * @retval NRF_ERROR_BUSY          If calibration is in progress.
  */
 ret_code_t nrf_drv_clock_calibration_start(uint8_t delay, nrf_drv_clock_event_handler_t handler);
 
@@ -227,8 +212,8 @@ ret_code_t nrf_drv_clock_calibration_start(uint8_t delay, nrf_drv_clock_event_ha
  * aborted calibration is completed. @ref nrf_drv_clock_is_calibrating can also be used to check
  * if the system is calibrating.
  *
- * @retval     NRF_SUCCESS                        If the procedure was successful.
- * @retval     NRF_ERROR_FORBIDDEN                If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
+ * @retval NRF_SUCCESS         If the procedure was successful.
+ * @retval NRF_ERROR_FORBIDDEN If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
  */
 ret_code_t nrf_drv_clock_calibration_abort(void);
 
@@ -238,28 +223,57 @@ ret_code_t nrf_drv_clock_calibration_abort(void);
  * This function indicates that the system is
  * in calibration if it is in any of the calibration process phases (see @ref nrf_drv_clock_calibration_start).
  *
- * @param[out] p_is_calibrating                   True if calibration is in progress, false if not.
+ * @param[out] p_is_calibrating True if calibration is in progress, false if not.
  *
- * @retval     NRF_SUCCESS                        If the procedure was successful.
- * @retval     NRF_ERROR_FORBIDDEN                If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
+ * @retval NRF_SUCCESS         If the procedure was successful.
+ * @retval NRF_ERROR_FORBIDDEN If a SoftDevice is present or the selected LFCLK source is not an RC oscillator.
  */
 ret_code_t nrf_drv_clock_is_calibrating(bool * p_is_calibrating);
 
 /**@brief Function for returning a requested task address for the clock driver module.
  *
- * @param[in]  task                               One of the peripheral tasks.
+ * @param[in] task One of the peripheral tasks.
  *
- * @return     Task address.
+ * @return Task address.
  */
 __STATIC_INLINE uint32_t nrf_drv_clock_ppi_task_addr(nrf_clock_task_t task);
 
 /**@brief Function for returning a requested event address for the clock driver module.
  *
- * @param[in]  event                              One of the peripheral events.
+ * @param[in] event One of the peripheral events.
  *
- * @return     Event address.
+ * @return Event address.
  */
 __STATIC_INLINE uint32_t nrf_drv_clock_ppi_event_addr(nrf_clock_event_t event);
+
+
+#ifdef SOFTDEVICE_PRESENT
+/**
+ * @brief Function called by the SoftDevice handler if an @ref NRF_SOC_EVTS event is received from the SoftDevice.
+ *
+ * @param[in] evt_id One of NRF_SOC_EVTS values.
+ */
+void nrf_drv_clock_on_soc_event(uint32_t evt_id);
+
+/**
+ * @brief Function called by the SoftDevice handler when the SoftDevice has been enabled.
+ *
+ * This function is called just after the SoftDevice has been properly enabled.
+ * Its main purpose is to mark that LFCLK has been requested by SD.
+ */
+void nrf_drv_clock_on_sd_enable(void);
+
+/**
+ * @brief Function called by the SoftDevice handler when the SoftDevice has been disabled.
+ *
+ * This function is called just after the SoftDevice has been properly disabled.
+ * It has two purposes:
+ * 1. Releases the LFCLK from the SD.
+ * 2. Reinitializes an interrupt after the SD releases POWER_CLOCK_IRQ.
+ */
+void nrf_drv_clock_on_sd_disable(void);
+
+#endif
 /**
  *@}
  **/
@@ -276,10 +290,8 @@ __STATIC_INLINE uint32_t nrf_drv_clock_ppi_event_addr(nrf_clock_event_t event)
 }
 #endif //SUPPRESS_INLINE_IMPLEMENTATION
 
-/*lint --flb "Leave library region" */
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif // NRF_CLOCK_H__
+#endif // NRF_DRV_CLOCK_H__

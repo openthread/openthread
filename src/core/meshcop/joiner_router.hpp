@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
 #include "common/locator.hpp"
@@ -50,8 +48,6 @@
 #include "thread/key_manager.hpp"
 
 namespace ot {
-
-class ThreadNetif;
 
 namespace MeshCoP {
 
@@ -90,8 +86,8 @@ private:
         kDelayJoinEnt = 50, ///< milliseconds
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    void        HandleStateChanged(otChangedFlags aFlags);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -118,8 +114,6 @@ private:
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
     void    SendDelayedJoinerEntrust(void);
     otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    otError GetBorderAgentRloc(uint16_t &aRloc);
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;

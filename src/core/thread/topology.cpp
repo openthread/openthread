@@ -44,10 +44,30 @@ namespace ot {
 
 void Neighbor::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++)
+    Random::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
+}
+
+bool Child::IsStateValidOrAttaching(void) const
+{
+    bool rval = false;
+
+    switch (GetState())
     {
-        mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+    case kStateInvalid:
+    case kStateParentRequest:
+    case kStateParentResponse:
+        break;
+
+    case kStateRestored:
+    case kStateChildIdRequest:
+    case kStateLinkRequest:
+    case kStateChildUpdateRequest:
+    case kStateValid:
+        rval = true;
+        break;
     }
+
+    return rval;
 }
 
 void Child::ClearIp6Addresses(void)
@@ -84,7 +104,7 @@ otError Child::GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddres
 
     VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
 
-    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix(),
+    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix().m8,
            Ip6::Address::kMeshLocalPrefixSize);
 
     aAddress.SetIid(mMeshLocalIid);
@@ -218,10 +238,7 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
-    {
-        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
 }
 
 const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const

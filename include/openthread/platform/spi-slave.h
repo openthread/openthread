@@ -32,12 +32,13 @@
  *   This file includes the platform abstraction for SPI slave communication.
  */
 
-#ifndef SPI_SLAVE_H_
-#define SPI_SLAVE_H_
+#ifndef OPENTHREAD_PLATFORM_SPI_SLAVE_H_
+#define OPENTHREAD_PLATFORM_SPI_SLAVE_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -177,4 +178,4 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
 } // extern "C"
 #endif
 
-#endif // SPI_SLAVE_H_
+#endif // OPENTHREAD_PLATFORM_SPI_SLAVE_H_

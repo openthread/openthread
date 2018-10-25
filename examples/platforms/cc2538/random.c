@@ -32,7 +32,6 @@
  *
  */
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>
 

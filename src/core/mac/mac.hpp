@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
@@ -49,10 +50,6 @@
 #include "thread/topology.hpp"
 
 namespace ot {
-
-namespace Mle {
-class MleRouter;
-}
 
 /**
  * @addtogroup core-mac
@@ -72,10 +69,9 @@ namespace Mac {
  */
 enum
 {
-    kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs   = 4,  ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
+    kMaxBE             = 5,  ///< macMaxBE (IEEE 802.15.4-2006).
+    kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
 
     kMinBackoff = 1, ///< Minimum backoff (milliseconds).
 
@@ -87,18 +83,17 @@ enum
     kScanChannelsAll     = OT_CHANNEL_ALL, ///< All channels.
     kScanDurationDefault = 300,            ///< Default interval between channels (milliseconds).
 
-    /**
-     * Maximum number of MAC layer tx attempts for an outbound direct frame.
-     *
-     */
-    kDirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
+    kMaxCsmaBackoffsDirect =
+        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
+    kMaxCsmaBackoffsIndirect =
+        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
 
-    /**
-     * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
-     * a data request command (data poll) from the child.
-     *
-     */
-    kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
+    kMaxFrameRetriesDirect =
+        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT, ///< macMaxFrameRetries for direct transmissions
+    kMaxFrameRetriesIndirect =
+        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
+
+    kTxNumBcast = OPENTHREAD_CONFIG_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
 
 /**
@@ -113,7 +108,14 @@ public:
     enum
     {
         kChannelIteratorFirst = 0xff, ///< Value to pass in `GetNextChannel()` to get the first channel in the mask.
+        kInfoStringSize       = 45,   ///< Recommended buffer size to use with `ToString()`.
     };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * This constructor initializes a `ChannelMask` instance.
@@ -208,6 +210,14 @@ public:
     void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
 
     /**
+     * This method returns the number of channels in the mask.
+     *
+     * @returns Number of channels in the mask.
+     *
+     */
+    uint8_t GetNumberOfChannels(void) const;
+
+    /**
      * This method gets the next channel in the channel mask.
      *
      * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
@@ -222,6 +232,41 @@ public:
      *
      */
     otError GetNextChannel(uint8_t &aChannel) const;
+
+    /**
+     * This method overloads `==` operator to indicate whether two masks are equal.
+     *
+     * @param[in] aAnother   A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are equal, FALSE otherwise.
+     *
+     */
+    bool operator==(const ChannelMask &aAnother) const { return (mMask == aAnother.mMask); }
+
+    /**
+     * This method overloads `!=` operator to indicate whether two masks are different.
+     *
+     * @param[in] aAnother     A reference to another mask to compare with the current one.
+     *
+     * @returns TRUE if the two masks are different, FALSE otherwise.
+     *
+     */
+    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
+
+    /**
+     * This method converts the channel mask into a human-readable string.
+     *
+     * Examples of possible output:
+     *  -  empty mask      ->  "{ }"
+     *  -  all channels    ->  "{ 11-26 }"
+     *  -  single channel  ->  "{ 20 }"
+     *  -  multiple ranges ->  "{ 11, 14-17, 20-22, 24, 25 }"
+     *  -  no range        ->  "{ 14, 21, 26 }"
+     *
+     * @returns  An `InfoString` object representing the channel mask.
+     *
+     */
+    InfoString ToString(void) const;
 
 private:
 #if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)
@@ -513,7 +558,7 @@ public:
     const ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
     /**
-     * This method sets the IEEE 802.15.4 Extended Address
+     * This method sets the IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
@@ -539,22 +584,81 @@ public:
     otError SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This method returns the IEEE 802.15.4 Channel.
+     * This method returns the IEEE 802.15.4 PAN Channel.
      *
-     * @returns The IEEE 802.15.4 Channel.
+     * @returns The IEEE 802.15.4 PAN Channel.
      *
      */
-    uint8_t GetChannel(void) const { return mChannel; }
+    uint8_t GetPanChannel(void) const { return mPanChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 Channel.
+     * This method sets the IEEE 802.15.4 PAN Channel.
      *
-     * @param[in]  aChannel  The IEEE 802.15.4 Channel.
+     * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Channel.
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 PAN Channel.
+     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
      *
      */
-    otError SetChannel(uint8_t aChannel);
+    otError SetPanChannel(uint8_t aChannel);
+
+    /**
+     * This method returns the IEEE 802.15.4 Radio Channel.
+     *
+     * @returns The IEEE 802.15.4 Radio Channel.
+     *
+     */
+    uint8_t GetRadioChannel(void) const { return mRadioChannel; }
+
+    /**
+     * This method sets the IEEE 802.15.4 Radio Channel. It can only be called after successfully calling
+     * `AcquireRadioChannel()`.
+     *
+     * @param[in]  aChannel  The IEEE 802.15.4 Radio Channel.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Radio Channel.
+     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
+     * @retval OT_ERROR_INVALID_STATE  The acquisition ID is incorrect.
+     *
+     */
+    otError SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel);
+
+    /**
+     * This method acquires external ownership of the Radio channel so that future calls to `SetRadioChannel)()` will
+     * succeed.
+     *
+     * @param[out]  aAcquisitionId  The AcquisitionId that the caller should use when calling `SetRadioChannel()`.
+     *
+     * @retval OT_ERROR_NONE           Successfully acquired permission to Set the Radio Channel.
+     * @retval OT_ERROR_INVALID_STATE  Failed to acquire permission as the radio Channel has already been acquired.
+     *
+     */
+    otError AcquireRadioChannel(uint16_t *aAcquisitionId);
+
+    /**
+     * This method releases external ownership of the radio Channel that was acquired with `AcquireRadioChannel()`. The
+     * channel will re-adopt the PAN Channel when this API is called.
+     *
+     * @retval OT_ERROR_NONE  Successfully released the IEEE 802.15.4 Radio Channel.
+     *
+     */
+    otError ReleaseRadioChannel(void);
+
+    /**
+     * This method returns the supported channel mask.
+     *
+     * @returns The supported channel mask.
+     *
+     */
+    const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
+
+    /**
+     * This method sets the supported channel mask
+     *
+     * @param[in] aMask   The supported channel mask.
+     *
+     */
+    void SetSupportedChannelMask(const ChannelMask &aMask);
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -567,12 +671,25 @@ public:
     /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
-     * @param[in]  aNetworkName  A pointer to the IEEE 802.15.4 Network Name.
+     * @param[in]  aNetworkName  A pointer to the string. Must be null terminated.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
     otError SetNetworkName(const char *aNetworkName);
+
+    /**
+     * This method sets the IEEE 802.15.4 Network Name.
+     *
+     * @param[in]  aBuffer  A pointer to the char buffer containing the name. Does not need to be null terminated.
+     * @param[in]  aLength  Number of chars in the buffer.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetNetworkName(const char *aBuffer, uint8_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.
@@ -598,17 +715,17 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId.m8; }
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended PAN ID.
      *
-     * @param[in]  aExtPanId  The IEEE 802.15.4 Extended PAN ID.
+     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN ID.
      *
      * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    otError SetExtendedPanId(const uint8_t *aExtPanId);
+    otError SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
     /**
@@ -771,11 +888,41 @@ public:
      */
     uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
 
+    /**
+     * This method Starts/Stops the Link layer. It may only be used when the Netif Interface is down
+     *
+     * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
+     *
+     * @retval OT_ERROR_NONE   The operation succeeded or the new State equals the current State.
+     *
+     */
+    otError SetEnabled(bool aEnable);
+
+    /**
+     * This method indicates whether or not the link layer is enabled.
+     *
+     * @retval true   Link layer is enabled.
+     * @retval false  Link layer is not enabled.
+     *
+     */
+    bool IsEnabled(void) { return mEnabled; }
+
+    /**
+     * This method performs AES CCM on the frame which is going to be sent.
+     *
+     * @param[in]  aFrame       A reference to the MAC frame buffer that is going to be sent.
+     * @param[in]  aExtAddress  A pointer to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     *
+     */
+    static void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
+
 private:
     enum
     {
         kInvalidRssiValue  = 127,
         kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
+        kMaxAcquisitionId  = 0xffff,
 
     /**
      * Interval between RSSI samples when performing Energy Scan.
@@ -802,8 +949,24 @@ private:
         kOperationTransmitOutOfBandFrame,
     };
 
-    void    GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
-    void    ProcessTransmitSecurity(Frame &aFrame);
+    /**
+     * This method processes transmit security on the frame which is going to be sent.
+     *
+     * This method prepares the frame, fills Mac auxiliary header, and perform AES CCM immediately in most cases
+     * (depends on @p aProcessAesCcm). If aProcessAesCcm is False, it probably means that some content in the frame
+     * will be updated just before transmission, so AES CCM will be performed after that (before transmission).
+     *
+     * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
+     * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
+     *
+     */
+    void ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm);
+
+    static void GenerateNonce(const ExtAddress &aAddress,
+                              uint32_t          aFrameCounter,
+                              uint8_t           aSecurityLevel,
+                              uint8_t *         aNonce);
+
     otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
@@ -814,6 +977,7 @@ private:
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
     Frame * GetOperationFrame(void);
+    void    PerformOperation(void);
 
     static void HandleMacTimer(Timer &aTimer);
     void        HandleMacTimer(void);
@@ -821,8 +985,8 @@ private:
     void        HandleBackoffTimer(void);
     static void HandleReceiveTimer(Timer &aTimer);
     void        HandleReceiveTimer(void);
-    static void PerformOperation(Tasklet &aTasklet);
-    void        PerformOperation(void);
+    static void HandleOperationTask(Tasklet &aTasklet);
+    void        HandleOperationTask(void);
 
     void StartCsmaBackoff(void);
 
@@ -837,6 +1001,15 @@ private:
     otError RadioReceive(uint8_t aChannel);
     otError RadioSleep(void);
 
+    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const Frame &aFrame, otError aError) const;
+    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    void    ProcessTimeIe(Frame &aFrame);
+    uint8_t GetTimeIeOffset(Frame &aFrame);
+#endif
+
     static const char *OperationToString(Operation aOperation);
 
     Operation mOperation;
@@ -849,6 +1022,7 @@ private:
     bool mPendingWaitingForData : 1;
     bool mRxOnWhenIdle : 1;
     bool mBeaconsEnabled : 1;
+    bool mTransmitAborted : 1;
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mDelaySleep : 1;
 #endif
@@ -866,7 +1040,10 @@ private:
     ExtAddress   mExtAddress;
     ShortAddress mShortAddress;
     PanId        mPanId;
-    uint8_t      mChannel;
+    uint8_t      mPanChannel;
+    uint8_t      mRadioChannel;
+    uint16_t     mRadioChannelAcquisitionId;
+    ChannelMask  mSupportedChannelMask;
 
     otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;
@@ -876,8 +1053,9 @@ private:
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;
-    uint8_t mCsmaAttempts;
-    uint8_t mTransmitAttempts;
+    uint8_t mCsmaBackoffs;
+    uint8_t mTransmitRetries;
+    uint8_t mBroadcastTransmitCount;
 
     ChannelMask mScanChannelMask;
     uint16_t    mScanDuration;
@@ -905,6 +1083,7 @@ private:
 
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+    bool               mEnabled;
 };
 
 /**

@@ -85,8 +85,8 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -95,8 +95,13 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
 
         for i in range(2, 5):
             self.nodes[i].start()
-            self.simulator.go(5)
+
+        self.simulator.go(5)
+
+        for i in range(2, 5):
             self.assertEqual(self.nodes[i].get_state(), 'router')
+
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         self.nodes[ED].start()
         self.simulator.go(5)

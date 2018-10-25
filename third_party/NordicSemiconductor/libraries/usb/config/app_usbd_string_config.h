@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
- *
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * 
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- *
+ * 
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- *
+ * 
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- *
+ * 
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- *
+ * 
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
  */
 #ifndef APP_USBD_STRING_CONFIG_H
 #define APP_USBD_STRING_CONFIG_H
@@ -67,7 +67,7 @@
  * @ref APP_USBD_STRINGS_LANGIDS.
  */
 #define APP_USBD_STRINGS_MANUFACTURER    \
-    APP_USBD_STRING_DESC('N', 'o', 'r', 'd', 'i', 'c', ' ', 'S', 'e', 'm', 'i', 'c', 'o', 'n', 'd', 'u', 'c', 't', 'o', 'r')
+    APP_USBD_STRING_DESC("Nordic Semiconductor")
 
 /**
  * @brief Define whether @ref APP_USBD_STRINGS_MANUFACTURER is created by @ref APP_USBD_STRING_DESC
@@ -81,7 +81,7 @@
  * List of product names defined the same way like in @ref APP_USBD_STRINGS_MANUFACTURER
  */
 #define APP_USBD_STRINGS_PRODUCT         \
-    APP_USBD_STRING_DESC('n', 'R', 'F', '5', '2', '8', '4', '0', ' ', 'O', 'p', 'e', 'n', 'T', 'h', 'r', 'e', 'a', 'd', ' ', 'D', 'e', 'v', 'i', 'c', 'e')
+    APP_USBD_STRING_DESC("nRF52840 OpenThread Device")
 
 
 /**
@@ -99,7 +99,7 @@
  * @note
  * There is only one SERIAL number inside the library and it is Language independent.
  */
-#define APP_USBD_STRING_SERIAL gExternSerialNumber
+#define APP_USBD_STRING_SERIAL g_extern_serial_number
 
 /**
  * @brief Define whether @ref APP_USBD_STRING_SERIAL is created by @ref APP_USBD_STRING_DESC
@@ -124,7 +124,7 @@
  * - @c ...     : List of string descriptors for each defined language.
  */
 #define APP_USBD_STRINGS_USER          \
-    X(APP_USER_1, , APP_USBD_STRING_DESC('U', 's', 'e', 'r', ' ', '1'))
+    X(APP_USER_1, , APP_USBD_STRING_DESC("User 1"))
 
 /** @} */
 #endif /* APP_USBD_STRING_CONFIG_H */

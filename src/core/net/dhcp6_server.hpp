@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "common/locator.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -46,11 +44,6 @@
 #include "thread/network_data_leader.hpp"
 
 namespace ot {
-
-class ThreadNetif;
-namespace NetworkData {
-class Leader;
-}
 
 namespace Dhcp6 {
 

@@ -38,8 +38,6 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-#include <openthread/types.h>
-
 #include "coap/coap_header.hpp"
 
 namespace ot {

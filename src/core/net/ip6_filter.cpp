@@ -166,6 +166,11 @@ exit:
     return error;
 }
 
+void Filter::RemoveAllUnsecurePorts(void)
+{
+    memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
+}
+
 const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const
 {
     // Count the number of unsecure ports.

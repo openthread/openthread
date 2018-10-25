@@ -127,7 +127,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
 {
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
-    otMessage *  responseMessage;
+    otMessage *  responseMessage = NULL;
     otCoapCode   responseCode    = OT_COAP_CODE_EMPTY;
     char         responseContent = '0';
 
@@ -158,7 +158,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
 
     default:
         mInterpreter.mServer->OutputFormat("Undefined\r\n");
-        return;
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     PrintPayload(aMessage);
@@ -196,11 +196,14 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
 
 exit:
 
-    if (error != OT_ERROR_NONE && responseMessage != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("Cannot send coap response message: Error %d: %s\r\n", error,
-                                           otThreadErrorToString(error));
-        otMessageFree(responseMessage);
+        if (responseMessage != NULL)
+        {
+            mInterpreter.mServer->OutputFormat("Cannot send coap response message: Error %d: %s\r\n", error,
+                                               otThreadErrorToString(error));
+            otMessageFree(responseMessage);
+        }
     }
     else if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
     {
@@ -243,7 +246,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     // Destination IPv6 address

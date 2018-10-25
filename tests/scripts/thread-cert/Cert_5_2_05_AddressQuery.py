@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -77,8 +76,8 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
@@ -126,8 +125,11 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         mleid = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ED1].ping(mleid))
 
+        # Wait for sniffer collecting packets
+        self.simulator.go(1)
+
         reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-        msg = reed_messages.next_coap_message('0.02')
+        msg = reed_messages.next_coap_message('0.02', '/a/an')
         command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
         # 7 & 8. Verify DUT_REED would send Address Notification when ping to its 2001::EID and 2002::EID.
@@ -142,8 +144,11 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
                 raise "Error: Address is unexpected."
             self.assertTrue(self.nodes[ED1].ping(global_address))
 
+            # Wait for sniffer collecting packets
+            self.simulator.go(1)
+
             reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
-            msg = reed_messages.next_coap_message('0.02')
+            msg = reed_messages.next_coap_message('0.02', '/a/an')
             command.check_address_notification(msg, self.nodes[DUT_REED], self.nodes[LEADER])
 
         assert flag2001 == 1 , "Error: Expecting address 2001::EID not appear."

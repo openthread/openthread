@@ -29,7 +29,6 @@
 #include <driverlib/aon_rtc.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <openthread/types.h>
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>

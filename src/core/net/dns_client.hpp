@@ -32,7 +32,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/dns.h>
-#include <openthread/types.h>
 
 #include "common/message.hpp"
 #include "common/timer.hpp"

@@ -72,6 +72,19 @@ public:
     void Clear(void);
 
     /**
+     * This method restores and retrieves the dataset from non-volatile memory.
+     *
+     * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
+     *
+     * @param[out]  aDataset  Where to place the dataset.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     *
+     */
+    otError Restore(Dataset &aDataset);
+
+    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
@@ -132,11 +145,13 @@ public:
     int Compare(const Timestamp *aCompare);
 
 private:
-    uint16_t GetSettingsKey(void) const;
-    void     SetTimestamp(const Dataset &aDataset);
+    bool IsActive(void) const { return (mType == Tlv::kActiveTimestamp); }
+    void SetTimestamp(const Dataset &aDataset);
 
-    uint32_t  mUpdateTime; ///< Local time last updated
-    Tlv::Type mType;       ///< Active or Pending
+    Timestamp mTimestamp;            ///< Active or Pending Timestamp
+    uint32_t  mUpdateTime;           ///< Local time last updated
+    Tlv::Type mType;                 ///< Active or Pending
+    bool      mTimestampPresent : 1; ///< Whether or not timestamp is present
 };
 
 } // namespace MeshCoP

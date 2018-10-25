@@ -38,7 +38,7 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #include "crypto/aes_ecb.hpp"
 

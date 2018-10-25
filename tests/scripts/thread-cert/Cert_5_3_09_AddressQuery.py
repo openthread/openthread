@@ -80,14 +80,14 @@ class Cert_5_3_09_AddressQuery(unittest.TestCase):
         self.nodes[SED1].set_panid(0xface)
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[SED1].set_timeout(3)
+        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
         self.nodes[SED1].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         # 1 & 2 ALL: Build and verify the topology

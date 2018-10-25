@@ -54,39 +54,21 @@ exit:
     return error;
 }
 
-otError MeshForwarder::EvictIndirectMessage(void)
+otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    return OT_ERROR_NOT_FOUND;
-}
+    otError  error = OT_ERROR_NOT_FOUND;
+    Message *message;
 
-otError MeshForwarder::GetIndirectTransmission(void)
-{
-    return OT_ERROR_NOT_FOUND;
-}
+    VerifyOrExit((message = mSendQueue.GetTail()) != NULL);
 
-otError MeshForwarder::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aChild);
-    return OT_ERROR_NOT_FOUND;
-}
+    if (message->GetPriority() < aPriority)
+    {
+        RemoveMessage(*message);
+        ExitNow(error = OT_ERROR_NONE);
+    }
 
-void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)
-{
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aMacDest);
-}
-
-void MeshForwarder::HandleMesh(uint8_t *               aFrame,
-                               uint8_t                 aFrameLength,
-                               const Mac::Address &    aMacSource,
-                               const otThreadLinkInfo &aLinkInfo)
-{
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aFrameLength);
-    OT_UNUSED_VARIABLE(aMacSource);
-    OT_UNUSED_VARIABLE(aLinkInfo);
+exit:
+    return error;
 }
 
 } // namespace ot

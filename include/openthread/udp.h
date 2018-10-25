@@ -30,13 +30,14 @@
  * @file
  * @brief
  *  This file defines the OpenThread UDP API.
+ *
  */
 
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
+#include <openthread/ip6.h>
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,6 +54,26 @@ extern "C" {
  */
 
 /**
+ * This callback allows OpenThread to provide specific handlers for certain UDP messages.
+ *
+ * @retval  true    The message is handled by this receiver and should not be further processed.
+ * @retval  false   The message is not handled by this receiver.
+ *
+ */
+typedef bool (*otUdpHandler)(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * This structure represents a UDP receiver.
+ *
+ */
+typedef struct otUdpReceiver
+{
+    struct otUdpReceiver *mNext;    ///< A pointer to the next UDP receiver (internal use only).
+    otUdpHandler          mHandler; ///< A function pointer to the receiver callback.
+    void *                mContext; ///< A pointer to application-specific context.
+} otUdpReceiver;
+
+/**
  * This callback allows OpenThread to inform the application of a received UDP message.
  *
  */
@@ -64,12 +85,12 @@ typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessag
  */
 typedef struct otUdpSocket
 {
-    otSockAddr          mSockName;  ///< The local IPv6 socket address.
-    otSockAddr          mPeerName;  ///< The peer IPv6 socket address.
-    otUdpReceive        mHandler;   ///< A function pointer to the application callback.
-    void *              mContext;   ///< A pointer to application-specific context.
-    void *              mTransport; ///< A pointer to the transport object (internal use only).
-    struct otUdpSocket *mNext;      ///< A pointer to the next UDP socket (internal use only).
+    otSockAddr          mSockName; ///< The local IPv6 socket address.
+    otSockAddr          mPeerName; ///< The peer IPv6 socket address.
+    otUdpReceive        mHandler;  ///< A function pointer to the application callback.
+    void *              mContext;  ///< A pointer to application-specific context.
+    void *              mHandle;   ///< A handle to platform's UDP
+    struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
 /**
@@ -171,6 +192,77 @@ otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  *
  */
 otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * @}
+ *
+ */
+
+/**
+ * @addtogroup api-udp-proxy
+ *
+ * @brief
+ *   This module includes functions for UDP proxy feature.
+ *
+ *   The functions in this module are available when udp-proxy feature (`OPENTHREAD_ENABLE_UDP_PROXY`) is enabled.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This function pointer delivers the UDP packet to host and host should send the packet through its own network stack.
+ *
+ * @param[in]  aMessage   A pointer to the UDP Message.
+ * @param[in]  aPeerPort  The destination UDP port.
+ * @param[in]  aPeerAddr  A pointer to the destination IPv6 address.
+ * @param[in]  aSockPort  The source UDP port.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+typedef void (*otUdpProxySender)(otMessage *   aMessage,
+                                 uint16_t      aPeerPort,
+                                 otIp6Address *aPeerAddr,
+                                 uint16_t      aSockPort,
+                                 void *        aContext);
+
+/**
+ * Set UDP proxy callback to deliever UDP packets to host.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aSender              A pointer to a function called to deliver UDP packet to host.
+ * @param[in]  aContext             A pointer to application-specific context.
+ *
+ */
+void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *aContext);
+
+/**
+ * Handle a UDP packet received from host.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aMessage             A pointer to the UDP Message.
+ * @param[in]  aPeerPort            The source UDP port.
+ * @param[in]  aPeerAddr            A pointer to the source address.
+ * @param[in]  aSockPort            The destination UDP port.
+ *
+ * @warning No matter the call success or fail, the message is freed.
+ *
+ */
+void otUdpProxyReceive(otInstance *        aInstance,
+                       otMessage *         aMessage,
+                       uint16_t            aPeerPort,
+                       const otIp6Address *aPeerAddr,
+                       uint16_t            aSockPort);
+
+/**
+ * This function gets the existing UDP Sockets.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the first UDP Socket.
+ *
+ */
+otUdpSocket *otUdpGetSockets(otInstance *aInstance);
 
 /**
  * @}

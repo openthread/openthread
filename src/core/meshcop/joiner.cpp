@@ -55,7 +55,6 @@
 #if OPENTHREAD_ENABLE_JOINER
 
 using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap64;
 
 namespace ot {
 namespace MeshCoP {
@@ -101,7 +100,7 @@ otError Joiner::Start(const char *     aPSKd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().Signal(OT_CHANGED_JOINER_STATE);
 
     // use extended address based on factory-assigned IEEE EUI-64
     GetJoinerId(joinerId);
@@ -120,8 +119,7 @@ otError Joiner::Start(const char *     aPSKd,
     error = netif.GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
     SuccessOrExit(error);
 
-    error = netif.GetCoapSecure().GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                   static_cast<uint8_t>(strlen(aPSKd)));
+    error = netif.GetCoapSecure().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd), static_cast<uint8_t>(strlen(aPSKd)));
     SuccessOrExit(error);
 
     error = netif.GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
@@ -161,7 +159,7 @@ void Joiner::Close(void)
     ThreadNetif &netif = GetNetif();
 
     netif.GetCoapSecure().Disconnect();
-    netif.GetIp6Filter().RemoveUnsecurePort(netif.GetCoapSecure().GetPort());
+    netif.GetIp6Filter().RemoveUnsecurePort(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
 }
 
 void Joiner::Complete(otError aError)
@@ -169,7 +167,7 @@ void Joiner::Complete(otError aError)
     ThreadNetif &netif = GetNetif();
     mState             = OT_JOINER_STATE_IDLE;
     otError error      = OT_ERROR_NOT_FOUND;
-    GetNotifier().SetFlags(OT_CHANGED_JOINER_STATE);
+    GetNotifier().Signal(OT_CHANGED_JOINER_STATE);
 
     netif.GetCoapSecure().Disconnect();
 
@@ -198,8 +196,8 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     {
         JoinerRouter joinerRouter;
 
-        otLogDebgMeshCoP(GetInstance(), "HandleDiscoverResult() aResult = %llX",
-                         HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
+        otLogDebgMeshCoP(GetInstance(), "Received Discovery Response (%s)",
+                         static_cast<Mac::ExtAddress &>(aResult->mExtAddress).ToString().AsCString());
 
         // Joining is disabled if the Steering Data is not included
         if (aResult->mSteeringData.mLength == 0)
@@ -286,20 +284,20 @@ otError Joiner::TryNextJoin()
 
     if (joinerRouter->mPriority > 0)
     {
-        Ip6::MessageInfo messageInfo;
+        Ip6::SockAddr sockaddr;
 
         joinerRouter->mPriority = 0;
 
         netif.GetMac().SetPanId(joinerRouter->mPanId);
-        netif.GetMac().SetChannel(joinerRouter->mChannel);
-        netif.GetIp6Filter().AddUnsecurePort(netif.GetCoapSecure().GetPort());
+        netif.GetMac().SetPanChannel(joinerRouter->mChannel);
+        netif.GetIp6Filter().AddUnsecurePort(OPENTHREAD_CONFIG_JOINER_UDP_PORT);
 
-        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
-        messageInfo.GetPeerAddr().SetIid(joinerRouter->mExtAddr);
-        messageInfo.mPeerPort    = joinerRouter->mJoinerUdpPort;
-        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+        sockaddr.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
+        sockaddr.GetAddress().SetIid(joinerRouter->mExtAddr);
+        sockaddr.mPort    = joinerRouter->mJoinerUdpPort;
+        sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
 
-        netif.GetCoapSecure().Connect(messageInfo, Joiner::HandleSecureCoapClientConnect, this);
+        netif.GetCoapSecure().Connect(sockaddr, Joiner::HandleSecureCoapClientConnect, this);
         mState = OT_JOINER_STATE_CONNECT;
         error  = OT_ERROR_NONE;
     }

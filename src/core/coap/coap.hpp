@@ -49,8 +49,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace Coap {
 
 /**
@@ -230,6 +228,14 @@ public:
      *
      */
     Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+
+    /**
+     * This method returns a pointer to the Uri-Path.
+     *
+     * @returns A Pointer to the Uri-Path.
+     *
+     */
+    const char *GetUriPath(void) const { return mUriPath; };
 
 private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -480,14 +486,6 @@ public:
     otError Stop(void);
 
     /**
-     * This method returns a port number used by CoAP service.
-     *
-     * @returns A port number.
-     *
-     */
-    uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
-
-    /**
      * This method adds a resource to the CoAP server.
      *
      * @param[in]  aResource  A reference to the resource.
@@ -517,7 +515,7 @@ public:
      * This method creates a new message with a CoAP header.
      *
      * @param[in]  aHeader      A reference to a CoAP header that is used to create the message.
-     * @param[in]  aPrority     The message priority level.
+     * @param[in]  aPriority    The message priority level.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
@@ -586,7 +584,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
      *
      */
-    otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
     {
         return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
     };
@@ -721,7 +719,7 @@ protected:
 private:
     enum
     {
-        kDefaultCoapMessagePriority = Message::kPriorityLow,
+        kDefaultCoapMessagePriority = Message::kPriorityNormal,
     };
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

@@ -14,6 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
 * [coap](#coap-start)
+* [coaps](#coaps-start-checkpeercert)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -51,6 +52,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
+* [networktime](#networktime)
 * [panid](#panid)
 * [parent](#parent)
 * [parentpriority](#parentpriority)
@@ -67,32 +69,32 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan-channel)
+* [scan](#scan)
 * [singleton](#singleton)
 * [state](#state)
 * [thread](#thread-start)
-* [txpowermax](#txpowermax)
+* [txpower](#txpower)
 * [version](#version)
 * [diag](#diag)
 * [service](#service)
 
 ## OpenThread Command Details
 
-### autostart true
+### autostart enable
 
 Automatically start Thread on initialization.
 
 ```bash
-> autostart true
+> autostart enable
 Done
 ```
 
-### autostart false
+### autostart disable
 
 Don't automatically start Thread on initialization.
 
 ```bash
-> autostart false
+> autostart disable
 Done
 ```
 
@@ -102,7 +104,7 @@ Show the status of automatically starting Thread on initialization.
 
 ```bash
 > autostart
-false
+Disabled
 Done
 ```
 
@@ -236,7 +238,7 @@ Coap service started: Done
 Stops the application coap service.
 
 ```bash
-> coap start
+> coap stop
 Coap service stopped: Done
 ```
 
@@ -273,6 +275,104 @@ Sending coap message: Done
 Received coap request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: 31 32 33
 coap response sent successfully!
 Received coap response
+```
+
+### coaps start \<checkPeerCert\>
+
+Starts the Application CoAP Secure Service.
+
+* checkPeerCert: Peer Certificate Check can be disabled by typing false.
+
+```bash
+> coaps start false
+Verify Peer Certificate: false. Coap Secure service started: Done
+> coaps start
+Verify Peer Certificate: true. Coap Secure service started: Done
+```
+
+### coaps stop
+
+Stops the Application CoAP Secure Service.
+
+```bash
+> coaps stop
+Coap Secure service stopped:  Done
+```
+
+### coaps set psk \<preSharedKey\> \<keyIdentity\>
+
+Set a pre-shared key with his identifier and the ciphersuite 
+"DTLS_PSK_WITH_AES_128_CCM_8" for the dtls session.
+
+* preSharedKey: The pre-shared key (PSK) for dtls session.
+* keyIdentity: The identifier for the PSK.
+
+```bash
+> coaps set psk myPreSharedSecret myIdentifier
+Coap Secure set PSK: Done
+```
+
+### coaps set x509
+
+Set X.509 Certificate with his private key, which is saved in
+src/cli/x509_cert_key.hpp.
+
+```bash
+> coaps set x509
+Coap Secure set own .X509 certificate: Done
+```
+
+### coaps connect \<serverAddress\> \[port\]
+
+Open a dtls session to a CoAP Secure Server.
+
+* serverAddress: IPv6 address of Server
+
+```bash
+> coaps connect 2001:1234::321
+Coap Secure connect: Done
+CoAP Secure connected!
+```
+
+### coaps disconnect
+
+Terminate the dtls session to the Server.
+
+```bash
+> coaps disconnect
+CoAP Secure not connected or disconnected.
+Done
+```
+
+### coaps \<method\> \<address\> \<uri\> \[type\] \[payload\]
+
+* method: CoAP method to be used (GET/PUT/POST/DELETE).
+* address: IPv6 address of the CoAP Secure server to query.
+* uri: URI String of the resource on the CoAP server.
+* type: Switch between confirmable ("con") and non-confirmable (default).
+* payload: In case of PUT/POST/DELETE a payload can be encapsulated.
+
+```bash
+> coaps get 2001:1234::321 secret
+Sending coap secure request: Done
+Received coap secure response
+    CoapSecure RX Header Informations:
+        Type 16 (NON CONF)
+        Code 69 (Coap Code CONTENT)
+    With payload (hex):
+4a756e2031322031353a30373a3336
+> coaps put 2001:1234::321 test non-con hello
+Sending coap secure request: Done
+> coaps post 2001:1234::321 test con
+Sending coap secure request: Done
+Received coap secure response
+    CoapSecure RX Header Informations:
+        Type 32 (NON CONF)
+        Code 69 (Coap Code CONTENT)
+    With payload (hex):
+4a756e2031322031353a30373a3336
+> coaps delete 2001:1234::321 test
+Sending coap secure request: Done
 ```
 
 ### commissioner start \<provisioningUrl\>
@@ -608,6 +708,31 @@ Set network name.
 > dataset networkname openthread
 Done
 ```
+
+### networktime
+
+Get the Thread network time and the time sync parameters.
+
+```bash
+> networktime
+Network Time:     21084154us (synchronized)
+Time Sync Period: 100s
+XTAL Threshold:   300ppm
+Done
+```
+
+### networktime \<timesyncperiod\> \<xtalthreshold\>
+
+Set time sync parameters
+
+* timesyncperiod: The time synchronization period, in seconds.
+* xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+
+```bash
+> networktime 100 300
+Done
+```
+
 
 ### dataset panid \<panid\>
 
@@ -1132,7 +1257,7 @@ Get the Thread Device Mode value.
 
 * r: rx-on-when-idle
 * s: Secure IEEE 802.15.4 data requests
-* d: Full Function Device
+* d: Full Thread Device
 * n: Full Network Data
 
 ```bash
@@ -1147,7 +1272,7 @@ Set the Thread Device Mode value.
 
 * r: rx-on-when-idle
 * s: Secure IEEE 802.15.4 data requests
-* d: Full Function Device
+* d: Full Thread Device
 * n: Full Network Data
 
 ```bash
@@ -1284,6 +1409,12 @@ Done
 
 Get the diagnostic information for a Thread Router as parent.
 
+Note: When operating as a Thread Router, this command will return the cached
+      information from when the device was previously attached as a Thread
+      Child. Returning cached information is necessary to support the Thread
+      Test Harness - Test Scenario 8.2.x requests the former parent (i.e. Joiner
+      Router's) MAC address even if the device has already promoted to a router.
+
 ```bash
 > parent
 Ext Addr: be1857c6c21dce55
@@ -1347,6 +1478,16 @@ Set the customized data poll period for sleepy end device (seconds). Only for ce
 
 ```bash
 > pollperiod 10
+Done
+```
+
+### prefix
+
+Get the prefix list in the local Network Data.
+
+```bash
+> prefix
+2001:dead:beef:cafe::/64 paros med
 Done
 ```
 
@@ -1430,9 +1571,19 @@ Get the Thread RLOC16 value.
 Done
 ```
 
+### route
+
+Get the external route list in the local Network Data.
+
+```bash
+> route
+2001:dead:beef:cafe::/64 s med
+Done
+```
+
 ### route add \<prefix\> [s] [prf]
 
-Add a valid prefix to the Network Data.
+Add a valid external route to the Network Data.
 
 * s: Stable flag
 * prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
@@ -1444,7 +1595,7 @@ Done
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the Network Data.
+Invalidate a external route in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
@@ -1607,6 +1758,35 @@ Perform an IEEE 802.15.4 Active Scan.
 Done
 ```
 
+### scan energy \[duration\]
+
+Perform an IEEE 802.15.4 Energy Scan.
+
+* duration: The time in milliseconds to spend scanning each channel.
+
+```bash
+> scan energy 10
+| Ch | RSSI |
++----+------+
+| 11 |  -59 |
+| 12 |  -62 |
+| 13 |  -67 |
+| 14 |  -61 |
+| 15 |  -87 |
+| 16 |  -86 |
+| 17 |  -86 |
+| 18 |  -52 |
+| 19 |  -58 |
+| 20 |  -82 |
+| 21 |  -76 |
+| 22 |  -82 |
+| 23 |  -74 |
+| 24 |  -81 |
+| 25 |  -88 |
+| 26 |  -71 |
+Done
+```
+
 ### singleton
 Return true when there are no other nodes in the network, otherwise return false.
 
@@ -1651,7 +1831,7 @@ Disable Thread protocol operation and detach from a Thread network.
 Done
 ```
 
-### txpowermax
+### txpower
 
 Get the transmit power in dBm.
 
@@ -1661,7 +1841,7 @@ Get the transmit power in dBm.
 Done
 ```
 
-### txpowermax \<txpowermax\>
+### txpower \<txpower\>
 
 Set the transmit power.
 

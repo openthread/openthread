@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_BORDER_ROUTER_H_
 #define OPENTHREAD_BORDER_ROUTER_H_
 
-#include <openthread/types.h>
+#include <openthread/ip6.h>
+#include <openthread/netdata.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -151,9 +152,9 @@ OTAPI otError OTCALL otBorderRouterRemoveRoute(otInstance *aInstance, const otIp
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
  *
  */
-otError otBorderRouterGetNextRoute(otInstance *           aInstance,
-                                   otNetworkDataIterator *aIterator,
-                                   otExternalRouteConfig *aConfig);
+OTAPI otError OTCALL otBorderRouterGetNextRoute(otInstance *           aInstance,
+                                                otNetworkDataIterator *aIterator,
+                                                otExternalRouteConfig *aConfig);
 
 /**
  * Immediately register the local network data with the Leader.

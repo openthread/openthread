@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac.hpp"
@@ -55,8 +53,6 @@ enum
 {
     kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
 };
-
-class MleRouter;
 
 /**
  * @addtogroup core-mesh-forwarding
@@ -175,13 +171,15 @@ public:
     void RemoveDataResponseMessages(void);
 
     /**
-     * This method evicts the first indirect message in the indirect send queue.
+     * This method evicts the message with lowest priority in the send queue.
      *
-     * @retval OT_ERROR_NONE       Successfully evicted an indirect message.
-     * @retval OT_ERROR_NOT_FOUND  No indirect messages available to evict.
+     * @param[in]  aPriority  The highest priority level of the evicted message.
+     *
+     * @retval OT_ERROR_NONE       Successfully evicted a low priority message.
+     * @retval OT_ERROR_NOT_FOUND  No low priority messages available to evict.
      *
      */
-    otError EvictIndirectMessage(void);
+    otError EvictMessage(uint8_t aPriority);
 
     /**
      * This method returns a reference to the send queue.
@@ -275,6 +273,19 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
+    otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  DecompressIp6Header(const uint8_t *     aFrame,
+                                 uint8_t             aFrameLength,
+                                 const Mac::Address &aMacSource,
+                                 const Mac::Address &aMacDest,
+                                 Ip6::Header &       aIp6Header,
+                                 uint8_t &           aHeaderLength,
+                                 bool &              aNextHeaderCompressed);
+    otError  GetIp6Header(const uint8_t *     aFrame,
+                          uint8_t             aFrameLength,
+                          const Mac::Address &aMacSource,
+                          const Mac::Address &aMacDest,
+                          Ip6::Header &       aIp6Header);
     otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
@@ -309,6 +320,7 @@ private:
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void     RemoveMessage(Message &aMessage);
+    void     HandleDiscoverComplete(void);
 
     static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
     void           HandleReceivedFrame(Mac::Frame &aFrame);
@@ -327,7 +339,67 @@ private:
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
-    void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress, otError aError);
+    void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, otError aError);
+    void LogFrame(const char *aActionText, const Mac::Frame &aFrame, otError aError);
+    void LogFragmentFrameDrop(otError                       aError,
+                              uint8_t                       aFrameLength,
+                              const Mac::Address &          aMacSource,
+                              const Mac::Address &          aMacDest,
+                              const Lowpan::FragmentHeader &aFragmentHeader,
+                              bool                          aIsSecure);
+    void LogLowpanHcFrameDrop(otError             aError,
+                              uint8_t             aFrameLength,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              bool                aIsSecure);
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+    const char *MessageActionToString(MessageAction aAction, otError aError);
+    const char *MessagePriorityToString(const Message &aMessage);
+
+    otError ParseIp6UdpTcpHeader(const Message &aMessage,
+                                 Ip6::Header &  aIp6Header,
+                                 uint16_t &     aChecksum,
+                                 uint16_t &     aSourcePort,
+                                 uint16_t &     aDestPort);
+#if OPENTHREAD_FTD
+    otError DecompressIp6UdpTcpHeader(const Message &     aMessage,
+                                      uint16_t            aOffset,
+                                      const Mac::Address &aMeshSource,
+                                      const Mac::Address &aMeshDest,
+                                      Ip6::Header &       aIp6Header,
+                                      uint16_t &          aChecksum,
+                                      uint16_t &          aSourcePort,
+                                      uint16_t &          aDestPort);
+    otError LogMeshFragmentHeader(MessageAction       aAction,
+                                  const Message &     aMessage,
+                                  const Mac::Address *aMacAddress,
+                                  otError             aError,
+                                  uint16_t &          aOffset,
+                                  Mac::Address &      aMeshSource,
+                                  Mac::Address &      aMeshDest,
+                                  otLogLevel          aLogLevel);
+    void    LogMeshIpHeader(const Message &     aMessage,
+                            uint16_t            aOffset,
+                            const Mac::Address &aMeshSource,
+                            const Mac::Address &aMeshDest,
+                            otLogLevel          aLogLevel);
+    void    LogMeshMessage(MessageAction       aAction,
+                           const Message &     aMessage,
+                           const Mac::Address *aAddress,
+                           otError             aError,
+                           otLogLevel          aLogLevel);
+#endif
+    void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
+                                   uint16_t     aSourcePort,
+                                   uint16_t     aDestPort,
+                                   otLogLevel   aLogLevel);
+    void LogIp6Message(MessageAction       aAction,
+                       const Message &     aMessage,
+                       const Mac::Address *aAddress,
+                       otError             aError,
+                       otLogLevel          aLogLevel);
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
     Mac::Receiver mMacReceiver;
     Mac::Sender   mMacSender;
@@ -341,7 +413,8 @@ private:
 
     Message *mSendMessage;
     bool     mSendMessageIsARetransmission;
-    uint8_t  mSendMessageMaxMacTxAttempts;
+    uint8_t  mSendMessageMaxCsmaBackoffs;
+    uint8_t  mSendMessageMaxFrameRetries;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -356,7 +429,7 @@ private:
 
     uint32_t mScanChannels;
     uint8_t  mScanChannel;
-    uint8_t  mRestoreChannel;
+    uint16_t mMacRadioAcquisitionId;
     uint16_t mRestorePanId;
     bool     mScanning;
 
@@ -368,7 +441,7 @@ private:
     uint32_t              mSendMessageFrameCounter;
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
-    uint8_t               mStartChildIndex;
+    Child *               mIndirectStartingChild;
 #endif
 
     DataPollManager mDataPollManager;

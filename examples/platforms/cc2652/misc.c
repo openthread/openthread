@@ -29,7 +29,6 @@
 #include <openthread/config.h>
 
 #include <driverlib/sys_ctrl.h>
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 /*
@@ -67,7 +66,6 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
         break;
 
     case RSTSRC_VDDS_LOSS:
-    case RSTSRC_VDD_LOSS:
     case RSTSRC_VDDR_LOSS:
     case RSTSRC_CLK_LOSS:
         ret = OT_PLAT_RESET_REASON_CRASH;

@@ -36,10 +36,10 @@
 #include "instance.hpp"
 
 #include <openthread/platform/misc.h>
-#include <openthread/platform/settings.h>
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "thread/router_table.hpp"
 
 namespace ot {
 
@@ -51,25 +51,24 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(Instance), uint64_t);
 #endif
 
 Instance::Instance(void)
-    : mActiveScanCallback(NULL)
+    : mTimerMilliScheduler(*this)
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+    , mTimerMicroScheduler(*this)
+#endif
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    , mActiveScanCallback(NULL)
     , mActiveScanCallbackContext(NULL)
     , mEnergyScanCallback(NULL)
     , mEnergyScanCallbackContext(NULL)
     , mNotifier(*this)
-    , mTimerMilliScheduler(*this)
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-    , mTimerMicroScheduler(*this)
-#endif
+    , mSettings(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    , mLinkRaw(*this)
-#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    , mApplicationCoapSecure(*this)
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     , mChannelMonitor(*this)
@@ -77,7 +76,20 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     , mChannelManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+    , mAnnounceSender(*this)
+#endif
     , mMessagePool(*this)
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    , mLinkRaw(*this)
+#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+#endif
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    , mExtension(Extension::ExtensionBase::Init(*this))
+#endif
     , mIsInitialized(false)
 {
 }
@@ -128,13 +140,19 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
+void Instance::Reset(void)
+{
+    otPlatReset(this);
+}
+
 void Instance::AfterInit(void)
 {
     mIsInitialized = true;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     // Restore datasets and network information
 
-    otPlatSettingsInit(this);
+    GetSettings().Init();
     mThreadNetif.GetMle().Restore();
 
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
@@ -153,6 +171,11 @@ void Instance::AfterInit(void)
     }
 
 #endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+    GetExtension().SignalInstanceInit();
+#endif
 }
 
 void Instance::Finalize(void)
@@ -161,21 +184,20 @@ void Instance::Finalize(void)
 
     mIsInitialized = false;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
+    IgnoreReturnValue(otLinkSetEnabled(this, false));
+#endif
 
 exit:
     return;
 }
 
-void Instance::Reset(void)
-{
-    otPlatReset(this);
-}
-
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::FactoryReset(void)
 {
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
     otPlatReset(this);
 }
 
@@ -184,7 +206,7 @@ otError Instance::ErasePersistentInfo(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    otPlatSettingsWipe(this);
+    GetSettings().Wipe();
 
 exit:
     return error;
@@ -217,199 +239,6 @@ void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
         mEnergyScanCallback(aResult, mEnergyScanCallbackContext);
     }
 }
-
-// Specializations of the `Get<Type>()` method.
-
-template <> Notifier &Instance::Get(void)
-{
-    return GetNotifier();
-}
-
-template <> TaskletScheduler &Instance::Get(void)
-{
-    return GetTaskletScheduler();
-}
-
-template <> MeshForwarder &Instance::Get(void)
-{
-    return GetThreadNetif().GetMeshForwarder();
-}
-
-template <> Mle::Mle &Instance::Get(void)
-{
-    return GetThreadNetif().GetMle();
-}
-
-template <> Mle::MleRouter &Instance::Get(void)
-{
-    return GetThreadNetif().GetMle();
-}
-
-template <> Ip6::Netif &Instance::Get(void)
-{
-    return GetThreadNetif();
-}
-
-template <> Ip6::Ip6 &Instance::Get(void)
-{
-    return GetIp6();
-}
-
-template <> Mac::Mac &Instance::Get(void)
-{
-    return GetThreadNetif().GetMac();
-}
-
-template <> KeyManager &Instance::Get(void)
-{
-    return GetThreadNetif().GetKeyManager();
-}
-
-#if OPENTHREAD_FTD
-template <> AddressResolver &Instance::Get(void)
-{
-    return GetThreadNetif().GetAddressResolver();
-}
-
-template <> MeshCoP::Leader &Instance::Get(void)
-{
-    return GetThreadNetif().GetLeader();
-}
-
-template <> MeshCoP::JoinerRouter &Instance::Get(void)
-{
-    return GetThreadNetif().GetJoinerRouter();
-}
-#endif // OPENTHREAD_FTD
-
-template <> AnnounceBeginServer &Instance::Get(void)
-{
-    return GetThreadNetif().GetAnnounceBeginServer();
-}
-
-template <> DataPollManager &Instance::Get(void)
-{
-    return GetThreadNetif().GetMeshForwarder().GetDataPollManager();
-}
-
-template <> EnergyScanServer &Instance::Get(void)
-{
-    return GetThreadNetif().GetEnergyScanServer();
-}
-
-template <> PanIdQueryServer &Instance::Get(void)
-{
-    return GetThreadNetif().GetPanIdQueryServer();
-}
-
-template <> NetworkData::Leader &Instance::Get(void)
-{
-    return GetThreadNetif().GetNetworkDataLeader();
-}
-
-template <> Ip6::Mpl &Instance::Get(void)
-{
-    return GetIp6().GetMpl();
-}
-
-template <> Coap::Coap &Instance::Get(void)
-{
-    return GetThreadNetif().GetCoap();
-}
-
-template <> MeshCoP::ActiveDataset &Instance::Get(void)
-{
-    return GetThreadNetif().GetActiveDataset();
-}
-
-template <> MeshCoP::PendingDataset &Instance::Get(void)
-{
-    return GetThreadNetif().GetPendingDataset();
-}
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-template <> Coap::ApplicationCoap &Instance::Get(void)
-{
-    return GetApplicationCoap();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-template <> MeshCoP::Commissioner &Instance::Get(void)
-{
-    return GetThreadNetif().GetCommissioner();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_JOINER
-template <> MeshCoP::Joiner &Instance::Get(void)
-{
-    return GetThreadNetif().GetJoiner();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-template <> Dns::Client &Instance::Get(void)
-{
-    return GetThreadNetif().GetDnsClient();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_DTLS
-template <> MeshCoP::Dtls &Instance::Get(void)
-{
-    return GetThreadNetif().GetDtls();
-}
-
-template <> Coap::CoapSecure &Instance::Get(void)
-{
-    return GetThreadNetif().GetCoapSecure();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-template <> LinkRaw &Instance::Get(void)
-{
-    return GetLinkRaw();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-template <> Dhcp6::Dhcp6Client &Instance::Get(void)
-{
-    return GetThreadNetif().GetDhcp6Client();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-template <> Utils::JamDetector &Instance::Get(void)
-{
-    return GetThreadNetif().GetJamDetector();
-}
-#endif
-
-template <> Utils::ChildSupervisor &Instance::Get(void)
-{
-    return GetThreadNetif().GetChildSupervisor();
-}
-
-template <> Utils::SupervisionListener &Instance::Get(void)
-{
-    return GetThreadNetif().GetSupervisionListener();
-}
-
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-template <> Utils::ChannelMonitor &Instance::Get(void)
-{
-    return GetChannelMonitor();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
-template <> Utils::ChannelManager &Instance::Get(void)
-{
-    return GetChannelManager();
-}
-#endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace ot

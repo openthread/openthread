@@ -26,13 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: generic
+language: python
+python: "3.6"
 
 sudo: required
 dist: trusty
 
 before_install:
   - .travis/before_install.sh
+
+before_script:
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
+    fi
 
 script:
   - .travis/script.sh
@@ -42,20 +48,31 @@ after_success:
 
 matrix:
   include:
-    - env: BUILD_TARGET="posix-distcheck" CC=clang-5.0 CXX=clang++-5.0 VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="android-build" VERBOSE=1
+      os: linux
+      python: "2.7"
+    - env: BUILD_TARGET="posix-distcheck" CC=clang-6.0 CXX=clang++-6.0 VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
-    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
-      os: linux
-      compiler: gcc
+            - clang-6.0
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 FAULTINJECTION=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+      python: "2.7"
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -70,34 +87,36 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
+    - env: BUILD_TARGET="scan-build" CC="clang-6.0" CXX="clang++-6.0"
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
-    - env: BUILD_TARGET="arm-gcc49"
+            - clang-6.0
+    - env: BUILD_TARGET="arm-gcc-4"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc54"
+    - env: BUILD_TARGET="arm-gcc-5"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc63"
+    - env: BUILD_TARGET="arm-gcc-6"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC=clang-5.0 CXX=clang++-5.0
+    - env: BUILD_TARGET="arm-gcc-7"
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix" CC=clang-6.0 CXX=clang++-6.0
       os: linux
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-trusty-6.0
+            - ubuntu-toolchain-r-test
           packages:
-            - clang-5.0
-    - env: BUILD_TARGET="posix" CC="gcc" CXX="g++"
-      os: linux
-      compiler: gcc
+            - clang-6.0
     - env: BUILD_TARGET="posix" CC="gcc-5" CXX="g++-5"
       os: linux
       compiler: gcc
@@ -118,6 +137,36 @@ matrix:
           packages:
             - gcc-6
             - g++-6
+    - env: BUILD_TARGET="posix" CC="gcc-7" CXX="g++-7"
+      os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
+    - env: BUILD_TARGET="posix" CC="gcc-8" CXX="g++-8"
+      os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-8
+            - g++-8
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
+      os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
+      os: linux
+      compiler: gcc
+      python: "2.7"
+    - env: BUILD_TARGET="osx" VERBOSE=1
+      os: osx
+      language: generic

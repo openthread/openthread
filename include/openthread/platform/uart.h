@@ -32,12 +32,12 @@
  *   This file includes the platform abstraction for UART communication.
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef OPENTHREAD_PLATFORM_UART_H_
+#define OPENTHREAD_PLATFORM_UART_H_
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,4 +107,4 @@ extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
 } // extern "C"
 #endif
 
-#endif // UART_H_
+#endif // OPENTHREAD_PLATFORM_UART_H_

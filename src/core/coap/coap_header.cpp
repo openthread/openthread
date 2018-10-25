@@ -33,13 +33,12 @@
 
 #include "coap_header.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Coap {
@@ -84,7 +83,7 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
     VerifyOrExit(GetVersion() == 1);
 
     tokenLength = GetTokenLength();
-    VerifyOrExit(tokenLength <= kMaxTokenLength && (mHeaderLength + tokenLength) <= length);
+    VerifyOrExit(tokenLength <= OT_COAP_MAX_TOKEN_LENGTH && (mHeaderLength + tokenLength) <= length);
     aMessage.Read(offset, tokenLength, mHeader.mBytes + mHeaderLength);
     mHeaderLength += tokenLength;
     offset += tokenLength;
@@ -417,14 +416,11 @@ exit:
 
 void Header::SetToken(uint8_t aTokenLength)
 {
-    assert(aTokenLength <= kMaxTokenLength);
+    uint8_t token[OT_COAP_MAX_TOKEN_LENGTH] = {0};
 
-    uint8_t token[kMaxTokenLength] = {0};
+    assert(aTokenLength <= sizeof(token));
 
-    for (uint8_t i = 0; i < aTokenLength; i++)
-    {
-        token[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
+    Random::FillBuffer(token, aTokenLength);
 
     SetToken(token, aTokenLength);
 }
@@ -435,6 +431,103 @@ void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
     SetMessageId(aRequestHeader.GetMessageId());
     SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 }
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+const char *Header::CodeToString(void) const
+{
+    const char *mCodeString;
+
+    switch (mHeader.mFields.mCode)
+    {
+    case OT_COAP_CODE_INTERNAL_ERROR:
+        mCodeString = "InternalError";
+        break;
+    case OT_COAP_CODE_METHOD_NOT_ALLOWED:
+        mCodeString = "MethodNotAllowed";
+        break;
+    case OT_COAP_CODE_CONTENT:
+        mCodeString = "Content";
+        break;
+    case OT_COAP_CODE_EMPTY:
+        mCodeString = "Empty";
+        break;
+    case OT_COAP_CODE_GET:
+        mCodeString = "Get";
+        break;
+    case OT_COAP_CODE_POST:
+        mCodeString = "Post";
+        break;
+    case OT_COAP_CODE_PUT:
+        mCodeString = "Put";
+        break;
+    case OT_COAP_CODE_DELETE:
+        mCodeString = "Delete";
+        break;
+    case OT_COAP_CODE_NOT_FOUND:
+        mCodeString = "NotFound";
+        break;
+    case OT_COAP_CODE_UNSUPPORTED_FORMAT:
+        mCodeString = "UnsupportedFormat";
+        break;
+    case OT_COAP_CODE_RESPONSE_MIN:
+        mCodeString = "ResponseMin";
+        break;
+    case OT_COAP_CODE_CREATED:
+        mCodeString = "Created";
+        break;
+    case OT_COAP_CODE_DELETED:
+        mCodeString = "Deleted";
+        break;
+    case OT_COAP_CODE_VALID:
+        mCodeString = "Valid";
+        break;
+    case OT_COAP_CODE_CHANGED:
+        mCodeString = "Changed";
+        break;
+    case OT_COAP_CODE_BAD_REQUEST:
+        mCodeString = "BadRequest";
+        break;
+    case OT_COAP_CODE_UNAUTHORIZED:
+        mCodeString = "Unauthorized";
+        break;
+    case OT_COAP_CODE_BAD_OPTION:
+        mCodeString = "BadOption";
+        break;
+    case OT_COAP_CODE_FORBIDDEN:
+        mCodeString = "Forbidden";
+        break;
+    case OT_COAP_CODE_NOT_ACCEPTABLE:
+        mCodeString = "NotAcceptable";
+        break;
+    case OT_COAP_CODE_PRECONDITION_FAILED:
+        mCodeString = "PreconditionFailed";
+        break;
+    case OT_COAP_CODE_REQUEST_TOO_LARGE:
+        mCodeString = "RequestTooLarge";
+        break;
+    case OT_COAP_CODE_NOT_IMPLEMENTED:
+        mCodeString = "NotImplemented";
+        break;
+    case OT_COAP_CODE_BAD_GATEWAY:
+        mCodeString = "BadGateway";
+        break;
+    case OT_COAP_CODE_SERVICE_UNAVAILABLE:
+        mCodeString = "ServiceUnavailable";
+        break;
+    case OT_COAP_CODE_GATEWAY_TIMEOUT:
+        mCodeString = "GatewayTimeout";
+        break;
+    case OT_COAP_CODE_PROXY_NOT_SUPPORTED:
+        mCodeString = "ProxyNotSupported";
+        break;
+    default:
+        mCodeString = "Unknown";
+        break;
+    }
+
+    return mCodeString;
+}
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 } // namespace Coap
 } // namespace ot

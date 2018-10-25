@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aux_smph_h
-*  Revised:        2017-01-31 09:37:48 +0100 (Tue, 31 Jan 2017)
-*  Revision:       48345
+*  Revised:        2017-05-16 19:35:21 +0200 (Tue, 16 May 2017)
+*  Revision:       49005
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -67,7 +67,7 @@
 // Semaphore 7
 #define AUX_SMPH_O_SMPH7                                            0x0000001C
 
-// Sticky Request For Single Semaphore
+// Auto Take
 #define AUX_SMPH_O_AUTOTAKE                                         0x00000020
 
 //*****************************************************************************
@@ -77,13 +77,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH0_STAT                                         0x00000001
 #define AUX_SMPH_SMPH0_STAT_BITN                                             0
 #define AUX_SMPH_SMPH0_STAT_M                                       0x00000001
@@ -96,13 +100,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH1_STAT                                         0x00000001
 #define AUX_SMPH_SMPH1_STAT_BITN                                             0
 #define AUX_SMPH_SMPH1_STAT_M                                       0x00000001
@@ -115,13 +123,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH2_STAT                                         0x00000001
 #define AUX_SMPH_SMPH2_STAT_BITN                                             0
 #define AUX_SMPH_SMPH2_STAT_M                                       0x00000001
@@ -134,13 +146,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH3_STAT                                         0x00000001
 #define AUX_SMPH_SMPH3_STAT_BITN                                             0
 #define AUX_SMPH_SMPH3_STAT_M                                       0x00000001
@@ -153,13 +169,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH4_STAT                                         0x00000001
 #define AUX_SMPH_SMPH4_STAT_BITN                                             0
 #define AUX_SMPH_SMPH4_STAT_M                                       0x00000001
@@ -172,13 +192,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH5_STAT                                         0x00000001
 #define AUX_SMPH_SMPH5_STAT_BITN                                             0
 #define AUX_SMPH_SMPH5_STAT_M                                       0x00000001
@@ -191,13 +215,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH6_STAT                                         0x00000001
 #define AUX_SMPH_SMPH6_STAT_BITN                                             0
 #define AUX_SMPH_SMPH6_STAT_M                                       0x00000001
@@ -210,13 +238,17 @@
 //*****************************************************************************
 // Field:     [0] STAT
 //
-// Status when reading:
+// Request or release of semaphore.
 //
-// 0: Semaphore was already taken
-// 1: Semaphore was available and hence taken by this read access
+// Request by read:
 //
-// Reading the register causes it to change value to 0. Releasing the semaphore
-// is done by writing 1
+// 0: Semaphore not available.
+// 1: Semaphore granted.
+//
+// Release by write:
+//
+// 0: Do not use.
+// 1: Release semaphore.
 #define AUX_SMPH_SMPH7_STAT                                         0x00000001
 #define AUX_SMPH_SMPH7_STAT_BITN                                             0
 #define AUX_SMPH_SMPH7_STAT_M                                       0x00000001
@@ -229,15 +261,19 @@
 //*****************************************************************************
 // Field:   [2:0] SMPH_ID
 //
-// Requesting a certain semaphore is done by writing the corresponding
-// semaphore ID, 0x0-0x7, to SMPH_ID. The request is sticky and once the
-// semaphore becomes available it will be taken. At the same time,
-// SMPH_AUTOTAKE_DONE event is asserted. This event is deasserted when SW
-// releases the semaphore or a new ID is written to SMPH_ID.
+// Write the semaphore ID,0x0-0x7, to SMPH_ID to request this semaphore until
+// it is granted.
 //
-// Note: SW must wait until SMPH_AUTOTAKE_DONE event is triggered before
-// writing a new ID to SMPH_ID . Failing to do so might lead to permanently
-// lost semaphores as the owners may be unknown
+// When semaphore SMPH_ID is granted, event
+// AUX_EVCTL:EVSTAT0.AUX_SMPH_AUTOTAKE_DONE becomes 1.
+//
+// The event becomes 0 when software releases the semaphore or writes a new
+// value to SMPH_ID.
+//
+// To avoid corrupted semaphores:
+// - Usage of this functionality must be restricted to one CPU core.
+// - Software must wait until AUX_EVCTL:EVSTAT0.AUX_SMPH_AUTOTAKE_DONE is 1
+// before it writes a new value to SMPH_ID.
 #define AUX_SMPH_AUTOTAKE_SMPH_ID_W                                          3
 #define AUX_SMPH_AUTOTAKE_SMPH_ID_M                                 0x00000007
 #define AUX_SMPH_AUTOTAKE_SMPH_ID_S                                          0

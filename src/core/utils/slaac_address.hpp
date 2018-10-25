@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-#include <openthread/platform/random.h>
+#include <openthread/ip6.h>
 
 namespace ot {
 namespace Utils {

@@ -38,7 +38,7 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
+#include <openthread/dataset.h>
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -359,7 +359,7 @@ private:
     bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     uint8_t mPSKc[kMaxKeyLength];
 #endif
     uint8_t  mKek[kMaxKeyLength];

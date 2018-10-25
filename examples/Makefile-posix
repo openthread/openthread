@@ -47,26 +47,31 @@ BuildJobs                      ?= 10
 
 configure_OPTIONS                   = \
     --enable-application-coap         \
+    --enable-application-coap-secure  \
+    --enable-border-agent             \
     --enable-border-router            \
     --enable-cert-log                 \
     --enable-child-supervision        \
-    --enable-cli-app=all              \
+    --enable-cli                      \
     --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-diag                     \
     --enable-dns-client               \
+    --enable-ftd                      \
     --enable-jam-detection            \
     --enable-joiner                   \
     --enable-legacy                   \
     --enable-mac-filter               \
+    --enable-mtd                      \
     --enable-mtd-network-diagnostic   \
-    --enable-ncp-app=all              \
+    --enable-ncp                      \
+    --with-ncp-bus=uart               \
+    --enable-radio-only               \
     --enable-raw-link-api             \
     --enable-service                  \
-    --enable-tmf-proxy                \
+    --enable-udp-proxy                \
     --with-examples=posix             \
-    --with-ncp-bus=uart               \
     $(NULL)
 
 ifeq ($(FAULTINJECTION),1)
@@ -92,6 +97,10 @@ ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
 endif
 
+ifeq ($(VIRTUAL_TIME_UART),1)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME_UART=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(NULL)
@@ -111,9 +120,6 @@ LDFLAGS                        += \
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
-
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
@@ -122,7 +128,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild-autotools/repo/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g')
+TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g')
 
 
 ifndef BuildJobs

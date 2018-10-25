@@ -135,12 +135,15 @@ EXTRA_DIST                                                         = \
     network_layer.py                                                 \
     node.py                                                          \
     node_cli.py                                                      \
+    pcap.py                                                          \
     simulator.py                                                     \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
     test_coap.py                                                     \
+    test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
+    test_diag.py                                                     \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -165,6 +168,7 @@ else # OPENTHREAD_ENABLE_FAULT_INJECTION
 
 check_SCRIPTS                                                     += \
     test_coap.py                                                     \
+    test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_ipv6.py                                                     \
@@ -267,6 +271,12 @@ check_SCRIPTS                                                     += \
 
 endif # OPENTHREAD_ENABLE_FAULT_INJECTION
 
+if OPENTHREAD_ENABLE_DIAG
+check_SCRIPTS                                                     += \
+    test_diag.py                                                     \
+    $(NULL)
+endif
+
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
@@ -279,10 +289,9 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    test_coaps.py                                                    \
+    test_diag.py                                                     \
     test_service.py                                                  \
-    Cert_5_2_05_AddressQuery.py                                      \
-    Cert_5_3_08_ChildAddressSet.py                                   \
-    Cert_5_3_09_AddressQuery.py                                      \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \

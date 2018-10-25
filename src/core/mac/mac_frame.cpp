@@ -53,6 +53,11 @@ bool ExtAddress::operator!=(const ExtAddress &aOther) const
     return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
 }
 
+ExtAddress::InfoString ExtAddress::ToString(void) const
+{
+    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+}
+
 void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
 {
     mType = kTypeExtended;
@@ -70,26 +75,10 @@ void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
     }
 }
 
-const char *Address::ToString(char *aBuf, uint16_t aSize) const
+Address::InfoString Address::ToString(void) const
 {
-    switch (mType)
-    {
-    case kTypeNone:
-        snprintf(aBuf, aSize, "None");
-        break;
-
-    case kTypeShort:
-        snprintf(aBuf, aSize, "0x%04x", GetShort());
-        break;
-
-    case kTypeExtended:
-        snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x", GetExtended().m8[0], GetExtended().m8[1],
-                 GetExtended().m8[2], GetExtended().m8[3], GetExtended().m8[4], GetExtended().m8[5],
-                 GetExtended().m8[6], GetExtended().m8[7]);
-        break;
-    }
-
-    return aBuf;
+    return (mType == kTypeExtended) ? GetExtended().ToString()
+                                    : (mType == kTypeNone ? InfoString("None") : InfoString("0x%04x", GetShort()));
 }
 
 otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
@@ -122,27 +111,23 @@ otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         assert(false);
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(aFcf))
+    {
+        length += sizeof(PanId);
+    }
+
+    // Source Address
     switch (aFcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrNone:
         break;
 
     case kFcfSrcAddrShort:
-        if ((aFcf & kFcfPanidCompression) == 0)
-        {
-            length += sizeof(PanId);
-        }
-
         length += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((aFcf & kFcfPanidCompression) == 0)
-        {
-            length += sizeof(PanId);
-        }
-
         length += sizeof(ExtAddress);
         break;
 
@@ -374,6 +359,30 @@ exit:
     return index;
 }
 
+bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
+{
+    bool srcPanIdPresent = false;
+
+    if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
+    {
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+        // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
+        //  Dest Address:       Extended
+        //  Source Address:     Extended
+        //  Dest Pan ID:        Present
+        //  Src Pan ID:         Not Present
+        //  Pan ID Compression: 0
+        if ((aFcf & kFcfFrameVersionMask) != kFcfFrameVersion2015 || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
+            (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrExt)
+#endif
+        {
+            srcPanIdPresent = true;
+        }
+    }
+
+    return srcPanIdPresent;
+}
+
 otError Frame::GetSrcPanId(PanId &aPanId) const
 {
     otError error = OT_ERROR_NONE;
@@ -419,7 +428,7 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     }
 
     // Source PAN
-    if ((fcf & kFcfPanidCompression) == 0)
+    if (IsSrcPanIdPresent(fcf))
     {
         index += sizeof(PanId);
     }
@@ -526,24 +535,20 @@ uint8_t Frame::FindSecurityHeaderIndex(void) const
         break;
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Source Address
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrShort:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ExtAddress);
         break;
     }
@@ -795,7 +800,7 @@ otError Frame::SetPayloadLength(uint8_t aLength)
     return OT_ERROR_NONE;
 }
 
-uint8_t Frame::FindPayloadIndex(void) const
+uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
     uint8_t  index = 0;
     uint16_t fcf;
@@ -827,27 +832,23 @@ uint8_t Frame::FindPayloadIndex(void) const
         ExitNow(index = kInvalidIndex);
     }
 
-    // Source PAN + Address
+    // Source PAN
+    if (IsSrcPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Source Address
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrNone:
         break;
 
     case kFcfSrcAddrShort:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        if ((fcf & kFcfPanidCompression) == 0)
-        {
-            index += sizeof(PanId);
-        }
-
         index += sizeof(ExtAddress);
         break;
 
@@ -884,8 +885,50 @@ uint8_t Frame::FindPayloadIndex(void) const
         }
     }
 
+exit:
+    return index;
+}
+
+uint8_t Frame::FindPayloadIndex(void) const
+{
+    uint8_t index = SkipSecurityHeaderIndex();
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+    uint8_t *cur    = NULL;
+    uint8_t *footer = GetFooter();
+#endif
+
+    VerifyOrExit(index != kInvalidIndex);
+
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+    cur = GetPsdu() + index;
+
+    if (IsIePresent())
+    {
+        while (cur + sizeof(HeaderIe) <= footer)
+        {
+            HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
+            uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+
+            cur += sizeof(HeaderIe);
+            index += sizeof(HeaderIe);
+
+            VerifyOrExit(cur + len <= footer, index = kInvalidIndex);
+
+            cur += len;
+            index += len;
+
+            if (ie->GetId() == kHeaderIeTermination2)
+            {
+                break;
+            }
+        }
+
+        // Assume no Payload IE in current implementation
+    }
+#endif
+
     // Command ID
-    if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    if ((GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         index += kCommandIdSize;
     }
@@ -905,10 +948,10 @@ exit:
     return payload;
 }
 
-const uint8_t *Frame::GetPayload(void) const
+uint8_t *Frame::GetPayload(void) const
 {
-    uint8_t        index   = FindPayloadIndex();
-    const uint8_t *payload = GetPsdu() + index;
+    uint8_t  index   = FindPayloadIndex();
+    uint8_t *payload = GetPsdu() + index;
 
     VerifyOrExit(index != kInvalidIndex, payload = NULL);
 
@@ -921,34 +964,128 @@ uint8_t *Frame::GetFooter(void)
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-const uint8_t *Frame::GetFooter(void) const
+uint8_t *Frame::GetFooter(void) const
 {
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+uint8_t Frame::FindHeaderIeIndex(void) const
 {
-    uint8_t     type, commandId;
-    Address     src, dst;
-    const char *typeStr;
-    char        stringBuffer[10];
-    char        srcStringBuffer[Address::kAddressStringSize];
-    char        dstStringBuffer[Address::kAddressStringSize];
+    uint8_t index;
+
+    VerifyOrExit(IsIePresent(), index = kInvalidIndex);
+
+    index = SkipSecurityHeaderIndex();
+
+exit:
+    return index;
+}
+
+otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
+{
+    otError  error = OT_ERROR_NONE;
+    uint8_t  index = FindHeaderIeIndex();
+    uint8_t *cur;
+    uint8_t *base;
+
+    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_FAILED);
+    cur  = GetPsdu() + index;
+    base = cur;
+
+    for (uint8_t i = 0; i < aIeCount; i++)
+    {
+        memcpy(cur, &aIeList[i], sizeof(HeaderIe));
+        cur += sizeof(HeaderIe);
+        cur += aIeList[i].GetLength();
+    }
+
+    SetPsduLength(GetPsduLength() + static_cast<uint8_t>(cur - base));
+
+exit:
+    return error;
+}
+
+uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
+{
+    uint8_t  index   = FindHeaderIeIndex();
+    uint8_t *cur     = NULL;
+    uint8_t *payload = GetPayload();
+
+    VerifyOrExit(index != kInvalidIndex);
+
+    cur = GetPsdu() + index;
+
+    while (cur + sizeof(HeaderIe) <= payload)
+    {
+        HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
+        uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+
+        if (ie->GetId() == aIeId)
+        {
+            break;
+        }
+
+        cur += sizeof(HeaderIe);
+
+        VerifyOrExit(cur + len <= payload, cur = NULL);
+
+        cur += len;
+    }
+
+    if (cur == payload)
+    {
+        cur = NULL;
+    }
+
+exit:
+    return cur;
+}
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint8_t *Frame::GetTimeIe(void) const
+{
+    TimeIe * timeIe              = NULL;
+    uint8_t *cur                 = NULL;
+    uint8_t  oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+
+    cur = GetHeaderIe(kHeaderIeVendor);
+    VerifyOrExit(cur != NULL);
+
+    cur += sizeof(HeaderIe);
+
+    timeIe = reinterpret_cast<TimeIe *>(cur);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
+    VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
+
+exit:
+    return cur;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
+Frame::InfoString Frame::ToInfoString(void) const
+{
+    InfoString string;
+    uint8_t    commandId, type;
+    Address    src, dst;
+
+    string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence());
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        typeStr = "Beacon";
+        string.Append("Beacon");
         break;
 
     case kFcfFrameData:
-        typeStr = "Data";
+        string.Append("Data");
         break;
 
     case kFcfFrameAck:
-        typeStr = "Ack";
+        string.Append("Ack");
         break;
 
     case kFcfFrameMacCmd:
@@ -960,47 +1097,42 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            typeStr = "Cmd(DataReq)";
+            string.Append("Cmd(DataReq)");
             break;
 
         case kMacCmdBeaconRequest:
-            typeStr = "Cmd(BeaconReq)";
+            string.Append("Cmd(BeaconReq)");
             break;
 
         default:
-            snprintf(stringBuffer, sizeof(stringBuffer), "Cmd(%d)", commandId);
-            typeStr = stringBuffer;
+            string.Append("Cmd(%d)", commandId);
             break;
         }
 
         break;
 
     default:
-        snprintf(stringBuffer, sizeof(stringBuffer), "%d", type);
-        typeStr = stringBuffer;
+        string.Append("%d", type);
         break;
     }
 
     GetSrcAddr(src);
     GetDstAddr(dst);
 
-    snprintf(aBuf, aSize, "len:%d, seqnum:%d, type:%s, src:%s, dst:%s, sec:%s, ackreq:%s", GetLength(), GetSequence(),
-             typeStr, src.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
-             dst.ToString(dstStringBuffer, sizeof(dstStringBuffer)), GetSecurityEnabled() ? "yes" : "no",
-             GetAckRequest() ? "yes" : "no");
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
+                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
 
-    return aBuf;
+    return string;
 }
 
-const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize)
+BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     const uint8_t *xpanid = GetExtendedPanId();
 
-    snprintf(aBuf, aSize, "name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
-             GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6], xpanid[7],
-             GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
-
-    return aBuf;
+    return InfoString("name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
+                      GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6],
+                      xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
+                      IsNative() ? "yes" : "no");
 }
 
 } // namespace Mac

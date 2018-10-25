@@ -92,7 +92,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 40
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 44
 #endif
 
 /**
@@ -126,37 +126,82 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+ * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
  *
- * Maximum number of MAC layer transmit attempts for an outbound direct frame.
- * Per IEEE 802.15.4-2006, default value is set to (macMaxFrameRetries + 1) with macMaxFrameRetries = 3.
+ * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+ *
+ * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
-#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT 4
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT 32
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+ * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
  *
- * Maximum number of MAC layer transmit attempts for an outbound indirect frame (to a sleepy child) after receiving
- * a data request command (data poll) from the child.
+ * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
+ *
+ * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
-#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL 1
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT 4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+ *
+ * The maximum number of retries allowed after a transmission failure for direct transmissions.
+ *
+ * Equivalent to macMaxFrameRetries, default value is 3.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ *
+ * The maximum number of retries allowed after a transmission failure for indirect transmissions.
+ *
+ * Equivalent to macMaxFrameRetries, default value is 0.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
 #endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
  *
- * Maximum number of transmit attempts for an outbound indirect frame (for a sleepy child) each triggered by the
- * reception of a new data request command (a new data poll) from the sleepy child. Each data poll triggered attempt is
- * retried by the MAC layer up to `OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL` times.
+ * Maximum number of received IEEE 802.15.4 Data Requests for a queued indirect transaction.
+ *
+ * The indirect frame remains in the transaction queue until it is successfully transmitted or until the indirect
+ * transmission fails after the maximum number of IEEE 802.15.4 Data Request messages have been received.
+ *
+ * Takes the place of macTransactionPersistenceTime. The time period is specified in units of IEEE 802.15.4 Data
+ * Request receptions, rather than being governed by macBeaconOrder.
+ *
+ * @sa OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
 #define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS 4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
+ *
+ * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
+ *
+ * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
+ * increase congestion.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
+#define OPENTHREAD_CONFIG_TX_NUM_BCAST 1
 #endif
 
 /**
@@ -259,6 +304,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE 1024
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_ROUTERS
+ *
+ * The maximum number of routers in a Thread network.
+ *
+ * @note Thread specifies this value to be 32.  Changing this value may cause interoperability issues with standard
+ *       Thread 1.1 devices.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_ROUTERS
+#define OPENTHREAD_CONFIG_MAX_ROUTERS 32
 #endif
 
 /**
@@ -528,6 +586,32 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+ *
+ * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
+ *
+ * Thread specification defines this value as 30,000 ms. Changing from the specified value should be done for testing
+ * only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY 30000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
+ *
+ * Default Delay Timer value for a Pending Operational Dataset (in ms).
+ *
+ * Thread specification defines this value as 300,000 ms. Changing from the specified value should be done for testing
+ * only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
+#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY 300000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
  * Selects if, and where the LOG output goes to.
@@ -558,6 +642,8 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP 2
 /** Log output is handled by a platform defined function */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
+/** Log output for NCP goes to Spinel `STREAM_LOG` property (for CLI platform defined function is expected) */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL 4
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -764,6 +850,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+ *
+ * If defined as 1 when IPv6 message info is logged in mesh-forwarder, the source and destination IPv6 addresses of
+ * messages are also included.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
+#define OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
  *
  * Defines the name of function/macro used for logging inside OpenThread, by default it is set to `otPlatLog()`.
@@ -820,8 +917,12 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE 512
+#else
 #define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE 1300
 #endif
+#endif // OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
@@ -830,8 +931,12 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE 512
+#else
 #define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE 1300
 #endif
+#endif // OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
@@ -842,6 +947,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
 #define OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
+ *
+ * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE
+#define OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE 150
 #endif
 
 /**
@@ -879,6 +994,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ *
+ * Define to 1 if you want to enable software CSMA-CA backoff logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
  *
  * Define to 1 if you want to enable software energy scanning logic.
@@ -898,6 +1025,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+ *
+ * Allows to define custom otPlatRadioGetIeeeEui64 function to retrieve EUI-64.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE 0
 #endif
 
 /**
@@ -924,23 +1061,37 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE
  *
- * The size of mbedTLS heap buffer when DTLS is enabled.
+ * The size of heap buffer when DTLS is enabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE (1536 * sizeof(void *))
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#define OPENTHREAD_CONFIG_HEAP_SIZE (3072 * sizeof(void *))
+#else
+#define OPENTHREAD_CONFIG_HEAP_SIZE (1536 * sizeof(void *))
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_HEAP_SIZE
+
+/**
+ * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+ *
+ * The size of heap buffer when DTLS is disabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS 384
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ * @def OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
  *
- * The size of mbedTLS heap buffer when DTLS is disabled.
+ * The size of dtls application data when the CoAP Secure API is enabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
-#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS 384
+#ifndef OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
+#define OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH 1400
 #endif
 
 /**
@@ -1059,7 +1210,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
  *
- * The minimum delay in seconds used by Channel Manager module for performing a channel change.
+ * The minimum delay (in seconds) used by Channel Manager module for performing a channel change.
  *
  * The minimum delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within
  * the Thread network.
@@ -1069,6 +1220,81 @@
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY 120
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT
+ *
+ * The minimum number of RSSI samples per channel by Channel Monitoring feature before the collected data can be used
+ * by the Channel Manager module to (auto) select a better channel.
+ *
+ * Applicable only if Channel Manager and Channel Monitoring features are both enabled (i.e.,
+ * `OPENTHREAD_ENABLE_CHANNEL_MANAGER` and `OPENTHREAD_ENABLE_CHANNEL_MONITOR` are set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT 500
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
+ *
+ * This threshold specifies the minimum occupancy rate difference between two channels for the Channel Manager to
+ * prefer an unfavored channel over the best favored one. This is used when (auto) selecting a channel based on the
+ * collected channel quality data by "channel monitor" feature.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED (0xffff * 7 / 100)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
+ *
+ * This threshold specifies the minimum occupancy rate difference required between the current channel and a newly
+ * selected channel for Channel Manager to allow channel change to the new channel.
+ *
+ * The difference is based on the `ChannelMonitor::GetChannelOccupancy()` definition which provides the average
+ * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
+ * a threshold). Value 0 maps to 0% rate and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL
+ *
+ * The default time interval (in seconds) used by Channel Manager for auto-channel-selection functionality.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL (3 * 60 * 60)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
+ *
+ * Minimum CCA failure rate threshold on current channel before Channel Manager starts channel selection attempt.
+ *
+ * Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD (0xffff * 14 / 100)
 #endif
 
 /**
@@ -1188,6 +1414,129 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+ *
+ * Define as 1 to enable attach backoff feature
+ *
+ * When this feature is enabled, an exponentially increasing backoff wait time is added between attach attempts.
+ * If device is sleepy, the radio will be put to sleep during the wait time. This ensures that a battery-powered sleepy
+ * end-device does not drain its battery by continuously searching for a parent to attach to (when there is no
+ * router/parent for it to attach).
+ *
+ * The backoff time starts from a minimum interval specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL`,
+ * and every attach attempt the wait time is doubled up to `OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL` which
+ * specifies the maximum wait time.
+ *
+ * Once the wait time reaches the maximum, a random jitter interval is added to it. The maximum value for jitter is
+ * specified by `OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL`. The random jitter is selected uniformly within
+ * range `[-JITTER, +JITTER]`. It is only added when the backoff wait interval is at maximum value.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+ *
+ * Specifies the minimum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL 251
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+ *
+ * Specifies the maximum backoff wait interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL 1200000 // 1200 seconds = 20 minutes
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+ *
+ * Specifies the maximum jitter interval (in milliseconds) used by attach backoff feature.
+ *
+ * Applicable only if attach backoff feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF`).
+ *
+ * Please see `OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF` description for more details.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL
+#define OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL 2000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+ *
+ * Define as 1 to enable sending of a unicast MLE Announce message in response to a received Announce message from
+ * a device.
+ *
+ * @note The unicast MLE announce message is sent in addition to (and after) the multicast MLE Announce.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+#define OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+ *
+ * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
+ *
+ * The list of channels is determined from the Operational Dataset's ChannelMask. The period intervals are determined
+ * by `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` and `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED`
+ * configuration options.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#define OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
+ *
+ * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in Router role.
+ *
+ * In a cycle, the `AnnounceSender` sends MLE Announcement on all channels in Active Operational Dataset's ChannelMask.
+ * The transmissions on different channels happen uniformly over the given interval (i.e., if there are 16 channels,
+ * there will be 16 MLE Announcement messages each on one channel with `interval / 16`  between two consecutive MLE
+ * Announcement transmissions).
+ *
+ * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER`).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER 688000 // 668 seconds = 11 min and 28 sec.
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
+ *
+ * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in REED role.
+ *
+ * This is similar to `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` but used when device is in REED role.
+ *
+ * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER`).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED (668000 * 3)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
  *
  * Define as 1 to enable peek/poke functionality on NCP.
@@ -1215,6 +1564,27 @@
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE
 #define OPENTHREAD_CONFIG_NCP_SPINEL_RESPONSE_QUEUE_SIZE 15
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+ *
+ * Define to 1 to enable support controlling of desired power state of NCP's micro-controller.
+ *
+ * The power state specifies the desired power state of NCP's micro-controller (MCU) when the underlying platform's
+ * operating system enters idle mode (i.e., all active tasks/events are processed and the MCU can potentially enter a
+ * energy-saving power state).
+ *
+ * The power state primarily determines how the host should interact with the NCP and whether the host needs an
+ * external trigger (a "poke") before it can communicate with the NCP or not.
+ *
+ * When enabled, the platform is expected to provide `otPlatSetMcuPowerState()` and `otPlatGetMcuPowerState()`
+ * functions (please see `openthread/platform/misc.h`). Host can then control the power state using
+ * `SPINEL_PROP_MCU_POWER_STATE`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+#define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 0
 #endif
 
 /**
@@ -1294,13 +1664,204 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
+ * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
- * Define as 1 to disable CCA on the last transmit attempt
+ * Define as 1 to disable CSMA-CA on the last transmit attempt
  *
  */
-#ifndef OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT
-#define OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT 0
+#ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#define OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+ *
+ * Define OpenThread diagnostic mode max command line arguments.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode command line buffer size in bytes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+ *
+ * Define as 1 to enable the time synchronization service feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+ *
+ * Define as 1 to require time synchronization when attaching to a network. If the device is router capable
+ * and cannot find a neighboring router supporting time synchronization, the device will form a new partition.
+ * If the device is not router capable, the device will remain an orphan.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
+#define OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
+ *
+ * Specifies the default period of time synchronization, in seconds.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
+#define OPENTHREAD_CONFIG_TIME_SYNC_PERIOD 30
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
+ *
+ * Specifies the default XTAL threshold for a device to become Router in time synchronization enabled network, in PPM.
+ *
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD
+#define OPENTHREAD_CONFIG_TIME_SYNC_XTAL_THRESHOLD 300
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+ *
+ * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
+ * to support following features:
+ *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
+ *
+ * @note If it's enabled, platform must support interrupt context and concurrent access AES.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
+#else
+#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 0
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+ *
+ * Enable experimental mode for 'deep' networks, allowing packet routes up to 32 nodes.
+ * This mode is incompatible with Thread 1.1.1 and older.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#define OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
+ *
+ * The settings storage path on posix platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
+#define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "tmp"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS
+ *
+ * This setting configures the number of consecutive MCPS.DATA-Confirms having Status NO_ACK
+ * that cause a Child-to-Parent link to be considered broken.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS
+#define OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS 4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
+ *
+ * This setting configures the minimum poll period in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
+#define OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD 10
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_RETX_POLL_PERIOD
+ *
+ * This setting configures the retx poll period in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RETX_POLL_PERIOD
+#define OPENTHREAD_CONFIG_RETX_POLL_PERIOD 1000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE
+ *
+ * This setting configures the default buffer size for IPv6 datagram destined for an attached SED.
+ * A Thread Router MUST be able to buffer at least one 1280-octet IPv6 datagram for an attached SED according to
+ * the Thread Conformance Specification.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE 1280
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT
+ *
+ * This setting configures the default datagram count of 106-octet IPv6 datagram per attached SED.
+ * A Thread Router MUST be able to buffer at least one 106-octet IPv6 datagram per attached SED according to
+ * the Thread Conformance Specification.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT
+#define OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT
+ *
+ * This setting configures the default hop limit of IPv6.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT
+#define OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT 64
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM
+ *
+ * This setting configures the max datagram length of IPv6.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM
+#define OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM 1280
+#endif
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

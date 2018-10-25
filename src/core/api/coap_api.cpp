@@ -93,9 +93,9 @@ otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUri
     return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
 }
 
-void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
+otError otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
 {
-    static_cast<Coap::Header *>(aHeader)->SetPayloadMarker();
+    return static_cast<Coap::Header *>(aHeader)->SetPayloadMarker();
 }
 
 void otCoapHeaderSetMessageId(otCoapHeader *aHeader, uint16_t aMessageId)
@@ -111,6 +111,11 @@ otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader)
 otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader)
 {
     return static_cast<const Coap::Header *>(aHeader)->GetCode();
+}
+
+const char *otCoapHeaderCodeToString(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->CodeToString();
 }
 
 uint16_t otCoapHeaderGetMessageId(const otCoapHeader *aHeader)

@@ -30,7 +30,7 @@
 #include <openthread/config.h>
 #include <openthread/platform/misc.h>
 
-#include <device/nrf.h>
+#include <nrf.h>
 
 #include "platform-nrf5.h"
 
@@ -39,6 +39,8 @@
 #endif
 
 static uint32_t sResetReason;
+
+bool gPlatformPseudoResetWasRequested;
 
 __WEAK void nrf5CryptoInit(void)
 {
@@ -69,8 +71,12 @@ void nrf5MiscDeinit(void)
 void otPlatReset(otInstance *aInstance)
 {
     (void)aInstance;
-
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = true;
+    sResetReason                     = POWER_RESETREAS_SREQ_Msk;
+#else  // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     NVIC_SystemReset();
+#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)

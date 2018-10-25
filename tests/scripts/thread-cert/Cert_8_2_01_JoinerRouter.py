@@ -43,7 +43,7 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
 
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i)
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
@@ -64,8 +64,8 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()

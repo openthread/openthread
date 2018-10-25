@@ -37,7 +37,6 @@
 
 #include "platform-posix.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/random.h>
 
 #include "utils/code_utils.h"
@@ -55,8 +54,8 @@ void platformRandomInit(void)
 
 #else // __SANITIZE_ADDRESS__
 
-    // Multiplying NODE_ID assures that no two nodes gets the same seed within an hour.
-    sState = (uint32_t)time(NULL) + (3600 * NODE_ID);
+    // Multiplying gNodeId assures that no two nodes gets the same seed within an hour.
+    sState = (uint32_t)time(NULL) + (3600 * gNodeId);
 
 #endif // __SANITIZE_ADDRESS__
 }

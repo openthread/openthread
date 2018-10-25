@@ -36,8 +36,6 @@
 
 #include <assert.h>
 #include <utils/code_utils.h>
-#include <openthread/openthread.h>
-#include <openthread/types.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -57,10 +55,15 @@
 #include <inc/hw_fcfg1.h>
 #include <inc/hw_memmap.h>
 #include <inc/hw_prcm.h>
+#include <inc/hw_rfc_pwr.h>
+#include <rf_patches/rf_patch_cpe_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_mce_ieee_802_15_4.h>
+#include <rf_patches/rf_patch_rfe_ieee_802_15_4.h>
 
 enum
 {
     CC2652_RECEIVE_SENSITIVITY = -100, // dBm
+    CC2652_RF_CMD0             = 0x0607,
 };
 
 /* phy state as defined by openthread */
@@ -69,13 +72,40 @@ static volatile cc2652_PhyState_t sState;
 /* set to max transmit power by default */
 static output_config_t const *sCurrentOutputPower = &(rgOutputPower[0]);
 
-/* TODO: replace with correct overrides, pre-Alpha */
-/* Overrides for IEEE 802.15.4, differential mode */
+/* Overrides from SmartRF Studio 7 2.10.0#94 */
 static uint32_t sIEEEOverrides[] = {
-    0x00008403, // Use 48 MHz Crystal
-    0x000088C3, // Disabling dynamic DCDC settings control in RX
-    0x000088D3, // Disabling dynamic DCDC settings control in TX
-    0xFFFFFFFF, // END_OVERRIDE
+    // override_ieee_802_15_4.xml
+    // PHY: Use MCE RAM patch, RFE ROM bank 1
+    MCE_RFE_OVERRIDE(1, 0, 0, 0, 1, 0),
+    // Synth: Use 48 MHz crystal, enable extra PLL filtering
+    (uint32_t)0x02400403,
+    // Synth: Configure extra PLL filtering
+    (uint32_t)0x001C8473,
+    // Synth: Configure synth hardware
+    (uint32_t)0x00088433,
+    // Synth: Set minimum RTRIM to 3
+    (uint32_t)0x00038793,
+    // Synth: Configure faster calibration
+    HW32_ARRAY_OVERRIDE(0x4004, 1),
+    // Synth: Configure faster calibration
+    (uint32_t)0x1C0C0618,
+    // Synth: Configure faster calibration
+    (uint32_t)0xC00401A1,
+    // Synth: Configure faster calibration
+    (uint32_t)0x00010101,
+    // Synth: Configure faster calibration
+    (uint32_t)0xC0040141,
+    // Synth: Configure faster calibration
+    (uint32_t)0x00214AD3,
+    // Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us)
+    (uint32_t)0x02980243,
+    // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). In Rx, use DCDCCTL5[3:0]=0xC
+    // (DITHER_EN=1 and IPEAK=4).
+    (uint32_t)0xFCFC08C3,
+    // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
+    (uint32_t)0x000F8883,
+    // override_frontend_id.xml
+    (uint32_t)0xFFFFFFFF,
 };
 
 /*
@@ -840,8 +870,10 @@ static uint_fast8_t rfCorePowerOn(void)
     }
 
     /* Let CPE boot */
-    HWREG(RFC_PWR_NONBUF_BASE + RFC_PWR_O_PWMCLKEN) =
-        (RFC_PWR_PWMCLKEN_RFC_M | RFC_PWR_PWMCLKEN_CPE_M | RFC_PWR_PWMCLKEN_CPERAM_M);
+    RFCClockEnable();
+
+    /* Enable ram clocks for patches */
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, RFC_PWR_PWMCLKEN_MDMRAM | RFC_PWR_PWMCLKEN_RFERAM));
 
     /* Send ping (to verify RFCore is ready and alive) */
     return rfCoreExecutePingCmd();
@@ -878,6 +910,19 @@ static void rfCorePowerOff(void)
         /* Switch the HF clock source (cc26xxware executes this from ROM) */
         OSCHfSourceSwitch();
     }
+}
+
+/**
+ * Applies CPE, RFE, and MCE patches to the radio.
+ */
+static void rfCoreApplyPatch(void)
+{
+    rf_patch_cpe_ieee_802_15_4();
+    rf_patch_mce_ieee_802_15_4();
+    rf_patch_rfe_ieee_802_15_4();
+
+    /* disable ram bus clocks */
+    RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, 0));
 }
 
 /**
@@ -935,6 +980,8 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
     sRadioSetupCmd.pRegOverride = sIEEEOverrides;
 
     interruptsWereDisabled = IntMasterDisable();
+
+    rfCoreApplyPatch();
 
     doorbellRet = (RFCDoorbellSendTo((uint32_t)&sStartRatCmd) & 0xFF);
     otEXPECT_ACTION(CMDSTA_Done == doorbellRet, ret = doorbellRet);
@@ -1835,17 +1882,18 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-                // TODO: Propagate CM0 timestamp
-                receiveFrame.mMsec = otPlatAlarmMilliGetNow();
-                receiveFrame.mUsec = 0; // Don't support microsecond timer for now.
-#endif
+                if (otPlatRadioGetPromiscuous(aInstance))
+                {
+                    // TODO: Propagate CM0 timestamp
+                    receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+                    receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+                }
 
-                receiveFrame.mLength  = len;
-                receiveFrame.mPsdu    = &(payload[1]);
-                receiveFrame.mChannel = sReceiveCmd.channel;
-                receiveFrame.mRssi    = rssi;
-                receiveFrame.mLqi     = crcCorr->status.corr;
+                receiveFrame.mLength             = len;
+                receiveFrame.mPsdu               = &(payload[1]);
+                receiveFrame.mChannel            = sReceiveCmd.channel;
+                receiveFrame.mInfo.mRxInfo.mRssi = rssi;
+                receiveFrame.mInfo.mRxInfo.mLqi  = crcCorr->status.corr;
 
                 receiveError = OT_ERROR_NONE;
             }

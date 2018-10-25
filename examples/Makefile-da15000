@@ -42,18 +42,22 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli-app=all          \
-    --enable-ncp-app=all          \
+    --enable-cli                  \
+    --enable-ftd                  \
+    --enable-mtd                  \
+    --enable-ncp                  \
     --with-ncp-bus=uart           \
-    --with-examples=da15000       \
+    --enable-radio-only           \
     --enable-linker-map           \
+    --with-examples=da15000       \
     MBEDTLS_CPPFLAGS="$(DA15000_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-DA15000_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"da15000-mbedtls-config.h\"'
+DA15000_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+DA15000_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"da15000-mbedtls-config.h\"'
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/da15000/crypto
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/include
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/peripherals/include
@@ -63,7 +67,7 @@ DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/interfaces/ftd
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/bsp/config
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/dialog/DialogSDK/interfaces/ftdf/src
-DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo.patched/include
+DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 DA15000_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
 DA15000_MBEDTLS_CPPFLAGS += -include$(PWD)/examples/platforms/da15000/custom_config_qspi.h
 

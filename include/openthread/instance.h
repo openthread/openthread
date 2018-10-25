@@ -36,9 +36,13 @@
 #define OPENTHREAD_INSTANCE_H_
 
 #include <stdlib.h>
+#ifdef OTDLL
+#include <guiddef.h>
+#endif
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +58,38 @@ extern "C" {
  *
  */
 
+/**
+ * This structure represents the OpenThread instance structure.
+ */
+typedef struct otInstance otInstance;
+
 #ifdef OTDLL
+
+/**
+ * This structure represents the handle to the OpenThread API.
+ *
+ */
+typedef struct otApiInstance otApiInstance;
+
+/**
+ * This structure represents a list of device GUIDs.
+ *
+ */
+typedef struct otDeviceList
+{
+    uint16_t aDevicesLength;
+    GUID     aDevices[1];
+} otDeviceList;
+
+/**
+ * This function pointer is called to notify addition and removal of OpenThread devices.
+ *
+ * @param[in]  aAdded       A flag indicating if the device was added or removed.
+ * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
+ * @param[in]  aContext     A pointer to application-specific context.
+ *
+ */
+typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 /**
  * This function initializes a new instance of the OpenThread library.
@@ -163,7 +198,7 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 /**
  * This function initializes the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is enabled.
@@ -182,7 +217,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 /**
  * This function initializes the static single instance of the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
  * This function is available and can only be used when support for multiple OpenThread instances is disabled.
@@ -247,7 +282,17 @@ enum
     OT_CHANGED_MASTER_KEY                  = 1 << 20, ///< Master key changed
     OT_CHANGED_PSKC                        = 1 << 21, ///< PSKc changed
     OT_CHANGED_SECURITY_POLICY             = 1 << 22, ///< Security Policy changed
+    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 23, ///< Channel Manager new pending Thread channel changed
+    OT_CHANGED_SUPPORTED_CHANNEL_MASK      = 1 << 24, ///< Supported channel mask changed
+    OT_CHANGED_BORDER_AGENT_STATE          = 1 << 25, ///< Border agent state changed
 };
+
+/**
+ * This type represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`
+ * definitions.
+ *
+ */
+typedef uint32_t otChangedFlags;
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -256,7 +301,7 @@ enum
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
+typedef void(OTCALL *otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
@@ -329,10 +374,28 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE               The log level was changed successfully.
  * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is disabled.
- *                                     (@sa `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
+ *                                     (see `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
  *
  */
 otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+
+/**
+ * This function gets the OpenThread version string.
+ *
+ * @returns A pointer to the OpenThread version.
+ *
+ */
+OTAPI const char *OTCALL otGetVersionString(void);
+
+/**
+ * This function gets the OpenThread radio version string.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the OpenThread radio version.
+ *
+ */
+const char *otGetRadioVersionString(otInstance *aInstance);
 
 /**
  * @}

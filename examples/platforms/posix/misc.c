@@ -29,52 +29,78 @@
 #include "platform-posix.h"
 
 #ifndef _WIN32
+#include <setjmp.h>
 #include <unistd.h>
 #endif
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
-#include "platform.h"
+#include "openthread-system.h"
 
 #ifndef _WIN32
-extern int    gArgumentsCount;
-extern char **gArguments;
+extern jmp_buf gResetJump;
 #endif
+
+static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
+bool                       gPlatformPseudoResetWasRequested;
+static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-#ifndef _WIN32
-    char *argv[gArgumentsCount + 1];
+#if _WIN32
+// This function does nothing on the Windows platform.
 
-    for (int i = 0; i < gArgumentsCount; ++i)
-    {
-        argv[i] = gArguments[i];
-    }
+#elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET // if _WIN32
+    gPlatformPseudoResetWasRequested = true;
+    sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
 
-    argv[gArgumentsCount] = NULL;
-
-    PlatformDeinit();
+#else // elif OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    // Restart the process using execvp.
+    otSysDeinit();
     platformUartRestore();
 
-    alarm(0);
+    longjmp(gResetJump, 1);
+    assert(false);
 
-    execvp(argv[0], argv);
-    perror("reset failed");
-    exit(EXIT_FAILURE);
-#else
-// This function does nothing on the Windows platform.
-#endif // _WIN32
+#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+
     (void)aInstance;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;
-    return OT_PLAT_RESET_REASON_POWER_ON;
+    return sPlatResetReason;
 }
 
 void otPlatWakeHost(void)
 {
     // TODO: implement an operation to wake the host from sleep state.
+}
+
+otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
+{
+    otError error = OT_ERROR_NONE;
+
+    (void)aInstance;
+
+    switch (aState)
+    {
+    case OT_PLAT_MCU_POWER_STATE_ON:
+    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
+        gPlatMcuPowerState = aState;
+        break;
+
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
+
+    return error;
+}
+
+otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
+{
+    (void)aInstance;
+    return gPlatMcuPowerState;
 }

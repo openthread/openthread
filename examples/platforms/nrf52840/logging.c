@@ -46,9 +46,9 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
-#include <openthread/types.h>
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 #include <segger_rtt/SEGGER_RTT.h>
 
 #if (LOG_RTT_COLOR_ENABLE == 1)
@@ -140,11 +140,12 @@ void nrf5LogDeinit()
     sLogInitialized = false;
 }
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogRegion;
 
     uint16_t length = 0;
+    int      charsWritten;
     char     logString[LOG_PARSE_BUFFER_SIZE + 1];
 
     otEXPECT(sLogInitialized == true);
@@ -159,7 +160,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     // Parse user string.
     va_list paramList;
     va_start(paramList, aFormat);
-    length += vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, paramList);
+    charsWritten = vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, paramList);
+    otEXPECT(charsWritten >= 0);
+    length += charsWritten;
 
     if (length > LOG_PARSE_BUFFER_SIZE)
     {

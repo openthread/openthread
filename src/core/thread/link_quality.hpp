@@ -36,8 +36,9 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
+
+#include "common/string.hpp"
 
 namespace ot {
 
@@ -64,17 +65,6 @@ public:
     {
         kMaxRateValue = 0xffff, ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
     };
-
-    /**
-     * This constructor initializes a `SuccessRateTracker` instance.
-     *
-     * After initialization the tracker starts with success rate 100% (failure rate 0%).
-     *
-     */
-    SuccessRateTracker(void)
-        : mFailureRate(0)
-    {
-    }
 
     /**
      * This method resets the tracker to its initialized state, setting success rate to 100%.
@@ -131,6 +121,12 @@ public:
     };
 
     /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kStringSize> InfoString;
+
+    /**
      * This method reset the averager and clears the average value.
      *
      */
@@ -180,13 +176,10 @@ public:
      * This method converts the current average RSS value to a human-readable string (e.g., "-80.375"). If the
      * average is unknown, empty string is returned.
      *
-     * @param[out]  aBuf   A pointer to the char buffer.
-     * @param[in]   aSize  The maximum size of the buffer.
-     *
-     * @returns A pointer to the char string buffer.
+     * @returns An `InfoString` object containing the string representation of average RSS.
      *
      */
-    const char *ToString(char *aBuf, uint16_t aSize) const;
+    InfoString ToString(void) const;
 
 private:
     /*
@@ -231,10 +224,10 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * This type defines the fixed-length `String` object returned from `ToInfoString()`.
      *
      */
-    LinkQualityInfo(void);
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * This method clears the all the data in the object.
@@ -269,15 +262,12 @@ public:
     uint16_t GetAverageRssRaw(void) const { return mRssAverager.GetRaw(); }
 
     /**
-     * This method converts the link quality info to NULL-terminated info/debug human-readable string.
+     * This method converts the link quality info to info/debug human-readable string.
      *
-     * @param[out]  aBuf   A pointer to the string buffer.
-     * @param[in]   aSize  The maximum size of the string buffer.
-     *
-     * @returns A pointer to the char string buffer.
+     * @returns An `InfoString` representing the link quality info.
      *
      */
-    const char *ToInfoString(char *aBuf, uint16_t aSize) const;
+    InfoString ToInfoString(void) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received

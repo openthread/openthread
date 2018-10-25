@@ -32,10 +32,9 @@
  *   This file defines the raw OpenThread IEEE 802.15.4 Link Layer API.
  */
 
-#ifndef LINK_RAW_H_
-#define LINK_RAW_H_
+#ifndef OPENTHREAD_LINK_RAW_H_
+#define OPENTHREAD_LINK_RAW_H_
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -74,42 +73,6 @@ otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled);
  *
  */
 bool otLinkRawIsEnabled(otInstance *aInstance);
-
-/**
- * This function set the IEEE 802.15.4 PAN ID.
- *
- * @param[in] aInstance      A pointer to an OpenThread instance.
- * @param[in] aPanId         The IEEE 802.15.4 PAN ID.
- *
- * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
- *
- */
-otError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId);
-
-/**
- * This function sets the IEEE 802.15.4 Extended Address.
- *
- * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
- *
- * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
- *
- */
-otError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
-
-/**
- * Set the Short Address for address filtering.
- *
- * @param[in] aInstance      A pointer to an OpenThread instance.
- * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
- *
- * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
- *
- */
-otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * This function gets the status of promiscuous mode.
@@ -163,14 +126,13 @@ typedef void(OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *
  * Turn on the radio.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aChannel     The channel to use for receiving.
  * @param[in]  aCallback    A pointer to a function called on receipt of a IEEE 802.15.4 frame.
  *
  * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
  * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
  *
  */
-otError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback);
+otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback);
 
 /**
  * The radio transitions from Transmit to Receive.
@@ -212,7 +174,7 @@ typedef void (*otLinkRawTransmitDone)(otInstance *  aInstance,
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
- * 2. Transmits the psdu on the given channel and at the given transmit power.
+ * 2. Transmits the PSDU on the given channel and at the given transmit power.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aFrame       A pointer to the frame that was transmitted.
@@ -366,4 +328,4 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // LINK_RAW_H_
+#endif // OPENTHREAD_LINK_RAW_H_

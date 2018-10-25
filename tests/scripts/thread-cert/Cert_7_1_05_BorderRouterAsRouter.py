@@ -70,13 +70,13 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[SED2].set_mode('s')
         self.nodes[SED2].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[SED2].enable_whitelist()
-        self.nodes[SED2].set_timeout(3)
+        self.nodes[SED2].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()

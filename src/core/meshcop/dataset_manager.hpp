@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -47,8 +45,6 @@
 #include "net/udp6.hpp"
 
 namespace ot {
-
-class ThreadNetif;
 
 namespace MeshCoP {
 
@@ -94,14 +90,6 @@ public:
     otError AppendMleDatasetTlv(Message &aMessage) const;
 
     /**
-     * This method returns a pointer to the TLV.
-     *
-     * @returns A pointer to the TLV or NULL if none is found.
-     *
-     */
-    const Tlv *GetTlv(Tlv::Type aType) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
@@ -126,7 +114,8 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @retval OT_ERROR_NONE  Successfully applied configuration.
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
     otError ApplyConfiguration(void) const;
@@ -167,8 +156,11 @@ protected:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
      */
-    void Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -236,7 +228,8 @@ public:
      * @param[in]  aTlvs     Any additional raw TLVs to include.
      * @param[in]  aLength   Number of bytes in @p aTlvs.
      *
-     * @retval OT_ERROR_NONE on success.
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
      *
      */
     otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
@@ -244,14 +237,19 @@ public:
     /**
      * This method sends a MGMT_GET request.
      *
-     * @param[in]  aTlvTypes  The list of TLV types to request.
-     * @param[in]  aLength    Number of bytes in @p aTlvTypes.
-     * @param[in]  aAddress   The IPv6 destination address for the MGMT_GET request.
+     * @param[in]  aDatasetComponents  An Operational Dataset components structure specifying components to request.
+     * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+     * @param[in]  aLength             Number of bytes in @p aTlvTypes.
+     * @param[in]  aAddress            The IPv6 destination address for the MGMT_GET request.
      *
-     * @retval OT_ERROR_NONE on success.
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
      *
      */
-    otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress) const;
+    otError SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
+                           const uint8_t *                       aTlvTypes,
+                           uint8_t                               aLength,
+                           const otIp6Address *                  aAddress) const;
 
 protected:
     /**
@@ -276,10 +274,15 @@ protected:
     otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
+    enum
+    {
+        kMaxDatasetTlvs = 16, // Maximum number of TLVs in an `otOperationalDataset`.
+    };
+
     void SendSetResponse(const Coap::Header &    aRequestHeader,
                          const Ip6::MessageInfo &aMessageInfo,
                          StateTlv::State         aState);
-#endif
+#endif // OPENTHREAD_FTD
 };
 
 class ActiveDataset : public DatasetManager

@@ -45,7 +45,7 @@ abs_top_srcdir   := $(abspath $(top_srcdir))
 # any trailing version number information typically included on Darwin
 # / Mac OS X.
 
-host             := $(shell $(top_srcdir)/autoconf/config.guess | $(SED) -e 's/[[:digit:].]*$$//g')
+host             := $(shell $(top_srcdir)/third_party/autoconf/config.guess | $(SED) -e 's/[[:digit:].]*$$//g')
 
 distdir           = $(PACKAGE)-$(VERSION)
 
@@ -62,8 +62,8 @@ PACKAGE_VERSION   = $(shell $(CAT) $(top_builddir)/.local-version)
 
 VERSION           = $(PACKAGE_VERSION)
 
-DIST_TMPDIR      := $(shell mktemp -u -p /tmp -d tmp.$(PACKAGE)-$(VERSION)XXXXXX)
-TOOLS_TMPDIR     := $(shell mktemp -u -p /tmp -d tmp.$(PACKAGE)-$(VERSION)XXXXXX)
+DIST_TMPDIR      := $(shell mktemp -u -d /tmp/tmp.$(PACKAGE)-$(VERSION)XXXXXX)
+TOOLS_TMPDIR     := $(shell mktemp -u -d /tmp/tmp.$(PACKAGE)-$(VERSION)XXXXXX)
 
 #
 # Verbosity

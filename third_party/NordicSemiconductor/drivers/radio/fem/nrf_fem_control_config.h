@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ extern "C" {
  */
 
 /** Time in us when PA GPIO is activated before radio is ready for transmission. */
-#define NRF_FEM_PA_TIME_IN_ADVANCE          5
+#define NRF_FEM_PA_TIME_IN_ADVANCE          23
 
 /** Time in us when LNA GPIO is activated before radio is ready for reception. */
 #define NRF_FEM_LNA_TIME_IN_ADVANCE         5
@@ -52,15 +52,6 @@ extern "C" {
 
 /** Radio ramp-up time in RX mode, in us. */
 #define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
-
-/** Radio turnaround from RX to TX mode, in us. */
-#define NRF_FEM_RADIO_TX_TURNAROUND_LATENCY_US 20
-
-/** Radio turnaround from TX to RX mode, in us. */
-#define NRF_FEM_RADIO_RX_TURNAROUND_LATENCY_US 20
-
-/** Tifs drift measured, in us. */
-#define NRF_FEM_RADIO_TIFS_DRIFT_US         20
 
 #else
 

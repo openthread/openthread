@@ -41,3 +41,12 @@ libtool
 Makefile
 Makefile.in
 output
+third_party/nlbuild-autotools/repo/third_party/autoconf/compile
+third_party/nlbuild-autotools/repo/third_party/autoconf/depcomp
+third_party/nlbuild-autotools/repo/third_party/autoconf/ltmain.sh
+third_party/nlbuild-autotools/repo/third_party/autoconf/m4/libtool.m4
+third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltoptions.m4
+third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltsugar.m4
+third_party/nlbuild-autotools/repo/third_party/autoconf/m4/ltversion.m4
+third_party/nlbuild-autotools/repo/third_party/autoconf/m4/lt~obsolete.m4
+third_party/nlbuild-autotools/repo/third_party/autoconf/missing

@@ -87,7 +87,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
+            node.destroy()
 
     def test(self):
         self.nodes[LEADER1].start()

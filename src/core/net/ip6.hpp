@@ -103,19 +103,20 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = 64,
-        kMaxDatagramLength = 1280,
+        kDefaultHopLimit   = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
+        kMaxDatagramLength = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
     };
 
     /**
      * This method allocates a new message buffer from the buffer pool.
      *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
+     * @param[in]  aPriority  The priority level of the message.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved);
+    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultIp6MessagePriority);
 
     /**
      * This constructor initializes the object.
@@ -379,6 +380,11 @@ public:
     static const char *IpProtoToString(IpProto aIpProto);
 
 private:
+    enum
+    {
+        kDefaultIp6MessagePriority = Message::kPriorityNormal,
+    };
+
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 

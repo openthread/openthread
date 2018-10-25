@@ -43,7 +43,7 @@
         ..\..\src;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
+        ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions)

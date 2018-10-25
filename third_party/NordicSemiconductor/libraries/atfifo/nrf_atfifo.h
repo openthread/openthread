@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2011 - 2017, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2011 - 2018, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,16 +35,18 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 #ifndef NRF_ATFIFO_H__
 #define NRF_ATFIFO_H__
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "sdk_config.h"
 #include "nordic_common.h"
 #include "nrf_assert.h"
 #include "sdk_errors.h"
-
+#include "nrf_log_instance.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -134,11 +136,12 @@ typedef union nrf_atfifo_postag_u
  */
 typedef struct nrf_atfifo_s
 {
-    void                * p_buf;     //!< Pointer to the data buffer
-    nrf_atfifo_postag_t   tail;      //!< Read and write tail position tag
-    nrf_atfifo_postag_t   head;      //!< Read and write head position tag
-    uint16_t              buf_size;  //!< FIFO size in number of bytes (has to be divisible by @c item_size)
-    uint16_t              item_size; //!< Size of a single FIFO item
+    void                * p_buf;        //!< Pointer to the data buffer
+    nrf_atfifo_postag_t   tail;         //!< Read and write tail position tag
+    nrf_atfifo_postag_t   head;         //!< Read and write head position tag
+    uint16_t              buf_size;     //!< FIFO size in number of bytes (has to be divisible by @c item_size)
+    uint16_t              item_size;    //!< Size of a single FIFO item
+    NRF_LOG_INSTANCE_PTR_DECLARE(p_log) //!< Pointer to instance of the logger object (Conditionally compiled).
 }nrf_atfifo_t;
 
 /**
@@ -163,6 +166,10 @@ typedef struct nrf_atfifo_rcontext_s
     nrf_atfifo_postag_t last_head; //!< Head tag value that was here when opening the FIFO to read
 }nrf_atfifo_item_get_t;
 
+
+/** @brief Name of the module used for logger messaging.
+ */
+#define NRF_ATFIFO_LOG_NAME atfifo
 
 /**
  * @defgroup nrf_atfifo_instmacros FIFO instance macros
@@ -228,9 +235,18 @@ typedef struct nrf_atfifo_rcontext_s
      * @param[in] item_cnt     Capacity of the created FIFO in maximum number of items that may be stored.
      *                         The phisical size of the buffer will be 1 element bigger.
      */
-    #define NRF_ATFIFO_DEF(fifo_id, storage_type, item_cnt)                 \
-        static storage_type NRF_ATFIFO_BUF_NAME(fifo_id)[(item_cnt)+1];     \
-        static nrf_atfifo_t NRF_ATFIFO_INST_NAME(fifo_id);                  \
+    #define NRF_ATFIFO_DEF(fifo_id, storage_type, item_cnt)                                     \
+        static storage_type NRF_ATFIFO_BUF_NAME(fifo_id)[(item_cnt)+1];                         \
+        NRF_LOG_INSTANCE_REGISTER(NRF_ATFIFO_LOG_NAME, fifo_id,                                 \
+                                  NRF_ATFIFO_CONFIG_INFO_COLOR,                                 \
+                                  NRF_ATFIFO_CONFIG_DEBUG_COLOR,                                \
+                                  NRF_ATFIFO_CONFIG_LOG_INIT_FILTER_LEVEL,                      \
+                                  NRF_ATFIFO_CONFIG_LOG_ENABLED ?                               \
+                                          NRF_ATFIFO_CONFIG_LOG_LEVEL : NRF_LOG_SEVERITY_NONE); \
+        static nrf_atfifo_t NRF_ATFIFO_INST_NAME(fifo_id) = {                                   \
+                .p_buf = NULL,                                                                  \
+                NRF_LOG_INSTANCE_PTR_INIT(p_log, NRF_ATFIFO_LOG_NAME, fifo_id)                  \
+        };                                                                                      \
         static nrf_atfifo_t * const fifo_id = &NRF_ATFIFO_INST_NAME(fifo_id)
 
     /**
@@ -381,7 +397,7 @@ ret_code_t nrf_atfifo_get_free(nrf_atfifo_t * const p_fifo, void * const p_var, 
  *
  * @return Pointer to data buffer or NULL if there is no data in the FIFO.
  */
-void const * nrf_atfifo_item_get(nrf_atfifo_t * const p_fifo, nrf_atfifo_item_get_t * p_context);
+void * nrf_atfifo_item_get(nrf_atfifo_t * const p_fifo, nrf_atfifo_item_get_t * p_context);
 
 /**
  * @brief Function for closing the reading operation.

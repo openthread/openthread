@@ -34,10 +34,16 @@
 #include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
+#include <drivers/radio/platform/temperature/nrf_802154_temperature.h>
 
 #if SOFTDEVICE_PRESENT
 #include "softdevice.h"
 #endif
+
+#define US_PER_S 1000000ULL
+
+static uint64_t sLastReadTimestamp;
+static int32_t  sTemperature;
 
 #if !SOFTDEVICE_PRESENT
 __STATIC_INLINE void dataReadyEventClear(void)
@@ -52,6 +58,8 @@ void nrf5TempInit(void)
 {
 #if !SOFTDEVICE_PRESENT
     nrf_temp_init();
+
+    NRF_TEMP->TASKS_START = 1;
 #endif
 }
 
@@ -62,25 +70,60 @@ void nrf5TempDeinit(void)
 #endif
 }
 
-int32_t nrf5TempGet(void)
+void nrf5TempProcess(void)
 {
-#if SOFTDEVICE_PRESENT
-    int32_t temperature;
-    (void)sd_temp_get(&temperature);
-#else
-    NRF_TEMP->TASKS_START = 1;
+    int32_t  prevTemperature = sTemperature;
+    uint64_t now;
 
-    while (NRF_TEMP->EVENTS_DATARDY == 0)
+#if SOFTDEVICE_PRESENT
+    now = nrf5AlarmGetCurrentTime();
+
+    if (now - sLastReadTimestamp > (TEMP_MEASUREMENT_INTERVAL * US_PER_S))
     {
-        ;
+        (void)sd_temp_get(&sTemperature);
+        sLastReadTimestamp = now;
+    }
+#else
+    if (NRF_TEMP->EVENTS_DATARDY)
+    {
+        dataReadyEventClear();
+
+        sTemperature = nrf_temp_read();
     }
 
-    dataReadyEventClear();
+    now = nrf5AlarmGetCurrentTime();
 
-    int32_t temperature = nrf_temp_read();
-
-    NRF_TEMP->TASKS_STOP = 1;
+    if (now - sLastReadTimestamp > (TEMP_MEASUREMENT_INTERVAL * US_PER_S))
+    {
+        NRF_TEMP->TASKS_START = 1;
+        sLastReadTimestamp    = now;
+    }
 #endif
 
-    return temperature;
+    if (prevTemperature != sTemperature)
+    {
+        nrf_802154_temperature_changed();
+    }
+}
+
+int32_t nrf5TempGet(void)
+{
+    // Provide temperature value in [0.25 C] unit.
+    return sTemperature;
+}
+
+void nrf_802154_temperature_init(void)
+{
+    // Intentionally empty
+}
+
+void nrf_802154_temperature_deinit(void)
+{
+    // Intentionally empty
+}
+
+int8_t nrf_802154_temperature_get(void)
+{
+    // Provide temperature value in [C].
+    return (int8_t)(sTemperature / 4);
 }

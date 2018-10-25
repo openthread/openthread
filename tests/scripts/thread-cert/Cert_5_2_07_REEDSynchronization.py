@@ -54,8 +54,8 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         # 1. Ensure topology is formed correctly without DUT_ROUTER1.
@@ -65,7 +65,7 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
 
         for i in range(2, 17):
             self.nodes[i].start()
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         for i in range(2, 17):
             self.assertEqual(self.nodes[i].get_state(), 'router')
@@ -75,7 +75,7 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
         self.nodes[DUT_REED].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64(), config.RSSI['LINK_QULITY_1'])
 
         self.nodes[DUT_REED].start()
-        self.simulator.go(5)
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
         self.assertEqual(self.nodes[DUT_REED].get_state(), 'child')
 
         # The DUT_REED must not send a coap message here.

@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_SERVER_H_
 #define OPENTHREAD_SERVER_H_
 
-#include <openthread/types.h>
+#include <openthread/netdata.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +51,35 @@ extern "C" {
  *
  */
 
+#define OT_SERVICE_DATA_MAX_SIZE 252 ///< Maximum size of Service Data in bytes.
+#define OT_SERVER_DATA_MAX_SIZE \
+    248 ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+
+/**
+ * This structure represents a Server configuration.
+ *
+ */
+typedef struct otServerConfig
+{
+    bool     mStable : 1;       ///< TRUE, if this configuration is considered Stable Network Data. FALSE, otherwise.
+    uint8_t  mServerDataLength; ///< Length of server data.
+    uint8_t  mServerData[OT_SERVER_DATA_MAX_SIZE]; ///< Server data bytes.
+    uint16_t mRloc16;                              ///< The Server RLOC16.
+} otServerConfig;
+
+/**
+ * This structure represents a Service configuration.
+ *
+ */
+typedef struct otServiceConfig
+{
+    uint8_t        mServiceID;         ///< Used to return service ID when iterating over network data from leader.
+    uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
+    uint8_t        mServiceDataLength; ///< Length of service data.
+    uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.
+    otServerConfig mServerConfig;                          ///< The Server configuration.
+} otServiceConfig;
+
 /**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
@@ -59,6 +88,7 @@ extern "C" {
  * @param[out]    aData        A pointer to the data buffer.
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
+ *
  */
 OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -74,6 +104,7 @@ OTAPI otError OTCALL otServerGetNetDataLocal(otInstance *aInstance, bool aStable
  *
  * @sa otServerRemoveService
  * @sa otServerRegister
+ *
  */
 OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig);
 
@@ -90,6 +121,7 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
  *
  * @sa otServerAddService
  * @sa otServerRegister
+ *
  */
 OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance,
                                            uint32_t    aEnterpriseNumber,
@@ -137,6 +169,7 @@ OTAPI otError OTCALL otServerGetNextLeaderService(otInstance *           aInstan
  *
  * @sa otServerAddService
  * @sa otServerRemoveService
+ *
  */
 OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
 

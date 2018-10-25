@@ -70,6 +70,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -78,15 +79,18 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #define POLL poll
 #endif
 
-#include <openthread/openthread.h>
+#include <openthread/instance.h>
 
 #include "openthread-core-config.h"
+#include "platform-config.h"
 
 enum
 {
-    OT_SIM_EVENT_ALARM_FIRED    = 0,
-    OT_SIM_EVENT_RADIO_RECEIVED = 1,
-    OT_EVENT_DATA_MAX_SIZE      = 1024,
+    OT_SIM_EVENT_ALARM_FIRED        = 0,
+    OT_SIM_EVENT_RADIO_RECEIVED     = 1,
+    OT_SIM_EVENT_UART_WRITE         = 2,
+    OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
+    OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -98,23 +102,22 @@ struct Event
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
+enum
+{
+    WELLKNOWN_NODE_ID = 34, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+};
+
 /**
  * Unique node ID.
  *
  */
-extern uint32_t NODE_ID;
-
-/**
- * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
- *
- */
-extern uint32_t WELLKNOWN_NODE_ID;
+extern uint32_t gNodeId;
 
 /**
  * This function initializes the alarm service used by OpenThread.
  *
  */
-void platformAlarmInit(void);
+void platformAlarmInit(uint32_t aSpeedUpFactor);
 
 /**
  * This function retrieves the time remaining until the alarm fires.
@@ -223,5 +226,22 @@ void platformUartProcess(void);
  *
  */
 void platformUartRestore(void);
+
+/**
+ * This function sends a simulation event.
+ *
+ * @param[in]   aEvent  A pointer to the simulation event to send
+ *
+ */
+void otSimSendEvent(const struct Event *aEvent);
+
+/**
+ * This function sends Uart data through simulation.
+ *
+ * @param[in]   aData       A pointer to the UART data.
+ * @param[in]   aLength     Length of UART data.
+ *
+ */
+void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 #endif // PLATFORM_POSIX_H_

@@ -27,7 +27,6 @@
  */
 
 #include <driverlib/sys_ctrl.h>
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 /**
@@ -55,7 +54,6 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
         return OT_PLAT_RESET_REASON_EXTERNAL;
 
     case RSTSRC_VDDS_LOSS:
-    case RSTSRC_VDD_LOSS:
     case RSTSRC_VDDR_LOSS:
     case RSTSRC_CLK_LOSS:
         return OT_PLAT_RESET_REASON_CRASH;

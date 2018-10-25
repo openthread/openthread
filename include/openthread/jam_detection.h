@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_JAM_DETECTION_H_
 #define OPENTHREAD_JAM_DETECTION_H_
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,6 +101,7 @@ otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection Window.
+ *
  */
 uint8_t otJamDetectionGetWindow(otInstance *aInstance);
 
@@ -125,7 +126,8 @@ otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @returns The Jam Detection Busy Period
+ * @returns The Jam Detection Busy Period.
+ *
  */
 uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance);
 
@@ -159,6 +161,7 @@ otError otJamDetectionStop(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection status (true if enabled, false otherwise).
+ *
  */
 bool otJamDetectionIsEnabled(otInstance *aInstance);
 
@@ -168,6 +171,7 @@ bool otJamDetectionIsEnabled(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The Jam Detection state (`true` jam is detected, `false' otherwise).
+ *
  */
 bool otJamDetectionGetState(otInstance *aInstance);
 
@@ -184,6 +188,7 @@ bool otJamDetectionGetState(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
  * @returns The current history bitmap.
+ *
  */
 uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
 

@@ -46,8 +46,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 namespace NetworkData {
 
 /**
@@ -67,6 +65,16 @@ namespace NetworkData {
 class Leader : public LeaderBase
 {
 public:
+    /**
+     * This enumeration defines the match mode constants to compare two RLOC16 values.
+     *
+     */
+    enum MatchMode
+    {
+        kMatchModeRloc16,   ///< Perform exact RLOC16 match.
+        kMatchModeRouterId, ///< Perform Router ID match (match the router and any of its children).
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -124,12 +132,13 @@ public:
     otError SetContextIdReuseDelay(uint32_t aDelay);
 
     /**
-     * This method removes Network Data associated with a given RLOC16.
+     * This method removes Network Data entries matching with a given RLOC16.
      *
-     * @param[in]  aRloc16  A RLOC16 value.
+     * @param[in]  aRloc16    A RLOC16 value.
+     * @param[in]  aMatchMode A match mode (@sa MatchMode).
      *
      */
-    void RemoveBorderRouter(uint16_t aRloc16);
+    void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
 
     /**
      * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
@@ -182,16 +191,25 @@ private:
 
     otError RemoveCommissioningData(void);
 
-    otError RemoveRloc(uint16_t aRloc16);
-    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
+    otError RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode);
+    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode);
 #if OPENTHREAD_ENABLE_SERVICE
-    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16);
+    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode);
 #endif
-    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16);
-    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16);
+    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode);
+    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode);
 
-    otError RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength);
-    bool    IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
+    static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
+
+    otError RlocLookup(uint16_t  aRloc16,
+                       bool &    aIn,
+                       bool &    aStable,
+                       uint8_t * aTlvs,
+                       uint8_t   aTlvsLength,
+                       MatchMode aMatchMode,
+                       bool      aAllowOtherEntries = true);
+
+    bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
 
     static void HandleCommissioningSet(void *               aContext,
                                        otCoapHeader *       aHeader,

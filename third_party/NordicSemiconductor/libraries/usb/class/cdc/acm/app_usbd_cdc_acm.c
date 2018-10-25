@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2016 - 2017, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,10 +35,11 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
-#include "sdk_config.h"
-#if APP_USBD_CLASS_CDC_ACM_ENABLED
+#include "sdk_common.h"
+#if NRF_MODULE_ENABLED(APP_USBD_CDC_ACM)
+
 #include "app_usbd_cdc_acm.h"
 #include <inttypes.h>
 
@@ -177,47 +178,39 @@ static inline nrf_drv_usbd_ep_t data_ep_out_addr_get(app_usbd_class_inst_t const
 static ret_code_t setup_req_std_in(app_usbd_class_inst_t const * p_inst,
                                    app_usbd_setup_evt_t const *  p_setup_ev)
 {
-    switch (p_setup_ev->setup.bmRequest)
+    /* Only Get Descriptor standard IN request is supported by CDC class */
+    if ((app_usbd_setup_req_rec(p_setup_ev->setup.bmRequestType) == APP_USBD_SETUP_REQREC_INTERFACE)
+        &&
+        (p_setup_ev->setup.bmRequest == APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR))
     {
-        case APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR:
+        size_t dsc_len = 0;
+        size_t max_size;
+
+        uint8_t * p_trans_buff = app_usbd_core_setup_transfer_buff_get(&max_size);
+
+        /* Try to find descriptor in class internals*/
+        ret_code_t ret = app_usbd_class_descriptor_find(
+            p_inst,
+            p_setup_ev->setup.wValue.hb,
+            p_setup_ev->setup.wValue.lb,
+            p_trans_buff,
+            &dsc_len);
+
+        if (ret != NRF_ERROR_NOT_FOUND)
         {
-            size_t dsc_len = 0;
-
-            /* Try to find descriptor in class internals*/
-            void const * p_dsc = app_usbd_class_descriptor_find(p_inst,
-                                                                p_setup_ev->setup.wValue.hb,
-                                                                p_setup_ev->setup.wValue.lb,
-                                                                &dsc_len);
-            if (p_dsc != NULL)
-            {
-                return app_usbd_core_setup_rsp(&(p_setup_ev->setup), p_dsc, dsc_len);
-            }
-
-            break;
+            ASSERT(dsc_len < NRF_DRV_USBD_EPSIZE);
+            return app_usbd_core_setup_rsp(&(p_setup_ev->setup), p_trans_buff, dsc_len);
         }
-        case APP_USBD_SETUP_STDREQ_GET_INTERFACE:
-        {
-
-            size_t tx_maxsize;
-            uint8_t * p_tx_buff = app_usbd_core_setup_transfer_buff_get(&tx_maxsize);
-
-            p_tx_buff[0] = 0;
-            return app_usbd_core_setup_rsp(&p_setup_ev->setup,
-                                           p_tx_buff,
-                                           sizeof(uint8_t));
-        }
-        default:
-            break;
     }
 
     return NRF_ERROR_NOT_SUPPORTED;
 }
 
 /**
- * @brief Internal SETUP standard OUT request handler
+ * @brief Internal SETUP standard OUT request handler.
  *
- * @param[in] p_inst        Generic class instance
- * @param[in] p_setup_ev    Setup event
+ * @param[in] p_inst        Generic class instance.
+ * @param[in] p_setup_ev    Setup event.
  *
  * @return Standard error code.
  */
@@ -333,7 +326,7 @@ static ret_code_t cdc_acm_req_out_datastage(app_usbd_class_inst_t const * p_inst
                               p_cdc_acm_ctx->request.len);
     ret_code_t ret;
     CRITICAL_REGION_ENTER();
-    ret = app_usbd_core_setup_data_transfer(NRF_DRV_USBD_EPOUT0, &transfer);
+    ret = app_usbd_ep_transfer(NRF_DRV_USBD_EPOUT0, &transfer);
     if (ret == NRF_SUCCESS)
     {
         const app_usbd_core_setup_data_handler_desc_t desc = {
@@ -346,6 +339,28 @@ static ret_code_t cdc_acm_req_out_datastage(app_usbd_class_inst_t const * p_inst
     CRITICAL_REGION_EXIT();
 
     return ret;
+}
+
+/**
+ * @brief Reset port to default state.
+ *
+ * @param p_inst Generic class instance.
+ */
+static void cdc_acm_reset_port(app_usbd_class_inst_t const * p_inst)
+{
+    app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
+    app_usbd_cdc_acm_ctx_t *   p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
+
+    p_cdc_acm_ctx->line_state = 0;
+
+    // Set rx transfers configuration to default state.
+    p_cdc_acm_ctx->rx_transfer[0].p_buf = NULL;
+    p_cdc_acm_ctx->rx_transfer[1].p_buf = NULL;
+    p_cdc_acm_ctx->bytes_left = 0;
+    p_cdc_acm_ctx->bytes_read = 0;
+    p_cdc_acm_ctx->last_read  = 0;
+    p_cdc_acm_ctx->cur_read   = 0;
+    p_cdc_acm_ctx->p_copy_pos = p_cdc_acm_ctx->internal_rx_buf;
 }
 
 /**
@@ -404,9 +419,18 @@ static ret_code_t setup_req_class_out(app_usbd_class_inst_t const * p_inst,
                 /*Abort DATA endpoints on port close */
                 nrf_drv_usbd_ep_t ep;
                 ep = data_ep_in_addr_get(p_inst);
-                usbd_drv_ep_abort(ep);
+                nrf_drv_usbd_ep_abort(ep);
                 ep = data_ep_out_addr_get(p_inst);
-                usbd_drv_ep_abort(ep);
+                nrf_drv_usbd_ep_abort(ep);
+
+                // Set rx transfers configuration to default state.
+                p_cdc_acm_ctx->rx_transfer[0].p_buf = NULL;
+                p_cdc_acm_ctx->rx_transfer[1].p_buf = NULL;
+                p_cdc_acm_ctx->bytes_left = 0;
+                p_cdc_acm_ctx->bytes_read = 0;
+                p_cdc_acm_ctx->last_read  = 0;
+                p_cdc_acm_ctx->cur_read   = 0;
+                p_cdc_acm_ctx->p_copy_pos = p_cdc_acm_ctx->internal_rx_buf;
             }
 
             return NRF_SUCCESS;
@@ -460,6 +484,193 @@ static ret_code_t setup_event_handler(app_usbd_class_inst_t const * p_inst,
     return NRF_ERROR_NOT_SUPPORTED;
 }
 
+
+/**
+ * @brief CDC ACM consumer.
+ *
+ * @note See @ref nrf_drv_usbd_consumer_t
+ */
+static bool cdc_acm_consumer(nrf_drv_usbd_ep_transfer_t * p_next,
+                             void *                       p_context,
+                             size_t                       ep_size,
+                             size_t                       data_size)
+{
+    app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = (app_usbd_cdc_acm_ctx_t *) p_context;
+    p_next->size = data_size;
+
+    if (data_size <= p_cdc_acm_ctx->rx_transfer[0].read_left)
+    {
+        p_next->p_data.rx = p_cdc_acm_ctx->rx_transfer[0].p_buf;
+
+        p_cdc_acm_ctx->rx_transfer[0].p_buf     += data_size;
+        p_cdc_acm_ctx->bytes_read               += data_size;
+        p_cdc_acm_ctx->rx_transfer[0].read_left -= data_size;
+        NRF_LOG_DEBUG("Received %d bytes. Space left in user buffer: %d bytes.",
+                      data_size,
+                      p_cdc_acm_ctx->rx_transfer[0].read_left);
+        return (p_cdc_acm_ctx->rx_transfer[0].read_left) != 0;
+    }
+    else
+    {
+        p_next->p_data.rx = p_cdc_acm_ctx->internal_rx_buf;
+
+        p_cdc_acm_ctx->cur_read = data_size;
+        NRF_LOG_DEBUG("Received %d bytes. Stored in internal buffer.", data_size);
+        return false;
+    }
+}
+
+/**
+ * @brief CDC ACM single transfer consumer.
+ *
+ * This function finalizes transfer after any received block.
+ *
+ * @note See @ref nrf_drv_usbd_consumer_t
+ */
+static bool cdc_acm_single_shoot_consumer(nrf_drv_usbd_ep_transfer_t * p_next,
+                                          void *                       p_context,
+                                          size_t                       ep_size,
+                                          size_t                       data_size)
+{
+    app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = (app_usbd_cdc_acm_ctx_t *) p_context;
+    p_next->size = data_size;
+
+    if (data_size <= p_cdc_acm_ctx->rx_transfer[0].read_left)
+    {
+        p_next->p_data.rx = p_cdc_acm_ctx->rx_transfer[0].p_buf;
+
+        p_cdc_acm_ctx->bytes_read               = data_size;
+        p_cdc_acm_ctx->rx_transfer[0].read_left = data_size;
+        NRF_LOG_DEBUG("Received %d bytes. Space left in user buffer: %d bytes.",
+                      data_size,
+                      p_cdc_acm_ctx->rx_transfer[0].read_left);
+    }
+    else
+    {
+        p_next->p_data.rx = p_cdc_acm_ctx->internal_rx_buf;
+        p_cdc_acm_ctx->cur_read = data_size;
+        NRF_LOG_DEBUG("Received %d bytes. Stored in internal buffer.", data_size);
+    }
+
+    return false;
+}
+
+/**
+ * @brief Manage switching between user buffers and copying data from internal buffer.
+ *
+ * @param p_inst  Generic USB class instance.
+ *
+ * @return Standard error code.
+ */
+static ret_code_t cdc_acm_rx_block_finished(app_usbd_class_inst_t const *  p_inst)
+{
+    app_usbd_cdc_acm_t const * p_cdc_acm     = cdc_acm_get(p_inst);
+    app_usbd_cdc_acm_ctx_t *   p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
+    nrf_drv_usbd_ep_t          ep            = data_ep_out_addr_get(p_inst);
+
+    nrf_drv_usbd_handler_desc_t handler_desc = {
+        .handler.consumer = cdc_acm_consumer,
+        .p_context        = p_cdc_acm_ctx
+    };
+
+    if (p_cdc_acm_ctx->rx_transfer[0].read_left == 0) // Buffer completely filled by consumer
+    {
+        p_cdc_acm_ctx->last_read  = p_cdc_acm_ctx->bytes_read;
+        p_cdc_acm_ctx->bytes_read = 0;
+        p_cdc_acm_ctx->bytes_left = 0;
+
+        if (p_cdc_acm_ctx->rx_transfer[1].p_buf != NULL)
+        {
+            p_cdc_acm_ctx->rx_transfer[0]       = p_cdc_acm_ctx->rx_transfer[1];
+            p_cdc_acm_ctx->rx_transfer[1].p_buf = NULL;
+            return app_usbd_ep_handled_transfer(ep, &handler_desc);
+        }
+        else
+        {
+            p_cdc_acm_ctx->rx_transfer[0].p_buf = NULL;
+            return NRF_SUCCESS;
+        }
+    }
+
+    size_t bytes_read   = p_cdc_acm_ctx->cur_read;
+    size_t bytes_to_cpy = bytes_read;
+
+    if (bytes_read > p_cdc_acm_ctx->rx_transfer[0].read_left)
+    {
+        bytes_to_cpy = p_cdc_acm_ctx->rx_transfer[0].read_left;
+    }
+    memcpy(p_cdc_acm_ctx->rx_transfer[0].p_buf,
+           p_cdc_acm_ctx->internal_rx_buf,
+           bytes_to_cpy);
+
+    // First buffer is full
+    p_cdc_acm_ctx->last_read  = p_cdc_acm_ctx->bytes_read + bytes_to_cpy;
+    p_cdc_acm_ctx->bytes_read = 0;
+    p_cdc_acm_ctx->bytes_left = bytes_read - bytes_to_cpy;
+    p_cdc_acm_ctx->p_copy_pos = p_cdc_acm_ctx->internal_rx_buf + bytes_to_cpy;
+
+    if (p_cdc_acm_ctx->rx_transfer[1].p_buf != NULL)
+    {
+        // If there is second transfer, copy it to first
+        p_cdc_acm_ctx->rx_transfer[0]       = p_cdc_acm_ctx->rx_transfer[1];
+        p_cdc_acm_ctx->rx_transfer[1].p_buf = NULL;
+
+        while (p_cdc_acm_ctx->bytes_left > 0)
+        {
+
+            if (p_cdc_acm_ctx->bytes_left >= p_cdc_acm_ctx->rx_transfer[0].read_left)
+            {
+                // If there are enough bytes left in internal buffer to completely fill next transfer,
+                // we call user event handler to obtain next buffer and continue double buffering.
+                memcpy(p_cdc_acm_ctx->rx_transfer[0].p_buf,
+                       p_cdc_acm_ctx->p_copy_pos,
+                       p_cdc_acm_ctx->rx_transfer[0].read_left);
+
+                p_cdc_acm_ctx->bytes_left -= p_cdc_acm_ctx->rx_transfer[0].read_left;
+                p_cdc_acm_ctx->p_copy_pos += p_cdc_acm_ctx->rx_transfer[0].read_left;
+                p_cdc_acm_ctx->last_read = p_cdc_acm_ctx->rx_transfer[0].read_left;
+                user_event_handler(p_inst, APP_USBD_CDC_ACM_USER_EVT_RX_DONE);
+
+                if (p_cdc_acm_ctx->rx_transfer[1].p_buf != NULL)
+                {
+                    p_cdc_acm_ctx->rx_transfer[0]       = p_cdc_acm_ctx->rx_transfer[1];
+                    p_cdc_acm_ctx->rx_transfer[1].p_buf = NULL;
+                }
+                else
+                {
+                    // If user does not specify a second buffer, all data transfers are done
+                    // and data left in internal buffer is lost.
+                    p_cdc_acm_ctx->rx_transfer[0].p_buf = NULL;
+                    break;
+                }
+            }
+            else
+            {
+                memcpy(p_cdc_acm_ctx->rx_transfer[0].p_buf,
+                       p_cdc_acm_ctx->p_copy_pos,
+                       p_cdc_acm_ctx->bytes_left);
+                p_cdc_acm_ctx->bytes_read = p_cdc_acm_ctx->bytes_left;
+
+                p_cdc_acm_ctx->rx_transfer[0].read_left -= p_cdc_acm_ctx->bytes_left;
+                p_cdc_acm_ctx->rx_transfer[0].p_buf     += p_cdc_acm_ctx->bytes_left;
+                break;
+            }
+        }
+
+
+    }
+    else
+    {
+        p_cdc_acm_ctx->rx_transfer[0].p_buf = NULL;
+    }
+
+    if (p_cdc_acm_ctx->rx_transfer[0].p_buf != NULL)
+    {
+        return app_usbd_ep_handled_transfer(ep, &handler_desc);
+    }
+    return NRF_SUCCESS;
+}
+
 /**
  * @brief Class specific endpoint transfer handler.
  *
@@ -476,7 +687,7 @@ static ret_code_t cdc_acm_endpoint_ev(app_usbd_class_inst_t const *  p_inst,
         NRF_LOG_INFO("EPIN_COMM: notify");
         return NRF_SUCCESS;
     }
-
+    ret_code_t ret;
     if (NRF_USBD_EPIN_CHECK(p_event->drv_evt.data.eptransfer.ep))
     {
         switch (p_event->drv_evt.data.eptransfer.status)
@@ -497,9 +708,10 @@ static ret_code_t cdc_acm_endpoint_ev(app_usbd_class_inst_t const *  p_inst,
         switch (p_event->drv_evt.data.eptransfer.status)
         {
             case NRF_USBD_EP_OK:
+                ret = cdc_acm_rx_block_finished(p_inst);
                 NRF_LOG_INFO("EPOUT_DATA: %02x done", p_event->drv_evt.data.eptransfer.ep);
                 user_event_handler(p_inst, APP_USBD_CDC_ACM_USER_EVT_RX_DONE);
-                return NRF_SUCCESS;
+                return ret;
             case NRF_USBD_EP_WAITING:
             case NRF_USBD_EP_ABORTED:
                 return NRF_SUCCESS;
@@ -527,6 +739,7 @@ static ret_code_t cdc_acm_event_handler(app_usbd_class_inst_t const *  p_inst,
         case APP_USBD_EVT_DRV_SOF:
             break;
         case APP_USBD_EVT_DRV_RESET:
+            cdc_acm_reset_port(p_inst);
             break;
         case APP_USBD_EVT_DRV_SETUP:
             ret  = setup_event_handler(p_inst, (app_usbd_setup_evt_t const *)p_event);
@@ -539,18 +752,15 @@ static ret_code_t cdc_acm_event_handler(app_usbd_class_inst_t const *  p_inst,
         case APP_USBD_EVT_DRV_RESUME:
             break;
         case APP_USBD_EVT_INST_APPEND:
-        {
-            ret = app_usbd_class_sof_register(p_inst);
             break;
-        }
         case APP_USBD_EVT_INST_REMOVE:
-        {
-            ret = app_usbd_class_sof_unregister(p_inst);
             break;
-        }
         case APP_USBD_EVT_STARTED:
             break;
         case APP_USBD_EVT_STOPPED:
+            break;
+        case APP_USBD_EVT_POWER_REMOVED:
+            cdc_acm_reset_port(p_inst);
             break;
         default:
             ret = NRF_ERROR_NOT_SUPPORTED;
@@ -560,28 +770,167 @@ static ret_code_t cdc_acm_event_handler(app_usbd_class_inst_t const *  p_inst,
     return ret;
 }
 
-/**
- * @brief @ref app_usbd_class_methods_t::get_descriptors
- */
-static const void * cdc_acm_get_descriptors(app_usbd_class_inst_t const * p_inst,
-                                            size_t *                      p_size)
+
+static bool cdc_acm_feed_descriptors(app_usbd_class_descriptor_ctx_t * p_ctx,
+                                     app_usbd_class_inst_t const     * p_inst,
+                                     uint8_t                         * p_buff,
+                                     size_t                            max_size)
 {
-    ASSERT(p_size != NULL);
+    static uint8_t ifaces    = 0;
+    ifaces = app_usbd_class_iface_count_get(p_inst);
     app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
 
-    *p_size = p_cdc_acm->specific.inst.raw_desc_size;
-    return p_cdc_acm->specific.inst.p_raw_desc;
+    APP_USBD_CLASS_DESCRIPTOR_BEGIN(p_ctx, p_buff, max_size);
+
+    /* INTERFACE ASSOCIATION DESCRIPTOR */
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x08); // bLength
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION); // bDescriptorType = Interface Association
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface); // bFirstInterface
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02); // bInterfaceCount
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS); // bFunctionClass
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM); // bFunctionSubClass
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol); // bFunctionProtocol
+    APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // iFunction
+
+    static uint8_t i = 0;
+
+    for (i = 0; i < ifaces; i++)
+    {
+        /* INTERFACE DESCRIPTOR */
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x09); // bLength
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_INTERFACE); // bDescriptorType = Interface
+
+        static app_usbd_class_iface_conf_t const * p_cur_iface = NULL;
+        p_cur_iface = app_usbd_class_iface_get(p_inst, i);
+
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_number_get(p_cur_iface)); // bInterfaceNumber
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bAlternateSetting
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_iface_ep_count_get(p_cur_iface)); // bNumEndpoints
+
+        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(p_cur_iface))
+        {
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_COMM_CLASS); // bInterfaceClass = CDC COMM
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SUBCLASS_ACM); // bInterfaceSubclass
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.protocol); // bInterfaceProtocol
+        }
+        else if (p_cdc_acm->specific.inst.data_interface ==
+                 app_usbd_class_iface_number_get(p_cur_iface))
+        {
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_DATA_CLASS); // bInterfaceClass = CDC DATA
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterfaceSubclass
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterfaceProtocol
+        }
+        else
+        {
+            ASSERT(0);
+        }
+
+        APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // iInterface
+
+        if (p_cdc_acm->specific.inst.comm_interface == app_usbd_class_iface_number_get(p_cur_iface))
+        {
+            /* HEADER DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_HEADER); // bDescriptorSubtype = Header Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x10); // bcdCDC LSB
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x01); // bcdCDC MSB
+
+            /* CALL MANAGEMENT DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_CALL_MGMT); // bDescriptorSubtype = Call Management Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x03); // bmCapabilities
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface); // bDataInterface
+
+            /* ABSTRACT CONTROL MANAGEMENT DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x04); // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_ACM); // bDescriptorSubtype = Abstract Control Management Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x02); // bmCapabilities
+
+            /* UNION DESCRIPTOR */
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x05);
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_CS_INTERFACE); // bDescriptorType = Class Specific Interface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_CDC_SCS_UNION); // bDescriptorSubtype = Union Functional Descriptor
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.comm_interface); // bControlInterface
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.data_interface); // bSubordinateInterface
+        }
+        else if (p_cdc_acm->specific.inst.data_interface ==
+                 app_usbd_class_iface_number_get(p_cur_iface))
+        {
+            ;
+        }
+        else
+        {
+            ASSERT(0);
+        }
+
+        /* ENDPOINT DESCRIPTORS */
+        static uint8_t endpoints = 0;
+        endpoints = app_usbd_class_iface_ep_count_get(p_cur_iface);
+
+        static uint8_t j = 0;
+
+        for (j = 0; j < endpoints; j++)
+        {
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(0x07);                         // bLength
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_ENDPOINT); // bDescriptorType = Endpoint
+
+            static app_usbd_class_ep_conf_t const * p_cur_ep = NULL;
+            p_cur_ep = app_usbd_class_iface_ep_get(p_cur_iface, j);
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(app_usbd_class_ep_address_get(p_cur_ep)); // bEndpointAddress
+
+            if (p_cdc_acm->specific.inst.comm_interface ==
+                app_usbd_class_iface_number_get(p_cur_iface))
+            {
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_INTERRUPT); // bmAttributes
+            }
+            else if (p_cdc_acm->specific.inst.data_interface ==
+                     app_usbd_class_iface_number_get(p_cur_iface))
+            {
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(APP_USBD_DESCRIPTOR_EP_ATTR_TYPE_BULK); // bmAttributes
+            }
+            else
+            {
+                ASSERT(0);
+            }
+
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(LSB_16(NRF_DRV_USBD_EPSIZE)); // wMaxPacketSize LSB
+            APP_USBD_CLASS_DESCRIPTOR_WRITE(MSB_16(NRF_DRV_USBD_EPSIZE)); // wMaxPacketSize MSB
+
+            if (p_cdc_acm->specific.inst.comm_interface ==
+                app_usbd_class_iface_number_get(p_cur_iface))
+            {
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(p_cdc_acm->specific.inst.p_ep_interval[0]); // bInterval
+            }
+            else if (p_cdc_acm->specific.inst.data_interface ==
+                     app_usbd_class_iface_number_get(p_cur_iface))
+            {
+                APP_USBD_CLASS_DESCRIPTOR_WRITE(0x00); // bInterval
+            }
+            else
+            {
+                ASSERT(0);
+            }
+
+        }
+
+    }
+
+    APP_USBD_CLASS_DESCRIPTOR_END();
 }
 
 /**
- * @brief Public cdc_acm class interface
+ * @brief Public cdc_acm class interface.
  *
  */
 const app_usbd_class_methods_t app_usbd_cdc_acm_class_methods = {
         .event_handler = cdc_acm_event_handler,
-        .get_descriptors = cdc_acm_get_descriptors,
+        .feed_descriptors = cdc_acm_feed_descriptors,
 };
 
+/** @} */
 
 ret_code_t app_usbd_cdc_acm_write(app_usbd_cdc_acm_t const * p_cdc_acm,
                                   const void *               p_buf,
@@ -597,46 +946,163 @@ ret_code_t app_usbd_cdc_acm_write(app_usbd_cdc_acm_t const * p_cdc_acm,
         /*Port is not opened*/
         return NRF_ERROR_INVALID_STATE;
     }
-
+    
     nrf_drv_usbd_ep_t ep = data_ep_in_addr_get(p_inst);
-    NRF_DRV_USBD_TRANSFER_IN(transfer, p_buf, length);
-    return app_usbd_core_ep_transfer(ep, &transfer);
+    
+    if (APP_USBD_CDC_ACM_ZLP_ON_EPSIZE_WRITE && ((length % NRF_DRV_USBD_EPSIZE) == 0))
+    {
+        NRF_DRV_USBD_TRANSFER_IN_ZLP(transfer, p_buf, length);
+        return app_usbd_ep_transfer(ep, &transfer);
+    }
+    else
+    {
+        NRF_DRV_USBD_TRANSFER_IN(transfer, p_buf, length);
+        return app_usbd_ep_transfer(ep, &transfer);
+    }
 }
 
 size_t app_usbd_cdc_acm_rx_size(app_usbd_cdc_acm_t const * p_cdc_acm)
 {
-    app_usbd_class_inst_t const * p_inst = app_usbd_cdc_acm_class_inst_get(p_cdc_acm);
-    nrf_drv_usbd_ep_t ep = data_ep_out_addr_get(p_inst);
+    app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
 
-    size_t size;
-    ret_code_t ret = nrf_drv_usbd_ep_status_get(ep, &size);
-    if (ret != NRF_SUCCESS)
-    {
-        return 0;
-    }
+    return p_cdc_acm_ctx->last_read;
+}
 
-    return size;
+size_t app_usbd_cdc_acm_bytes_stored(app_usbd_cdc_acm_t const * p_cdc_acm)
+{
+    app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
+
+    return p_cdc_acm_ctx->bytes_left;
 }
 
 ret_code_t app_usbd_cdc_acm_read(app_usbd_cdc_acm_t const * p_cdc_acm,
                                  void *                     p_buf,
                                  size_t                     length)
 {
-    ASSERT((length % NRF_DRV_USBD_EPSIZE) == 0);
-    app_usbd_class_inst_t const * p_inst = app_usbd_cdc_acm_class_inst_get(p_cdc_acm);
+    ASSERT(p_buf != NULL);
+    ret_code_t ret;
     app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
 
-    bool dtr_state = (p_cdc_acm_ctx->line_state & APP_USBD_CDC_ACM_LINE_STATE_DTR) ?
-                      true : false;
-    if (!dtr_state)
+    if (0U == (p_cdc_acm_ctx->line_state & APP_USBD_CDC_ACM_LINE_STATE_DTR))
     {
         /*Port is not opened*/
         return NRF_ERROR_INVALID_STATE;
     }
 
-    nrf_drv_usbd_ep_t ep = data_ep_out_addr_get(p_inst);
-    NRF_DRV_USBD_TRANSFER_OUT(transfer, p_buf, length);
-    return app_usbd_core_ep_transfer(ep, &transfer);
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+    CRITICAL_REGION_ENTER();
+#endif // (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+
+    if (p_cdc_acm_ctx->rx_transfer[0].p_buf == NULL)
+    {
+        if (p_cdc_acm_ctx->bytes_left >= length)
+        {
+            memcpy(p_buf, p_cdc_acm_ctx->p_copy_pos, length);
+            p_cdc_acm_ctx->bytes_left -= length;
+            p_cdc_acm_ctx->p_copy_pos += length;
+            p_cdc_acm_ctx->last_read   = length;
+            ret = NRF_SUCCESS;
+        }
+        else
+        {
+            p_cdc_acm_ctx->rx_transfer[0].p_buf     = p_buf;
+            p_cdc_acm_ctx->rx_transfer[0].read_left = length;
+            nrf_drv_usbd_ep_t ep = data_ep_out_addr_get(app_usbd_cdc_acm_class_inst_get(p_cdc_acm));
+            nrf_drv_usbd_handler_desc_t const handler_desc = {
+                .handler.consumer = cdc_acm_consumer,
+                .p_context        = p_cdc_acm_ctx
+            };
+
+            if (p_cdc_acm_ctx->bytes_left > 0)
+            {
+                memcpy(p_cdc_acm_ctx->rx_transfer[0].p_buf,
+                       p_cdc_acm_ctx->p_copy_pos,
+                       p_cdc_acm_ctx->bytes_left);
+                p_cdc_acm_ctx->rx_transfer[0].read_left -= p_cdc_acm_ctx->bytes_left;
+                p_cdc_acm_ctx->rx_transfer[0].p_buf     += p_cdc_acm_ctx->bytes_left;
+                p_cdc_acm_ctx->bytes_read = p_cdc_acm_ctx->bytes_left;
+                p_cdc_acm_ctx->bytes_left = 0;
+
+            }
+            ret = app_usbd_ep_handled_transfer(ep, &handler_desc);
+            if (ret == NRF_SUCCESS)
+            {
+                ret = NRF_ERROR_IO_PENDING;
+            }
+        }
+    }
+    else if (p_cdc_acm_ctx->rx_transfer[1].p_buf == NULL)
+    {
+        p_cdc_acm_ctx->rx_transfer[1].p_buf     = p_buf;
+        p_cdc_acm_ctx->rx_transfer[1].read_left = length;
+        ret = NRF_ERROR_IO_PENDING;
+    }
+    else
+    {
+        ret = NRF_ERROR_BUSY;
+    }
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+    CRITICAL_REGION_EXIT();
+#endif // (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+
+    return ret;
+}
+
+ret_code_t app_usbd_cdc_acm_read_any(app_usbd_cdc_acm_t const * p_cdc_acm,
+                                     void *                     p_buf,
+                                     size_t                     length)
+{
+    ASSERT(p_buf != NULL);
+    ret_code_t ret;
+    app_usbd_cdc_acm_ctx_t * p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
+
+    if (0U == (p_cdc_acm_ctx->line_state & APP_USBD_CDC_ACM_LINE_STATE_DTR))
+    {
+        /*Port is not opened*/
+        return NRF_ERROR_INVALID_STATE;
+    }
+
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+    CRITICAL_REGION_ENTER();
+#endif // (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+    if (p_cdc_acm_ctx->bytes_left > 0)
+    {
+        size_t to_copy = MIN(length, p_cdc_acm_ctx->bytes_left);
+        memcpy(p_buf, p_cdc_acm_ctx->p_copy_pos, to_copy);
+        p_cdc_acm_ctx->bytes_left -= to_copy;
+        p_cdc_acm_ctx->p_copy_pos += to_copy;
+        p_cdc_acm_ctx->last_read   = to_copy;
+        ret = NRF_SUCCESS;
+    }
+    else
+    {
+        if (p_cdc_acm_ctx->rx_transfer[0].p_buf == NULL)
+        {
+            p_cdc_acm_ctx->rx_transfer[0].p_buf     = p_buf;
+            p_cdc_acm_ctx->rx_transfer[0].read_left = length;
+            nrf_drv_usbd_ep_t ep = data_ep_out_addr_get(app_usbd_cdc_acm_class_inst_get(p_cdc_acm));
+            nrf_drv_usbd_handler_desc_t const handler_desc = {
+               .handler.consumer = cdc_acm_single_shoot_consumer,
+               .p_context        = p_cdc_acm_ctx
+            };
+
+            ret = app_usbd_ep_handled_transfer(ep, &handler_desc);
+            if (ret == NRF_SUCCESS)
+            {
+                ret = NRF_ERROR_IO_PENDING;
+            }
+        }
+        else
+        {
+            ret = NRF_ERROR_BUSY;
+        }
+    }
+
+#if (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+    CRITICAL_REGION_EXIT();
+#endif // (APP_USBD_CONFIG_EVENT_QUEUE_ENABLE == 0)
+
+    return ret;
 }
 
 static ret_code_t cdc_acm_serial_state_notify(app_usbd_cdc_acm_t const * p_cdc_acm)
@@ -649,7 +1115,7 @@ static ret_code_t cdc_acm_serial_state_notify(app_usbd_cdc_acm_t const * p_cdc_a
     NRF_DRV_USBD_TRANSFER_OUT(transfer,
                               &p_cdc_acm_ctx->request.payload,
                               sizeof(app_usbd_cdc_acm_notify_t));
-    return app_usbd_core_ep_transfer(ep, &transfer);
+    return app_usbd_ep_transfer(ep, &transfer);
 }
 
 ret_code_t app_usbd_cdc_acm_serial_state_notify(app_usbd_cdc_acm_t const *      p_cdc_acm,
@@ -730,6 +1196,4 @@ ret_code_t app_usbd_cdc_acm_line_state_get(app_usbd_cdc_acm_t const *    p_cdc_a
     return ret;
 }
 
-#endif /* APP_USBD_CLASS_CDC_ACM_ENABLED */
-
-/** @} */
+#endif //NRF_MODULE_ENABLED(APP_USBD_CDC_ACM)

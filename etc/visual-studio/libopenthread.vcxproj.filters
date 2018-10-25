@@ -144,6 +144,12 @@
     <ClCompile Include="..\..\src\core\common\notifier.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\settings.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\common\string.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -158,6 +164,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp">
       <Filter>Source Files\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\mac\link_raw.cpp">
+      <Filter>Source Files\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac.cpp">
       <Filter>Source Files\mac</Filter>
@@ -199,6 +208,9 @@
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\child_table.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\data_poll_manager.cpp">
@@ -244,6 +256,9 @@
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\router_table.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\src_match_controller.cpp">
@@ -315,6 +330,9 @@
     <ClCompile Include="..\..\src\core\utils\child_supervision.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\parse_cmdline.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
@@ -334,6 +352,9 @@
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\announce_sender.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\crc16.cpp">
@@ -381,6 +402,9 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\new.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\string.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\tasklet.hpp">
@@ -449,6 +473,12 @@
     <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\announce_sender.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\child_table.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\data_poll_manager.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -492,6 +522,9 @@
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\router_table.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\src_match_controller.hpp">
@@ -564,6 +597,9 @@
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\child_supervision.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\parse_cmdline.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">

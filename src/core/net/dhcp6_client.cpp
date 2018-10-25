@@ -35,14 +35,12 @@
 
 #include "dhcp6_client.hpp"
 
-#include <openthread/types.h>
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -307,10 +305,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         // new transaction id
-        for (uint8_t i = 0; i < kTransactionIdSize; i++)
-        {
-            mTransactionId[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
+        Random::FillBuffer(mTransactionId, kTransactionIdSize);
 
         // ensure mIdentityAssociationHead is the prefix agent to solicit.
         if (prevIdentityAssociation)
@@ -390,8 +385,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendIaAddress(*message, aRloc16));
     SuccessOrExit(error = AppendRapidCommit(*message));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(messageInfo.GetPeerAddr().mFields.m8, netif.GetMle().GetMeshLocalPrefix(), 8);
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, netif.GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix));
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
@@ -568,7 +562,8 @@ exit:
 
 uint16_t Dhcp6Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Dhcp6::Code aCode)
 {
-    uint16_t end = aOffset + aLength;
+    uint16_t end  = aOffset + aLength;
+    uint16_t rval = 0;
 
     while (aOffset <= end)
     {
@@ -577,14 +572,14 @@ uint16_t Dhcp6Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
 
         if (option.GetCode() == (aCode))
         {
-            return aOffset;
+            ExitNow(rval = aOffset);
         }
 
         aOffset += sizeof(option) + option.GetLength();
     }
 
 exit:
-    return 0;
+    return rval;
 }
 
 otError Dhcp6Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)

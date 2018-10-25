@@ -61,7 +61,7 @@ Leader::Leader(Instance &aInstance)
     , mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this)
     , mTimer(aInstance, HandleTimer, this)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
-    , mSessionId(0xffff)
+    , mSessionId(Random::GetUint16())
 {
     GetNetif().GetCoap().AddResource(mPetition);
     GetNetif().GetCoap().AddResource(mKeepAlive);
@@ -85,6 +85,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
     otLogInfoMeshCoP(GetInstance(), "received petition");
 
+    VerifyOrExit(GetNetif().GetMle().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
     VerifyOrExit(commissionerId.IsValid());
 
@@ -178,8 +179,10 @@ void Leader::HandleKeepAlive(void *               aContext,
 
 void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    NetworkData::Leader &    netdata = GetNetif().GetNetworkDataLeader();
     StateTlv                 state;
     CommissionerSessionIdTlv sessionId;
+    BorderAgentLocatorTlv *  borderAgentLocator;
     StateTlv::State          responseState;
 
     otLogInfoMeshCoP(GetInstance(), "received keep alive");
@@ -190,7 +193,10 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
     VerifyOrExit(sessionId.IsValid());
 
-    if (sessionId.GetCommissionerSessionId() != mSessionId)
+    borderAgentLocator =
+        static_cast<BorderAgentLocatorTlv *>(netdata.GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
+
+    if ((borderAgentLocator == NULL) || (sessionId.GetCommissionerSessionId() != mSessionId))
     {
         responseState = StateTlv::kReject;
     }
@@ -201,6 +207,14 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     }
     else
     {
+        uint16_t rloc = HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]);
+
+        if (borderAgentLocator->GetBorderAgentLocator() != rloc)
+        {
+            borderAgentLocator->SetBorderAgentLocator(rloc);
+            netdata.IncrementVersion();
+        }
+
         responseState = StateTlv::kAccept;
         mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
     }

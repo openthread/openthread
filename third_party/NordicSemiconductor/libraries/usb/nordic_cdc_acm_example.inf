@@ -1,39 +1,35 @@
-; Windows 2000, XP, Vista, 7 and 8 (x32 and x64) driver for Nordic CDC ACM OpenThread device
+; Copyright (c) 2017 Nordic Semiconductor
+; Windows 2000, XP, Vista, 7 and 8 (x32 and x64) driver for Nordic CDC ACM example
 
 [Version] 
 Signature   = "$Windows NT$" 
 Class       = Ports 
 ClassGuid   = {4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider    = %Manufacturer% 
-LayoutFile  = layout.inf 
 DriverVer   = 01/08/2013,6.0.0.0 
+CatalogFile = nordic_cdc_acm.cat
 
 ;----------------------------------------------------------
 ; Targets
 ;----------------------------------------------------------
 [Manufacturer] 
-%Manufacturer%=DeviceList, NTAMD64, NTIA64, NT 
+%Manufacturer%=DeviceList, NTAMD64, NTIA64, NTx86
 
-[DeviceList] 
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall, USB\VID_1915&PID_CAFE 
+[DeviceList.NTx86] 
+%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall, USB\VID_1915&PID_CAFE&MI_00 
 
 
 [DeviceList.NTAMD64]
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE
+%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_00
 
 
 [DeviceList.NTIA64]
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE 
+%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NTamd64, USB\VID_1915&PID_CAFE&MI_00
 
-
-[DeviceList.NT]
-%NORDIC_CDC_ACM_EXAMPLE%=DriverInstall.NT, USB\VID_1915&PID_CAFE
 
 ;----------------------------------------------------------
 ; Windows 2000, XP, Vista, Windows 7, Windows 8 - 32bit
 ;----------------------------------------------------------
-[Reader_Install.NTx86] 
-
 
 [DestinationDirs] 
 DefaultDestDir=12 
@@ -45,7 +41,6 @@ CopyFiles=DriverInstall.NT.Copy
 AddReg=DriverInstall.NT.AddReg 
 
 [DriverInstall.NT.Copy] 
-usbser.sys 
 
 [DriverInstall.NT.AddReg]
 HKR,,DevLoader,,*ntkern 
@@ -53,6 +48,7 @@ HKR,,NTMPDriver,,usbser.sys
 HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider" 
 
 [DriverInstall.NT.Services] 
+include=mdmcpq.inf 
 AddService = usbser, 0x00000002, DriverService.NT 
 
 [DriverService.NT] 
@@ -73,7 +69,6 @@ CopyFiles=DriverCopyFiles.NTamd64
 AddReg=DriverInstall.NTamd64.AddReg
 
 [DriverCopyFiles.NTamd64]
-usbser.sys,,,0x20
 
 [DriverInstall.NTamd64.AddReg]
 HKR,,DevLoader,,*ntkern
@@ -81,14 +76,7 @@ HKR,,NTMPDriver,,usbser.sys
 HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
 
 [DriverInstall.NTamd64.Services]
-AddService=usbser, 0x00000002, DriverService.NTamd64
-
-[DriverService.NTamd64]
-DisplayName=%Serial.SvcDesc%
-ServiceType=1
-StartType=3
-ErrorControl=1
-ServiceBinary=%12%\usbser.sys
+AddService=usbser, 0x00000002, DriverService.NT
 
 ;----------------------------------------------------------
 ; String

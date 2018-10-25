@@ -42,33 +42,63 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli-app=all          \
-    --enable-ncp-app=all          \
-    --with-ncp-bus=uart           \
+    --enable-cli                  \
     --enable-diag                 \
-    --with-examples=efr32         \
+    --enable-ftd                  \
+    --enable-mtd                  \
+    --enable-ncp                  \
+    --with-ncp-bus=uart           \
+    --enable-radio-only           \
     --enable-linker-map           \
+    --with-examples=efr32         \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
+
+#
+# Differentiate between boards
+# - BRD4304A / SLWSTK6000B / MGM12P Module / 2.4GHz@19dBm
+# - BRD4161A / SLWSTK6000B / Wireless Starter Kit / 2.4GHz@19dBm
+# - BRD4166A / SLTB004A / Thunderboard Sense 2 / 2.4GHz@10dBm
+# - BRD4170A / SLWSTK6000B / Multiband Wireless Starter Kit / 2.4GHz@19dBm, 915MHz@19dBm, 868MHz@19dBm
+#
+ifeq ($(BOARD),BRD4304A)
+MCU = EFR32MG12P432F1024GM48
+else
+ifeq ($(BOARD),BRD4161A)
+MCU = EFR32MG12P432F1024GL125
+else
+ifeq ($(BOARD),BRD4166A)
+MCU = EFR32MG12P332F1024GL125
+else
+ifeq ($(BOARD),BRD4170A)
+MCU = EFR32MG12P433F1024GM68
+else
+$(error Please provide a value for BOARD variable e.g BOARD=BRD4161A (currently supported BRD4304A, BRD4161A, BRD4166A or BRD4170A))
+endif
+endif
+endif
+endif
+
 EFR32_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 EFR32_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"efr32-mbedtls-config.h\"'
-EFR32_MBEDTLS_CPPFLAGS += -DEFR32MG12P432F1024GL125
+EFR32_MBEDTLS_CPPFLAGS += -D$(MCU)
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/efr32/crypto
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/configs
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/platform/CMSIS/Include
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/util/third_party/mbedtls/sl_crypto/include
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/platform/Device/SiliconLabs/EFR32MG12P/Include
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.0/platform/emlib/inc
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/configs
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.3/platform/CMSIS/Include
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.3/util/third_party/mbedtls/sl_crypto/include
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.3/platform/Device/SiliconLabs/EFR32MG12P/Include
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v2.3/platform/emlib/inc
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo.patched/include/mbedtls
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
+EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32/
+HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(shell echo $(BOARD) | tr A-Z a-z)
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
@@ -77,6 +107,8 @@ COMMONCFLAGS                   := \
     -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
+    -I$(HAL_CONF_DIR)             \
+    -D$(MCU)                      \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

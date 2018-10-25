@@ -48,7 +48,7 @@
         ..\..\include;
         ..\..\src\core;
         ..\..\third_party\mbedtls;
-        ..\..\third_party\mbedtls\repo.patched\include;
+        ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -82,6 +82,8 @@
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
+    <ClCompile Include="..\..\src\core\common\settings.cpp" />
+    <ClCompile Include="..\..\src\core\common\string.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
@@ -92,6 +94,7 @@
     <ClCompile Include="..\..\src\core\crypto\mbedtls.cpp" />
     <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
+    <ClCompile Include="..\..\src\core\mac\link_raw.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_filter.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
@@ -123,6 +126,8 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\announce_sender.cpp" />
+    <ClCompile Include="..\..\src\core\thread\child_table.cpp" />
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\data_poll_manager.cpp" />
     <ClCompile Include="..\..\src\core\thread\key_manager.cpp" />
@@ -139,10 +144,12 @@
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp" />
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\router_table.cpp" />
     <ClCompile Include="..\..\src\core\thread\src_match_controller.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\topology.cpp" />
     <ClCompile Include="..\..\src\core\utils\child_supervision.cpp" />
+    <ClCompile Include="..\..\src\core\utils\parse_cmdline.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
     <ClCompile Include="..\..\src\core\utils\missing_strnlen.c" />
@@ -165,6 +172,7 @@
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\string.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />
     <ClInclude Include="..\..\src\core\common\tlvs.hpp" />
@@ -203,10 +211,12 @@
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\announce_sender.hpp" />
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\child_table.hpp" />
     <ClInclude Include="..\..\src\core\thread\data_poll_manager.hpp" />
     <ClInclude Include="..\..\src\core\thread\key_manager.hpp" />
     <ClInclude Include="..\..\src\core\thread\link_quality.hpp" />
@@ -223,12 +233,14 @@
     <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\router_table.hpp" />
     <ClInclude Include="..\..\src\core\thread\src_match_controller.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_uri_paths.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\child_supervision.hpp" />
+    <ClInclude Include="..\..\src\core\utils\parse_cmdline.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
     <ClInclude Include="..\..\src\core\utils\wrap_string.h" />

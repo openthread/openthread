@@ -47,7 +47,6 @@
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -236,43 +235,33 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
     otError         error   = OT_ERROR_NONE;
     uint8_t         count   = 0;
     uint8_t         timeout = 0;
-    uint8_t         numChildren;
-    const Child *   children = netif.GetMle().GetChildren(&numChildren);
     ChildTableTlv   tlv;
     ChildTableEntry entry;
 
     tlv.Init();
 
-    for (int i = 0; i < numChildren; i++)
-    {
-        if (children[i].GetState() == Neighbor::kStateValid)
-        {
-            count++;
-        }
-    }
-
+    count = netif.GetMle().GetChildTable().GetNumChildren(ChildTable::kInStateValid);
     tlv.SetLength(count * sizeof(ChildTableEntry));
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 
-    for (int i = 0; i < numChildren; i++)
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
-        if (children[i].GetState() == Neighbor::kStateValid)
+        Child &child = *iter.GetChild();
+
+        timeout = 0;
+
+        while (static_cast<uint32_t>(1 << timeout) < child.GetTimeout())
         {
-            timeout = 0;
-
-            while (static_cast<uint32_t>(1 << timeout) < children[i].GetTimeout())
-            {
-                timeout++;
-            }
-
-            entry.SetReserved(0);
-            entry.SetTimeout(timeout + 4);
-            entry.SetChildId(netif.GetMle().GetChildId(children[i].GetRloc16()));
-            entry.SetMode(children[i].GetDeviceMode());
-
-            SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
+            timeout++;
         }
+
+        entry.SetReserved(0);
+        entry.SetTimeout(timeout + 4);
+        entry.SetChildId(netif.GetMle().GetChildId(child.GetRloc16()));
+        entry.SetMode(child.GetDeviceMode());
+
+        SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
     }
 
 exit:
@@ -328,7 +317,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kTimeout:
         {
-            if ((netif.GetMle().GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+            if (!netif.GetMle().IsRxOnWhenIdle())
             {
                 TimeoutTlv tlv;
                 tlv.Init();
@@ -349,6 +338,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kRoute:
         {
             RouteTlv tlv;
@@ -357,11 +347,11 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
+#endif
 
         case NetworkDiagnosticTlv::kLeaderData:
         {
-            LeaderDataTlv tlv;
-            memcpy(&tlv, &netif.GetMle().GetLeaderDataTlv(), sizeof(tlv));
+            LeaderDataTlv tlv(reinterpret_cast<const LeaderDataTlv &>(netif.GetMle().GetLeaderDataTlv()));
             tlv.Init();
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
@@ -403,13 +393,19 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kSupplyVoltage:
         {
             // Thread 1.1.1 Specification Section 10.11.4.3:
-            // Omitted if the battery level is not measured, is unknown.
+            // Omitted if the supply voltage is not measured, is unknown.
             break;
         }
 
         case NetworkDiagnosticTlv::kChildTable:
         {
-            SuccessOrExit(error = AppendChildTable(aResponse));
+            // Thread 1.1.1 Specification Section 10.11.2.2:
+            // If a Thread device is unable to supply a specific Diagnostic TLV, that TLV is omitted.
+            // Here only Leader or Router may have children.
+            if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER || netif.GetMle().GetRole() == OT_DEVICE_ROLE_ROUTER)
+            {
+                SuccessOrExit(error = AppendChildTable(aResponse));
+            }
             break;
         }
 

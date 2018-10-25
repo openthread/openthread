@@ -52,12 +52,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mChannelMask(0)
-    , mPeriod(0)
-    , mCount(0)
-    , mChannel(0)
-    , mTimer(aInstance, &AnnounceBeginServer::HandleTimer, this)
+    : AnnounceSenderBase(aInstance, &AnnounceBeginServer::HandleTimer)
     , mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this)
 {
     GetNetif().GetCoap().AddResource(mAnnounceBegin);
@@ -70,23 +65,7 @@ otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
 
 otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
 {
-    otError error = OT_ERROR_NONE;
-
-    mChannelMask = aChannelMask;
-    mCount       = aCount;
-    mPeriod      = aPeriod;
-    mChannel     = OT_RADIO_CHANNEL_MIN;
-
-    while ((mChannelMask & (1 << mChannel)) == 0)
-    {
-        mChannel++;
-        VerifyOrExit(mChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
-    }
-
-    mTimer.Start(mPeriod);
-
-exit:
-    return error;
+    return AnnounceSenderBase::SendAnnounce(Mac::ChannelMask(aChannelMask), aCount, aPeriod, kDefaultJitter);
 }
 
 void AnnounceBeginServer::HandleRequest(void *               aContext,
@@ -98,6 +77,7 @@ void AnnounceBeginServer::HandleRequest(void *               aContext,
                                                                 *static_cast<Message *>(aMessage),
                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
+
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::ChannelMask0Tlv channelMask;
@@ -130,29 +110,7 @@ exit:
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceBeginServer>().HandleTimer();
-}
-
-void AnnounceBeginServer::HandleTimer(void)
-{
-    GetNetif().GetMle().SendAnnounce(mChannel++, false);
-
-    while (mCount > 0)
-    {
-        if (mChannelMask & (1 << mChannel))
-        {
-            mTimer.Start(mPeriod);
-            break;
-        }
-
-        mChannel++;
-
-        if (mChannel > OT_RADIO_CHANNEL_MAX)
-        {
-            mChannel = OT_RADIO_CHANNEL_MIN;
-            mCount--;
-        }
-    }
+    aTimer.GetOwner<AnnounceBeginServer>().AnnounceSenderBase::HandleTimer();
 }
 
 } // namespace ot

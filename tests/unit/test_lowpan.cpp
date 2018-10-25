@@ -109,11 +109,14 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
  */
 static void Init()
 {
-    uint8_t meshLocalPrefix[] = {0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34};
+    otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
     sThreadNetif->GetMle().SetMeshLocalPrefix(meshLocalPrefix);
 
     // Emulate global prefixes with contextes.
     uint8_t mockNetworkData[] = {
+        0x0c, // MLE Network Data Type
+        0x20, // MLE Network Data Length
+
         // Prefix 2001:2:0:1::/64
         0x03, 0x0e,                                                             // Prefix TLV
         0x00, 0x40, 0x20, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x07, 0x02, // 6LoWPAN Context ID TLV
@@ -125,7 +128,12 @@ static void Init()
         0x02, 0x40                                                              // Context ID = 2, C = FALSE
     };
 
-    sThreadNetif->GetNetworkDataLeader().SetNetworkData(0, 0, true, mockNetworkData, sizeof(mockNetworkData));
+    Message *message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0);
+    VerifyOrQuit(message != NULL, "6lo: Ip6::NewMessage failed");
+
+    SuccessOrQuit(message->Append(mockNetworkData, sizeof(mockNetworkData)), "6lo: Message::Append failed");
+
+    sThreadNetif->GetNetworkDataLeader().SetNetworkData(0, 0, true, *message, 0);
 }
 
 /**

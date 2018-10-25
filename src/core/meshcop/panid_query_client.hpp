@@ -45,8 +45,6 @@
 
 namespace ot {
 
-class ThreadNetif;
-
 /**
  * This class implements handling PANID Query Requests.
  *

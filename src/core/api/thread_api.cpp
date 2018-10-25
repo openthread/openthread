@@ -36,7 +36,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/thread.h>
-#include <openthread/platform/settings.h>
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -58,29 +57,29 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
     instance.GetThreadNetif().GetMle().SetTimeout(aTimeout);
 }
 
-const uint8_t *otThreadGetExtendedPanId(otInstance *aInstance)
+const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMac().GetExtendedPanId();
+    return &instance.GetThreadNetif().GetMac().GetExtendedPanId();
 }
 
-otError otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId)
+otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-    uint8_t   mlPrefix[8];
+    otError           error    = OT_ERROR_NONE;
+    Instance &        instance = *static_cast<Instance *>(aInstance);
+    otMeshLocalPrefix prefix;
 
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetMac().SetExtendedPanId(aExtendedPanId);
+    instance.GetThreadNetif().GetMac().SetExtendedPanId(*aExtendedPanId);
 
-    mlPrefix[0] = 0xfd;
-    memcpy(mlPrefix + 1, aExtendedPanId, 5);
-    mlPrefix[6] = 0x00;
-    mlPrefix[7] = 0x00;
-    instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(mlPrefix);
+    prefix.m8[0] = 0xfd;
+    memcpy(&prefix.m8[1], aExtendedPanId->m8, 5);
+    prefix.m8[6] = 0x00;
+    prefix.m8[7] = 0x00;
+    instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(prefix);
 
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
@@ -120,7 +119,7 @@ otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
         config.mSecureDataRequests = 1;
     }
 
-    if (mode & Mle::ModeTlv::kModeFFD)
+    if (mode & Mle::ModeTlv::kModeFullThreadDevice)
     {
         config.mDeviceType = 1;
     }
@@ -150,7 +149,7 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
 
     if (aConfig.mDeviceType)
     {
-        mode |= Mle::ModeTlv::kModeFFD;
+        mode |= Mle::ModeTlv::kModeFullThreadDevice;
     }
 
     if (aConfig.mNetworkData)
@@ -192,14 +191,14 @@ const otIp6Address *otThreadGetMeshLocalEid(otInstance *aInstance)
     return &instance.GetThreadNetif().GetMle().GetMeshLocal64();
 }
 
-const uint8_t *otThreadGetMeshLocalPrefix(otInstance *aInstance)
+const otMeshLocalPrefix *otThreadGetMeshLocalPrefix(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetMeshLocalPrefix();
+    return &instance.GetThreadNetif().GetMle().GetMeshLocalPrefix();
 }
 
-otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix)
+otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -207,7 +206,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLo
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    error = instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
+    error = instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(*aMeshLocalPrefix);
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
 
@@ -365,7 +364,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
     aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
     aParentInfo->mAge = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
-    aParentInfo->mAllocated       = parent->IsAllocated();
+    aParentInfo->mAllocated       = true;
     aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 
 exit:
@@ -404,41 +403,6 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 
 exit:
     return error;
-}
-
-const char *otGetVersionString(void)
-{
-/**
- * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
- * intended to be used to specify compiler directives to indicate
- * what linker section the platform version string should be stored.
- *
- * This is useful for specifying an exact locaiton of where the version
- * string will be located so that it can be easily retrieved from the
- * raw firmware image.
- *
- * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
- * is used instead.
- *
- * If both are unspecified, the location of the string in the firmware
- * image will be undefined and may change.
- */
-
-#ifdef PLATFORM_VERSION_ATTR_PREFIX
-    PLATFORM_VERSION_ATTR_PREFIX
-#else
-    static
-#endif
-    const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
-#if defined(__DATE__)
-                                         "; " __DATE__ " " __TIME__
-#endif
-#ifdef PLATFORM_VERSION_ATTR_SUFFIX
-                                             PLATFORM_VERSION_ATTR_SUFFIX
-#endif
-        ; // Trailing semicolon to end statement.
-
-    return sVersion;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
@@ -497,10 +461,10 @@ exit:
 bool otThreadGetAutoStart(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-    uint8_t  autoStart       = 0;
-    uint16_t autoStartLength = sizeof(autoStart);
+    uint8_t   autoStart = 0;
+    Instance &instance  = *static_cast<Instance *>(aInstance);
 
-    if (otPlatSettingsGet(aInstance, Settings::kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != OT_ERROR_NONE)
+    if (instance.GetSettings().ReadThreadAutoStart(autoStart) != OT_ERROR_NONE)
     {
         autoStart = 0;
     }
@@ -515,8 +479,10 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 otError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-    uint8_t autoStart = aStartAutomatically ? 1 : 0;
-    return otPlatSettingsSet(aInstance, Settings::kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+    uint8_t   autoStart = aStartAutomatically ? 1 : 0;
+    Instance &instance  = *static_cast<Instance *>(aInstance);
+
+    return instance.GetSettings().SaveThreadAutoStart(autoStart);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aStartAutomatically);
@@ -557,4 +523,37 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return &instance.GetThreadNetif().GetMeshForwarder().GetCounters();
+}
+
+const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.GetThreadNetif().GetMle().GetCounters();
+}
+
+void otThreadResetMleCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetMle().ResetCounters();
+}
+
+otError otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+                                               otThreadParentResponseCallback aCallback,
+                                               void *                         aContext)
+{
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().GetMle().RegisterParentResponseStatsCallback(aCallback, aContext);
+
+    return OT_ERROR_NONE;
+#else
+    (void)aInstance;
+    (void)aCallback;
+    (void)aContext;
+
+    return OT_ERROR_DISABLED_FEATURE;
+#endif
 }

@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 /** @file
  *
@@ -59,25 +59,75 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * @cond (NODOX)
+ */
+/*lint -save -e27 -e10 -e19 */
+#if defined (__LINT__)
+#define STACK_BASE 0x1F000 // Arbitrary value.
+#define STACK_TOP  0x20000 // Arbitrary value.
 
-//lint -save -e27 -e10 -e19
-#if defined ( __CC_ARM ) && !defined (__LINT__)
+#elif defined ( __CC_ARM )
 extern char STACK$$Base;
 extern char STACK$$Length;
 #define STACK_BASE    &STACK$$Base
 #define STACK_TOP    ((void*)((uint32_t)STACK_BASE + (uint32_t)&STACK$$Length))
+
 #elif defined ( __ICCARM__ )
 extern char CSTACK$$Base;
 extern char CSTACK$$Length;
 #define STACK_BASE    &CSTACK$$Base
 #define STACK_TOP    ((void*)((uint32_t)STACK_BASE + (uint32_t)&CSTACK$$Length))
+
 #elif defined   ( __GNUC__ )
 extern uint32_t __StackTop;
 extern uint32_t __StackLimit;
 #define STACK_BASE    &__StackLimit
 #define STACK_TOP     &__StackTop
 #endif
-//lint -restore
+
+/* These macros are valid only when absolute placement is used for the application
+ * image. The macros are not compile time symbols. They cannot be used as a
+ * constant expression, for example, inside a static assert or linker script
+ * at-placement. */
+#if defined (__LINT__)
+#define CODE_START (0)      // Arbitrary value.
+#define CODE_END   (0x1000) // Arbitrary value.
+#define CODE_SIZE  (0x1000) // Arbitrary value.
+
+#elif defined ( __CC_ARM )
+extern char Load$$LR$$LR_IROM1$$Base;
+extern char Load$$LR$$LR_IROM1$$Length;
+extern char Load$$LR$$LR_IROM1$$Limit;
+#define CODE_START ((uint32_t)&Load$$LR$$LR_IROM1$$Base)
+#define CODE_END   ((uint32_t)&Load$$LR$$LR_IROM1$$Limit)
+#define CODE_SIZE  ((uint32_t)&Load$$LR$$LR_IROM1$$Length)
+
+#elif defined ( __ICCARM__ )
+extern void * __vector_table;
+extern char RO_END$$Base;
+#define CODE_START ((uint32_t)&__vector_table)
+#define CODE_END   ((uint32_t)&RO_END$$Base)
+#define CODE_SIZE  (CODE_END - CODE_START)
+
+#elif defined(__SES_ARM)
+extern uint32_t * _vectors;
+extern uint32_t __FLASH_segment_used_end__;
+#define CODE_START ((uint32_t)&_vectors)
+#define CODE_END   ((uint32_t)&__FLASH_segment_used_end__)
+#define CODE_SIZE  (CODE_END - CODE_START)
+
+#elif defined ( __GNUC__ )
+extern uint32_t __isr_vector;
+extern uint32_t __etext;
+#define CODE_START ((uint32_t)&__isr_vector)
+#define CODE_END   ((uint32_t)&__etext)
+#define CODE_SIZE  (CODE_END - CODE_START)
+#endif
+/** @}
+ * @endcond
+ */
+/* lint -restore */
 
 enum
 {
@@ -86,6 +136,51 @@ enum
     UNIT_10_MS    = 10000       /**< Number of microseconds in 10 milliseconds. */
 };
 
+/**
+ * @brief Counts number of bits required for the given value
+ *
+ * The macro technically searches for the highest bit set.
+ * For value 0 it returns 0.
+ *
+ * @param val Value to be processed
+ *
+ * @return Number of bits required for the given value
+ */
+//lint -emacro(572,VBITS)
+#define VBITS(val) VBITS_32(val)
+
+/**
+ * @def VBITS_1
+ * @brief Internal macro used by @ref VBITS */
+/**
+ * @def VBITS_2
+ * @brief Internal macro used by @ref VBITS */
+/**
+ * @def VBITS_4
+ * @brief Internal macro used by @ref VBITS */
+/**
+ * @def VBITS_8
+ * @brief Internal macro used by @ref VBITS */
+/**
+ * @def VBITS_16
+ * @brief Internal macro used by @ref VBITS */
+/**
+ * @def VBITS_32
+ * @brief Internal macro used by @ref VBITS */
+#define VBITS_1( v) ((((v) & (0x0001U <<  0)) != 0) ? 1U : 0U)
+#define VBITS_2( v) ((((v) & (0x0001U <<  1)) != 0) ? VBITS_1 ((v) >>  1) +  1 : VBITS_1 (v))
+#define VBITS_4( v) ((((v) & (0x0003U <<  2)) != 0) ? VBITS_2 ((v) >>  2) +  2 : VBITS_2 (v))
+#define VBITS_8( v) ((((v) & (0x000fU <<  4)) != 0) ? VBITS_4 ((v) >>  4) +  4 : VBITS_4 (v))
+#define VBITS_16(v) ((((v) & (0x00ffU <<  8)) != 0) ? VBITS_8 ((v) >>  8) +  8 : VBITS_8 (v))
+#define VBITS_32(v) ((((v) & (0xffffU << 16)) != 0) ? VBITS_16((v) >> 16) + 16 : VBITS_16(v))
+
+
+/*Segger embedded studio originally has offsetof macro which cannot be used in macros (like STATIC_ASSERT).
+  This redefinition is to allow using that. */
+#if defined(__SES_ARM) && defined(__GNUC__)
+#undef offsetof
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
 
 /**@brief Implementation specific macro for delayed macro expansion used in string concatenation
 *
@@ -105,35 +200,50 @@ enum
 #define STRING_CONCATENATE(lhs, rhs) STRING_CONCATENATE_IMPL(lhs, rhs)
 
 
-// Disable lint-warnings/errors for STATIC_ASSERT
-//lint -emacro(10, STATIC_ASSERT)
-//lint -emacro(15, STATIC_ASSERT)
-//lint -emacro(18, STATIC_ASSERT)
-//lint -emacro(19, STATIC_ASSERT)
-//lint -emacro(30, STATIC_ASSERT)
-//lint -emacro(37, STATIC_ASSERT)
-//lint -emacro(42, STATIC_ASSERT)
-//lint -emacro(26, STATIC_ASSERT)
-//lint -emacro(102,STATIC_ASSERT)
-//lint -emacro(533,STATIC_ASSERT)
-//lint -emacro(534,STATIC_ASSERT)
-//lint -emacro(132,STATIC_ASSERT)
-//lint -emacro(414,STATIC_ASSERT)
-//lint -emacro(578,STATIC_ASSERT)
-//lint -emacro(628,STATIC_ASSERT)
-//lint -emacro(648,STATIC_ASSERT)
-//lint -emacro(830,STATIC_ASSERT)
+#ifndef __LINT__
 
-/**@brief Macro for doing static (i.e. compile time) assertion.
-*
-* @note If the EXPR isn't resolvable, then the error message won't be shown.
-* @note The output of STATIC_ASSERT will be different across different compilers.
-*
-* @param[in] EXPR Constant expression to be verified.
-* @hideinitializer
-*/
-#define STATIC_ASSERT(EXPR) \
-    extern char (*_do_assert(void)) [sizeof(char[1 - 2*!(EXPR)])]
+#ifdef __GNUC__
+#define STATIC_ASSERT_SIMPLE(EXPR)      _Static_assert(EXPR, "unspecified message")
+#define STATIC_ASSERT_MSG(EXPR, MSG)    _Static_assert(EXPR, MSG)
+#endif
+
+#ifdef __CC_ARM
+#define STATIC_ASSERT_SIMPLE(EXPR)      extern char (*_do_assert(void)) [sizeof(char[1 - 2*!(EXPR)])]
+#define STATIC_ASSERT_MSG(EXPR, MSG)    extern char (*_do_assert(void)) [sizeof(char[1 - 2*!(EXPR)])]
+#endif
+
+#ifdef __ICCARM__
+#define STATIC_ASSERT_SIMPLE(EXPR)      static_assert(EXPR, "unspecified message")
+#define STATIC_ASSERT_MSG(EXPR, MSG)    static_assert(EXPR, MSG)
+#endif
+
+#else // __LINT__
+
+#define STATIC_ASSERT_SIMPLE(EXPR)      extern char (*_ignore(void))
+#define STATIC_ASSERT_MSG(EXPR, MSG)    extern char (*_ignore(void))
+
+#endif
+
+
+#define _SELECT_ASSERT_FUNC(x, EXPR, MSG, ASSERT_MACRO, ...) ASSERT_MACRO
+
+/**
+ * @brief   Static (i.e. compile time) assert macro.
+ *
+ * @note The output of STATIC_ASSERT can be different across compilers.
+ *
+ * Usage:
+ * STATIC_ASSERT(expression);
+ * STATIC_ASSERT(expression, message);
+ *
+ * @hideinitializer
+ */
+//lint -save -esym(???, STATIC_ASSERT)
+#define STATIC_ASSERT(...)                                                                          \
+    _SELECT_ASSERT_FUNC(x, ##__VA_ARGS__,                                                           \
+                        STATIC_ASSERT_MSG(__VA_ARGS__),                                             \
+                        STATIC_ASSERT_SIMPLE(__VA_ARGS__))
+//lint -restore
 
 
 /**@brief Implementation details for NUM_VAR_ARGS */
@@ -275,7 +385,7 @@ typedef struct
  *
  * @return The aligned (increased) @p number.
  */
-#define ALIGN_NUM(alignment, number) ((number - 1) + alignment - ((number - 1) % alignment))
+#define ALIGN_NUM(alignment, number) (((number) - 1) + (alignment) - (((number) - 1) % (alignment)))
 
 /**@brief Macro for getting first of 2 parameters.
  *
@@ -322,7 +432,7 @@ typedef struct
  *
  * Macro that extracts selected bit-field from provided value
  *
- * @param[in] val  Value from witch selected bit-field would be extracted
+ * @param[in] val  Value from which selected bit-field would be extracted
  * @param[in] bcnt Number of bits in the bit-field
  * @param[in] boff Lowest bit number
  *
@@ -416,7 +526,7 @@ typedef struct
  * @sa BF_CX
  * @sa BF_GET
  *
- * @param[in] val   Value from witch selected bit-field would be extracted
+ * @param[in] val   Value from which selected bit-field would be extracted
  * @param[in] bf_cx Complex bit-field
  *
  * @return Value of the selected bits.
@@ -600,6 +710,24 @@ typedef struct
 #define MACRO_MAP_13(macro, a, ...) macro(a) MACRO_MAP_12(macro, __VA_ARGS__, )
 #define MACRO_MAP_14(macro, a, ...) macro(a) MACRO_MAP_13(macro, __VA_ARGS__, )
 #define MACRO_MAP_15(macro, a, ...) macro(a) MACRO_MAP_14(macro, __VA_ARGS__, )
+#define MACRO_MAP_16(macro, a, ...) macro(a) MACRO_MAP_15(macro, __VA_ARGS__, )
+#define MACRO_MAP_17(macro, a, ...) macro(a) MACRO_MAP_16(macro, __VA_ARGS__, )
+#define MACRO_MAP_18(macro, a, ...) macro(a) MACRO_MAP_17(macro, __VA_ARGS__, )
+#define MACRO_MAP_19(macro, a, ...) macro(a) MACRO_MAP_18(macro, __VA_ARGS__, )
+#define MACRO_MAP_20(macro, a, ...) macro(a) MACRO_MAP_19(macro, __VA_ARGS__, )
+#define MACRO_MAP_21(macro, a, ...) macro(a) MACRO_MAP_20(macro, __VA_ARGS__, )
+#define MACRO_MAP_22(macro, a, ...) macro(a) MACRO_MAP_21(macro, __VA_ARGS__, )
+#define MACRO_MAP_23(macro, a, ...) macro(a) MACRO_MAP_22(macro, __VA_ARGS__, )
+#define MACRO_MAP_24(macro, a, ...) macro(a) MACRO_MAP_23(macro, __VA_ARGS__, )
+#define MACRO_MAP_25(macro, a, ...) macro(a) MACRO_MAP_24(macro, __VA_ARGS__, )
+#define MACRO_MAP_26(macro, a, ...) macro(a) MACRO_MAP_25(macro, __VA_ARGS__, )
+#define MACRO_MAP_27(macro, a, ...) macro(a) MACRO_MAP_26(macro, __VA_ARGS__, )
+#define MACRO_MAP_28(macro, a, ...) macro(a) MACRO_MAP_27(macro, __VA_ARGS__, )
+#define MACRO_MAP_29(macro, a, ...) macro(a) MACRO_MAP_28(macro, __VA_ARGS__, )
+#define MACRO_MAP_30(macro, a, ...) macro(a) MACRO_MAP_29(macro, __VA_ARGS__, )
+#define MACRO_MAP_31(macro, a, ...) macro(a) MACRO_MAP_30(macro, __VA_ARGS__, )
+#define MACRO_MAP_32(macro, a, ...) macro(a) MACRO_MAP_31(macro, __VA_ARGS__, )
+
 
 #define MACRO_MAP_REC_0(           ...)
 #define MACRO_MAP_REC_1( macro, a, ...) macro(a)
@@ -617,6 +745,24 @@ typedef struct
 #define MACRO_MAP_REC_13(macro, a, ...) macro(a) MACRO_MAP_REC_12(macro, __VA_ARGS__, )
 #define MACRO_MAP_REC_14(macro, a, ...) macro(a) MACRO_MAP_REC_13(macro, __VA_ARGS__, )
 #define MACRO_MAP_REC_15(macro, a, ...) macro(a) MACRO_MAP_REC_14(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_16(macro, a, ...) macro(a) MACRO_MAP_REC_15(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_17(macro, a, ...) macro(a) MACRO_MAP_REC_16(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_18(macro, a, ...) macro(a) MACRO_MAP_REC_17(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_19(macro, a, ...) macro(a) MACRO_MAP_REC_18(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_20(macro, a, ...) macro(a) MACRO_MAP_REC_19(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_21(macro, a, ...) macro(a) MACRO_MAP_REC_20(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_22(macro, a, ...) macro(a) MACRO_MAP_REC_21(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_23(macro, a, ...) macro(a) MACRO_MAP_REC_22(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_24(macro, a, ...) macro(a) MACRO_MAP_REC_23(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_25(macro, a, ...) macro(a) MACRO_MAP_REC_24(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_26(macro, a, ...) macro(a) MACRO_MAP_REC_25(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_27(macro, a, ...) macro(a) MACRO_MAP_REC_26(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_28(macro, a, ...) macro(a) MACRO_MAP_REC_27(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_29(macro, a, ...) macro(a) MACRO_MAP_REC_28(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_30(macro, a, ...) macro(a) MACRO_MAP_REC_29(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_31(macro, a, ...) macro(a) MACRO_MAP_REC_30(macro, __VA_ARGS__, )
+#define MACRO_MAP_REC_32(macro, a, ...) macro(a) MACRO_MAP_REC_31(macro, __VA_ARGS__, )
+
 
 /**
  * @brief Mapping macro with current index
@@ -663,6 +809,23 @@ typedef struct
 #define MACRO_MAP_FOR_13(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_12((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
 #define MACRO_MAP_FOR_14(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_13((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
 #define MACRO_MAP_FOR_15(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_14((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_16(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_15((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_17(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_16((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_18(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_17((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_19(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_18((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_20(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_19((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_21(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_20((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_22(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_21((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_23(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_22((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_24(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_23((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_25(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_24((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_26(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_25((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_27(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_26((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_28(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_27((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_29(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_28((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_30(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_29((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_31(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_30((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_32(n_list, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list))) MACRO_MAP_FOR_31((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__, )
 
 
 /**
@@ -709,6 +872,24 @@ typedef struct
 #define MACRO_MAP_FOR_PARAM_13(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_12((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
 #define MACRO_MAP_FOR_PARAM_14(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_13((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
 #define MACRO_MAP_FOR_PARAM_15(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_14((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_16(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_15((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_17(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_16((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_18(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_17((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_19(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_18((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_20(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_19((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_21(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_20((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_22(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_21((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_23(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_22((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_24(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_23((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_25(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_24((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_26(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_25((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_27(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_26((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_28(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_27((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_29(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_28((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_30(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_29((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_31(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_30((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+#define MACRO_MAP_FOR_PARAM_32(n_list, param, macro, a, ...) macro(a, GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), param) MACRO_MAP_FOR_PARAM_31((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), param, macro, __VA_ARGS__, )
+
 
 
 /**
@@ -739,6 +920,23 @@ typedef struct
 #define MACRO_REPEAT_13(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_12(macro, __VA_ARGS__)
 #define MACRO_REPEAT_14(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_13(macro, __VA_ARGS__)
 #define MACRO_REPEAT_15(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_14(macro, __VA_ARGS__)
+#define MACRO_REPEAT_16(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_15(macro, __VA_ARGS__)
+#define MACRO_REPEAT_17(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_16(macro, __VA_ARGS__)
+#define MACRO_REPEAT_18(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_17(macro, __VA_ARGS__)
+#define MACRO_REPEAT_19(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_18(macro, __VA_ARGS__)
+#define MACRO_REPEAT_20(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_19(macro, __VA_ARGS__)
+#define MACRO_REPEAT_21(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_20(macro, __VA_ARGS__)
+#define MACRO_REPEAT_22(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_21(macro, __VA_ARGS__)
+#define MACRO_REPEAT_23(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_22(macro, __VA_ARGS__)
+#define MACRO_REPEAT_24(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_23(macro, __VA_ARGS__)
+#define MACRO_REPEAT_25(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_24(macro, __VA_ARGS__)
+#define MACRO_REPEAT_26(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_25(macro, __VA_ARGS__)
+#define MACRO_REPEAT_27(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_26(macro, __VA_ARGS__)
+#define MACRO_REPEAT_28(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_27(macro, __VA_ARGS__)
+#define MACRO_REPEAT_29(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_28(macro, __VA_ARGS__)
+#define MACRO_REPEAT_30(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_29(macro, __VA_ARGS__)
+#define MACRO_REPEAT_31(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_30(macro, __VA_ARGS__)
+#define MACRO_REPEAT_32(macro, ...) macro(__VA_ARGS__) MACRO_REPEAT_31(macro, __VA_ARGS__)
 
 
 /**
@@ -772,6 +970,24 @@ typedef struct
 #define MACRO_REPEAT_FOR_13(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_12((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
 #define MACRO_REPEAT_FOR_14(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_13((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
 #define MACRO_REPEAT_FOR_15(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_14((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_16(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_15((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_17(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_16((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_18(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_17((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_19(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_18((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_20(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_19((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_21(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_20((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_22(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_21((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_23(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_22((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_24(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_23((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_25(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_24((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_26(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_25((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_27(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_26((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_28(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_27((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_29(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_28((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_30(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_29((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_31(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_30((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+#define MACRO_REPEAT_FOR_32(n_list, macro, ...) macro(GET_VA_ARG_1(BRACKET_EXTRACT(n_list)), __VA_ARGS__) MACRO_REPEAT_FOR_31((GET_ARGS_AFTER_1(BRACKET_EXTRACT(n_list))), macro, __VA_ARGS__)
+
 
 /**@brief Adding curly brace to the macro parameter.
  *
@@ -837,6 +1053,23 @@ static __INLINE uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
     p_encoded_data[2] = (uint8_t) ((value & 0x00FF0000) >> 16);
     p_encoded_data[3] = (uint8_t) ((value & 0xFF000000) >> 24);
     return sizeof(uint32_t);
+}
+
+/**@brief Function for encoding a uint40 value.
+ *
+ * @param[in]   value            Value to be encoded.
+ * @param[out]  p_encoded_data   Buffer where the encoded data is to be written.
+ *
+ * @return      Number of bytes written.
+ */
+static __INLINE uint8_t uint40_encode(uint64_t value, uint8_t * p_encoded_data)
+{
+    p_encoded_data[0] = (uint8_t) ((value & 0x00000000FF) >> 0);
+    p_encoded_data[1] = (uint8_t) ((value & 0x000000FF00) >> 8);
+    p_encoded_data[2] = (uint8_t) ((value & 0x0000FF0000) >> 16);
+    p_encoded_data[3] = (uint8_t) ((value & 0x00FF000000) >> 24);
+    p_encoded_data[4] = (uint8_t) ((value & 0xFF00000000) >> 32);
+    return 5;
 }
 
 /**@brief Function for encoding a uint48 value.
@@ -938,6 +1171,8 @@ static __INLINE uint8_t uint16_big_encode(uint16_t value, uint8_t * p_encoded_da
     return sizeof(uint16_t);
 }
 
+/*lint -esym(526, __rev) */
+/*lint -esym(628, __rev) */
 /**@brief Function for encoding a uint32 value in big-endian format.
  *
  * @param[in]   value            Value to be encoded.
@@ -949,6 +1184,21 @@ static __INLINE uint8_t uint32_big_encode(uint32_t value, uint8_t * p_encoded_da
 {
     *(uint32_t *)p_encoded_data = __REV(value);
     return sizeof(uint32_t);
+}
+
+/**@brief Function for decoding a uint40 value.
+ *
+ * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
+ *
+ * @return      Decoded value. (uint64_t)
+ */
+static __INLINE uint64_t uint40_decode(const uint8_t * p_encoded_data)
+{
+    return ( (((uint64_t)((uint8_t *)p_encoded_data)[0]) << 0)  |
+             (((uint64_t)((uint8_t *)p_encoded_data)[1]) << 8)  |
+             (((uint64_t)((uint8_t *)p_encoded_data)[2]) << 16) |
+             (((uint64_t)((uint8_t *)p_encoded_data)[3]) << 24) |
+             (((uint64_t)((uint8_t *)p_encoded_data)[4]) << 32 ));
 }
 
 /**@brief Function for decoding a uint48 value.
@@ -1030,6 +1280,7 @@ static __INLINE bool is_word_aligned(void const* p)
     return (((uintptr_t)p & 0x03) == 0);
 }
 
+/*lint -e{568, 685} */
 /**
  * @brief Function for checking if provided address is located in stack space.
  *
@@ -1049,7 +1300,6 @@ static __INLINE bool is_address_from_stack(void * ptr)
         return false;
     }
 }
-
 
 #ifdef __cplusplus
 }

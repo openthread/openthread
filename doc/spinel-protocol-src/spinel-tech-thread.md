@@ -32,10 +32,17 @@ The IPv6 address of the leader. (Note: May change to long and short address of l
 
 ### PROP 81: PROP_THREAD_PARENT
 * Type: Read-Only
-* Packed-Encoding: `ES`
-* LADDR, SADDR
+* Packed-Encoding: `ESLccCC`
 
-The long address and short address of the parent of this node.
+Information about parent of this node.
+
+*  `E`: Extended address
+*  `S`: RLOC16
+*  `L`: Age (seconds since last heard from)
+*  `c`: Average RSS (in dBm)
+*  `c`: Last RSSI (in dBm)
+*  `C`: Link Quality In
+*  `C`: Link Quality Out
 
 ### PROP 82: PROP_THREAD_CHILD_TABLE
 * Type: Read-Only
@@ -288,13 +295,15 @@ Set to true to enable the native commissioner. It is mandatory before adding the
 * Packed-Encoding: `b`
 * Required capability: `CAP_THREAD_TMF_PROXY`
 
-Set to true to enable the TMF proxy.
+Set to true to enable the TMF proxy. This property is deprecated.
 
 ### PROP 5394: PROP_THREAD_TMF_PROXY_STREAM {#prop-thread-tmf-proxy-stream}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `dSS`
 * Required capability: `CAP_THREAD_TMF_PROXY`
+
+This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
 
 Data per item is:
 
@@ -308,7 +317,6 @@ Fields:  | Length | CoAP | locator | port
 
 This property allows the host to send and receive TMF messages from
 the NCP's RLOC address and support Thread-specific border router functions.
-
 
 ### PROP 5395: PROP_THREAD_DISOVERY_SCAN_JOINER_FLAG {#prop-thread-discovery-scan-joiner-flag}
 
@@ -416,7 +424,7 @@ following properties can also be included in the Pending Dataset:
 *   SPINEL_PROP_DATASET_PENDING_TIMESTAMP
 *   SPINEL_PROP_DATASET_DELAY_TIMER
 
-### PROP 5402: SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET (#prop-thread-mgmt-active-dataset)
+### PROP 5402: SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET (#prop-thread-mgmt-set-active-dataset)
 
   * Type: Write only
   * Packing-Encoding: `A(t(iD))`
@@ -435,7 +443,7 @@ TLVs):
 
 *    SPINEL_PROP_DATASET_RAW_TLVS
 
-### PROP 5403: SPINEL_PROP_THREAD_MGMT_PENDING_DATASET (#prop-thread-mgmt-pending-dataset)
+### PROP 5403: SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET (#prop-thread-mgmt-set-pending-dataset)
 
   * Type: Write only
   * Packing-Encoding: `A(t(iD))`
@@ -461,8 +469,10 @@ This can only be included in one of the Dataset related properties below:
 
 *   SPINEL_PROP_THREAD_ACTIVE_DATASET
 *   SPINEL_PROP_THREAD_PENDING_DATASET
-*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
 
 ### PROP 5405: SPINEL_PROP_DATASET_PENDING_TIMESTAMP (#prop-dataset-pending-timestamps)
 
@@ -475,8 +485,8 @@ Dataset.
 It can only be included in one of the Pending Dataset properties:
 
 *   SPINEL_PROP_THREAD_PENDING_DATASET
-*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
-
+*   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
 
 ### PROP 5406: SPINEL_PROP_DATASET_DELAY_TIMER (#prop-dataset-delay-timer)
 
@@ -491,7 +501,8 @@ Pending Operational Dataset.
 It can only be included in one of the Pending Dataset properties:
 
 *   SPINEL_PROP_THREAD_PENDING_DATASET
-*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
 
 ### PROP 5407: SPINEL_PROP_DATASET_SECURITY_POLICY (#prop-dataset-security-policy)
 
@@ -510,8 +521,10 @@ It can only be included in one of the Dataset related properties below:
 
 *   SPINEL_PROP_THREAD_ACTIVE_DATASET
 *   SPINEL_PROP_THREAD_PENDING_DATASET
-*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET
 
 ### PROP 5408: SPINEL_PROP_DATASET_RAW_TLVS (#prop-dataset-raw-tlvs)
 
@@ -523,8 +536,8 @@ DataSet.
 
 It can only be included in one of the following Dataset properties:
 
-*   SPINEL_PROP_THREAD_MGMT_ACTIVE_DATASET
-*   SPINEL_PROP_THREAD_MGMT_PENDING_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET
 
 ### PROP 5409: SPINEL_PROP_THREAD_CHILD_TABLE_ADDRESSES (#prop-thread-child-table-addresses)
 
@@ -562,3 +575,87 @@ Data per item is:
 * `S`: Message error rate (0 -> 0%, 0xffff -> 100%)
 * `c`: Average RSSI (in dBm)
 * `c`: Last RSSI (in dBm)
+
+### PROP 5411: SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE (#prop-thread-address-cache-table)
+
+* Type: Read-Only
+* Packing-Encoding: `A(t(6SC))`
+
+This property provides Thread EID IPv6 address cache table.
+
+Data per item is:
+
+* `6` : Target IPv6 address
+* `S` : RLOC16 of target
+* `C` : Age (order of use, 0 indicates most recently used entry)
+
+### PROP 5412: SPINEL_PROP_THREAD_UDP_PROXY_STREAM (#prop-thread-udp-proxy-stream)
+
+* Type: Write-Stream
+* Packed-Encoding: `dS6S`
+* Required capability: `CAP_THREAD_UDP_PROXY`
+
+This property helps exchange UDP packets with host.
+
+  `d`: UDP payload
+  `S`: Remote UDP port
+  `6`: Remote IPv6 address
+  `S`: Local UDP port
+
+### PROP 5413: SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET (#prop-thread-mgmt-get-active-dataset)
+
+* Type: Write-Only
+* Packing-format: `A(t(iD))`
+
+The formatting of this property follows the same rules as in
+SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET. This property
+allows the sender to not include a value associated with
+properties in formating of `t(iD)`, i.e., it should accept
+either a `t(iD)` or a `t(i)` encoding which in both cases
+indicate the associated Dataset property should be requested
+as part of MGMT_GET command.
+
+When written, it triggers a MGMT_ACTIVE_GET meshcop command to be
+sent to leader with the given Dataset. The spinel frame response
+should be a `LAST_STATUS` with the status of the transmission
+of MGMT_ACTIVE_GET command.
+
+In addition to supported properties in
+SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET, the following property
+can be optionally included in the Dataset:
+
+*    SPINEL_PROP_DATASET_DEST_ADDRESS
+
+### PROP 5414: SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET (#prop-thread-mgmt-get-pending-dataset)
+
+* Type: Write-Only
+* Packing-format: `A(t(iD))`
+
+The formatting of this property follows the same rules as in
+SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET.
+
+This is write-only property. When written, it triggers a
+MGMT_PENDING_GET meshcop command to be sent to leader with the
+given Dataset. The spinel frame response should be a
+`LAST_STATUS` with the status of the transmission of
+MGMT_PENDING_GET command.
+
+In addition to supported properties in
+SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET, the following property
+can be optionally included the Dataset:
+
+*    SPINEL_PROP_DATASET_DEST_ADDRESS
+
+### PROP 5415: SPINEL_PROP_DATASET_DEST_ADDRESS (#prop-dataset-dest-address)
+
+* Type: No direct read or write
+* Packing-Encoding: `6`
+
+This property specifies the IPv6 destination when sending
+MGMT_GET command for either Active or Pending Dataset if not
+provided, Leader ALOC address is used as default.
+
+This can only be included in one of the Dataset related properties below:
+
+*   SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET
+*   SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET

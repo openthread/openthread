@@ -66,13 +66,13 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
             self.nodes[i].add_whitelist(self.nodes[ROUTER].get_addr64())
             self.nodes[ROUTER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
-            self.nodes[i].set_timeout(3)
+            self.nodes[i].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -100,6 +100,6 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
                 if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
                     self.assertTrue(self.nodes[LEADER].ping(addr, size=106))
                     break
-        
+
 if __name__ == '__main__':
     unittest.main()

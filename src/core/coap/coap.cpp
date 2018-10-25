@@ -30,13 +30,12 @@
 
 #include "coap.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
+#include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
@@ -62,7 +61,7 @@ CoapBase::CoapBase(Instance &     aInstance,
     , mDefaultHandler(NULL)
     , mDefaultHandlerContext(NULL)
 {
-    mMessageId = static_cast<uint16_t>(otPlatRandomGet());
+    mMessageId = Random::GetUint16();
 }
 
 otError CoapBase::Start(uint16_t aPort)
@@ -150,10 +149,9 @@ Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
     // Ensure that header has minimum required length.
     VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength);
 
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength(), aPriority)) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
-    message->SetPriority(aPriority);
 
 exit:
     return message;
@@ -528,8 +526,8 @@ exit:
 
 void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Coap *>(aContext)->Receive(*static_cast<Message *>(aMessage),
-                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<CoapBase *>(aContext)->Receive(*static_cast<Message *>(aMessage),
+                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void CoapBase::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -739,9 +737,9 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mResponseContext       = aContext;
     mRetransmissionCount   = 0;
     mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
-    mRetransmissionTimeout += otPlatRandomGet() % (TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator /
-                                                       kAckRandomFactorDenominator -
-                                                   TimerMilli::SecToMsec(kAckTimeout) + 1);
+    mRetransmissionTimeout += Random::GetUint32InRange(
+        0, TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+               TimerMilli::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {

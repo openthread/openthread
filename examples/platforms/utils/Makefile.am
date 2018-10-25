@@ -38,7 +38,7 @@ libopenthread_platform_utils_a_CPPFLAGS = \
 
 libopenthread_platform_utils_a_SOURCES  = \
     debug_uart.c                          \
-    settings.cpp                          \
+    settings_flash.c                      \
     $(NULL)
 
 noinst_HEADERS                          = \

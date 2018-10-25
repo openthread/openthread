@@ -95,6 +95,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_PARTITION_ID",                REF_IOCTL_FUNC_WITH_TUN(otPartitionId) },
     { "IOCTL_OTLWF_OT_RLOC16",                      REF_IOCTL_FUNC_WITH_TUN(otRloc16) },
     { "IOCTL_OTLWF_OT_ROUTER_ID_SEQUENCE",          REF_IOCTL_FUNC(otRouterIdSequence) },
+    { "IOCTL_OTLWF_OT_MAX_ROUTER_ID",               REF_IOCTL_FUNC(otMaxRouterId) },
     { "IOCTL_OTLWF_OT_ROUTER_INFO",                 REF_IOCTL_FUNC(otRouterInfo) },
     { "IOCTL_OTLWF_OT_STABLE_NETWORK_DATA_VERSION", REF_IOCTL_FUNC_WITH_TUN(otStableNetworkDataVersion) },
     { "IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED",       REF_IOCTL_FUNC(otMacBlacklistEnabled) },
@@ -145,6 +146,7 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_REMOVE_MAC_FIXED_RSS",        REF_IOCTL_FUNC_WITH_TUN(otRemoveMacFixedRss) },
     { "IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS",          REF_IOCTL_FUNC(otNextMacFixedRss) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS",         REF_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss) },
+    { "IOCTL_OTLWF_OT_NEXT_ROUTE",                  REF_IOCTL_FUNC(otNextRoute) },
 };
 
 // intentionally -1 in the end due to that IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY (#161) is removed now.
@@ -1254,12 +1256,13 @@ otLwfIoCtl_otExtendedPanId(
 
     if (InBufferLength >= sizeof(otExtendedPanId))
     {
-        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (otExtendedPanId*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otExtendedPanId))
     {
-        memcpy(OutBuffer, otThreadGetExtendedPanId(pFilter->otCtx), sizeof(otExtendedPanId));
+        const otExtendedPanId* aExtendedPanId = otThreadGetExtendedPanId(pFilter->otCtx);
+        memcpy(OutBuffer, aExtendedPanId, sizeof(otExtendedPanId));
         *OutBufferLength = sizeof(otExtendedPanId);
         status = STATUS_SUCCESS;
     }
@@ -1537,7 +1540,7 @@ enum
 {
     kThreadMode_RxOnWhenIdle        = (1 << 3),
     kThreadMode_SecureDataRequest   = (1 << 2),
-    kThreadMode_FullFunctionDevice  = (1 << 1),
+    kThreadMode_FullThreadDevice  = (1 << 1),
     kThreadMode_FullNetworkData     = (1 << 0),
 };
 
@@ -1561,7 +1564,7 @@ otLwfTunIoCtl_otLinkMode(
 
         if (aLinkMode->mRxOnWhenIdle)       numeric_mode |= kThreadMode_RxOnWhenIdle;
         if (aLinkMode->mSecureDataRequests) numeric_mode |= kThreadMode_SecureDataRequest;
-        if (aLinkMode->mDeviceType)         numeric_mode |= kThreadMode_FullFunctionDevice;
+        if (aLinkMode->mDeviceType)         numeric_mode |= kThreadMode_FullThreadDevice;
         if (aLinkMode->mNetworkData)        numeric_mode |= kThreadMode_FullNetworkData;
 
         status =
@@ -1612,7 +1615,7 @@ otLwfTunIoCtl_otLinkMode_Handler(
 
             aLinkMode->mRxOnWhenIdle = ((numeric_mode & kThreadMode_RxOnWhenIdle) == kThreadMode_RxOnWhenIdle);
             aLinkMode->mSecureDataRequests = ((numeric_mode & kThreadMode_SecureDataRequest) == kThreadMode_SecureDataRequest);
-            aLinkMode->mDeviceType = ((numeric_mode & kThreadMode_FullFunctionDevice) == kThreadMode_FullFunctionDevice);
+            aLinkMode->mDeviceType = ((numeric_mode & kThreadMode_FullThreadDevice) == kThreadMode_FullThreadDevice);
             aLinkMode->mNetworkData = ((numeric_mode & kThreadMode_FullNetworkData) == kThreadMode_FullNetworkData);
 
             *OutBufferLength = sizeof(otLinkModeConfig);
@@ -1933,12 +1936,13 @@ otLwfIoCtl_otMeshLocalPrefix(
 
     if (InBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        status = ThreadErrorToNtstatus(otThreadSetMeshLocalPrefix(pFilter->otCtx, InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetMeshLocalPrefix(pFilter->otCtx, (otMeshLocalPrefix*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        memcpy(OutBuffer, otThreadGetMeshLocalPrefix(pFilter->otCtx), sizeof(otMeshLocalPrefix));
+        const otMeshLocalPrefix* aMeshLocalPrefix = otThreadGetMeshLocalPrefix(pFilter->otCtx);
+        memcpy(OutBuffer, aMeshLocalPrefix, sizeof(otMeshLocalPrefix));
         *OutBufferLength = sizeof(otMeshLocalPrefix);
         status = STATUS_SUCCESS;
     }
@@ -4510,6 +4514,37 @@ otLwfIoCtl_otRouterIdSequence(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+otLwfIoCtl_otMaxRouterId(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(uint8_t))
+    {
+        *(uint8_t*)OutBuffer = otThreadGetMaxRouterId(pFilter->otCtx);
+        *OutBufferLength = sizeof(uint8_t);
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
 otLwfIoCtl_otRouterInfo(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
@@ -4855,6 +4890,58 @@ otLwfIoCtl_otNextOnMeshPrefix(
                 );
         }
         *OutBufferLength = sizeof(uint8_t) + sizeof(otBorderRouterConfig);
+        if (status == STATUS_SUCCESS)
+        {
+            *(uint32_t*)OutBuffer = aIterator;
+        }
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otNextRoute(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    if (InBufferLength >= sizeof(BOOLEAN) + sizeof(uint32_t) &&
+        *OutBufferLength >= sizeof(uint32_t) + sizeof(otExternalRouteConfig))
+    {
+        BOOLEAN aLocal = *(BOOLEAN*)InBuffer;
+        uint32_t aIterator = *(uint32_t*)(InBuffer + sizeof(BOOLEAN));
+        otExternalRouteConfig* aConfig = (otExternalRouteConfig*)((PUCHAR)OutBuffer + sizeof(uint32_t));
+        if (aLocal)
+        {
+            status = ThreadErrorToNtstatus(
+                otBorderRouterGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        else
+        {
+            status = ThreadErrorToNtstatus(
+                otNetDataGetNextRoute(
+                    pFilter->otCtx,
+                    &aIterator,
+                    aConfig)
+                );
+        }
+        *OutBufferLength = sizeof(uint8_t) + sizeof(otExternalRouteConfig);
         if (status == STATUS_SUCCESS)
         {
             *(uint32_t*)OutBuffer = aIterator;
@@ -5833,20 +5920,22 @@ otLwfIoCtl_otSendActiveGet(
     *OutBufferLength = 0;
     UNREFERENCED_PARAMETER(OutBuffer);
 
-    if (InBufferLength >= sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t))
     {
-        uint8_t aLength = *(uint8_t*)InBuffer;
-        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(uint8_t);
+        const otOperationalDatasetComponents *aDatasetComp = (otOperationalDatasetComponents*)InBuffer;
+        uint8_t aLength = *(uint8_t*)(InBuffer + sizeof(otOperationalDatasetComponents));
+        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(otOperationalDatasetComponents) + sizeof(uint8_t);
 
-        if (InBufferLength >= sizeof(uint8_t) + aLength)
+        if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength)
         {
             otIp6Address *aAddress = NULL;
-            if (InBufferLength >= sizeof(uint8_t) + aLength + sizeof(otIp6Address))
-                aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
+            if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength + sizeof(otIp6Address))
+                aAddress = (otIp6Address*)(InBuffer + sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
                 otDatasetSendMgmtActiveGet(
                     pFilter->otCtx,
+                    aDatasetComp,
                     aTlvTypes,
                     aLength,
                     aAddress)
@@ -5912,20 +6001,22 @@ otLwfIoCtl_otSendPendingGet(
     *OutBufferLength = 0;
     UNREFERENCED_PARAMETER(OutBuffer);
 
-    if (InBufferLength >= sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otOperationalDataset) + sizeof(uint8_t))
     {
-        uint8_t aLength = *(uint8_t*)InBuffer;
-        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(uint8_t);
+        const otOperationalDatasetComponents *aDatasetComp = (otOperationalDatasetComponents*)InBuffer;
+        uint8_t aLength = *(uint8_t*)(InBuffer + sizeof(otOperationalDataset));
+        PUCHAR aTlvTypes = aLength == 0 ? NULL : InBuffer + sizeof(otOperationalDataset) +  sizeof(uint8_t);
 
-        if (InBufferLength >= sizeof(uint8_t) + aLength)
+        if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength)
         {
             otIp6Address *aAddress = NULL;
-            if (InBufferLength >= sizeof(uint8_t) + aLength + sizeof(otIp6Address))
-                aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
+            if (InBufferLength >= sizeof(otOperationalDatasetComponents) + sizeof(uint8_t) + aLength + sizeof(otIp6Address))
+                aAddress = (otIp6Address*)(InBuffer + sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
                 otDatasetSendMgmtPendingGet(
                     pFilter->otCtx,
+                    aDatasetComp,
                     aTlvTypes,
                     aLength,
                     aAddress)

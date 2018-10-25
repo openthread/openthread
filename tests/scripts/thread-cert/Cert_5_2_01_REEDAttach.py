@@ -79,8 +79,8 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -136,6 +136,8 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         # DUT_ROUTER1: Verify forwarding LEADER's Address Solicit Response to REED1
         msg = router1_messages.next_coap_message('2.04')
         msg.assertSentToDestinationAddress(reed1_ipv6_address)
+
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to REED1
         for addr in self.nodes[REED1].get_addrs():

@@ -149,6 +149,22 @@ namespace ot {
 #define OT_URI_PATH_ANNOUNCE_BEGIN "c/ab"
 
 /**
+ * @def OT_URI_PATH_PROXY_RX
+ *
+ * The URI Path for Proxy RX.
+ *
+ */
+#define OT_URI_PATH_PROXY_RX "c/ur"
+
+/**
+ * @def OT_URI_PATH_PROXY_TX
+ *
+ * The URI Path for Proxy TX.
+ *
+ */
+#define OT_URI_PATH_PROXY_TX "c/ut"
+
+/**
  * @def OT_URI_PATH_RELAY_RX
  *
  * The URI Path for Relay RX.
@@ -219,6 +235,22 @@ namespace ot {
  *
  */
 #define OT_URI_PATH_COMMISSIONER_GET "c/cg"
+
+/**
+ * @def OT_URI_PATH_COMMISSIONER_KEEP_ALIVE
+ *
+ * The URI Path for Commissioner Keep Alive.
+ *
+ */
+#define OT_URI_PATH_COMMISSIONER_KEEP_ALIVE "c/ca"
+
+/**
+ * @def OT_URI_PATH_COMMISSIONER_PETITION
+ *
+ * The URI Path for Commissioner Petition.
+ *
+ */
+#define OT_URI_PATH_COMMISSIONER_PETITION "c/cp"
 
 /**
  * @def OT_URI_PATH_COMMISSIONER_SET

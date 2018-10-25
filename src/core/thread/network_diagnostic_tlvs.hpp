@@ -38,7 +38,7 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
+#include <openthread/thread.h>
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"
@@ -278,7 +278,7 @@ public:
     {
         kModeRxOnWhenIdle      = 1 << 3,
         kModeSecureDataRequest = 1 << 2,
-        kModeFFD               = 1 << 1,
+        kModeFullThreadDevice  = 1 << 1,
         kModeFullNetworkData   = 1 << 0,
     };
 
@@ -716,8 +716,8 @@ private:
         kRouteCostMask        = 0xf << kRouteCostOffset,
     };
     uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(Mle::kMaxRouterId)];
-    uint8_t mRouteData[Mle::kMaxRouters];
+    uint8_t mRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    uint8_t mRouteData[Mle::kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
 /**

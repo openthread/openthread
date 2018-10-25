@@ -32,12 +32,14 @@
  *  This file defines the top-level functions for the OpenThread CLI server.
  */
 
-#ifndef CLI_H_
-#define CLI_H_
+#ifndef OPENTHREAD_CLI_H_
+#define OPENTHREAD_CLI_H_
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <openthread/types.h>
+
+#include <openthread/instance.h>
+#include <openthread/platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,4 +154,4 @@ void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
 } // extern "C"
 #endif
 
-#endif
+#endif // OPENTHREAD_CLI_H_

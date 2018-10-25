@@ -51,10 +51,12 @@ openthread_headers                      = \
     channel_monitor.h                     \
     child_supervision.h                   \
     cli.h                                 \
+    coap_secure.h                         \
     coap.h                                \
     commissioner.h                        \
     config.h                              \
     crypto.h                              \
+    border_agent.h                        \
     border_router.h                       \
     dataset.h                             \
     dataset_ftd.h                         \
@@ -62,6 +64,7 @@ openthread_headers                      = \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
     dns.h                                 \
+    error.h                               \
     icmp6.h                               \
     instance.h                            \
     ip6.h                                 \
@@ -74,12 +77,11 @@ openthread_headers                      = \
     netdata.h                             \
     openthread.h                          \
     otfaultinjection.h                    \
+    network_time.h                        \
     server.h                              \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \
-    tmf_proxy.h                           \
-    types.h                               \
     udp.h                                 \
     $(NULL)
 

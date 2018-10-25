@@ -30,6 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                                                                           = libopenthread-da15000.a
 
+# Do not enable -pedantic-errors
+override CFLAGS    := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
 libopenthread_da15000_a_CPPFLAGS                                                        = \
     -I$(top_srcdir)/include                                                               \
     -I$(top_srcdir)/examples/platforms                                                    \
@@ -43,7 +47,7 @@ libopenthread_da15000_a_CPPFLAGS                                                
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include                  \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include                  \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src                      \
-    -I$(top_srcdir)/third_party/mbedtls/repo.patched/include                              \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include                                      \
     -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h                 \
     -Wno-sign-compare                                                                     \
     -Wno-unused-parameter                                                                 \
@@ -59,9 +63,9 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                               \
     logging.c                                                                             \
     misc.c                                                                                \
-    platform.c                                                                            \
     radio.c                                                                               \
     random.c                                                                              \
+    system.c                                                                              \
     uart.c                                                                                \
     crypto/aes_alt.c                                                                      \
     $(NULL)

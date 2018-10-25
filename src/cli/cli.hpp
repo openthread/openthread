@@ -40,7 +40,6 @@
 
 #include <openthread/cli.h>
 #include <openthread/ip6.h>
-#include <openthread/openthread.h>
 #include <openthread/udp.h>
 
 #include "cli/cli_server.hpp"
@@ -49,6 +48,11 @@
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
 #include "cli/cli_coap.hpp"
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#include <coap/coap_header.hpp>
+#include "cli/cli_coap_secure.hpp"
 #endif
 
 #include "common/code_utils.hpp"
@@ -95,6 +99,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
+    friend class CoapsSecure;
     friend class UdpExample;
 
 public:
@@ -193,6 +198,9 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    void ProcessCoapSecure(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -215,10 +223,10 @@ private:
     void ProcessEidCache(int argc, char *argv[]);
 #endif
     void ProcessEui64(int argc, char *argv[]);
-#ifdef OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_POSIX
     void ProcessExit(int argc, char *argv[]);
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_EXAMPLES_POSIX
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
     void ProcessLogFilename(int argc, char *argv[]);
 #endif
     void ProcessExtAddress(int argc, char *argv[]);
@@ -272,6 +280,9 @@ private:
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif
     void ProcessNetworkName(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    void ProcessNetworkTime(int argc, char *argv[]);
+#endif
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
 #if OPENTHREAD_FTD
@@ -295,6 +306,7 @@ private:
     void    ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
+    otError ProcessRouteList(void);
 #endif
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
@@ -335,7 +347,8 @@ private:
     static void s_HandlePingTimer(Timer &aTimer);
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
+    static void OTCALL s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext);
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
@@ -364,10 +377,11 @@ private:
     void HandlePingTimer();
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
+    void HandleEnergyScanResult(otEnergyScanResult *aResult);
 #ifdef OTDLL
-    void HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags);
+    void HandleNetifStateChanged(otInstance *aInstance, otChangedFlags aFlags);
 #else
-    void HandleNetifStateChanged(uint32_t aFlags);
+    void HandleNetifStateChanged(otChangedFlags aFlags);
 #endif
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame);
@@ -437,6 +451,11 @@ private:
     Coap mCoap;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+    CoapsSecure mCoapSecure;
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 };
 
 } // namespace Cli

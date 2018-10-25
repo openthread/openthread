@@ -67,10 +67,10 @@ Ip6::Ip6(Instance &aInstance)
 {
 }
 
-Message *Ip6::NewMessage(uint16_t aReserved)
+Message *Ip6::NewMessage(uint16_t aReserved, uint8_t aPriority)
 {
-    return GetInstance().GetMessagePool().New(Message::kTypeIp6,
-                                              sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved);
+    return GetInstance().GetMessagePool().New(
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aPriority);
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
@@ -616,7 +616,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (mIcmp.IsEchoEnabled())
+            if (mIcmp.ShouldHandleEchoRequest(aMessageInfo))
             {
                 IcmpHeader icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
@@ -644,6 +644,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
                 break;
 
+#if OPENTHREAD_ENABLE_PLATFORM_UDP == 0
             case kCoapUdpPort:
 
                 // do not pass TMF messages
@@ -653,8 +654,15 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 }
 
                 break;
+#endif // OPENTHREAD_ENABLE_PLATFORM_UDP
 
             default:
+#if OPENTHREAD_FTD
+                if (udp.GetDestinationPort() == GetInstance().Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
+                {
+                    ExitNow(error = OT_ERROR_NO_ROUTE);
+                }
+#endif
                 break;
             }
 
@@ -676,12 +684,12 @@ exit:
     switch (error)
     {
     case OT_ERROR_NO_BUFS:
-        otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
+        otLogWarnIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
                      aMessage.GetLength());
         break;
 
     case OT_ERROR_DROP:
-        otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
+        otLogNoteIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
                      aMessage.GetLength());
         break;
 
@@ -798,11 +806,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, header, nextHeader, forward, receive));
 
-    if (!mForwardingEnabled && aNetif != NULL)
-    {
-        forward = false;
-    }
-
     // process IPv6 Payload
     if (receive)
     {
@@ -841,6 +844,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
 
         if (aNetif != NULL)
         {
+            VerifyOrExit(mForwardingEnabled, forward = false);
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 

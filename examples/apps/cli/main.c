@@ -34,9 +34,19 @@
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
 #include <openthread/otfaultinjection.h>
+#include <openthread/tasklet.h>
 #include <openthread/platform/logging.h>
 
-#include "platform.h"
+#include "openthread-system.h"
+
+#if OPENTHREAD_EXAMPLES_POSIX
+#include <setjmp.h>
+#include <unistd.h>
+
+jmp_buf gResetJump;
+
+void __gcov_flush();
+#endif
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 void *otPlatCAlloc(size_t aNum, size_t aSize)
@@ -59,12 +69,25 @@ int main(int argc, char *argv[])
 {
     otInstance *sInstance;
 
+#if OPENTHREAD_EXAMPLES_POSIX
+    if (setjmp(gResetJump))
+    {
+        alarm(0);
+#if OPENTHREAD_ENABLE_COVERAGE
+        __gcov_flush();
+#endif
+        execvp(argv[0], argv);
+    }
+#endif
+
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     size_t   otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer       = NULL;
 #endif
 
-    PlatformInit(argc, argv);
+pseudo_reset:
+
+    otSysInit(argc, argv);
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     // Call to query the buffer size
@@ -87,16 +110,18 @@ int main(int argc, char *argv[])
     otDiagInit(sInstance);
 #endif
 
-    while (1)
+    while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
+        otSysProcessDrivers(sInstance);
     }
 
-        // otInstanceFinalize(sInstance);
+    otInstanceFinalize(sInstance);
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-        // free(otInstanceBuffer);
+    free(otInstanceBuffer);
 #endif
+
+    goto pseudo_reset;
 
     return 0;
 }

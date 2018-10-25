@@ -38,8 +38,6 @@
 
 #include <stdio.h>
 
-#include <openthread/types.h>
-
 #include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
@@ -94,15 +92,6 @@ otError DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
     return dataset.AppendMleDatasetTlv(aMessage);
 }
 
-const Tlv *DatasetManager::GetTlv(Tlv::Type aType) const
-{
-    Dataset dataset(mLocal.GetType());
-
-    mLocal.Get(dataset);
-
-    return dataset.Get(aType);
-}
-
 otError DatasetManager::Restore(void)
 {
     otError          error;
@@ -111,7 +100,7 @@ otError DatasetManager::Restore(void)
 
     mTimer.Stop();
 
-    SuccessOrExit(error = mLocal.Get(dataset));
+    SuccessOrExit(error = mLocal.Restore(dataset));
 
     timestamp = dataset.GetTimestamp();
 
@@ -155,10 +144,12 @@ void DatasetManager::HandleDetach(void)
     Restore();
 }
 
-void DatasetManager::Set(const Dataset &aDataset)
+otError DatasetManager::Set(const Dataset &aDataset)
 {
+    otError          error = OT_ERROR_NONE;
     const Timestamp *timestamp;
     int              compare;
+    bool             isMasterkeyUpdated = false;
 
     timestamp = aDataset.GetTimestamp();
 
@@ -169,28 +160,31 @@ void DatasetManager::Set(const Dataset &aDataset)
 
         if (mLocal.GetType() == Tlv::kActiveTimestamp)
         {
-            aDataset.ApplyConfiguration(GetInstance());
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isMasterkeyUpdated));
         }
     }
 
     compare = mLocal.Compare(timestamp);
 
-    if (compare > 0)
+    if (isMasterkeyUpdated || compare > 0)
     {
-        ThreadNetif &netif = GetNetif();
-
         mLocal.Set(aDataset);
 
-        if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+#if OPENTHREAD_FTD
+        if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
         {
-            netif.GetNetworkDataLeader().IncrementVersion();
-            netif.GetNetworkDataLeader().IncrementStableVersion();
+            GetNetif().GetNetworkDataLeader().IncrementVersion();
+            GetNetif().GetNetworkDataLeader().IncrementStableVersion();
         }
+#endif
     }
     else if (compare < 0)
     {
         mTimer.Start(1000);
     }
+
+exit:
+    return error;
 }
 
 void DatasetManager::HandleTimer(void)
@@ -203,11 +197,13 @@ void DatasetManager::HandleTimer(void)
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
-        const ActiveTimestampTlv *tlv =
-            static_cast<const ActiveTimestampTlv *>(netif.GetPendingDataset().GetTlv(Tlv::kActiveTimestamp));
-        const Timestamp *pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
+        Dataset dataset(Tlv::kPendingTimestamp);
+        netif.GetPendingDataset().Get(dataset);
 
-        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) >= 0)
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
+        const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
+
+        if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) == 0)
         {
             // stop registration attempts during dataset transition
             ExitNow();
@@ -453,7 +449,11 @@ void PendingDataset::Clear(void)
 
 void PendingDataset::ClearNetwork(void)
 {
-    Restore();
+    Dataset dataset(mLocal.GetType());
+
+    mTimestamp.Init();
+    mTimestampValid = false;
+    DatasetManager::Set(dataset);
 }
 
 otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)

@@ -36,7 +36,7 @@ import node
 LEADER = 1
 ED = 2
 
-class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
+class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -58,8 +58,8 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
     def tearDown(self):
         for node in list(self.nodes.values()):
             node.stop()
-        del self.nodes
-        del self.simulator
+            node.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()

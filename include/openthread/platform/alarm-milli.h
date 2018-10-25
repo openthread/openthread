@@ -32,12 +32,12 @@
  *   This file includes the platform abstraction for the millisecond alarm service.
  */
 
-#ifndef ALARM_MILLI_H_
-#define ALARM_MILLI_H_
+#ifndef OPENTHREAD_PLATFORM_ALARM_MILLI_H_
+#define OPENTHREAD_PLATFORM_ALARM_MILLI_H_
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,4 +99,4 @@ extern void otPlatDiagAlarmFired(otInstance *aInstance);
 } // extern "C"
 #endif
 
-#endif // ALARM_MILLI_H_
+#endif // OPENTHREAD_PLATFORM_ALARM_MILLI_H_

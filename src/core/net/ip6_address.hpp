@@ -38,8 +38,7 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/types.h>
-
+#include "common/string.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
@@ -96,6 +95,12 @@ public:
         kOrgLocalScope       = 8,  ///< Organization-Local scope
         kGlobalScope         = 14, ///< Global scope
     };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kIp6AddressStringSize> InfoString;
 
     /**
      * This method clears the IPv6 address by setting it to the Unspecified Address "::".
@@ -292,10 +297,10 @@ public:
     /**
      * This method sets the Interface Identifier.
      *
-     * @param[in]  aEui64  A reference to the IEEE EUI-64 address.
+     * @param[in]  aExtAddress  A reference to the extended address.
      *
      */
-    void SetIid(const Mac::ExtAddress &aEui64);
+    void SetIid(const Mac::ExtAddress &aExtAddress);
 
     /**
      * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
@@ -365,15 +370,12 @@ public:
     otError FromString(const char *aBuf);
 
     /**
-     * This method converts an IPv6 address object to a NULL-terminated string.
+     * This method converts an IPv6 address object to a string
      *
-     * @param[out]  aBuf   A pointer to the buffer.
-     * @param[in]   aSize  The maximum size of the buffer.
-     *
-     * @returns A pointer to the buffer.
+     * @returns An `InfoString` representing the IPv6 address.
      *
      */
-    const char *ToString(char *aBuf, uint16_t aSize) const;
+    InfoString ToString(void) const;
 
     /**
      * This method returns the number of IPv6 prefix bits that match.

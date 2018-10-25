@@ -33,6 +33,7 @@
 
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -48,6 +49,21 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 
     memcpy(&aJoinerId, hash, sizeof(aJoinerId));
     aJoinerId.SetLocal(true);
+}
+
+otError GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
+{
+    otError                error = OT_ERROR_NONE;
+    BorderAgentLocatorTlv *borderAgentLocator;
+
+    borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
+        aNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
+    VerifyOrExit(borderAgentLocator != NULL, error = OT_ERROR_NOT_FOUND);
+
+    aRloc = borderAgentLocator->GetBorderAgentLocator();
+
+exit:
+    return error;
 }
 
 } // namespace MeshCoP

@@ -29,7 +29,6 @@
 #include <windows.h>
 #include <stdio.h>
 
-#include <openthread/openthread.h>
 #include <openthread/cli.h>
 #include <openthread/platform/uart.h>
 #include <openthread/platform/misc.h>
