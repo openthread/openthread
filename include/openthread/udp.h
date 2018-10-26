@@ -183,6 +183,11 @@ otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @param[in]  aMessage      A pointer to a message buffer.
  * @param[in]  aMessageInfo  A pointer to a message info structure.
  *
+ * @note Caller is responsible to free @p aMessage if this call fails.
+ *
+ * @retval OT_ERROR_NONE            The message is successfully scheduled for sending.
+ * @retval OT_ERROR_INVALID_ARGS    Invalid arguments are given.
+ *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
  * @sa otUdpClose
