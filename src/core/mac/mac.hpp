@@ -832,17 +832,6 @@ public:
      */
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-    /**
-     * This method indicates if the device is in joinable state or not.
-     *
-     * @retval true   Device is joinable.
-     * @retval false  Device is non-joinable.
-     *
-     */
-    bool IsBeaconJoinable(void);
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-
     /**
      * This method returns the MAC counter.
      *
@@ -973,6 +962,7 @@ private:
     void    FinishOperation(void);
     void    SendBeaconRequest(Frame &aFrame);
     void    SendBeacon(Frame &aFrame);
+    bool    ShouldSendBeacon(void) const;
     void    StartBackoff(void);
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
