@@ -32,6 +32,7 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/new.hpp"
 #include "common/owner-locator.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
@@ -151,7 +152,15 @@ bool CoapSecure::IsConnected(void)
 
 otError CoapSecure::Disconnect(void)
 {
-    return GetNetif().GetDtls().Stop();
+    Ip6::SockAddr sockAddr;
+    otError       error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = GetNetif().GetDtls().Stop());
+    // Disconnect from previous peer by connecting to any address
+    SuccessOrExit(error = mSocket.Connect(sockAddr));
+
+exit:
+    return error;
 }
 
 MeshCoP::Dtls &CoapSecure::GetDtls(void)
