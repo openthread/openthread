@@ -275,6 +275,17 @@ otError Header::AppendUintOption(uint16_t aNumber, uint32_t aValue)
     return AppendOption(coapOption);
 }
 
+otError Header::AppendStringOption(uint16_t aNumber, const char *aValue)
+{
+    Option coapOption;
+
+    coapOption.mNumber = aNumber;
+    coapOption.mLength = static_cast<uint16_t>(strlen(aValue));
+    coapOption.mValue  = reinterpret_cast<const uint8_t *>(aValue);
+
+    return AppendOption(coapOption);
+}
+
 otError Header::AppendObserveOption(uint32_t aObserve)
 {
     return AppendUintOption(OT_COAP_OPTION_OBSERVE, aObserve & 0xFFFFFF);
@@ -297,12 +308,15 @@ otError Header::AppendUriPathOptions(const char *aUriPath)
         cur = end + 1;
     }
 
-    coapOption.mLength = static_cast<uint16_t>(strlen(cur));
-    coapOption.mValue  = reinterpret_cast<const uint8_t *>(cur);
-    SuccessOrExit(error = AppendOption(coapOption));
+    SuccessOrExit(error = AppendStringOption(OT_COAP_OPTION_URI_PATH, cur));
 
 exit:
     return error;
+}
+
+otError Header::AppendProxyUriOption(const char *aProxyUri)
+{
+    return AppendStringOption(OT_COAP_OPTION_PROXY_URI, aProxyUri);
 }
 
 otError Header::AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
@@ -317,13 +331,7 @@ otError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 
 otError Header::AppendUriQueryOption(const char *aUriQuery)
 {
-    Option coapOption;
-
-    coapOption.mNumber = OT_COAP_OPTION_URI_QUERY;
-    coapOption.mLength = static_cast<uint16_t>(strlen(aUriQuery));
-    coapOption.mValue  = reinterpret_cast<const uint8_t *>(aUriQuery);
-
-    return AppendOption(coapOption);
+    return AppendStringOption(OT_COAP_OPTION_URI_QUERY, aUriQuery);
 }
 
 const Header::Option *Header::GetFirstOption(void)
