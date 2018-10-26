@@ -165,7 +165,7 @@ typedef enum otCoapOptionContentFormat {
     OT_COAP_OPTION_CONTENT_FORMAT_JWS          = 101 ///< application/json-web-signature
 } otCoapOptionContentFormat;
 
-#define OT_COAP_HEADER_MAX_LENGTH 128 ///< Max CoAP header length (bytes)
+#define OT_COAP_HEADER_MAX_LENGTH 512 ///< Max CoAP header length (bytes)
 
 /**
  * This structure represents a CoAP header.
@@ -183,7 +183,7 @@ typedef struct otCoapHeader
         } mFields;                                 ///< Structure representing a CoAP base header
         uint8_t mBytes[OT_COAP_HEADER_MAX_LENGTH]; ///< The raw byte encoding for the CoAP header
     } mHeader;                                     ///< The CoAP header encoding
-    uint8_t      mHeaderLength;                    ///< The CoAP header length (bytes)
+    uint16_t     mHeaderLength;                    ///< The CoAP header length (bytes)
     uint16_t     mOptionLast;                      ///< The last CoAP Option Number value
     uint16_t     mFirstOptionOffset;               ///< The byte offset for the first CoAP Option
     uint16_t     mNextOptionOffset;                ///< The byte offset for the next CoAP Option
