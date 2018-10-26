@@ -83,6 +83,11 @@ otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUri
     return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
 }
 
+otError otCoapHeaderAppendProxyUriOption(otCoapHeader *aHeader, const char *aUriPath)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendProxyUriOption(aUriPath);
+}
+
 otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendMaxAgeOption(aMaxAge);

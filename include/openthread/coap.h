@@ -328,7 +328,7 @@ otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, ui
 otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve);
 
 /**
- * This function appends an Uri-Path option.
+ * This function appends a Uri-Path option.
  *
  * @param[inout]  aHeader   A pointer to the CoAP header.
  * @param[in]     aUriPath  A pointer to a NULL-terminated string.
@@ -339,6 +339,19 @@ otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve
  *
  */
 otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath);
+
+/**
+ * This function appends a Proxy-Uri option.
+ *
+ * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[in]     aUriPath  A pointer to a NULL-terminated string.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapHeaderAppendProxyUriOption(otCoapHeader *aHeader, const char *aUriPath);
 
 /**
  * This function appends a Max-Age option.
