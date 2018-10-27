@@ -32,7 +32,6 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
-#include "common/new.hpp"
 #include "common/owner-locator.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
