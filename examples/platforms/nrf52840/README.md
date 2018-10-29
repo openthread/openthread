@@ -92,6 +92,17 @@ single transfer size limitation.
 
 [spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
 
+## Disabling MSD
+
+With MSD(Mass storage device) enabled, bytes gets swallowed when writing long bytes to UART on Linux or macOS. Disable
+this feature by running `msddisable` in `JLinkExe` and power-cycle the device:
+
+```
+J-Link>msddisable
+Probe configured successfully.
+J-Link>
+```
+
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is
