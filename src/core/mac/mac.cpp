@@ -340,8 +340,9 @@ void Mac::PerformActiveScan(void)
     else
     {
         otPlatRadioSetPanId(&GetInstance(), mPanId);
-        mActiveScanHandler(mScanContext, NULL);
         FinishOperation();
+        mActiveScanHandler(mScanContext, NULL);
+        PerformNextOperation();
     }
 }
 
@@ -380,8 +381,9 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        mEnergyScanHandler(mScanContext, NULL);
         FinishOperation();
+        mEnergyScanHandler(mScanContext, NULL);
+        PerformNextOperation();
     }
 }
 
@@ -459,6 +461,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         {
             mReceiveTimer.Stop();
             FinishOperation();
+            PerformNextOperation();
         }
     }
 
@@ -736,11 +739,11 @@ void Mac::HandleOperationTask(void)
     }
     else
     {
-        PerformOperation();
+        PerformNextOperation();
     }
 }
 
-void Mac::PerformOperation(void)
+void Mac::PerformNextOperation(void)
 {
     VerifyOrExit(mOperation == kOperationIdle);
 
@@ -811,18 +814,8 @@ exit:
 
 void Mac::FinishOperation(void)
 {
-    // Clear the current operation and start any pending ones.
-
     otLogDebgMac("Finishing operation \"%s\"", OperationToString(mOperation));
-
     mOperation = kOperationIdle;
-
-    // Note that we do not want to post the `mOperationTask` here and
-    // instead we do a direct call to `PerformOperation()`. This helps
-    // ensure that if there is no pending operation, the radio is
-    // switched to idle mode immediately.
-
-    PerformOperation();
 }
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
@@ -1487,6 +1480,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     case kOperationTransmitBeacon:
         mCounters.mTxBeacon++;
         FinishOperation();
+        PerformNextOperation();
         break;
 
     case kOperationTransmitData:
@@ -1512,14 +1506,16 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         }
 
         otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
-        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
         FinishOperation();
+        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
+        PerformNextOperation();
         break;
     }
 
     case kOperationTransmitOutOfBandFrame:
         mOobFrame = NULL;
         FinishOperation();
+        PerformNextOperation();
         break;
 
     default:
@@ -1667,6 +1663,8 @@ void Mac::HandleReceiveTimer(void)
         FinishOperation();
 
         GetNetif().GetMeshForwarder().GetDataPollManager().HandlePollTimeout();
+
+        PerformNextOperation();
     }
     else
     {
@@ -2066,6 +2064,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             mDelaySleep = aFrame->GetFramePending();
 #endif
             FinishOperation();
+            PerformNextOperation();
         }
 
         SuccessOrExit(error);
