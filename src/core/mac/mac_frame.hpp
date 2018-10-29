@@ -1064,20 +1064,21 @@ public:
     void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
 
     /**
+     * This method indicates whether or not CSMA-CA is enabled.
+     *
+     * @retval TRUE  CSMA-CA is enabled.
+     * @retval FALSE CSMA-CA is not enabled is not enabled.
+     *
+     */
+    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
+
+    /**
      * This method sets the CSMA-CA enabled attribute.
      *
      * @param[in]  aCsmaCaEnabled  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
      *
      */
     void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
-
-    /**
-     * This method gets the CSMA-CA enabled attribute.
-     *
-     * @returns  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
-     *
-     */
-    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
 
     /**
      * This method returns the key used for frame encryption and authentication (AES CCM).
@@ -1256,6 +1257,17 @@ public:
      */
     uint8_t *GetHeaderIe(uint8_t aIeId) const;
 #endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+
+    /**
+     * This method copies the PSDU and all attributes from another frame.
+     *
+     * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
+     * the PSDU buffer of the current frame.
+
+     * @param[in] aFrame   The frame to copy from.
+     *
+     */
+    void CopyFrom(const Frame &aFrame);
 
     /**
      * This method returns information about the frame object as an `InfoString` object.

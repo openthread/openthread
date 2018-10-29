@@ -158,6 +158,8 @@ SOURCES_COMMON                      = \
     mac/mac.cpp                       \
     mac/mac_filter.cpp                \
     mac/mac_frame.cpp                 \
+    mac/sub_mac.cpp                   \
+    mac/sub_mac_callbacks.cpp         \
     meshcop/announce_begin_client.cpp \
     meshcop/border_agent.cpp          \
     meshcop/commissioner.cpp          \
@@ -243,6 +245,8 @@ libopenthread_radio_a_SOURCES       = \
     common/timer.cpp                  \
     mac/link_raw.cpp                  \
     mac/mac_frame.cpp                 \
+    mac/sub_mac.cpp                   \
+    mac/sub_mac_callbacks.cpp         \
     thread/link_quality.cpp           \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
@@ -318,6 +322,7 @@ HEADERS_COMMON                      = \
     mac/mac.hpp                       \
     mac/mac_filter.hpp                \
     mac/mac_frame.hpp                 \
+    mac/sub_mac.hpp                   \
     meshcop/announce_begin_client.hpp \
     meshcop/border_agent.hpp          \
     meshcop/commissioner.hpp          \
