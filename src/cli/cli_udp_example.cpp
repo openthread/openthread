@@ -221,6 +221,11 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     buf[length] = '\0';
 
     mInterpreter.mServer->OutputFormat("%s\r\n", buf);
+
+    if (mUdpReceviceCallback != NULL)
+    {
+        mUdpReceviceCallback(this, aMessage, aMessageInfo);
+    }
 }
 
 } // namespace Cli

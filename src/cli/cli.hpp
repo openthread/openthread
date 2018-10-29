@@ -42,6 +42,7 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_latency_test.hpp"
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
 
@@ -102,7 +103,9 @@ class Interpreter
     friend class Coap;
     friend class CoapSecure;
     friend class UdpExample;
-
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    friend class LatencyTest;
+#endif
 public:
     /**
      * Constructor
@@ -321,6 +324,9 @@ private:
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    void ProcessLatency(int argc, char *argv[]);
+#endif
 #endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -447,7 +453,11 @@ private:
     bool           mSntpQueryingInProgress;
 #endif
 
-    UdpExample mUdp;
+    UdpExample  mUdp;
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    LatencyTest mLatency;
+#endif
 
 #endif
 

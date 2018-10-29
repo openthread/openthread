@@ -161,6 +161,9 @@ const struct Command Interpreter::sCommands[] = {
     {"joinerport", &Interpreter::ProcessJoinerPort},
 #endif
     {"keysequence", &Interpreter::ProcessKeySequence},
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    {"latency", &Interpreter::ProcessLatency},
+#endif
     {"leaderdata", &Interpreter::ProcessLeaderData},
 #if OPENTHREAD_FTD
     {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
@@ -292,6 +295,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    , mLatency(*this)
+#endif
 #endif
     , mInstance(aInstance)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -2906,6 +2912,17 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
     error = mUdp.Process(argc, argv);
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+
+void Interpreter::ProcessLatency(int argc, char *argv[])
+{
+    otError error;
+    error = mLatency.Process(argc, argv);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #endif
 
 void Interpreter::ProcessVersion(int argc, char *argv[])

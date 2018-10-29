@@ -149,6 +149,7 @@ SOURCES_COMMON =                      \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
     cli_udp_example.cpp               \
+    cli_latency_test.cpp              \
     $(NULL)
 
 libopenthread_cli_ftd_a_SOURCES =     \
@@ -168,6 +169,7 @@ noinst_HEADERS                      = \
     cli_server.hpp                    \
     cli_uart.hpp                      \
     cli_udp_example.hpp               \
+    cli_latency_test.hpp              \
     x509_cert_key.hpp                 \
     $(NULL)
 

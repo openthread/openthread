@@ -28,12 +28,15 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI CoAP server and client.
+ *   This file contains definitions for one-way latency test.
  */
 
-#ifndef CLI_UDP_EXAMPLE_HPP_
-#define CLI_UDP_EXAMPLE_HPP_
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
 
+#ifndef CLI_LATENCY_TEST_HPP_
+#define CLI_LATENCY_TEST_HPP_
+
+#include "cli_udp_example.hpp"
 #include "openthread-core-config.h"
 
 #include <openthread/udp.h>
@@ -42,12 +45,12 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
-
+class UdpExample;
 /**
  * This class implements a CLI-based UDP example.
  *
  */
-class UdpExample
+class LatencyTest : public UdpExample
 {
 public:
     /**
@@ -56,7 +59,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    UdpExample(Interpreter &aInterpreter);
+    LatencyTest(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -67,66 +70,25 @@ public:
      */
     otError Process(int argc, char *argv[]);
 
-    /**
-     * This method handles CLI command to bind a UDP/IPv6 socket.
-     *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     *
-     * @retval  OT_ERROR_NONE              Bind operation was successful.
-     * @retval  OT_ERROR_INVALID_ARGS      Failed to parse the string.
-     */
-    otError ProcessBind(int argc, char *argv[]);
-
-    /**
-     * This method handles CLI command to close a UDP/IPv6 socket.
-     *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     *
-     * @retval  OT_ERROR_NONE              Close operation was successful.
-     * @retval  OT_ERROR_INVALID_ARGS      Failed to parse the string.
-     */
-    otError ProcessClose(int argc, char *argv[]);
-
-    /**
-     * This method handles CLI command to open a UDP/IPv6 socket.
-     *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     *
-     * @retval  OT_ERROR_NONE              A response was received successfully.
-     * @retval  OT_ERROR_ABORT             A CoAP transaction was reseted by peer.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period
-     */
-    otError ProcessOpen(int argc, char *argv[]);
-
-    /**
-     * This function pointer is called when a UDP packet is received.
-     *
-     * @retval  OT_ERROR_NONE              Open operation was successful.
-     * @retval  OT_ERROR_INVALID_ARGS      Failed to parse the string.
-     *
-     */
-    typedef void (*UdpReceiveHandler)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    UdpReceiveHandler mUdpReceviceCallback;
-
 private:
     struct Command
     {
         const char *mName;
-        otError (UdpExample::*mCommand)(int argc, char *argv[]);
+        otError (LatencyTest::*mCommand)(int argc, char *argv[]);
     };
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessConnect(int argc, char *argv[]);
-    otError ProcessSend(int argc, char *argv[]);
-
+    otError     ProcessHelp(int argc, char *argv[]);
+    otError     ProcessSend(int argc, char *argv[]);
+    otError     ProcessResult(int argc, char *argv[]);
+    otError     ProcessHopLimit(int argc, char *argv[]);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;
+
+    uint8_t  mHopLimit;
+    uint32_t mLatency;
 
     otUdpSocket mSocket;
 };
@@ -134,4 +96,5 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UDP_EXAMPLE_HPP_
+#endif // CLI_LATENCY_TEST_HPP_
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
