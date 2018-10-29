@@ -419,14 +419,6 @@ public:
     otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
 
     /**
-     * This method generates a random IEEE 802.15.4 Extended Address.
-     *
-     * @param[out]  aExtAddress  A pointer to where the generated Extended Address is placed.
-     *
-     */
-    void GenerateExtAddress(ExtAddress *aExtAddress);
-
-    /**
      * This method returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
