@@ -107,9 +107,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_list ap;
     va_start(ap, aFormat);
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
-    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
     otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
 #endif
     va_end(ap);
 }
