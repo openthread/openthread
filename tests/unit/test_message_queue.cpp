@@ -90,7 +90,7 @@ void TestMessageQueue(void)
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0, NULL);
+        msg[i] = sMessagePool->New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msg[i] != NULL, "Message::New failed\n");
     }
 
