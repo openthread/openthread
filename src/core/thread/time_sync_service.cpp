@@ -57,6 +57,8 @@ TimeSync::TimeSync(Instance &aInstance)
 #endif
     , mLastTimeSyncReceived(0)
     , mNetworkTimeOffset(0)
+    , mTimeSyncCallback(NULL)
+    , mTimeSyncCallbackContext(NULL)
 {
 }
 
@@ -92,6 +94,8 @@ otNetworkTimeStatus TimeSync::GetTime(uint64_t &aNetworkTime) const
 
 void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
 {
+    const int64_t origNetworkTimeOffset = mNetworkTimeOffset;
+
     VerifyOrExit(aMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ);
 
     if (mTimeSyncSeq != OT_TIME_SYNC_INVALID_SEQ && (int8_t)(aMessage.GetTimeSyncSeq() - mTimeSyncSeq) < 0)
@@ -113,6 +117,8 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
             mTimeSyncSeq          = aMessage.GetTimeSyncSeq();
             mNetworkTimeOffset    = aMessage.GetNetworkTimeOffset();
             mTimeSyncRequired     = true;
+
+            NotifyTimeSyncCallback(mNetworkTimeOffset - origNetworkTimeOffset);
         }
     }
 
@@ -125,6 +131,14 @@ void TimeSync::IncrementTimeSyncSeq(void)
     if (++mTimeSyncSeq == OT_TIME_SYNC_INVALID_SEQ)
     {
         ++mTimeSyncSeq;
+    }
+}
+
+void TimeSync::NotifyTimeSyncCallback(int64_t aNetworkTimeOffsetDelta)
+{
+    if (mTimeSyncCallback != NULL)
+    {
+        mTimeSyncCallback(mTimeSyncCallbackContext, aNetworkTimeOffsetDelta);
     }
 }
 

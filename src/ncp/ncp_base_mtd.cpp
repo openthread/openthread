@@ -66,6 +66,8 @@
 #include "common/instance.hpp"
 #include "net/ip6.hpp"
 
+#define ABS(value) (((value) >= 0) ? (value) : -(value))
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 namespace ot {
@@ -2616,6 +2618,32 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(
 
 exit:
     return error;
+}
+
+void NcpBase::HandleTimeSyncUpdate(void *aContext, int64_t aNetworkTimeOffsetDelta)
+{
+    static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate(aNetworkTimeOffsetDelta);
+}
+
+void NcpBase::HandleTimeSyncUpdate(int64_t aNetworkTimeOffsetDelta)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(ABS(aNetworkTimeOffsetDelta) >= OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US);
+
+    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                              SPINEL_PROP_THREAD_NETWORK_TIME));
+
+    SuccessOrExit(error = HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>());
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
+        mUpdateChangedPropsTask.Post();
+    }
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 

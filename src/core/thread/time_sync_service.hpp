@@ -137,12 +137,31 @@ public:
      */
     uint16_t GetXtalThreshold(void) const { return mXtalThreshold; }
 
+    /**
+     * Set the time sync callback to be notified of a network time update.
+     * 
+     * @param[in] aCallback The callback to be called when time sync is handled.
+     * @param[im] aCallbackContext The context to be passed to callback.
+     *
+     */
+    void SetTimeSyncCallback(otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
+    {
+        mTimeSyncCallback        = aCallback;
+        mTimeSyncCallbackContext = aCallbackContext;
+    }
 private:
     /**
      * Increase the time synchronization sequence.
      *
      */
     void IncrementTimeSyncSeq(void);
+
+    /**
+     * Notify any listener of a network time sync update event.
+     *
+     * @param[in] aNetworkTimeOffsetDelta The change in network time offset
+     */
+    void NotifyTimeSyncCallback(int64_t aNetworkTimeOffsetDelta);
 
     bool     mTimeSyncRequired; ///< Indicate whether or not a time synchronization message is required.
     uint8_t  mTimeSyncSeq;      ///< The time synchronization sequence.
@@ -153,6 +172,8 @@ private:
 #endif
     uint32_t mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
     int64_t  mNetworkTimeOffset;    ///< The time offset to the Thread Network time
+    otNetworkTimeSyncCallbackFn mTimeSyncCallback;        ///< The callback to be called when time sync is handled.
+    void *                      mTimeSyncCallbackContext; ///< The context to be passed to callback.
 };
 
 /**
