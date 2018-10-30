@@ -343,10 +343,9 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL && message->GetLength() == 0)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
-        message = NULL;
     }
 
     return error;
