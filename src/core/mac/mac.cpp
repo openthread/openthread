@@ -197,7 +197,7 @@ Mac::Mac(Instance &aInstance)
     , mCcaSampleCount(0)
     , mEnabled(true)
 {
-    GenerateExtAddress(&mExtAddress);
+    mExtAddress.GenerateRandom();
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
 
@@ -466,14 +466,6 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
 exit:
     return;
-}
-
-void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
-{
-    Random::FillBuffer(aExtAddress->m8, sizeof(ExtAddress));
-
-    aExtAddress->SetGroup(false);
-    aExtAddress->SetLocal(true);
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
