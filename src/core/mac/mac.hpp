@@ -277,119 +277,6 @@ private:
 };
 
 /**
- * This class implements a MAC receiver client.
- *
- */
-class Receiver : public OwnerLocator
-{
-    friend class Mac;
-
-public:
-    /**
-     * This function pointer is called when a MAC frame is received.
-     *
-     * @param[in]  aReceiver A reference to the MAC receiver client object.
-     * @param[in]  aFrame    A reference to the MAC frame.
-     *
-     */
-    typedef void (*ReceiveFrameHandler)(Receiver &aReceiver, Frame &aFrame);
-
-    /**
-     * This function pointer is called on a data request command (data poll) timeout, i.e., when the ack in response to
-     * a data request command indicated a frame is pending, but no frame was received after `kDataPollTimeout` interval.
-     *
-     * @param[in]  aReceiver  A reference to the MAC receiver client object.
-     *
-     */
-    typedef void (*DataPollTimeoutHandler)(Receiver &aReceiver);
-
-    /**
-     * This constructor creates a MAC receiver client.
-     *
-     * @param[in]  aReceiveFrameHandler  A pointer to a function that is called on MAC frame reception.
-     * @param[in]  aPollTimeoutHandler   A pointer to a function called on data poll timeout (may be set to NULL).
-     * @param[in]  aOwner                A pointer to owner of this object.
-     *
-     */
-    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aOwner)
-        : OwnerLocator(aOwner)
-        , mReceiveFrameHandler(aReceiveFrameHandler)
-        , mPollTimeoutHandler(aPollTimeoutHandler)
-        , mNext(NULL)
-    {
-    }
-
-private:
-    void HandleReceivedFrame(Frame &aFrame) { mReceiveFrameHandler(*this, aFrame); }
-
-    void HandleDataPollTimeout(void)
-    {
-        if (mPollTimeoutHandler != NULL)
-        {
-            mPollTimeoutHandler(*this);
-        }
-    }
-
-    ReceiveFrameHandler    mReceiveFrameHandler;
-    DataPollTimeoutHandler mPollTimeoutHandler;
-    Receiver *             mNext;
-};
-
-/**
- * This class implements a MAC sender client.
- *
- */
-class Sender : public OwnerLocator
-{
-    friend class Mac;
-
-public:
-    /**
-     * This function pointer is called when the MAC is about to transmit the frame asking MAC sender client to provide
-     * the frame.
-     *
-     * @param[in]  aSender   A reference to the MAC sender client object.
-     * @param[in]  aFrame    A reference to the MAC frame buffer.
-     *
-     */
-    typedef otError (*FrameRequestHandler)(Sender &aSender, Frame &aFrame);
-
-    /**
-     * This function pointer is called when the MAC is done sending the frame.
-     *
-     * @param[in]  aSender   A reference to the MAC sender client object.
-     * @param[in]  aFrame    A reference to the MAC frame buffer that was sent.
-     * @param[in]  aError    The status of the last MSDU transmission.
-     *
-     */
-    typedef void (*SentFrameHandler)(Sender &aSender, Frame &aFrame, otError aError);
-
-    /**
-     * This constructor creates a MAC sender client.
-     *
-     * @param[in]  aFrameRequestHandler  A pointer to a function that is called when about to send a MAC frame.
-     * @param[in]  aSentFrameHandler     A pointer to a function that is called when done sending the frame.
-     * @param[in]  aOwner                A pointer to owner of this object.
-     *
-     */
-    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aOwner)
-        : OwnerLocator(aOwner)
-        , mFrameRequestHandler(aFrameRequestHandler)
-        , mSentFrameHandler(aSentFrameHandler)
-        , mNext(NULL)
-    {
-    }
-
-private:
-    otError HandleFrameRequest(Frame &aFrame) { return mFrameRequestHandler(*this, aFrame); }
-    void    HandleSentFrame(Frame &aFrame, otError aError) { mSentFrameHandler(*this, aFrame, aError); }
-
-    FrameRequestHandler mFrameRequestHandler;
-    SentFrameHandler    mSentFrameHandler;
-    Sender *            mNext;
-};
-
-/**
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
@@ -508,35 +395,25 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method registers a new MAC receiver client.
+     * This method requests a new MAC frame transmission.
      *
-     * @param[in]  aReceiver  A reference to the MAC receiver client.
-     *
-     * @retval OT_ERROR_NONE     Successfully registered the receiver.
-     * @retval OT_ERROR_ALREADY  The receiver was already registered.
-     *
-     */
-    otError RegisterReceiver(Receiver &aReceiver);
-
-    /**
-     * This method registers a new MAC sender client.
-     *
-     * @param[in]  aSender  A reference to the MAC sender client.
-     *
-     * @retval OT_ERROR_NONE     Successfully registered the sender.
-     * @retval OT_ERROR_ALREADY  The sender was already registered.
+     * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
+     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
+     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
      *
      */
-    otError SendFrameRequest(Sender &aSender);
+    otError SendFrameRequest(void);
 
     /**
-     * This method registers a Out of Band frame for MAC Transmission.
+     * This method requests an Out of Band frame for MAC Transmission.
+     *
      * An Out of Band frame is one that was generated outside of OpenThread.
      *
      * @param[in]  aOobFrame  A pointer to the frame.
      *
-     * @retval OT_ERROR_NONE     Successfully registered the frame.
-     * @retval OT_ERROR_ALREADY  MAC layer is busy sending a previously registered frame.
+     * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
+     * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
+     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
      *
      */
     otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
@@ -832,17 +709,6 @@ public:
      */
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-    /**
-     * This method indicates if the device is in joinable state or not.
-     *
-     * @retval true   Device is joinable.
-     * @retval false  Device is non-joinable.
-     *
-     */
-    bool IsBeaconJoinable(void);
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-
     /**
      * This method returns the MAC counter.
      *
@@ -973,6 +839,7 @@ private:
     void    FinishOperation(void);
     void    SendBeaconRequest(Frame &aFrame);
     void    SendBeacon(Frame &aFrame);
+    bool    ShouldSendBeacon(void) const;
     void    StartBackoff(void);
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
@@ -1047,9 +914,6 @@ private:
 
     otNetworkName   mNetworkName;
     otExtendedPanId mExtendedPanId;
-
-    Sender *  mSendHead, *mSendTail;
-    Receiver *mReceiveHead, *mReceiveTail;
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;

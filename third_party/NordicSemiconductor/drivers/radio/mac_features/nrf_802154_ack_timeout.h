@@ -47,8 +47,7 @@
 /**
  * @brief Set timeout time for ACK timeout feature.
  * 
- * @param[in]  time  Timeout time in us. Timeout is started at the beginning of frame
- *                   transmission (after transmission of PHR).
+ * @param[in]  time  Timeout time in us.
  *                   Default value is defined in nrf_802154_config.h.
  */
 void nrf_802154_ack_timeout_time_set(uint32_t time);

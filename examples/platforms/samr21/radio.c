@@ -156,7 +156,7 @@ static void setTxPower(uint8_t aPower)
             }
         }
 
-        otLogDebgPlat(sInstance, "Radio set tx power: %d, %d", aPower, i);
+        otLogDebgPlat("Radio set tx power: %d, %d", aPower, i);
 
         radioTrxOff();
 
@@ -172,7 +172,7 @@ static void setChannel(uint8_t aChannel)
 {
     if (aChannel != sChannel)
     {
-        otLogDebgPlat(sInstance, "Radio set channel: %d", aChannel);
+        otLogDebgPlat("Radio set channel: %d", aChannel);
 
         radioTrxOff();
 
@@ -234,7 +234,7 @@ static void handleRx(void)
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
-                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d", sReceiveFrame.mInfo.mRxInfo.mRssi);
+                otLogDebgPlat("Radio receive done, rssi: %d", sReceiveFrame.mInfo.mRxInfo.mRssi);
 
                 otPlatRadioReceiveDone(sInstance, &sReceiveFrame, OT_ERROR_NONE);
             }
@@ -257,7 +257,7 @@ static void handleTx(void)
         else
 #endif
         {
-            otLogDebgPlat(sInstance, "Radio transmit done, status: %d", sTxStatus);
+            otLogDebgPlat("Radio transmit done, status: %d", sTxStatus);
 
             otPlatRadioTxDone(sInstance, &sTransmitFrame, NULL, sTxStatus);
         }
@@ -376,7 +376,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Set Pan ID: 0x%04X", aPanId);
+    otLogDebgPlat("Set Pan ID: 0x%04X", aPanId);
 
     radioTrxOff();
 
@@ -416,7 +416,7 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    otLogDebgPlat(sInstance, "Radio enable");
+    otLogDebgPlat("Radio enable");
 
     if (!otPlatRadioIsEnabled(aInstance))
     {
@@ -430,7 +430,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    otLogDebgPlat(sInstance, "Radio disable");
+    otLogDebgPlat("Radio disable");
 
     if (otPlatRadioIsEnabled(aInstance))
     {
@@ -446,7 +446,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Radio sleep");
+    otLogDebgPlat("Radio sleep");
 
     otError error = OT_ERROR_NONE;
 
@@ -465,7 +465,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Radio receive, channel: %d", aChannel);
+    otLogDebgPlat("Radio receive, channel: %d", aChannel);
 
     otError error = OT_ERROR_NONE;
 
@@ -486,7 +486,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Radio transmit");
+    otLogDebgPlat("Radio transmit");
 
     otError error = OT_ERROR_NONE;
 
@@ -606,7 +606,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
 
-    otLogDebgPlat(sInstance, "Radio set default TX power: %d", aPower);
+    otLogDebgPlat("Radio set default TX power: %d", aPower);
 
     setTxPower(aPower);
 

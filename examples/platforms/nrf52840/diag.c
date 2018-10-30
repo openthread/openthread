@@ -49,7 +49,12 @@
 #include <drivers/radio/nrf_802154.h>
 #include <utils/code_utils.h>
 
-typedef enum { kDiagTransmitModeIdle, kDiagTransmitModePackets, kDiagTransmitModeCarrier } DiagTrasmitMode;
+typedef enum
+{
+    kDiagTransmitModeIdle,
+    kDiagTransmitModePackets,
+    kDiagTransmitModeCarrier
+} DiagTrasmitMode;
 
 struct PlatformDiagCommand
 {

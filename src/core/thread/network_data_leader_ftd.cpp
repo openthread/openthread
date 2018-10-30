@@ -163,7 +163,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip
     ThreadNetworkDataTlv networkData;
     ThreadRloc16Tlv      rloc16;
 
-    otLogInfoNetData(GetInstance(), "Received network data registration");
+    otLogInfoNetData("Received network data registration");
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
     {
@@ -180,7 +180,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip
 
     SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoNetData(GetInstance(), "Sent network data registration acknowledgment");
+    otLogInfoNetData("Sent network data registration acknowledgment");
 
 exit:
     return;
@@ -391,7 +391,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &    aRequestHeader
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset get response");
+    otLogInfoMeshCoP("sent commissioning dataset get response");
 
 exit:
 
@@ -423,7 +423,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &     aRequestHeade
 
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset set response");
+    otLogInfoMeshCoP("sent commissioning dataset set response");
 
 exit:
 
@@ -831,14 +831,14 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOl
         {
         case NetworkDataTlv::kTypePrefix:
             SuccessOrExit(error = AddPrefix(*static_cast<PrefixTlv *>(cur)));
-            otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
+            otDumpDebgNetData("add prefix done", mTlvs, mLength);
             break;
 
 #if OPENTHREAD_ENABLE_SERVICE
 
         case NetworkDataTlv::kTypeService:
             SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur), aOldTlvs, aOldTlvsLength));
-            otDumpDebgNetData(GetInstance(), "add service done", mTlvs, mLength);
+            otDumpDebgNetData("add service done", mTlvs, mLength);
             break;
 #endif
 
@@ -854,7 +854,7 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOl
     OT_UNUSED_VARIABLE(aOldTlvsLength);
 #endif
 
-    otDumpDebgNetData(GetInstance(), "add done", mTlvs, mLength);
+    otDumpDebgNetData("add done", mTlvs, mLength);
 
 exit:
     return error;
@@ -1043,7 +1043,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
                 }
             }
 
-            otLogInfoNetData(GetInstance(), "Allocated Service ID = %d", i);
+            otLogInfoNetData("Allocated Service ID = %d", i);
 
             VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
         }
@@ -1204,7 +1204,7 @@ int Leader::AllocateContext(void)
         {
             mContextUsed |= 1 << i;
             rval = i;
-            otLogInfoNetData(GetInstance(), "Allocated Context ID = %d", rval);
+            otLogInfoNetData("Allocated Context ID = %d", rval);
             ExitNow();
         }
     }
@@ -1215,7 +1215,7 @@ exit:
 
 otError Leader::FreeContext(uint8_t aContextId)
 {
-    otLogInfoNetData(GetInstance(), "Free Context Id = %d", aContextId);
+    otLogInfoNetData("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
@@ -1271,7 +1271,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
                 continue;
             }
 
-            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -1288,7 +1288,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
                 continue;
             }
 
-            otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+            otDumpDebgNetData("remove service done", mTlvs, mLength);
 
             break;
         }
@@ -1302,7 +1302,7 @@ otError Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
+    otDumpDebgNetData("remove done", mTlvs, mLength);
 
     return OT_ERROR_NONE;
 }
@@ -1492,7 +1492,7 @@ otError Leader::RemoveContext(uint8_t aContextId)
                 continue;
             }
 
-            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -1503,7 +1503,7 @@ otError Leader::RemoveContext(uint8_t aContextId)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
+    otDumpDebgNetData("remove done", mTlvs, mLength);
 
     return OT_ERROR_NONE;
 }

@@ -54,8 +54,8 @@ extern "C" {
 
 #define OT_DNS_MAX_HOSTNAME_LENGTH 62 ///< Maximum allowed hostname length (maximum label size - 1 for compression).
 
-#define OT_DNS_DEFAULT_DNS_SERVER_IP "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
-#define OT_DNS_DEFAULT_DNS_SERVER_PORT 53                   ///< Defines default DNS Server port.
+#define OT_DNS_DEFAULT_SERVER_IP "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
+#define OT_DNS_DEFAULT_SERVER_PORT 53                   ///< Defines default DNS Server port.
 
 /**
  * This structure implements DNS Query parameters.

@@ -174,10 +174,6 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
     , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
-    , mSendHead(NULL)
-    , mSendTail(NULL)
-    , mReceiveHead(NULL)
-    , mReceiveTail(NULL)
     , mBeaconSequence(Random::GetUint8())
     , mDataSequence(Random::GetUint8())
     , mCsmaBackoffs(0)
@@ -445,24 +441,6 @@ void Mac::SampleRssi(void)
     }
 }
 
-otError Mac::RegisterReceiver(Receiver &aReceiver)
-{
-    assert(mReceiveTail != &aReceiver && aReceiver.mNext == NULL);
-
-    if (mReceiveTail == NULL)
-    {
-        mReceiveHead = &aReceiver;
-        mReceiveTail = &aReceiver;
-    }
-    else
-    {
-        mReceiveTail->mNext = &aReceiver;
-        mReceiveTail        = &aReceiver;
-    }
-
-    return OT_ERROR_NONE;
-}
-
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle);
@@ -650,23 +628,12 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError Mac::SendFrameRequest(Sender &aSender)
+otError Mac::SendFrameRequest(void)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mSendTail != &aSender && aSender.mNext == NULL, error = OT_ERROR_ALREADY);
-
-    if (mSendHead == NULL)
-    {
-        mSendHead = &aSender;
-        mSendTail = &aSender;
-    }
-    else
-    {
-        mSendTail->mNext = &aSender;
-        mSendTail        = &aSender;
-    }
+    VerifyOrExit(!mPendingTransmitData && (mOperation != kOperationTransmitData), error = OT_ERROR_ALREADY);
 
     StartOperation(kOperationTransmitData);
 
@@ -697,7 +664,7 @@ void Mac::UpdateIdleMode(void)
     {
         if (RadioSleep() != OT_ERROR_INVALID_STATE)
         {
-            otLogDebgMac(GetInstance(), "Idle mode: Radio sleeping");
+            otLogDebgMac("Idle mode: Radio sleeping");
             ExitNow();
         }
 
@@ -706,7 +673,7 @@ void Mac::UpdateIdleMode(void)
         // the radio in receive mode.
     }
 
-    otLogDebgMac(GetInstance(), "Idle mode: Radio receiving on channel %d", mRadioChannel);
+    otLogDebgMac("Idle mode: Radio receiving on channel %d", mRadioChannel);
     RadioReceive(mRadioChannel);
 
 exit:
@@ -717,7 +684,7 @@ void Mac::StartOperation(Operation aOperation)
 {
     if (aOperation != kOperationIdle)
     {
-        otLogDebgMac(GetInstance(), "Request to start operation \"%s\"", OperationToString(aOperation));
+        otLogDebgMac("Request to start operation \"%s\"", OperationToString(aOperation));
     }
 
     switch (aOperation)
@@ -843,7 +810,7 @@ void Mac::PerformOperation(void)
 
     if (mOperation != kOperationIdle)
     {
-        otLogDebgMac(GetInstance(), "Starting operation \"%s\"", OperationToString(mOperation));
+        otLogDebgMac("Starting operation \"%s\"", OperationToString(mOperation));
     }
 
 exit:
@@ -854,7 +821,7 @@ void Mac::FinishOperation(void)
 {
     // Clear the current operation and start any pending ones.
 
-    otLogDebgMac(GetInstance(), "Finishing operation \"%s\"", OperationToString(mOperation));
+    otLogDebgMac("Finishing operation \"%s\"", OperationToString(mOperation));
 
     mOperation = kOperationIdle;
 
@@ -895,7 +862,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstPanId(kShortAddrBroadcast);
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
-    otLogInfoMac(GetInstance(), "Sending Beacon Request");
+    otLogInfoMac("Sending Beacon Request");
 }
 
 void Mac::SendBeacon(Frame &aFrame)
@@ -944,6 +911,35 @@ void Mac::SendBeacon(Frame &aFrame)
     aFrame.SetPayloadLength(beaconLength);
 
     LogBeacon("Sending", *beaconPayload);
+}
+
+bool Mac::ShouldSendBeacon(void) const
+{
+    bool shouldSend = false;
+
+    VerifyOrExit(mEnabled);
+
+    shouldSend = IsBeaconEnabled();
+
+#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+    if (!shouldSend)
+    {
+        // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
+        // the device should transmit IEEE 802.15.4 Beacons in response
+        // to IEEE 802.15.4 Beacon Requests even while the device is not
+        // router capable and detached (i.e., `IsBeaconeEnabled()` is
+        // false) but only if it is in joinable state (unsecure port
+        // list is not empty).
+
+        uint8_t numUnsecurePorts;
+
+        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+        shouldSend = (numUnsecurePorts != 0);
+    }
+#endif
+
+exit:
+    return shouldSend;
 }
 
 void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
@@ -1002,7 +998,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
         aFrame.SetAesKey(keyManager.GetCurrentMacKey());
         extAddress = &mExtAddress;
 
-        // If the frame is marked as a retransmission, the `Mac::Sender` which
+        // If the frame is marked as a retransmission, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
         // same values used in the earlier transmit attempt. For a new frame (not
         // a retransmission), we get a new frame counter and key id from the key
@@ -1197,9 +1193,10 @@ void Mac::BeginTransmit(void)
 
         case kOperationTransmitData:
             sendFrame.SetChannel(mRadioChannel);
-            SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
 
-            // If the frame is marked as a retransmission, then data sequence number is already set by the `Sender`.
+            SuccessOrExit(error = GetNetif().GetMeshForwarder().HandleFrameRequest(sendFrame));
+
+            // If the frame is marked as a retransmission, then data sequence number is already set.
             if (!sendFrame.IsARetransmission())
             {
                 sendFrame.SetSequence(mDataSequence);
@@ -1289,7 +1286,7 @@ void Mac::HandleTransmitStarted(otRadioFrame *aFrame)
     if (frame->GetAckRequest() && !(otPlatRadioGetCaps(&GetInstance()) & OT_RADIO_CAPS_ACK_TIMEOUT))
     {
         mMacTimer.Start(kAckTimeout);
-        otLogDebgMac(GetInstance(), "Ack timer start");
+        otLogDebgMac("Ack timer start");
     }
 }
 
@@ -1417,7 +1414,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     {
         LogFrameTxFailure(sendFrame, aError);
 
-        otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
+        otDumpDebgMac("TX ERR", sendFrame.GetHeader(), 16);
 
         if (mEnabled && !RadioSupportsRetries() && mTransmitRetries < sendFrame.GetMaxFrameRetries())
         {
@@ -1502,8 +1499,6 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     case kOperationTransmitData:
     {
-        Sender *sender;
-
         if (sendFrame.IsDataRequestCommand())
         {
             if (mEnabled && framePending)
@@ -1519,23 +1514,13 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
             mCounters.mTxData++;
         }
 
-        sender    = mSendHead;
-        mSendHead = mSendHead->mNext;
-
-        if (mSendHead == NULL)
-        {
-            mSendTail = NULL;
-        }
-
-        sender->mNext = NULL;
-
         if (!sendFrame.IsARetransmission())
         {
             mDataSequence++;
         }
 
-        otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
-        sender->HandleSentFrame(sendFrame, aError);
+        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
+        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
         FinishOperation();
         break;
     }
@@ -1577,7 +1562,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac(GetInstance(), "otPlatRadioTransmit() failed with error %s", otThreadErrorToString(error));
+        otLogWarnMac("otPlatRadioTransmit() failed with error %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -1603,7 +1588,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac(GetInstance(), "otPlatRadioReceive() failed with error %s", otThreadErrorToString(error));
+        otLogWarnMac("otPlatRadioReceive() failed with error %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -1617,7 +1602,7 @@ otError Mac::RadioSleep(void)
 
     if (mDelaySleep)
     {
-        otLogDebgMac(GetInstance(), "Delaying sleep waiting for frame rx/tx");
+        otLogDebgMac("Delaying sleep waiting for frame rx/tx");
 
         mReceiveTimer.Start(kSleepDelay);
         mDelaySleep = false;
@@ -1634,7 +1619,7 @@ otError Mac::RadioSleep(void)
     error = otPlatRadioSleep(&GetInstance());
     VerifyOrExit(error != OT_ERROR_NONE);
 
-    otLogWarnMac(GetInstance(), "otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
+    otLogWarnMac("otPlatRadioSleep() failed with error %s", otThreadErrorToString(error));
 
 exit:
     return error;
@@ -1659,7 +1644,7 @@ void Mac::HandleMacTimer(void)
         break;
 
     case kOperationTransmitData:
-        otLogDebgMac(GetInstance(), "Ack timer fired");
+        otLogDebgMac("Ack timer fired");
         RadioReceive(mTxFrame->mChannel);
         HandleTransmitDone(mTxFrame, NULL, OT_ERROR_NO_ACK);
         break;
@@ -1685,18 +1670,15 @@ void Mac::HandleReceiveTimer(void)
 
     if (mOperation == kOperationWaitingForData)
     {
-        otLogDebgMac(GetInstance(), "Data poll timeout");
+        otLogDebgMac("Data poll timeout");
 
         FinishOperation();
 
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleDataPollTimeout();
-        }
+        GetNetif().GetMeshForwarder().GetDataPollManager().HandlePollTimeout();
     }
     else
     {
-        otLogDebgMac(GetInstance(), "Sleep delay timeout expired");
+        otLogDebgMac("Sleep delay timeout expired");
 
         UpdateIdleMode();
     }
@@ -1725,7 +1707,7 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
-    otLogDebgMac(GetInstance(), "Frame counter %u", frameCounter);
+    otLogDebgMac("Frame counter %u", frameCounter);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1935,7 +1917,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         break;
 
     case Address::kTypeShort:
-        otLogDebgMac(GetInstance(), "Received frame from short address 0x%04x", srcaddr.GetShort());
+        otLogDebgMac("Received frame from short address 0x%04x", srcaddr.GetShort());
 
         if (neighbor == NULL)
         {
@@ -1999,8 +1981,8 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         //
         // Note that `error` is checked again later after the
         // operation `kOperationWaitingForData` is processed
-        // so the duplicate frame will not be passed to any
-        // registered `Receiver`.
+        // so the duplicate frame will not be passed to next
+        // layer (`MeshForwarder`).
 
         VerifyOrExit(mOperation == kOperationWaitingForData);
 
@@ -2130,12 +2112,8 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     if (receive)
     {
-        otDumpDebgMac(GetInstance(), "RX", aFrame->GetHeader(), aFrame->GetLength());
-
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleReceivedFrame(*aFrame);
-        }
+        otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+        netif.GetMeshForwarder().HandleReceivedFrame(*aFrame);
     }
 
 exit:
@@ -2196,13 +2174,9 @@ otError Mac::HandleMacCommand(Frame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogInfoMac(GetInstance(), "Received Beacon Request");
+        otLogInfoMac("Received Beacon Request");
 
-        if (mEnabled && (mBeaconsEnabled
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-                         || IsBeaconJoinable()
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-                             ))
+        if (ShouldSendBeacon())
         {
             StartOperation(kOperationTransmitBeacon);
         }
@@ -2289,27 +2263,6 @@ int8_t Mac::GetNoiseFloor(void)
     return otPlatRadioGetReceiveSensitivity(&GetInstance());
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-bool Mac::IsBeaconJoinable(void)
-{
-    uint8_t numUnsecurePorts;
-    bool    joinable = false;
-
-    GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
-
-    if (numUnsecurePorts)
-    {
-        joinable = true;
-    }
-    else
-    {
-        joinable = false;
-    }
-
-    return joinable;
-}
-#endif // OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-
 const char *Mac::OperationToString(Operation aOperation)
 {
     const char *retval = "";
@@ -2354,24 +2307,24 @@ void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
 {
     if (aFrame == NULL)
     {
-        otLogInfoMac(GetInstance(), "Frame rx failed, error:%s", otThreadErrorToString(aError));
+        otLogInfoMac("Frame rx failed, error:%s", otThreadErrorToString(aError));
     }
     else
     {
-        otLogInfoMac(GetInstance(), "Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
+        otLogInfoMac("Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
                      aFrame->ToInfoString().AsCString());
     }
 }
 
 void Mac::LogFrameTxFailure(const Frame &aFrame, otError aError) const
 {
-    otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError),
-                 mTransmitRetries, aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+    otLogInfoMac("Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError), mTransmitRetries,
+                 aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
 }
 
 void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
 {
-    otLogInfoMac(GetInstance(), "%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
+    otLogInfoMac("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
 }
 
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

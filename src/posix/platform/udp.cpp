@@ -281,17 +281,48 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 sin6;
     int                 fd;
+    bool isDisconnect = memcmp(&aUdpSocket->mPeerName.mAddress, &in6addr_any, sizeof(in6addr_any)) == 0 &&
+                        aUdpSocket->mPeerName.mPort == 0;
 
     VerifyOrExit(aUdpSocket->mHandle != NULL, error = OT_ERROR_INVALID_ARGS);
 
     fd = FdFromHandle(aUdpSocket->mHandle);
 
     memset(&sin6, 0, sizeof(struct sockaddr_in6));
-    sin6.sin6_port   = htons(aUdpSocket->mPeerName.mPort);
-    sin6.sin6_family = AF_INET6;
-    memcpy(&sin6.sin6_addr, &aUdpSocket->mPeerName.mAddress, sizeof(sin6.sin6_addr));
+    sin6.sin6_port = htons(aUdpSocket->mPeerName.mPort);
+    if (!isDisconnect)
+    {
+        sin6.sin6_family = AF_INET6;
+        memcpy(&sin6.sin6_addr, &aUdpSocket->mPeerName.mAddress, sizeof(sin6.sin6_addr));
+    }
+    else
+    {
+#ifdef __APPLE__
+        sin6.sin6_family = AF_UNSPEC;
+#else
+        // There is a bug in linux that connecting to AF_UNSPEC does not disconnect.
+        // We create new socket to disconnect.
+        SuccessOrExit(error = otPlatUdpClose(aUdpSocket));
+        SuccessOrExit(error = otPlatUdpSocket(aUdpSocket));
+        SuccessOrExit(error = otPlatUdpBind(aUdpSocket));
+        ExitNow();
+#endif
+    }
 
-    VerifyOrExit(0 == connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)), error = OT_ERROR_FAILED);
+    switch (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)))
+    {
+    case 0:
+        break;
+#ifdef __APPLE__
+    case EAFNOSUPPORT:
+        VerifyOrExit(isDisconnect, error = OT_ERROR_FAILED);
+        break;
+#endif
+
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
 
 exit:
     return error;

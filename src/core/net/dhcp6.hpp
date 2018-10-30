@@ -72,7 +72,8 @@ enum
  * DHCPv6 Message Types
  *
  */
-typedef enum Type {
+typedef enum Type
+{
     kTypeSolicit            = 1,
     kTypeAdvertise          = 2,
     kTypeRequest            = 3,
@@ -149,7 +150,8 @@ private:
  * DHCPv6 Option Codes
  *
  */
-typedef enum Code {
+typedef enum Code
+{
     kOptionClientIdentifier          = 1,
     kOptionServerIdentifier          = 2,
     kOptionIaNa                      = 3,
@@ -233,7 +235,8 @@ private:
  * Duid Type
  *
  */
-typedef enum DuidType {
+typedef enum DuidType
+{
     kDuidLLT = 1,
     kDuidEN  = 2,
     kDuidLL  = 3,
@@ -555,7 +558,8 @@ private:
  * Status Code
  *
  */
-typedef enum Status {
+typedef enum Status
+{
     kStatusSuccess      = 0,
     kStatusUnspecFail   = 1,
     kStatusNoAddrsAvail = 2,

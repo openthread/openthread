@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016-2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,60 @@
 
 /**
  * @file
- *   This file implements the OpenThread DNSv6 API.
+ * @brief
+ *   This file includes OpenThread logging related definitions.
  */
 
-#include "openthread-core-config.h"
+#ifndef OPENTHREAD_LOGGING_H_
+#define OPENTHREAD_LOGGING_H_
 
-#include <openthread/dns.h>
+#include <openthread/error.h>
+#include <openthread/platform/logging.h>
 
-#include "common/instance.hpp"
-
-using namespace ot;
-
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.GetThreadNetif().GetDnsClient().Query(aQuery, aHandler, aContext);
-}
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/**
+ * @addtogroup api-logging
+ *
+ * @brief
+ *   This module includes OpenThread logging related definitions.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This function returns the current log level.
+ *
+ * If dynamic log level feature `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` is enabled, this function returns the
+ * currently set dynamic log level. Otherwise, this function returns the build-time configured log level.
+ *
+ * @returns The log level.
+ *
+ */
+otLogLevel otLoggingGetLevel(void);
+
+/**
+ * This function sets the log level.
+ *
+ * @param[in]  aLogLevel               The log level.
+ *
+ * @retval OT_ERROR_NONE               The log level was changed successfully.
+ * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is not supported.
+ *                                     (see `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
+ *
+ */
+otError otLoggingSetLevel(otLogLevel aLogLevel);
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_LOGGING_H_

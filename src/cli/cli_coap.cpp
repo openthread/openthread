@@ -132,11 +132,11 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
     char         responseContent = '0';
 
     mInterpreter.mServer->OutputFormat(
-        "Received coap request from [%x:%x:%x:%x:%x:%x:%x:%x]: ", HostSwap16(aMessageInfo->mSockAddr.mFields.m16[0]),
-        HostSwap16(aMessageInfo->mSockAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[2]),
-        HostSwap16(aMessageInfo->mSockAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[4]),
-        HostSwap16(aMessageInfo->mSockAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mSockAddr.mFields.m16[6]),
-        HostSwap16(aMessageInfo->mSockAddr.mFields.m16[7]));
+        "Received coap request from [%x:%x:%x:%x:%x:%x:%x:%x]: ", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
+        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
 
     switch (otCoapHeaderGetCode(aHeader))
     {

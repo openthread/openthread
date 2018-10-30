@@ -44,20 +44,23 @@
 
 #define TX_RAMP_UP_TIME       40  // us
 #define RX_RAMP_UP_TIME       40  // us
-#define RX_RAMP_DOWN_TIME      0  // us
-#define MAX_RAMP_DOWN_TIME     6  // us
+#define RX_RAMP_DOWN_TIME     0   // us
+#define MAX_RAMP_DOWN_TIME    6   // us
 #define RX_TX_TURNAROUND_TIME 20  // us
 
-#define A_CCA_DURATION         8  // sym
-#define A_TURNAROUND_TIME     12  // sym
-#define A_UNIT_BACKOFF_PERIOD 20  // sym
+#define A_CCA_DURATION_SYMBOLS    8   // sym
+#define A_TURNAROUND_TIME_SYMBOLS 12  // sym
+#define A_UNIT_BACKOFF_SYMBOLS    20  // sym
 
-#define NUM_OCTETS_IN_ACK      6  // bytes
+#define PHY_SYMBOLS_FROM_OCTETS(octets)   ((octets) * PHY_SYMBOLS_PER_OCTET)
+#define PHY_US_TIME_FROM_SYMBOLS(symbols) ((symbols) * PHY_US_PER_SYMBOL)
 
-#define MAC_ACK_WAIT_DURATION (A_UNIT_BACKOFF_PERIOD +                                            \
-                               A_TURNAROUND_TIME +                                                \
-                               PHY_SHR_DURATION +                                                 \
-                               (NUM_OCTETS_IN_ACK * PHY_SYMBOLS_PER_OCTET))
+#define IMM_ACK_SYMBOLS  (PHY_SHR_SYMBOLS + PHY_SYMBOLS_FROM_OCTETS(IMM_ACK_LENGTH + PHR_SIZE))
+#define IMM_ACK_DURATION (PHY_US_TIME_FROM_SYMBOLS(IMM_ACK_SYMBOLS))
+
+#define MAC_IMM_ACK_WAIT_SYMBOLS (A_UNIT_BACKOFF_SYMBOLS +    \
+                                  A_TURNAROUND_TIME_SYMBOLS + \
+                                  IMM_ACK_SYMBOLS)
 
 __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
                                                     bool    cca,
@@ -71,6 +74,25 @@ __STATIC_INLINE uint16_t nrf_802154_cca_duration_get(void);
 
 #ifndef SUPPRESS_INLINE_IMPLEMENTATION
 
+__STATIC_INLINE uint16_t nrf_802154_frame_duration_get(uint8_t psdu_length,
+                                                       bool    shr,
+                                                       bool    phr)
+{
+    uint16_t us_time = PHY_US_TIME_FROM_SYMBOLS(PHY_SYMBOLS_FROM_OCTETS(psdu_length));
+
+    if (phr)
+    {
+        us_time += PHY_US_TIME_FROM_SYMBOLS(PHY_SYMBOLS_FROM_OCTETS(PHR_SIZE));
+    }
+
+    if (shr)
+    {
+        us_time += PHY_US_TIME_FROM_SYMBOLS(PHY_SHR_SYMBOLS);
+    }
+
+    return us_time;
+}
+
 __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
                                                     bool    cca,
                                                     bool    ack_requested)
@@ -79,57 +101,53 @@ __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
     // if CCA: + RX ramp up + CCA + RX ramp down
     // + TX ramp up + SHR + PHR + PSDU
     // if ACK: + macAckWaitDuration
-    uint16_t result = PHY_SHR_DURATION + (psdu_length + 1) * PHY_SYMBOLS_PER_OCTET;
+    uint16_t us_time = MAX_RAMP_DOWN_TIME + TX_RAMP_UP_TIME + nrf_802154_frame_duration_get(psdu_length, true, true);
 
     if (ack_requested)
     {
-        result += MAC_ACK_WAIT_DURATION;
+        us_time += PHY_US_TIME_FROM_SYMBOLS(MAC_IMM_ACK_WAIT_SYMBOLS);
     }
-
-    result *= PHY_US_PER_SYMBOL;
-
-    result += MAX_RAMP_DOWN_TIME + TX_RAMP_UP_TIME;
 
     if (cca)
     {
-        result += RX_RAMP_UP_TIME + (A_CCA_DURATION * PHY_US_PER_SYMBOL) + RX_RAMP_DOWN_TIME;
+        us_time += RX_RAMP_UP_TIME + RX_RAMP_DOWN_TIME + PHY_US_TIME_FROM_SYMBOLS(A_CCA_DURATION_SYMBOLS);
     }
 
-    return result;
+    return us_time;
 }
 
 __STATIC_INLINE uint16_t nrf_802154_cca_before_tx_duration_get(void)
 {
     // CCA + turnaround time
-    uint16_t result = (A_CCA_DURATION * PHY_US_PER_SYMBOL) + RX_TX_TURNAROUND_TIME;
+    uint16_t us_time = PHY_US_TIME_FROM_SYMBOLS(A_CCA_DURATION_SYMBOLS) + RX_TX_TURNAROUND_TIME;
 
-    return result;
+    return us_time;
 }
 
 __STATIC_INLINE uint16_t nrf_802154_rx_duration_get(uint8_t psdu_length, bool ack_requested)
 {
     // SHR + PHR + PSDU
     // if ACK: + aTurnaroundTime + ACK frame duration
-    uint16_t result = PHY_SHR_DURATION + ((psdu_length + 1) * PHY_SYMBOLS_PER_OCTET);
+    uint16_t us_time = nrf_802154_frame_duration_get(psdu_length, true, true);
 
     if (ack_requested)
     {
-        result += A_TURNAROUND_TIME +
-                  PHY_SHR_DURATION +
-                  (NUM_OCTETS_IN_ACK * PHY_SYMBOLS_PER_OCTET);
+        us_time += PHY_US_TIME_FROM_SYMBOLS(A_TURNAROUND_TIME_SYMBOLS +
+                                            PHY_SHR_SYMBOLS +
+                                            PHY_SYMBOLS_FROM_OCTETS(IMM_ACK_LENGTH + PHR_SIZE));
     }
 
-    result *= PHY_US_PER_SYMBOL;
-
-    return result;
+    return us_time;
 }
 
 __STATIC_INLINE uint16_t nrf_802154_cca_duration_get(void)
 {
     // ramp down + rx ramp up + CCA
-    uint16_t result = MAX_RAMP_DOWN_TIME + RX_RAMP_UP_TIME + (A_CCA_DURATION * PHY_US_PER_SYMBOL);
+    uint16_t us_time = MAX_RAMP_DOWN_TIME +
+                       RX_RAMP_UP_TIME +
+                       PHY_US_TIME_FROM_SYMBOLS(A_CCA_DURATION_SYMBOLS);
 
-    return result;
+    return us_time;
 }
 
 #endif /* SUPPRESS_INLINE_IMPLEMENTATION */

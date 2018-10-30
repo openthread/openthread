@@ -99,7 +99,8 @@
 extern "C" {
 #endif
 
-typedef enum {
+typedef enum
+{
     SPINEL_STATUS_OK      = 0, ///< Operation has completed successfully.
     SPINEL_STATUS_FAILURE = 1, ///< Operation has failed for some undefined reason.
 
@@ -196,28 +197,32 @@ typedef enum {
     SPINEL_STATUS_EXPERIMENTAL__END   = 2097152,
 } spinel_status_t;
 
-typedef enum {
+typedef enum
+{
     SPINEL_NET_ROLE_DETACHED = 0,
     SPINEL_NET_ROLE_CHILD    = 1,
     SPINEL_NET_ROLE_ROUTER   = 2,
     SPINEL_NET_ROLE_LEADER   = 3,
 } spinel_net_role_t;
 
-typedef enum {
+typedef enum
+{
     SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED       = 0,
     SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY   = 1,
     SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY = 2,
     SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL            = 3,
 } spinel_ipv6_icmp_ping_offload_mode_t;
 
-typedef enum {
+typedef enum
+{
     SPINEL_SCAN_STATE_IDLE     = 0,
     SPINEL_SCAN_STATE_BEACON   = 1,
     SPINEL_SCAN_STATE_ENERGY   = 2,
     SPINEL_SCAN_STATE_DISCOVER = 3,
 } spinel_scan_state_t;
 
-typedef enum {
+typedef enum
+{
     SPINEL_MCU_POWER_STATE_ON        = 0,
     SPINEL_MCU_POWER_STATE_LOW_POWER = 1,
     SPINEL_MCU_POWER_STATE_OFF       = 2,
@@ -226,7 +231,8 @@ typedef enum {
 // The `spinel_power_state_t` enumeration and `POWER_STATE`
 // property are deprecated. Please use `MCU_POWER_STATE`
 // instead.
-typedef enum {
+typedef enum
+{
     SPINEL_POWER_STATE_OFFLINE    = 0,
     SPINEL_POWER_STATE_DEEP_SLEEP = 1,
     SPINEL_POWER_STATE_STANDBY    = 2,
@@ -234,7 +240,8 @@ typedef enum {
     SPINEL_POWER_STATE_ONLINE     = 4,
 } spinel_power_state_t;
 
-typedef enum {
+typedef enum
+{
     SPINEL_HOST_POWER_STATE_OFFLINE    = 0,
     SPINEL_HOST_POWER_STATE_DEEP_SLEEP = 1,
     SPINEL_HOST_POWER_STATE_RESERVED   = 2,
@@ -518,7 +525,8 @@ enum
  *    Experimental |          2,000,000 - 2,097,151 | Experimental use only
  *
  */
-typedef enum {
+typedef enum
+{
     SPINEL_PROP_LAST_STATUS      = 0,  ///< status [i]
     SPINEL_PROP_PROTOCOL_VERSION = 1,  ///< major, minor [i,i]
     SPINEL_PROP_NCP_VERSION      = 2,  ///< version string [U]

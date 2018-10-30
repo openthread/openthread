@@ -173,7 +173,8 @@ extern "C" {
  * This enumeration represents error codes used throughout OpenThread.
  *
  */
-typedef enum otError {
+typedef enum otError
+{
     /**
      * No error.
      */

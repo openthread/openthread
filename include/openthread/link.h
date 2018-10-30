@@ -84,7 +84,8 @@ typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter ent
  * Defines address mode of the mac filter.
  *
  */
-typedef enum otMacFilterAddressMode {
+typedef enum otMacFilterAddressMode
+{
     OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
     OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Whitelist address filter mode is enabled.
     OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Blacklist address filter mode is enabled.

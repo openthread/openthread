@@ -76,7 +76,14 @@
 #define XTAL_ACCURACY       40 // The crystal used on nRF52840PDK has ±20ppm accuracy.
 // clang-format on
 
-typedef enum { kMsTimer, kUsTimer, k802154Timer, k802154Sync, kNumTimers } AlarmIndex;
+typedef enum
+{
+    kMsTimer,
+    kUsTimer,
+    k802154Timer,
+    k802154Sync,
+    kNumTimers
+} AlarmIndex;
 
 typedef struct
 {
@@ -95,6 +102,7 @@ typedef struct
 static volatile uint32_t sOverflowCounter; ///< Counter of RTC overflowCounter, incremented by 2 on each OVERFLOW event.
 static volatile uint8_t  sMutex;           ///< Mutex for write access to @ref sOverflowCounter.
 static volatile uint64_t sTimeOffset = 0;  ///< Time overflowCounter to keep track of current time (in millisecond).
+static volatile bool     sEventPending;    ///< Timer fired and upper layer should be notified.
 static AlarmData         sTimerData[kNumTimers]; ///< Data of the timers.
 
 static const AlarmChannelData sChannelData[kNumTimers] = //
@@ -317,6 +325,7 @@ static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
         case kMsTimer:
         case kUsTimer:
             sTimerData[aIndex].mFireAlarm = true;
+            sEventPending                 = true;
             otSysEventSignalPending();
             break;
 
@@ -479,29 +488,34 @@ void nrf5AlarmDeinit(void)
 
 void nrf5AlarmProcess(otInstance *aInstance)
 {
-    if (sTimerData[kMsTimer].mFireAlarm)
+    do
     {
-        sTimerData[kMsTimer].mFireAlarm = false;
+        sEventPending = false;
+
+        if (sTimerData[kMsTimer].mFireAlarm)
+        {
+            sTimerData[kMsTimer].mFireAlarm = false;
 
 #if OPENTHREAD_ENABLE_DIAG
 
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagAlarmFired(aInstance);
-        }
-        else
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagAlarmFired(aInstance);
+            }
+            else
 #endif
-        {
-            otPlatAlarmMilliFired(aInstance);
+            {
+                otPlatAlarmMilliFired(aInstance);
+            }
         }
-    }
 
-    if (sTimerData[kUsTimer].mFireAlarm)
-    {
-        sTimerData[kUsTimer].mFireAlarm = false;
+        if (sTimerData[kUsTimer].mFireAlarm)
+        {
+            sTimerData[kUsTimer].mFireAlarm = false;
 
-        otPlatAlarmMicroFired(aInstance);
-    }
+            otPlatAlarmMicroFired(aInstance);
+        }
+    } while (sEventPending);
 }
 
 inline uint64_t nrf5AlarmGetCurrentTime(void)

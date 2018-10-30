@@ -66,7 +66,7 @@ otError ChannelMonitor::Start(void)
     VerifyOrExit(!IsRunning(), error = OT_ERROR_ALREADY);
     Clear();
     mTimer.Start(kTimerInterval);
-    otLogDebgUtil(GetInstance(), "ChannelMonitor: Starting");
+    otLogDebgUtil("ChannelMonitor: Starting");
 
 exit:
     return error;
@@ -78,7 +78,7 @@ otError ChannelMonitor::Stop(void)
 
     VerifyOrExit(IsRunning(), error = OT_ERROR_ALREADY);
     mTimer.Stop();
-    otLogDebgUtil(GetInstance(), "ChannelMonitor: Stopping");
+    otLogDebgUtil("ChannelMonitor: Stopping");
 
 exit:
     return error;
@@ -90,7 +90,7 @@ void ChannelMonitor::Clear(void)
     mSampleCount      = 0;
     memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 
-    otLogDebgUtil(GetInstance(), "ChannelMonitor: Clearing data");
+    otLogDebgUtil("ChannelMonitor: Clearing data");
 }
 
 uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
@@ -146,7 +146,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
         assert(channelIndex < kNumChannels);
 
-        otLogDebgUtil(GetInstance(), "ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
+        otLogDebgUtil("ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 
         if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
         {
@@ -182,7 +182,6 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 void ChannelMonitor::LogResults(void)
 {
     otLogInfoUtil(
-        GetInstance(),
         "ChannelMonitor: %u [%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
         mSampleCount, mChannelOccupancy[0] >> 8, mChannelOccupancy[1] >> 8, mChannelOccupancy[2] >> 8,
         mChannelOccupancy[3] >> 8, mChannelOccupancy[4] >> 8, mChannelOccupancy[5] >> 8, mChannelOccupancy[6] >> 8,

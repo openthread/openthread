@@ -151,7 +151,7 @@ void IntDefaultHandler(void)
         ;
 }
 
-    // clang-format off
+// clang-format off
 
 #define FLASH_CCA_BOOTLDR_CFG_DISABLE               0xEFFFFFFF ///< Disable backdoor function
 #define FLASH_CCA_BOOTLDR_CFG_ENABLE                0xF0FFFFFF ///< Enable backdoor function

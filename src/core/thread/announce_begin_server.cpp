@@ -101,7 +101,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aHeader, responseInfo));
-        otLogInfoMeshCoP(GetInstance(), "sent announce begin response");
+        otLogInfoMeshCoP("sent announce begin response");
     }
 
 exit:

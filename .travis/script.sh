@@ -45,6 +45,8 @@ python --version || die
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
 
+    export CPPFLAGS="-DMBEDTLS_DEBUG_C"
+
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \

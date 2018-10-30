@@ -395,7 +395,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     messageInfo.mInterfaceId = netif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
-    otLogInfoIp6(GetInstance(), "solicit");
+    otLogInfoIp6("solicit");
 
 exit:
 

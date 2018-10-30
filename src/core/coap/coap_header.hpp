@@ -145,7 +145,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Header::Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
+    Type GetType(void) const { return static_cast<Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
 
     /**
      * This method sets the Type value.
@@ -307,6 +307,19 @@ public:
     otError AppendUintOption(uint16_t aNumber, uint32_t aValue);
 
     /**
+     * This method appends a string CoAP option.
+     *
+     * @param[in]  aNumber  The CoAP Option number.
+     * @param[in]  aValue   The CoAP Option string value.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError AppendStringOption(uint16_t aNumber, const char *aValue);
+
+    /**
      * This method appends an Observe option.
      *
      * @param[in]  aObserve  Observe field value.
@@ -320,7 +333,7 @@ public:
     /**
      * This method appends a Uri-Path option.
      *
-     * @param[in]  aUriPath  A pointer to a NULL-terminated string.
+     * @param[in]  aUriPath           A pointer to a NULL-terminated string.
      *
      * @retval OT_ERROR_NONE          Successfully appended the option.
      * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -328,6 +341,18 @@ public:
      *
      */
     otError AppendUriPathOptions(const char *aUriPath);
+
+    /**
+     * This method appends a Proxy-Uri option.
+     *
+     * @param[in]  aProxyUri          A pointer to a NULL-terminated string.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError AppendProxyUriOption(const char *aProxyUri);
 
     /**
      * This method appends a Content-Format option.
@@ -402,7 +427,7 @@ public:
      * @returns The header length in bytes.
      *
      */
-    uint8_t GetLength(void) const { return mHeaderLength; }
+    uint16_t GetLength(void) const { return mHeaderLength; }
 
     /**
      * This method sets a default response header based on request header.

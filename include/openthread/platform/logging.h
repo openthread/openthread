@@ -116,7 +116,8 @@ typedef uint8_t otLogLevel;
  * This enumeration represents log regions.
  *
  */
-typedef enum otLogRegion {
+typedef enum otLogRegion
+{
     OT_LOG_REGION_API      = 1,  ///< OpenThread API
     OT_LOG_REGION_MLE      = 2,  ///< MLE
     OT_LOG_REGION_ARP      = 3,  ///< EID-to-RLOC mapping.

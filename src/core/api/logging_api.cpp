@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,42 @@
 
 /**
  * @file
- *   This file implements the OpenThread DNSv6 API.
+ *   This file implements the OpenThread logging related APIs.
  */
+
+#define WPP_NAME "logging_api.tmh"
 
 #include "openthread-core-config.h"
 
-#include <openthread/dns.h>
-
+#include <openthread/logging.h>
 #include "common/instance.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
+otLogLevel otLoggingGetLevel(void)
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL && !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.GetThreadNetif().GetDnsClient().Query(aQuery, aHandler, aContext);
+    return Instance::Get().GetLogLevel();
+}
+#else
+{
+    return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
 }
 #endif
+
+otError otLoggingSetLevel(otLogLevel aLogLevel)
+{
+    otError error = OT_ERROR_DISABLED_FEATURE;
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#warning "Dynamic log level is not supported along with multiple OT instance feature (`ENABLE_MULTIPLE_INSTANCES`)"
+#else
+    Instance::Get().SetLogLevel(aLogLevel);
+    error = OT_ERROR_NONE;
+#endif
+#endif
+
+    OT_UNUSED_VARIABLE(aLogLevel);
+    return error;
+}

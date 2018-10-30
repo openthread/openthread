@@ -2494,9 +2494,9 @@ const char *spinel_capability_to_cstr(unsigned int capability)
     return ret;
 }
 
-    // **** LCOV_EXCL_STOP ****
+// **** LCOV_EXCL_STOP ****
 
-    /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 
 #if SPINEL_SELF_TEST
 

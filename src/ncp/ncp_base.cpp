@@ -38,6 +38,7 @@
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
+#include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
@@ -1321,9 +1322,9 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
-    // ----------------------------------------------------------------------------
-    // MARK: Individual Property Getters and Setters
-    // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// MARK: Individual Property Getters and Setters
+// ----------------------------------------------------------------------------
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -2143,7 +2144,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>(
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
-    return mEncoder.WriteUint8(ConvertLogLevel(otGetDynamicLogLevel(mInstance)));
+    return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
@@ -2187,7 +2188,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         break;
     }
 
-    error = otSetDynamicLogLevel(mInstance, logLevel);
+    error = otLoggingSetLevel(logLevel);
 
 exit:
     return error;

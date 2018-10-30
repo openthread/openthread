@@ -566,7 +566,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 continue;
             }
 
-            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -587,7 +587,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 continue;
             }
 
-            otDumpDebgNetData(GetInstance(), "remove service done", mTlvs, mLength);
+            otDumpDebgNetData("remove service done", mTlvs, mLength);
             break;
         }
 
@@ -613,7 +613,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData(GetInstance(), "remove done", aData, aDataLength);
+    otDumpDebgNetData("remove done", aData, aDataLength);
 }
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)
@@ -1041,7 +1041,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         mLastAttemptWait = true;
     }
 
-    otLogInfoNetData(GetInstance(), "Sent server data notification");
+    otLogInfoNetData("Sent server data notification");
 
 exit:
 

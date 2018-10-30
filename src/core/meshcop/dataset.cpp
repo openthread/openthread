@@ -545,8 +545,8 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
 
             if (error != OT_ERROR_NONE)
             {
-                otLogWarnMeshCoP(aInstance, "DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)",
-                                 channel, otThreadErrorToString(error));
+                otLogWarnMeshCoP("DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)", channel,
+                                 otThreadErrorToString(error));
                 ExitNow();
             }
 

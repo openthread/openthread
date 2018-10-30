@@ -121,6 +121,7 @@ SOURCES_COMMON                      = \
     api/joiner_api.cpp                \
     api/link_api.cpp                  \
     api/link_raw_api.cpp              \
+    api/logging_api.cpp               \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/network_time_api.cpp          \
@@ -226,6 +227,7 @@ EXTRA_DIST                          = \
 libopenthread_radio_a_SOURCES       = \
     api/instance_api.cpp              \
     api/link_raw_api.cpp              \
+    api/logging_api.cpp               \
     api/message_api.cpp               \
     api/tasklet_api.cpp               \
     common/instance.cpp               \

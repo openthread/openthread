@@ -445,8 +445,12 @@ private:
         kMaxSpinelFrame    = 2048, ///< Max size in bytes for transferring spinel frames.
         kMaxWaitTime       = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize = 128,  ///< Max size of version string.
+        kCapsBufferSize    = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
     };
 
+    otError CheckSpinelVersion(void);
+    otError CheckCapabilities(void);
+    otError CheckRadioCapabilities(void);
     void    DecodeHdlc(const uint8_t *aData, uint16_t aLength);
     void    ReadAll(void);
     otError WriteAll(const uint8_t *aBuffer, uint16_t aLength);
@@ -591,10 +595,11 @@ private:
 
     int          mSockFd;
     otRadioState mState;
-    bool         mIsAckRequested : 1; ///< Ack requested.
-    bool         mIsDecoding : 1;     ///< Decoding hdlc frames.
-    bool         mIsPromiscuous : 1;  ///< Promiscuous mode.
-    bool         mIsReady : 1;        ///< NCP ready.
+    bool         mIsAckRequested : 1;    ///< Ack requested.
+    bool         mIsDecoding : 1;        ///< Decoding hdlc frames.
+    bool         mIsPromiscuous : 1;     ///< Promiscuous mode.
+    bool         mIsReady : 1;           ///< NCP ready.
+    bool         mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
 
 #if OPENTHREAD_ENABLE_DIAG
     bool   mDiagMode;

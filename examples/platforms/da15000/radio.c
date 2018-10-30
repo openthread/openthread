@@ -152,22 +152,22 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
 {
-    otLogInfoPlat(aInstance, "Set PanId: %X", aPanid);
+    otLogInfoPlat("Set PanId: %X", aPanid);
 
     ftdf_set_value(FTDF_PIB_PAN_ID, &aPanid);
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
-    otLogInfoPlat(aInstance, "Set Extended Address: %X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6],
-                  aAddress->m8[5], aAddress->m8[4], aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
+    otLogInfoPlat("Set Extended Address: %X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5],
+                  aAddress->m8[4], aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
     ftdf_set_value(FTDF_PIB_EXTENDED_ADDRESS, aAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
-    otLogInfoPlat(aInstance, "Set Short Address: %X", aAddress);
+    otLogInfoPlat("Set Short Address: %X", aAddress);
 
     ftdf_set_value(FTDF_PIB_SHORT_ADDRESS, &aAddress);
 }
@@ -197,7 +197,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
     ftdf_enable_transparent_mode(FTDF_TRUE, options);
     otPlatRadioSetPromiscuous(aInstance, false);
 
-    otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_SLEEP", NULL);
+    otLogDebgPlat("Radio state: OT_RADIO_STATE_SLEEP", NULL);
     sRadioState = OT_RADIO_STATE_SLEEP;
 
 exit:
@@ -212,7 +212,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
     ftdf_fppr_reset();
 
-    otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_DISABLED", NULL);
+    otLogDebgPlat("Radio state: OT_RADIO_STATE_DISABLED", NULL);
     sRadioState = OT_RADIO_STATE_DISABLED;
 
     return OT_ERROR_NONE;
@@ -241,7 +241,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otEXPECT_ACTION(sRadioState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
-    otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_SLEEP", NULL);
+    otLogDebgPlat("Radio state: OT_RADIO_STATE_SLEEP", NULL);
     sRadioState = OT_RADIO_STATE_SLEEP;
 
     sEnableRX = 0;
@@ -269,7 +269,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     sEnableRX = 1;
     ftdf_set_value(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
 
-    otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
+    otLogDebgPlat("Radio state: OT_RADIO_STATE_RECEIVE", NULL);
     sRadioState = OT_RADIO_STATE_RECEIVE;
 
 exit:
@@ -293,7 +293,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
     otEXPECT_ACTION(ftdf_fppr_get_free_short_address(&entry, &entryIdx), error = OT_ERROR_NO_BUFS);
 
-    otLogDebgPlat(aInstance, "Add ShortAddress entry: %d", entry);
+    otLogDebgPlat("Add ShortAddress entry: %d", entry);
 
     ftdf_fppr_set_short_address(entry, entryIdx, aShortAddress);
     ftdf_fppr_set_short_address_valid(entry, entryIdx, FTDF_TRUE);
@@ -321,7 +321,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
     otEXPECT_ACTION(ftdf_fppr_get_free_ext_address(&entry), error = OT_ERROR_NO_BUFS);
 
-    otLogDebgPlat(aInstance, "Add ExtAddress entry: %d", entry);
+    otLogDebgPlat("Add ExtAddress entry: %d", entry);
 
     ftdf_fppr_set_ext_address(entry, addr);
     ftdf_fppr_set_ext_address_valid(entry, FTDF_TRUE);
@@ -338,7 +338,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
     otEXPECT_ACTION(ftdf_fppr_lookup_short_address(aShortAddress, &entry, &entryIdx), error = OT_ERROR_NO_ADDRESS);
 
-    otLogDebgPlat(aInstance, "Clear ShortAddress entry: %d", entry);
+    otLogDebgPlat("Clear ShortAddress entry: %d", entry);
 
     ftdf_fppr_set_short_address(entry, entryIdx, 0);
     ftdf_fppr_set_short_address_valid(entry, entryIdx, FTDF_FALSE);
@@ -363,7 +363,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
     otEXPECT_ACTION(ftdf_fppr_lookup_ext_address(addr, &entry), error = OT_ERROR_NO_ADDRESS);
 
-    otLogDebgPlat(aInstance, "Clear ExtAddress entry: %d", entry);
+    otLogDebgPlat("Clear ExtAddress entry: %d", entry);
 
     ftdf_fppr_set_ext_address(entry, 0);
     ftdf_fppr_set_ext_address_valid(entry, FTDF_FALSE);
@@ -376,7 +376,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     uint8_t i, j;
 
-    otLogDebgPlat(aInstance, "Clear ShortAddress entries", NULL);
+    otLogDebgPlat("Clear ShortAddress entries", NULL);
 
     for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
     {
@@ -394,7 +394,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     uint8_t i;
 
-    otLogDebgPlat(aInstance, "Clear ExtAddress entries", NULL);
+    otLogDebgPlat("Clear ExtAddress entries", NULL);
 
     for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
     {
@@ -418,11 +418,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     otEXPECT_ACTION(sRadioState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    otLogDebgPlat(aInstance, "Radio start transmit: %d bytes on channel: %d", aFrame->mLength, aFrame->mChannel);
+    otLogDebgPlat("Radio start transmit: %d bytes on channel: %d", aFrame->mLength, aFrame->mChannel);
 
     ad_ftdf_send_frame_simple(aFrame->mLength, aFrame->mPsdu, aFrame->mChannel, 0, FTDF_TRUE);
 
-    otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_TRANSMIT", NULL);
+    otLogDebgPlat("Radio state: OT_RADIO_STATE_TRANSMIT", NULL);
     sRadioState = OT_RADIO_STATE_TRANSMIT;
 
     otPlatRadioTxStarted(aInstance, aFrame);
@@ -454,7 +454,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    otLogInfoPlat(aInstance, "Set Promiscuous: %d", aEnable ? 1 : 0);
+    otLogInfoPlat("Set Promiscuous: %d", aEnable ? 1 : 0);
 
     ftdf_set_value(FTDF_PIB_PROMISCUOUS_MODE, &aEnable);
     sRadioPromiscuous = aEnable;
@@ -483,7 +483,7 @@ exit:
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    otLogInfoPlat(aInstance, "Set DefaultTxPower: %d", aPower);
+    otLogInfoPlat("Set DefaultTxPower: %d", aPower);
 
     sTxPower = aPower;
     ftdf_set_value(FTDF_PIB_TX_POWER, &aPower);
@@ -499,7 +499,7 @@ void da15000RadioProcess(otInstance *aInstance)
     {
         ftdf_get_frame_header(sReceiveFrame[sReadFrame].mPsdu, &frameHeader);
 
-        otLogDebgPlat(aInstance, "Radio received: %d bytes", sReceiveFrame[sReadFrame].mLength);
+        otLogDebgPlat("Radio received: %d bytes", sReceiveFrame[sReadFrame].mLength);
 
         if (frameHeader.frame_type == FTDF_ACKNOWLEDGEMENT_FRAME)
         {
@@ -515,7 +515,7 @@ void da15000RadioProcess(otInstance *aInstance)
 
     if (sTransmitDoneFrame)
     {
-        otLogDebgPlat(aInstance, "Radio transmit status: %s", otThreadErrorToString(sTransmitStatus));
+        otLogDebgPlat("Radio transmit status: %s", otThreadErrorToString(sTransmitStatus));
 
         ftdf_get_frame_header(sTransmitFrame.mPsdu, &frameHeader);
 
@@ -534,7 +534,7 @@ void da15000RadioProcess(otInstance *aInstance)
 
         sTransmitDoneFrame = false;
 
-        otLogDebgPlat(aInstance, "Radio state: OT_RADIO_STATE_RECEIVE", NULL);
+        otLogDebgPlat("Radio state: OT_RADIO_STATE_RECEIVE", NULL);
     }
 
 exit:

@@ -56,7 +56,8 @@ extern "C" {
  * ICMPv6 Message Types
  *
  */
-typedef enum otIcmp6Type {
+typedef enum otIcmp6Type
+{
     OT_ICMP6_TYPE_DST_UNREACH  = 1,   ///< Destination Unreachable
     OT_ICMP6_TYPE_ECHO_REQUEST = 128, ///< Echo Request
     OT_ICMP6_TYPE_ECHO_REPLY   = 129, ///< Echo Reply
@@ -66,7 +67,8 @@ typedef enum otIcmp6Type {
  * ICMPv6 Message Codes
  *
  */
-typedef enum otIcmp6Code {
+typedef enum otIcmp6Code
+{
     OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE = 0, ///< Destination Unreachable No Route
 } otIcmp6Code;
 
@@ -127,7 +129,8 @@ typedef struct otIcmp6Handler
  * ICMPv6 Echo Reply Modes
  *
  */
-typedef enum otIcmp6EchoMode {
+typedef enum otIcmp6EchoMode
+{
     OT_ICMP6_ECHO_HANDLER_DISABLED       = 0, ///< ICMPv6 Echo processing disabled
     OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY   = 1, ///< ICMPv6 Echo processing enabled only for unicast requests only
     OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY = 2, ///< ICMPv6 Echo processing enabled only for multicast requests only

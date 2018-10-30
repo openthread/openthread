@@ -60,7 +60,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 int main(int argc, char *argv[])
 {
-    otInstance *sInstance;
+    otInstance *instance;
 
     if (setjmp(gResetJump))
     {
@@ -71,28 +71,25 @@ int main(int argc, char *argv[])
         execvp(argv[0], argv);
     }
 
-    otSysInit(argc, argv);
-
-    sInstance = otInstanceInitSingle();
-    assert(sInstance);
+    instance = otSysInit(argc, argv);
 
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
-    otNcpInit(sInstance);
+    otNcpInit(instance);
 #elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
-    otCliUartInit(sInstance);
+    otCliUartInit(instance);
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
+    otDiagInit(instance);
 #endif
 
     while (true)
     {
-        otTaskletsProcess(sInstance);
-        otSysProcessDrivers(sInstance);
+        otTaskletsProcess(instance);
+        otSysProcessDrivers(instance);
     }
 
-    otInstanceFinalize(sInstance);
+    otInstanceFinalize(instance);
 
     return 0;
 }
@@ -110,9 +107,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_list ap;
     va_start(ap, aFormat);
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
-    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
     otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
 #endif
     va_end(ap);
 }

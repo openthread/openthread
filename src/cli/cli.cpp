@@ -797,7 +797,7 @@ exit:
 void Interpreter::ProcessDns(int argc, char *argv[])
 {
     otError          error = OT_ERROR_NONE;
-    long             port  = OT_DNS_DEFAULT_DNS_SERVER_PORT;
+    long             port  = OT_DNS_DEFAULT_SERVER_PORT;
     Ip6::MessageInfo messageInfo;
     otDnsQuery       query;
 
@@ -820,7 +820,7 @@ void Interpreter::ProcessDns(int argc, char *argv[])
         else
         {
             // Use IPv6 address of default DNS server.
-            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_DNS_SERVER_IP));
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_SERVER_IP));
         }
 
         if (argc > 3)

@@ -550,7 +550,7 @@ exit:
 
     if (error)
     {
-        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Receive failed");
+        otLogInfoCoapErr(error, "Receive failed");
     }
 }
 
@@ -709,7 +709,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoCoapErr(GetNetif().GetInstance(), error, "Failed to process request");
+        otLogInfoCoapErr(error, "Failed to process request");
 
         if (error == OT_ERROR_NOT_FOUND)
         {
