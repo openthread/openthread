@@ -38,6 +38,7 @@
 
 #include <openthread/link_raw.h>
 
+#include "common/locator.hpp"
 #include "common/timer.hpp"
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF || \
@@ -49,7 +50,7 @@
 
 namespace ot {
 
-class LinkRaw
+class LinkRaw : public InstanceLocator
 {
 public:
     /**
@@ -111,6 +112,8 @@ public:
 
     /**
      * This method starts a (single) Transmit on the link-layer.
+     *
+     * @note The callback @p aCallback will not be called if this call does not return OT_ERROR_NONE.
      *
      * @param[in]  aFrame               A pointer to the frame that was transmitted.
      * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
@@ -237,13 +240,31 @@ public:
      */
     otError SetExtAddress(const otExtAddress &aExtAddress);
 
+    /**
+     * This method gets the transmit frame.
+     *
+     * @returns A pointer to the transmit frame.
+     *
+     */
+    otRadioFrame *GetTransmitFrame(void) { return mTransmitFrame; }
+
 private:
-    otInstance &mInstance;
+    enum
+    {
+        kOperationTransmitData = 1 << 0,
+    };
+
+    void        TransmitNow(void);
+    void        StartTransmit(void);
+    Tasklet     mOperationTask;
+    static void HandleOperationTask(Tasklet &aTasklet);
+    void        HandleOperationTask();
+
+    uint16_t mPendingOperations;
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
-    enum TimerReason
-    {
+    enum TimerReason{
         kTimerReasonNone,
         kTimerReasonAckTimeout,
         kTimerReasonCsmaBackoffComplete,
@@ -310,6 +331,8 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+    otRadioFrame *          mTransmitFrame;
+    otRadioCaps             mRadioCaps;
 };
 
 } // namespace ot

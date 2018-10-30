@@ -540,9 +540,14 @@ void radioSendMessage(otInstance *aInstance)
     sAckWait = true;
 }
 
+bool platformRadioIsTransmitPending(void)
+{
+    return sState == OT_RADIO_STATE_TRANSMIT && !sAckWait;
+}
+
 void platformRadioProcess(otInstance *aInstance)
 {
-    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
     }

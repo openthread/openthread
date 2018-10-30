@@ -105,14 +105,7 @@ otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
-    otRadioFrame *buffer = NULL;
-
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled());
-
-    buffer = otPlatRadioGetTransmitBuffer(aInstance);
-
-exit:
-    return buffer;
+    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetTransmitFrame();
 }
 
 otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
