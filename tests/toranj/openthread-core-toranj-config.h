@@ -171,6 +171,14 @@
 #define OPENTHREAD_CONFIG_LOG_SUFFIX                            ""
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PLATFORM
+ *
+ * Define to enable platform region logging.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PLATFORM                          1
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
  *
  *  The size of NCP message buffer in bytes
