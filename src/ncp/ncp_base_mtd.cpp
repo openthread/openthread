@@ -1420,7 +1420,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     otError        error    = OT_ERROR_NONE;
 
     // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, true, OT_MESSAGE_PRIORITY_NORMAL);
+    message = otIp6NewMessage(mInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
@@ -2255,15 +2255,16 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_REQUIRE_JOIN_EXIS
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(void)
 {
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    const uint8_t *metaPtr  = NULL;
-    uint16_t       metaLen  = 0;
-    otMessage *    message  = NULL;
-    otError        error    = OT_ERROR_NONE;
+    const uint8_t *   framePtr    = NULL;
+    uint16_t          frameLen    = 0;
+    const uint8_t *   metaPtr     = NULL;
+    uint16_t          metaLen     = 0;
+    otMessage *       message     = NULL;
+    otError           error       = OT_ERROR_NONE;
+    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, false, OT_MESSAGE_PRIORITY_NORMAL);
+    message = otIp6NewMessage(mInstance, &msgSettings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
@@ -2850,9 +2851,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STRE
     uint16_t            peerPort;
     uint16_t            sockPort;
     otMessage *         message;
-    otError             error = OT_ERROR_NONE;
+    otError             error       = OT_ERROR_NONE;
+    otMessageSettings   msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    message = otIp6NewMessage(mInstance, false, OT_MESSAGE_PRIORITY_NORMAL);
+    message = otIp6NewMessage(mInstance, &msgSettings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));

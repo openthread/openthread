@@ -485,14 +485,19 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 /**
  * This function creates a new message with a CoAP header.
  *
+ * If @aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * OT_MESSAGE_PRIORITY_NORMAL by default.
+ *
+ * This function only supports to set the link layer security enabled.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
- * @param[in]  aPriority  The message priority level.
+ * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
  *
- * @returns A pointer to the message or NULL if failed to allocate message.
+ * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  */
-otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader, otMessagePriority aPriority);
+otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader, otMessageSettings *aSettings);
 
 /**
  * This function sends a CoAP request.

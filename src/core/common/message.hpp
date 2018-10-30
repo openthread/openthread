@@ -1251,6 +1251,18 @@ public:
     Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
 
     /**
+     * This method is used to obtain a new message with specified settings.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aSettings       A pointer to the message settings or NULL to set default settings.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader, otMessageSettings *aSettings);
+
+    /**
      * This method is used to free a message and return all message buffers to the buffer pool.
      *
      * @param[in]  aMessage  The message to free.

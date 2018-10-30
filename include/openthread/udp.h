@@ -96,16 +96,18 @@ typedef struct otUdpSocket
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
- * @param[in]  aPriority             The message priority level.
+ * If @aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
- * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  * @sa otFreeMessage
  *
  */
-otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled, otMessagePriority aPriority);
+otMessage *otUdpNewMessage(otInstance *aInstance, otMessageSettings *aSettings);
 
 /**
  * Open a UDP/IPv6 socket.

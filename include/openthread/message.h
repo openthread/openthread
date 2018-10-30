@@ -99,6 +99,16 @@ typedef enum otMessagePriority {
 } otMessagePriority;
 
 /**
+ * This structure represents a message settings.
+ *
+ */
+typedef struct otMessageSettings
+{
+    bool              mLinkSecurityEnabled; ///< TRUE if the message should be secured at Layer 2.
+    otMessagePriority mPriority;            ///< The message priority level.
+} otMessageSettings;
+
+/**
  * Free an allocated message buffer.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
