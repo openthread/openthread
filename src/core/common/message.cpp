@@ -98,7 +98,7 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserved, otMessageSettings *
     uint8_t  priority;
 
     linkSecurityEnabled = (aSettings == NULL) ? true : aSettings->mLinkSecurityEnabled;
-    priority            = (aSettings == NULL) ? Message::kPriorityNormal : aSettings->mPriority;
+    priority            = (aSettings == NULL) ? OT_MESSAGE_PRIORITY_NORMAL : aSettings->mPriority;
 
     message = New(aType, aReserved, priority);
     if (message)
