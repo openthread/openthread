@@ -64,7 +64,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 
 int main(int argc, char *argv[])
 {
-    otInstance *sInstance;
+    otInstance *instance;
 
 #if OPENTHREAD_EXAMPLES_POSIX
     if (setjmp(gResetJump))
@@ -95,25 +95,25 @@ pseudo_reset:
     assert(otInstanceBuffer);
 
     // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInitSingle();
+    instance = otInstanceInitSingle();
 #endif
-    assert(sInstance);
+    assert(instance);
 
-    otNcpInit(sInstance);
+    otNcpInit(instance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
+    otDiagInit(instance);
 #endif
 
     while (!otSysPseudoResetWasRequested())
     {
-        otTaskletsProcess(sInstance);
-        otSysProcessDrivers(sInstance);
+        otTaskletsProcess(instance);
+        otSysProcessDrivers(instance);
     }
 
-    otInstanceFinalize(sInstance);
+    otInstanceFinalize(instance);
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     free(otInstanceBuffer);
 #endif
