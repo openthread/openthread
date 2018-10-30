@@ -174,10 +174,6 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
     , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
-    , mSendHead(NULL)
-    , mSendTail(NULL)
-    , mReceiveHead(NULL)
-    , mReceiveTail(NULL)
     , mBeaconSequence(Random::GetUint8())
     , mDataSequence(Random::GetUint8())
     , mCsmaBackoffs(0)
@@ -445,24 +441,6 @@ void Mac::SampleRssi(void)
     }
 }
 
-otError Mac::RegisterReceiver(Receiver &aReceiver)
-{
-    assert(mReceiveTail != &aReceiver && aReceiver.mNext == NULL);
-
-    if (mReceiveTail == NULL)
-    {
-        mReceiveHead = &aReceiver;
-        mReceiveTail = &aReceiver;
-    }
-    else
-    {
-        mReceiveTail->mNext = &aReceiver;
-        mReceiveTail        = &aReceiver;
-    }
-
-    return OT_ERROR_NONE;
-}
-
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle);
@@ -650,23 +628,12 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError Mac::SendFrameRequest(Sender &aSender)
+otError Mac::SendFrameRequest(void)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mSendTail != &aSender && aSender.mNext == NULL, error = OT_ERROR_ALREADY);
-
-    if (mSendHead == NULL)
-    {
-        mSendHead = &aSender;
-        mSendTail = &aSender;
-    }
-    else
-    {
-        mSendTail->mNext = &aSender;
-        mSendTail        = &aSender;
-    }
+    VerifyOrExit(!mPendingTransmitData && (mOperation != kOperationTransmitData), error = OT_ERROR_ALREADY);
 
     StartOperation(kOperationTransmitData);
 
@@ -1031,7 +998,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
         aFrame.SetAesKey(keyManager.GetCurrentMacKey());
         extAddress = &mExtAddress;
 
-        // If the frame is marked as a retransmission, the `Mac::Sender` which
+        // If the frame is marked as a retransmission, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
         // same values used in the earlier transmit attempt. For a new frame (not
         // a retransmission), we get a new frame counter and key id from the key
@@ -1226,9 +1193,10 @@ void Mac::BeginTransmit(void)
 
         case kOperationTransmitData:
             sendFrame.SetChannel(mRadioChannel);
-            SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
 
-            // If the frame is marked as a retransmission, then data sequence number is already set by the `Sender`.
+            SuccessOrExit(error = GetNetif().GetMeshForwarder().HandleFrameRequest(sendFrame));
+
+            // If the frame is marked as a retransmission, then data sequence number is already set.
             if (!sendFrame.IsARetransmission())
             {
                 sendFrame.SetSequence(mDataSequence);
@@ -1531,8 +1499,6 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
 
     case kOperationTransmitData:
     {
-        Sender *sender;
-
         if (sendFrame.IsDataRequestCommand())
         {
             if (mEnabled && framePending)
@@ -1548,23 +1514,13 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
             mCounters.mTxData++;
         }
 
-        sender    = mSendHead;
-        mSendHead = mSendHead->mNext;
-
-        if (mSendHead == NULL)
-        {
-            mSendTail = NULL;
-        }
-
-        sender->mNext = NULL;
-
         if (!sendFrame.IsARetransmission())
         {
             mDataSequence++;
         }
 
         otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
-        sender->HandleSentFrame(sendFrame, aError);
+        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
         FinishOperation();
         break;
     }
@@ -1718,10 +1674,7 @@ void Mac::HandleReceiveTimer(void)
 
         FinishOperation();
 
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleDataPollTimeout();
-        }
+        GetNetif().GetMeshForwarder().GetDataPollManager().HandlePollTimeout();
     }
     else
     {
@@ -2028,8 +1981,8 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         //
         // Note that `error` is checked again later after the
         // operation `kOperationWaitingForData` is processed
-        // so the duplicate frame will not be passed to any
-        // registered `Receiver`.
+        // so the duplicate frame will not be passed to next
+        // layer (`MeshForwarder`).
 
         VerifyOrExit(mOperation == kOperationWaitingForData);
 
@@ -2160,11 +2113,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     if (receive)
     {
         otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
-
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleReceivedFrame(*aFrame);
-        }
+        netif.GetMeshForwarder().HandleReceivedFrame(*aFrame);
     }
 
 exit:

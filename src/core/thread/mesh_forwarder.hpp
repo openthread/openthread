@@ -69,6 +69,8 @@ enum
  */
 class MeshForwarder : public InstanceLocator
 {
+    friend class Mac::Mac;
+
 public:
     /**
      * This constructor initializes the object.
@@ -322,20 +324,17 @@ private:
     void     RemoveMessage(Message &aMessage);
     void     HandleDiscoverComplete(void);
 
-    static void    HandleReceivedFrame(Mac::Receiver &aReceiver, Mac::Frame &aFrame);
-    void           HandleReceivedFrame(Mac::Frame &aFrame);
-    static otError HandleFrameRequest(Mac::Sender &aSender, Mac::Frame &aFrame);
-    otError        HandleFrameRequest(Mac::Frame &aFrame);
-    static void    HandleSentFrame(Mac::Sender &aSender, Mac::Frame &aFrame, otError aError);
-    void           HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    void           HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
-    static void    HandleDiscoverTimer(Timer &aTimer);
-    void           HandleDiscoverTimer(void);
-    static void    HandleReassemblyTimer(Timer &aTimer);
-    void           HandleReassemblyTimer(void);
-    static void    ScheduleTransmissionTask(Tasklet &aTasklet);
-    void           ScheduleTransmissionTask(void);
-    static void    HandleDataPollTimeout(Mac::Receiver &aReceiver);
+    void    HandleReceivedFrame(Mac::Frame &aFrame);
+    otError HandleFrameRequest(Mac::Frame &aFrame);
+    void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
+    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
+
+    static void HandleDiscoverTimer(Timer &aTimer);
+    void        HandleDiscoverTimer(void);
+    static void HandleReassemblyTimer(Timer &aTimer);
+    void        HandleReassemblyTimer(void);
+    static void ScheduleTransmissionTask(Tasklet &aTasklet);
+    void        ScheduleTransmissionTask(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
@@ -401,10 +400,8 @@ private:
                        otLogLevel          aLogLevel);
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-    Mac::Receiver mMacReceiver;
-    Mac::Sender   mMacSender;
-    TimerMilli    mDiscoverTimer;
-    TimerMilli    mReassemblyTimer;
+    TimerMilli mDiscoverTimer;
+    TimerMilli mReassemblyTimer;
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
