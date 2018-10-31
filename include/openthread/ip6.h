@@ -370,7 +370,7 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
 /**
  * Allocate a new message buffer for sending an IPv6 message.
  *
- * If @aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

@@ -485,7 +485,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
 /**
  * This function creates a new message with a CoAP header.
  *
- * If @aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * This function only supports to set the link layer security enabled.
