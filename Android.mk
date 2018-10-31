@@ -193,6 +193,7 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
     third_party/mbedtls/repo/library/platform.c             \
+    third_party/mbedtls/repo/library/platform_util.c        \
     third_party/mbedtls/repo/library/sha256.c               \
     third_party/mbedtls/repo/library/bignum.c               \
     third_party/mbedtls/repo/library/ccm.c                  \

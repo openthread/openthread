@@ -74,6 +74,7 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform_util.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cli.c" />
