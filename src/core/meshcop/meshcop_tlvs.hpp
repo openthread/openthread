@@ -1321,7 +1321,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMaskBaseEntry
+class ChannelMaskEntryBase
 {
 public:
     /**
@@ -1362,7 +1362,7 @@ public:
      * @returns The total size of this entry (number of bytes).
      *
      */
-    uint16_t GetSize(void) const { return sizeof(ChannelMaskBaseEntry) + mMaskLength; }
+    uint16_t GetSize(void) const { return sizeof(ChannelMaskEntryBase) + mMaskLength; }
 
     /**
      * This method clears the bit corresponding to @p aChannel in ChannelMask.
@@ -1408,7 +1408,7 @@ public:
      * @returns A pointer to next Channel Mask Entry or NULL if none found.
      *
      */
-    const ChannelMaskBaseEntry *GetNext(const Tlv *aChannelMaskBaseTlv) const;
+    const ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv) const;
 
 private:
     uint8_t mChannelPage;
@@ -1420,7 +1420,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMaskEntry : public ChannelMaskBaseEntry
+class ChannelMaskEntry : public ChannelMaskEntryBase
 {
 public:
     /**
@@ -1495,14 +1495,14 @@ public:
      * @returns A pointer to first Channel Mask Entry or NULL if not found.
      *
      */
-    const ChannelMaskBaseEntry *GetFirstEntry(void) const;
+    const ChannelMaskEntryBase *GetFirstEntry(void) const;
 
     /**
-     * This method gets the Page 0 Channel Mask Entry in the Channel Mask TLV.
+     * This method gets the Channel Mask Entry in the Channel Mask TLV.
      *
      * @param[in]  aChannelPage  The ChannelPage value.
      *
-     * @returns A pointer to Page 0 Channel Mask Entry or NULL if not found.
+     * @returns A pointer to Channel Mask Entry or NULL if not found.
      *
      */
     const ChannelMaskEntry *GetMaskEntry(uint8_t aChannelPage) const;

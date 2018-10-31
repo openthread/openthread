@@ -113,21 +113,21 @@ void SteeringDataTlv::ComputeBloomFilter(const otExtAddress &aJoinerId)
     SetBit(ansi.Get() % GetNumBits());
 }
 
-const ChannelMaskBaseEntry *ChannelMaskBaseEntry::GetNext(const Tlv *aChannelMaskBaseTlv) const
+const ChannelMaskEntryBase *ChannelMaskEntryBase::GetNext(const Tlv *aChannelMaskBaseTlv) const
 {
     const uint8_t *entry = reinterpret_cast<const uint8_t *>(this) + GetSize();
     const uint8_t *end   = aChannelMaskBaseTlv->GetValue() + aChannelMaskBaseTlv->GetSize();
 
-    return (entry < end) ? reinterpret_cast<const ChannelMaskBaseEntry *>(entry) : NULL;
+    return (entry < end) ? reinterpret_cast<const ChannelMaskEntryBase *>(entry) : NULL;
 }
 
-const ChannelMaskBaseEntry *ChannelMaskBaseTlv::GetFirstEntry(void) const
+const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
-    const ChannelMaskBaseEntry *entry = NULL;
+    const ChannelMaskEntryBase *entry = NULL;
 
-    VerifyOrExit(GetLength() >= sizeof(ChannelMaskBaseEntry));
+    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase));
 
-    entry = reinterpret_cast<const ChannelMaskBaseEntry *>(GetValue());
+    entry = reinterpret_cast<const ChannelMaskEntryBase *>(GetValue());
     VerifyOrExit(GetLength() >= entry->GetSize(), entry = NULL);
 
 exit:
@@ -138,7 +138,7 @@ const ChannelMaskEntry *ChannelMaskBaseTlv::GetMaskEntry(uint8_t aChannelPage) c
 {
     const ChannelMaskEntry *pageEntry = NULL;
 
-    for (const ChannelMaskBaseEntry *entry = GetFirstEntry(); entry != NULL; entry = entry->GetNext(this))
+    for (const ChannelMaskEntryBase *entry = GetFirstEntry(); entry != NULL; entry = entry->GetNext(this))
     {
         if (entry->GetChannelPage() == aChannelPage)
         {
