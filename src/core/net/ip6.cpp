@@ -75,20 +75,41 @@ Message *Ip6::NewMessage(uint16_t aReserved, uint8_t aPriority)
 
 uint8_t Ip6::DscpToPriority(uint8_t aDscp)
 {
-    uint8_t priority = Message::kPriorityNormal;
-    uint8_t cs       = aDscp & kDscpCsMask;
+    uint8_t priority;
+    uint8_t cs = aDscp & kDscpCsMask;
 
-    if ((cs == kDscpCs1) || (cs == kDscpCs2))
+    switch (aDscp)
     {
+    case kDscpCs1:
+        // fall through
+
+    case kDscpCs2:
         priority = Message::kPriorityLow;
-    }
-    else if ((cs == kDscpCs0) || (cs == kDscpCs3))
-    {
+        break;
+
+    case kDscpCs0:
+        // fall through
+
+    case kDscpCs3:
         priority = Message::kPriorityNormal;
-    }
-    else if ((cs == kDscpCs4) || (cs == kDscpCs5) || (cs == kDscpCs6) || (cs == kDscpCs7))
-    {
+        break;
+
+    case kDscpCs4:
+        // fall through
+
+    case kDscpCs5:
+        // fall through
+
+    case kDscpCs6:
+        // fall through
+
+    case kDscpCs7:
         priority = Message::kPriorityHigh;
+        break;
+
+    default:
+        priority = Message::kPriorityNormal;
+        break;
     }
 
     return priority;

@@ -1309,7 +1309,6 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
     Lowpan::FragmentHeader fragmentHeader;
     Message *              message = NULL;
     int                    headerLength;
-    uint8_t                priority;
 
     // Check the fragment header
     VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
@@ -1318,6 +1317,8 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
+        uint8_t priority;
+
         SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
         VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
