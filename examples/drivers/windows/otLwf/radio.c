@@ -633,7 +633,7 @@ void otPlatRadioEnableSrcMatch(_In_ otInstance *otCtx, bool aEnable)
     }
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, otShortAddress aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -675,7 +675,7 @@ otError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const otExtAddres
     return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, otShortAddress aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);

@@ -419,14 +419,6 @@ public:
     otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
 
     /**
-     * This method generates a random IEEE 802.15.4 Extended Address.
-     *
-     * @param[out]  aExtAddress  A pointer to where the generated Extended Address is placed.
-     *
-     */
-    void GenerateExtAddress(ExtAddress *aExtAddress);
-
-    /**
      * This method returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
@@ -837,6 +829,7 @@ private:
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
+    void    PerformNextOperation(void);
     void    SendBeaconRequest(Frame &aFrame);
     void    SendBeacon(Frame &aFrame);
     bool    ShouldSendBeacon(void) const;
@@ -844,7 +837,6 @@ private:
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
     Frame * GetOperationFrame(void);
-    void    PerformOperation(void);
 
     static void HandleMacTimer(Timer &aTimer);
     void        HandleMacTimer(void);

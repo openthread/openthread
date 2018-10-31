@@ -582,7 +582,7 @@ void Joiner::HandleTimer(void)
     case OT_JOINER_STATE_JOINED:
         Mac::ExtAddress extAddress;
 
-        netif.GetMac().GenerateExtAddress(&extAddress);
+        extAddress.GenerateRandom();
         netif.GetMac().SetExtAddress(extAddress);
         netif.GetMle().UpdateLinkLocalAddress();
 

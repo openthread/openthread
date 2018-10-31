@@ -96,6 +96,12 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
+     * This method generates a random IEEE 802.15.4 Extended Address.
+     *
+     */
+    void GenerateRandom(void);
+
+    /**
      * This method indicates whether or not the Group bit is set.
      *
      * @retval TRUE   If the group bit is set.
@@ -107,7 +113,7 @@ public:
     /**
      * This method sets the Group bit.
      *
-     * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
+     * @param[in]  aGroup  TRUE if group address, FALSE otherwise.
      *
      */
     void SetGroup(bool aGroup)
