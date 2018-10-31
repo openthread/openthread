@@ -64,7 +64,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     otError                           error = OT_ERROR_NONE;
     Coap::Header                      header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv          channelMask;
+    MeshCoP::ChannelMaskTlv           channelMask;
     MeshCoP::CountTlv                 count;
     MeshCoP::PeriodTlv                period;
 
@@ -86,6 +86,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
+    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
     channelMask.SetMask(aChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
 
