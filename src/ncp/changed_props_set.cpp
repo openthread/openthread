@@ -90,7 +90,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_JOIN_SUCCESS, false},     // 33
 #endif
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false},       // 34
+    {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false}, // 34
 #endif
 };
 
