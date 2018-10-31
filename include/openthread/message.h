@@ -92,7 +92,8 @@ typedef struct otBufferInfo
  * This enumeration defines the Openthread message priority levels.
  *
  */
-typedef enum otMessagePriority {
+typedef enum otMessagePriority
+{
     OT_MESSAGE_PRIORITY_LOW    = 0, ///< Low priority level.
     OT_MESSAGE_PRIORITY_NORMAL = 1, ///< Normal priority level.
     OT_MESSAGE_PRIORITY_HIGH   = 2, ///< High priority level.
