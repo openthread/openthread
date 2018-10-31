@@ -829,6 +829,7 @@ private:
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
+    void    PerformNextOperation(void);
     void    SendBeaconRequest(Frame &aFrame);
     void    SendBeacon(Frame &aFrame);
     bool    ShouldSendBeacon(void) const;
@@ -836,7 +837,6 @@ private:
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
     Frame * GetOperationFrame(void);
-    void    PerformOperation(void);
 
     static void HandleMacTimer(Timer &aTimer);
     void        HandleMacTimer(void);
