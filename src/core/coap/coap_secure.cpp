@@ -32,6 +32,7 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/new.hpp"
 #include "common/owner-locator.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
@@ -52,24 +53,17 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
-    , mTransmitMessage(NULL)
-    , mTransmitTask(aInstance, &CoapSecure::HandleUdpTransmit, this)
     , mLayerTwoSecurity(false)
 {
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-CoapSecure::CoapSecure(Instance &       aInstance,
-                       Tasklet::Handler aUdpTransmitHandle,
-                       Timer::Handler   aRetransmissionTimer,
-                       Timer::Handler   aResponsesQueueTimer)
+CoapSecure::CoapSecure(Instance &aInstance, Timer::Handler aRetransmissionTimer, Timer::Handler aResponsesQueueTimer)
     : CoapBase(aInstance, aRetransmissionTimer, aResponsesQueueTimer)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
-    , mTransmitMessage(NULL)
-    , mTransmitTask(aInstance, aUdpTransmitHandle, this)
     , mLayerTwoSecurity(true)
 {
 }
@@ -104,12 +98,6 @@ otError CoapSecure::Stop(void)
     if (IsConnectionActive())
     {
         Disconnect();
-    }
-
-    if (mTransmitMessage != NULL)
-    {
-        mTransmitMessage->Free();
-        mTransmitMessage = NULL;
     }
 
     mTransportCallback = NULL;
@@ -329,64 +317,38 @@ otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 
 otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error   = OT_ERROR_NONE;
+    Message *message = NULL;
 
-    if (mTransmitMessage == NULL)
-    {
-        VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
-        mTransmitMessage->SetSubType(aMessageSubType);
-        mTransmitMessage->SetLinkSecurityEnabled(mLayerTwoSecurity);
-    }
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetSubType(aMessageSubType);
+    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 
-    SuccessOrExit(error = mTransmitMessage->Append(aBuf, aLength));
+    SuccessOrExit(error = message->Append(aBuf, aLength));
 
     // Set message sub type in case Joiner Finalize Response is appended to the message.
     if (aMessageSubType != Message::kSubTypeNone)
     {
-        mTransmitMessage->SetSubType(aMessageSubType);
+        message->SetSubType(aMessageSubType);
     }
-
-    mTransmitTask.Post();
-
-exit:
-
-    if (error != OT_ERROR_NONE && mTransmitMessage != NULL && mTransmitMessage->GetLength() == 0)
-    {
-        mTransmitMessage->Free();
-        mTransmitMessage = NULL;
-    }
-
-    return error;
-}
-
-void CoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<CoapSecure>().HandleUdpTransmit();
-}
-
-void CoapSecure::HandleUdpTransmit(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mTransmitMessage != NULL, error = OT_ERROR_NO_BUFS);
 
     if (mTransportCallback)
     {
-        SuccessOrExit(error = mTransportCallback(mTransportContext, *mTransmitMessage, mPeerAddress));
+        SuccessOrExit(error = mTransportCallback(mTransportContext, *message, mPeerAddress));
     }
     else
     {
-        SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, mPeerAddress));
+        SuccessOrExit(error = mSocket.SendTo(*message, mPeerAddress));
     }
 
 exit:
 
-    if (error != OT_ERROR_NONE && mTransmitMessage != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
-        mTransmitMessage->Free();
+        message->Free();
     }
 
-    mTransmitMessage = NULL;
+    return error;
 }
 
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
@@ -403,15 +365,9 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 
 ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
     : CoapSecure(aInstance,
-                 &ApplicationCoapSecure::HandleUdpTransmit,
                  &ApplicationCoapSecure::HandleRetransmissionTimer,
                  &ApplicationCoapSecure::HandleResponsesQueueTimer)
 {
-}
-
-void ApplicationCoapSecure::HandleUdpTransmit(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<ApplicationCoapSecure>().CoapSecure::HandleUdpTransmit();
 }
 
 void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
