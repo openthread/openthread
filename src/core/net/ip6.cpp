@@ -78,7 +78,7 @@ uint8_t Ip6::DscpToPriority(uint8_t aDscp)
     uint8_t priority;
     uint8_t cs = aDscp & kDscpCsMask;
 
-    switch (aDscp)
+    switch (cs)
     {
     case kDscpCs1:
         // fall through
