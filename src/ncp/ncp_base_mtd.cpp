@@ -2633,6 +2633,7 @@ void NcpBase::HandleTimeSyncUpdate(int64_t aNetworkTimeOffsetDelta)
     mUpdateChangedPropsTask.Post();
 
 exit:
+    return;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
