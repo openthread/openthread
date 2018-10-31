@@ -2627,23 +2627,12 @@ void NcpBase::HandleTimeSyncUpdate(void *aContext, int64_t aNetworkTimeOffsetDel
 
 void NcpBase::HandleTimeSyncUpdate(int64_t aNetworkTimeOffsetDelta)
 {
-    otError error = OT_ERROR_NONE;
-
     VerifyOrExit(ABS(aNetworkTimeOffsetDelta) >= OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US);
 
-    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
-                                              SPINEL_PROP_THREAD_NETWORK_TIME));
-
-    SuccessOrExit(error = HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>());
-    SuccessOrExit(error = mEncoder.EndFrame());
+    mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
+    mUpdateChangedPropsTask.Post();
 
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        mUpdateChangedPropsTask.Post();
-    }
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
