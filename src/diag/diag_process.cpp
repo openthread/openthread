@@ -44,39 +44,33 @@
 namespace ot {
 namespace Diagnostics {
 
-const struct Diag::Command Diag::sCommands[] =
-{
-    { "start", &ProcessStart },
-    { "stop", &ProcessStop },
-    { "channel", &ProcessChannel },
-    { "power", &ProcessPower },
-    { "send", &ProcessSend },
-    { "repeat", &ProcessRepeat },
-    { "stats", &ProcessStats },
-    { NULL, NULL },
+const struct Diag::Command Diag::sCommands[] = {
+    {"start", &ProcessStart}, {"stop", &ProcessStop},     {"channel", &ProcessChannel}, {"power", &ProcessPower},
+    {"send", &ProcessSend},   {"repeat", &ProcessRepeat}, {"stats", &ProcessStats},     {NULL, NULL},
 };
 
 struct Diag::DiagStats Diag::sStats;
 
-int8_t Diag::sTxPower;
-uint8_t Diag::sChannel;
-uint8_t Diag::sTxLen;
-uint32_t Diag::sTxPeriod;
-uint32_t Diag::sTxPackets;
-otRadioFrame * Diag::sTxPacket;
-bool Diag::sRepeatActive;
-otInstance *Diag::sInstance;
+int8_t        Diag::sTxPower;
+uint8_t       Diag::sChannel;
+uint8_t       Diag::sTxLen;
+uint32_t      Diag::sTxPeriod;
+uint32_t      Diag::sTxPackets;
+otRadioFrame *Diag::sTxPacket;
+bool          Diag::sRepeatActive;
+otInstance *  Diag::sInstance;
 
 void Diag::Init(otInstance *aInstance)
 {
-    sInstance = aInstance;
-    sChannel = 20;
-    sTxPower = 0;
-    sTxPeriod = 0;
-    sTxLen = 0;
-    sTxPackets = 0;
+    sInstance     = aInstance;
+    sChannel      = 20;
+    sTxPower      = 0;
+    sTxPeriod     = 0;
+    sTxLen        = 0;
+    sTxPackets    = 0;
     sRepeatActive = false;
     memset(&sStats, 0, sizeof(struct DiagStats));
+
     sTxPacket = otPlatRadioGetTransmitBuffer(sInstance);
     otPlatDiagChannelSet(sChannel);
     otPlatDiagTxPowerSet(sTxPower);
@@ -170,7 +164,7 @@ otError Diag::ParseLong(char *aArgVector, long &aValue)
 
 void Diag::TxPacket(void)
 {
-    sTxPacket->mLength = sTxLen;
+    sTxPacket->mLength  = sTxLen;
     sTxPacket->mChannel = sChannel;
 
     for (uint8_t i = 0; i < sTxLen; i++)
@@ -184,7 +178,6 @@ void Diag::TxPacket(void)
 void Diag::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
-
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
@@ -239,7 +232,7 @@ exit:
 void Diag::ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(aArgCount == 2, error = OT_ERROR_INVALID_ARGS);
@@ -286,7 +279,7 @@ void Diag::ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_
         sTxLen = static_cast<uint8_t>(value);
 
         sRepeatActive = true;
-        uint32_t now = otPlatAlarmMilliGetNow();
+        uint32_t now  = otPlatAlarmMilliGetNow();
         otPlatAlarmMilliStartAt(sInstance, now, sTxPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n",
                  static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
@@ -307,8 +300,8 @@ void Diag::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t
 
     snprintf(aOutput, aOutputMaxLen,
              "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
-            static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
-            static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
+             static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
+             static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -347,7 +340,7 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
         if (sStats.mReceivedPackets == 0)
         {
             sStats.mFirstRssi = aFrame->mInfo.mRxInfo.mRssi;
-            sStats.mFirstLqi = aFrame->mInfo.mRxInfo.mLqi;
+            sStats.mFirstLqi  = aFrame->mInfo.mRxInfo.mLqi;
         }
 
         sStats.mReceivedPackets++;
@@ -362,7 +355,7 @@ void Diag::AlarmFired(otInstance *aInstance)
 {
     VerifyOrExit(aInstance == sInstance);
 
-    if(sRepeatActive)
+    if (sRepeatActive)
     {
         uint32_t now = otPlatAlarmMilliGetNow();
 
@@ -395,5 +388,5 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *
     Diag::DiagReceiveDone(aInstance, aFrame, aError);
 }
 
-}  // namespace Diagnostics
-}  // namespace ot
+} // namespace Diagnostics
+} // namespace ot
