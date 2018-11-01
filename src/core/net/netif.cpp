@@ -82,18 +82,14 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
     : InstanceLocator(aInstance)
+    , mNext(NULL)
     , mUnicastAddresses(NULL)
     , mMulticastAddresses(NULL)
     , mInterfaceId(aInterfaceId)
     , mMulticastPromiscuous(false)
-    , mNext(NULL)
+    , mInternalDynamicUnicastsNumber(0)
+    , mExternalDynamicUnicastsNumber(0)
 {
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtUnicastAddresses); i++)
-    {
-        // To mark the address as unused/available, set the `mNext` to point back to itself.
-        mExtUnicastAddresses[i].mNext = &mExtUnicastAddresses[i];
-    }
-
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtMulticastAddresses); i++)
     {
         // To mark the address as unused/available, set the `mNext` to point back to itself.
@@ -424,15 +420,17 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    size_t               num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
+    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
 
+    fprintf(stderr, "adding address\r\n");
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
-            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
+            VerifyOrExit(entry >= &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber] &&
+                             entry < &mDynamicUnicasts[num],
                          error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
@@ -442,17 +440,9 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    // Find an available entry in the `mExtUnicastAddresses` array.
-    for (entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
-    {
-        // In an unused/available entry, `mNext` points back to the entry itself.
-        if (entry->mNext == entry)
-        {
-            break;
-        }
-    }
-
-    VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(mInternalDynamicUnicastsNumber + mExternalDynamicUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
+    ++mExternalDynamicUnicastsNumber;
+    entry = &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber];
 
     // Copy the new address into the available entry and insert it in linked-list.
     *entry            = aAddress;
@@ -467,37 +457,55 @@ exit:
 
 otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
-    otError              error = OT_ERROR_NONE;
+    otError              error  = OT_ERROR_NONE;
+    NetifUnicastAddress *prev   = NULL;
+    NetifUnicastAddress *target = NULL;
     NetifUnicastAddress *entry;
-    NetifUnicastAddress *last = NULL;
-    size_t               num  = OT_ARRAY_LENGTH(mExtUnicastAddresses);
+    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
 
+    VerifyOrExit(mExternalDynamicUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
+
+    // Find target to remove
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
-            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
+            VerifyOrExit(entry >= &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber] &&
+                             entry < &mDynamicUnicasts[num],
                          error = OT_ERROR_INVALID_ARGS);
 
-            if (last)
-            {
-                last->mNext = entry->mNext;
-            }
-            else
-            {
-                mUnicastAddresses = entry->GetNext();
-            }
-
+            target = entry;
             break;
         }
-
-        last = entry;
     }
 
     VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
-    // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
-    entry->mNext = entry;
+    // Find previous entry of the top entry of internal addresses stack
+    for (entry = mUnicastAddresses; entry != &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber];
+         entry = entry->GetNext())
+    {
+        prev = entry;
+    }
+
+    --mExternalDynamicUnicastsNumber;
+
+    // Remove the top entry from list
+    if (prev == NULL)
+    {
+        mUnicastAddresses = entry->GetNext();
+    }
+    else
+    {
+        prev->mNext = entry->GetNext();
+    }
+
+    // Replace value of target with value of top entry
+    if (target != entry)
+    {
+        entry->mNext = target->GetNext();
+        *target      = *entry;
+    }
 
     GetNotifier().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
 
@@ -505,17 +513,19 @@ exit:
     return error;
 }
 
-void Netif::RemoveAllExternalUnicastAddresses(void)
+void Netif::RemoveAllDynamicUnicastAddresses(void)
 {
-    size_t num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
-
-    for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
+    for (NetifUnicastAddress *entry =
+             &mDynamicUnicasts[OT_ARRAY_LENGTH(mDynamicUnicasts) - mExternalDynamicUnicastsNumber];
+         mExternalDynamicUnicastsNumber > 0; entry++)
     {
-        // In unused entries, the `mNext` points back to the entry itself.
-        if (entry->mNext != entry)
-        {
-            RemoveExternalUnicastAddress(entry->GetAddress());
-        }
+        RemoveExternalUnicastAddress(entry->GetAddress());
+    }
+
+    for (NetifUnicastAddress *entry = &mDynamicUnicasts[mInternalDynamicUnicastsNumber - 1];
+         mInternalDynamicUnicastsNumber > 0; entry--)
+    {
+        RemoveInternalUnicastAddress(entry->GetAddress());
     }
 }
 
@@ -533,6 +543,99 @@ bool Netif::IsUnicastAddress(const Address &aAddress) const
 
 exit:
     return rval;
+}
+
+otError Netif::AddInternalUnicastAddress(const NetifUnicastAddress &aAddress)
+{
+    otError              error = OT_ERROR_NONE;
+    NetifUnicastAddress *entry;
+    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
+
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
+
+    for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
+    {
+        if (entry->GetAddress() == aAddress.GetAddress())
+        {
+            VerifyOrExit(entry >= &mDynamicUnicasts[0] && entry < &mDynamicUnicasts[mInternalDynamicUnicastsNumber],
+                         error = OT_ERROR_INVALID_ARGS);
+
+            entry->mPrefixLength = aAddress.mPrefixLength;
+            entry->mPreferred    = aAddress.mPreferred;
+            entry->mValid        = aAddress.mValid;
+            ExitNow();
+        }
+    }
+
+    VerifyOrExit(mInternalDynamicUnicastsNumber + mExternalDynamicUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
+
+    entry = &mDynamicUnicasts[mInternalDynamicUnicastsNumber++];
+
+    // Copy the new address into the available entry and insert it in linked-list.
+    *entry            = aAddress;
+    entry->mNext      = mUnicastAddresses;
+    mUnicastAddresses = entry;
+
+    GetNotifier().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+
+exit:
+    return error;
+}
+
+otError Netif::RemoveInternalUnicastAddress(const Address &aAddress)
+{
+    otError              error  = OT_ERROR_NONE;
+    NetifUnicastAddress *prev   = NULL;
+    NetifUnicastAddress *target = NULL;
+    NetifUnicastAddress *entry;
+
+    VerifyOrExit(mInternalDynamicUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
+
+    // Find target to remove
+    for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
+    {
+        if (entry->GetAddress() == aAddress)
+        {
+            VerifyOrExit(entry >= &mDynamicUnicasts[0] && entry < &mDynamicUnicasts[mInternalDynamicUnicastsNumber],
+                         error = OT_ERROR_INVALID_ARGS);
+
+            target = entry;
+            break;
+        }
+    }
+
+    VerifyOrExit(target != NULL, error = OT_ERROR_NOT_FOUND);
+
+    --mInternalDynamicUnicastsNumber;
+
+    // Find previous entry of the top entry of internal addresses stack
+    for (entry = mUnicastAddresses; entry != &mDynamicUnicasts[mInternalDynamicUnicastsNumber];
+         entry = entry->GetNext())
+    {
+        prev = entry;
+    }
+
+    // Remove the top entry from list
+    if (prev == NULL)
+    {
+        mUnicastAddresses = entry->GetNext();
+    }
+    else
+    {
+        prev->mNext = entry->GetNext();
+    }
+
+    // Replace value of target with value of top entry
+    if (target != entry)
+    {
+        entry->mNext = target->GetNext();
+        *target      = *entry;
+    }
+
+    GetNotifier().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
+
+exit:
+    return error;
 }
 
 } // namespace Ip6

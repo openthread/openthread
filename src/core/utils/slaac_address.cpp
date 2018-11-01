@@ -35,11 +35,11 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/ip6.h>
 #include <openthread/netdata.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/random.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac.hpp"
@@ -87,7 +87,8 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
 
         if (!found)
         {
-            otIp6RemoveUnicastAddress(aInstance, &address->mAddress);
+            static_cast<Instance *>(aInstance)->GetThreadNetif().RemoveInternalUnicastAddress(
+                *static_cast<Ip6::Address *>(&address->mAddress));
             address->mValid = false;
         }
     }
@@ -116,7 +117,8 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
             if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
                 config.mPrefix.mLength == address->mPrefixLength)
             {
-                otIp6AddUnicastAddress(aInstance, address);
+                static_cast<Instance *>(aInstance)->GetThreadNetif().AddInternalUnicastAddress(
+                    *static_cast<Ip6::NetifUnicastAddress *>(address));
                 found = true;
                 break;
             }
@@ -145,7 +147,8 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
                     CreateRandomIid(aInstance, address, aContext);
                 }
 
-                otIp6AddUnicastAddress(aInstance, address);
+                static_cast<Instance *>(aInstance)->GetThreadNetif().AddInternalUnicastAddress(
+                    *static_cast<Ip6::NetifUnicastAddress *>(address));
                 break;
             }
         }
