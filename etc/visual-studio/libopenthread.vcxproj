@@ -95,6 +95,7 @@
     <ClCompile Include="..\..\src\core\crypto\mbedtls.cpp" />
     <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
+    <ClCompile Include="..\..\src\core\mac\channel_mask.cpp" />
     <ClCompile Include="..\..\src\core\mac\link_raw.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_filter.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp" />
     <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h" />
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
+    <ClInclude Include="..\..\src\core\mac\channel_mask.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_filter.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp" />

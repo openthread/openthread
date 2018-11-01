@@ -152,6 +152,7 @@ SOURCES_COMMON                      = \
     crypto/mbedtls.cpp                \
     crypto/pbkdf2_cmac.cpp            \
     crypto/sha256.cpp                 \
+    mac/channel_mask.cpp              \
     mac/link_raw.cpp                  \
     mac/mac.cpp                       \
     mac/mac_filter.cpp                \
@@ -310,6 +311,7 @@ HEADERS_COMMON                      = \
     crypto/mbedtls.hpp                \
     crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
+    mac/channel_mask.hpp              \
     mac/link_raw.hpp                  \
     mac/mac.hpp                       \
     mac/mac_filter.hpp                \
