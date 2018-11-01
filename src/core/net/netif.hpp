@@ -210,6 +210,15 @@ public:
     int8_t GetInterfaceId(void) const { return mInterfaceId; }
 
     /**
+     * This method registers a callback to notify internal IPv6 address changes.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when an IPv6 address is added or removed.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     */
+    void SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackContext);
+
+    /**
      * This method returns a pointer to the list of unicast addresses.
      *
      * @returns A pointer to the list of unicast addresses.
@@ -463,11 +472,19 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
+    enum
+    {
+        kMulticastPrefixLength = 128, ///< Multicast prefix length used to notify internal address changes.
+    };
+
     NetifUnicastAddress *  mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
     int8_t                 mInterfaceId;
     bool                   mMulticastPromiscuous;
     Netif *                mNext;
+
+    otIp6AddressCallback mAddressCallback;
+    void *               mAddressCallbackContext;
 
     NetifUnicastAddress   mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];

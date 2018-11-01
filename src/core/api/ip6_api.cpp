@@ -170,6 +170,13 @@ void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallba
     instance.GetIp6().SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
+void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.GetThreadNetif().SetAddressCallback(aCallback, aCallbackContext);
+}
+
 bool otIp6IsReceiveFilterEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
