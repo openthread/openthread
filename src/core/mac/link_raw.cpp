@@ -361,6 +361,18 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
 
     VerifyOrExit(mTransmitDoneCallback != NULL);
 
+    switch (aError)
+    {
+    case OT_ERROR_NONE:
+    case OT_ERROR_NO_ACK:
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+    case OT_ERROR_ABORT:
+        break;
+    default:
+        aError = OT_ERROR_ABORT;
+        break;
+    }
+
     mTransmitDoneCallback(&GetInstance(), aFrame, aAckFrame, aError);
 
 exit:
