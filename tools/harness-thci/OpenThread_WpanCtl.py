@@ -117,7 +117,7 @@ class OpenThread_WpanCtl(IThci):
 
             if not line:
                 retry_times -= 1
-                time.sleep(1)
+                time.sleep(0.1)
 
             times -= 1
 
@@ -221,7 +221,7 @@ class OpenThread_WpanCtl(IThci):
 
             line = None
             response = []
-            retry_times = 10
+            retry_times = 20
             stdout_lines = []
             stderr_lines = []
             if self._is_net:
@@ -253,19 +253,16 @@ class OpenThread_WpanCtl(IThci):
                     logging.info('%s: the read line is[%s]', self.port, line)
                     if line:
                         response.append(line)
-                        print "response: %s" % response
                         if re.match(WPAN_CARRIER_PROMPT, line):
                             break
                         elif re.search(r'Not\s+Found|failed\s+with\s+error', line, re.M | re.I):
                             print "Command failed"
                             return 'Fail'
-                        else:
-                            retry_times -= 1
-                            time.sleep(0.2)
-                    else:
-                        retry_times -= 1
-                        time.sleep(1)
-                if not re.match(WPAN_CARRIER_PROMPT, line):
+
+                    retry_times -= 1
+                    time.sleep(0.1)
+
+                if retry_times == 0:
                     raise Exception('%s: failed to find end of response' % self.port)
                 logging.info('%s: send command[%s] done!', self.port, cmd)
                 return response
@@ -742,22 +739,53 @@ class OpenThread_WpanCtl(IThci):
     def _connect(self):
         if self.connectType == 'usb':
             print 'My port is %s' % self.port
-            self.handle = serial.Serial(self.port, 115200, timeout=0.1)
-            input_data = self.handle.read(self.handle.inWaiting())
-            if not input_data:
-                self.handle.write('\n')
-                time.sleep(3)
-                input_data = self.handle.read(self.handle.inWaiting())
-            if 'login' in input_data:
-                self.handle.write(WPAN_CARRIER_USER + '\n')
-                time.sleep(3)
-                input_data = self.handle.read(self.handle.inWaiting())
-                if 'Password' in input_data:
-                    self.handle.write(WPAN_CARRIER_PASSWD + '\n')
+            try:
+                self.handle = serial.Serial(self.port, 115200, timeout=0.2)
+            except Exception as e:
+                ModuleHelper.WriteIntoDebugLogger('open serial error ' + str(e))
+
+            try:
+                attempts = 0
+                user_prompted = False
+                pwd_prompted = False
+                while attempts < 10 or pwd_prompted == True:
+                    time.sleep(0.5)
+                    attempts = attempts + 1
+                    print 'attempts...', attempts
+
                     input_data = self.handle.read(self.handle.inWaiting())
-            self.handle.write('stty cols 128\n')
-            time.sleep(3)
-            self._is_net = False
+
+                    if (not input_data):
+                        if user_prompted == False:
+                            self.handle.write('\n')
+                        time.sleep(0.5)
+                        continue;
+
+                    if 'login' in input_data:
+                        self.handle.write(WPAN_CARRIER_USER + '\n')
+                        time.sleep(0.3)
+                        print 'user prompted'
+                        user_prompted = True
+
+                    elif 'Password' in input_data:
+                        print 'password prompted'
+                        time.sleep(0.3)
+                        self.handle.write(WPAN_CARRIER_PASSWD + '\n')
+                        pwd_prompted = True
+
+                    elif WPAN_CARRIER_PROMPT in input_data:
+                        print 'login success (serial)'
+                        time.sleep(0.3)
+                        self.deviceConnected = True
+                        self.handle.write('stty cols 128\n')
+                        time.sleep(1)
+                        break
+                if self.deviceConnected == False:
+                    raise Exception('login fail')
+                else:
+                    self._is_net = False
+            except Exception as e:
+                ModuleHelper.WriteIntoDebugLogger('connect to serial Error: ' + str(e))
 
         elif self.connectType == 'ip':
             print "My IP: %s Port: %s" % (self.dutIpv4, self.dutPort)
@@ -766,13 +794,15 @@ class OpenThread_WpanCtl(IThci):
                 self.handle = paramiko.SSHClient()
                 self.handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 self.handle.connect(self.dutIpv4, port=self.dutPort, username=WPAN_CARRIER_USER, password=WPAN_CARRIER_PASSWD)
-                self.handle.exec_command("stty cols 128")
+                print 'login success (ssh)'
+                self.deviceConnected = True
+                self.handle.exec_command('stty cols 128\n')
+                time.sleep(1)
                 self._is_net = True
             except Exception as e:
                 ModuleHelper.WriteIntoDebugLogger('connect to ssh Error: ' + str(e))
         else:
             raise Exception('Unknown port schema')
-        self.UIStatusMsg = self.getVersionNumber()
 
     def closeConnection(self):
         """close current serial port connection"""
@@ -791,17 +821,20 @@ class OpenThread_WpanCtl(IThci):
             # init serial port
             self.deviceConnected = False
             self._connect()
-            self.__sendCommand(WPANCTL_CMD + 'leave')
-            self.__sendCommand(WPANCTL_CMD + 'dataset erase')
 
-            if self.firmwarePrefix in self.UIStatusMsg:
-                self.deviceConnected = True
+            if self.deviceConnected:
+                self.UIStatusMsg = self.getVersionNumber()
+                if self.firmwarePrefix not in self.UIStatusMsg:
+                    self.deviceConnected = False
+                    self.UIStatusMsg = 'Firmware Not Matching Expecting ' + self.firmwarePrefix + ' Now is ' + self.UIStatusMsg
+                    raise Exception('Err: OpenThread device Firmware not matching..')
+                self.__sendCommand(WPANCTL_CMD + 'leave')
+                self.__sendCommand(WPANCTL_CMD + 'dataset erase')
             else:
-                self.UIStatusMsg = "Firmware Not Matching Expecting " + self.firmwarePrefix + " Now is " + self.UIStatusMsg
-                ModuleHelper.WriteIntoDebugLogger("Err: OpenThread device Firmware not matching..")
+                raise Exception('Err: Device not connected ..')
+
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('intialize() Error: ' + str(e))
-            self.deviceConnected = False
 
     def setNetworkName(self, networkName='GRL'):
         """set Thread Network name
@@ -1292,9 +1325,12 @@ class OpenThread_WpanCtl(IThci):
         print '%s call ping' % self.port
         print 'destination: %s' %destination
         try:
-            cmd = 'ping %s  -c 5 -s %s -I %s'  % (destination, str(length), WPAN_INTERFACE)
-            self._sendline(cmd)
-            self._expect(cmd)
+            cmd = 'ping %s -c 1 -s %s -I %s'  % (destination, str(length), WPAN_INTERFACE)
+            if self._is_net:
+                ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(cmd)
+            else:
+                self._sendline(cmd)
+                self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
@@ -1311,9 +1347,12 @@ class OpenThread_WpanCtl(IThci):
         print '%s call multicast_Ping' % self.port
         print 'destination: %s' % destination
         try:
-            cmd = 'ping %s -c 5 -s %s -I %s' % (destination, str(length), WPAN_INTERFACE)
-            self._sendline(cmd)
-            self._expect(cmd)
+            cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length), WPAN_INTERFACE)
+            if self._is_net:
+                ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(cmd)
+            else:
+                self._sendline(cmd)
+                self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
