@@ -830,6 +830,35 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM_UDP], [test "${enable_platform_udp}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_PLATFORM_UDP], [${OPENTHREAD_ENABLE_PLATFORM_UDP}], [Define to 1 to enable platform UDP.])
 
 #
+# Platform Netif
+#
+
+AC_ARG_ENABLE(platform_netif,
+    [AS_HELP_STRING([--enable-platform-netif],[Enable platform Netif support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+        no|yes)
+            enable_platform_netif=${enableval}
+            ;;
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_platform_netif} for --enable-platform-netif])
+            ;;
+        esac
+    ],
+    [enable_platform_netif=no])
+
+if test "$enable_platform_netif" = "yes"; then
+    OPENTHREAD_ENABLE_PLATFORM_NETIF=1
+else
+    OPENTHREAD_ENABLE_PLATFORM_NETIF=0
+fi
+
+AC_MSG_RESULT(${enable_platform_netif})
+AC_SUBST(OPENTHREAD_ENABLE_PLATFORM_NETIF)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM_NETIF], [test "${enable_platform_netif}" = 'yes'])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_PLATFORM_NETIF], [${OPENTHREAD_ENABLE_PLATFORM_NETIF}], [Define to 1 to enable platform Netif.])
+
+#
 # Thread Commissioner
 #
 

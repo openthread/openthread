@@ -232,6 +232,34 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
+ * This function initializes platform netif.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ *
+ */
+void platformNetifInit(otInstance *aInstance);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by platform netif module.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+
+/**
+ * This function performs platform netif processing.
+ *
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
+ *
+ */
+void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
+
+/**
  * This function restores the Uart.
  *
  */
@@ -337,8 +365,10 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 /**
  * This function initializes platform UDP driver.
  *
+ * @param[in]   aIfName   The name of Thread's platform network interface.
+ *
  */
-void platformUdpInit(void);
+void platformUdpInit(const char *aIfName);
 
 /**
  * This function performs platform UDP driver processing.

@@ -73,6 +73,10 @@ ifeq ($(COVERAGE),1)
 configure_OPTIONS              += --enable-coverage
 endif
 
+ifeq ($(PLATFORM_NETIF),1)
+configure_OPTIONS              += --enable-platform-netif
+endif
+
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../..
 

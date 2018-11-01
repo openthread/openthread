@@ -144,8 +144,8 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig);
     platformRandomInit();
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
-    platformUdpInit();
+#if OPENTHREAD_ENABLE_PLATFORM_UDP && OPENTHREAD_ENABLE_PLATFORM_NETIF == 0
+    platformUdpInit(getenv("PLATFORM_NETIF"));
 #endif
 
     instance = otInstanceInitSingle();
@@ -163,6 +163,13 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
 
     return instance;
 }
+
+#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+void otSysInitNetif(otInstance *aInstance)
+{
+    platformNetifInit(aInstance);
+}
+#endif
 
 void otSysDeinit(void)
 {
@@ -222,6 +229,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd);
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     platformUdpUpdateFdSet(aInstance, &readFdSet, &maxFd);
+#endif
+#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+    platformNetifUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     otSimUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd, &timeout);
@@ -283,6 +293,9 @@ void otSysProcessDrivers(otInstance *aInstance)
 #endif
     platformUartProcess(&readFdSet, &writeFdSet, &errorFdSet);
     platformAlarmProcess(aInstance);
+#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+    platformNetifProcess(&readFdSet, &writeFdSet, &errorFdSet);
+#endif
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     platformUdpProcess(aInstance, &readFdSet);
 #endif
