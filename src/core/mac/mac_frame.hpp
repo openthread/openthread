@@ -1072,6 +1072,14 @@ public:
     void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
 
     /**
+     * This method gets the CSMA-CA enabled attribute.
+     *
+     * @returns  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
+     *
+     */
+    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
+
+    /**
      * This method returns the key used for frame encryption and authentication (AES CCM).
      *
      * @returns The pointer to the key.

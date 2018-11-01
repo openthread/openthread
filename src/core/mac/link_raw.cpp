@@ -49,6 +49,8 @@
 
 namespace ot {
 
+namespace Mac {
+
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperationTask(aInstance, &LinkRaw::HandleOperationTask, this)
@@ -62,18 +64,19 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mEnergyScanTimer(aInstance, &LinkRaw::HandleTimer, this)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+    , mCsmaBackoffs(0)
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     , mTransmitRetries(0)
-    , mCsmaBackoffs(0)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mReceiveDoneCallback(NULL)
     , mTransmitDoneCallback(NULL)
     , mEnergyScanDoneCallback(NULL)
+    , mTransmitFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
+    , mRadioCaps(otPlatRadioGetCaps(&aInstance))
 {
-    // Query the capabilities to check asserts
-    mRadioCaps     = otPlatRadioGetCaps(&GetInstance());
-    mTransmitFrame = otPlatRadioGetTransmitBuffer(&GetInstance());
 }
 
 void LinkRaw::HandleOperationTask(Tasklet &aTasklet)
@@ -241,7 +244,7 @@ void LinkRaw::InvokeReceiveDone(otRadioFrame *aFrame, otError aError)
 void LinkRaw::StartTransmit(void)
 {
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-    if ((mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) == 0 && mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled)
+    if ((mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) == 0 && mTransmitFrame->IsCsmaCaEnabled())
     {
         StartCsmaBackoff();
     }
@@ -272,11 +275,18 @@ otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 
     mTransmitDoneCallback = aCallback;
 
+    mTransmitFrame->SetCsmaCaEnabled(true);
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
+    {
+        mCsmaBackoffs = 0;
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
     {
         mTransmitRetries = 0;
-        mCsmaBackoffs    = 0;
     }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
@@ -306,8 +316,8 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
     }
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+    if ((mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) == 0)
     {
         if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
         {
@@ -322,12 +332,24 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
         {
             mCsmaBackoffs = 0;
         }
+    }
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
+    {
         if (aError != OT_ERROR_NONE)
         {
             if (mTransmitRetries < aFrame->mInfo.mTxInfo.mMaxFrameRetries)
             {
                 mTransmitRetries++;
+#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+                if ((mTransmitFrame->GetMaxFrameRetries() > 0) &&
+                    (mTransmitFrame->GetMaxFrameRetries() <= mTransmitRetries))
+                {
+                    mTransmitFrame->SetCsmaCaEnabled(false);
+                }
+#endif
                 ExitNow(StartTransmit());
             }
         }
@@ -394,11 +416,11 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     // If we are implementing the ACK timeout logic, start a timer here (if ACK request)
     // to fire if we don't get a transmit done callback in time.
-    if ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0 && static_cast<Mac::Frame *>(aFrame)->GetAckRequest())
+    if ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0 && static_cast<Frame *>(aFrame)->GetAckRequest())
     {
         otLogDebgPlat("LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
-        mTimer.Start(Mac::kAckTimeout);
+        mTimer.Start(kAckTimeout);
     }
 #else
     OT_UNUSED_VARIABLE(aFrame);
@@ -478,16 +500,16 @@ void LinkRaw::HandleTimer(void)
 
 void LinkRaw::StartCsmaBackoff(void)
 {
-    uint32_t backoffExponent = Mac::kMinBE + mTransmitRetries + mCsmaBackoffs;
+    uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
     uint32_t backoff;
 
-    if (backoffExponent > Mac::kMaxBE)
+    if (backoffExponent > kMaxBE)
     {
-        backoffExponent = Mac::kMaxBE;
+        backoffExponent = kMaxBE;
     }
 
     backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
-    backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
+    backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
     otLogDebgPlat("LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonCsmaBackoffComplete;
@@ -529,27 +551,31 @@ void LinkRaw::HandleEnergyScanTimer(void)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
+} // namespace Mac
+
+} // namespace ot
+
 #if OPENTHREAD_RADIO
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    static_cast<Instance *>(aInstance)->GetLinkRaw().InvokeReceiveDone(aFrame, aError);
+    static_cast<ot::Instance *>(aInstance)->GetLinkRaw().InvokeReceiveDone(aFrame, aError);
 }
 
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    static_cast<Instance *>(aInstance)->GetLinkRaw().InvokeTransmitDone(aFrame, aAckFrame, aError);
+    static_cast<ot::Instance *>(aInstance)->GetLinkRaw().InvokeTransmitDone(aFrame, aAckFrame, aError);
 }
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    static_cast<Instance *>(aInstance)->GetLinkRaw().TransmitStarted(aFrame);
+    static_cast<ot::Instance *>(aInstance)->GetLinkRaw().TransmitStarted(aFrame);
 }
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
     VerifyOrExit(otInstanceIsInitialized(aInstance));
 
-    static_cast<Instance *>(aInstance)->GetLinkRaw().InvokeEnergyScanDone(aEnergyScanMaxRssi);
+    static_cast<ot::Instance *>(aInstance)->GetLinkRaw().InvokeEnergyScanDone(aEnergyScanMaxRssi);
 
 exit:
     return;
@@ -565,7 +591,5 @@ extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFr
 #endif
 
 #endif // OPENTHREAD_RADIO
-
-} // namespace ot
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API

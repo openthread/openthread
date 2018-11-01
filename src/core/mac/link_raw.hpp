@@ -40,6 +40,7 @@
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF || \
     OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -50,6 +51,7 @@
 
 namespace ot {
 
+namespace Mac {
 class LinkRaw : public InstanceLocator
 {
 public:
@@ -256,10 +258,10 @@ private:
 
     void        TransmitNow(void);
     void        StartTransmit(void);
-    Tasklet     mOperationTask;
     static void HandleOperationTask(Tasklet &aTasklet);
     void        HandleOperationTask();
 
+    Tasklet  mOperationTask;
     uint16_t mPendingOperations;
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
@@ -284,18 +286,17 @@ private:
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+    void StartCsmaBackoff(void);
+
+    uint8_t mCsmaBackoffs;
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
     uint8_t mTransmitRetries;
-    uint8_t mCsmaBackoffs;
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-
-    void StartCsmaBackoff(void);
-
-#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
@@ -331,10 +332,11 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
-    otRadioFrame *          mTransmitFrame;
+    Frame *                 mTransmitFrame;
     otRadioCaps             mRadioCaps;
 };
 
+} // namespace Mac
 } // namespace ot
 
 #endif // LINK_RAW_HPP_
