@@ -204,6 +204,7 @@ Mac::Mac(Instance &aInstance)
     GenerateExtAddress(&mExtAddress);
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
+    memset(&mNetworkName, 0, sizeof(otNetworkName));
 
     otPlatRadioEnable(&GetInstance());
 
@@ -612,15 +613,15 @@ otError Mac::SetNetworkName(const char *aNetworkName)
 
 otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t len   = static_cast<uint8_t>(strnlen(aBuffer, aLength));
+    otError error  = OT_ERROR_NONE;
+    uint8_t newLen = static_cast<uint8_t>(strnlen(aBuffer, aLength));
 
-    VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(memcmp(mNetworkName.m8, aBuffer, len) != 0,
+    VerifyOrExit(newLen <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(newLen != strlen(mNetworkName.m8) || memcmp(mNetworkName.m8, aBuffer, newLen) != 0,
                  GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
 
-    memcpy(mNetworkName.m8, aBuffer, len);
-    mNetworkName.m8[len] = 0;
+    memcpy(mNetworkName.m8, aBuffer, newLen);
+    mNetworkName.m8[newLen] = 0;
     GetNotifier().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
