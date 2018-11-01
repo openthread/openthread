@@ -52,6 +52,7 @@
 namespace ot {
 
 namespace Mac {
+
 class LinkRaw : public InstanceLocator
 {
 public:
@@ -117,14 +118,13 @@ public:
      *
      * @note The callback @p aCallback will not be called if this call does not return OT_ERROR_NONE.
      *
-     * @param[in]  aFrame               A pointer to the frame that was transmitted.
      * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
      *
      * @retval OT_ERROR_NONE            Successfully transitioned to Transmit.
      * @retval OT_ERROR_INVALID_STATE   The radio was not in the Receive state.
      *
      */
-    otError Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
+    otError Transmit(otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
@@ -251,28 +251,23 @@ public:
     otRadioFrame *GetTransmitFrame(void) { return mTransmitFrame; }
 
 private:
-    enum
-    {
-        kOperationTransmitData = 1 << 0,
-    };
-
     void        TransmitNow(void);
     void        StartTransmit(void);
     static void HandleOperationTask(Tasklet &aTasklet);
-    void        HandleOperationTask();
+    void        HandleOperationTask(void);
 
-    Tasklet  mOperationTask;
-    uint16_t mPendingOperations;
+    Tasklet mOperationTask;
+    bool    mPendingTransmitData : 1;
 
-#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-
-    enum TimerReason{
+    enum TimerReason
+    {
         kTimerReasonNone,
         kTimerReasonAckTimeout,
         kTimerReasonCsmaBackoffComplete,
         kTimerReasonEnergyScanComplete,
     };
 
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
     TimerMilli  mTimer;
     TimerReason mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

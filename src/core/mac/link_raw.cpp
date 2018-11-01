@@ -54,7 +54,7 @@ namespace Mac {
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperationTask(aInstance, &LinkRaw::HandleOperationTask, this)
-    , mPendingOperations(0)
+    , mPendingTransmitData(false)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
     , mTimer(aInstance, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
@@ -86,9 +86,9 @@ void LinkRaw::HandleOperationTask(Tasklet &aTasklet)
 
 void LinkRaw::HandleOperationTask(void)
 {
-    if (mPendingOperations | kOperationTransmitData)
+    if (mPendingTransmitData)
     {
-        mPendingOperations &= ~kOperationTransmitData;
+        mPendingTransmitData = false;
         TransmitNow();
     }
 }
@@ -182,31 +182,19 @@ otRadioCaps LinkRaw::GetCaps(void) const
     otRadioCaps radioCaps = mRadioCaps;
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-    if ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0)
-    {
-        radioCaps |= OT_RADIO_CAPS_ACK_TIMEOUT;
-    }
+    radioCaps |= OT_RADIO_CAPS_ACK_TIMEOUT;
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0)
-    {
-        radioCaps |= OT_RADIO_CAPS_TRANSMIT_RETRIES;
-    }
+    radioCaps |= OT_RADIO_CAPS_TRANSMIT_RETRIES;
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-    if ((mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) == 0)
-    {
-        radioCaps |= OT_RADIO_CAPS_CSMA_BACKOFF;
-    }
+    radioCaps |= OT_RADIO_CAPS_CSMA_BACKOFF;
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    if ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) == 0)
-    {
-        radioCaps |= OT_RADIO_CAPS_ENERGY_SCAN;
-    }
+    radioCaps |= OT_RADIO_CAPS_ENERGY_SCAN;
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     return radioCaps;
@@ -251,7 +239,7 @@ void LinkRaw::StartTransmit(void)
     else
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
     {
-        mPendingOperations |= kOperationTransmitData;
+        mPendingTransmitData = true;
         mOperationTask.Post();
     }
 }
@@ -266,11 +254,10 @@ void LinkRaw::TransmitNow(void)
     }
 }
 
-otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
+otError LinkRaw::Transmit(otLinkRawTransmitDone aCallback)
 {
     otError error = OT_ERROR_NONE;
 
-    assert(mTransmitFrame == aFrame);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
     mTransmitDoneCallback = aCallback;
@@ -298,6 +285,8 @@ exit:
 
 void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
+    assert(aFrame == mTransmitFrame);
+
     if (aError == OT_ERROR_NONE)
     {
         otLogDebgPlat("LinkRaw Transmit Done: %s", otThreadErrorToString(aError));
@@ -306,8 +295,6 @@ void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, 
     {
         otLogWarnPlat("LinkRaw Transmit Done: %s", otThreadErrorToString(aError));
     }
-
-    assert(aFrame == mTransmitFrame);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     if ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0)
