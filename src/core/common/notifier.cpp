@@ -36,7 +36,7 @@
 #include "notifier.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/owner-locator.hpp"
 
 namespace ot {

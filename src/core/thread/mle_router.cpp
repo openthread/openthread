@@ -40,7 +40,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"

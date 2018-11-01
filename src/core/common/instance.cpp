@@ -37,7 +37,7 @@
 
 #include <openthread/platform/misc.h>
 
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/new.hpp"
 #include "thread/router_table.hpp"
 

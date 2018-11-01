@@ -292,7 +292,7 @@ HEADERS_COMMON                      = \
     common/extension.hpp              \
     common/instance.hpp               \
     common/locator.hpp                \
-    common/logging.hpp                \
+    common/logging.h                  \
     common/message.hpp                \
     common/new.hpp                    \
     common/notifier.hpp               \

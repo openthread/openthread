@@ -57,7 +57,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
-#include <common/logging.hpp>
+#include <common/logging.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>

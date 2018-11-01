@@ -44,7 +44,7 @@
 #include "cli/cli.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
 

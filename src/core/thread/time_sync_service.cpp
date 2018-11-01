@@ -42,7 +42,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 
 namespace ot {
 

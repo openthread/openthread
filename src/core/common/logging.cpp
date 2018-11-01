@@ -33,7 +33,7 @@
 
 #define WPP_NAME "logging.tmh"
 
-#include "logging.hpp"
+#include "logging.h"
 
 #include "common/instance.hpp"
 

@@ -43,7 +43,7 @@
 #include "coap/coap_header.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/owner-locator.hpp"
 #include "crypto/pbkdf2_cmac.h"
 #include "meshcop/joiner_router.hpp"

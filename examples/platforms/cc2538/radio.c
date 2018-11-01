@@ -38,7 +38,7 @@
 #include <openthread/platform/radio.h>
 
 #include "platform-cc2538.h"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "utils/code_utils.h"
 
 enum

@@ -27,7 +27,7 @@
  */
 #include <openthread/config.h>
 
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "meshcop/commissioner.hpp"
 #include "utils/wrap_string.h"
 

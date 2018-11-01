@@ -34,6 +34,8 @@
 
 #include <openthread/platform/misc.h>
 
+#include "common/logging.h"
+
 #include "openthread-system.h"
 
 extern jmp_buf gResetJump;

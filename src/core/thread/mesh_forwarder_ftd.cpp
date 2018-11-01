@@ -37,7 +37,7 @@
 
 #include "mesh_forwarder.hpp"
 
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"

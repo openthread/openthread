@@ -36,7 +36,7 @@
 
 #include <openthread/platform/uart.h>
 
-#include "common/logging.hpp"
+#include "common/logging.h"
 
 #include "bsp.h"
 #include "em_chip.h"

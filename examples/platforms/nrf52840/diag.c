@@ -45,7 +45,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
-#include <common/logging.hpp>
+#include <common/logging.h>
 #include <drivers/radio/nrf_802154.h>
 #include <utils/code_utils.h>
 

@@ -43,7 +43,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <common/logging.hpp>
+#include <common/logging.h>
 #include <utils/code_utils.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>

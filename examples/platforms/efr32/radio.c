@@ -39,7 +39,7 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "utils/code_utils.h"
 
 #include "em_core.h"

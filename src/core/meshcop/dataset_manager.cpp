@@ -39,7 +39,7 @@
 #include <stdio.h>
 
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"

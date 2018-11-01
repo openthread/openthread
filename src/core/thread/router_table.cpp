@@ -34,7 +34,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/timer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"

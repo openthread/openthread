@@ -38,7 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/message.hpp"
 #include "common/owner-locator.hpp"
 #include "net/icmp6.hpp"

@@ -40,7 +40,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/new.hpp"
 
 using namespace ot;

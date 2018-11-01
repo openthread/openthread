@@ -38,7 +38,7 @@
 #include <openthread/ip6.h>
 
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "utils/slaac_address.hpp"
 
 using namespace ot;

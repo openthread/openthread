@@ -38,7 +38,7 @@
 #include <openthread/thread.h>
 
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "common/settings.hpp"
 
 using namespace ot;

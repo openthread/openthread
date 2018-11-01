@@ -37,7 +37,7 @@
 #include <string.h>
 
 #include "platform-da15000.h"
-#include "common/logging.hpp"
+#include "common/logging.h"
 #include "utils/code_utils.h"
 
 #include "ad_ftdf.h"
