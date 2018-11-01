@@ -540,6 +540,11 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+    else
+    {
+        otLogCritPlat("Radio file '%s' not supported", aRadioFile);
+        exit(OT_EXIT_INVALID_ARGUMENTS);
+    }
 
     SuccessOrExit(error = SendReset());
     SuccessOrExit(error = WaitResponse());
