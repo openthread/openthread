@@ -16,11 +16,19 @@ target_link_libraries(selftest ${libs})
 add_executable(benchmark benchmark.c)
 target_link_libraries(benchmark ${libs})
 
+if(TEST_CPP)
+    add_executable(cpp_dummy_build cpp_dummy_build.cpp)
+    target_link_libraries(cpp_dummy_build ${libs})
+endif()
+
 add_executable(ssl_cert_test ssl_cert_test.c)
 target_link_libraries(ssl_cert_test ${libs})
 
 add_executable(udp_proxy udp_proxy.c)
 target_link_libraries(udp_proxy ${libs})
+
+add_executable(zeroize zeroize.c)
+target_link_libraries(zeroize ${libs})
 
 install(TARGETS selftest benchmark ssl_cert_test udp_proxy
         DESTINATION "bin"
