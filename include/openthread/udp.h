@@ -183,6 +183,13 @@ otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @param[in]  aMessage      A pointer to a message buffer.
  * @param[in]  aMessageInfo  A pointer to a message info structure.
  *
+ * If the return value is OT_ERROR_NONE, OpenThread takes ownership of @p aMessage, and the caller should no longer
+ * reference @p aMessage. If the return value is not OT_ERROR_NONE, the caller retains ownership of @p aMessage,
+ * including freeing @p aMessage if the message buffer is no longer needed.
+ *
+ * @retval OT_ERROR_NONE            The message is successfully scheduled for sending.
+ * @retval OT_ERROR_INVALID_ARGS    Invalid arguments are given.
+ *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
  * @sa otUdpClose
