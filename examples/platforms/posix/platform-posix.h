@@ -244,4 +244,12 @@ void otSimSendEvent(const struct Event *aEvent);
  */
 void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 
+/**
+ * This function checks if radio transmitting is pending.
+ *
+ * @returns Whether radio transmitting is pending.
+ *
+ */
+bool platformRadioIsTransmitPending(void);
+
 #endif // PLATFORM_POSIX_H_
