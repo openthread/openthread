@@ -93,6 +93,7 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-border-agent   Border Agent
  * @defgroup api-border-router  Border Router
  * @defgroup api-commissioner   Commissioner
  * @defgroup api-thread-general General
@@ -124,6 +125,7 @@ extern "C" {
  * @defgroup api-crypto              Crypto
  * @defgroup api-factory-diagnostics Factory Diagnostics
  * @defgroup api-jam-detection       Jam Detection
+ * @defgroup api-logging             Logging
  * @defgroup api-ncp                 Network Co-Processor
  * @defgroup api-network-time        Network Time Synchronization
  *

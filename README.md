@@ -49,6 +49,8 @@ All end-user documentation and guides are located at [openthread.io](https://ope
 
 ...then [openthread.io](https://openthread.io) is the place for you.
 
+> Note: For users in China, end-user documentation is available at [openthread.google.cn](https://openthread.google.cn).
+
 If you're interested in contributing to OpenThread, read on.
 
 # Contributing
