@@ -3,7 +3,7 @@
  *
  * \brief This file contains SHA-1 definitions and functions.
  *
- * The Secure Hash Algorithm 1 (SHA-1) cryptographic hash function is defined in 
+ * The Secure Hash Algorithm 1 (SHA-1) cryptographic hash function is defined in
  * <em>FIPS 180-4: Secure Hash Standard (SHS)</em>.
  *
  * \warning   SHA-1 is considered a weak message digest and its use constitutes
@@ -58,7 +58,7 @@ extern "C" {
  *                 stronger message digests instead.
  *
  */
-typedef struct
+typedef struct mbedtls_sha1_context
 {
     uint32_t total[2];          /*!< The number of Bytes processed.  */
     uint32_t state[5];          /*!< The intermediate digest state.  */
