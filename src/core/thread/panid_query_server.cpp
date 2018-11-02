@@ -72,14 +72,14 @@ void PanIdQueryServer::HandleQuery(void *               aContext,
 
 void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::PanIdTlv        panId;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    Ip6::MessageInfo         responseInfo(aMessageInfo);
+    MeshCoP::PanIdTlv       panId;
+    MeshCoP::ChannelMaskTlv channelMask;
+    Ip6::MessageInfo        responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid());
+    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid());
@@ -125,13 +125,13 @@ void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
 
 otError PanIdQueryServer::SendConflict(void)
 {
-    ThreadNetif &            netif = GetNetif();
-    otError                  error = OT_ERROR_NONE;
-    Coap::Header             header;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::PanIdTlv        panId;
-    Ip6::MessageInfo         messageInfo;
-    Message *                message;
+    ThreadNetif &           netif = GetNetif();
+    otError                 error = OT_ERROR_NONE;
+    Coap::Header            header;
+    MeshCoP::ChannelMaskTlv channelMask;
+    MeshCoP::PanIdTlv       panId;
+    Ip6::MessageInfo        messageInfo;
+    Message *               message;
 
     header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -141,6 +141,7 @@ otError PanIdQueryServer::SendConflict(void)
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
+    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
     channelMask.SetMask(mChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
 

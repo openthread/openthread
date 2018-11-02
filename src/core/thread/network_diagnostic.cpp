@@ -413,7 +413,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             ChannelPagesTlv tlv;
             tlv.Init();
-            tlv.GetChannelPages()[0] = 0;
+            tlv.GetChannelPages()[0] = OT_RADIO_CHANNEL_PAGE;
             tlv.SetLength(1);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
