@@ -81,21 +81,23 @@ private:
     static void ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     static void TxPacket(void);
+
     static otError ParseLong(char *aString, long &aLong);
 
     static const struct Command sCommands[];
-    static struct DiagStats sStats;
-    static int8_t sTxPower;
-    static uint8_t sChannel;
-    static uint8_t sTxLen;
-    static uint32_t sTxPeriod;
-    static uint32_t sTxPackets;
+    static struct DiagStats     sStats;
+
+    static int8_t        sTxPower;
+    static uint8_t       sChannel;
+    static uint8_t       sTxLen;
+    static uint32_t      sTxPeriod;
+    static uint32_t      sTxPackets;
     static otRadioFrame *sTxPacket;
-    static otInstance *sInstance;
-    static bool sRepeatActive;
+    static otInstance *  sInstance;
+    static bool          sRepeatActive;
 };
 
-}  // namespace Diagnostics
-}  // namespace ot
+} // namespace Diagnostics
+} // namespace ot
 
-#endif  // CLI_HPP_
+#endif // CLI_HPP_

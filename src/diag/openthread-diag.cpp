@@ -59,13 +59,13 @@ void otDiagProcessCmdLine(const char *aInput, char *aOutput, size_t aOutputMaxLe
 {
     enum
     {
-        kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
+        kMaxArgs          = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
         kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
     };
 
     otError error = OT_ERROR_NONE;
-    char buffer[kMaxCommandBuffer];
-    char *argVector[kMaxArgs];
+    char    buffer[kMaxCommandBuffer];
+    char *  argVector[kMaxArgs];
     uint8_t argCount = 0;
 
     VerifyOrExit(strnlen(aInput, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
