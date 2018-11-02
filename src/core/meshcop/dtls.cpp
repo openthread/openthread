@@ -534,7 +534,8 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
         break;
 
     default:
-        assert(false);
+        otLogWarnMeshCoP("Dtls::HandleMbedtlsTransmit: %s error", otThreadErrorToString(error));
+        rval = MBEDTLS_ERR_NET_SEND_FAILED;
         break;
     }
 
