@@ -55,7 +55,7 @@ class Interpreter;
  * This class implements the CLI CoAP Secure server and client.
  *
  */
-class CoapsSecure
+class CoapSecure
 {
 public:
     /**
@@ -64,7 +64,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    CoapsSecure(Interpreter &aInterpreter);
+    CoapSecure(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.

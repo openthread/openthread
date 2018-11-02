@@ -75,80 +75,6 @@ const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYM
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
-uint8_t ChannelMask::GetNumberOfChannels(void) const
-{
-    uint8_t num     = 0;
-    uint8_t channel = kChannelIteratorFirst;
-
-    while (GetNextChannel(channel) == OT_ERROR_NONE)
-    {
-        num++;
-    }
-
-    return num;
-}
-
-otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
-{
-    otError error = OT_ERROR_NOT_FOUND;
-
-    if (aChannel == kChannelIteratorFirst)
-    {
-        aChannel = (OT_RADIO_CHANNEL_MIN - 1);
-    }
-
-    for (aChannel++; aChannel <= OT_RADIO_CHANNEL_MAX; aChannel++)
-    {
-        if (ContainsChannel(aChannel))
-        {
-            ExitNow(error = OT_ERROR_NONE);
-        }
-    }
-
-exit:
-    return error;
-}
-
-ChannelMask::InfoString ChannelMask::ToString(void) const
-{
-    InfoString string;
-    uint8_t    channel  = kChannelIteratorFirst;
-    bool       addComma = false;
-    otError    error;
-
-    string.Append("{");
-
-    error = GetNextChannel(channel);
-
-    while (error == OT_ERROR_NONE)
-    {
-        uint8_t rangeStart = channel;
-        uint8_t rangeEnd   = channel;
-
-        while ((error = GetNextChannel(channel)) == OT_ERROR_NONE)
-        {
-            if (channel != rangeEnd + 1)
-            {
-                break;
-            }
-
-            rangeEnd = channel;
-        }
-
-        string.Append("%s%d", addComma ? ", " : " ", rangeStart);
-        addComma = true;
-
-        if (rangeStart < rangeEnd)
-        {
-            string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
-        }
-    }
-
-    string.Append("}");
-
-    return string;
-}
-
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperation(kOperationIdle)
@@ -197,9 +123,10 @@ Mac::Mac(Instance &aInstance)
     , mCcaSampleCount(0)
     , mEnabled(true)
 {
-    GenerateExtAddress(&mExtAddress);
+    mExtAddress.GenerateRandom();
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
+    memset(&mNetworkName, 0, sizeof(otNetworkName));
 
     otPlatRadioEnable(&GetInstance());
 
@@ -308,8 +235,8 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
         aResult.mVersion    = beaconPayload->GetProtocolVersion();
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
-        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), sizeof(aResult.mNetworkName));
-        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(aResult.mExtendedPanId));
+        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), BeaconPayload::kNetworkNameSize);
+        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), BeaconPayload::kExtPanIdSize);
     }
 
     LogBeacon("Received", *beaconPayload);
@@ -340,8 +267,9 @@ void Mac::PerformActiveScan(void)
     else
     {
         otPlatRadioSetPanId(&GetInstance(), mPanId);
-        mActiveScanHandler(mScanContext, NULL);
         FinishOperation();
+        mActiveScanHandler(mScanContext, NULL);
+        PerformNextOperation();
     }
 }
 
@@ -380,8 +308,9 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        mEnergyScanHandler(mScanContext, NULL);
         FinishOperation();
+        mEnergyScanHandler(mScanContext, NULL);
+        PerformNextOperation();
     }
 }
 
@@ -459,6 +388,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         {
             mReceiveTimer.Stop();
             FinishOperation();
+            PerformNextOperation();
         }
     }
 
@@ -466,14 +396,6 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
 exit:
     return;
-}
-
-void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
-{
-    Random::FillBuffer(aExtAddress->m8, sizeof(ExtAddress));
-
-    aExtAddress->SetGroup(false);
-    aExtAddress->SetLocal(true);
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
@@ -590,15 +512,15 @@ otError Mac::SetNetworkName(const char *aNetworkName)
 
 otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t len   = static_cast<uint8_t>(strnlen(aBuffer, aLength));
+    otError error  = OT_ERROR_NONE;
+    uint8_t newLen = static_cast<uint8_t>(strnlen(aBuffer, aLength));
 
-    VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(memcmp(mNetworkName.m8, aBuffer, len) != 0,
+    VerifyOrExit(newLen <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(newLen != strlen(mNetworkName.m8) || memcmp(mNetworkName.m8, aBuffer, newLen) != 0,
                  GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
 
-    memcpy(mNetworkName.m8, aBuffer, len);
-    mNetworkName.m8[len] = 0;
+    memcpy(mNetworkName.m8, aBuffer, newLen);
+    mNetworkName.m8[newLen] = 0;
     GetNotifier().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
@@ -744,11 +666,11 @@ void Mac::HandleOperationTask(void)
     }
     else
     {
-        PerformOperation();
+        PerformNextOperation();
     }
 }
 
-void Mac::PerformOperation(void)
+void Mac::PerformNextOperation(void)
 {
     VerifyOrExit(mOperation == kOperationIdle);
 
@@ -819,18 +741,8 @@ exit:
 
 void Mac::FinishOperation(void)
 {
-    // Clear the current operation and start any pending ones.
-
     otLogDebgMac("Finishing operation \"%s\"", OperationToString(mOperation));
-
     mOperation = kOperationIdle;
-
-    // Note that we do not want to post the `mOperationTask` here and
-    // instead we do a direct call to `PerformOperation()`. This helps
-    // ensure that if there is no pending operation, the radio is
-    // switched to idle mode immediately.
-
-    PerformOperation();
 }
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
@@ -1495,6 +1407,7 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
     case kOperationTransmitBeacon:
         mCounters.mTxBeacon++;
         FinishOperation();
+        PerformNextOperation();
         break;
 
     case kOperationTransmitData:
@@ -1520,14 +1433,16 @@ void Mac::HandleTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otEr
         }
 
         otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
-        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
         FinishOperation();
+        GetNetif().GetMeshForwarder().HandleSentFrame(sendFrame, aError);
+        PerformNextOperation();
         break;
     }
 
     case kOperationTransmitOutOfBandFrame:
         mOobFrame = NULL;
         FinishOperation();
+        PerformNextOperation();
         break;
 
     default:
@@ -1675,6 +1590,8 @@ void Mac::HandleReceiveTimer(void)
         FinishOperation();
 
         GetNetif().GetMeshForwarder().GetDataPollManager().HandlePollTimeout();
+
+        PerformNextOperation();
     }
     else
     {
@@ -2074,6 +1991,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             mDelaySleep = aFrame->GetFramePending();
 #endif
             FinishOperation();
+            PerformNextOperation();
         }
 
         SuccessOrExit(error);

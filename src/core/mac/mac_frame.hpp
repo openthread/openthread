@@ -96,6 +96,12 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
+     * This method generates a random IEEE 802.15.4 Extended Address.
+     *
+     */
+    void GenerateRandom(void);
+
+    /**
      * This method indicates whether or not the Group bit is set.
      *
      * @retval TRUE   If the group bit is set.
@@ -107,7 +113,7 @@ public:
     /**
      * This method sets the Group bit.
      *
-     * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
+     * @param[in]  aGroup  TRUE if group address, FALSE otherwise.
      *
      */
     void SetGroup(bool aGroup)
@@ -1064,6 +1070,14 @@ public:
      *
      */
     void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
+
+    /**
+     * This method gets the CSMA-CA enabled attribute.
+     *
+     * @returns  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
+     *
+     */
+    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
 
     /**
      * This method returns the key used for frame encryption and authentication (AES CCM).

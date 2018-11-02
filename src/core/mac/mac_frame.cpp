@@ -39,9 +39,17 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Mac {
+
+void ExtAddress::GenerateRandom(void)
+{
+    Random::FillBuffer(m8, sizeof(ExtAddress));
+    SetGroup(false);
+    SetLocal(true);
+}
 
 bool ExtAddress::operator==(const ExtAddress &aOther) const
 {

@@ -119,6 +119,14 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_X509_CRT_PARSE_C
 #endif
 
+#if OPENTHREAD_ENABLE_ECDSA
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_ECDH_C
+#define MBEDTLS_ECDSA_C
+#define MBEDTLS_OID_C
+#define MBEDTLS_PEM_PARSE_C
+#endif
+
 #define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */
 #define MBEDTLS_MPI_MAX_SIZE              32 /**< Maximum number of bytes for usable MPIs. */
 #define MBEDTLS_ECP_MAX_BITS             256 /**< Maximum bit size of groups */
@@ -127,7 +135,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #define MBEDTLS_ENTROPY_MAX_SOURCES        1 /**< Maximum number of sources supported */
 
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#define MBEDTLS_PLATFORM_STD_CALLOC    otPlatCAlloc /**< Default allocator to use, can be undefined */
+#define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
 #define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
 #else
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C

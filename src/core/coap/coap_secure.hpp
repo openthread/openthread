@@ -86,10 +86,7 @@ public:
      * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
      *
      */
-    explicit CoapSecure(Instance &       aInstance,
-                        Tasklet::Handler aUdpTransmitHandle,
-                        Timer::Handler   aRetransmissionTimer,
-                        Timer::Handler   aResponsesQueueTimer);
+    explicit CoapSecure(Instance &aInstance, Timer::Handler aRetransmissionTimer, Timer::Handler aResponsesQueueTimer);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -348,8 +345,6 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-    static void HandleUdpTransmit(Tasklet &aTasklet);
-
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
 
@@ -358,8 +353,6 @@ private:
     void *            mConnectedContext;
     TransportCallback mTransportCallback;
     void *            mTransportContext;
-    Message *         mTransmitMessage;
-    Tasklet           mTransmitTask;
 
     bool mLayerTwoSecurity : 1;
 };
@@ -384,7 +377,6 @@ public:
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
-    static void HandleUdpTransmit(Tasklet &aTasklet);
 };
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

@@ -1529,6 +1529,39 @@ AC_SUBST(OPENTHREAD_CUSTOM_LINKER_FILE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_linker_file}" = "yes"])
 
 #
+# Support for ECDSA
+#
+
+AC_MSG_CHECKING([whether to build with ECDSA support])
+AC_ARG_ENABLE(ecdsa,
+    [AS_HELP_STRING([--enable-ecdsa], [Enable ECDSA support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ecdsa=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ecdsa} for --enable-ecdsa])
+            ;;
+        esac
+    ],
+    [enable_ecdsa=no])
+
+if test "$enable_ecdsa" = "yes"; then
+    OPENTHREAD_ENABLE_ECDSA=1
+else
+    OPENTHREAD_ENABLE_ECDSA=0
+fi
+
+AC_MSG_RESULT(${enable_ecdsa})
+AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
+
+
+#
 # Examples
 #
 
@@ -1919,6 +1952,7 @@ AC_MSG_NOTICE([
   OpenThread Border Agent support           : ${enable_border_agent}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
+  OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

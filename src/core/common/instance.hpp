@@ -407,7 +407,7 @@ public:
      * @returns A reference to the LinkRaw object.
      *
      */
-    LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
+    Mac::LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
 #endif
 
 private:
@@ -460,7 +460,7 @@ private:
     MessagePool mMessagePool;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw mLinkRaw;
+    Mac::LinkRaw mLinkRaw;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -696,7 +696,7 @@ template <> inline AnnounceSender &Instance::Get(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-template <> inline LinkRaw &Instance::Get(void)
+template <> inline Mac::LinkRaw &Instance::Get(void)
 {
     return GetLinkRaw();
 }
