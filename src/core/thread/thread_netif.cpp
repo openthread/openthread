@@ -125,7 +125,7 @@ otError ThreadNetif::Up(void)
 #endif
     mMleRouter.Enable();
     mIsUp = true;
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF);
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
     return OT_ERROR_NONE;
@@ -152,7 +152,7 @@ otError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_DTLS
     mDtls.Stop();
 #endif
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF);
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
     return OT_ERROR_NONE;
