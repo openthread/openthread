@@ -488,7 +488,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
  * If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
- * This function only supports to set the link layer security enabled.
+ * @note This function only supports to set the link layer security enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
