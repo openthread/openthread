@@ -47,7 +47,6 @@
 #include "mac/mac_frame.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
-#include "thread/network_diagnostic_tlvs.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -507,14 +506,6 @@ public:
      *
      */
     void SetPromiscuous(bool aPromiscuous);
-
-    /**
-     * This method fills network diagnostic MacCounterTlv.
-     *
-     * @param[in]  aMacCountersTlv The reference to the network diagnostic MacCounterTlv.
-     *
-     */
-    void FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const;
 
     /**
      * This method resets mac counters
