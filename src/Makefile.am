@@ -65,6 +65,7 @@ endif
 PRETTY_SUBDIRS                          = \
     cli                                   \
     core                                  \
+    diag                                  \
     ncp                                   \
     posix                                 \
     $(NULL)
