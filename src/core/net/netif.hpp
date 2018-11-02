@@ -245,7 +245,7 @@ public:
      * @param[in]  aAddress  A reference to the unicast address.
      *
      * @retval OT_ERROR_NONE          Successfully added (or updated) the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is link-local address or an external address.
      * @retval OT_ERROR_NO_BUFS       The maximum number of allowed internal addresses are already added.
      *
      */
@@ -257,7 +257,7 @@ public:
      * @param[in]  aAddress  A reference to the unicast address.
      *
      * @retval OT_ERROR_NONE          Successfully removed the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an external address.
      * @retval OT_ERROR_NOT_FOUND     The unicast address was not found.
      *
      */
