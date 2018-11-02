@@ -37,8 +37,8 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_USE_EXTERNAL_MAC
-#include "mac/mac_extern.hpp"
 #include "mac/channel_mask.hpp"
+#include "mac/mac_extern.hpp"
 #else
 #include "mac/mac_full.hpp"
 #endif
