@@ -53,17 +53,24 @@ CoapSecure::CoapSecure(Instance &aInstance)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
+    , mTransmitQueue()
+    , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
     , mLayerTwoSecurity(false)
 {
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-CoapSecure::CoapSecure(Instance &aInstance, Timer::Handler aRetransmissionTimer, Timer::Handler aResponsesQueueTimer)
+CoapSecure::CoapSecure(Instance &       aInstance,
+                       Tasklet::Handler aHandleTransmit,
+                       Timer::Handler   aRetransmissionTimer,
+                       Timer::Handler   aResponsesQueueTimer)
     : CoapBase(aInstance, aRetransmissionTimer, aResponsesQueueTimer)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
+    , mTransmitQueue()
+    , mTransmitTask(aInstance, aHandleTransmit, this)
     , mLayerTwoSecurity(true)
 {
 }
@@ -98,6 +105,12 @@ otError CoapSecure::Stop(void)
     if (IsConnectionActive())
     {
         Disconnect();
+    }
+
+    for (Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
+    {
+        mTransmitQueue.Dequeue(*message);
+        message->Free();
     }
 
     mTransportCallback = NULL;
@@ -230,7 +243,9 @@ otError CoapSecure::SendMessage(Message &               aMessage,
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    return GetNetif().GetDtls().Send(aMessage, aMessage.GetLength());
+    mTransmitQueue.Enqueue(aMessage);
+    mTransmitTask.Post();
+    return OT_ERROR_NONE;
 }
 
 void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -351,6 +366,30 @@ exit:
     return error;
 }
 
+void CoapSecure::HandleTransmit(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<CoapSecure>().HandleTransmit();
+}
+
+void CoapSecure::HandleTransmit(void)
+{
+    otError  error   = OT_ERROR_NONE;
+    Message *message = mTransmitQueue.GetHead();
+
+    VerifyOrExit(message != NULL);
+    mTransmitQueue.Dequeue(*message);
+
+    SuccessOrExit(error = GetDtls().Send(*message, message->GetLength()));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        message->Free();
+    }
+
+    otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
+}
+
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
 {
     aTimer.GetOwner<CoapSecure>().CoapBase::HandleRetransmissionTimer();
@@ -365,9 +404,15 @@ void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
 
 ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
     : CoapSecure(aInstance,
+                 &ApplicationCoapSecure::HandleTransmit,
                  &ApplicationCoapSecure::HandleRetransmissionTimer,
                  &ApplicationCoapSecure::HandleResponsesQueueTimer)
 {
+}
+
+void ApplicationCoapSecure::HandleTransmit(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<ApplicationCoapSecure>().CoapSecure::HandleTransmit();
 }
 
 void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
