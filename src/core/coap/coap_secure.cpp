@@ -379,6 +379,11 @@ void CoapSecure::HandleTransmit(void)
     VerifyOrExit(message != NULL);
     mTransmitQueue.Dequeue(*message);
 
+    if (mTransmitQueue.GetHead() != NULL)
+    {
+        mTransmitTask.Post();
+    }
+
     SuccessOrExit(error = GetDtls().Send(*message, message->GetLength()));
 
 exit:
