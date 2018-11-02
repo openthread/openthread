@@ -35,6 +35,7 @@
 #include "spinel_decoder.hpp"
 
 #include "common/code_utils.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 namespace Ncp {
