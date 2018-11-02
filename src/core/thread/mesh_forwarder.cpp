@@ -1586,9 +1586,7 @@ otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
         memcpy(&udpHeader, aFrame, sizeof(Ip6::UdpHeader));
     }
 
-    if (udpHeader.GetDestinationPort() == Mle::kUdpPort ||
-        udpHeader.GetDestinationPort() == OPENTHREAD_CONFIG_JOINER_UDP_PORT ||
-        udpHeader.GetDestinationPort() == kCoapUdpPort)
+    if (udpHeader.GetDestinationPort() == Mle::kUdpPort || udpHeader.GetDestinationPort() == kCoapUdpPort)
     {
         aPriority = Message::kPriorityNet;
     }
