@@ -170,7 +170,7 @@ otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         VerifyOrExit(mHeaderLength + optionLength <= length);
 
         aMessage.Read(offset, optionLength, mHeader.mBytes + mHeaderLength);
-        mHeaderLength += static_cast<uint8_t>(optionLength);
+        mHeaderLength += optionLength;
         offset += optionLength;
     }
 
