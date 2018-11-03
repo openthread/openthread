@@ -2,11 +2,11 @@
 
 ## URL
 
-https://github.com/ARMmbed/mbedtls/releases/tag/mbedtls-2.9.0
+https://github.com/ARMmbed/mbedtls/releases/tag/mbedtls-2.13.0
 
 ## Version
 
-2.9.0
+2.13.0
 
 ## License
 
