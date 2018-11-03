@@ -91,7 +91,12 @@ enum
     /**
      * Incompatible radio spinel.
      */
-    OT_EXIT_INCOMPATIBLE_RADIO_SPINEL = 3,
+    OT_EXIT_RADIO_SPINEL_INCOMPATIBLE = 3,
+
+    /**
+     * Unexpected radio spinel reset.
+     */
+    OT_EXIT_RADIO_SPINEL_RESET = 4,
 };
 
 /**
@@ -352,6 +357,24 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  */
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
+
+/**
+ * This function ends the current process with exit code @p aExitCode if @p aCondition is false.
+ *
+ * @param[in]   aCondition  The condition to verify
+ * @param[in]   aExitCode   The exit code if exits.
+ *
+ */
+void VerifyOrDie(bool aCondition, int aExitCode);
+
+/**
+ * This function ends the current process if @p aError is not OT_ERROR_NONE.
+ * The error code will be mapped from @p aError.
+ *
+ * @param[in]   aError  The OpenThread error code.
+ *
+ */
+void SuccessOrDie(otError aError);
 
 #ifdef __cplusplus
 }
