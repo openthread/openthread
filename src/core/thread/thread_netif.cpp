@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -114,31 +113,34 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 
 otError ThreadNetif::Up(void)
 {
-    if (!mIsUp)
-    {
-        // Enable the MAC just in case it was disabled while the Interface was down.
-        mMac.SetEnabled(true);
-        GetIp6().AddNetif(*this);
-        mMeshForwarder.Start();
-        mCoap.Start(kCoapUdpPort);
+    VerifyOrExit(!mIsUp);
+
+    // Enable the MAC just in case it was disabled while the Interface was down.
+    mMac.SetEnabled(true);
+    GetIp6().AddNetif(*this);
+    mMeshForwarder.Start();
+    mCoap.Start(kCoapUdpPort);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-        mDnsClient.Start();
+    mDnsClient.Start();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
         mSntpClient.Start();
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-        GetInstance().GetChannelMonitor().Start();
+    GetInstance().GetChannelMonitor().Start();
 #endif
-        mMleRouter.Enable();
-        mIsUp = true;
-    }
+    mMleRouter.Enable();
+    mIsUp = true;
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
+exit:
     return OT_ERROR_NONE;
 }
 
 otError ThreadNetif::Down(void)
 {
+    VerifyOrExit(mIsUp);
+
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
@@ -159,7 +161,9 @@ otError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_DTLS
     mDtls.Stop();
 #endif
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
+exit:
     return OT_ERROR_NONE;
 }
 
