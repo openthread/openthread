@@ -78,7 +78,7 @@
 #define HAVE__BOOL 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+ */
 #define LT_OBJDIR ".libs/"
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
@@ -160,8 +160,8 @@
 /* Define to 1 if you want to enable Service */
 #define OPENTHREAD_ENABLE_SERVICE 1
 
-/* Define to 1 to enable the UDP proxy feature. */
-#define OPENTHREAD_ENABLE_UDP_PROXY 1
+/* Define to 1 to enable the UDP forward feature. */
+#define OPENTHREAD_ENABLE_UDP_FORWARD 1
 
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none

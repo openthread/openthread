@@ -124,12 +124,12 @@ private:
     void    HandleRelayTransmit(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleRelayReceive(const Coap::Header &aHeader, const Message &aMessage);
     void    HandleProxyTransmit(const Coap::Header &aHeader, const Message &aMessage);
-    static bool HandleProxyReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
-        return static_cast<BorderAgent *>(aContext)->HandleProxyReceive(
+        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(
             *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
-    bool HandleProxyReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SetState(otBorderAgentState aState);
 
@@ -154,7 +154,7 @@ private:
     Coap::Resource mPendingSet;
     Coap::Resource mProxyTransmit;
 
-    Ip6::UdpReceiver         mProxyReceiver; ///< The UDP receiver to handle proxy packets to Commissioner
+    Ip6::UdpReceiver         mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
     TimerMilli         mTimer;

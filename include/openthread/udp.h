@@ -206,12 +206,12 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  */
 
 /**
- * @addtogroup api-udp-proxy
+ * @addtogroup api-udp-forward
  *
  * @brief
- *   This module includes functions for UDP proxy feature.
+ *   This module includes functions for UDP forward feature.
  *
- *   The functions in this module are available when udp-proxy feature (`OPENTHREAD_ENABLE_UDP_PROXY`) is enabled.
+ *   The functions in this module are available when udp-forward feature (`OPENTHREAD_ENABLE_UDP_FORWARD`) is enabled.
  *
  * @{
  *
@@ -227,21 +227,21 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  * @param[in]  aContext   A pointer to application-specific context.
  *
  */
-typedef void (*otUdpProxySender)(otMessage *   aMessage,
-                                 uint16_t      aPeerPort,
-                                 otIp6Address *aPeerAddr,
-                                 uint16_t      aSockPort,
-                                 void *        aContext);
+typedef void (*otUdpForwarder)(otMessage *   aMessage,
+                               uint16_t      aPeerPort,
+                               otIp6Address *aPeerAddr,
+                               uint16_t      aSockPort,
+                               void *        aContext);
 
 /**
- * Set UDP proxy callback to deliever UDP packets to host.
+ * Set UDP forward callback to deliever UDP packets to host.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aSender              A pointer to a function called to deliver UDP packet to host.
+ * @param[in]  aForwarder           A pointer to a function called to forward UDP packet to host.
  * @param[in]  aContext             A pointer to application-specific context.
  *
  */
-void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *aContext);
+void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext);
 
 /**
  * Handle a UDP packet received from host.
@@ -255,11 +255,11 @@ void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-void otUdpProxyReceive(otInstance *        aInstance,
-                       otMessage *         aMessage,
-                       uint16_t            aPeerPort,
-                       const otIp6Address *aPeerAddr,
-                       uint16_t            aSockPort);
+void otUdpForwardReceive(otInstance *        aInstance,
+                         otMessage *         aMessage,
+                         uint16_t            aPeerPort,
+                         const otIp6Address *aPeerAddr,
+                         uint16_t            aSockPort);
 
 /**
  * This function gets the existing UDP Sockets.

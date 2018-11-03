@@ -316,14 +316,14 @@ protected:
                                      bool                  aAllowEmptyValues = false);
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    static void HandleUdpProxyStream(otMessage *   aMessage,
-                                     uint16_t      aPeerPort,
-                                     otIp6Address *aPeerAddr,
-                                     uint16_t      aSockPort,
-                                     void *        aContext);
-    void        HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
-#endif // OPENTHREAD_ENABLE_UDP_PROXY
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    static void HandleUdpForwardStream(otMessage *   aMessage,
+                                       uint16_t      aPeerPort,
+                                       otIp6Address *aPeerAddr,
+                                       uint16_t      aSockPort,
+                                       void *        aContext);
+    void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
+#endif // OPENTHREAD_ENABLE_UDP_FORWARD
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     otError CommandHandler_NOOP(uint8_t aHeader);

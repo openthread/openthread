@@ -328,20 +328,20 @@ public:
     otUdpSocket *GetUdpSockets(void) { return mSockets; }
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
+#if OPENTHREAD_ENABLE_UDP_FORWARD
     /**
-     * This method sets the proxy sender.
+     * This method sets the forward sender.
      *
-     * @param[in]   aSender     A function pointer to send the proxy UDP packet.
+     * @param[in]   aForwarder  A function pointer to forward UDP packets.
      * @param[in]   aContext    A pointer to arbitrary context information.
      *
      */
-    void SetProxySender(otUdpProxySender aSender, void *aContext)
+    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext)
     {
-        mProxySender        = aSender;
-        mProxySenderContext = aContext;
+        mUdpForwarder        = aForwarder;
+        mUdpForwarderContext = aContext;
     }
-#endif // OPENTHREAD_ENABLE_UDP_PROXY
+#endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
 private:
     enum
@@ -358,9 +358,9 @@ private:
     uint16_t     mEphemeralPort;
     UdpReceiver *mReceivers;
     UdpSocket *  mSockets;
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    void *           mProxySenderContext;
-    otUdpProxySender mProxySender;
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    void *         mUdpForwarderContext;
+    otUdpForwarder mUdpForwarder;
 #endif
 };
 

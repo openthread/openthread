@@ -674,36 +674,36 @@ AC_MSG_CHECKING([should NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
-# Thread UDP Proxy
+# Thread UDP forward
 #
 
-AC_MSG_CHECKING([whether to enable UDP proxy])
-AC_ARG_ENABLE(udp_proxy,
-    [AS_HELP_STRING([--enable-udp-proxy], [Enable UDP proxy support @<:@default=no@:>@.])],
+AC_MSG_CHECKING([whether to enable UDP forward])
+AC_ARG_ENABLE(udp_forward,
+    [AS_HELP_STRING([--enable-udp-forward], [Enable UDP forward support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_udp_proxy=${enableval}
+            enable_udp_forward=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_udp_proxy} for --enable-udp-proxy])
+            AC_MSG_ERROR([Invalid value ${enable_udp_forward} for --enable-udp-forward])
             ;;
         esac
     ],
-    [enable_udp_proxy=no])
+    [enable_udp_forward=no])
 
-if test "$enable_udp_proxy" = "yes"; then
-    OPENTHREAD_ENABLE_UDP_PROXY=1
+if test "$enable_udp_forward" = "yes"; then
+    OPENTHREAD_ENABLE_UDP_FORWARD=1
 else
-    OPENTHREAD_ENABLE_UDP_PROXY=0
+    OPENTHREAD_ENABLE_UDP_FORWARD=0
 fi
 
-AC_MSG_RESULT(${enable_udp_proxy})
-AC_SUBST(OPENTHREAD_ENABLE_UDP_PROXY)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_UDP_PROXY], [test "${enable_udp_proxy}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UDP_PROXY], [${OPENTHREAD_ENABLE_UDP_PROXY}], [Define to 1 to enable the UDP proxy feature.])
+AC_MSG_RESULT(${enable_udp_forward})
+AC_SUBST(OPENTHREAD_ENABLE_UDP_FORWARD)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_UDP_FORWARD], [test "${enable_udp_forward}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UDP_FORWARD], [${OPENTHREAD_ENABLE_UDP_FORWARD}], [Define to 1 to enable the UDP forward feature.])
 
 #
 # Thread Border Agent
@@ -1930,7 +1930,7 @@ AC_MSG_NOTICE([
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
-  OpenThread UDP Proxy support              : ${enable_udp_proxy}
+  OpenThread UDP forward support            : ${enable_udp_forward}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
