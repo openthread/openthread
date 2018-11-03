@@ -126,6 +126,7 @@ SOURCES_COMMON                      = \
     api/netdata_api.cpp               \
     api/network_time_api.cpp          \
     api/server_api.cpp                \
+    api/sntp_api.cpp                  \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
@@ -184,6 +185,7 @@ SOURCES_COMMON                      = \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
+    net/sntp_client.cpp               \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
@@ -344,6 +346,7 @@ HEADERS_COMMON                      = \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
+    net/sntp_client.hpp               \
     net/socket.hpp                    \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
