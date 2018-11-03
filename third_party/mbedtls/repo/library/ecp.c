@@ -51,6 +51,7 @@
 
 #include "mbedtls/ecp.h"
 #include "mbedtls/threading.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -72,11 +73,6 @@
     !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -348,7 +344,7 @@ void mbedtls_ecp_group_free( mbedtls_ecp_group *grp )
         mbedtls_free( grp->T );
     }
 
-    mbedtls_zeroize( grp, sizeof( mbedtls_ecp_group ) );
+    mbedtls_platform_zeroize( grp, sizeof( mbedtls_ecp_group ) );
 }
 
 /*
@@ -1450,7 +1446,12 @@ static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 
 cleanup:
 
-    if( T != NULL && ! p_eq_g )
+    /* There are two cases where T is not stored in grp:
+     * - P != G
+     * - An intermediate operation failed before setting grp->T
+     * In either case, T must be freed.
+     */
+    if( T != NULL && T != grp->T )
     {
         for( i = 0; i < pre_len; i++ )
             mbedtls_ecp_point_free( &T[i] );
@@ -1896,7 +1897,6 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
             mbedtls_mpi_get_bit( d, 1 ) != 0 ||
             mbedtls_mpi_bitlen( d ) - 1 != grp->nbits ) /* mbedtls_mpi_bitlen is one-based! */
             return( MBEDTLS_ERR_ECP_INVALID_KEY );
-        else
 
         /* see [Curve25519] page 5 */
         if( grp->nbits == 254 && mbedtls_mpi_get_bit( d, 2 ) != 0 )
