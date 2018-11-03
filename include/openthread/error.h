@@ -314,7 +314,7 @@ typedef enum otError
     OT_ERROR_NOT_CAPABLE = 27,
 
     /**
-     * Coap response or acknowledgment or DNS response not received.
+     * Coap response or acknowledgment or DNS, SNTP response not received.
      */
     OT_ERROR_RESPONSE_TIMEOUT = 28,
 

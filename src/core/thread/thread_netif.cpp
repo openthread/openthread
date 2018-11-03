@@ -61,6 +61,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mDnsClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    , mSntpClient(aInstance.GetThreadNetif())
+#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
@@ -121,6 +124,9 @@ otError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
         mDnsClient.Start();
 #endif
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+        mSntpClient.Start();
+#endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
         GetInstance().GetChannelMonitor().Start();
 #endif
@@ -136,6 +142,9 @@ otError ThreadNetif::Down(void)
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    mSntpClient.Stop();
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     GetInstance().GetChannelMonitor().Stop();
