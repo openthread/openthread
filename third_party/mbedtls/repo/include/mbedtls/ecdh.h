@@ -2,8 +2,8 @@
  * \file ecdh.h
  *
  * \brief This file contains ECDH definitions and functions.
- * 
- * The Elliptic Curve Diffie-Hellman (ECDH) protocol is an anonymous 
+ *
+ * The Elliptic Curve Diffie-Hellman (ECDH) protocol is an anonymous
  * key agreement protocol allowing two parties to establish a shared
  * secret over an insecure channel. Each party must have an
  * elliptic-curve public–private key pair.
@@ -52,7 +52,7 @@ typedef enum
 /**
  * \brief           The ECDH context structure.
  */
-typedef struct
+typedef struct mbedtls_ecdh_context
 {
     mbedtls_ecp_group grp;   /*!< The elliptic curve used. */
     mbedtls_mpi d;           /*!< The private key. */
