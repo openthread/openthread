@@ -252,7 +252,7 @@ public:
     otError AddInternalUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
-     * This method removes a internal (to OpenThread) unicast address from the network interface.
+     * This method removes an internal (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
@@ -276,7 +276,7 @@ public:
     otError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
-     * This method removes a external (to OpenThread) unicast address from the network interface.
+     * This method removes an external (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
