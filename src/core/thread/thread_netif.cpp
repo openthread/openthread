@@ -124,7 +124,7 @@ otError ThreadNetif::Up(void)
     mDnsClient.Start();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
-        mSntpClient.Start();
+    mSntpClient.Start();
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     GetInstance().GetChannelMonitor().Start();
