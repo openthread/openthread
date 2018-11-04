@@ -423,7 +423,7 @@ OTAPI const otMeshLocalPrefix *OTCALL otThreadGetMeshLocalPrefix(otInstance *aIn
  * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix.
  *
  * @retval OT_ERROR_NONE           Successfully set the Mesh Local Prefix.
- * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are not enabled.
  *
  */
 OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefix *aMeshLocalPrefix);

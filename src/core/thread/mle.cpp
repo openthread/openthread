@@ -869,27 +869,43 @@ otError Mle::UpdateLinkLocalAddress(void)
     return OT_ERROR_NONE;
 }
 
-otError Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
+void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
 {
     ThreadNetif &netif = GetNetif();
 
-    if (memcmp(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix)) == 0)
+    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix)) == 0)
     {
         GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR);
         ExitNow();
     }
 
-    // We must remove the old addresses before adding the new ones.
-    netif.RemoveUnicastAddress(mMeshLocal64);
-    netif.RemoveUnicastAddress(mMeshLocal16);
-    netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
-    netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
+    if (netif.IsUp())
+    {
+        netif.RemoveUnicastAddress(mLeaderAloc);
+        // We must remove the old addresses before adding the new ones.
+        netif.RemoveUnicastAddress(mMeshLocal64);
+        netif.RemoveUnicastAddress(mMeshLocal16);
+        netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
+        netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
+    }
 
     memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
-    memcpy(mMeshLocal16.GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
+    memcpy(mMeshLocal16.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
+    memcpy(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
 
     // Just keep mesh local prefix if network interface is down
-    VerifyOrExit(netif.IsUp());
+    if (netif.IsUp())
+    {
+        ApplyMeshLocalPrefix();
+    }
+
+exit:
+    return;
+}
+
+void Mle::ApplyMeshLocalPrefix(void)
+{
+    ThreadNetif &netif = GetNetif();
 
 #if OPENTHREAD_ENABLE_SERVICE
 
@@ -924,20 +940,11 @@ otError Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
     // update Leader ALOC
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
-        netif.RemoveUnicastAddress(mLeaderAloc);
-        memcpy(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
         netif.AddUnicastAddress(mLeaderAloc);
-    }
-    else
-    {
-        memcpy(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
     }
 
     // Changing the prefix also causes the mesh local address to be different.
     GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
-
-exit:
-    return OT_ERROR_NONE;
 }
 
 uint16_t Mle::GetRloc16(void) const
