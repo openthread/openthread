@@ -43,6 +43,9 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "common/owner-locator.hpp"
+
+#define ABS(value) (((value) >= 0) ? (value) : -(value))
 
 namespace ot {
 
@@ -59,37 +62,20 @@ TimeSync::TimeSync(Instance &aInstance)
     , mNetworkTimeOffset(0)
     , mTimeSyncCallback(NULL)
     , mTimeSyncCallbackContext(NULL)
+    , mNotifierCallback(&TimeSync::HandleStateChanged, this)
+    , mTimer(aInstance, HandleTimeout, this)
+    , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
+    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
+
+    CheckAndHandleChanges(false);
 }
 
 otNetworkTimeStatus TimeSync::GetTime(uint64_t &aNetworkTime) const
 {
-    otNetworkTimeStatus networkTimeStatus = OT_NETWORK_TIME_SYNCHRONIZED;
-    otDeviceRole        role              = GetInstance().GetThreadNetif().GetMle().GetRole();
-
-    switch (role)
-    {
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
-        networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
-        break;
-
-    case OT_DEVICE_ROLE_CHILD:
-    case OT_DEVICE_ROLE_ROUTER:
-        if ((TimerMilli::GetNow() - mLastTimeSyncReceived) > 2 * TimerMilli::SecToMsec(mTimeSyncPeriod))
-        {
-            // The device hasn’t received time sync for more than two periods time.
-            networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
-        }
-        break;
-
-    case OT_DEVICE_ROLE_LEADER:
-        break;
-    }
-
     aNetworkTime = static_cast<uint64_t>(static_cast<int64_t>(otPlatTimeGet()) + mNetworkTimeOffset);
 
-    return networkTimeStatus;
+    return mCurrentStatus;
 }
 
 void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
@@ -118,7 +104,10 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
             mNetworkTimeOffset    = aMessage.GetNetworkTimeOffset();
             mTimeSyncRequired     = true;
 
-            NotifyTimeSyncCallback(mNetworkTimeOffset - origNetworkTimeOffset);
+            // Only notify listeners of an update for network time offset jumps of more than
+            // OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US but notify listeners regardless if the status changes.
+            CheckAndHandleChanges(ABS(mNetworkTimeOffset - origNetworkTimeOffset) >=
+                                  OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US);
         }
     }
 
@@ -134,11 +123,11 @@ void TimeSync::IncrementTimeSyncSeq(void)
     }
 }
 
-void TimeSync::NotifyTimeSyncCallback(int64_t aNetworkTimeOffsetDelta)
+void TimeSync::NotifyTimeSyncCallback()
 {
     if (mTimeSyncCallback != NULL)
     {
-        mTimeSyncCallback(mTimeSyncCallbackContext, aNetworkTimeOffsetDelta);
+        mTimeSyncCallback(mTimeSyncCallbackContext);
     }
 }
 
@@ -164,6 +153,82 @@ exit:
     return;
 }
 #endif // OPENTHREAD_FTD
+
+void TimeSync::HandleStateChanged(otChangedFlags aFlags)
+{
+    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
+    {
+        CheckAndHandleChanges(false);
+    }
+}
+
+void TimeSync::HandleTimeout()
+{
+    CheckAndHandleChanges(false);
+}
+
+void TimeSync::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+{
+    aCallback.GetOwner<TimeSync>().HandleStateChanged(aFlags);
+}
+
+void TimeSync::HandleTimeout(Timer &aTimer)
+{
+    aTimer.GetOwner<TimeSync>().HandleTimeout();
+}
+
+void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
+{
+    otNetworkTimeStatus networkTimeStatus       = OT_NETWORK_TIME_SYNCHRONIZED;
+    const otDeviceRole  role                    = GetInstance().GetThreadNetif().GetMle().GetRole();
+    const uint32_t      resyncNeededThresholdMs = 2 * TimerMilli::SecToMsec(mTimeSyncPeriod);
+    const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
+    uint32_t            timerTimeoutMs;
+
+    switch (role)
+    {
+    case OT_DEVICE_ROLE_DISABLED:
+    case OT_DEVICE_ROLE_DETACHED:
+        networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
+        break;
+
+    case OT_DEVICE_ROLE_CHILD:
+    case OT_DEVICE_ROLE_ROUTER:
+        if (timeSyncLastSyncMs > resyncNeededThresholdMs)
+        {
+            // The device hasn’t received time sync for more than two periods time.
+            networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
+        }
+        break;
+
+    case OT_DEVICE_ROLE_LEADER:
+        break;
+    }
+
+    mTimer.Stop();
+
+    if (networkTimeStatus == OT_NETWORK_TIME_SYNCHRONIZED)
+    {
+        // Schedule a check 1 millisecond after two periods of time
+        if (resyncNeededThresholdMs >= timeSyncLastSyncMs)
+        {
+            timerTimeoutMs = resyncNeededThresholdMs - timeSyncLastSyncMs + 1;
+        }
+        else
+        {
+            timerTimeoutMs = resyncNeededThresholdMs + 1;
+        }
+
+        mTimer.Start(timerTimeoutMs);
+    }
+
+    if (networkTimeStatus != mCurrentStatus || aTimeUpdated)
+    {
+        mCurrentStatus = networkTimeStatus;
+
+        NotifyTimeSyncCallback();
+    }
+}
 
 } // namespace ot
 

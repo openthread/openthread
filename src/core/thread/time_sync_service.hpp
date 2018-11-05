@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 
 namespace ot {
@@ -150,7 +151,43 @@ public:
         mTimeSyncCallbackContext = aCallbackContext;
     }
 
+    /**
+     * Callback to be called when thread state changes.
+     *
+     * @param[in] aFlags Flags that denote the state change events.
+     */
+    void HandleStateChanged(otChangedFlags aFlags);
+
+    /**
+     * Callback to be called when timer expires.
+     */
+    void HandleTimeout(void);
+
 private:
+    /**
+     * Callback to be called when thread state changes.
+     *
+     * @param[in] aCallback Callback context.
+     * @param[in] aFlags Flags that denote the state change events.
+     */
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+
+    /**
+     * Callback to be called when timer expires.
+     *
+     * @param[in] aTimer The corresponding timer.
+     */
+    static void HandleTimeout(Timer &aTimer);
+
+    /**
+     * Check and handle any status change, and notify observers if applicable.
+     *
+     * @param[in] aNotifyTimeUpdated True to denote that observers should be notified due to a time change, false
+     * otherwise.
+     *
+     */
+    void CheckAndHandleChanges(bool aNotifyTimeUpdated);
+
     /**
      * Increase the time synchronization sequence.
      *
@@ -159,10 +196,8 @@ private:
 
     /**
      * Notify any listener of a network time sync update event.
-     *
-     * @param[in] aNetworkTimeOffsetDelta The change in network time offset
      */
-    void NotifyTimeSyncCallback(int64_t aNetworkTimeOffsetDelta);
+    void NotifyTimeSyncCallback();
 
     bool     mTimeSyncRequired; ///< Indicate whether or not a time synchronization message is required.
     uint8_t  mTimeSyncSeq;      ///< The time synchronization sequence.
@@ -173,8 +208,12 @@ private:
 #endif
     uint32_t mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
     int64_t  mNetworkTimeOffset;    ///< The time offset to the Thread Network time
-    otNetworkTimeSyncCallbackFn mTimeSyncCallback;        ///< The callback to be called when time sync is handled.
-    void *                      mTimeSyncCallbackContext; ///< The context to be passed to callback.
+    otNetworkTimeSyncCallbackFn
+                        mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
+    void *              mTimeSyncCallbackContext; ///< The context to be passed to callback.
+    Notifier::Callback  mNotifierCallback;        ///< Callback for thread state changes.
+    TimerMilli          mTimer;                   ///< Timer for checking if a resync is required.
+    otNetworkTimeStatus mCurrentStatus;           ///< Current network time status.
 };
 
 /**

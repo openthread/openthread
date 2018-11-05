@@ -66,8 +66,6 @@
 #include "common/instance.hpp"
 #include "net/ip6.hpp"
 
-#define ABS(value) (((value) >= 0) ? (value) : -(value))
-
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 namespace ot {
@@ -2620,20 +2618,15 @@ exit:
     return error;
 }
 
-void NcpBase::HandleTimeSyncUpdate(void *aContext, int64_t aNetworkTimeOffsetDelta)
+void NcpBase::HandleTimeSyncUpdate(void *aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate(aNetworkTimeOffsetDelta);
+    static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate();
 }
 
-void NcpBase::HandleTimeSyncUpdate(int64_t aNetworkTimeOffsetDelta)
+void NcpBase::HandleTimeSyncUpdate()
 {
-    VerifyOrExit(ABS(aNetworkTimeOffsetDelta) >= OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US);
-
     mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
     mUpdateChangedPropsTask.Post();
-
-exit:
-    return;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 

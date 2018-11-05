@@ -1868,12 +1868,12 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
  *
  * This setting sets the minimum amount of time (in microseconds) that the network time must jump due to
- * a time sync event for the NCP to notify the host of the new network time.
+ * a time sync event for listeners to be notified of the new network time.
  */
-#ifndef OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US
-#define OPENTHREAD_CONFIG_NCP_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
+#define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
 #endif
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
