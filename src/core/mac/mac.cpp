@@ -69,12 +69,6 @@ static const otExtendedPanId sExtendedPanidInit = {
 };
 static const char sNetworkNameInit[] = "OpenThread";
 
-#ifdef _WIN32
-const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMinBE)) / 1000;
-const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMaxBE)) / 1000;
-static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
-#endif
-
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperation(kOperationIdle)
