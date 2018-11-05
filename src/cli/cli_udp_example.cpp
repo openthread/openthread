@@ -158,7 +158,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
         messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
     }
 
-    message = otUdpNewMessage(mInterpreter.mInstance, true);
+    message = otUdpNewMessage(mInterpreter.mInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg])));

@@ -416,7 +416,7 @@ void CoapSecure::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage
             otCoapHeaderSetPayloadMarker(&responseHeader);
         }
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
         if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
@@ -530,7 +530,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
         }
     }
 
-    message = otCoapNewMessage(mInterpreter.mInstance, &header);
+    message = otCoapNewMessage(mInterpreter.mInstance, &header, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // add payload
@@ -618,7 +618,7 @@ void CoapSecure::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const
         otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
         otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }

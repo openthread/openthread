@@ -514,13 +514,16 @@ public:
     /**
      * This method creates a new message with a CoAP header.
      *
-     * @param[in]  aHeader      A reference to a CoAP header that is used to create the message.
-     * @param[in]  aPriority    The message priority level.
+     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *
+     * @param[in]  aHeader    A reference to a CoAP header that is used to create the message.
+     * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
      */
-    Message *NewMessage(const Header &aHeader, uint8_t aPriority = kDefaultCoapMessagePriority);
+    Message *NewMessage(const Header &aHeader, const otMessageSettings *aSettings = NULL);
 
     /**
      * This method sends a CoAP message.
@@ -717,11 +720,6 @@ protected:
     Ip6::UdpSocket mSocket;
 
 private:
-    enum
-    {
-        kDefaultCoapMessagePriority = Message::kPriorityNormal,
-    };
-
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const CoapMetadata &aCoapMetadata);

@@ -904,7 +904,7 @@ otLwfEventWorkerThread(
                                 otError error = OT_ERROR_NONE;
 
                                 // Create a new message
-                                otMessage *message = otIp6NewMessage(pFilter->otCtx, TRUE);
+                                otMessage *message = otIp6NewMessage(pFilter->otCtx, NULL);
                                 if (message)
                                 {
                                     // Write to the message

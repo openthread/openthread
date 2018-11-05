@@ -91,6 +91,32 @@ exit:
     return message;
 }
 
+Message *MessagePool::New(uint8_t aType, uint16_t aReserved, const otMessageSettings *aSettings)
+{
+    Message *message;
+    bool     linkSecurityEnabled;
+    uint8_t  priority;
+
+    if (aSettings == NULL)
+    {
+        linkSecurityEnabled = true;
+        priority            = OT_MESSAGE_PRIORITY_NORMAL;
+    }
+    else
+    {
+        linkSecurityEnabled = aSettings->mLinkSecurityEnabled;
+        priority            = aSettings->mPriority;
+    }
+
+    message = New(aType, aReserved, priority);
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(linkSecurityEnabled);
+    }
+
+    return message;
+}
+
 void MessagePool::Free(Message *aMessage)
 {
     assert(aMessage->Next(MessageInfo::kListAll) == NULL && aMessage->Prev(MessageInfo::kListAll) == NULL);

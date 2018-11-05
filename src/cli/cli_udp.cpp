@@ -102,7 +102,7 @@ int Udp::Output(const char *aBuf, uint16_t aBufLength)
     otError error = OT_ERROR_NONE;
     otMessage *message;
 
-    VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = otUdpNewMessage(mInstance, NULL)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageSetLength(message, aBufLength));
     otMessageWrite(message, 0, aBuf, aBufLength);
     SuccessOrExit(error = otUdpSend(&mSocket, message, &mPeer));
