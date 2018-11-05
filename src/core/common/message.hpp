@@ -229,10 +229,10 @@ public:
 
     enum
     {
-        kPriorityLow    = 0, ///< Low priority level.
-        kPriorityNormal = 1, ///< Normal priority level.
-        kPriorityHigh   = 2, ///< High priority level.
-        kPriorityNet    = 3, ///< Network Control priority level.
+        kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
+        kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
+        kPriorityHigh   = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };
@@ -1249,6 +1249,21 @@ public:
      *
      */
     Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
+
+    /**
+     * This method is used to obtain a new message with specified settings.
+     *
+     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aSettings       A pointer to the message settings or NULL to set default settings.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader, const otMessageSettings *aSettings);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.

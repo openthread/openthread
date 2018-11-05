@@ -110,13 +110,16 @@ public:
     /**
      * This method allocates a new message buffer from the buffer pool.
      *
+     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
-     * @param[in]  aPriority  The priority level of the message.
+     * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultIp6MessagePriority);
+    Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
 
     /**
      * This constructor initializes the object.

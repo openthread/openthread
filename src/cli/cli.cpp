@@ -1849,7 +1849,7 @@ void Interpreter::HandlePingTimer()
     otMessage *          message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);
 
-    VerifyOrExit((message = otIp6NewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = otIp6NewMessage(mInstance, NULL)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(error = otMessageSetLength(message, mLength));
     SuccessOrExit(error = otIcmp6SendEchoRequest(mInstance, message, messageInfo, 1));
