@@ -148,22 +148,19 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
 
-otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader, otMessageSettings *aSettings)
+otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader, const otMessageSettings *aSettings)
 {
     Message * message;
     Instance &instance = *static_cast<Instance *>(aInstance);
-    uint8_t   priority;
 
     VerifyOrExit(aHeader != NULL, message = NULL);
 
     if (aSettings != NULL)
     {
-        VerifyOrExit(aSettings->mLinkSecurityEnabled, message = NULL);
         VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     }
 
-    priority = (aSettings == NULL) ? OT_MESSAGE_PRIORITY_NORMAL : aSettings->mPriority;
-    message  = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)), priority);
+    message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)), aSettings);
 
 exit:
     return message;

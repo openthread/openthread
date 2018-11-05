@@ -96,7 +96,7 @@ typedef struct otUdpSocket
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -107,7 +107,7 @@ typedef struct otUdpSocket
  * @sa otFreeMessage
  *
  */
-otMessage *otUdpNewMessage(otInstance *aInstance, otMessageSettings *aSettings);
+otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
  * Open a UDP/IPv6 socket.

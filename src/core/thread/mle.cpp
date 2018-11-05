@@ -1079,13 +1079,13 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr,
 
 Message *Mle::NewMleMessage(void)
 {
-    Message *message;
+    Message *         message;
+    otMessageSettings settings = {false, static_cast<otMessagePriority>(kMleMessagePriority)};
 
-    message = mSocket.NewMessage(0, kMleMessagePriority);
+    message = mSocket.NewMessage(0, &settings);
     VerifyOrExit(message != NULL);
 
     message->SetSubType(Message::kSubTypeMleGeneral);
-    message->SetLinkSecurityEnabled(false);
 
 exit:
     return message;

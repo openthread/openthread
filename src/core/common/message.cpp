@@ -91,14 +91,22 @@ exit:
     return message;
 }
 
-Message *MessagePool::New(uint8_t aType, uint16_t aReserved, otMessageSettings *aSettings)
+Message *MessagePool::New(uint8_t aType, uint16_t aReserved, const otMessageSettings *aSettings)
 {
-    Message *message = NULL;
+    Message *message;
     bool     linkSecurityEnabled;
     uint8_t  priority;
 
-    linkSecurityEnabled = (aSettings == NULL) ? true : aSettings->mLinkSecurityEnabled;
-    priority            = (aSettings == NULL) ? OT_MESSAGE_PRIORITY_NORMAL : aSettings->mPriority;
+    if (aSettings == NULL)
+    {
+        linkSecurityEnabled = true;
+        priority            = OT_MESSAGE_PRIORITY_NORMAL;
+    }
+    else
+    {
+        linkSecurityEnabled = aSettings->mLinkSecurityEnabled;
+        priority            = aSettings->mPriority;
+    }
 
     message = New(aType, aReserved, priority);
     if (message)

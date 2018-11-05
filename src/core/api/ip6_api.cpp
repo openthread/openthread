@@ -194,7 +194,7 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     return error;
 }
 
-otMessage *otIp6NewMessage(otInstance *aInstance, otMessageSettings *aSettings)
+otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;

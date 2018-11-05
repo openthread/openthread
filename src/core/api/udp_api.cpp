@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-otMessage *otUdpNewMessage(otInstance *aInstance, otMessageSettings *aSettings)
+otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
