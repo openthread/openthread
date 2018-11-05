@@ -245,7 +245,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
-    SetMeshLocalPrefix(GetMeshLocalPrefix());
+    ApplyMeshLocalPrefix();
     SetRloc16(GetRloc16());
 
     SetStateDetached();
@@ -894,10 +894,9 @@ void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
     memcpy(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
 
     // Just keep mesh local prefix if network interface is down
-    if (netif.IsUp())
-    {
-        ApplyMeshLocalPrefix();
-    }
+    VerifyOrExit(netif.IsUp());
+
+    ApplyMeshLocalPrefix();
 
 exit:
     return;
