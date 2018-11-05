@@ -38,7 +38,9 @@
 
 #include <openthread/link_raw.h>
 
+#include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF || \
     OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -49,7 +51,9 @@
 
 namespace ot {
 
-class LinkRaw
+namespace Mac {
+
+class LinkRaw : public InstanceLocator
 {
 public:
     /**
@@ -112,14 +116,15 @@ public:
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
-     * @param[in]  aFrame               A pointer to the frame that was transmitted.
+     * @note The callback @p aCallback will not be called if this call does not return OT_ERROR_NONE.
+     *
      * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
      *
      * @retval OT_ERROR_NONE            Successfully transitioned to Transmit.
      * @retval OT_ERROR_INVALID_STATE   The radio was not in the Receive state.
      *
      */
-    otError Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
+    otError Transmit(otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
@@ -237,10 +242,22 @@ public:
      */
     otError SetExtAddress(const otExtAddress &aExtAddress);
 
-private:
-    otInstance &mInstance;
+    /**
+     * This method gets the transmit frame.
+     *
+     * @returns A pointer to the transmit frame.
+     *
+     */
+    otRadioFrame *GetTransmitFrame(void) { return mTransmitFrame; }
 
-#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
+private:
+    void        TransmitNow(void);
+    void        StartTransmit(void);
+    static void HandleOperationTask(Tasklet &aTasklet);
+    void        HandleOperationTask(void);
+
+    Tasklet mOperationTask;
+    bool    mPendingTransmitData : 1;
 
     enum TimerReason
     {
@@ -250,6 +267,7 @@ private:
         kTimerReasonEnergyScanComplete,
     };
 
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
     TimerMilli  mTimer;
     TimerReason mTimerReason;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -263,18 +281,17 @@ private:
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+    void StartCsmaBackoff(void);
+
+    uint8_t mCsmaBackoffs;
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
     uint8_t mTransmitRetries;
-    uint8_t mCsmaBackoffs;
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-
-    void StartCsmaBackoff(void);
-
-#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
@@ -310,8 +327,11 @@ private:
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
+    Frame *                 mTransmitFrame;
+    otRadioCaps             mRadioCaps;
 };
 
+} // namespace Mac
 } // namespace ot
 
 #endif // LINK_RAW_HPP_

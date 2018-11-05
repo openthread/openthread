@@ -106,6 +106,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/crypto/mbedtls.cpp                             \
     src/core/crypto/pbkdf2_cmac.cpp                         \
     src/core/crypto/sha256.cpp                              \
+    src/core/mac/channel_mask.cpp                           \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
@@ -192,6 +193,7 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
     third_party/mbedtls/repo/library/platform.c             \
+    third_party/mbedtls/repo/library/platform_util.c        \
     third_party/mbedtls/repo/library/sha256.c               \
     third_party/mbedtls/repo/library/bignum.c               \
     third_party/mbedtls/repo/library/ccm.c                  \

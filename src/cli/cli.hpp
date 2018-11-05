@@ -61,6 +61,7 @@
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
 #include <openthread/dns.h>
+#include <openthread/sntp.h>
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #endif
@@ -99,7 +100,7 @@ struct Command
 class Interpreter
 {
     friend class Coap;
-    friend class CoapsSecure;
+    friend class CoapSecure;
     friend class UdpExample;
 
 public:
@@ -312,6 +313,9 @@ private:
     void ProcessRloc16(int argc, char *argv[]);
     void ProcessScan(int argc, char *argv[]);
     void ProcessSingleton(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    void ProcessSntp(int argc, char *argv[]);
+#endif
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
 #ifndef OTDLL
@@ -366,6 +370,10 @@ private:
                                     otError       aResult);
 #endif
 
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    static void s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
+#endif
+
 #ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const otIcmp6Header &aIcmpHeader);
     void HandlePingTimer();
@@ -386,11 +394,12 @@ private:
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
     void HandleJoinerCallback(otError aError);
-
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
-
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    void HandleSntpResponse(uint64_t aTime, otError aResult);
+#endif
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
 
     static const struct Command sCommands[];
@@ -434,6 +443,10 @@ private:
     char           mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    bool           mSntpQueryingInProgress;
+#endif
+
     UdpExample mUdp;
 
 #endif
@@ -447,7 +460,7 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-    CoapsSecure mCoapSecure;
+    CoapSecure mCoapSecure;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 };

@@ -119,6 +119,10 @@ ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
 
+ifeq ($(SNTP_CLIENT),1)
+configure_OPTIONS              += --enable-sntp-client
+endif
+
 ifeq ($(UDP_PROXY),1)
 configure_OPTIONS              += --enable-udp-proxy
 endif
