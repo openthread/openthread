@@ -1852,6 +1852,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_PROXY));
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PERFORMANCE_TEST));
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 exit:

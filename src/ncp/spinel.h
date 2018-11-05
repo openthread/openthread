@@ -760,6 +760,7 @@ enum
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
+    SPINEL_CAP_PERFORMANCE_TEST        = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN       = 1024,
@@ -2317,6 +2318,45 @@ typedef enum
      *
      */
     SPINEL_PROP_PARENT_RESPONSE_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 13,
+
+    /// End-to-End Latency test
+    /** Format: `6Sb` - Write only
+     *
+     * Required capability SPINEL_CAP_PERFORMANCE_TEST_
+     *
+     *  `6`: Peer IPv6 address
+     *  `S`: UDP payload size
+     *  `b`: Role of node, True is sending node, False is receiving node.
+     *
+     * This property sets the role of node in latency test. Launch the receiving node by setting the default value in
+     * this property, and then launch the sending node to start the test.
+     *
+     */
+    SPINEL_PROP_PERFORMANCE_LATENCY_TEST = SPINEL_PROP_OPENTHREAD__BEGIN + 14,
+
+    /// Latency test result
+    /** Format: `L` - Read-Write
+     *
+     * Required capability SPINEL_CAP_PERFORMANCE_TEST
+     *
+     *  `L`: Latnecy value, in microseconds
+     *
+     * This property sends latency value from receiving node to the Host.
+     *
+     */
+    SPINEL_PROP_PERFORMANCE_LATENCY = SPINEL_PROP_OPENTHREAD__BEGIN + 15,
+
+    /// hoplimit value
+    /** Format: `C` - Read-Write
+     *
+     * Required capability SPINEL_CAP_PERFORMANCE_TEST
+     *
+     *  `C`: hoplimit value
+     *
+     * This property sends hoplimit value from receiving node to the Host.
+     *
+     */
+    SPINEL_PROP_PERFORMANCE_HOPLIMIT = SPINEL_PROP_OPENTHREAD__BEGIN + 16,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

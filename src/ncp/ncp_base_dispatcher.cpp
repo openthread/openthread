@@ -495,6 +495,14 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>;
         break;
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    case SPINEL_PROP_PERFORMANCE_LATENCY:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PERFORMANCE_LATENCY>;
+        break;
+    case SPINEL_PROP_PERFORMANCE_HOPLIMIT:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PERFORMANCE_HOPLIMIT>;
+        break;
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
     case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
@@ -813,6 +821,17 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    case SPINEL_PROP_PERFORMANCE_LATENCY_TEST:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_LATENCY_TEST>;
+        break;
+    case SPINEL_PROP_PERFORMANCE_LATENCY:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_LATENCY>;
+        break;
+    case SPINEL_PROP_PERFORMANCE_HOPLIMIT:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_HOPLIMIT>;
+        break;
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------

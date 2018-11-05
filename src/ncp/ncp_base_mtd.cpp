@@ -2619,6 +2619,114 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_LATENCY_TEST>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    const otIp6Address *peerAddr;
+    uint16_t            length;
+    bool                isSender;
+    otMessage *         message = NULL;
+    otMessageInfo       messageInfo;
+    char                payload[1500];
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(peerAddr));
+    SuccessOrExit(error = mDecoder.ReadUint16(length));
+    SuccessOrExit(error = mDecoder.ReadBool(isSender));
+
+    SuccessOrExit(error = otUdpClose(&mSocket));
+    SuccessOrExit(error = otUdpOpen(mInstance, &mSocket, HandleUdpReceive, this));
+
+    {
+        otSockAddr sockAddr;
+        memset(&sockAddr, 0, sizeof(sockAddr));
+        sockAddr.mPort    = 1234;
+        sockAddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+        SuccessOrExit(error = otUdpBind(&mSocket, &sockAddr));
+    }
+
+    if (isSender)
+    {
+        memset(&messageInfo, 0, sizeof(messageInfo));
+        memcpy(&messageInfo.mPeerAddr, peerAddr, sizeof(otIp6Address));
+        messageInfo.mPeerPort    = 1234;
+        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+
+        message = otUdpNewMessage(mInstance, true);
+        VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+        {
+            otNetworkTimeStatus status;
+            uint64_t            txTimestamp;
+            status = otNetworkTimeGet(mInstance, txTimestamp);
+            if (status != OT_NETWORK_TIME_SYNCHRONIZED)
+            {
+                txTimestamp = 0;
+            }
+            memset(payload, 'T', (size_t)length);
+            memcpy(payload, &txTimestamp, sizeof(uint64_t));
+
+            SuccessOrExit(error = otMessageAppend(message, payload, static_cast<uint16_t>(length)));
+        }
+
+        SuccessOrExit(error = otUdpSend(&mSocket, message, &messageInfo));
+    }
+
+exit:
+    if (error != OT_ERROR_NONE && message != NULL)
+    {
+        otMessageFree(message);
+    }
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PERFORMANCE_LATENCY>(void)
+{
+    return mEncoder.WriteUint32(mLatency);
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PERFORMANCE_HOPLIMIT>(void)
+{
+    return mEncoder.WriteUint8(mHopLimit);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_LATENCY>(void)
+{
+    return mDecoder.ReadUint32(mLatency);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PERFORMANCE_HOPLIMIT>(void)
+{
+    return mDecoder.ReadUint8(mHopLimit);
+}
+
+void NcpBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    static_cast<NcpBase *>(aContext)->HandleUdpReceive(aMessage, aMessageInfo);
+}
+
+void NcpBase::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    uint8_t             buf[1500];
+    uint64_t            rxTimestamp;
+    uint64_t            txTimestamp;
+    otNetworkTimeStatus status;
+
+    otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
+
+    mHopLimit = aMessageInfo->mHopLimit;
+
+    status = otNetworkTimeGet(mInstance, rxTimestamp);
+    if (status != OT_NETWORK_TIME_SYNCHRONIZED)
+    {
+        mLatency = 0;
+        return;
+    }
+    memcpy(&txTimestamp, buf, sizeof(uint64_t));
+    mLatency = (uint32_t)(rxTimestamp - txTimestamp);
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+
 void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleActiveScanResult(aResult);

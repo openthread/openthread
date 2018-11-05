@@ -46,6 +46,7 @@
 #include <openthread/dhcp6_client.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
+#include <openthread/udp.h>
 
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
@@ -488,6 +489,13 @@ protected:
     SpinelEncoder          mEncoder;
     SpinelDecoder          mDecoder;
     bool                   mHostPowerStateInProgress;
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC && OPENTHREAD_CONFIG_ENABLE_PERFORMANCE_TEST
+    uint32_t    mLatency;
+    uint8_t     mHopLimit;
+    otUdpSocket mSocket;
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+#endif
 
     enum
     {
