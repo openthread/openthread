@@ -81,28 +81,18 @@ uint8_t Ip6::DscpToPriority(uint8_t aDscp)
     switch (cs)
     {
     case kDscpCs1:
-        // fall through
-
     case kDscpCs2:
         priority = Message::kPriorityLow;
         break;
 
     case kDscpCs0:
-        // fall through
-
     case kDscpCs3:
         priority = Message::kPriorityNormal;
         break;
 
     case kDscpCs4:
-        // fall through
-
     case kDscpCs5:
-        // fall through
-
     case kDscpCs6:
-        // fall through
-
     case kDscpCs7:
         priority = Message::kPriorityHigh;
         break;
