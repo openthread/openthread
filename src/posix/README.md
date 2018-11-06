@@ -44,6 +44,29 @@ make -f examples/Makefile-posix
 
 #### nRF52840
 
+* USB=0
+
+```sh
+make -f examples/Makefile-nrf52840
+arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-ncp-radio ot-ncp-radio.hex
+nrfjprog -f nrf52 --chiperase --reset --program ot-ncp-radio.hex
+nrfjprog -f nrf52 --pinresetenable
+nrfjprog -f nrf52 --reset
+
+# Disable MSD
+expect <<EOF
+spawn JLinkExe
+expect "J-Link>"
+send "msddisable\n"
+expect "Probe configured successfully."
+exit
+EOF
+
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
+```
+
+* USB=1
+
 ```sh
 # without USB=1 may result in failure for serial port issue
 make -f examples/Makefile-nrf52840 USB=1
