@@ -2842,8 +2842,8 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STREAM>(void)
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_STREAM>(void)
 {
     const uint8_t *     framePtr = NULL;
     uint16_t            frameLen = 0;
@@ -2864,9 +2864,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STRE
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
-    otUdpProxyReceive(mInstance, message, peerPort, peerAddr, sockPort);
+    otUdpForwardReceive(mInstance, message, peerPort, peerAddr, sockPort);
 
-    // `otUdpProxyReceive()` takes ownership of `message` (in both success
+    // `otUdpForwardReceive()` takes ownership of `message` (in both success
     // or failure cases). `message` is set to NULL so it is not freed at
     // exit.
     message = NULL;
@@ -2880,21 +2880,21 @@ exit:
     return error;
 }
 
-void NcpBase::HandleUdpProxyStream(otMessage *   aMessage,
-                                   uint16_t      aPeerPort,
-                                   otIp6Address *aPeerAddr,
-                                   uint16_t      aSockPort,
-                                   void *        aContext)
+void NcpBase::HandleUdpForwardStream(otMessage *   aMessage,
+                                     uint16_t      aPeerPort,
+                                     otIp6Address *aPeerAddr,
+                                     uint16_t      aSockPort,
+                                     void *        aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleUdpProxyStream(aMessage, aPeerPort, *aPeerAddr, aSockPort);
+    static_cast<NcpBase *>(aContext)->HandleUdpForwardStream(aMessage, aPeerPort, *aPeerAddr, aSockPort);
 }
 
-void NcpBase::HandleUdpProxyStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort)
+void NcpBase::HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort)
 {
     uint16_t length = otMessageGetLength(aMessage);
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_PROXY_STREAM));
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_THREAD_UDP_FORWARD_STREAM));
     SuccessOrExit(mEncoder.WriteUint16(length));
     SuccessOrExit(mEncoder.WriteMessage(aMessage));
 
@@ -2916,7 +2916,7 @@ exit:
         otMessageFree(aMessage);
     }
 }
-#endif // OPENTHREAD_ENABLE_UDP_PROXY
+#endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
 // ----------------------------------------------------------------------------
 // MARK: Property/Status Changed

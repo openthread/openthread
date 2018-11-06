@@ -308,12 +308,12 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 {
     otError error = OT_ERROR_NONE;
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
+#if OPENTHREAD_ENABLE_UDP_FORWARD
     if (aMessageInfo.GetInterfaceId() == OT_NETIF_INTERFACE_ID_HOST)
     {
-        VerifyOrExit(mProxySender != NULL, error = OT_ERROR_NO_ROUTE);
-        mProxySender(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
-                     mProxySenderContext);
+        VerifyOrExit(mUdpForwarder != NULL, error = OT_ERROR_NO_ROUTE);
+        mUdpForwarder(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
+                      mUdpForwarderContext);
         // message is consumed by the callback
     }
     else
