@@ -76,7 +76,7 @@ python --version || die
         --enable-raw-link-api             \
         --enable-service                  \
         --enable-sntp-client              \
-        --enable-udp-proxy                \
+        --enable-udp-forward              \
         --with-examples=posix || die
 
     scan-build --status-bugs -analyze-headers -v make || die

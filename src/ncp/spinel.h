@@ -765,7 +765,7 @@ enum
     SPINEL_CAP_THREAD__BEGIN       = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER = (SPINEL_CAP_THREAD__BEGIN + 0),
     SPINEL_CAP_THREAD_TMF_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 1),
-    SPINEL_CAP_THREAD_UDP_PROXY    = (SPINEL_CAP_THREAD__BEGIN + 2),
+    SPINEL_CAP_THREAD_UDP_FORWARD  = (SPINEL_CAP_THREAD__BEGIN + 2),
     SPINEL_CAP_THREAD_JOINER       = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD__END         = 1152,
 
@@ -1497,7 +1497,7 @@ typedef enum
     /** Format `dSS`
      * Required capability: `SPINEL_CAP_THREAD_TMF_PROXY`
      *
-     * This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
+     * This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_FORWARD_STREAM`.
      *
      */
     SPINEL_PROP_THREAD_TMF_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
@@ -1764,9 +1764,9 @@ typedef enum
      */
     SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE = SPINEL_PROP_THREAD_EXT__BEGIN + 35,
 
-    /// Thread UDP proxy stream
+    /// Thread UDP forward stream
     /** Format `dS6S`
-     * Required capability: `SPINEL_CAP_THREAD_UDP_PROXY`
+     * Required capability: `SPINEL_CAP_THREAD_UDP_FORWARD`
      *
      * This property helps exchange UDP packets with host.
      *
@@ -1776,7 +1776,7 @@ typedef enum
      *  `S`: Local UDP port
      *
      */
-    SPINEL_PROP_THREAD_UDP_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 36,
+    SPINEL_PROP_THREAD_UDP_FORWARD_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 36,
 
     /// Send MGMT_GET Thread Active Operational Dataset
     /** Format: `A(t(iD))` - Write only

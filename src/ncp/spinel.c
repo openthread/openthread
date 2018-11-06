@@ -1602,8 +1602,8 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "THREAD_TMF_PROXY_STREAM";
         break;
 
-    case SPINEL_PROP_THREAD_UDP_PROXY_STREAM:
-        ret = "THREAD_UDP_PROXY_STREAM";
+    case SPINEL_PROP_THREAD_UDP_FORWARD_STREAM:
+        ret = "THREAD_UDP_FORWARD_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
@@ -2467,8 +2467,8 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "THREAD_TMF_PROXY";
         break;
 
-    case SPINEL_CAP_THREAD_UDP_PROXY:
-        ret = "THREAD_UDP_PROXY";
+    case SPINEL_CAP_THREAD_UDP_FORWARD:
+        ret = "THREAD_UDP_FORWARD";
         break;
 
     case SPINEL_CAP_THREAD_JOINER:
