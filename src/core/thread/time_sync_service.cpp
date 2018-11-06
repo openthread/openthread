@@ -183,7 +183,6 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
     const otDeviceRole  role                    = GetInstance().GetThreadNetif().GetMle().GetRole();
     const uint32_t      resyncNeededThresholdMs = 2 * TimerMilli::SecToMsec(mTimeSyncPeriod);
     const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
-    uint32_t            timerTimeoutMs;
 
     mTimer.Stop();
 
