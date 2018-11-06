@@ -185,6 +185,8 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
     const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
     uint32_t            timerTimeoutMs;
 
+    mTimer.Stop();
+
     switch (role)
     {
     case OT_DEVICE_ROLE_DISABLED:
@@ -199,27 +201,16 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
             // The device hasn’t received time sync for more than two periods time.
             networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
         }
+        else
+        {
+            // Schedule a check 1 millisecond after two periods of time
+            assert(resyncNeededThresholdMs >= timeSyncLastSyncMs);
+            mTimer.Start(resyncNeededThresholdMs - timeSyncLastSyncMs + 1);
+        }
         break;
 
     case OT_DEVICE_ROLE_LEADER:
         break;
-    }
-
-    mTimer.Stop();
-
-    if (networkTimeStatus == OT_NETWORK_TIME_SYNCHRONIZED)
-    {
-        // Schedule a check 1 millisecond after two periods of time
-        if (resyncNeededThresholdMs >= timeSyncLastSyncMs)
-        {
-            timerTimeoutMs = resyncNeededThresholdMs - timeSyncLastSyncMs + 1;
-        }
-        else
-        {
-            timerTimeoutMs = resyncNeededThresholdMs + 1;
-        }
-
-        mTimer.Start(timerTimeoutMs);
     }
 
     if (networkTimeStatus != mCurrentStatus || aTimeUpdated)
