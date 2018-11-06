@@ -69,86 +69,6 @@ static const otExtendedPanId sExtendedPanidInit = {
 };
 static const char sNetworkNameInit[] = "OpenThread";
 
-#ifdef _WIN32
-const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMinBE)) / 1000;
-const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME * (1 << kMaxBE)) / 1000;
-static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
-#endif
-
-uint8_t ChannelMask::GetNumberOfChannels(void) const
-{
-    uint8_t num     = 0;
-    uint8_t channel = kChannelIteratorFirst;
-
-    while (GetNextChannel(channel) == OT_ERROR_NONE)
-    {
-        num++;
-    }
-
-    return num;
-}
-
-otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
-{
-    otError error = OT_ERROR_NOT_FOUND;
-
-    if (aChannel == kChannelIteratorFirst)
-    {
-        aChannel = (OT_RADIO_CHANNEL_MIN - 1);
-    }
-
-    for (aChannel++; aChannel <= OT_RADIO_CHANNEL_MAX; aChannel++)
-    {
-        if (ContainsChannel(aChannel))
-        {
-            ExitNow(error = OT_ERROR_NONE);
-        }
-    }
-
-exit:
-    return error;
-}
-
-ChannelMask::InfoString ChannelMask::ToString(void) const
-{
-    InfoString string;
-    uint8_t    channel  = kChannelIteratorFirst;
-    bool       addComma = false;
-    otError    error;
-
-    string.Append("{");
-
-    error = GetNextChannel(channel);
-
-    while (error == OT_ERROR_NONE)
-    {
-        uint8_t rangeStart = channel;
-        uint8_t rangeEnd   = channel;
-
-        while ((error = GetNextChannel(channel)) == OT_ERROR_NONE)
-        {
-            if (channel != rangeEnd + 1)
-            {
-                break;
-            }
-
-            rangeEnd = channel;
-        }
-
-        string.Append("%s%d", addComma ? ", " : " ", rangeStart);
-        addComma = true;
-
-        if (rangeStart < rangeEnd)
-        {
-            string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
-        }
-    }
-
-    string.Append("}");
-
-    return string;
-}
-
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mOperation(kOperationIdle)
@@ -200,6 +120,7 @@ Mac::Mac(Instance &aInstance)
     mExtAddress.GenerateRandom();
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
+    memset(&mNetworkName, 0, sizeof(otNetworkName));
 
     otPlatRadioEnable(&GetInstance());
 
@@ -308,8 +229,8 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
         aResult.mVersion    = beaconPayload->GetProtocolVersion();
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
-        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), sizeof(aResult.mNetworkName));
-        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(aResult.mExtendedPanId));
+        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), BeaconPayload::kNetworkNameSize);
+        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), BeaconPayload::kExtPanIdSize);
     }
 
     LogBeacon("Received", *beaconPayload);
@@ -585,15 +506,15 @@ otError Mac::SetNetworkName(const char *aNetworkName)
 
 otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t len   = static_cast<uint8_t>(strnlen(aBuffer, aLength));
+    otError error  = OT_ERROR_NONE;
+    uint8_t newLen = static_cast<uint8_t>(strnlen(aBuffer, aLength));
 
-    VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(memcmp(mNetworkName.m8, aBuffer, len) != 0,
+    VerifyOrExit(newLen <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(newLen != strlen(mNetworkName.m8) || memcmp(mNetworkName.m8, aBuffer, newLen) != 0,
                  GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
 
-    memcpy(mNetworkName.m8, aBuffer, len);
-    mNetworkName.m8[len] = 0;
+    memcpy(mNetworkName.m8, aBuffer, newLen);
+    mNetworkName.m8[newLen] = 0;
     GetNotifier().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
@@ -2226,22 +2147,6 @@ otError Mac::SetEnabled(bool aEnable)
     mEnabled = aEnable;
 
     return OT_ERROR_NONE;
-}
-
-void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
-{
-    aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
-    aMacCounters.SetIfInErrors(mCounters.mRxErrNoFrame + mCounters.mRxErrUnknownNeighbor +
-                               mCounters.mRxErrInvalidSrcAddr + mCounters.mRxErrSec + mCounters.mRxErrFcs +
-                               mCounters.mRxErrOther);
-    aMacCounters.SetIfOutErrors(mCounters.mTxErrCca);
-    aMacCounters.SetIfInUcastPkts(mCounters.mRxUnicast);
-    aMacCounters.SetIfInBroadcastPkts(mCounters.mRxBroadcast);
-    aMacCounters.SetIfInDiscards(mCounters.mRxAddressFiltered + mCounters.mRxDestAddrFiltered +
-                                 mCounters.mRxDuplicated);
-    aMacCounters.SetIfOutUcastPkts(mCounters.mTxUnicast);
-    aMacCounters.SetIfOutBroadcastPkts(mCounters.mTxBroadcast);
-    aMacCounters.SetIfOutDiscards(mCounters.mTxErrBusyChannel);
 }
 
 void Mac::ResetCounters(void)

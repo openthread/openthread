@@ -43,10 +43,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *instance = NULL;
-    otMessage * message  = NULL;
-    otError     error    = OT_ERROR_NONE;
-    bool        isSecure;
+    otInstance *      instance = NULL;
+    otMessage *       message  = NULL;
+    otError           error    = OT_ERROR_NONE;
+    otMessageSettings settings;
 
     VerifyOrExit(size > 0);
 
@@ -58,9 +58,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otThreadSetEnabled(instance, true);
     otThreadBecomeLeader(instance);
 
-    isSecure = (data[0] & 0x1) != 0;
+    settings.mLinkSecurityEnabled = (data[0] & 0x1) != 0;
+    settings.mPriority            = OT_MESSAGE_PRIORITY_NORMAL;
 
-    message = otIp6NewMessage(instance, isSecure);
+    message = otIp6NewMessage(instance, &settings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otMessageAppend(message, data + 1, static_cast<uint16_t>(size - 1));

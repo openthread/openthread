@@ -99,9 +99,6 @@ Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
         // To mark the address as unused/available, set the `mNext` to point back to itself.
         mExtMulticastAddresses[i].mNext = &mExtMulticastAddresses[i];
     }
-
-    mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-        const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
 }
 
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
@@ -118,6 +115,25 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 
 exit:
     return rval;
+}
+
+void Netif::SubscribeAllNodesMulticast(void)
+{
+    assert(mMulticastAddresses == NULL);
+
+    mMulticastAddresses = static_cast<NetifMulticastAddress *>(
+        const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+
+    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+}
+
+void Netif::UnsubscribeAllNodesMulticast(void)
+{
+    assert(mMulticastAddresses == NULL || mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress);
+
+    mMulticastAddresses = NULL;
+
+    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
 }
 
 otError Netif::SubscribeAllRoutersMulticast(void)

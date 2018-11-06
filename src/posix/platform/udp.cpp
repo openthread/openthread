@@ -392,6 +392,8 @@ void platformUdpInit(void)
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
+    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
+
     VerifyOrExit(sPlatNetifIndex != 0);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
@@ -413,7 +415,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
                 continue;
             }
 
-            message = otUdpNewMessage(aInstance, false);
+            message = otUdpNewMessage(aInstance, &msgSettings);
 
             if (message == NULL)
             {

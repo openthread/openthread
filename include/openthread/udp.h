@@ -96,15 +96,18 @@ typedef struct otUdpSocket
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
+ * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
- * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  * @sa otFreeMessage
  *
  */
-otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
  * Open a UDP/IPv6 socket.
@@ -183,6 +186,13 @@ otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @param[in]  aMessage      A pointer to a message buffer.
  * @param[in]  aMessageInfo  A pointer to a message info structure.
  *
+ * If the return value is OT_ERROR_NONE, OpenThread takes ownership of @p aMessage, and the caller should no longer
+ * reference @p aMessage. If the return value is not OT_ERROR_NONE, the caller retains ownership of @p aMessage,
+ * including freeing @p aMessage if the message buffer is no longer needed.
+ *
+ * @retval OT_ERROR_NONE            The message is successfully scheduled for sending.
+ * @retval OT_ERROR_INVALID_ARGS    Invalid arguments are given.
+ *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
  * @sa otUdpClose
@@ -199,12 +209,12 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  */
 
 /**
- * @addtogroup api-udp-proxy
+ * @addtogroup api-udp-forward
  *
  * @brief
- *   This module includes functions for UDP proxy feature.
+ *   This module includes functions for UDP forward feature.
  *
- *   The functions in this module are available when udp-proxy feature (`OPENTHREAD_ENABLE_UDP_PROXY`) is enabled.
+ *   The functions in this module are available when udp-forward feature (`OPENTHREAD_ENABLE_UDP_FORWARD`) is enabled.
  *
  * @{
  *
@@ -220,21 +230,21 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  * @param[in]  aContext   A pointer to application-specific context.
  *
  */
-typedef void (*otUdpProxySender)(otMessage *   aMessage,
-                                 uint16_t      aPeerPort,
-                                 otIp6Address *aPeerAddr,
-                                 uint16_t      aSockPort,
-                                 void *        aContext);
+typedef void (*otUdpForwarder)(otMessage *   aMessage,
+                               uint16_t      aPeerPort,
+                               otIp6Address *aPeerAddr,
+                               uint16_t      aSockPort,
+                               void *        aContext);
 
 /**
- * Set UDP proxy callback to deliever UDP packets to host.
+ * Set UDP forward callback to deliever UDP packets to host.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aSender              A pointer to a function called to deliver UDP packet to host.
+ * @param[in]  aForwarder           A pointer to a function called to forward UDP packet to host.
  * @param[in]  aContext             A pointer to application-specific context.
  *
  */
-void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *aContext);
+void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext);
 
 /**
  * Handle a UDP packet received from host.
@@ -248,11 +258,11 @@ void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-void otUdpProxyReceive(otInstance *        aInstance,
-                       otMessage *         aMessage,
-                       uint16_t            aPeerPort,
-                       const otIp6Address *aPeerAddr,
-                       uint16_t            aSockPort);
+void otUdpForwardReceive(otInstance *        aInstance,
+                         otMessage *         aMessage,
+                         uint16_t            aPeerPort,
+                         const otIp6Address *aPeerAddr,
+                         uint16_t            aSockPort);
 
 /**
  * This function gets the existing UDP Sockets.

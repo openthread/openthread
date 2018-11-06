@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -61,6 +60,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mDnsClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    , mSntpClient(aInstance.GetThreadNetif())
+#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
@@ -111,46 +113,62 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 
 otError ThreadNetif::Up(void)
 {
-    if (!mIsUp)
-    {
-        // Enable the MAC just in case it was disabled while the Interface was down.
-        mMac.SetEnabled(true);
-        GetIp6().AddNetif(*this);
-        mMeshForwarder.Start();
-        mCoap.Start(kCoapUdpPort);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-        mDnsClient.Start();
-#endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-        GetInstance().GetChannelMonitor().Start();
-#endif
-        mMleRouter.Enable();
-        mIsUp = true;
-    }
+    VerifyOrExit(!mIsUp);
 
+    // Enable the MAC just in case it was disabled while the Interface was down.
+    mMac.SetEnabled(true);
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    GetInstance().GetChannelMonitor().Start();
+#endif
+    mMeshForwarder.Start();
+    GetIp6().AddNetif(*this);
+
+    mIsUp = true;
+
+    SubscribeAllNodesMulticast();
+    mMleRouter.Enable();
+    mCoap.Start(kCoapUdpPort);
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mDnsClient.Start();
+#endif
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    mSntpClient.Start();
+#endif
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
+
+exit:
     return OT_ERROR_NONE;
 }
 
 otError ThreadNetif::Down(void)
 {
-    mCoap.Stop();
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient.Stop();
-#endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    GetInstance().GetChannelMonitor().Stop();
-#endif
-    mMleRouter.Disable();
-    mMeshForwarder.Stop();
-    GetIp6().RemoveNetif(*this);
-    RemoveAllExternalUnicastAddresses();
-    UnsubscribeAllExternalMulticastAddresses();
-    mIsUp = false;
+    VerifyOrExit(mIsUp);
 
 #if OPENTHREAD_ENABLE_DTLS
     mDtls.Stop();
 #endif
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mDnsClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    mSntpClient.Stop();
+#endif
+    mCoap.Stop();
+    mMleRouter.Disable();
+    RemoveAllExternalUnicastAddresses();
+    UnsubscribeAllExternalMulticastAddresses();
+    UnsubscribeAllRoutersMulticast();
+    UnsubscribeAllNodesMulticast();
 
+    mIsUp = false;
+    GetIp6().RemoveNetif(*this);
+    mMeshForwarder.Stop();
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    GetInstance().GetChannelMonitor().Stop();
+#endif
+    GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
+
+exit:
     return OT_ERROR_NONE;
 }
 

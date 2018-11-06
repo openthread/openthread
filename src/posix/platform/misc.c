@@ -35,6 +35,7 @@
 #include <openthread/platform/misc.h>
 
 #include "openthread-system.h"
+#include "common/logging.hpp"
 
 extern jmp_buf gResetJump;
 
@@ -88,4 +89,34 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 {
     (void)aInstance;
     return gPlatMcuPowerState;
+}
+
+void SuccessOrDie(otError aError)
+{
+    int exitCode;
+
+    switch (aError)
+    {
+    case OT_ERROR_NONE:
+        return;
+
+    case OT_ERROR_INVALID_ARGS:
+        exitCode = OT_EXIT_INVALID_ARGUMENTS;
+        break;
+
+    default:
+        exitCode = OT_EXIT_FAILURE;
+        break;
+    }
+
+    otLogCritPlat("Error: %s", otThreadErrorToString(aError));
+    exit(exitCode);
+}
+
+void VerifyOrDie(bool aCondition, int aExitCode)
+{
+    if (!aCondition)
+    {
+        exit(aExitCode);
+    }
 }

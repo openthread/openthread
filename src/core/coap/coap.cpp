@@ -142,14 +142,14 @@ void CoapBase::SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext)
     mDefaultHandlerContext = aContext;
 }
 
-Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
+Message *CoapBase::NewMessage(const Header &aHeader, const otMessageSettings *aSettings)
 {
     Message *message = NULL;
 
     // Ensure that header has minimum required length.
     VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength);
 
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength(), aPriority)) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength(), aSettings)) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
 

@@ -274,8 +274,8 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    otUdpProxySetSender(mInstance, &NcpBase::HandleUdpProxyStream, this);
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif
     otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
     otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
@@ -1852,8 +1852,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_JOINER));
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_PROXY));
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_FORWARD));
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

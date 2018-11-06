@@ -40,16 +40,19 @@
 
 using namespace ot;
 
-otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
+otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message  = instance.GetIp6().GetUdp().NewMessage(0);
+    Message * message;
 
-    if (message)
+    if (aSettings != NULL)
     {
-        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+        VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     }
 
+    message = instance.GetMessagePool().New(Message::kTypeIp6, 0, aSettings);
+
+exit:
     return message;
 }
 
@@ -92,20 +95,20 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
     return socket.SendTo(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
-void otUdpProxySetSender(otInstance *aInstance, otUdpProxySender aSender, void *aContext)
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Ip6::Ip6 &ip6      = instance.Get<Ip6::Ip6>();
 
-    ip6.GetUdp().SetProxySender(aSender, aContext);
+    ip6.GetUdp().SetUdpForwarder(aForwarder, aContext);
 }
 
-void otUdpProxyReceive(otInstance *        aInstance,
-                       otMessage *         aMessage,
-                       uint16_t            aPeerPort,
-                       const otIp6Address *aPeerAddr,
-                       uint16_t            aSockPort)
+void otUdpForwardReceive(otInstance *        aInstance,
+                         otMessage *         aMessage,
+                         uint16_t            aPeerPort,
+                         const otIp6Address *aPeerAddr,
+                         uint16_t            aSockPort)
 {
     Ip6::MessageInfo messageInfo;
     Instance &       instance = *static_cast<Instance *>(aInstance);
@@ -123,7 +126,7 @@ void otUdpProxyReceive(otInstance *        aInstance,
 
     static_cast<ot::Message *>(aMessage)->Free();
 }
-#endif // OPENTHREAD_ENABLE_UDP_PROXY
+#endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
 otUdpSocket *otUdpGetSockets(otInstance *aInstance)

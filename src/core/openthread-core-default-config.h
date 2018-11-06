@@ -544,6 +544,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT
+ *
+ * Maximum time that SNTP Client waits for response in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT 3000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SNTP_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for SNTP client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SNTP_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_SNTP_MAX_RETRANSMIT 2
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
  *
  * The Beacon version to use when the beacon join flag is set.

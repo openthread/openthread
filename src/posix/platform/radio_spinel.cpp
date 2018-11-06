@@ -142,23 +142,6 @@ static inline bool isAckRequested(const uint8_t *frame)
     return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
 }
 
-static inline void SuccessOrDie(otError aError)
-{
-    if (aError != OT_ERROR_NONE)
-    {
-        // fprintf(stderr, "Operation failed: %s\r\n", otThreadErrorToString(aError));
-        exit(OT_EXIT_FAILURE);
-    }
-}
-
-static inline void VerifyOrDie(bool aCondition)
-{
-    if (!aCondition)
-    {
-        exit(OT_EXIT_FAILURE);
-    }
-}
-
 namespace ot {
 
 static otError SpinelStatusToOtError(spinel_status_t aError)
@@ -540,6 +523,11 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+    else
+    {
+        otLogCritPlat("Radio file '%s' not supported", aRadioFile);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
     SuccessOrExit(error = SendReset());
     SuccessOrExit(error = WaitResponse());
@@ -576,7 +564,7 @@ otError RadioSpinel::CheckSpinelVersion(void)
     {
         otLogCritPlat("Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                       SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
-        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+        exit(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
 exit:
@@ -618,7 +606,7 @@ otError RadioSpinel::CheckCapabilities(void)
     if (!supportsRawRadio)
     {
         otLogCritPlat("RCP capability list does not include support for radio/raw mode");
-        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+        exit(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
 exit:
@@ -643,7 +631,7 @@ otError RadioSpinel::CheckRadioCapabilities(void)
                       (mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "yes" : "no",
                       (mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "yes" : "no");
 
-        exit(OT_EXIT_INCOMPATIBLE_RADIO_SPINEL);
+        exit(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
 exit:
@@ -853,7 +841,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
             mIsReady = true;
 
             // If RCP crashes/resets while radio was enabled, posix app exits.
-            VerifyOrDie(!IsEnabled());
+            VerifyOrDie(!IsEnabled(), OT_EXIT_RADIO_SPINEL_RESET);
         }
         else
         {

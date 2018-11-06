@@ -33,10 +33,6 @@
 
 # Establish some key directories
 
-srcdir=`dirname ${0}`
-abs_srcdir=`pwd`
-abs_top_srcdir="${abs_srcdir}"
-
 install_packages_apt()
 {
     # apt update and install dependencies
@@ -76,6 +72,13 @@ install_packages_brew()
         echo 'warning: clang/gcc needed for posix examples'
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
+
+    # add clang-format for pretty
+    CLANG_FORMAT_VERSION="clang-format version 6.0"
+    which clang-format-6.0 || (which clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@6
+        sudo ln -s "$(brew --repo)/opt/llvm@6/bin/clang-format" /usr/local/bin/clang-format-6.0
+    }
 }
 
 install_packages_source()

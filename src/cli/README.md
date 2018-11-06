@@ -67,6 +67,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [singleton](#singleton)
+* [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 * [state](#state)
 * [thread](#thread-start)
 * [txpower](#txpower)
@@ -1733,6 +1734,24 @@ Return true when there are no other nodes in the network, otherwise return false
 > singleton
 true or false
 Done
+```
+
+### sntp query \[SNTP server IP\] \[SNTP server port\]
+
+Send SNTP Query to obtain current unix epoch time (from 1st January 1970).
+The latter two parameters have following default values:
+ * NTP server IP: 2001:4860:4806:8:: (Google IPv6 NTP Server)
+ * NTP server port: 123
+
+```bash
+> sntp query
+> SNTP response - Unix time: 1540894725 (era: 0)
+```
+
+You can use NAT64 of OpenThread Border Router to reach e.g. Google IPv4 NTP Server:
+```bash
+> sntp query 64:ff9b::d8ef:2308
+> SNTP response - Unix time: 1540898611 (era: 0)
 ```
 
 ### state

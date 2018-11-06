@@ -45,7 +45,7 @@
 namespace ot {
 namespace Cli {
 
-CoapsSecure::CoapsSecure(Interpreter &aInterpreter)
+CoapSecure::CoapSecure(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mShutdownFlag(false)
     , mUseCertificate(false)
@@ -57,7 +57,7 @@ CoapsSecure::CoapsSecure(Interpreter &aInterpreter)
     memset(&mPskId, 0, sizeof(mPskId));
 }
 
-void CoapsSecure::PrintHeaderInfos(otCoapHeader *aHeader) const
+void CoapSecure::PrintHeaderInfos(otCoapHeader *aHeader) const
 {
     otCoapCode mCoapCode;
     otCoapType mCoapType;
@@ -90,7 +90,7 @@ void CoapsSecure::PrintHeaderInfos(otCoapHeader *aHeader) const
                                        static_cast<const char *>(otCoapHeaderCodeToString(aHeader)));
 }
 
-void CoapsSecure::PrintPayload(otMessage *aMessage) const
+void CoapSecure::PrintPayload(otMessage *aMessage) const
 {
     uint8_t  buf[kMaxBufferSize];
     uint16_t bytesToPrint;
@@ -124,7 +124,7 @@ void CoapsSecure::PrintPayload(otMessage *aMessage) const
     mInterpreter.mServer->OutputFormat("\r\n> ");
 }
 
-otError CoapsSecure::Process(int argc, char *argv[])
+otError CoapSecure::Process(int argc, char *argv[])
 {
     otError error           = OT_ERROR_NONE;
     bool    mVerifyPeerCert = true;
@@ -147,9 +147,9 @@ otError CoapsSecure::Process(int argc, char *argv[])
         }
         otCoapSecureSetSslAuthMode(mInterpreter.mInstance, mVerifyPeerCert);
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT, this));
-        otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapsSecure::HandleClientConnect, this);
+        otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecure::HandleClientConnect, this);
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapsSecure::DefaultHandle, this);
+        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandle, this);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
         if (mUseCertificate)
@@ -231,8 +231,8 @@ otError CoapsSecure::Process(int argc, char *argv[])
                 sockaddr.mPort = static_cast<uint16_t>(value);
             }
 
-            SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &sockaddr,
-                                                      &CoapsSecure::HandleClientConnect, this));
+            SuccessOrExit(
+                error = otCoapSecureConnect(mInterpreter.mInstance, &sockaddr, &CoapSecure::HandleClientConnect, this));
             mInterpreter.mServer->OutputFormat("Coap Secure connect: ");
         }
         else
@@ -244,7 +244,7 @@ otError CoapsSecure::Process(int argc, char *argv[])
     {
         mResource.mUriPath = mUriPath;
         mResource.mContext = this;
-        mResource.mHandler = &CoapsSecure::HandleServerResponse;
+        mResource.mHandler = &CoapSecure::HandleServerResponse;
 
         if (argc > 1)
         {
@@ -304,7 +304,7 @@ exit:
     return error;
 }
 
-otError CoapsSecure::Stop(void)
+otError CoapSecure::Stop(void)
 {
     otError error = OT_ERROR_ABORT;
     otCoapRemoveResource(mInterpreter.mInstance, &mResource);
@@ -313,12 +313,12 @@ otError CoapsSecure::Stop(void)
     return error;
 }
 
-void OTCALL CoapsSecure::HandleClientConnect(bool aConnected, void *aContext)
+void OTCALL CoapSecure::HandleClientConnect(bool aConnected, void *aContext)
 {
-    static_cast<CoapsSecure *>(aContext)->HandleClientConnect(aConnected);
+    static_cast<CoapSecure *>(aContext)->HandleClientConnect(aConnected);
 }
 
-void CoapsSecure::HandleClientConnect(bool aConnected)
+void CoapSecure::HandleClientConnect(bool aConnected)
 {
     if (aConnected)
     {
@@ -348,15 +348,15 @@ void CoapsSecure::HandleClientConnect(bool aConnected)
     OT_UNUSED_VARIABLE(aConnected);
 }
 
-void OTCALL CoapsSecure::HandleServerResponse(void *               aContext,
-                                              otCoapHeader *       aHeader,
-                                              otMessage *          aMessage,
-                                              const otMessageInfo *aMessageInfo)
+void OTCALL CoapSecure::HandleServerResponse(void *               aContext,
+                                             otCoapHeader *       aHeader,
+                                             otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapsSecure *>(aContext)->HandleServerResponse(aHeader, aMessage, aMessageInfo);
+    static_cast<CoapSecure *>(aContext)->HandleServerResponse(aHeader, aMessage, aMessageInfo);
 }
 
-void CoapsSecure::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapSecure::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     otError      error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
@@ -416,7 +416,7 @@ void CoapsSecure::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessag
             otCoapHeaderSetPayloadMarker(&responseHeader);
         }
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
         if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
@@ -441,7 +441,7 @@ exit:
     }
 }
 
-otError CoapsSecure::ProcessRequest(int argc, char *argv[])
+otError CoapSecure::ProcessRequest(int argc, char *argv[])
 {
     otError       error   = OT_ERROR_NONE;
     otMessage *   message = NULL;
@@ -530,7 +530,7 @@ otError CoapsSecure::ProcessRequest(int argc, char *argv[])
         }
     }
 
-    message = otCoapNewMessage(mInterpreter.mInstance, &header);
+    message = otCoapNewMessage(mInterpreter.mInstance, &header, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // add payload
@@ -546,7 +546,7 @@ otError CoapsSecure::ProcessRequest(int argc, char *argv[])
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
-        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, &CoapsSecure::HandleClientResponse, this);
+        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, &CoapSecure::HandleClientResponse, this);
     }
     else
     {
@@ -565,19 +565,19 @@ exit:
     return error;
 }
 
-void OTCALL CoapsSecure::HandleClientResponse(void *               aContext,
-                                              otCoapHeader *       aHeader,
-                                              otMessage *          aMessage,
-                                              const otMessageInfo *aMessageInfo,
-                                              otError              aError)
+void OTCALL CoapSecure::HandleClientResponse(void *               aContext,
+                                             otCoapHeader *       aHeader,
+                                             otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo,
+                                             otError              aError)
 {
-    static_cast<CoapsSecure *>(aContext)->HandleClientResponse(aHeader, aMessage, aMessageInfo, aError);
+    static_cast<CoapSecure *>(aContext)->HandleClientResponse(aHeader, aMessage, aMessageInfo, aError);
 }
 
-void CoapsSecure::HandleClientResponse(otCoapHeader *       aHeader,
-                                       otMessage *          aMessage,
-                                       const otMessageInfo *aMessageInfo,
-                                       otError              aError)
+void CoapSecure::HandleClientResponse(otCoapHeader *       aHeader,
+                                      otMessage *          aMessage,
+                                      const otMessageInfo *aMessageInfo,
+                                      otError              aError)
 {
     if (aError != OT_ERROR_NONE)
     {
@@ -596,15 +596,15 @@ void CoapsSecure::HandleClientResponse(otCoapHeader *       aHeader,
 }
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-void OTCALL CoapsSecure::DefaultHandle(void *               aContext,
-                                       otCoapHeader *       aHeader,
-                                       otMessage *          aMessage,
-                                       const otMessageInfo *aMessageInfo)
+void OTCALL CoapSecure::DefaultHandle(void *               aContext,
+                                      otCoapHeader *       aHeader,
+                                      otMessage *          aMessage,
+                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapsSecure *>(aContext)->DefaultHandle(aHeader, aMessage, aMessageInfo);
+    static_cast<CoapSecure *>(aContext)->DefaultHandle(aHeader, aMessage, aMessageInfo);
 }
 
-void CoapsSecure::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapSecure::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
@@ -618,7 +618,7 @@ void CoapsSecure::DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, cons
         otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
         otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }

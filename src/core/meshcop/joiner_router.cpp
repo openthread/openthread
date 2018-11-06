@@ -227,7 +227,8 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     JoinerRouterKekTlv kek;
     uint16_t           offset;
     uint16_t           length;
-    Message *          message = NULL;
+    Message *          message  = NULL;
+    otMessageSettings  settings = {false, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
     Ip6::MessageInfo   messageInfo;
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST,
@@ -243,8 +244,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
-    VerifyOrExit((message = mSocket.NewMessage(0, kMeshCoPMessagePriority)) != NULL, error = OT_ERROR_NO_BUFS);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = mSocket.NewMessage(0, &settings)) != NULL, error = OT_ERROR_NO_BUFS);
 
     while (length)
     {
@@ -347,7 +347,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     }
     else
     {
-        ChannelMaskTlv channelMask;
+        ChannelMaskBaseTlv channelMask;
         channelMask.Init();
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }

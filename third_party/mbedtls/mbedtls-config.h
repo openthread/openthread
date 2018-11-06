@@ -54,7 +54,21 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
     va_end( argp );
     return ret;
 }
-#define MBEDTLS_PLATFORM_STD_SNPRINTF    windows_kernel_snprintf
+#define MBEDTLS_PLATFORM_STD_SNPRINTF windows_kernel_snprintf
+
+#define MBEDTLS_PLATFORM_ZEROIZE_ALT
+__inline void mbedtls_platform_zeroize( void *buf, size_t len)
+{
+    uint8_t *p = (uint8_t *)buf;
+    while ( len-- )
+    {
+        *p++ = 0;
+    }
+}
+#endif
+
+#ifndef _WIN32
+#define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
 #endif
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(_KERNEL_MODE)

@@ -109,13 +109,16 @@ public:
     /**
      * This method returns a new UDP message with sufficient header space reserved.
      *
+     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     * @param[in]  aPriority  A reference to the priority of the message.
+     * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultSocketMessagePriority);
+    Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
 
     /**
      * This method opens the UDP socket.
@@ -186,11 +189,6 @@ public:
     SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
 private:
-    enum
-    {
-        kDefaultSocketMessagePriority = Message::kPriorityNormal,
-    };
-
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
     void       SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
 
@@ -276,7 +274,7 @@ public:
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, uint8_t aPriority = kDefaultUdpMessagePriority);
+    Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
 
     /**
      * This method sends an IPv6 datagram.
@@ -328,27 +326,22 @@ public:
     otUdpSocket *GetUdpSockets(void) { return mSockets; }
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_PROXY
+#if OPENTHREAD_ENABLE_UDP_FORWARD
     /**
-     * This method sets the proxy sender.
+     * This method sets the forward sender.
      *
-     * @param[in]   aSender     A function pointer to send the proxy UDP packet.
+     * @param[in]   aForwarder  A function pointer to forward UDP packets.
      * @param[in]   aContext    A pointer to arbitrary context information.
      *
      */
-    void SetProxySender(otUdpProxySender aSender, void *aContext)
+    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext)
     {
-        mProxySender        = aSender;
-        mProxySenderContext = aContext;
+        mUdpForwarder        = aForwarder;
+        mUdpForwarderContext = aContext;
     }
-#endif // OPENTHREAD_ENABLE_UDP_PROXY
+#endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
 private:
-    enum
-    {
-        kDefaultUdpMessagePriority = Message::kPriorityNormal,
-    };
-
     enum
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
@@ -358,9 +351,9 @@ private:
     uint16_t     mEphemeralPort;
     UdpReceiver *mReceivers;
     UdpSocket *  mSockets;
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    void *           mProxySenderContext;
-    otUdpProxySender mProxySender;
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    void *         mUdpForwarderContext;
+    otUdpForwarder mUdpForwarder;
 #endif
 };
 

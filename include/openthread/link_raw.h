@@ -177,14 +177,13 @@ typedef void (*otLinkRawTransmitDone)(otInstance *  aInstance,
  * 2. Transmits the PSDU on the given channel and at the given transmit power.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aFrame       A pointer to the frame that was transmitted.
  * @param[in]  aCallback    A pointer to a function called on completion of the transmission.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
  * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
  *
  */
-otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
+otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback);
 
 /**
  * Get the most recent RSSI measurement.

@@ -854,9 +854,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_UDP_PROXY
-    case SPINEL_PROP_THREAD_UDP_PROXY_STREAM:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_PROXY_STREAM>;
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    case SPINEL_PROP_THREAD_UDP_FORWARD_STREAM:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_STREAM>;
         break;
 #endif
     case SPINEL_PROP_THREAD_ACTIVE_DATASET:

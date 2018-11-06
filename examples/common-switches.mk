@@ -119,8 +119,12 @@ ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
 
-ifeq ($(UDP_PROXY),1)
-configure_OPTIONS              += --enable-udp-proxy
+ifeq ($(SNTP_CLIENT),1)
+configure_OPTIONS              += --enable-sntp-client
+endif
+
+ifeq ($(UDP_FORWARD),1)
+configure_OPTIONS              += --enable-udp-forward
 endif
 
 ifeq ($(DEBUG_UART),1)

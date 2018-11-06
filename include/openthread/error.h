@@ -93,6 +93,7 @@ extern "C" {
  *
  * @{
  *
+ * @defgroup api-border-agent   Border Agent
  * @defgroup api-border-router  Border Router
  * @defgroup api-commissioner   Commissioner
  * @defgroup api-thread-general General
@@ -124,6 +125,7 @@ extern "C" {
  * @defgroup api-crypto              Crypto
  * @defgroup api-factory-diagnostics Factory Diagnostics
  * @defgroup api-jam-detection       Jam Detection
+ * @defgroup api-logging             Logging
  * @defgroup api-ncp                 Network Co-Processor
  * @defgroup api-network-time        Network Time Synchronization
  *
@@ -312,7 +314,7 @@ typedef enum otError
     OT_ERROR_NOT_CAPABLE = 27,
 
     /**
-     * Coap response or acknowledgment or DNS response not received.
+     * Coap response or acknowledgment or DNS, SNTP response not received.
      */
     OT_ERROR_RESPONSE_TIMEOUT = 28,
 

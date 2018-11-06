@@ -226,6 +226,9 @@ const struct Command Interpreter::sCommands[] = {
     {"service", &Interpreter::ProcessService},
 #endif
     {"singleton", &Interpreter::ProcessSingleton},
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    {"sntp", &Interpreter::ProcessSntp},
+#endif
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
 #ifndef OTDLL
@@ -1846,7 +1849,7 @@ void Interpreter::HandlePingTimer()
     otMessage *          message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);
 
-    VerifyOrExit((message = otIp6NewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = otIp6NewMessage(mInstance, NULL)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(error = otMessageSetLength(message, mLength));
     SuccessOrExit(error = otIcmp6SendEchoRequest(mInstance, message, messageInfo, 1));
@@ -2705,6 +2708,80 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
 
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+void Interpreter::ProcessSntp(int argc, char *argv[])
+{
+    otError          error = OT_ERROR_NONE;
+    long             port  = OT_SNTP_DEFAULT_SERVER_PORT;
+    Ip6::MessageInfo messageInfo;
+    otSntpQuery      query;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "query") == 0)
+    {
+        VerifyOrExit(!mSntpQueryingInProgress, error = OT_ERROR_BUSY);
+
+        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+
+        if (argc > 1)
+        {
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(argv[1]));
+        }
+        else
+        {
+            // Use IPv6 address of default SNTP server.
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_SNTP_DEFAULT_SERVER_IP));
+        }
+
+        if (argc > 2)
+        {
+            SuccessOrExit(error = ParseLong(argv[2], port));
+        }
+
+        messageInfo.SetPeerPort(static_cast<uint16_t>(port));
+
+        query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
+
+        SuccessOrExit(error = otSntpClientQuery(mInstance, &query, &Interpreter::s_HandleSntpResponse, this));
+
+        mSntpQueryingInProgress = true;
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        AppendResult(error);
+    }
+}
+
+void Interpreter::s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult)
+{
+    static_cast<Interpreter *>(aContext)->HandleSntpResponse(aTime, aResult);
+}
+
+void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
+{
+    if (aResult == OT_ERROR_NONE)
+    {
+        // Some Embedded C libraries do not support printing of 64-bit unsigned integers.
+        // To simplify, unix epoch time and era number are printed separately.
+        mServer->OutputFormat("SNTP response - Unix time: %ld (era: %ld)\r\n",
+                              static_cast<uint32_t>(aTime & UINT32_MAX), static_cast<uint32_t>(aTime >> 32));
+    }
+    else
+    {
+        mServer->OutputFormat("SNTP error - %s\r\n", otThreadErrorToString(aResult));
+    }
+
+    mSntpQueryingInProgress = false;
+}
+#endif
 
 void Interpreter::ProcessState(int argc, char *argv[])
 {

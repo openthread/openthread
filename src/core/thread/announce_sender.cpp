@@ -124,14 +124,15 @@ void AnnounceSender::HandleTimer(Timer &aTimer)
 
 otError AnnounceSender::GetActiveDatasetChannelMask(Mac::ChannelMask &aMask) const
 {
-    otError                         error = OT_ERROR_NONE;
-    const MeshCoP::ChannelMask0Tlv *channelMaskTlv;
-    MeshCoP::Dataset                dataset(MeshCoP::Tlv::kActiveTimestamp);
+    otError                        error = OT_ERROR_NONE;
+    const MeshCoP::ChannelMaskTlv *channelMaskTlv;
+    MeshCoP::Dataset               dataset(MeshCoP::Tlv::kActiveTimestamp);
 
     SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMask0Tlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != NULL && channelMaskTlv->GetChannelPage() == OT_RADIO_CHANNEL_PAGE,
+                 error = OT_ERROR_NOT_FOUND);
 
     aMask.SetMask(channelMaskTlv->GetMask());
 

@@ -65,6 +65,7 @@
 #include "net/dns_client.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
+#include "net/sntp_client.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
 #include "thread/energy_scan_server.hpp"
@@ -419,6 +420,16 @@ public:
     TimeSync &GetTimeSync(void) { return mTimeSync; }
 #endif
 
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    /**
+     * This method returns a reference to the SNTP client object.
+     *
+     * @returns A reference to the SNTP client object.
+     *
+     */
+    Sntp::Client &GetSntpClient(void) { return mSntpClient; }
+#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+
     /**
      * This method returns whether Thread Management Framework Addressing Rules are met.
      *
@@ -441,6 +452,9 @@ private:
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     Dns::Client mDnsClient;
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_ENABLE_SNTP_CLIENT
+    Sntp::Client mSntpClient;
+#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter             mIp6Filter;

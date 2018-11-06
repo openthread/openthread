@@ -705,10 +705,16 @@ public:
      *
      * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Mesh Local Prefix.
+     */
+    void SetMeshLocalPrefix(const otMeshLocalPrefix &aPrefix);
+
+    /**
+     * This method applies the Mesh Local Prefix.
+     *
+     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    otError SetMeshLocalPrefix(const otMeshLocalPrefix &aPrefix);
+    void ApplyMeshLocalPrefix(void);
 
     /**
      * This method returns a reference to the Thread link-local address.

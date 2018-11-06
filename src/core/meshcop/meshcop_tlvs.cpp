@@ -113,48 +113,48 @@ void SteeringDataTlv::ComputeBloomFilter(const otExtAddress &aJoinerId)
     SetBit(ansi.Get() % GetNumBits());
 }
 
-const ChannelMaskEntry *ChannelMaskEntry::GetNext(const Tlv *aChannelMaskTlv) const
+const ChannelMaskEntryBase *ChannelMaskEntryBase::GetNext(const Tlv *aChannelMaskBaseTlv) const
 {
     const uint8_t *entry = reinterpret_cast<const uint8_t *>(this) + GetSize();
-    const uint8_t *end   = aChannelMaskTlv->GetValue() + aChannelMaskTlv->GetSize();
+    const uint8_t *end   = aChannelMaskBaseTlv->GetValue() + aChannelMaskBaseTlv->GetSize();
 
-    return (entry < end) ? reinterpret_cast<const ChannelMaskEntry *>(entry) : NULL;
+    return (entry < end) ? reinterpret_cast<const ChannelMaskEntryBase *>(entry) : NULL;
 }
 
-const ChannelMaskEntry *ChannelMaskTlv::GetFirstEntry(void) const
+const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
-    const ChannelMaskEntry *entry = NULL;
+    const ChannelMaskEntryBase *entry = NULL;
 
-    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntry));
+    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase));
 
-    entry = reinterpret_cast<const ChannelMaskEntry *>(GetValue());
+    entry = reinterpret_cast<const ChannelMaskEntryBase *>(GetValue());
     VerifyOrExit(GetLength() >= entry->GetSize(), entry = NULL);
 
 exit:
     return entry;
 }
 
-const ChannelMask0Entry *ChannelMaskTlv::GetMask0Entry(void) const
+const ChannelMaskEntry *ChannelMaskBaseTlv::GetMaskEntry(uint8_t aChannelPage) const
 {
-    const ChannelMask0Entry *page0Entry = NULL;
+    const ChannelMaskEntry *pageEntry = NULL;
 
-    for (const ChannelMaskEntry *entry = GetFirstEntry(); entry != NULL; entry = entry->GetNext(this))
+    for (const ChannelMaskEntryBase *entry = GetFirstEntry(); entry != NULL; entry = entry->GetNext(this))
     {
-        if (entry->GetChannelPage() == 0)
+        if (entry->GetChannelPage() == aChannelPage)
         {
-            page0Entry = static_cast<const ChannelMask0Entry *>(entry);
+            pageEntry = static_cast<const ChannelMaskEntry *>(entry);
 
-            if (page0Entry->IsValid())
+            if (pageEntry->IsValid())
             {
                 ExitNow();
             }
         }
     }
 
-    page0Entry = NULL;
+    pageEntry = NULL;
 
 exit:
-    return page0Entry;
+    return pageEntry;
 }
 
 } // namespace MeshCoP

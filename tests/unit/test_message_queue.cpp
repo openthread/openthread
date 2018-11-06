@@ -236,7 +236,7 @@ void TestMessageQueueOtApis(void)
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = otIp6NewMessage(sInstance, true);
+        msg[i] = otIp6NewMessage(sInstance, NULL);
         VerifyOrQuit(msg[i] != NULL, "otIp6NewMessage() failed.\n");
     }
 
