@@ -206,7 +206,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    error = instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(*aMeshLocalPrefix);
+    instance.GetThreadNetif().GetMle().SetMeshLocalPrefix(*aMeshLocalPrefix);
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
 

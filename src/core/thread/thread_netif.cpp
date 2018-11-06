@@ -117,8 +117,16 @@ otError ThreadNetif::Up(void)
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     mMac.SetEnabled(true);
-    GetIp6().AddNetif(*this);
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    GetInstance().GetChannelMonitor().Start();
+#endif
     mMeshForwarder.Start();
+    GetIp6().AddNetif(*this);
+
+    mIsUp = true;
+
+    SubscribeAllNodesMulticast();
+    mMleRouter.Enable();
     mCoap.Start(kCoapUdpPort);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Start();
@@ -126,11 +134,6 @@ otError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     mSntpClient.Start();
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    GetInstance().GetChannelMonitor().Start();
-#endif
-    mMleRouter.Enable();
-    mIsUp = true;
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
@@ -141,25 +144,27 @@ otError ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
-    mCoap.Stop();
+#if OPENTHREAD_ENABLE_DTLS
+    mDtls.Stop();
+#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     mSntpClient.Stop();
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-    GetInstance().GetChannelMonitor().Stop();
-#endif
+    mCoap.Stop();
     mMleRouter.Disable();
-    mMeshForwarder.Stop();
-    GetIp6().RemoveNetif(*this);
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
-    mIsUp = false;
+    UnsubscribeAllRoutersMulticast();
+    UnsubscribeAllNodesMulticast();
 
-#if OPENTHREAD_ENABLE_DTLS
-    mDtls.Stop();
+    mIsUp = false;
+    GetIp6().RemoveNetif(*this);
+    mMeshForwarder.Stop();
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    GetInstance().GetChannelMonitor().Stop();
 #endif
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
