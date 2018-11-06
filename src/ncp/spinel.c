@@ -1290,6 +1290,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PHY_RX_SENSITIVITY";
         break;
 
+    case SPINEL_PROP_PHY_PCAP_ENABLED:
+        ret = "PHY_PCAP_ENABLED";
+        break;
+
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         ret = "JAM_DETECT_ENABLE";
         break;
@@ -2357,6 +2361,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_MCU_POWER_STATE:
         ret = "MCU_POWER_STATE";
+        break;
+
+    case SPINEL_CAP_PCAP:
+        ret = "PCAP";
         break;
 
     case SPINEL_CAP_802_15_4_2003:

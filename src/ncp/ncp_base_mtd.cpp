@@ -2919,6 +2919,79 @@ exit:
 #endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
 // ----------------------------------------------------------------------------
+// MARK: Pcap frame handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandlePcapFrame(aFrame);
+}
+
+void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame)
+{
+    uint16_t flags  = 0;
+    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+
+    VerifyOrExit(mPcapEnabled);
+
+    if (aFrame->mDidTx)
+    {
+        flags |= SPINEL_MD_FLAG_TX;
+    }
+
+    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
+    SuccessOrExit(mEncoder.WriteUint16(aFrame->mLength));
+
+    SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
+
+    // Append metadata (rssi, etc)
+    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
+    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
+    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
+
+    SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
+    // Empty for now
+    SuccessOrExit(mEncoder.CloseStruct());
+
+    SuccessOrExit(mEncoder.OpenStruct()); // Vendor-data
+    // Empty for now
+    SuccessOrExit(mEncoder.CloseStruct());
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_PCAP_ENABLED>(void)
+{
+    return mEncoder.WriteBool(mPcapEnabled);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_PCAP_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    VerifyOrExit(enabled != mPcapEnabled);
+
+    mPcapEnabled = enabled;
+
+    if (mPcapEnabled)
+    {
+        otLinkSetPcapCallback(mInstance, &NcpBase::HandlePcapFrame, static_cast<void *>(this));
+    }
+    else
+    {
+        otLinkSetPcapCallback(mInstance, NULL, NULL);
+    }
+
+exit:
+    return error;
+}
+
+// ----------------------------------------------------------------------------
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 

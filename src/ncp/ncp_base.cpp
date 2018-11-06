@@ -225,6 +225,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mAllowLocalNetworkDataChange(false)
     , mRequireJoinExistingNetwork(false)
     , mIsRawStreamEnabled(false)
+    , mPcapEnabled(false)
     , mDisableStreamWrite(false)
     , mShouldEmitChildTableUpdate(false)
     ,
@@ -273,7 +274,6 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_ENABLE_UDP_FORWARD
     otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif
-    otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void *>(this));
     otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #if OPENTHREAD_FTD
     otThreadSetChildTableCallback(mInstance, &NcpBase::HandleChildTableChanged);
@@ -640,56 +640,6 @@ void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDel
 }
 
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-
-// ----------------------------------------------------------------------------
-// MARK: Raw frame handling
-// ----------------------------------------------------------------------------
-
-void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
-{
-    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
-}
-
-void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
-{
-    uint16_t flags  = 0;
-    uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
-    if (!mIsRawStreamEnabled)
-    {
-        goto exit;
-    }
-
-    if (aFrame->mDidTx)
-    {
-        flags |= SPINEL_MD_FLAG_TX;
-    }
-
-    // Append frame header and frame length
-    SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
-    SuccessOrExit(mEncoder.WriteUint16(aFrame->mLength));
-
-    // Append the frame contents
-    SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
-
-    // Append metadata (rssi, etc)
-    SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
-    SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
-
-    SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
-    // Empty for now
-    SuccessOrExit(mEncoder.CloseStruct());
-
-    SuccessOrExit(mEncoder.OpenStruct()); // Vendor-data
-    // Empty for now
-    SuccessOrExit(mEncoder.CloseStruct());
-
-    SuccessOrExit(mEncoder.EndFrame());
-
-exit:
-    return;
-}
 
 // ----------------------------------------------------------------------------
 // MARK: Spinel Response Handling
@@ -1791,6 +1741,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NET_THREAD_1_1));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PCAP));
+
 #if OPENTHREAD_ENABLE_MAC_FILTER
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_WHITELIST));
 #endif
