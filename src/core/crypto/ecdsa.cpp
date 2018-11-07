@@ -33,12 +33,11 @@
 
 #include "ecdsa.hpp"
 
-#include <assert.h>
-
 #include <mbedtls/ecdsa.h>
 #include <mbedtls/pk.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/random.hpp"
 
 namespace ot {
