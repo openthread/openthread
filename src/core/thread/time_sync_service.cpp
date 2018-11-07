@@ -123,7 +123,7 @@ void TimeSync::IncrementTimeSyncSeq(void)
     }
 }
 
-void TimeSync::NotifyTimeSyncCallback()
+void TimeSync::NotifyTimeSyncCallback(void)
 {
     if (mTimeSyncCallback != NULL)
     {
@@ -162,7 +162,7 @@ void TimeSync::HandleStateChanged(otChangedFlags aFlags)
     }
 }
 
-void TimeSync::HandleTimeout()
+void TimeSync::HandleTimeout(void)
 {
     CheckAndHandleChanges(false);
 }
