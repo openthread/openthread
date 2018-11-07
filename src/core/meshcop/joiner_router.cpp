@@ -402,7 +402,7 @@ exit:
 
 void JoinerRouter::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<JoinerRouter>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<JoinerRouter>().HandleTimer();
 }
 
 void JoinerRouter::HandleTimer(void)

@@ -1022,7 +1022,7 @@ exit:
 
 void Mac::HandleBackoffTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mac>().HandleBackoffTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mac>().HandleBackoffTimer();
 }
 
 void Mac::HandleBackoffTimer(void)
@@ -1536,7 +1536,7 @@ exit:
 
 void Mac::HandleMacTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mac>().HandleMacTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mac>().HandleMacTimer();
 }
 
 void Mac::HandleMacTimer(void)
@@ -1566,7 +1566,7 @@ void Mac::HandleMacTimer(void)
 
 void Mac::HandleReceiveTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mac>().HandleReceiveTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mac>().HandleReceiveTimer();
 }
 
 void Mac::HandleReceiveTimer(void)

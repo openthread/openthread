@@ -1838,7 +1838,7 @@ exit:
 
 void Interpreter::s_HandlePingTimer(Timer &aTimer)
 {
-    GetOwner(aTimer).HandlePingTimer();
+    GetOwner(*static_cast<OwnerTimer *>(&aTimer)).HandlePingTimer();
 }
 
 void Interpreter::HandlePingTimer()

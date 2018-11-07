@@ -430,7 +430,7 @@ void LinkRaw::TransmitStarted(otRadioFrame *aFrame)
 
 void LinkRaw::HandleTimer(Timer &aTimer)
 {
-    LinkRaw &linkRaw = aTimer.GetOwner<LinkRaw>();
+    LinkRaw &linkRaw = static_cast<OwnerTimer *>(&aTimer)->GetOwner<LinkRaw>();
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     // Energy scan uses a different timer for adding delay between RSSI samples.

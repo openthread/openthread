@@ -115,7 +115,7 @@ void ChildSupervisor::UpdateOnSend(Child &aChild)
 
 void ChildSupervisor::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChildSupervisor>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<ChildSupervisor>().HandleTimer();
 }
 
 void ChildSupervisor::HandleTimer(void)
@@ -239,7 +239,7 @@ void SupervisionListener::RestartTimer(void)
 
 void SupervisionListener::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<SupervisionListener>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<SupervisionListener>().HandleTimer();
 }
 
 void SupervisionListener::HandleTimer(void)

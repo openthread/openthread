@@ -106,7 +106,7 @@ exit:
 
 void ChannelMonitor::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChannelMonitor>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<ChannelMonitor>().HandleTimer();
 }
 
 void ChannelMonitor::HandleTimer(void)

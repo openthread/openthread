@@ -381,7 +381,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 
 bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
 {
-    return aTimer.GetOwner<MleRouter>().HandleAdvertiseTimer();
+    return static_cast<OwnerTimer *>(&aTimer)->GetOwner<MleRouter>().HandleAdvertiseTimer();
 }
 
 bool MleRouter::HandleAdvertiseTimer(void)
@@ -1680,7 +1680,7 @@ exit:
 
 void MleRouter::HandleStateUpdateTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<MleRouter>().HandleStateUpdateTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<MleRouter>().HandleStateUpdateTimer();
 }
 
 void MleRouter::HandleStateUpdateTimer(void)

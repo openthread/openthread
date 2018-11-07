@@ -260,7 +260,7 @@ void Client::FinalizeSntpTransaction(Message &            aQuery,
 
 void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Client>().HandleRetransmissionTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Client>().HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)

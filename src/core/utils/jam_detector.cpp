@@ -165,7 +165,7 @@ exit:
 
 void JamDetector::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<JamDetector>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<JamDetector>().HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)

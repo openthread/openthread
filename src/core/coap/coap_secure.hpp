@@ -69,27 +69,14 @@ public:
 
     /**
      * This constructor initializes the object.
-     *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
-     *
-     */
-    explicit CoapSecure(Instance &aInstance);
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    /**
-     * This constructor initializes the object.
      * (Used for Application CoAPS)
      *
-     * @param[in]  aInstance             A reference to the OpenThread instance.
-     * @param[in]  aUdpTransmitHandle    Handler for udp transmit.
-     * @param[in]  aRetransmissionTimer  Handler for retransmission.
-     * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[in]  aUdpTransmitHandle   Handler for udp transmit.
+     * @param[in]  aLinkSecurity        Whether to enable link security.
      *
      */
-    explicit CoapSecure(Instance &       aInstance,
-                        Tasklet::Handler aUdpTransmitHandle,
-                        Timer::Handler   aRetransmissionTimer,
-                        Timer::Handler   aResponsesQueueTimer);
+    explicit CoapSecure(Instance &aInstance, Tasklet::Handler aUdpTransmitHandle, bool aLinkSecurity = false);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -348,8 +335,6 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
     static void HandleTransmit(Tasklet &aTasklet);
 
     Ip6::MessageInfo  mPeerAddress;
@@ -363,13 +348,14 @@ private:
     bool mLayerTwoSecurity : 1;
 };
 
+<<<<<<< HEAD
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-/**
- * This class implements the application CoAP Secure client and server.
- *
- */
-class ApplicationCoapSecure : public CoapSecure
+    /**
+     * This class implements the application CoAP Secure client and server.
+     *
+     */
+    class ApplicationCoapSecure : public CoapSecure
 {
 public:
     /**
@@ -388,6 +374,8 @@ private:
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+=======
+>>>>>>> [core] use free timer to simplify CoAP
 } // namespace Coap
 } // namespace ot
 

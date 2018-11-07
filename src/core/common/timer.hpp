@@ -64,7 +64,7 @@ class TimerMilliScheduler;
  * This class implements a timer.
  *
  */
-class Timer : public InstanceLocator, public OwnerLocator
+class Timer
 {
     friend class TimerScheduler;
 
@@ -90,10 +90,8 @@ public:
      * @param[in]  aOwner      A pointer to owner of the `Timer` object.
      *
      */
-    Timer(Instance &aInstance, Handler aHandler, void *aOwner)
-        : InstanceLocator(aInstance)
-        , OwnerLocator(aOwner)
-        , mHandler(aHandler)
+    Timer(Handler aHandler)
+        : mHandler(aHandler)
         , mFireTime(0)
         , mNext(this)
     {
@@ -137,22 +135,94 @@ protected:
 };
 
 /**
- * This class implements the millisecond timer.
+ * This class implements a owner timer.
  *
  */
-class TimerMilli : public Timer
+class OwnerTimer : public OwnerLocator, public Timer
 {
 public:
     /**
-     * This constructor creates a millisecond timer instance.
+     * This constructor creates a owner timer instance.
+     *
+     * @param[in]  aOwner      A pointer to owner of the `Timer` object.
+     *
+     */
+    OwnerTimer(Handler aHandler, void *aOwner)
+        : OwnerLocator(aOwner)
+        , Timer(aHandler)
+    {
+    }
+};
+
+/**
+ * This class implements functions shared by millisecond timers.
+ *
+ */
+class MilliTimerBase : public InstanceLocator
+{
+public:
+    /**
+     * This constructor creates a millisecond timer base.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     *
+     */
+    MilliTimerBase(Instance &aInstance)
+        : InstanceLocator(aInstance)
+    {
+    }
+
+    /**
+     * This static method returns the current time in milliseconds.
+     *
+     * @returns The current time in milliseconds.
+     *
+     */
+    static uint32_t GetNow(void) { return otPlatAlarmMilliGetNow(); }
+
+    /**
+     * This static method returns the number of milliseconds given seconds.
+     *
+     * @returns The number of milliseconds.
+     *
+     */
+    static uint32_t SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+
+    /**
+     * This static method returns the number of seconds given milliseconds.
+     *
+     * @returns The number of seconds.
+     *
+     */
+    static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+
+protected:
+    /**
+     * This method returns a reference to the TimerMilliScheduler.
+     *
+     * @returns   A reference to the TimerMilliScheduler.
+     *
+     */
+    TimerMilliScheduler &GetTimerMilliScheduler(void) const;
+};
+
+/**
+ * This class implements free millisecond timer.
+ *
+ */
+class FreeMilliTimer : public MilliTimerBase, public Timer
+{
+public:
+    /**
+     * This constructor creates a free millisecond timer.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     * @param[in]  aOwner      A pointer to the owner of the `TimerMilli` object.
      *
      */
-    TimerMilli(Instance &aInstance, Handler aHandler, void *aOwner)
-        : Timer(aInstance, aHandler, aOwner)
+    FreeMilliTimer(Instance &aInstance, Handler aHandler)
+        : MilliTimerBase(aInstance)
+        , Timer(aHandler)
     {
     }
 
@@ -180,39 +250,78 @@ public:
      *
      */
     void Stop(void);
+};
+
+/**
+ * This class implements indexed free millisecond timer.
+ *
+ */
+template <class kType, int kIndex> class IndexedFreeMilliTimer : public FreeMilliTimer
+{
+public:
+    template <void (kType::*kMethod)(void)> static void MethodHandler(Timer &aTimer)
+    {
+        (static_cast<kType *>(static_cast<IndexedFreeMilliTimer *>(&aTimer))->*kMethod)();
+    }
 
     /**
-     * This static method returns the current time in milliseconds.
+     * This constructor creates a indexed free millisecond timer.
      *
-     * @returns The current time in milliseconds.
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      *
      */
-    static uint32_t GetNow(void) { return otPlatAlarmMilliGetNow(); }
+    IndexedFreeMilliTimer(Instance &aInstance, Handler aHandler)
+        : FreeMilliTimer(aInstance, aHandler)
+    {
+    }
+};
+
+/**
+ * This class implements the millisecond timer.
+ *
+ */
+class TimerMilli : public MilliTimerBase, public OwnerTimer
+{
+public:
+    /**
+     * This constructor creates a millisecond timer instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
+     * @param[in]  aOwner      A pointer to the owner of the `TimerMilli` object.
+     *
+     */
+    TimerMilli(Instance &aInstance, Handler aHandler, void *aOwner)
+        : MilliTimerBase(aInstance)
+        , OwnerTimer(aHandler, aOwner)
+    {
+    }
 
     /**
-     * This static method returns the number of milliseconds given seconds.
+     * This method schedules the timer to fire a @p dt milliseconds from now.
      *
-     * @returns The number of milliseconds.
+     * @param[in]  aDt  The expire time in milliseconds from now.
+     *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    static uint32_t SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+    void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
 
     /**
-     * This static method returns the number of seconds given milliseconds.
+     * This method schedules the timer to fire at @p aDt milliseconds from @p aT0.
      *
-     * @returns The number of seconds.
+     * @param[in]  aT0  The start time in milliseconds.
+     * @param[in]  aDt  The expire time in milliseconds from @p aT0.
+     *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+    void StartAt(uint32_t aT0, uint32_t aDt);
 
-private:
     /**
-     * This method returns a reference to the TimerMilliScheduler.
-     *
-     * @returns   A reference to the TimerMilliScheduler.
+     * This method stops the timer.
      *
      */
-    TimerMilliScheduler &GetTimerMilliScheduler(void) const;
+    void Stop(void);
 };
 
 /**
@@ -323,7 +432,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Add(TimerMilli &aTimer) { TimerScheduler::Add(aTimer, sAlarmMilliApi); }
+    void Add(Timer &aTimer) { TimerScheduler::Add(aTimer, sAlarmMilliApi); }
 
     /**
      * This method removes a timer instance to the timer scheduler.
@@ -331,7 +440,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); };
+    void Remove(Timer &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); };
 
     /**
      * This method processes the running timers.
@@ -350,7 +459,7 @@ class TimerMicroScheduler;
  * This class implements the microsecond timer.
  *
  */
-class TimerMicro : public Timer
+class TimerMicro : public InstanceLocator, public OwnerTimer
 {
 public:
     /**
@@ -362,7 +471,8 @@ public:
      *
      */
     TimerMicro(Instance &aInstance, Handler aHandler, void *aOwner)
-        : Timer(aInstance, aHandler, aOwner)
+        : InstanceLocator(aInstance)
+        , OwnerTimer(aHandler, aOwner)
     {
     }
 

@@ -1153,7 +1153,7 @@ void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<MeshForwarder>().HandleDiscoverTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<MeshForwarder>().HandleDiscoverTimer();
 }
 
 void MeshForwarder::HandleDiscoverTimer(void)
@@ -1447,7 +1447,7 @@ void MeshForwarder::ClearReassemblyList(void)
 
 void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<MeshForwarder>().HandleReassemblyTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<MeshForwarder>().HandleReassemblyTimer();
 }
 
 void MeshForwarder::HandleReassemblyTimer(void)

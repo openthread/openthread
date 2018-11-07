@@ -110,7 +110,7 @@ exit:
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceBeginServer>().AnnounceSenderBase::HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<AnnounceBeginServer>().AnnounceSenderBase::HandleTimer();
 }
 
 } // namespace ot

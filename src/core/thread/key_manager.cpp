@@ -276,7 +276,7 @@ void KeyManager::StartKeyRotationTimer(void)
 
 void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<KeyManager>().HandleKeyRotationTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<KeyManager>().HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)

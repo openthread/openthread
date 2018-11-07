@@ -336,7 +336,7 @@ otCommissionerState Commissioner::GetState(void) const
 
 void Commissioner::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Commissioner>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Commissioner>().HandleTimer();
 }
 
 void Commissioner::HandleTimer(void)
@@ -358,7 +358,7 @@ void Commissioner::HandleTimer(void)
 
 void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Commissioner>().HandleJoinerExpirationTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Commissioner>().HandleJoinerExpirationTimer();
 }
 
 void Commissioner::HandleJoinerExpirationTimer(void)

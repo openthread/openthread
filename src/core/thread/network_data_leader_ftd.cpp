@@ -1554,7 +1554,7 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
 void Leader::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Leader>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

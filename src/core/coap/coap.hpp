@@ -347,16 +347,6 @@ class ResponsesQueue
 {
 public:
     /**
-     * Default class constructor.
-     *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
-     * @param[in]  aHandler   A timer handler provided by owner of `RespponseQueue`.
-     * @param[in]  aContext   A pointer to arbitrary context information (used along with timer handler).
-     *
-     */
-    ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext);
-
-    /**
      * Add given response to the cache.
      *
      * If matching response (the same Message ID, source endpoint address and port) exists in the cache given
@@ -424,8 +414,10 @@ public:
      * This method must be invoked by the owner of `ResponsesQueue` instance when the timer expires from the `aHandler`
      * callback function provided in the constructor.
      *
+     * @param[in]   aTimer  A reference to the ResponsesQueueTimer.
+     *
      */
-    void HandleTimer(void);
+    void HandleTimer(FreeMilliTimer &aTimer);
 
 private:
     enum
@@ -440,14 +432,18 @@ private:
     }
 
     MessageQueue mQueue;
-    TimerMilli   mTimer;
 };
+
+class CoapBase;
+
+typedef IndexedFreeMilliTimer<CoapBase, 1> RetransmissionTimer;
+typedef IndexedFreeMilliTimer<CoapBase, 2> ResponsesQueueTimer;
 
 /**
  * This class implements the common base for CoAP client and server.
  *
  */
-class CoapBase : public InstanceLocator
+class CoapBase : public RetransmissionTimer, public ResponsesQueueTimer
 {
     friend class ResponsesQueue;
 
@@ -668,18 +664,30 @@ public:
      */
     const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
 
+    /**
+     * This method returns a reference to the thread network interface.
+     *
+     * @returns   A reference to the thread network interface.
+     *
+     */
+    ThreadNetif &GetNetif(void) const { return RetransmissionTimer::GetNetif(); };
+
+    /**
+     * This method returns a reference to the parent OpenThread Instance.
+     *
+     * @returns A reference to the parent otInstance.
+     *
+     */
+    Instance &GetInstance(void) const { return RetransmissionTimer::GetInstance(); };
+
 protected:
     /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance                      A reference to the OpenThread instance.
-     * @param[in]  aRetransmissionTimerHandler    A timer handler provided by sub-class for `mRetranmissionTimer`.
-     * @param[in]  aResponsesQueueTimerHandler    A timer handler provided by sub-class for `mReponsesQueue` timer.
      *
      */
-    CoapBase(Instance &     aInstance,
-             Timer::Handler aRetransmissionTimerHandler,
-             Timer::Handler aResponsesQueueTimerHandler);
+    CoapBase(Instance &aInstance);
 
     /**
      * Retransmission timer handler.
@@ -697,7 +705,7 @@ protected:
      * callback function provided in the constructor.
      *
      */
-    void HandleResponsesQueueTimer(void) { mResponsesQueue.HandleTimer(); }
+    void HandleResponsesQueueTimer(void) { mResponsesQueue.HandleTimer(*static_cast<ResponsesQueueTimer *>(this)); }
 
     /**
      * This method sends a message.
@@ -743,7 +751,6 @@ private:
 
     MessageQueue mPendingRequests;
     uint16_t     mMessageId;
-    TimerMilli   mRetransmissionTimer;
 
     Resource *mResources;
 
@@ -769,35 +776,7 @@ public:
      *
      */
     explicit Coap(Instance &aInstance);
-
-private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
 };
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-/**
- * This class implements the application CoAP client and server.
- *
- */
-class ApplicationCoap : public CoapBase
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in] aInstance      A reference to the OpenThread instance.
-     *
-     */
-    explicit ApplicationCoap(Instance &aInstance);
-
-private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
-};
-
-#endif
 
 } // namespace Coap
 } // namespace ot

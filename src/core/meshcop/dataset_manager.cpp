@@ -423,7 +423,7 @@ void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip
 
 void ActiveDataset::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ActiveDataset>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<ActiveDataset>().HandleTimer();
 }
 
 PendingDataset::PendingDataset(Instance &aInstance)
@@ -496,7 +496,7 @@ void PendingDataset::StartDelayTimer(void)
 
 void PendingDataset::HandleDelayTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PendingDataset>().HandleDelayTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<PendingDataset>().HandleDelayTimer();
 }
 
 void PendingDataset::HandleDelayTimer(void)
@@ -548,7 +548,7 @@ void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
 
 void PendingDataset::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PendingDataset>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<PendingDataset>().HandleTimer();
 }
 
 } // namespace MeshCoP

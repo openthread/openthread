@@ -558,7 +558,7 @@ exit:
 
 void Joiner::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Joiner>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Joiner>().HandleTimer();
 }
 
 void Joiner::HandleTimer(void)

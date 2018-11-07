@@ -687,7 +687,7 @@ exit:
 
 void BorderAgent::HandleTimeout(Timer &aTimer)
 {
-    aTimer.GetOwner<BorderAgent>().HandleTimeout();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<BorderAgent>().HandleTimeout();
 }
 
 void BorderAgent::HandleTimeout(void)

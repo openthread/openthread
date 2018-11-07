@@ -48,16 +48,13 @@
 namespace ot {
 namespace Coap {
 
-CoapBase::CoapBase(Instance &     aInstance,
-                   Timer::Handler aRetransmissionTimerHandler,
-                   Timer::Handler aResponsesQueueTimerHandler)
-    : InstanceLocator(aInstance)
+CoapBase::CoapBase(Instance &aInstance)
+    : RetransmissionTimer(aInstance, RetransmissionTimer::MethodHandler<&CoapBase::HandleRetransmissionTimer>)
+    , ResponsesQueueTimer(aInstance, ResponsesQueueTimer::MethodHandler<&CoapBase::HandleResponsesQueueTimer>)
     , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
-    , mRetransmissionTimer(aInstance, aRetransmissionTimerHandler, this)
     , mResources(NULL)
     , mContext(NULL)
     , mInterceptor(NULL)
-    , mResponsesQueue(aInstance, aResponsesQueueTimerHandler, this)
     , mDefaultHandler(NULL)
     , mDefaultHandlerContext(NULL)
 {
@@ -174,6 +171,11 @@ otError CoapBase::SendMessage(Message &               aMessage,
         header.GetCode() != OT_COAP_CODE_EMPTY)
     {
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
+
+        if (!ResponsesQueueTimer::IsRunning())
+        {
+            ResponsesQueueTimer::Start(TimerMilli::SecToMsec(kExchangeLifetime));
+        }
     }
 
     // Set Message Id if it was not already set.
@@ -350,7 +352,7 @@ void CoapBase::HandleRetransmissionTimer(void)
 
     if (nextDelta != 0xffffffff)
     {
-        mRetransmissionTimer.Start(nextDelta);
+        RetransmissionTimer::Start(nextDelta);
     }
 }
 
@@ -407,19 +409,19 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &     aMessage,
     SuccessOrExit(error = aCoapMetadata.AppendTo(*messageCopy));
 
     // Setup the timer.
-    if (mRetransmissionTimer.IsRunning())
+    if (RetransmissionTimer::IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mRetransmissionTimer.GetFireTime();
+        alarmFireTime = RetransmissionTimer::GetFireTime();
 
         if (aCoapMetadata.IsEarlier(alarmFireTime))
         {
-            mRetransmissionTimer.Start(aCoapMetadata.mRetransmissionTimeout);
+            RetransmissionTimer::Start(aCoapMetadata.mRetransmissionTimeout);
         }
     }
     else
     {
-        mRetransmissionTimer.Start(aCoapMetadata.mRetransmissionTimeout);
+        RetransmissionTimer::Start(aCoapMetadata.mRetransmissionTimeout);
     }
 
     // Enqueue the message.
@@ -440,10 +442,10 @@ void CoapBase::DequeueMessage(Message &aMessage)
 {
     mPendingRequests.Dequeue(aMessage);
 
-    if (mRetransmissionTimer.IsRunning() && (mPendingRequests.GetHead() == NULL))
+    if (RetransmissionTimer::IsRunning() && (mPendingRequests.GetHead() == NULL))
     {
         // No more requests pending, stop the timer.
-        mRetransmissionTimer.Stop();
+        RetransmissionTimer::Stop();
     }
 
     // Free the message memory.
@@ -756,12 +758,6 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mConfirmable  = aConfirmable;
 }
 
-ResponsesQueue::ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext)
-    : mQueue()
-    , mTimer(aInstance, aHandler, aContext)
-{
-}
-
 otError ResponsesQueue::GetMatchedResponseCopy(const Header &          aHeader,
                                                const Ip6::MessageInfo &aMessageInfo,
                                                Message **              aResponse)
@@ -865,11 +861,6 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
     enqueuedResponseHeader.AppendTo(*copy);
     mQueue.Enqueue(*copy);
 
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(TimerMilli::SecToMsec(kExchangeLifetime));
-    }
-
 exit:
     return;
 }
@@ -895,7 +886,7 @@ void ResponsesQueue::DequeueAllResponses(void)
     }
 }
 
-void ResponsesQueue::HandleTimer(void)
+void ResponsesQueue::HandleTimer(FreeMilliTimer &aTimer)
 {
     Message *              message;
     EnqueuedResponseHeader enqueuedResponseHeader;
@@ -910,7 +901,7 @@ void ResponsesQueue::HandleTimer(void)
         }
         else
         {
-            mTimer.Start(enqueuedResponseHeader.GetRemainingTime());
+            aTimer.Start(enqueuedResponseHeader.GetRemainingTime());
             break;
         }
     }
@@ -924,38 +915,9 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 }
 
 Coap::Coap(Instance &aInstance)
-    : CoapBase(aInstance, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
+    : CoapBase(aInstance)
 {
 }
-
-void Coap::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Coap>().CoapBase::HandleRetransmissionTimer();
-}
-
-void Coap::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Coap>().CoapBase::HandleResponsesQueueTimer();
-}
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-ApplicationCoap::ApplicationCoap(Instance &aInstance)
-    : CoapBase(aInstance, &ApplicationCoap::HandleRetransmissionTimer, &ApplicationCoap::HandleResponsesQueueTimer)
-{
-}
-
-void ApplicationCoap::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleRetransmissionTimer();
-}
-
-void ApplicationCoap::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleResponsesQueueTimer();
-}
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 } // namespace Coap
 } // namespace ot

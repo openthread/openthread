@@ -174,7 +174,7 @@ void TimeSync::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags 
 
 void TimeSync::HandleTimeout(Timer &aTimer)
 {
-    aTimer.GetOwner<TimeSync>().HandleTimeout();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<TimeSync>().HandleTimeout();
 }
 
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)

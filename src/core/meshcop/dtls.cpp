@@ -691,7 +691,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 
 void Dtls::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Dtls>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Dtls>().HandleTimer();
 }
 
 void Dtls::HandleTimer(void)

@@ -1582,7 +1582,7 @@ exit:
 
 void Mle::HandleAttachTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleAttachTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mle>().HandleAttachTimer();
 }
 
 void Mle::HandleAttachTimer(void)
@@ -1820,7 +1820,7 @@ exit:
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleDelayedResponseTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mle>().HandleDelayedResponseTimer();
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -2116,7 +2116,7 @@ exit:
 
 void Mle::HandleMessageTransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleMessageTransmissionTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mle>().HandleMessageTransmissionTimer();
 }
 
 void Mle::HandleMessageTransmissionTimer(void)
@@ -3973,7 +3973,7 @@ exit:
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
 void Mle::HandleParentSearchTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleParentSearchTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mle>().HandleParentSearchTimer();
 }
 
 void Mle::HandleParentSearchTimer(void)

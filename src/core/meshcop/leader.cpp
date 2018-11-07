@@ -307,7 +307,7 @@ uint32_t Leader::GetDelayTimerMinimal(void) const
 
 void Leader::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Leader>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

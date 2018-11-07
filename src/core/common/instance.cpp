@@ -68,7 +68,7 @@ Instance::Instance(void)
     , mApplicationCoap(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    , mApplicationCoapSecure(*this)
+    , mApplicationCoapSecure(*this, true)
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     , mChannelMonitor(*this)

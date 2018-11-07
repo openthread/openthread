@@ -230,7 +230,7 @@ exit:
 
 void ChannelManager::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChannelManager>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<ChannelManager>().HandleTimer();
 }
 
 void ChannelManager::HandleTimer(void)

@@ -122,7 +122,7 @@ exit:
 
 void EnergyScanServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<EnergyScanServer>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<EnergyScanServer>().HandleTimer();
 }
 
 void EnergyScanServer::HandleTimer(void)

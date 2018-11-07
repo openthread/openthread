@@ -259,7 +259,7 @@ exit:
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mpl>().HandleRetransmissionTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mpl>().HandleRetransmissionTimer();
 }
 
 void Mpl::HandleRetransmissionTimer(void)
@@ -346,7 +346,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
 void Mpl::HandleSeedSetTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mpl>().HandleSeedSetTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Mpl>().HandleSeedSetTimer();
 }
 
 void Mpl::HandleSeedSetTimer(void)

@@ -416,12 +416,12 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
 void DataPollManager::HandlePollTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DataPollManager>().SendDataPoll();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<DataPollManager>().SendDataPoll();
 }
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(GetNetif().GetMle().GetTimeout()) -
+    return MilliTimerBase::SecToMsec(GetNetif().GetMle().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

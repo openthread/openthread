@@ -168,7 +168,7 @@ exit:
 
 void PanIdQueryServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PanIdQueryServer>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<PanIdQueryServer>().HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)

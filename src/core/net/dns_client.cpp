@@ -382,12 +382,12 @@ void Client::FinalizeDnsTransaction(Message &            aQuery,
 
 void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Client>().HandleRetransmissionTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<Client>().HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t         now       = TimerMilli::GetNow();
+    uint32_t         now       = MilliTimerBase::GetNow();
     uint32_t         nextDelta = 0xffffffff;
     QueryMetadata    queryMetadata;
     Message *        message     = mPendingQueries.GetHead();

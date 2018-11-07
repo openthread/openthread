@@ -69,6 +69,18 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow)
     return retval;
 }
 
+void FreeMilliTimer::StartAt(uint32_t aT0, uint32_t aDt)
+{
+    assert(aDt <= kMaxDt);
+    mFireTime = aT0 + aDt;
+    GetTimerMilliScheduler().Add(*this);
+}
+
+void FreeMilliTimer::Stop(void)
+{
+    GetTimerMilliScheduler().Remove(*this);
+}
+
 void TimerMilli::StartAt(uint32_t aT0, uint32_t aDt)
 {
     assert(aDt <= kMaxDt);
@@ -81,7 +93,7 @@ void TimerMilli::Stop(void)
     GetTimerMilliScheduler().Remove(*this);
 }
 
-TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
+TimerMilliScheduler &MilliTimerBase::GetTimerMilliScheduler(void) const
 {
     return GetInstance().GetTimerMilliScheduler();
 }

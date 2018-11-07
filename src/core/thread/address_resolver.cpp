@@ -702,7 +702,7 @@ exit:
 
 void AddressResolver::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AddressResolver>().HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<AddressResolver>().HandleTimer();
 }
 
 void AddressResolver::HandleTimer(void)

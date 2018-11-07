@@ -47,34 +47,17 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(Instance &aInstance)
-    : CoapBase(aInstance, &CoapSecure::HandleRetransmissionTimer, &CoapSecure::HandleResponsesQueueTimer)
+CoapSecure::CoapSecure(Instance &aInstance, bool aLinkSecurity)
+    : CoapBase(aInstance)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
     , mTransmitQueue()
     , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
-    , mLayerTwoSecurity(false)
+    , mLayerTwoSecurity(aLinkSecurity)
 {
 }
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-CoapSecure::CoapSecure(Instance &       aInstance,
-                       Tasklet::Handler aHandleTransmit,
-                       Timer::Handler   aRetransmissionTimer,
-                       Timer::Handler   aResponsesQueueTimer)
-    : CoapBase(aInstance, aRetransmissionTimer, aResponsesQueueTimer)
-    , mConnectedCallback(NULL)
-    , mConnectedContext(NULL)
-    , mTransportCallback(NULL)
-    , mTransportContext(NULL)
-    , mTransmitQueue()
-    , mTransmitTask(aInstance, aHandleTransmit, this)
-    , mLayerTwoSecurity(true)
-{
-}
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
@@ -397,43 +380,6 @@ exit:
         otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
     }
 }
-
-void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<CoapSecure>().CoapBase::HandleRetransmissionTimer();
-}
-
-void CoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<CoapSecure>().CoapBase::HandleResponsesQueueTimer();
-}
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
-    : CoapSecure(aInstance,
-                 &ApplicationCoapSecure::HandleTransmit,
-                 &ApplicationCoapSecure::HandleRetransmissionTimer,
-                 &ApplicationCoapSecure::HandleResponsesQueueTimer)
-{
-}
-
-void ApplicationCoapSecure::HandleTransmit(Tasklet &aTasklet)
-{
-    aTasklet.GetOwner<ApplicationCoapSecure>().CoapSecure::HandleTransmit();
-}
-
-void ApplicationCoapSecure::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleRetransmissionTimer();
-}
-
-void ApplicationCoapSecure::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoapSecure>().CoapBase::HandleResponsesQueueTimer();
-}
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 } // namespace Coap
 } // namespace ot

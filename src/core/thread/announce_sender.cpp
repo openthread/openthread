@@ -119,7 +119,7 @@ AnnounceSender::AnnounceSender(Instance &aInstance)
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceSender>().AnnounceSenderBase::HandleTimer();
+    static_cast<OwnerTimer *>(&aTimer)->GetOwner<AnnounceSender>().AnnounceSenderBase::HandleTimer();
 }
 
 otError AnnounceSender::GetActiveDatasetChannelMask(Mac::ChannelMask &aMask) const
