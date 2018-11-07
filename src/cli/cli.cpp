@@ -1624,7 +1624,7 @@ void Interpreter::ProcessNetworkTime(int argc, char *argv[])
 
         networkTimeStatus = otNetworkTimeGet(mInstance, time);
 
-        mServer->OutputFormat("Network Time:     %dus", time);
+        mServer->OutputFormat("Network Time:     %luus", time);
 
         switch (networkTimeStatus)
         {
