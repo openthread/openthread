@@ -2624,7 +2624,7 @@ void NcpBase::HandleTimeSyncUpdate(void *aContext)
     static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate();
 }
 
-void NcpBase::HandleTimeSyncUpdate()
+void NcpBase::HandleTimeSyncUpdate(void)
 {
     mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
     mUpdateChangedPropsTask.Post();

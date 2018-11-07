@@ -197,7 +197,7 @@ private:
     /**
      * Notify any listener of a network time sync update event.
      */
-    void NotifyTimeSyncCallback();
+    void NotifyTimeSyncCallback(void);
 
     bool     mTimeSyncRequired; ///< Indicate whether or not a time synchronization message is required.
     uint8_t  mTimeSyncSeq;      ///< The time synchronization sequence.
