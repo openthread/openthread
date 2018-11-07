@@ -155,11 +155,13 @@ public:
      * Callback to be called when thread state changes.
      *
      * @param[in] aFlags Flags that denote the state change events.
+     *
      */
     void HandleStateChanged(otChangedFlags aFlags);
 
     /**
      * Callback to be called when timer expires.
+     *
      */
     void HandleTimeout(void);
 
@@ -169,6 +171,7 @@ private:
      *
      * @param[in] aCallback Callback context.
      * @param[in] aFlags Flags that denote the state change events.
+     *
      */
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
 
@@ -176,6 +179,7 @@ private:
      * Callback to be called when timer expires.
      *
      * @param[in] aTimer The corresponding timer.
+     *
      */
     static void HandleTimeout(Timer &aTimer);
 
@@ -196,6 +200,7 @@ private:
 
     /**
      * Notify any listener of a network time sync update event.
+     *
      */
     void NotifyTimeSyncCallback(void);
 
