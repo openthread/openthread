@@ -147,16 +147,14 @@ otError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_DTLS
     mDtls.Stop();
 #endif
-#if OPENTHREAD_ENABLE_DNS_CLIENT
-    mDnsClient.Stop();
-#endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     mSntpClient.Stop();
 #endif
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mDnsClient.Stop();
+#endif
     mCoap.Stop();
     mMleRouter.Disable();
-    mMeshForwarder.Stop();
-    GetIp6().RemoveNetif(*this);
     RemoveAllDynamicUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
     UnsubscribeAllRoutersMulticast();
