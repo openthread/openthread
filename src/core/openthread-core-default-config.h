@@ -1892,6 +1892,7 @@
  *
  * This setting sets the minimum amount of time (in microseconds) that the network time must jump due to
  * a time sync event for listeners to be notified of the new network time.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
 #define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
