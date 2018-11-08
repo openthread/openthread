@@ -263,6 +263,9 @@ protected:
     static void HandlePcapFrame(const otRadioFrame *aFrame, void *aContext);
     void        HandlePcapFrame(const otRadioFrame *aFrame);
 
+    static void HandleTimeSyncUpdate(void *aContext);
+    void        HandleTimeSyncUpdate(void);
+
 #if OPENTHREAD_FTD
     static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
     void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);

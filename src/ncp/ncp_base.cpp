@@ -40,6 +40,7 @@
 #include <openthread/link.h>
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
+#include <openthread/network_time.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
@@ -213,13 +214,11 @@ NcpBase::NcpBase(Instance *aInstance)
     , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
     , mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag)
     , mHostPowerStateHeader(0)
-    ,
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-    mAllowPeekDelegate(NULL)
+    , mAllowPeekDelegate(NULL)
     , mAllowPokeDelegate(NULL)
-    ,
 #endif
-    mNextExpectedTid(0)
+    , mNextExpectedTid(0)
     , mResponseQueueHead(0)
     , mResponseQueueTail(0)
     , mAllowLocalNetworkDataChange(false)
@@ -228,27 +227,23 @@ NcpBase::NcpBase(Instance *aInstance)
     , mPcapEnabled(false)
     , mDisableStreamWrite(false)
     , mShouldEmitChildTableUpdate(false)
-    ,
 #if OPENTHREAD_FTD
-    mPreferredRouteId(0)
-    ,
+    , mPreferredRouteId(0)
 #endif
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    mCurTransmitTID(0)
+    , mCurTransmitTID(0)
     , mCurScanChannel(kInvalidScanChannel)
     , mSrcMatchEnabled(false)
-    ,
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    mInboundSecureIpFrameCounter(0)
+    , mInboundSecureIpFrameCounter(0)
     , mInboundInsecureIpFrameCounter(0)
     , mOutboundSecureIpFrameCounter(0)
     , mOutboundInsecureIpFrameCounter(0)
     , mDroppedOutboundIpFrameCounter(0)
     , mDroppedInboundIpFrameCounter(0)
-    ,
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-    mFramingErrorCounter(0)
+    , mFramingErrorCounter(0)
     , mRxSpinelFrameCounter(0)
     , mRxSpinelOutOfOrderTidCounter(0)
     , mTxSpinelFrameCounter(0)
@@ -271,6 +266,9 @@ NcpBase::NcpBase(Instance *aInstance)
     otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #if OPENTHREAD_ENABLE_UDP_FORWARD
     otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif

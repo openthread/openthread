@@ -63,6 +63,8 @@ typedef enum otNetworkTimeStatus
     OT_NETWORK_TIME_SYNCHRONIZED   = 1,  ///< The device network time is synchronized.
 } otNetworkTimeStatus;
 
+typedef void (*otNetworkTimeSyncCallbackFn)(void *aCallbackContext);
+
 /**
  * zero is considered as invalid time synchronization sequence.
  *
@@ -127,6 +129,21 @@ otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXTALThres
  *
  */
 uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance);
+
+/**
+ * Set a callback to be called when a network time sync or status change occurs
+ *
+ * This callback shall be called only when the network time offset jumps by
+ * OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US or when the status changes.
+ *
+ * @param[in] aInstance The OpenThread instance structure.
+ * @param[in] aCallbackFn The callback function to be called
+ * @param[in] aCallbackContext The context to be passed to the callback function upon invocation
+ *
+ */
+void otNetworkTimeSyncSetCallback(otInstance *                aInstance,
+                                  otNetworkTimeSyncCallbackFn aCallbackFn,
+                                  void *                      aCallbackContext);
 
 /**
  * @}

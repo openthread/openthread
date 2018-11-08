@@ -1886,4 +1886,15 @@
 #ifndef OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM
 #define OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM 1280
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
+ *
+ * This setting sets the minimum amount of time (in microseconds) that the network time must jump due to
+ * a time sync event for listeners to be notified of the new network time.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
+#define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
+#endif
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

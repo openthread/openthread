@@ -89,6 +89,9 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_JOIN_RSP_TIMEOUT, false}, // 32
     {SPINEL_PROP_LAST_STATUS, SPINEL_STATUS_JOIN_SUCCESS, false},     // 33
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false}, // 34
+#endif
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
