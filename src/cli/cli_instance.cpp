@@ -33,12 +33,13 @@
 
 #include "openthread-core-config.h"
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
 
 #include "cli.hpp"
+
+#include "common/debug.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 
@@ -52,9 +53,8 @@ void Interpreter::CacheInstances()
         otDeviceList *aDeviceList = otEnumerateDevices(mApiInstance);
         assert(aDeviceList);
 
-        mInstancesLength = aDeviceList->aDevicesLength > MAX_CLI_OT_INSTANCES ?
-                            MAX_CLI_OT_INSTANCES :
-                            (uint8_t)aDeviceList->aDevicesLength;
+        mInstancesLength = aDeviceList->aDevicesLength > MAX_CLI_OT_INSTANCES ? MAX_CLI_OT_INSTANCES
+                                                                              : (uint8_t)aDeviceList->aDevicesLength;
 
         for (uint8_t i = 0; i < mInstancesLength; i++)
         {
@@ -66,12 +66,17 @@ void Interpreter::CacheInstances()
 
         otFreeMemory(aDeviceList);
 
-        if (mInstancesLength > 0) { mInstance = mInstances[0].mInstance; }
+        if (mInstancesLength > 0)
+        {
+            mInstance = mInstances[0].mInstance;
+        }
     }
 }
 
 #define GUID_FORMAT "{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}"
-#define GUID_ARG(guid) guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]
+#define GUID_ARG(guid)                                                                                             \
+    guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], \
+        guid.Data4[5], guid.Data4[6], guid.Data4[7]
 
 void Interpreter::ProcessInstanceList(int argc, char *argv[])
 {
@@ -79,17 +84,16 @@ void Interpreter::ProcessInstanceList(int argc, char *argv[])
 
     for (uint8_t i = 0; i < mInstancesLength; i++)
     {
-        GUID aDeviceGuid = otGetDeviceGuid(mInstances[i].mInstance);
+        GUID     aDeviceGuid  = otGetDeviceGuid(mInstances[i].mInstance);
         uint32_t aCompartment = otGetCompartmentId(mInstances[i].mInstance);
-        mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
-                              i, GUID_ARG(aDeviceGuid), aCompartment);
+        mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n", i, GUID_ARG(aDeviceGuid), aCompartment);
     }
 }
 
 void Interpreter::ProcessInstance(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    long value;
+    long    value;
 
     if (argc == 0)
     {
@@ -99,10 +103,10 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
         }
         else
         {
-            GUID aDeviceGuid = otGetDeviceGuid(mInstance);
+            GUID     aDeviceGuid  = otGetDeviceGuid(mInstance);
             uint32_t aCompartment = otGetCompartmentId(mInstance);
-            mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
-                                  mInstanceIndex, GUID_ARG(aDeviceGuid), aCompartment);
+            mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n", mInstanceIndex, GUID_ARG(aDeviceGuid),
+                                  aCompartment);
         }
     }
     else
@@ -111,7 +115,7 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
         VerifyOrExit(value >= 0 && value < mInstancesLength, error = OT_ERROR_INVALID_ARGS);
 
         mInstanceIndex = (uint8_t)value;
-        mInstance = mInstances[mInstanceIndex].mInstance;
+        mInstance      = mInstances[mInstanceIndex].mInstance;
     }
 
 exit:
@@ -119,5 +123,5 @@ exit:
 }
 #endif
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
