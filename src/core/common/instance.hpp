@@ -330,7 +330,7 @@ public:
      * @returns A reference to the application COAP Secure object.
      *
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -442,7 +442,7 @@ private:
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    Coap::CoapSecure mApplicationCoapSecure;
+    Coap::ApplicationCoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -591,6 +591,13 @@ template <> inline MeshCoP::PendingDataset &Instance::Get(void)
 template <> inline TimeSync &Instance::Get(void)
 {
     return GetThreadNetif().GetTimeSync();
+}
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+template <> inline Coap::ApplicationCoapSecure &Instance::Get(void)
+{
+    return GetApplicationCoapSecure();
 }
 #endif
 

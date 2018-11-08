@@ -47,14 +47,14 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(Instance &aInstance, bool aLinkSecurity)
+CoapSecure::CoapSecure(Instance &aInstance, Tasklet::Handler aTransmitHandler, bool aLinkSecurity)
     : CoapBase(aInstance)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
     , mTransmitQueue()
-    , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
+    , mTransmitTask(aInstance, aTransmitHandler, this)
     , mLayerTwoSecurity(aLinkSecurity)
 {
 }
@@ -381,6 +381,19 @@ exit:
     }
 }
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
+    : CoapSecure(aInstance, &ApplicationCoapSecure::HandleTransmit, true)
+{
+}
+
+void ApplicationCoapSecure::HandleTransmit(Tasklet &aTasklet)
+{
+    aTasklet.GetOwner<ApplicationCoapSecure>().CoapSecure::HandleTransmit();
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 } // namespace Coap
 } // namespace ot
 

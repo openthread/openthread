@@ -69,15 +69,15 @@ public:
 
     /**
      * This constructor initializes the object.
-     * (Used for Application CoAPS)
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
      * @param[in]  aUdpTransmitHandle   Handler for udp transmit.
      * @param[in]  aLinkSecurity        Whether to enable link security.
      *
      */
-    explicit CoapSecure(Instance &aInstance, Tasklet::Handler aUdpTransmitHandle, bool aLinkSecurity = false);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    explicit CoapSecure(Instance &       aInstance,
+                        Tasklet::Handler aUdpTransmitHandle = &CoapSecure::HandleTransmit,
+                        bool             aLinkSecurity      = false);
 
     /**
      * This method starts the secure CoAP agent.
@@ -348,14 +348,13 @@ private:
     bool mLayerTwoSecurity : 1;
 };
 
-<<<<<<< HEAD
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-    /**
-     * This class implements the application CoAP Secure client and server.
-     *
-     */
-    class ApplicationCoapSecure : public CoapSecure
+/**
+ * This class implements the application CoAP Secure client and server.
+ *
+ */
+class ApplicationCoapSecure : public CoapSecure
 {
 public:
     /**
@@ -367,15 +366,11 @@ public:
     explicit ApplicationCoapSecure(Instance &aInstance);
 
 private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
     static void HandleTransmit(Tasklet &aTasklet);
 };
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-=======
->>>>>>> [core] use free timer to simplify CoAP
 } // namespace Coap
 } // namespace ot
 
