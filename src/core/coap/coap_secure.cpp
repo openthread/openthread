@@ -389,10 +389,13 @@ void CoapSecure::HandleTransmit(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
+        otLogNoteMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
         message->Free();
     }
-
-    otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
+    else
+    {
+        otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
+    }
 }
 
 void CoapSecure::HandleRetransmissionTimer(Timer &aTimer)
