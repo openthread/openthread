@@ -73,6 +73,60 @@ Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
         Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
+uint8_t Ip6::DscpToPriority(uint8_t aDscp)
+{
+    uint8_t priority;
+    uint8_t cs = aDscp & kDscpCsMask;
+
+    switch (cs)
+    {
+    case kDscpCs1:
+    case kDscpCs2:
+        priority = Message::kPriorityLow;
+        break;
+
+    case kDscpCs0:
+    case kDscpCs3:
+        priority = Message::kPriorityNormal;
+        break;
+
+    case kDscpCs4:
+    case kDscpCs5:
+    case kDscpCs6:
+    case kDscpCs7:
+        priority = Message::kPriorityHigh;
+        break;
+
+    default:
+        priority = Message::kPriorityNormal;
+        break;
+    }
+
+    return priority;
+}
+
+uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
+{
+    uint8_t dscp = kDscpCs0;
+
+    switch (aPriority)
+    {
+    case Message::kPriorityLow:
+        dscp = kDscpCs1;
+        break;
+
+    case Message::kPriorityNormal:
+        dscp = kDscpCs0;
+        break;
+
+    case Message::kPriorityHigh:
+        dscp = kDscpCs4;
+        break;
+    }
+
+    return dscp;
+}
+
 uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
 {
     return Message::UpdateChecksum(aChecksum, aAddress.mFields.m8, sizeof(aAddress));
@@ -358,6 +412,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     const NetifUnicastAddress *source;
 
     header.Init();
+    header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
     header.SetHopLimit(aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
