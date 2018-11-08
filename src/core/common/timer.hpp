@@ -216,6 +216,44 @@ private:
 };
 
 /**
+ * This class implements a millisecond timer that also maintains a user context pointer.
+ *
+ * In typical `TimerMilli`/`TimerMicro` use, in the timer callback handler, the owner of the timer is determined using
+ * `GetOwner<Type>` method. This method works if there is a single instance of `Type` within OpenThread instance
+ * hierarchy. The `TimerMilliContext` is intended for cases where there may be multiple instances of the same class/type
+ * using a timer object. `TimerMilliContext` will store a context `void *` information.
+ *
+ */
+class TimerMilliContext : public TimerMilli
+{
+public:
+    /**
+     * This constructor creates a millisecond timer that also maintains a user context pointer.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
+     * @param[in]  aContext    A pointer to an arbitrary context information.
+     *
+     */
+    TimerMilliContext(Instance &aInstance, Handler aHandler, void *aContext)
+        : TimerMilli(aInstance, aHandler, aContext)
+        , mContext(aContext)
+    {
+    }
+
+    /**
+     * This method returns the pointer to the arbitrary context information.
+     *
+     * @returns Pointer to the arbitrary context information.
+     *
+     */
+    void *GetContext(void) { return mContext; }
+
+private:
+    void *mContext;
+};
+
+/**
  * This class implements the base timer scheduler.
  *
  */
