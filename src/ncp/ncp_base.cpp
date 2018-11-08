@@ -40,6 +40,7 @@
 #include <openthread/link.h>
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
+#include <openthread/network_time.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 
@@ -264,6 +265,9 @@ NcpBase::NcpBase(Instance *aInstance)
     otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #if OPENTHREAD_ENABLE_UDP_FORWARD
     otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif

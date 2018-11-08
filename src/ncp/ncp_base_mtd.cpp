@@ -2618,6 +2618,17 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(
 exit:
     return error;
 }
+
+void NcpBase::HandleTimeSyncUpdate(void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate();
+}
+
+void NcpBase::HandleTimeSyncUpdate(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
+    mUpdateChangedPropsTask.Post();
+}
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext)
