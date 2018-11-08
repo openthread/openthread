@@ -86,7 +86,10 @@ public:
      * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
      *
      */
-    explicit CoapSecure(Instance &aInstance, Timer::Handler aRetransmissionTimer, Timer::Handler aResponsesQueueTimer);
+    explicit CoapSecure(Instance &       aInstance,
+                        Tasklet::Handler aUdpTransmitHandle,
+                        Timer::Handler   aRetransmissionTimer,
+                        Timer::Handler   aResponsesQueueTimer);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
     /**
@@ -331,7 +334,7 @@ public:
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 protected:
-    void HandleUdpTransmit(void);
+    void HandleTransmit(void);
 
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -347,12 +350,15 @@ private:
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
+    static void HandleTransmit(Tasklet &aTasklet);
 
     Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
     void *            mConnectedContext;
     TransportCallback mTransportCallback;
     void *            mTransportContext;
+    MessageQueue      mTransmitQueue;
+    Tasklet           mTransmitTask;
 
     bool mLayerTwoSecurity : 1;
 };
@@ -377,6 +383,7 @@ public:
 private:
     static void HandleRetransmissionTimer(Timer &aTimer);
     static void HandleResponsesQueueTimer(Timer &aTimer);
+    static void HandleTransmit(Tasklet &aTasklet);
 };
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
