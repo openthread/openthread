@@ -587,6 +587,13 @@ template <> inline MeshCoP::PendingDataset &Instance::Get(void)
     return GetThreadNetif().GetPendingDataset();
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+template <> inline TimeSync &Instance::Get(void)
+{
+    return GetThreadNetif().GetTimeSync();
+}
+#endif
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 template <> inline Coap::ApplicationCoap &Instance::Get(void)
 {

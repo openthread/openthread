@@ -89,4 +89,12 @@ uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance)
 
     return instance.GetThreadNetif().GetTimeSync().GetXtalThreshold();
 }
+
+void otNetworkTimeSyncSetCallback(otInstance *aInstance, otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetTimeSync().SetTimeSyncCallback(aCallback, aCallbackContext);
+}
+
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC

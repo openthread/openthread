@@ -263,6 +263,9 @@ protected:
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
     void        ProcessThreadChangedFlags(void);
 
+    static void HandleTimeSyncUpdate(void *aContext);
+    void        HandleTimeSyncUpdate(void);
+
 #if OPENTHREAD_FTD
     static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
     void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
