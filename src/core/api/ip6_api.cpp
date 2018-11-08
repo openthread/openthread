@@ -264,3 +264,17 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
 {
     return static_cast<const Ip6::Address *>(aAddress)->IsUnspecified();
 }
+
+otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
+{
+    otError                         error    = OT_ERROR_NONE;
+    Instance &                      instance = *static_cast<Instance *>(aInstance);
+    const Ip6::NetifUnicastAddress *netifAddr;
+
+    netifAddr = instance.GetIp6().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
+    VerifyOrExit(netifAddr != NULL, error = OT_ERROR_NOT_FOUND);
+    memcpy(&aMessageInfo->mSockAddr, &netifAddr->mAddress, sizeof(aMessageInfo->mSockAddr));
+
+exit:
+    return error;
+}
