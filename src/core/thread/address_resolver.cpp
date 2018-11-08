@@ -552,7 +552,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
             memcmp(netif.GetMle().GetMeshLocal64().GetIid(), mlIidTlv.GetIid(), 8))
         {
             // Target EID matches address and Mesh Local EID differs
-            netif.RemoveUnicastAddress(*address);
+            netif.RemoveNativeUnicastAddress(*address);
             ExitNow();
         }
     }

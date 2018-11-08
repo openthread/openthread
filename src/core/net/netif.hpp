@@ -218,7 +218,7 @@ public:
     const NetifUnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses; }
 
     /**
-     * This method adds a unicast address to the network interface.
+     * This method adds a native unicast address to the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
@@ -226,10 +226,10 @@ public:
      * @retval OT_ERROR_ALREADY  The unicast address was already added.
      *
      */
-    otError AddUnicastAddress(NetifUnicastAddress &aAddress);
+    otError AddNativeUnicastAddress(NetifUnicastAddress &aAddress);
 
     /**
-     * This method removes a unicast address from the network interface.
+     * This method removes a native unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
@@ -237,7 +237,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  The unicast address wasn't found to be removed.
      *
      */
-    otError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+    otError RemoveNativeUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
      * This method adds an internal (to OpenThread) unicast address to the network interface.
@@ -288,11 +288,10 @@ public:
     otError RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
-     * This method removes all the previously added dynamic (to OpenThread) unicast addresses from the
-     * network interface.
+     * This method removes all added unicast addresses in the unicast address pool from the network interface.
      *
      */
-    void RemoveAllDynamicUnicastAddresses(void);
+    void ClearUnicastAddressPool(void);
 
     /**
      * This method indicates whether or not an address is assigned to this interface.
@@ -493,9 +492,9 @@ private:
     int8_t                 mInterfaceId;
     bool                   mMulticastPromiscuous;
 
-    uint8_t               mInternalDynamicUnicastsNumber;
-    uint8_t               mExternalDynamicUnicastsNumber;
-    NetifUnicastAddress   mDynamicUnicasts[OPENTHREAD_CONFIG_MAX_DYNAMIC_IP_ADDRS];
+    uint8_t               mInternalUnicastsNumber;
+    uint8_t               mExternalUnicastsNumber;
+    NetifUnicastAddress   mUnicastAddressPool[OPENTHREAD_CONFIG_UNICAST_IP_ADDRESS_POOL_SIZE];
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;

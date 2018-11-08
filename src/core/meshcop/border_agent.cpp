@@ -213,7 +213,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             netif.GetMle().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
                                                sessionIdTlv.GetCommissionerSessionId());
-            netif.AddUnicastAddress(borderAgent.mCommissionerAloc);
+            netif.AddNativeUnicastAddress(borderAgent.mCommissionerAloc);
             netif.GetIp6().GetUdp().AddReceiver(borderAgent.mUdpReceiver);
         }
     }
@@ -634,7 +634,7 @@ void BorderAgent::HandleConnected(bool aConnected)
 
         otLogInfoMeshCoP("Commissioner disconnected");
         netif.GetIp6().GetUdp().RemoveReceiver(mUdpReceiver);
-        netif.RemoveUnicastAddress(mCommissionerAloc);
+        netif.RemoveNativeUnicastAddress(mCommissionerAloc);
         coaps.Stop();
         SetState(OT_BORDER_AGENT_STATE_STARTED);
         mTimer.Start(kRestartDelay);

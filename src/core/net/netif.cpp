@@ -87,8 +87,8 @@ Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
     , mMulticastAddresses(NULL)
     , mInterfaceId(aInterfaceId)
     , mMulticastPromiscuous(false)
-    , mInternalDynamicUnicastsNumber(0)
-    , mExternalDynamicUnicastsNumber(0)
+    , mInternalUnicastsNumber(0)
+    , mExternalUnicastsNumber(0)
 {
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtMulticastAddresses); i++)
     {
@@ -362,7 +362,7 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
     }
 }
 
-otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
+otError Netif::AddNativeUnicastAddress(NetifUnicastAddress &aAddress)
 {
     otError error = OT_ERROR_NONE;
 
@@ -383,7 +383,7 @@ exit:
     return error;
 }
 
-otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
+otError Netif::RemoveNativeUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError error = OT_ERROR_NONE;
 
@@ -420,7 +420,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
+    const size_t         num = OT_ARRAY_LENGTH(mUnicastAddressPool);
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
@@ -428,8 +428,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
-            VerifyOrExit(entry >= &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber] &&
-                             entry < &mDynamicUnicasts[num],
+            VerifyOrExit(entry >= &mUnicastAddressPool[num - mExternalUnicastsNumber] &&
+                             entry < &mUnicastAddressPool[num],
                          error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
@@ -439,9 +439,9 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    VerifyOrExit(mInternalDynamicUnicastsNumber + mExternalDynamicUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
-    ++mExternalDynamicUnicastsNumber;
-    entry = &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber];
+    VerifyOrExit(mInternalUnicastsNumber + mExternalUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
+    ++mExternalUnicastsNumber;
+    entry = &mUnicastAddressPool[num - mExternalUnicastsNumber];
 
     // Copy the new address into the available entry and insert it in linked-list.
     *entry            = aAddress;
@@ -460,17 +460,17 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     NetifUnicastAddress *prev   = NULL;
     NetifUnicastAddress *target = NULL;
     NetifUnicastAddress *entry;
-    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
+    const size_t         num = OT_ARRAY_LENGTH(mUnicastAddressPool);
 
-    VerifyOrExit(mExternalDynamicUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mExternalUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
 
     // Find target to remove
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
-            VerifyOrExit(entry >= &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber] &&
-                             entry < &mDynamicUnicasts[num],
+            VerifyOrExit(entry >= &mUnicastAddressPool[num - mExternalUnicastsNumber] &&
+                             entry < &mUnicastAddressPool[num],
                          error = OT_ERROR_INVALID_ARGS);
 
             target = entry;
@@ -481,13 +481,13 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
     // Find previous entry of the top entry of internal addresses stack
-    for (entry = mUnicastAddresses; entry != &mDynamicUnicasts[num - mExternalDynamicUnicastsNumber];
+    for (entry = mUnicastAddresses; entry != &mUnicastAddressPool[num - mExternalUnicastsNumber];
          entry = entry->GetNext())
     {
         prev = entry;
     }
 
-    --mExternalDynamicUnicastsNumber;
+    --mExternalUnicastsNumber;
 
     // Remove the top entry from list
     if (prev == NULL)
@@ -512,17 +512,17 @@ exit:
     return error;
 }
 
-void Netif::RemoveAllDynamicUnicastAddresses(void)
+void Netif::ClearUnicastAddressPool(void)
 {
     for (NetifUnicastAddress *entry =
-             &mDynamicUnicasts[OT_ARRAY_LENGTH(mDynamicUnicasts) - mExternalDynamicUnicastsNumber];
-         mExternalDynamicUnicastsNumber > 0; entry++)
+             &mUnicastAddressPool[OT_ARRAY_LENGTH(mUnicastAddressPool) - mExternalUnicastsNumber];
+         mExternalUnicastsNumber > 0; entry++)
     {
         RemoveExternalUnicastAddress(entry->GetAddress());
     }
 
-    for (NetifUnicastAddress *entry = &mDynamicUnicasts[mInternalDynamicUnicastsNumber - 1];
-         mInternalDynamicUnicastsNumber > 0; entry--)
+    for (NetifUnicastAddress *entry = &mUnicastAddressPool[mInternalUnicastsNumber - 1]; mInternalUnicastsNumber > 0;
+         entry--)
     {
         RemoveInternalUnicastAddress(entry->GetAddress());
     }
@@ -548,7 +548,7 @@ otError Netif::AddInternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    const size_t         num = OT_ARRAY_LENGTH(mDynamicUnicasts);
+    const size_t         num = OT_ARRAY_LENGTH(mUnicastAddressPool);
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
@@ -556,7 +556,7 @@ otError Netif::AddInternalUnicastAddress(const NetifUnicastAddress &aAddress)
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
-            VerifyOrExit(entry >= &mDynamicUnicasts[0] && entry < &mDynamicUnicasts[mInternalDynamicUnicastsNumber],
+            VerifyOrExit(entry >= &mUnicastAddressPool[0] && entry < &mUnicastAddressPool[mInternalUnicastsNumber],
                          error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
@@ -566,9 +566,9 @@ otError Netif::AddInternalUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    VerifyOrExit(mInternalDynamicUnicastsNumber + mExternalDynamicUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(mInternalUnicastsNumber + mExternalUnicastsNumber < num, error = OT_ERROR_NO_BUFS);
 
-    entry = &mDynamicUnicasts[mInternalDynamicUnicastsNumber++];
+    entry = &mUnicastAddressPool[mInternalUnicastsNumber++];
 
     // Copy the new address into the available entry and insert it in linked-list.
     *entry            = aAddress;
@@ -588,14 +588,14 @@ otError Netif::RemoveInternalUnicastAddress(const Address &aAddress)
     NetifUnicastAddress *target = NULL;
     NetifUnicastAddress *entry;
 
-    VerifyOrExit(mInternalDynamicUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mInternalUnicastsNumber > 0, error = OT_ERROR_NOT_FOUND);
 
     // Find target to remove
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
-            VerifyOrExit(entry >= &mDynamicUnicasts[0] && entry < &mDynamicUnicasts[mInternalDynamicUnicastsNumber],
+            VerifyOrExit(entry >= &mUnicastAddressPool[0] && entry < &mUnicastAddressPool[mInternalUnicastsNumber],
                          error = OT_ERROR_INVALID_ARGS);
 
             target = entry;
@@ -605,11 +605,10 @@ otError Netif::RemoveInternalUnicastAddress(const Address &aAddress)
 
     VerifyOrExit(target != NULL, error = OT_ERROR_NOT_FOUND);
 
-    --mInternalDynamicUnicastsNumber;
+    --mInternalUnicastsNumber;
 
     // Find previous entry of the top entry of internal addresses stack
-    for (entry = mUnicastAddresses; entry != &mDynamicUnicasts[mInternalDynamicUnicastsNumber];
-         entry = entry->GetNext())
+    for (entry = mUnicastAddresses; entry != &mUnicastAddressPool[mInternalUnicastsNumber]; entry = entry->GetNext())
     {
         prev = entry;
     }

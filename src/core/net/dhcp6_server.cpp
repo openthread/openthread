@@ -110,7 +110,7 @@ otError Dhcp6Server::UpdateService(void)
         if (!found)
         {
             netif.GetNetworkDataLeader().GetContext(address->mFields.m8[15], lowpanContext);
-            netif.RemoveUnicastAddress(mAgentsAloc[i]);
+            netif.RemoveNativeUnicastAddress(mAgentsAloc[i]);
             mAgentsAloc[i].mValid = false;
             RemovePrefixAgent(lowpanContext.mPrefix);
         }
@@ -162,7 +162,7 @@ otError Dhcp6Server::UpdateService(void)
                 mAgentsAloc[i].mPrefixLength = 128;
                 mAgentsAloc[i].mPreferred    = true;
                 mAgentsAloc[i].mValid        = true;
-                netif.AddUnicastAddress(mAgentsAloc[i]);
+                netif.AddNativeUnicastAddress(mAgentsAloc[i]);
                 AddPrefixAgent(config.mPrefix);
                 break;
             }

@@ -230,7 +230,7 @@ otError Mle::Disable(void)
 
     SuccessOrExit(error = Stop(false));
     SuccessOrExit(error = mSocket.Close());
-    SuccessOrExit(error = GetNetif().RemoveUnicastAddress(mLinkLocal64));
+    SuccessOrExit(error = GetNetif().RemoveNativeUnicastAddress(mLinkLocal64));
 
 exit:
     return error;
@@ -296,8 +296,8 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     SetStateDetached();
     GetNetif().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
     GetNetif().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
-    netif.RemoveUnicastAddress(mMeshLocal16);
-    netif.RemoveUnicastAddress(mMeshLocal64);
+    netif.RemoveNativeUnicastAddress(mMeshLocal16);
+    netif.RemoveNativeUnicastAddress(mMeshLocal64);
 
     SetRole(OT_DEVICE_ROLE_DISABLED);
 
@@ -706,7 +706,7 @@ otError Mle::SetStateDetached(void)
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
-        netif.RemoveUnicastAddress(mLeaderAloc);
+        netif.RemoveNativeUnicastAddress(mLeaderAloc);
     }
 
     SetRole(OT_DEVICE_ROLE_DETACHED);
@@ -732,7 +732,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
-        netif.RemoveUnicastAddress(mLeaderAloc);
+        netif.RemoveNativeUnicastAddress(mLeaderAloc);
     }
 
     SetRloc16(aRloc16);
@@ -860,9 +860,9 @@ otError Mle::UpdateLinkLocalAddress(void)
 {
     ThreadNetif &netif = GetNetif();
 
-    netif.RemoveUnicastAddress(mLinkLocal64);
+    netif.RemoveNativeUnicastAddress(mLinkLocal64);
     mLinkLocal64.GetAddress().SetIid(netif.GetMac().GetExtAddress());
-    netif.AddUnicastAddress(mLinkLocal64);
+    netif.AddNativeUnicastAddress(mLinkLocal64);
 
     GetNotifier().Signal(OT_CHANGED_THREAD_LL_ADDR);
 
@@ -881,10 +881,10 @@ void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
 
     if (netif.IsUp())
     {
-        netif.RemoveUnicastAddress(mLeaderAloc);
+        netif.RemoveNativeUnicastAddress(mLeaderAloc);
         // We must remove the old addresses before adding the new ones.
-        netif.RemoveUnicastAddress(mMeshLocal64);
-        netif.RemoveUnicastAddress(mMeshLocal16);
+        netif.RemoveNativeUnicastAddress(mMeshLocal64);
+        netif.RemoveNativeUnicastAddress(mMeshLocal16);
         netif.UnsubscribeMulticast(mLinkLocalAllThreadNodes);
         netif.UnsubscribeMulticast(mRealmLocalAllThreadNodes);
     }
@@ -912,9 +912,9 @@ void Mle::ApplyMeshLocalPrefix(void)
     {
         if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
         {
-            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            netif.RemoveNativeUnicastAddress(mServiceAlocs[i]);
             memcpy(mServiceAlocs[i].GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
-            netif.AddUnicastAddress(mServiceAlocs[i]);
+            netif.AddNativeUnicastAddress(mServiceAlocs[i]);
         }
     }
 
@@ -927,19 +927,19 @@ void Mle::ApplyMeshLocalPrefix(void)
     memcpy(mRealmLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
     // Add the addresses back into the table.
-    netif.AddUnicastAddress(mMeshLocal64);
+    netif.AddNativeUnicastAddress(mMeshLocal64);
     netif.SubscribeMulticast(mLinkLocalAllThreadNodes);
     netif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
     if (IsAttached())
     {
-        netif.AddUnicastAddress(mMeshLocal16);
+        netif.AddNativeUnicastAddress(mMeshLocal16);
     }
 
     // update Leader ALOC
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
-        netif.AddUnicastAddress(mLeaderAloc);
+        netif.AddNativeUnicastAddress(mLeaderAloc);
     }
 
     // Changing the prefix also causes the mesh local address to be different.
@@ -955,13 +955,13 @@ otError Mle::SetRloc16(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
-    netif.RemoveUnicastAddress(mMeshLocal16);
+    netif.RemoveNativeUnicastAddress(mMeshLocal16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-        netif.AddUnicastAddress(mMeshLocal16);
+        netif.AddNativeUnicastAddress(mMeshLocal16);
     }
 
     netif.GetMac().SetShortAddress(aRloc16);
@@ -1043,7 +1043,7 @@ otError Mle::AddLeaderAloc(void)
 
     SuccessOrExit(error = GetLeaderAloc(mLeaderAloc.GetAddress()));
 
-    error = GetNetif().AddUnicastAddress(mLeaderAloc);
+    error = GetNetif().AddNativeUnicastAddress(mLeaderAloc);
 
 exit:
     return error;
@@ -1469,7 +1469,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
                                OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
-            netif.AddUnicastAddress(mMeshLocal64);
+            netif.AddNativeUnicastAddress(mMeshLocal64);
             GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
         }
 
@@ -1540,7 +1540,7 @@ void Mle::UpdateServiceAlocs(void)
         if ((serviceAloc != Mac::kShortAddrInvalid) &&
             (!leaderData.ContainsService(Mle::GetServiceIdFromAloc(serviceAloc), rloc)))
         {
-            netif.RemoveUnicastAddress(mServiceAlocs[i]);
+            netif.RemoveNativeUnicastAddress(mServiceAlocs[i]);
             mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
         }
     }
@@ -1568,7 +1568,7 @@ void Mle::UpdateServiceAlocs(void)
                 if (serviceAloc == Mac::kShortAddrInvalid)
                 {
                     SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[i].GetAddress()));
-                    netif.AddUnicastAddress(mServiceAlocs[i]);
+                    netif.AddNativeUnicastAddress(mServiceAlocs[i]);
                     break;
                 }
             }

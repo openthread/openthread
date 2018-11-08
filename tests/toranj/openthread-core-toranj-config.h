@@ -99,12 +99,12 @@
 #define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                    10
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_DYNAMIC_IP_ADDRS
+ * @def OPENTHREAD_CONFIG_UNICAST_IP_ADDRESS_POOL_SIZE
  *
- * The maximum number of supported IPv6 addresses allows to be dynamically added.
+ * The size of the IPv6 unicast address pool per network interface.
  *
  */
-#define OPENTHREAD_CONFIG_MAX_DYNAMIC_IP_ADDRS                  8
+#define OPENTHREAD_CONFIG_UNICAST_IP_ADDRESS_POOL_SIZE          8
 
 /**
  * @def OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS

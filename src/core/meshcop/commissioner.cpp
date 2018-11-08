@@ -121,7 +121,7 @@ otError Commissioner::Stop(void)
     GetNetif().GetCoapSecure().Stop();
 
     mState = OT_COMMISSIONER_STATE_DISABLED;
-    GetNetif().RemoveUnicastAddress(mCommissionerAloc);
+    GetNetif().RemoveNativeUnicastAddress(mCommissionerAloc);
     GetNotifier().Signal(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     ClearJoiners();
@@ -672,7 +672,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *          aHeader,
     mSessionId = sessionId.GetCommissionerSessionId();
 
     netif.GetMle().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId);
-    netif.AddUnicastAddress(mCommissionerAloc);
+    netif.AddNativeUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
     mState = OT_COMMISSIONER_STATE_ACTIVE;
@@ -777,7 +777,7 @@ exit:
 
     if (mState != OT_COMMISSIONER_STATE_ACTIVE)
     {
-        GetNetif().RemoveUnicastAddress(mCommissionerAloc);
+        GetNetif().RemoveNativeUnicastAddress(mCommissionerAloc);
         RemoveCoapResources();
     }
 }
