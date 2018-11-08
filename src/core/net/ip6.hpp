@@ -122,6 +122,26 @@ public:
     Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
 
     /**
+     * This method converts the message priority level to IPv6 DSCP value.
+     *
+     * @param[in]  aPriority  The message priority level.
+     *
+     * @returns The IPv6 DSCP value.
+     *
+     */
+    static uint8_t PriorityToDscp(uint8_t aPriority);
+
+    /**
+     * This method converts the IPv6 DSCP value to message priority level.
+     *
+     * @param[in]  aDscp  The IPv6 DSCP value.
+     *
+     * @returns The message priority level.
+     *
+     */
+    static uint8_t DscpToPriority(uint8_t aDscp);
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance   A reference to the otInstance object.
