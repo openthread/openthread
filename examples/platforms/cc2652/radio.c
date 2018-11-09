@@ -1589,8 +1589,6 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     else
     {
         /* we are not running, so we must update the values ourselves */
-        sSrcMatchExtData.srcPendEn[idx]  = 0u;
-        sSrcMatchExtData.srcMatchEn[idx] = 0u;
         sSrcMatchExtData.srcPendEn[idx / 32] &= ~(1 << (idx % 32));
         sSrcMatchExtData.srcMatchEn[idx / 32] &= ~(1 << (idx % 32));
     }
