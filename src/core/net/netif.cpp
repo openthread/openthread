@@ -480,7 +480,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 
     VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
-    // Find previous entry of the top entry of internal addresses stack
+    // Find previous entry of the top entry of external addresses stack
     for (entry = mUnicastAddresses; entry != &mUnicastAddressPool[num - mExternalUnicastsNumber];
          entry = entry->GetNext())
     {
