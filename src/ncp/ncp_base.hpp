@@ -237,9 +237,6 @@ protected:
                                                 NcpFrameBuffer *         aNcpBuffer);
     void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
-    static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
-    void        HandleRawFrame(const otRadioFrame *aFrame);
-
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
@@ -262,6 +259,9 @@ protected:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
     void        ProcessThreadChangedFlags(void);
+
+    static void HandlePcapFrame(const otRadioFrame *aFrame, void *aContext);
+    void        HandlePcapFrame(const otRadioFrame *aFrame);
 
     static void HandleTimeSyncUpdate(void *aContext);
     void        HandleTimeSyncUpdate(void);
@@ -530,6 +530,7 @@ protected:
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
+    bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
 
