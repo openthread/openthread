@@ -36,7 +36,9 @@
 #define MBEDTLS_ECDSA_C
 
 #if defined(__ICCARM__)
-    _Pragma("diag_suppress=Pe549")
-    _Pragma("diag_suppress=Pa082")
-    _Pragma("diag_suppress=Pa084")
+    _Pragma("diag_suppress=Pe550")
+#endif
+
+#if defined(__CC_ARM)
+    _Pragma("diag_suppress=550")
 #endif
