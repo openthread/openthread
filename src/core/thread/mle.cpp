@@ -1507,6 +1507,10 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         this->UpdateServiceAlocs();
 #endif
 #endif
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+        GetNetif().GetDhcp6Client().UpdateAddresses();
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
     }
 
     if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))

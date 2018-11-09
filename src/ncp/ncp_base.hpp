@@ -43,7 +43,6 @@
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
-#include <openthread/dhcp6_client.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
 
@@ -533,10 +532,6 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcpAddress mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-#endif
 
 #if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

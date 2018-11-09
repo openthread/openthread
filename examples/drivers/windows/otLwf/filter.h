@@ -200,9 +200,6 @@ typedef struct _MS_FILTER
     ULONG                       otCachedAddrCount;
     IN6_ADDR                    otLinkLocalAddr;
     otNetifAddress              otAutoAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcpAddress               otDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     union
     {

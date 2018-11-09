@@ -472,7 +472,7 @@ public:
      * @returns A pointer to the IPv6 address.
      *
      */
-    otIp6Address *GetAddress(void) { return &mAddress; }
+    Ip6::Address &GetAddress(void) { return mAddress; }
 
     /**
      * This method sets the IPv6 address.
@@ -515,7 +515,7 @@ public:
     void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = HostSwap32(aValidLifetime); }
 
 private:
-    otIp6Address mAddress;           ///< IPv6 address
+    Ip6::Address mAddress;           ///< IPv6 address
     uint32_t     mPreferredLifetime; ///< Preferred Lifetime
     uint32_t     mValidLifetime;     ///< Valid Lifetime
 } OT_TOOL_PACKED_END;

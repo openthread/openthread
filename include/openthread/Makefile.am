@@ -61,7 +61,6 @@ openthread_headers                      = \
     dataset.h                             \
     dataset_ftd.h                         \
     diag.h                                \
-    dhcp6_client.h                        \
     dhcp6_server.h                        \
     dns.h                                 \
     error.h                               \
