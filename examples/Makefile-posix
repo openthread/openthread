@@ -69,6 +69,7 @@ configure_OPTIONS                   = \
     --enable-radio-only               \
     --enable-raw-link-api             \
     --enable-service                  \
+    --enable-sntp-client              \
     --enable-udp-forward              \
     --with-examples=posix             \
     $(NULL)
