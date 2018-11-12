@@ -304,7 +304,9 @@ public:
      */
     static void RemoveFrom(Message &aMessage)
     {
-        assert(aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader)) == OT_ERROR_NONE);
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
     }
 
     /**
