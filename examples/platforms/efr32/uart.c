@@ -153,7 +153,7 @@ otError otPlatUartEnable(void)
 
     for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
     {
-        UARTDRV_Receive(sUartHandle, (uint8_t *)&sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
+        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
     }
 
     return OT_ERROR_NONE;
