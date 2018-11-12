@@ -84,6 +84,14 @@
 #include "cli_coap_secure.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#include <openthread/channel_manager.h>
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include <openthread/channel_monitor.h>
+#endif
+
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
@@ -491,6 +499,100 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     {
         mServer->OutputFormat("%d\r\n", otLinkGetChannel(mInstance));
     }
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    else if (strcmp(argv[0], "monitor") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("enabled: %d\r\n", otChannelMonitorIsEnabled(mInstance));
+            if (otChannelMonitorIsEnabled(mInstance))
+            {
+                mServer->OutputFormat("interval: %d\r\n", otChannelMonitorGetSampleInterval(mInstance));
+                mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
+                mServer->OutputFormat("window: %d\r\n", otChannelMonitorGetSampleWindow(mInstance));
+                mServer->OutputFormat("count: %d\r\n", otChannelMonitorGetSampleCount(mInstance));
+            }
+        }
+        else if (strcmp(argv[1], "start") == 0)
+        {
+            error = otChannelMonitorSetEnabled(mInstance, true);
+        }
+        else if (strcmp(argv[1], "stop") == 0)
+        {
+            error = otChannelMonitorSetEnabled(mInstance, false);
+        }
+        else
+        {
+            SuccessOrExit(error = ParseLong(argv[1], value));
+            mServer->OutputFormat("occupancy: %d\r\n",
+                                  otChannelMonitorGetChannelOccupancy(mInstance, static_cast<uint8_t>(value)));
+        }
+    }
+#endif
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+    else if (strcmp(argv[0], "manager") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("channel: %d\r\n", otChannelManagerGetRequestedChannel(mInstance));
+            mServer->OutputFormat("auto: %d\r\n", otChannelManagerGetAutoChannelSelectionEnabled(mInstance));
+
+            if (otChannelManagerGetAutoChannelSelectionEnabled(mInstance))
+            {
+                mServer->OutputFormat("delay: %d\r\n", otChannelManagerGetDelay(mInstance));
+                mServer->OutputFormat("interval: %d\r\n", otChannelManagerGetAutoChannelSelectionInterval(mInstance));
+                mServer->OutputFormat("supported: 0x%08x\r\n", otChannelManagerGetSupportedChannels(mInstance));
+                mServer->OutputFormat("favored: 0x%08x\r\n", otChannelManagerGetFavoredChannels(mInstance));
+            }
+        }
+        else if (strcmp(argv[1], "change") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerRequestChannelChange(mInstance, static_cast<uint8_t>(value));
+        }
+        else if (strcmp(argv[1], "request") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerRequestChannelSelect(mInstance, (value != 0) ? true : false);
+        }
+        else if (strcmp(argv[1], "auto") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetAutoChannelSelectionEnabled(mInstance, (value != 0) ? true : false);
+        }
+        else if (strcmp(argv[1], "delay") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerSetDelay(mInstance, static_cast<uint8_t>(value));
+        }
+        else if (strcmp(argv[1], "interval") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerSetAutoChannelSelectionInterval(mInstance, static_cast<uint32_t>(value));
+        }
+        else if (strcmp(argv[1], "supported") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetSupportedChannels(mInstance, static_cast<uint32_t>(value));
+        }
+        else if (strcmp(argv[1], "favored") == 0)
+        {
+            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetFavoredChannels(mInstance, static_cast<uint32_t>(value));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#endif
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
