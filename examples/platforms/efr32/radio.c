@@ -67,19 +67,19 @@ enum
     EFR32_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
-static uint16_t     sPanId             = 0;
-static bool         sTransmitBusy      = false;
-static bool         sPromiscuous       = false;
-static bool         sIsSrcMatchEnabled = false;
-static otRadioState sState             = OT_RADIO_STATE_DISABLED;
+static uint16_t      sPanId             = 0;
+static volatile bool sTransmitBusy      = false;
+static bool          sPromiscuous       = false;
+static bool          sIsSrcMatchEnabled = false;
+static otRadioState  sState             = OT_RADIO_STATE_DISABLED;
 
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
 static otRadioFrame sReceiveFrame;
 static otError      sReceiveError;
 
-static otRadioFrame sTransmitFrame;
-static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static otError      sTransmitError;
+static otRadioFrame     sTransmitFrame;
+static uint8_t          sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static volatile otError sTransmitError;
 
 typedef struct srcMatchEntry
 {

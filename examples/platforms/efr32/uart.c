@@ -74,9 +74,9 @@ DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS, sUartTxQueue);
 
 static UARTDRV_HandleData_t sUartHandleData;
 static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
-static uint8_t              sReceiveBuffer[2];
+static volatile uint8_t     sReceiveBuffer[2];
 static const uint8_t *      sTransmitBuffer = NULL;
-static uint16_t             sTransmitLength = 0;
+static volatile uint16_t    sTransmitLength = 0;
 
 typedef struct ReceiveFifo_t
 {
@@ -88,7 +88,7 @@ typedef struct ReceiveFifo_t
     uint16_t mTail;
 } ReceiveFifo_t;
 
-static ReceiveFifo_t sReceiveFifo;
+static volatile ReceiveFifo_t sReceiveFifo;
 
 static void processReceive(void);
 
@@ -117,7 +117,7 @@ static void processReceive(void)
     // If the data wraps around, process the first part
     if (sReceiveFifo.mHead > tail)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, kReceiveFifoSize - sReceiveFifo.mHead);
+        otPlatUartReceived((uint8_t *)sReceiveFifo.mBuffer + sReceiveFifo.mHead, kReceiveFifoSize - sReceiveFifo.mHead);
 
         // Reset the buffer mHead back to zero.
         sReceiveFifo.mHead = 0;
@@ -126,7 +126,7 @@ static void processReceive(void)
     // For any data remaining, process it
     if (sReceiveFifo.mHead != tail)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, tail - sReceiveFifo.mHead);
+        otPlatUartReceived((uint8_t *)sReceiveFifo.mBuffer + sReceiveFifo.mHead, tail - sReceiveFifo.mHead);
 
         // Set mHead to the local tail we have cached
         sReceiveFifo.mHead = tail;
@@ -153,7 +153,7 @@ otError otPlatUartEnable(void)
 
     for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
     {
-        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
+        UARTDRV_Receive(sUartHandle, (uint8_t *)&sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
     }
 
     return OT_ERROR_NONE;
