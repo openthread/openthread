@@ -42,6 +42,7 @@ libopenthread_posix_a_CPPFLAGS            = \
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
     frame_queue.cpp                         \
+    hdlc_interface.cpp                      \
     logging.c                               \
     misc.c                                  \
     radio_spinel.cpp                        \
@@ -75,6 +76,7 @@ noinst_HEADERS                            = \
     frame_queue.hpp                         \
     openthread-system.h                     \
     platform-posix.h                        \
+    hdlc_interface.hpp                      \
     radio_spinel.hpp                        \
     $(NULL)
 

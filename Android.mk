@@ -180,15 +180,16 @@ LOCAL_SRC_FILES                                          := \
     src/ncp/spinel_decoder.cpp                              \
     src/ncp/spinel_encoder.cpp                              \
     src/posix/platform/alarm.c                              \
-    src/posix/platform/misc.c                               \
+    src/posix/platform/frame_queue.cpp                      \
+    src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.c                            \
+    src/posix/platform/misc.c                               \
+    src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/random.c                             \
+    src/posix/platform/settings.cpp                         \
+    src/posix/platform/spi-stubs.c                          \
     src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
-    src/posix/platform/spi-stubs.c                          \
-    src/posix/platform/frame_queue.cpp                      \
-    src/posix/platform/radio_spinel.cpp                     \
-    src/posix/platform/settings.cpp                         \
     third_party/mbedtls/repo/library/md.c                   \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
