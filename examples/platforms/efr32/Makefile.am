@@ -38,6 +38,10 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+BOARD                                        = BRD4170A
+
+EFR32_BOARD_DIR                              = $(shell echo $(BOARD) | tr A-Z a-z)
+
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.3
 
 libopenthread_efr32_a_CPPFLAGS                                                = \
@@ -69,6 +73,11 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
     -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
     -Wno-unused-parameter                                                       \
+    $(NULL)
+
+BOARD_SOURCES                                                                 = \
+    $(EFR32_BOARD_DIR)/band_config.c                                            \
+    $(EFR32_BOARD_DIR)/rail_config.c                                            \
     $(NULL)
 
 PLATFORM_SOURCES                                                              = \
@@ -120,16 +129,19 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     $(NULL)
 
 noinst_HEADERS                                                                = \
+    $(EFR32_BOARD_DIR)/band_config.h                                            \
+    $(EFR32_BOARD_DIR)/rail_config.h                                            \
     platform-efr32.h                                                            \
+    platform-band.h                                                             \
     $(NULL)
 
 libopenthread_efr32_a_SOURCES                                                 = \
     $(PLATFORM_SOURCES)                                                         \
+    $(BOARD_SOURCES)                                                            \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
     $(PLATFORM_SOURCES)                                                         \
-    $(noinst_HEADERS)                                                           \
     $(NULL)
 
 Dash                                                                                                 = -

@@ -83,6 +83,40 @@ enum
 };
 
 /**
+ * This enumeration defines the channel.
+ *
+ */
+enum
+{
+    OT_CHANNEL_1  = 1,  ///< Channel 1
+    OT_CHANNEL_2  = 2,  ///< Channel 2
+    OT_CHANNEL_3  = 3,  ///< Channel 3
+    OT_CHANNEL_4  = 4,  ///< Channel 4
+    OT_CHANNEL_5  = 5,  ///< Channel 5
+    OT_CHANNEL_6  = 6,  ///< Channel 6
+    OT_CHANNEL_7  = 7,  ///< Channel 7
+    OT_CHANNEL_8  = 8,  ///< Channel 8
+    OT_CHANNEL_9  = 9,  ///< Channel 9
+    OT_CHANNEL_10 = 10, ///< Channel 10
+    OT_CHANNEL_11 = 11, ///< Channel 11
+    OT_CHANNEL_12 = 12, ///< Channel 12
+    OT_CHANNEL_13 = 13, ///< Channel 13
+    OT_CHANNEL_14 = 14, ///< Channel 14
+    OT_CHANNEL_15 = 15, ///< Channel 15
+    OT_CHANNEL_16 = 16, ///< Channel 16
+    OT_CHANNEL_17 = 17, ///< Channel 17
+    OT_CHANNEL_18 = 18, ///< Channel 18
+    OT_CHANNEL_19 = 19, ///< Channel 19
+    OT_CHANNEL_20 = 20, ///< Channel 20
+    OT_CHANNEL_21 = 21, ///< Channel 21
+    OT_CHANNEL_22 = 22, ///< Channel 22
+    OT_CHANNEL_23 = 23, ///< Channel 23
+    OT_CHANNEL_24 = 24, ///< Channel 24
+    OT_CHANNEL_25 = 25, ///< Channel 25
+    OT_CHANNEL_26 = 26, ///< Channel 26
+};
+
+/**
  * This type represents radio capabilities.
  *
  * The value is a bit-field indicating the capabilities supported by the radio. See `OT_RADIO_CAPS_*` definitions.
