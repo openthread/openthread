@@ -73,7 +73,7 @@ typedef enum
     ENERGY_SCAN_IN_PROGRESS,
     ENERGY_SCAN_COMPLETED,
     ENERGY_SCAN_COMPLETED_ERROR
-} EnergyScanStatus;
+} energyScanStatus;
 
 static uint16_t     sPanId             = 0;
 static bool         sTransmitBusy      = false;
@@ -89,7 +89,7 @@ static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static otError      sTransmitError;
 
-static volatile EnergyScanStatus sEnergyScanStatus    = ENERGY_SCAN_IDLE;
+static volatile energyScanStatus sEnergyScanStatus    = ENERGY_SCAN_IDLE;
 static volatile int8_t           sEnergyScanResultDbm = RAIL_RSSI_INVALID_DBM;
 
 #define US_IN_MS 1000UL
@@ -607,9 +607,9 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
 
-static EnergyScanStatus checkEnergyScanCompletedThenReset(int8_t *aEnergyScanResultDbm)
+static energyScanStatus checkEnergyScanCompletedThenReset(int8_t *aEnergyScanResultDbm)
 {
-    EnergyScanStatus status;
+    energyScanStatus status;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
@@ -864,7 +864,7 @@ void efr32RadioProcess(otInstance *aInstance)
     else
     {
         int8_t                 energyScanResultDbm;
-        const EnergyScanStatus completionStatus = checkEnergyScanCompletedThenReset(&energyScanResultDbm);
+        const energyScanStatus completionStatus = checkEnergyScanCompletedThenReset(&energyScanResultDbm);
 
         if (completionStatus == ENERGY_SCAN_COMPLETED || completionStatus == ENERGY_SCAN_COMPLETED_ERROR)
         {
