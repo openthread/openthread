@@ -527,7 +527,7 @@ otError Mle::Discover(uint32_t        aScanChannels,
 
     // Discovery Request TLV
     discoveryRequest.Init();
-    discoveryRequest.SetVersion(kVersion);
+    discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
     SuccessOrExit(error = message->Append(&discoveryRequest, sizeof(discoveryRequest)));
 
@@ -1304,7 +1304,7 @@ otError Mle::AppendVersion(Message &aMessage)
     VersionTlv tlv;
 
     tlv.Init();
-    tlv.SetVersion(kVersion);
+    tlv.SetVersion(kThreadVersion);
 
     return aMessage.Append(&tlv, sizeof(tlv));
 }
