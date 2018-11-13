@@ -75,19 +75,19 @@ typedef enum
     ENERGY_SCAN_COMPLETED_ERROR
 } energyScanStatus;
 
-static uint16_t     sPanId             = 0;
-static bool         sTransmitBusy      = false;
-static bool         sPromiscuous       = false;
-static bool         sIsSrcMatchEnabled = false;
-static otRadioState sState             = OT_RADIO_STATE_DISABLED;
+static uint16_t      sPanId             = 0;
+static volatile bool sTransmitBusy      = false;
+static bool          sPromiscuous       = false;
+static bool          sIsSrcMatchEnabled = false;
+static otRadioState  sState             = OT_RADIO_STATE_DISABLED;
 
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
 static otRadioFrame sReceiveFrame;
 static otError      sReceiveError;
 
-static otRadioFrame sTransmitFrame;
-static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static otError      sTransmitError;
+static otRadioFrame     sTransmitFrame;
+static uint8_t          sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static volatile otError sTransmitError;
 
 static volatile energyScanStatus sEnergyScanStatus    = ENERGY_SCAN_IDLE;
 static volatile int8_t           sEnergyScanResultDbm = RAIL_RSSI_INVALID_DBM;

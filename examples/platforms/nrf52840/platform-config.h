@@ -73,17 +73,13 @@
 #endif
 
 /**
- * @def UART_HWFC
+ * @def UART_HWFC_ENABLED
  *
- * UART Hardware Flow Control.
- *
- * @brief Possible values:
- *         \ref NRF_UART_HWFC_ENABLED - HW Flow control enabled.
- *         \ref NRF_UART_HWFC_DISABLED - HW Flow control disabled.
+ * Enable UART Hardware Flow Control.
  *
  */
-#ifndef UART_HWFC
-#define UART_HWFC NRF_UART_HWFC_ENABLED
+#ifndef UART_HWFC_ENABLED
+#define UART_HWFC_ENABLED 1
 #endif
 
 /**

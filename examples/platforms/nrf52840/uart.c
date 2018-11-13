@@ -175,19 +175,20 @@ otError otPlatUartEnable(void)
     nrf_gpio_cfg_input(UART_PIN_RX, NRF_GPIO_PIN_NOPULL);
     nrf_uart_txrx_pins_set(UART_INSTANCE, UART_PIN_TX, UART_PIN_RX);
 
-#if (UART_HWFC == NRF_UART_HWFC_ENABLED)
+#if (UART_HWFC_ENABLED == 1)
     // Set up CTS and RTS pins.
     nrf_gpio_cfg_input(UART_PIN_CTS, NRF_GPIO_PIN_NOPULL);
     nrf_gpio_pin_set(UART_PIN_RTS);
     nrf_gpio_cfg_output(UART_PIN_RTS);
     nrf_uart_hwfc_pins_set(UART_INSTANCE, UART_PIN_RTS, UART_PIN_CTS);
+
+    nrf_uart_configure(UART_INSTANCE, UART_PARITY, NRF_UART_HWFC_ENABLED);
+#else
+    nrf_uart_configure(UART_INSTANCE, UART_PARITY, NRF_UART_HWFC_DISABLED);
 #endif
 
     // Configure baudrate.
     nrf_uart_baudrate_set(UART_INSTANCE, UART_BAUDRATE);
-
-    // Configure parity and hardware flow control.
-    nrf_uart_configure(UART_INSTANCE, UART_PARITY, UART_HWFC);
 
     // Clear UART specific events.
     nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_TXDRDY);
