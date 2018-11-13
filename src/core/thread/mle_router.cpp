@@ -1587,6 +1587,9 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     // A Router MUST NOT send an MLE Parent Response if:
 
+    // 0. It is detached or attempting to another partition
+    VerifyOrExit((mRole != OT_DEVICE_ROLE_DETACHED) && (mAttachState == kAttachStateIdle), error = OT_ERROR_DROP);
+
     // 1. It has no available Child capacity (if Max Child Count minus
     // Child Count would be equal to zero)
     // ==> verified below when allocating a child entry
