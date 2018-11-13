@@ -57,7 +57,7 @@ enum
  */
 enum
 {
-    kVersion                        = 2,     ///< MLE Version
+    kThreadVersion                  = 2,     ///< Thread Version
     kUdpPort                        = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout     = 750,   ///< Router Parent Request timeout
     kParentRequestReedTimeout       = 1250,  ///< Router and REEDs Parent Request timeout
