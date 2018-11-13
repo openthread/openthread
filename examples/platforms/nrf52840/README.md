@@ -209,7 +209,7 @@ Run the following command:
 MSDDisable
 ```
 
-These command takes effect after a power cycle of the development kit and stay this way until changed again.
+This command takes effect after a power cycle of the development kit and stay this way until changed again.
 
 ### Hardware Flow Control detection
 
