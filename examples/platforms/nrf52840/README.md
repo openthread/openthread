@@ -49,6 +49,7 @@ Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to 
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
 
 ## nRF52840 dongle support (PCA10059)
+
 You can build the libraries with support for USB bootloader present in PCA10059. As this dongle uses native USB support we have to enable it as well. To do so, build the libraries with the following parameter:
 ```
 $ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
@@ -58,6 +59,7 @@ Please see [nRF52840 Dongle Programming][nrf52840-dongle-programming] for more d
 [nrf52840-dongle-programming]: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52%2Fdita%2Fnrf52%2Fdevelopment%2Fnrf52840_dongle%2Fprogramming.html&cp=2_0_4_4
 
 ## Prefixing compiler command
+
 You can prefix compiler command using CCPREFIX parameter. This is useful when you utilize tools like [ccache][ccache-website] to speed up compilation. Example usage:
 
 [ccache-website]: https://ccache.samba.org/
@@ -91,6 +93,13 @@ Note that the native SPI Slave support is not intended to be used with Engineeri
 single transfer size limitation.
 
 [spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
+
+## CryptoCell 310 support
+
+By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
+```
 
 ## Flashing the binaries
 
@@ -185,14 +194,49 @@ Select the correct target device (nRF52) and the target interface "SWD".
 
 The intended log level can be set using `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 
-## Disabling the Mass Storage Device
+## Segger J-Link configuration
+
+### Disabling the Mass Storage Device
 
 Due to a known issue in Segger’s J-Link firmware, depending on your version, you might experience data corruption or drops if you use the serial port. You can avoid this issue by disabling the Mass Storage Device:
 
  - On Linux or macOS (OS X), open JLinkExe from the terminal.
  - On Microsoft Windows, open the J-Link Commander application.
 
-Run the following command: `MSDDisable`
+Run the following command:
+
+```bash
+MSDDisable
+```
+
+This command takes effect after a power cycle of the development kit and stay this way until changed again.
+
+### Hardware Flow Control detection
+
+By default, J-Link detects at runtime if the target uses flow control or not.
+
+Automatic HWFC detection is done by driving P0.07 (Clear to Send (CTS)) from the interface MCU and evaluating the state of P0.05 (Request to Send (RTS)) when the first data is sent or received. If the state of P0.05 (RTS) is high, HWFC is assumed not to be used.
+
+To avoid potential race conditions, it is possible to force hardware flow control and bypass runtime auto-detection.
+
+ - On Linux or macOS (OS X), open JLinkExe from the terminal.
+ - On Microsoft Windows, open the J-Link Commander application.
+
+Run the following command:
+
+```bash
+SetHWFC Force
+```
+
+The auto-detection feature may be enabled again by the following command:
+
+```bash
+SetHWFC Enable
+```
+
+You can find more details [here][J-Link_OB].
+
+[J-Link_OB]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
 
 ## Diagnostic module
 
@@ -217,7 +261,8 @@ The following toolchains have been used for testing and verification:
   - gcc version 6.2.0
 
  The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
-  - `ec59d7e` - 06.04.2018 (the newest checked)
+  - `704511c` - 18.09.2018 (the newest checked)
+  - `ec59d7e` - 06.04.2018
   - `a89eb88` - 16.11.2017
   - `6a15261` - 29.06.2017
   - `030efba` - 22.04.2017
@@ -234,19 +279,12 @@ The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
  - unique support for DFU-over-Thread (Device Firmware Upgrade),
  - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP or MQTT-SN protocols,
- - support for an OpenThread Network Co-Processor (NCP) using either UART or USB transport protocol,
+ - support for an OpenThread Network Co-Processor (NCP) using UART, USB or SPI transport protocol,
  - Border Router and cloud connectivity example,
  - Thread native commissioning with NFC example,
  - example applications demonstrating the use of FreeRTOS with OpenThread,
  - support for IAR, Keil MDK-ARM and Segger Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
  - range of PC tools including a Thread Topology Monitor,
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
-
-#### CryptoCell 310 support
-
-By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
-```
-$ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
-```
 
 [nRF5-SDK-Thread-Zigbee]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
