@@ -76,9 +76,7 @@ def verify_prefix(node_list, prefix, prefix_len=64, stable=True, priority='med',
                 verify(p.priority == priority)
                 break
         else:
-            print "Did not find prefix {} on node {}".format(prefix, node)
-            exit(1)
-
+            raise wpan.VerifyError('Did not find prefix {} on node {}'.format(prefix, node))
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
@@ -118,6 +116,8 @@ sc2.set(wpan.WPAN_POLL_INTERVAL, '200')
 #-----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
+WAIT_TIME = 5
+
 prefix1 = 'fd00:abba:cafe::'
 prefix2 = 'fd00:1234::'
 prefix3 = 'fd00:deed::'
@@ -125,59 +125,68 @@ prefix4 = 'fd00:abcd::'
 
 # Add on-mesh prefix1 on router r1
 r1.config_gateway(prefix1)
-time.sleep(0.5)
 
 # Verify that the prefix1 and its corresponding address are present on all nodes
-verify_prefix(all_nodes, prefix1, stable=True, on_mesh=True, slaac=True)
-verify_address(all_nodes, prefix1)
+def check_prefix1_on_all_nodes():
+    verify_prefix(all_nodes, prefix1, stable=True, on_mesh=True, slaac=True)
+    verify_address(all_nodes, prefix1)
+
+wpan.verify_within(check_prefix1_on_all_nodes, WAIT_TIME)
 
 # Now add prefix2 with priority `high` on router r2 and check all nodes for the new prefix/address
 r2.config_gateway(prefix2, default_route=True, priority='1')
-time.sleep(0.5)
-verify_prefix(all_nodes, prefix2, stable=True, on_mesh=True, slaac=True, default_route=True, priority='high')
-verify_address(all_nodes, prefix2)
+
+def check_prefix2_on_all_nodes():
+    verify_prefix(all_nodes, prefix2, stable=True, on_mesh=True, slaac=True, default_route=True, priority='high')
+    verify_address(all_nodes, prefix2)
+
+wpan.verify_within(check_prefix2_on_all_nodes, WAIT_TIME)
 
 # Add prefix3 on sleepy end-device and check for it on all nodes
 sc1.config_gateway(prefix3, priority='-1')
-time.sleep(0.5)
-verify_prefix(all_nodes, prefix3, stable=True, on_mesh=True, slaac=True, priority='low')
-verify_address(all_nodes, prefix3)
+
+def check_prefix3_on_all_nodes():
+    verify_prefix(all_nodes, prefix3, stable=True, on_mesh=True, slaac=True, priority='low')
+    verify_address(all_nodes, prefix3)
+
+wpan.verify_within(check_prefix3_on_all_nodes, WAIT_TIME)
 
 # Verify that prefix1 is retained by `wpantund` and pushed to NCP after a reset
 r1.reset()
 
+def check_r1_is_associated():
+    verify(r1.is_associated())
+
 # Wait for r1 to recover after reset
-start_time = time.time()
-wait_time = 5
-while not r1.is_associated():
-    if time.time() - start_time > wait_time:
-        print 'Took too long for node to recover after reset ({}>{} sec)'.format(time.time() - start_time, wait_time)
-        exit(1)
-    time.sleep(0.25)
+wpan.verify_within(check_r1_is_associated, WAIT_TIME)
 
 # Wait for on-mesh prefix to be updated
-time.sleep(0.5)
-verify_prefix(all_nodes, prefix1, stable=True, on_mesh=True, slaac=True)
-verify_address(all_nodes, prefix1)
+wpan.verify_within(check_prefix1_on_all_nodes, WAIT_TIME)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Test `add-prefix` and `remove-prefix`
 
 r1.add_prefix(prefix4, 48, priority="1", stable=False, on_mesh=True, slaac=False, dhcp=True, configure=False,
     default_route=True, preferred=False)
-verify_prefix([r1], prefix4, 48, priority="high", stable=False, on_mesh=True, slaac=False, dhcp=True, configure=False,
-    default_route=True, preferred=False)
+
+def check_prefix4_on_r1():
+    verify_prefix(all_nodes, prefix4, 48, priority="high", stable=False, on_mesh=True, slaac=False, dhcp=True,
+        configure=False, default_route=True, preferred=False)
+
+wpan.verify_within(check_prefix4_on_r1, WAIT_TIME)
 
 # Remove prefix and verify that it is removed from list
 r1.remove_prefix(prefix4, 48)
-time.sleep(0.5)
-verify(r1.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES).find(prefix4) < 0)
+
+def check_prefix4_removed_from_r1():
+    verify(r1.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES).find(prefix4) < 0)
+
+wpan.verify_within(check_prefix4_removed_from_r1, WAIT_TIME)
 
 r1.add_prefix(prefix4, 48, priority="-1", stable=True, on_mesh=False, slaac=True, dhcp=False, configure=True,
     default_route=False, preferred=True)
 verify_prefix([r1], prefix4, 48, priority="low", stable=True, on_mesh=False, slaac=True, dhcp=False, configure=True,
     default_route=False, preferred=True)
-
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
