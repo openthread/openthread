@@ -67,6 +67,14 @@ enum
     EFR32_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
+typedef enum
+{
+    ENERGY_SCAN_IDLE,
+    ENERGY_SCAN_IN_PROGRESS,
+    ENERGY_SCAN_COMPLETED,
+    ENERGY_SCAN_COMPLETED_ERROR
+} EnergyScanStatus;
+
 static uint16_t     sPanId             = 0;
 static bool         sTransmitBusy      = false;
 static bool         sPromiscuous       = false;
@@ -80,6 +88,12 @@ static otError      sReceiveError;
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static otError      sTransmitError;
+
+static volatile EnergyScanStatus sEnergyScanStatus    = ENERGY_SCAN_IDLE;
+static volatile int8_t           sEnergyScanResultDbm = RAIL_RSSI_INVALID_DBM;
+
+#define US_IN_MS 1000UL
+#define QUARTER_DBM_IN_DBM 4
 
 typedef struct srcMatchEntry
 {
@@ -170,7 +184,8 @@ void efr32RadioInit(void)
                                    RAIL_EVENT_TX_BLOCKED |                      //
                                    RAIL_EVENT_TX_UNDERFLOW |                    //
                                    RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND | //
-                                   RAIL_EVENT_CAL_NEEDED                        //
+                                   RAIL_EVENT_CAL_NEEDED |                      //
+                                   RAIL_EVENT_RSSI_AVERAGE_DONE                 //
     );
     assert(status == RAIL_STATUS_NO_ERROR);
 
@@ -376,7 +391,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -592,6 +607,23 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
 
+static EnergyScanStatus checkEnergyScanCompletedThenReset(int8_t *aEnergyScanResultDbm)
+{
+    EnergyScanStatus status;
+
+    CORE_DECLARE_IRQ_STATE;
+    CORE_ENTER_CRITICAL();
+
+    status = sEnergyScanStatus;
+    otEXPECT(status == ENERGY_SCAN_COMPLETED || status == ENERGY_SCAN_COMPLETED_ERROR);
+
+    sEnergyScanStatus     = ENERGY_SCAN_IDLE;
+    *aEnergyScanResultDbm = sEnergyScanResultDbm;
+exit:
+    CORE_EXIT_CRITICAL();
+    return status;
+}
+
 static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle)
 {
     RAIL_RxPacketHandle_t  packetHandle = RAIL_RX_PACKET_HANDLE_INVALID;
@@ -760,14 +792,45 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
         status = RAIL_Calibrate(aRailHandle, NULL, RAIL_CAL_ALL_PENDING);
         assert(status == RAIL_STATUS_NO_ERROR);
     }
+
+    if (aEvents & RAIL_EVENT_RSSI_AVERAGE_DONE)
+    {
+        const int16_t energyScanResultQuarterDbm = RAIL_GetAverageRssi(aRailHandle);
+
+        if (energyScanResultQuarterDbm == RAIL_RSSI_INVALID)
+        {
+            sEnergyScanResultDbm = 0;
+            sEnergyScanStatus    = ENERGY_SCAN_COMPLETED_ERROR;
+        }
+        else
+        {
+            sEnergyScanResultDbm = energyScanResultQuarterDbm / QUARTER_DBM_IN_DBM;
+            sEnergyScanStatus    = ENERGY_SCAN_COMPLETED;
+        }
+    }
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
+    RAIL_Status_t status;
+    otError       error = OT_ERROR_NONE;
+
     (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
-    return OT_ERROR_NOT_IMPLEMENTED;
+
+    CORE_DECLARE_IRQ_STATE;
+    CORE_ENTER_CRITICAL();
+
+    otEXPECT_ACTION(((sState == OT_RADIO_STATE_SLEEP) && (RAIL_GetRadioState(sRailHandle) == RAIL_RF_STATE_IDLE) &&
+                     (sEnergyScanStatus == ENERGY_SCAN_IDLE)),
+                    error = OT_ERROR_BUSY);
+
+    status = RAIL_StartAverageRssi(sRailHandle, aScanChannel, aScanDuration * US_IN_MS, NULL);
+    otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
+
+    sEnergyScanStatus = ENERGY_SCAN_IN_PROGRESS;
+exit:
+    CORE_EXIT_CRITICAL();
+    return error;
 }
 
 void efr32RadioProcess(otInstance *aInstance)
@@ -796,6 +859,17 @@ void efr32RadioProcess(otInstance *aInstance)
         else
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
+        }
+    }
+    else
+    {
+        int8_t                 energyScanResultDbm;
+        const EnergyScanStatus completionStatus = checkEnergyScanCompletedThenReset(&energyScanResultDbm);
+
+        if (completionStatus == ENERGY_SCAN_COMPLETED || completionStatus == ENERGY_SCAN_COMPLETED_ERROR)
+        {
+            // Platform API provides no way to report an energy scan error, so 0 will be returned
+            otPlatRadioEnergyScanDone(aInstance, energyScanResultDbm);
         }
     }
 

@@ -74,7 +74,7 @@
  * Define to 1 if you want to enable software energy scanning logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN          1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN          0
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
