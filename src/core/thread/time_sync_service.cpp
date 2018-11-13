@@ -195,7 +195,12 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 
     case OT_DEVICE_ROLE_CHILD:
     case OT_DEVICE_ROLE_ROUTER:
-        if (timeSyncLastSyncMs > resyncNeededThresholdMs)
+        if (mLastTimeSyncReceived == 0)
+        {
+            // Haven't yet received any time sync
+            networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
+        }
+        else if (timeSyncLastSyncMs > resyncNeededThresholdMs)
         {
             // The device hasn’t received time sync for more than two periods time.
             networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
