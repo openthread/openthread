@@ -47,6 +47,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/src/core                                                                                 \
     -I$(srcdir)                                                                                              \
+	-I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
@@ -73,7 +74,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
     $(NULL)
@@ -165,6 +165,7 @@ RADIO_DRIVER_SOURCES                                                            
     $(NULL)
 
 NORDICSEMI_SOURCES                                                                                         = \
+	@top_builddir@/third_party/jlink/SEGGER_RTT_V640/RTT/SEGGER_RTT.c                                        \
     @top_builddir@/third_party/NordicSemiconductor/dependencies/app_util_platform.c                          \
     @top_builddir@/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.c                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.c                             \
@@ -187,7 +188,6 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/nrfx/hal/nrf_nvmc.c                                       \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/mdk/gcc_startup_nrf52840.S                           \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.c                                \
-    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.c                                   \
     $(NULL)
 
 HWCRYPTO_SOURCES                                                                                           = \
@@ -238,6 +238,8 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(NULL)
 
 noinst_HEADERS                                                                                               = \
+	$(top_srcdir)/examples/platforms/nrf52840/SEGGER_RTT_Conf.h                                                \
+	$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT/SEGGER_RTT.h                                           \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/arm_math.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc_V6.h                                       \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc.h                                          \
@@ -360,8 +362,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_bitfields.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_peripherals.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.h                                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                      \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_err.h                            \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gap.h                            \
