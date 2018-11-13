@@ -76,16 +76,16 @@ static UARTDRV_HandleData_t sUartHandleData;
 static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
 static uint8_t              sReceiveBuffer[2];
 static const uint8_t *      sTransmitBuffer = NULL;
-static uint16_t             sTransmitLength = 0;
+static volatile uint16_t    sTransmitLength = 0;
 
 typedef struct ReceiveFifo_t
 {
     // The data buffer
     uint8_t mBuffer[kReceiveFifoSize];
     // The offset of the first item written to the list.
-    uint16_t mHead;
+    volatile uint16_t mHead;
     // The offset of the next item to be written to the list.
-    uint16_t mTail;
+    volatile uint16_t mTail;
 } ReceiveFifo_t;
 
 static ReceiveFifo_t sReceiveFifo;
