@@ -105,26 +105,6 @@ enum
 
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
-static inline otPanId getDstPan(const uint8_t *frame)
-{
-    return static_cast<otPanId>((frame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | frame[IEEE802154_DSTPAN_OFFSET]);
-}
-
-static inline otShortAddress getShortAddress(const uint8_t *frame)
-{
-    return static_cast<otShortAddress>((frame[IEEE802154_DSTADDR_OFFSET + 1] << 8) | frame[IEEE802154_DSTADDR_OFFSET]);
-}
-
-static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
-{
-    size_t i;
-
-    for (i = 0; i < sizeof(otExtAddress); i++)
-    {
-        address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
-    }
-}
-
 static inline bool isAckRequested(const uint8_t *frame)
 {
     return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
@@ -677,53 +657,21 @@ void RadioSpinel::ProcessFrameQueue(void)
 
 void RadioSpinel::RadioReceive(void)
 {
-    otError        error = OT_ERROR_NONE;
-    otPanId        dstpan;
-    otShortAddress shortAddress;
-    otExtAddress   extAddress;
-
-    VerifyOrExit(mIsPromiscuous == false, error = OT_ERROR_NONE);
-    VerifyOrExit((mState == OT_RADIO_STATE_RECEIVE || mState == OT_RADIO_STATE_TRANSMIT), error = OT_ERROR_DROP);
-
-    switch (mRxRadioFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
-    {
-    case IEEE802154_DST_ADDR_NONE:
-        break;
-
-    case IEEE802154_DST_ADDR_SHORT:
-        dstpan       = getDstPan(mRxRadioFrame.mPsdu);
-        shortAddress = getShortAddress(mRxRadioFrame.mPsdu);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == mPanid) &&
-                         (shortAddress == IEEE802154_BROADCAST || shortAddress == mShortAddress),
-                     error = OT_ERROR_ABORT);
-        break;
-
-    case IEEE802154_DST_ADDR_EXT:
-        dstpan = getDstPan(mRxRadioFrame.mPsdu);
-        getExtAddress(mRxRadioFrame.mPsdu, &extAddress);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == mPanid) &&
-                         memcmp(&extAddress, mExtendedAddress.m8, sizeof(extAddress)) == 0,
-                     error = OT_ERROR_ABORT);
-        break;
-
-    default:
-        error = OT_ERROR_ABORT;
-        goto exit;
-    }
-
-exit:
+    VerifyOrExit(mIsPromiscuous || mState == OT_RADIO_STATE_RECEIVE || mState == OT_RADIO_STATE_TRANSMIT);
 
 #if OPENTHREAD_ENABLE_DIAG
-
     if (otPlatDiagModeGet())
     {
-        otPlatDiagRadioReceiveDone(mInstance, error == OT_ERROR_NONE ? &mRxRadioFrame : NULL, error);
+        otPlatDiagRadioReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
     }
     else
 #endif
     {
-        otPlatRadioReceiveDone(mInstance, error == OT_ERROR_NONE ? &mRxRadioFrame : NULL, error);
+        otPlatRadioReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
     }
+
+exit:
+    return;
 }
 
 void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
