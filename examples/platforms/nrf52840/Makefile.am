@@ -47,7 +47,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/src/core                                                                                 \
     -I$(srcdir)                                                                                              \
-	-I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT                                                    \
+    -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
@@ -165,7 +165,6 @@ RADIO_DRIVER_SOURCES                                                            
     $(NULL)
 
 NORDICSEMI_SOURCES                                                                                         = \
-	@top_builddir@/third_party/jlink/SEGGER_RTT_V640/RTT/SEGGER_RTT.c                                        \
     @top_builddir@/third_party/NordicSemiconductor/dependencies/app_util_platform.c                          \
     @top_builddir@/third_party/NordicSemiconductor/drivers/clock/nrf_drv_clock.c                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/power/nrf_drv_power.c                             \
@@ -238,8 +237,6 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(NULL)
 
 noinst_HEADERS                                                                                               = \
-	$(top_srcdir)/examples/platforms/nrf52840/SEGGER_RTT_Conf.h                                                \
-	$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT/SEGGER_RTT.h                                           \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/arm_math.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc_V6.h                                       \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/cmsis_armcc.h                                          \
@@ -390,12 +387,15 @@ PRETTY_FILES                                                                    
 Dash                                                                                                       = -
 
 libopenthread_nrf52840_a_LIBADD                                                                            = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_sdk_a_LIBADD                                                                        = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

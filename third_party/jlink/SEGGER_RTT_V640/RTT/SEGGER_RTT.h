@@ -63,7 +63,12 @@ Revision: $Rev: 12826 $
 #ifndef SEGGER_RTT_H
 #define SEGGER_RTT_H
 
+#ifdef SEGGER_RTT_CONFIG_H
+#include SEGGER_RTT_CONFIG_H
+#else
 #include "SEGGER_RTT_Conf.h"
+#endif
+
 #ifndef SEGGER_RTT_ASM  // defined when SEGGER_RTT.h is included from assembly file
 #include <stdlib.h>
 #include <stdarg.h>

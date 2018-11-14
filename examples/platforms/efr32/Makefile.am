@@ -87,7 +87,6 @@ PLATFORM_SOURCES                                                              = 
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
-    @top_builddir@/third_party/jlink/SEGGER_RTT_V640/RTT/SEGGER_RTT.c                                                             \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_bcc.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_init.c                                     \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_stk.c                                      \
@@ -134,8 +133,9 @@ PRETTY_FILES                                                                  = 
     $(noinst_HEADERS)                                                           \
     $(NULL)
 
-Dash                                                                          = -
-libopenthread_efr32_a_LIBADD                                                  = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+Dash                                                                                                 = -
+libopenthread_efr32_a_LIBADD                                                                         = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
