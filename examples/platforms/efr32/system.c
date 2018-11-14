@@ -57,8 +57,8 @@ otInstance *sInstance;
 
 void otSysInit(int argc, char *argv[])
 {
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 
     CHIP_Init();
 

@@ -42,7 +42,7 @@ static uint32_t          sStartTime = 0;
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sDeltaTime = aDt;
     sStartTime = aT0;
@@ -50,7 +50,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sDeltaTime = 0;
 }

@@ -44,18 +44,19 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otSysDeinit();
     platformUartRestore();
 
     longjmp(gResetJump, 1);
     assert(false);
-
-    (void)aInstance;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return sPlatResetReason;
 }
 
@@ -68,7 +69,7 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
 {
     otError error = OT_ERROR_NONE;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     switch (aState)
     {
@@ -87,7 +88,8 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
 
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return gPlatMcuPowerState;
 }
 

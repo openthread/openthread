@@ -225,7 +225,8 @@ void setChannel(uint8_t channel)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     /* should set it manually or preset it in memory */
     aIeeeEui64[0] = 0x00;
     aIeeeEui64[1] = 0x50;
@@ -239,8 +240,9 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
-    (void)aInstance;
     uint8_t pan[2];
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     pan[0] = (uint8_t)(panid & 0xFF);
     pan[1] = (uint8_t)(panid >> 8);
@@ -249,15 +251,16 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *address)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     /* cast to remove const, FIXME: perhaps the bsp library should be updated? */
     mrf24j40_set_eui((uint8_t *)(address->m8));
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
-    (void)aInstance;
     uint8_t addr[2];
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     addr[0] = (uint8_t)(address & 0xFF);
     addr[1] = (uint8_t)(address >> 8);
@@ -327,7 +330,7 @@ void emskRadioInit(void)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return (sState != OT_RADIO_STATE_DISABLED);
 }
 
@@ -354,7 +357,8 @@ otError otPlatRadioDisable(otInstance *aInstance)
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -369,7 +373,8 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
@@ -386,8 +391,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
-    (void)aFrame;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -400,32 +406,32 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return 0;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return (bool)(mrf24j40_read_short_ctrl_reg(MRF24J40_RXMCR) & MRF24J40_PROMI);
 }
 
 // should be checked again with CC2538
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     mrf24j40_set_promiscuous(~aEnable);
 }
 
@@ -623,74 +629,74 @@ static void RadioIsr(void *ptr)
    and this is not supported in MRF24J40 */
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
-    (void)aEnable;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
-    (void)aShortAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
-    (void)aExtAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
-    (void)aShortAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
-    (void)aExtAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     // TODO: Create a proper implementation for this driver.
-    (void)aInstance;
-    (void)aPower;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPower);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     // TODO: Create a proper implementation for this driver.
-    (void)aInstance;
-    (void)aPower;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPower);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return EMSK_RECEIVE_SENSITIVITY;
 }

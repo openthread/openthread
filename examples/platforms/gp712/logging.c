@@ -97,6 +97,8 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     int          charsWritten;
     va_list      args;
 
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     offset = 0;
 
     va_start(args, aFormat);
@@ -107,8 +109,6 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
 
 exit:
     syslog(PlatOtLogLevelToSysLogLevel(aLogLevel), "%s", logString);
-
-    (void)aLogRegion;
 }
 
 #endif

@@ -427,8 +427,9 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *          aHeader,
                                           const Ip6::MessageInfo *aMessageInfo,
                                           otError                 aResult)
 {
-    (void)aMessageInfo;
     StateTlv state;
+
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE &&
                  aHeader->GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aHeader->GetCode() == OT_COAP_CODE_CHANGED);

@@ -63,6 +63,9 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     int          charsWritten;
     va_list      args;
 
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     offset = 0;
 
     LOG_PRINTF("[%d] ", gNodeId);
@@ -79,9 +82,6 @@ exit:
 #else
     printf("%s\r\n", logString);
 #endif
-
-    (void)aLogLevel;
-    (void)aLogRegion;
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

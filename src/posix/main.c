@@ -55,7 +55,7 @@ void __gcov_flush();
 
 void otTaskletsSignalPending(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 int main(int argc, char *argv[])

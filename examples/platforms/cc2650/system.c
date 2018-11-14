@@ -39,8 +39,8 @@ void *dummy_ccfg_ref = ((void *)(&(__ccfg)));
  */
 void otSysInit(int argc, char *argv[])
 {
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
 
     while (dummy_ccfg_ref == NULL)
     {

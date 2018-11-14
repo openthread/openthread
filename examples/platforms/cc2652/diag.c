@@ -48,7 +48,7 @@ static bool sDiagMode = false;
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     // Add more platform specific diagnostics features here.
     if (argc > 1)
@@ -69,24 +69,24 @@ bool otPlatDiagModeGet()
 
 void otPlatDiagChannelSet(uint8_t aChannel)
 {
-    (void)aChannel;
+    OT_UNUSED_VARIABLE(aChannel);
 }
 
 void otPlatDiagTxPowerSet(int8_t aTxPower)
 {
-    (void)aTxPower;
+    OT_UNUSED_VARIABLE(aTxPower);
 }
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
-    (void)aFrame;
-    (void)aError;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
 }
 
 void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 #endif // OPENTHREAD_ENABLE_DIAG

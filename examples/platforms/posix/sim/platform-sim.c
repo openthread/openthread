@@ -64,7 +64,7 @@ uint16_t sPortOffset;
 
 static void handleSignal(int aSignal)
 {
-    (void)aSignal;
+    OT_UNUSED_VARIABLE(aSignal);
     gTerminate = true;
 }
 

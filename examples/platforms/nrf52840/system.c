@@ -55,13 +55,13 @@ void __cxa_pure_virtual(void)
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     if (gPlatformPseudoResetWasRequested)
     {
         otSysDeinit();
     }
-
-    (void)argc;
-    (void)argv;
 
 #if !SOFTDEVICE_PRESENT
     // Enable I-code cache
