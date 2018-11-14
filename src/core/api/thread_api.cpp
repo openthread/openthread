@@ -550,9 +550,9 @@ otError otThreadRegisterParentResponseCallback(otInstance *                   aI
 
     return OT_ERROR_NONE;
 #else
-    (void)aInstance;
-    (void)aCallback;
-    (void)aContext;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCallback);
+    OT_UNUSED_VARIABLE(aContext);
 
     return OT_ERROR_DISABLED_FEATURE;
 #endif

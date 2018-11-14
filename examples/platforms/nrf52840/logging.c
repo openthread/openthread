@@ -142,7 +142,7 @@ void nrf5LogDeinit()
 
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    (void)aLogRegion;
+    OT_UNUSED_VARIABLE(aLogRegion);
 
     uint16_t length = 0;
     int      charsWritten;

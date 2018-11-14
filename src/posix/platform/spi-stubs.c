@@ -49,9 +49,9 @@ otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aComplete
                              otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
                              void *                                    aContext)
 {
-    (void)aCompleteCallback;
-    (void)aProcessCallback;
-    (void)aContext;
+    OT_UNUSED_VARIABLE(aCompleteCallback);
+    OT_UNUSED_VARIABLE(aProcessCallback);
+    OT_UNUSED_VARIABLE(aContext);
 
     fprintf(stderr, "\nNo SPI support for posix platform.");
     exit(OT_EXIT_FAILURE);
@@ -69,11 +69,11 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
                                          uint16_t aInputBufLen,
                                          bool     aRequestTransactionFlag)
 {
-    (void)aOutputBuf;
-    (void)aOutputBufLen;
-    (void)aInputBuf;
-    (void)aInputBufLen;
-    (void)aRequestTransactionFlag;
+    OT_UNUSED_VARIABLE(aOutputBuf);
+    OT_UNUSED_VARIABLE(aOutputBufLen);
+    OT_UNUSED_VARIABLE(aInputBuf);
+    OT_UNUSED_VARIABLE(aInputBufLen);
+    OT_UNUSED_VARIABLE(aRequestTransactionFlag);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
@@ -86,8 +86,8 @@ void otPlatUartSendDone(void)
 
 void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    (void)aBuf;
-    (void)aBufLength;
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
 }
 
 #endif // OPENTHREAD_ENABLE_NCP_SPI

@@ -50,7 +50,7 @@ __STATIC_INLINE void dataReadyEventClear(void)
 {
     NRF_TEMP->EVENTS_DATARDY = 0;
     volatile uint32_t dummy  = NRF_TEMP->EVENTS_DATARDY;
-    (void)dummy;
+    OT_UNUSED_VARIABLE(dummy);
 }
 #endif
 

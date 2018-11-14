@@ -46,6 +46,8 @@ void otPlatReset(otInstance *aInstance)
 {
     char *argv[gArgumentsCount + 1];
 
+    OT_UNUSED_VARIABLE(aInstance);
+
     for (int i = 0; i < gArgumentsCount; ++i)
     {
         argv[i] = gArguments[i];
@@ -59,12 +61,11 @@ void otPlatReset(otInstance *aInstance)
     execvp(argv[0], argv);
     perror("reset failed");
     exit(EXIT_FAILURE);
-    (void)aInstance;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 

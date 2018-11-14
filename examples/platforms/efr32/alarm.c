@@ -93,7 +93,7 @@ uint32_t otPlatTimeGetXtalAccuracy(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sAlarmT0   = t0;
     sAlarmDt   = dt;
     sIsRunning = true;
@@ -101,7 +101,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sIsRunning = false;
 }
 

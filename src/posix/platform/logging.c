@@ -51,7 +51,7 @@ void platformLoggingInit(const char *aName)
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
 
 #else
-    (void)aName;
+    OT_UNUSED_VARIABLE(aName);
 #endif
 }
 
@@ -64,6 +64,8 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     va_list      args;
     int          logLevel;
     unsigned int offset = 0;
+
+    OT_UNUSED_VARIABLE(aLogRegion);
 
     charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", gNodeId);
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
@@ -103,8 +105,6 @@ exit:
         break;
     }
     syslog(logLevel, "%s", logString);
-
-    (void)aLogRegion;
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

@@ -209,7 +209,8 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     uint64_t eui64;
     uint8_t *eui64Ptr = NULL;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     eui64    = SYSTEM_GetUnique();
     eui64Ptr = (uint8_t *)&eui64;
@@ -224,7 +225,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
     RAIL_Status_t status;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogInfoPlat("PANID=%X", aPanId);
 
@@ -237,7 +238,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 {
     RAIL_Status_t status;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogInfoPlat("ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
                   aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
@@ -250,7 +251,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
     RAIL_Status_t status;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogInfoPlat("ShortAddr=%X", aAddress);
 
@@ -260,7 +261,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return (sState != OT_RADIO_STATE_DISABLED);
 }
 
@@ -289,7 +290,8 @@ exit:
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED),
                     error = OT_ERROR_INVALID_STATE);
@@ -307,7 +309,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError       error = OT_ERROR_NONE;
     RAIL_Status_t status;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
@@ -328,7 +331,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
     RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_NONE;
     RAIL_Status_t     status;
-    (void)aInstance;
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
                     error = OT_ERROR_INVALID_STATE);
@@ -363,25 +365,25 @@ exit:
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return (int8_t)(RAIL_GetAverageRssi(sRailHandle) >> 2);
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return sPromiscuous;
 }
 
@@ -389,7 +391,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     RAIL_Status_t status;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sPromiscuous = aEnable;
     status       = RAIL_IEEE802154_SetPromiscuousMode(sRailHandle, aEnable);
@@ -500,7 +502,7 @@ void removeFromSrcMatchExtIndirect(uint8_t entry)
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     // set Frame Pending bit for all outgoing ACKs if aEnable is false
     sIsSrcMatchEnabled = aEnable;
@@ -508,9 +510,10 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
     otError error = OT_ERROR_NONE;
     int8_t  entry = -1;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     entry = findSrcMatchAvailEntry(true);
     otLogDebgPlat("Add ShortAddr entry: %d", entry);
@@ -527,7 +530,8 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 {
     otError error = OT_ERROR_NONE;
     int8_t  entry = -1;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     entry = findSrcMatchAvailEntry(false);
     otLogDebgPlat("Add ExtAddr entry: %d", entry);
@@ -544,7 +548,8 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 {
     otError error = OT_ERROR_NONE;
     int8_t  entry = -1;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     entry = findSrcMatchShortEntry(aShortAddress);
     otLogDebgPlat("Clear ShortAddr entry: %d", entry);
@@ -561,7 +566,8 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 {
     otError error = OT_ERROR_NONE;
     int8_t  entry = -1;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     entry = findSrcMatchExtEntry(aExtAddress);
     otLogDebgPlat("Clear ExtAddr entry: %d", entry);
@@ -576,7 +582,7 @@ exit:
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ShortAddr entries", NULL);
 
@@ -585,7 +591,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ExtAddr entries", NULL);
 
@@ -764,9 +770,9 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -805,7 +811,8 @@ void efr32RadioProcess(otInstance *aInstance)
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     otError error = OT_ERROR_NONE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
     *aPower = (int8_t)(RAIL_GetTxPowerDbm(sRailHandle) / 10);
@@ -817,7 +824,8 @@ exit:
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     RAIL_Status_t status;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     status = RAIL_SetTxPowerDbm(sRailHandle, ((RAIL_TxPower_t)aPower) * 10);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -827,6 +835,6 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return EFR32_RECEIVE_SENSITIVITY;
 }

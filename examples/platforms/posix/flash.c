@@ -127,7 +127,7 @@ exit:
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    (void)aTimeout;
+    OT_UNUSED_VARIABLE(aTimeout);
     return OT_ERROR_NONE;
 }
 

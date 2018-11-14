@@ -341,7 +341,8 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     aIeeeEui64[0] = 0x18;
     aIeeeEui64[1] = 0xb4;
     aIeeeEui64[2] = 0x30;
@@ -354,13 +355,13 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sPanid = panid;
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     for (size_t i = 0; i < sizeof(sExtendedAddress); i++)
     {
@@ -370,13 +371,13 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sShortAddress = address;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sPromiscuous = aEnable;
 }
 
@@ -449,7 +450,7 @@ void platformRadioDeinit(void)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return (sState != OT_RADIO_STATE_DISABLED) ? true : false;
 }
 
@@ -476,7 +477,8 @@ otError otPlatRadioDisable(otInstance *aInstance)
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -490,7 +492,8 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
@@ -506,8 +509,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
     otError error = OT_ERROR_INVALID_STATE;
-    (void)aInstance;
-    (void)aRadio;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aRadio);
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -520,7 +524,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return &sTransmitFrame;
 }
 
@@ -530,7 +534,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     uint8_t  channel = sReceiveFrame.mChannel;
     uint32_t probabilityThreshold;
 
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT((OT_RADIO_CHANNEL_MIN <= channel) && channel <= (OT_RADIO_CHANNEL_MAX));
 
@@ -551,13 +555,13 @@ exit:
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return sPromiscuous;
 }
 
@@ -828,7 +832,7 @@ exit:
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
     sSrcMatchEnabled = aEnable;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
@@ -845,7 +849,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
     sShortAddressMatchTable[sShortAddressMatchTableCount++] = aShortAddress;
 
 exit:
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 
@@ -865,7 +869,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     sExtAddressMatchTable[sExtAddressMatchTableCount++] = *aExtAddress;
 
 exit:
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 
@@ -885,7 +889,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
     }
 
 exit:
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 
@@ -906,33 +910,33 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     }
 
 exit:
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     sShortAddressMatchTableCount = 0;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     sExtAddressMatchTableCount = 0;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     *aPower = sTxPower;
 
     return OT_ERROR_NONE;
@@ -940,7 +944,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sTxPower = aPower;
 
     return OT_ERROR_NONE;
@@ -948,7 +952,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return POSIX_RECEIVE_SENSITIVITY;
 }
 

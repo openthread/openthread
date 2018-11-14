@@ -41,15 +41,15 @@
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     emskAlarmInit();
     emskRadioInit();
     emskRandomInit();
     otPlatUartEnable();
 
     DBG("OpenThread Init Finished\r\n");
-
-    (void)argc;
-    (void)argv;
 }
 
 bool otSysPseudoResetWasRequested(void)

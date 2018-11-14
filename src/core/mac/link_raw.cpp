@@ -584,8 +584,8 @@ exit:
 extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     // Note: For now this functionality is not supported in Radio Only mode.
-    (void)aInstance;
-    (void)aFrame;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
 }
 #endif
 
