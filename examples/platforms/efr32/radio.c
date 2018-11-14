@@ -820,8 +820,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    otEXPECT_ACTION(((sState == OT_RADIO_STATE_SLEEP) && (RAIL_GetRadioState(sRailHandle) == RAIL_RF_STATE_IDLE) &&
-                     (sEnergyScanStatus == ENERGY_SCAN_IDLE)),
+    otEXPECT_ACTION((sEnergyScanStatus == ENERGY_SCAN_IDLE && RAIL_GetRadioState(sRailHandle) == RAIL_RF_STATE_IDLE),
                     error = OT_ERROR_BUSY);
 
     status = RAIL_StartAverageRssi(sRailHandle, aScanChannel, aScanDuration * US_IN_MS, NULL);
