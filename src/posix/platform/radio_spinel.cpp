@@ -1659,13 +1659,13 @@ exit:
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
-    (void)aFrame;
-    (void)aError;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
 }
 
 void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 #endif // OPENTHREAD_ENABLE_DIAG

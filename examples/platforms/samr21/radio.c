@@ -317,7 +317,7 @@ void samr21RadioInit(void)
 
 void samr21RadioProcess(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     PHY_TaskHandler();
 
@@ -362,7 +362,7 @@ void samr21RadioRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
  ******************************************************************************/
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sState;
 }
@@ -374,7 +374,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Set Pan ID: 0x%04X", aPanId);
 
@@ -387,7 +387,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     radioTrxOff();
 
@@ -398,7 +398,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     radioTrxOff();
 
@@ -409,7 +409,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return (sState != OT_RADIO_STATE_DISABLED);
 }
@@ -444,7 +444,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Radio sleep");
 
@@ -463,7 +463,7 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Radio receive, channel: %d", aChannel);
 
@@ -484,11 +484,11 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void)aInstance;
+    otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Radio transmit");
-
-    otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
@@ -512,7 +512,7 @@ exit:
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return &sTransmitFrame;
 }
@@ -529,22 +529,22 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sPromiscuous;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sPromiscuous = aEnable;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
-    (void)aEnable;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
@@ -569,17 +569,17 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sScanStartTime = otPlatAlarmMilliGetNow();
     sScanDuration  = aScanDuration;
@@ -604,7 +604,7 @@ exit:
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Radio set default TX power: %d", aPower);
 
@@ -615,7 +615,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return SAMR21_RECEIVE_SENSITIVITY;
 }

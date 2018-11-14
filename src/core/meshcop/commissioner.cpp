@@ -756,9 +756,9 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *          aHeader
                                                  const Ip6::MessageInfo *aMessageInfo,
                                                  otError                 aResult)
 {
-    (void)aMessageInfo;
-
     StateTlv state;
+
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, mState = OT_COMMISSIONER_STATE_DISABLED);
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED,

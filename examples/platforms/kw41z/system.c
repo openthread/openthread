@@ -47,6 +47,9 @@ void otSysInit(int argc, char *argv[])
     uint32_t temp, tempTrim;
     uint8_t  revId;
 
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     /* enable clock for PORTs */
     CLOCK_EnableClock(kCLOCK_PortA);
     CLOCK_EnableClock(kCLOCK_PortB);
@@ -94,9 +97,6 @@ void otSysInit(int argc, char *argv[])
     kw41zRadioInit();
 
     otPlatUartEnable();
-
-    (void)argc;
-    (void)argv;
 }
 
 bool otSysPseudoResetWasRequested(void)

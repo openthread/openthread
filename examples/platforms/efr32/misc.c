@@ -49,14 +49,15 @@ void efr32MiscInit(void)
 
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     NVIC_SystemReset();
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
     otPlatResetReason reason;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sResetCause & RMU_RSTCAUSE_PORST)
     {

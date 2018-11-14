@@ -331,6 +331,6 @@ OT_TOOL_WEAK void otPlatUartSendDone(void)
 
 OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    (void)aBuf;
-    (void)aBufLength;
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
 }

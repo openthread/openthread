@@ -127,15 +127,15 @@ static void ExampleProcess(otInstance *aInstance)
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     // Initialize Random number generator
     da15000RandomInit();
     // Initialize Alarm
     da15000AlarmInit();
     // Initialize Radio
     da15000RadioInit();
-
-    (void)argc;
-    (void)argv;
 }
 
 bool otSysPseudoResetWasRequested(void)

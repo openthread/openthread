@@ -40,8 +40,8 @@
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aFormat);
 }
 #endif

@@ -47,28 +47,28 @@ uint32_t utilsFlashGetSize(void)
 
 otError utilsFlashErasePage(uint32_t aAddress)
 {
-    (void)aAddress;
+    OT_UNUSED_VARIABLE(aAddress);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    (void)aTimeout;
+    OT_UNUSED_VARIABLE(aTimeout);
     return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    (void)aAddress;
-    (void)aData;
-    (void)aSize;
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aSize);
     return 0;
 }
 
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    (void)aAddress;
-    (void)aData;
-    (void)aSize;
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aSize);
     return 0;
 }
