@@ -391,15 +391,6 @@ exit:
     LogIfFail("Error handling hdlc frame", error);
 }
 
-void RadioSpinel::HandleHdlcError(void *aContext, otError aError, uint8_t *aBuffer, uint16_t aLength)
-{
-    otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aLength);
-}
-
 void RadioSpinel::HandleNotification(const uint8_t *aBuffer, uint16_t aLength)
 {
     spinel_prop_key_t key;
