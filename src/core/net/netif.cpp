@@ -87,6 +87,8 @@ Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
     , mInterfaceId(aInterfaceId)
     , mMulticastPromiscuous(false)
     , mNext(NULL)
+    , mAddressCallback(NULL)
+    , mAddressCallbackContext(NULL)
 {
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtUnicastAddresses); i++)
     {
