@@ -583,8 +583,10 @@ private:
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t       mAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
     otRadioFrame  mRxRadioFrame;
     otRadioFrame  mTxRadioFrame;
+    otRadioFrame  mAckRadioFrame;
     otRadioFrame *mTransmitFrame; ///< Points to the frame to send
 
     otExtAddress mExtendedAddress;
