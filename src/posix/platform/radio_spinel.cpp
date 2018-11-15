@@ -266,8 +266,9 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
 
-    mRxRadioFrame.mPsdu = mRxPsdu;
-    mTxRadioFrame.mPsdu = mTxPsdu;
+    mRxRadioFrame.mPsdu  = mRxPsdu;
+    mTxRadioFrame.mPsdu  = mTxPsdu;
+    mAckRadioFrame.mPsdu = mAckPsdu;
 
 exit:
     SuccessOrDie(error);
@@ -783,7 +784,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         else
 #endif
         {
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mAckRadioFrame : NULL), mTxError);
         }
 
         mTxState = kIdle;
@@ -1254,7 +1255,7 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         if (mIsAckRequested)
         {
             VerifyOrExit(aLength > 0, error = OT_ERROR_FAILED);
-            SuccessOrExit(error = ParseRadioFrame(mRxRadioFrame, aBuffer, aLength));
+            SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength));
         }
     }
     else
@@ -1630,7 +1631,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
         else
 #endif
         {
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mRxRadioFrame : NULL), mTxError);
+            otPlatRadioTxDone(mInstance, mTransmitFrame, (mIsAckRequested ? &mAckRadioFrame : NULL), mTxError);
         }
 
         mTxState = kIdle;
