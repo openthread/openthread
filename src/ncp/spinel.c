@@ -2483,6 +2483,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "THREAD_JOINER";
         break;
 
+    case SPINEL_CAP_THREAD_BORDER_ROUTER:
+        ret = "THREAD_BORDER_ROUTER";
+        break;
+
     case SPINEL_CAP_NEST_LEGACY_INTERFACE:
         ret = "NEST_LEGACY_INTERFACE";
         break;
