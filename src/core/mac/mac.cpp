@@ -2201,14 +2201,29 @@ const char *Mac::OperationToString(Operation aOperation)
 
 void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
 {
+    otLogLevel logLevel;
+
+    switch (aError)
+    {
+    case OT_ERROR_ABORT:
+    case OT_ERROR_NO_FRAME_RECEIVED:
+    case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
+        logLevel = OT_LOG_LEVEL_DEBG;
+        break;
+
+    default:
+        logLevel = OT_LOG_LEVEL_INFO;
+        break;
+    }
+
     if (aFrame == NULL)
     {
-        otLogInfoMac("Frame rx failed, error:%s", otThreadErrorToString(aError));
+        otLogMac(logLevel, "Frame rx failed, error:%s", otThreadErrorToString(aError));
     }
     else
     {
-        otLogInfoMac("Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
-                     aFrame->ToInfoString().AsCString());
+        otLogMac(logLevel, "Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
+                 aFrame->ToInfoString().AsCString());
     }
 }
 
