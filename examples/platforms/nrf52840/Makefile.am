@@ -47,7 +47,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/src/core                                                                                 \
     -I$(srcdir)                                                                                              \
-    -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \

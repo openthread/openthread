@@ -46,7 +46,6 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/src/core                                                    \
-    -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT                       \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/protocol/ieee802154         \
