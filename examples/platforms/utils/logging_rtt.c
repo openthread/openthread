@@ -98,7 +98,8 @@ static inline const char *levelToString(otLogLevel aLogLevel)
  */
 static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
 {
-    return snprintf(aLogString, aMaxSize, "%s[%010ld]", RTT_COLOR_CODE_CYAN, otPlatAlarmMilliGetNow());
+    long unsigned int now = otPlatAlarmMilliGetNow();
+    return snprintf(aLogString, (size_t)aMaxSize, "%s[%010lu]", RTT_COLOR_CODE_CYAN, now);
 }
 #endif
 
@@ -113,7 +114,7 @@ static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
  */
 static inline uint16_t logLevel(char *aLogString, uint16_t aMaxSize, otLogLevel aLogLevel)
 {
-    return snprintf(aLogString, aMaxSize, "%s ", levelToString(aLogLevel));
+    return snprintf(aLogString, (size_t)aMaxSize, "%s ", levelToString(aLogLevel));
 }
 
 void utilsLogRttInit(void)
@@ -150,7 +151,7 @@ void utilsLogRttOutput(otLogLevel aLogLevel, otLogRegion aLogRegion, const char 
     // Add level information.
     length += logLevel(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aLogLevel);
 
-    charsWritten = vsnprintf(&logString[length], (LOG_PARSE_BUFFER_SIZE - length), aFormat, ap);
+    charsWritten = vsnprintf(&logString[length], (size_t)(LOG_PARSE_BUFFER_SIZE - length), aFormat, ap);
     otEXPECT(charsWritten >= 0);
     length += charsWritten;
 
