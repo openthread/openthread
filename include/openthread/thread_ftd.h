@@ -149,6 +149,9 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
  * it can not be used, a randomly generated router id is picked. This property can be set only when the device role is
  * either detached or disabled.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aRouterId    The preferred Router Id.
  *
@@ -257,6 +260,9 @@ OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
 /**
  * Set the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDelay    The CONTEXT_ID_REUSE_DELAY value.
  *
@@ -267,6 +273,9 @@ OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t
 
 /**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -303,6 +312,9 @@ OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 /**
  * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
  *
@@ -313,6 +325,9 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
 
 /**
  * Release a Router ID that has been allocated by the device in the Leader role.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
@@ -327,6 +342,9 @@ OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRou
 /**
  * Attempt to become a router.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval OT_ERROR_NONE           Successfully begin attempt to become a router.
@@ -336,6 +354,9 @@ OTAPI otError OTCALL otThreadBecomeRouter(otInstance *aInstance);
 
 /**
  * Become a leader and start a new partition.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -358,6 +379,9 @@ OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
 /**
  * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
  *
@@ -378,6 +402,9 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
 
 /**
  * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
@@ -530,6 +557,9 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
 
 /**
  * Set the parent priority.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aParentPriority  The parent priority value.

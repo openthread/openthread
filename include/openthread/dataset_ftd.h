@@ -160,6 +160,9 @@ OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
 /**
  * Set minimal delay timer.
  *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
  * @param[in]  aInstance           A pointer to an OpenThread instance.
  * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
  *
