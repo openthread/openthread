@@ -1583,6 +1583,7 @@ otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
     }
     else
     {
+        VerifyOrExit(aFrameLength >= sizeof(Ip6::UdpHeader), error = OT_ERROR_PARSE);
         memcpy(&udpHeader, aFrame, sizeof(Ip6::UdpHeader));
     }
 
