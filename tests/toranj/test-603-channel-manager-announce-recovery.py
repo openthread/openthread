@@ -98,16 +98,12 @@ c2.reset();
 verify(int(c2.get(wpan.WPAN_CHANNEL), 0) == 11)
 
 # wait for 20s for c2 to be attached/associated
-start_time = time.time()
-wait_time = 20
+def check_c2_is_associated():
+    verify(c2.is_associated())
 
-while not c2.is_associated():
-    if time.time() - start_time > wait_time:
-        print 'Took too long to recover through ML Announce ({}>{} sec)'.format(time.time() - start_time, wait_time)
-        exit(1)
-    time.sleep(0.1)
+wpan.verify_within(check_c2_is_associated, 20)
 
-# Check that c2 did attach and is on channel 26.
+# Check that c2 is now on channel 26.
 verify(int(c2.get(wpan.WPAN_CHANNEL), 0) == 26)
 
 #-----------------------------------------------------------------------------------------------------------------------
