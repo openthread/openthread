@@ -533,7 +533,6 @@ private:
                         va_list           args);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
 
-    static void HandleHdlcError(void *aContext, otError aError, uint8_t *aBuffer, uint16_t aLength);
     static void HandleSpinelFrame(void *aContext, uint8_t *aBuffer, uint16_t aLength)
     {
         static_cast<RadioSpinel *>(aContext)->HandleSpinelFrame(aBuffer, aLength);
