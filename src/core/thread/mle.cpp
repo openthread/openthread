@@ -135,7 +135,7 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.mValid        = true;
 
     // Leader Aloc
-    mLeaderAloc.mPrefixLength       = 128;
+    mLeaderAloc.mPrefixLength       = 64;
     mLeaderAloc.mPreferred          = true;
     mLeaderAloc.mValid              = true;
     mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -148,7 +148,7 @@ Mle::Mle(Instance &aInstance)
     {
         memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
 
-        mServiceAlocs[i].mPrefixLength               = 128;
+        mServiceAlocs[i].mPrefixLength               = 64;
         mServiceAlocs[i].mPreferred                  = true;
         mServiceAlocs[i].mValid                      = true;
         mServiceAlocs[i].mScopeOverride              = Ip6::Address::kRealmLocalScope;

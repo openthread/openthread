@@ -159,7 +159,7 @@ otError Dhcp6Server::UpdateService(void)
                 address->mFields.m16[6]      = HostSwap16(0xfe00);
                 address->mFields.m8[14]      = Ip6::Address::kAloc16Mask;
                 address->mFields.m8[15]      = lowpanContext.mContextId;
-                mAgentsAloc[i].mPrefixLength = 128;
+                mAgentsAloc[i].mPrefixLength = 64;
                 mAgentsAloc[i].mPreferred    = true;
                 mAgentsAloc[i].mValid        = true;
                 netif.AddUnicastAddress(mAgentsAloc[i]);
