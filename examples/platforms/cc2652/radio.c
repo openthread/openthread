@@ -1206,9 +1206,9 @@ void cc2652RadioInit(void)
  */
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    otError error = OT_ERROR_BUSY;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateSleep)
     {
@@ -1239,6 +1239,7 @@ exit:
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return (sState != cc2652_stateDisabled);
 }
 
@@ -1247,9 +1248,9 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
  */
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    otError error = OT_ERROR_BUSY;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateDisabled)
     {
@@ -1274,9 +1275,9 @@ otError otPlatRadioDisable(otInstance *aInstance)
  */
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    otError error = OT_ERROR_BUSY;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateSleep)
     {
@@ -1294,9 +1295,9 @@ exit:
  */
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
     *aPower = sCurrentOutputPower->dbm;
@@ -1310,10 +1311,10 @@ exit:
  */
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     unsigned int           i;
     output_config_t const *powerCfg = &(rgOutputPower[0]);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     for (i = 1; i < OUTPUT_CONFIG_COUNT; i++)
     {
@@ -1337,9 +1338,9 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
  */
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError error = OT_ERROR_BUSY;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateSleep)
     {
@@ -1391,9 +1392,9 @@ exit:
  */
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    otError error = OT_ERROR_BUSY;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2652_stateSleep)
     {
@@ -1420,6 +1421,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return &sTransmitFrame;
 }
 
@@ -1453,6 +1455,7 @@ exit:
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return sRfStats.maxRssi;
 }
 
@@ -1462,6 +1465,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
@@ -1489,10 +1493,10 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
  */
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t idx   = rfCoreFindShortSrcMatchIdx(aShortAddress);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     if (idx == CC2652_SRC_MATCH_NONE)
     {
@@ -1523,10 +1527,10 @@ exit:
  */
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t idx;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT_ACTION((idx = rfCoreFindShortSrcMatchIdx(aShortAddress)) != CC2652_SRC_MATCH_NONE,
                     error = OT_ERROR_NO_ADDRESS);
@@ -1553,10 +1557,10 @@ exit:
  */
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t idx   = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     if (idx == CC2652_SRC_MATCH_NONE)
     {
@@ -1586,10 +1590,10 @@ exit:
  */
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t idx;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2652_SRC_MATCH_NONE,
                     error = OT_ERROR_NO_ADDRESS);
@@ -1670,6 +1674,7 @@ exit:
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     /* we are promiscuous if we are not filtering */
     return sReceiveCmd.frameFiltOpt.frameFiltEn == 0;
 }
@@ -1700,10 +1705,10 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
  */
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint8_t *    eui64;
     unsigned int i;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     /*
      * The IEEE MAC address can be stored two places. We check the Customer
@@ -1978,5 +1983,6 @@ void cc2652RadioProcess(otInstance *aInstance)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return CC2652_RECEIVE_SENSITIVITY;
 }

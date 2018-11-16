@@ -188,6 +188,7 @@ exit:
 void PlatSocketRxSignaled(uint8_t id)
 {
     OT_UNUSED_VARIABLE(id);
+
     //Dummy callback function to flush pipe
     uint8_t readChar;
     //Remove trigger byte from pipe

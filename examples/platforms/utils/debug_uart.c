@@ -124,6 +124,7 @@ OT_TOOL_WEAK
 otError otPlatDebugUart_logfile(const char *filename)
 {
     OT_UNUSED_VARIABLE(filename);
+
     return OT_ERROR_FAILED;
 }
 
@@ -131,11 +132,11 @@ otError otPlatDebugUart_logfile(const char *filename)
 /* this should not be a WEAK function */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    va_list  ap;
-    uint32_t now;
-
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
+
+    va_list  ap;
+    uint32_t now;
 
     now = otPlatAlarmMilliGetNow();
     otPlatDebugUart_printf("%3d.%03d | ", (int)(now / 1000), (int)(now % 1000));

@@ -445,12 +445,12 @@ void HdlcInterface::HandleHdlcFrame(void *aContext, uint8_t *aFrame, uint16_t aF
 
 void HdlcInterface::HandleHdlcError(void *aContext, otError aError, uint8_t *aFrame, uint16_t aFrameLength)
 {
-    otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
-
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aError);
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aFrameLength);
+
+    otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
 }
 
 } // namespace PosixApp

@@ -92,12 +92,12 @@ int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char         logString[512];
     unsigned int offset;
     int          charsWritten;
     va_list      args;
-
-    OT_UNUSED_VARIABLE(aLogRegion);
 
     offset = 0;
 

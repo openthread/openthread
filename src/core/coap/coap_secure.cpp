@@ -243,6 +243,7 @@ otError CoapSecure::SendMessage(Message &               aMessage,
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+
     mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
     return OT_ERROR_NONE;

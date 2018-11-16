@@ -67,9 +67,9 @@ void otPlatWakeHost(void)
 
 otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     switch (aState)
     {

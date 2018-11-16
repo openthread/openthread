@@ -189,13 +189,13 @@ static otError SpinelStatusToOtError(spinel_status_t aError)
 
 static void LogIfFail(const char *aText, otError aError)
 {
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aError);
+
     if (aError != OT_ERROR_NONE)
     {
         otLogWarnPlat("%s: %s", aText, otThreadErrorToString(aError));
     }
-
-    OT_UNUSED_VARIABLE(aText);
-    OT_UNUSED_VARIABLE(aError);
 }
 
 void HdlcInterface::Callbacks::HandleReceivedFrame(const uint8_t *aBuffer, uint16_t aLength)

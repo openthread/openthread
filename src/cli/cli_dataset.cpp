@@ -212,19 +212,23 @@ exit:
 
 otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     return OT_ERROR_NONE;
 }
 
 otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otOperationalDataset dataset;
     otError              error;
 
@@ -232,13 +236,14 @@ otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
     error = Print(dataset);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     return error;
 }
 
 otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otOperationalDataset dataset;
     otError              error;
 
@@ -246,14 +251,14 @@ otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
     error = Print(dataset);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     return error;
 }
 
 #if OPENTHREAD_FTD
 otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -262,14 +267,14 @@ otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *a
     sDataset.mActiveTimestamp                      = static_cast<uint64_t>(value);
     sDataset.mComponents.mIsActiveTimestampPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -278,14 +283,14 @@ otError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
     sDataset.mChannel                      = static_cast<uint16_t>(value);
     sDataset.mComponents.mIsChannelPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -293,7 +298,6 @@ otError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mChannelMaskPage0                      = static_cast<uint32_t>(value);
     sDataset.mComponents.mIsChannelMaskPage0Present = true;
-    OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return error;
@@ -301,15 +305,18 @@ exit:
 
 otError Dataset::ProcessClear(otInstance *aInstance, int argc, char *argv[])
 {
-    memset(&sDataset, 0, sizeof(sDataset));
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    memset(&sDataset, 0, sizeof(sDataset));
     return OT_ERROR_NONE;
 }
 
 otError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
@@ -327,14 +334,14 @@ otError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -343,14 +350,14 @@ otError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
     sDataset.mDelay                      = static_cast<uint32_t>(value);
     sDataset.mComponents.mIsDelayPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessExtPanId(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
@@ -360,14 +367,14 @@ otError Dataset::ProcessExtPanId(otInstance *aInstance, int argc, char *argv[])
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
     sDataset.mComponents.mIsExtendedPanIdPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     uint8_t key[OT_MASTER_KEY_SIZE];
 
@@ -377,14 +384,14 @@ otError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
     memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
     sDataset.mComponents.mIsMasterKeyPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError      error = OT_ERROR_NONE;
     otIp6Address prefix;
 
@@ -394,14 +401,14 @@ otError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *a
     memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
     sDataset.mComponents.mIsMeshLocalPrefixPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     size_t  length;
 
@@ -412,14 +419,14 @@ otError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[
     memcpy(sDataset.mNetworkName.m8, argv[0], length);
     sDataset.mComponents.mIsNetworkNamePresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -428,14 +435,14 @@ otError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
     sDataset.mPanId                      = static_cast<otPanId>(value);
     sDataset.mComponents.mIsPanIdPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -444,14 +451,14 @@ otError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *
     sDataset.mPendingTimestamp                      = static_cast<uint64_t>(value);
     sDataset.mComponents.mIsPendingTimestampPresent = true;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
     uint8_t              tlvs[128];
@@ -568,14 +575,14 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError                        error = OT_ERROR_NONE;
     otOperationalDatasetComponents datasetComponents;
     uint8_t                        tlvs[32];
@@ -667,14 +674,14 @@ otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *ar
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
 otError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError  error = OT_ERROR_NONE;
     uint16_t length;
 
@@ -685,7 +692,6 @@ otError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
                  error = OT_ERROR_PARSE);
 
     sDataset.mComponents.mIsPSKcPresent = true;
-    OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return error;
@@ -693,6 +699,8 @@ exit:
 
 otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -735,7 +743,6 @@ otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *ar
     }
 
     sDataset.mComponents.mIsSecurityPolicyPresent = true;
-    OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return error;

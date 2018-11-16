@@ -79,6 +79,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *   aInstance,
                                   void *         aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
+
     bool                  found    = false;
     bool                  newAgent = false;
     otDhcpAddress *       address  = NULL;
@@ -518,8 +519,9 @@ void Dhcp6Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const ot
 
 void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Dhcp6Header header;
     OT_UNUSED_VARIABLE(aMessageInfo);
+
+    Dhcp6Header header;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header));
     aMessage.MoveOffset(sizeof(header));

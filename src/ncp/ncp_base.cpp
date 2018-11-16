@@ -1148,9 +1148,9 @@ otError NcpBase::CommandHandler_NOOP(uint8_t aHeader)
 
 otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aHeader);
+
+    otError error = OT_ERROR_NONE;
 
     // Signal a platform reset. If implemented, this function
     // shouldn't return.
@@ -2158,6 +2158,9 @@ exit:
 otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                        otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
 {
+    OT_UNUSED_VARIABLE(aAllowPeekDelegate);
+    OT_UNUSED_VARIABLE(aAllowPokeDelegate);
+
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -2168,9 +2171,6 @@ otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDele
         ncp->RegisterPeekPokeDelagates(aAllowPeekDelegate, aAllowPokeDelegate);
     }
 #else
-    OT_UNUSED_VARIABLE(aAllowPeekDelegate);
-    OT_UNUSED_VARIABLE(aAllowPokeDelegate);
-
     error = OT_ERROR_DISABLED_FEATURE;
 
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -2197,6 +2197,9 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 
 extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char logString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE];
     int  charsWritten;
 
@@ -2209,9 +2212,6 @@ extern "C" void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 
         otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
     }
-
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
 }
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)

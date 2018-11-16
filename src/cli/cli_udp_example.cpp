@@ -56,13 +56,13 @@ UdpExample::UdpExample(Interpreter &aInterpreter)
 
 otError UdpExample::ProcessHelp(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
-
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
 
     return OT_ERROR_NONE;
 }

@@ -328,13 +328,13 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     otError       error = OT_ERROR_NONE;
     Header        responseHeader;
     QueryMetadata queryMetadata;
     Message *     message  = NULL;
     uint64_t      unixTime = 0;
-
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));

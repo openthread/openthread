@@ -188,6 +188,8 @@ void setTxPower(int8_t aTxPower)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     // EUI64 is in a mixed-endian format.  Split in two halves, each 32-bit
     // half is in little-endian format (machine endian).  However, the
     // most significant part of the EUI64 comes first, so we can't cheat
@@ -196,8 +198,6 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     // See https://e2e.ti.com/support/wireless_connectivity/low_power_rf_tools/f/155/p/307344/1072252
 
     volatile uint32_t *eui64 = &HWREG(IEEE_EUI64);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     // Read first 32-bits
     uint32_t part = eui64[0];
@@ -283,6 +283,7 @@ void cc2538RadioInit(void)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return (sState != OT_RADIO_STATE_DISABLED) ? true : false;
 }
 
@@ -310,9 +311,9 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    otError error = OT_ERROR_INVALID_STATE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -327,9 +328,9 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError error = OT_ERROR_INVALID_STATE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
@@ -371,9 +372,9 @@ static void setupTransmit(otRadioFrame *aFrame)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError error = OT_ERROR_INVALID_STATE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -464,24 +465,28 @@ exit:
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return 0;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
@@ -805,11 +810,11 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError   error = OT_ERROR_NONE;
     int8_t    entry = findSrcMatchAvailEntry(true);
     uint32_t *addr  = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Add ShortAddr entry: %d", entry);
 
@@ -830,11 +835,11 @@ exit:
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError   error = OT_ERROR_NONE;
     int8_t    entry = findSrcMatchAvailEntry(false);
     uint32_t *addr  = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Add ExtAddr entry: %d", entry);
 
@@ -855,10 +860,10 @@ exit:
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     int8_t  entry = findSrcMatchShortEntry(aShortAddress);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ShortAddr entry: %d", entry);
 
@@ -872,10 +877,10 @@ exit:
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
     int8_t  entry = findSrcMatchExtEntry(aExtAddress);
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ExtAddr entry: %d", entry);
 
@@ -889,10 +894,10 @@ exit:
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t *addrEn         = (uint32_t *)RFCORE_XREG_SRCSHORTEN0;
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCSHORTPENDEN0;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ShortAddr entries", NULL);
 
@@ -905,10 +910,10 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t *addrEn         = (uint32_t *)RFCORE_XREG_SRCEXTEN0;
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCEXTPENDEN0;
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     otLogDebgPlat("Clear ExtAddr entries", NULL);
 
@@ -924,14 +929,15 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aScanChannel);
     OT_UNUSED_VARIABLE(aScanDuration);
+
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
     *aPower = sTxPower;
@@ -943,6 +949,7 @@ exit:
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     setTxPower(aPower);
     return OT_ERROR_NONE;
 }
@@ -950,5 +957,6 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return CC2538_RECEIVE_SENSITIVITY;
 }

@@ -51,6 +51,7 @@ static uint32_t sUsAlarm     = 0;
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
     OT_UNUSED_VARIABLE(aSpeedUpFactor);
+
     sNow = 0;
 }
 
@@ -80,6 +81,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     sIsMsRunning = false;
 }
 
@@ -99,6 +101,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 void otPlatAlarmMicroStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     sIsUsRunning = false;
 }
 

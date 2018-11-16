@@ -3292,6 +3292,8 @@ exit:
 
 otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     ThreadNetif &       netif = GetNetif();
     otError             error = OT_ERROR_NONE;
     LeaderDataTlv       leaderData;
@@ -3409,7 +3411,6 @@ exit:
         otLogWarnMleErr(error, "Failed to process Child ID Response");
     }
 
-    OT_UNUSED_VARIABLE(aMessageInfo);
     return error;
 }
 
@@ -3591,6 +3592,8 @@ exit:
 
 otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     otError                   error = OT_ERROR_NONE;
     ChannelTlv                channelTlv;
     ActiveTimestampTlv        timestamp;
@@ -3655,7 +3658,6 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aMessageInfo);
     return error;
 }
 
@@ -4079,19 +4081,19 @@ void Mle::UpdateParentSearchState(void)
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {
-    otLogInfoMle("%s (%s)", aLogString, aAddress.ToString().AsCString());
-
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
+
+    otLogInfoMle("%s (%s)", aLogString, aAddress.ToString().AsCString());
 }
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const
 {
-    otLogInfoMle("%s (%s,0x%04x)", aLogString, aAddress.ToString().AsCString(), aRloc);
-
     OT_UNUSED_VARIABLE(aLogString);
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aRloc);
+
+    otLogInfoMle("%s (%s,0x%04x)", aLogString, aAddress.ToString().AsCString(), aRloc);
 }
 
 const char *Mle::RoleToString(otDeviceRole aRole)

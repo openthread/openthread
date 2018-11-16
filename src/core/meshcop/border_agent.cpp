@@ -187,14 +187,14 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
                                      const otMessageInfo *aMessageInfo,
                                      otError              aResult)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     ForwardContext &forwardContext = *static_cast<ForwardContext *>(aContext);
     BorderAgent &   borderAgent    = forwardContext.GetBorderAgent();
     ThreadNetif &   netif          = borderAgent.GetNetif();
     const Message * message        = static_cast<const Message *>(aMessage);
     Coap::Header    header;
     otError         error;
-
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
     SuccessOrExit(error = aResult);
 
@@ -319,12 +319,12 @@ BorderAgent::BorderAgent(Instance &aInstance)
 
 void BorderAgent::HandleProxyTransmit(const Coap::Header &aHeader, const Message &aMessage)
 {
+    OT_UNUSED_VARIABLE(aHeader);
+
     Message *        message = NULL;
     Ip6::MessageInfo messageInfo;
     uint16_t         offset;
     otError          error;
-
-    OT_UNUSED_VARIABLE(aHeader);
 
     {
         UdpEncapsulationTlv tlv;

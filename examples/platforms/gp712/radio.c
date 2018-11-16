@@ -83,12 +83,14 @@ static int8_t  sLastReceivedPower = 127;
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     qorvoRadioGetIeeeEui64(aIeeeEui64);
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     qorvoRadioSetPanId(panid);
     otCachedSettings.panid = panid;
 }
@@ -96,18 +98,21 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *address)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     qorvoRadioSetExtendedAddress(address->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     qorvoRadioSetShortAddress(address);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return (sState != OT_RADIO_STATE_DISABLED);
 }
 
@@ -143,9 +148,9 @@ exit:
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    otError error = OT_ERROR_INVALID_STATE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
@@ -227,24 +232,28 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return sLastReceivedPower;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return false;
 }
 
@@ -257,36 +266,42 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     qorvoRadioEnableSrcMatch(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return qorvoRadioAddSrcMatchShortEntry(aShortAddress, otCachedSettings.panid);
 }
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return qorvoRadioAddSrcMatchExtEntry(aExtAddress->m8, otCachedSettings.panid);
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return qorvoRadioClearSrcMatchShortEntry(aShortAddress, otCachedSettings.panid);
 }
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return qorvoRadioClearSrcMatchExtEntry(aExtAddress->m8, otCachedSettings.panid);
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     /* clear both short and extended addresses here */
     qorvoRadioClearSrcMatchEntries();
 }
@@ -294,6 +309,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     /* not implemented */
     /* assumes clearing of short and extended entries is done simultaniously by the openthread stack */
 }
@@ -301,6 +317,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     sScanstate = 1;
     return qorvoRadioEnergyScan(aScanChannel, aScanDuration);
 }
@@ -316,6 +333,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
     // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPower);
+
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -324,11 +342,13 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPower);
+
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return GP712_RECEIVE_SENSITIVITY;
 }
