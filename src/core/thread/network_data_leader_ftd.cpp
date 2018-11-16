@@ -819,6 +819,11 @@ exit:
 
 otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
+#if !OPENTHREAD_ENABLE_SERVICE
+    OT_UNUSED_VARIABLE(aOldTlvs);
+    OT_UNUSED_VARIABLE(aOldTlvsLength);
+#endif
+
     otError         error = OT_ERROR_NONE;
     NetworkDataTlv *cur   = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
@@ -848,11 +853,6 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOl
 
         cur = cur->GetNext();
     }
-
-#if !OPENTHREAD_ENABLE_SERVICE
-    OT_UNUSED_VARIABLE(aOldTlvs);
-    OT_UNUSED_VARIABLE(aOldTlvsLength);
-#endif
 
     otDumpDebgNetData("add done", mTlvs, mLength);
 

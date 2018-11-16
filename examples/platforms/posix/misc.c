@@ -70,6 +70,7 @@ void otPlatReset(otInstance *aInstance)
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return sPlatResetReason;
 }
 
@@ -80,9 +81,9 @@ void otPlatWakeHost(void)
 
 otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     switch (aState)
     {
@@ -102,5 +103,6 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return gPlatMcuPowerState;
 }

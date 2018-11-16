@@ -44,9 +44,9 @@ extern void platformUartRestore(void);
 
 void otPlatReset(otInstance *aInstance)
 {
-    char *argv[gArgumentsCount + 1];
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    char *argv[gArgumentsCount + 1];
 
     for (int i = 0; i < gArgumentsCount; ++i)
     {
@@ -66,6 +66,7 @@ void otPlatReset(otInstance *aInstance)
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 

@@ -44,6 +44,7 @@
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     SysCtrlSystemReset();
 }
 
@@ -52,9 +53,9 @@ void otPlatReset(otInstance *aInstance)
  */
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    otPlatResetReason ret;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otPlatResetReason ret;
 
     switch (SysCtrlResetSourceGet())
     {

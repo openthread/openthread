@@ -105,6 +105,8 @@ void NcpBase::LinkRawTransmitDone(otInstance *, otRadioFrame *aFrame, otRadioFra
 
 void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
+    OT_UNUSED_VARIABLE(aFrame);
+
     if (mCurTransmitTID)
     {
         uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
@@ -138,7 +140,6 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aFrame);
     return;
 }
 

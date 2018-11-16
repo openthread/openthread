@@ -115,10 +115,10 @@ void Diag::AppendErrorResult(otError aError, char *aOutput, size_t aOutputMaxLen
 
 void Diag::ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aArgCount);
     OT_UNUSED_VARIABLE(aArgVector);
+
+    otError error = OT_ERROR_NONE;
 
     otPlatRadioEnable(sInstance);
     otPlatRadioSetPromiscuous(sInstance, true);
@@ -134,10 +134,10 @@ exit:
 
 void Diag::ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aArgCount);
     OT_UNUSED_VARIABLE(aArgVector);
+
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
@@ -291,10 +291,10 @@ exit:
 
 void Diag::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aArgCount);
     OT_UNUSED_VARIABLE(aArgVector);
+
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 

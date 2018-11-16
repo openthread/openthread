@@ -78,6 +78,7 @@ void platformDummy(void *dummyPointer)
 static void cbKeyPressed(uint8_t Param)
 {
     OT_UNUSED_VARIABLE(Param);
+
     qorvoAlarmScheduleEventArg(0, platformDummy, (void *)&s_in_fd);
 }
 
