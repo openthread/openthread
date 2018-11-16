@@ -96,7 +96,7 @@ static inline const char *levelToString(otLogLevel aLogLevel)
  *
  * @returns  Number of bytes successfully written to the log buffer.
  */
-static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
+static inline int logTimestamp(char *aLogString, uint16_t aMaxSize)
 {
     long unsigned int now = otPlatAlarmMilliGetNow();
     return snprintf(aLogString, (size_t)aMaxSize, "%s[%010lu]", RTT_COLOR_CODE_CYAN, now);
@@ -112,7 +112,7 @@ static inline uint16_t logTimestamp(char *aLogString, uint16_t aMaxSize)
  *
  * @returns  Number of bytes successfully written to the log buffer.
  */
-static inline uint16_t logLevel(char *aLogString, uint16_t aMaxSize, otLogLevel aLogLevel)
+static inline int logLevel(char *aLogString, uint16_t aMaxSize, otLogLevel aLogLevel)
 {
     return snprintf(aLogString, (size_t)aMaxSize, "%s ", levelToString(aLogLevel));
 }
