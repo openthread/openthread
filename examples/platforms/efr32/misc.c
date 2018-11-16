@@ -55,9 +55,9 @@ void otPlatReset(otInstance *aInstance)
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    otPlatResetReason reason;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otPlatResetReason reason;
 
     if (sResetCause & RMU_RSTCAUSE_PORST)
     {

@@ -450,16 +450,16 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    // RFC1035 7.3. Resolver cannot rely that a response will come from the same address
+    // which it sent the corresponding query to.
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     otError            error = OT_ERROR_NONE;
     Header             responseHeader;
     QueryMetadata      queryMetadata;
     ResourceRecordAaaa record;
     Message *          message = NULL;
     uint16_t           offset;
-
-    // RFC1035 7.3. Resolver cannot rely that a response will come from the same address
-    // which it sent the corresponding query to.
-    OT_UNUSED_VARIABLE(aMessageInfo);
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));

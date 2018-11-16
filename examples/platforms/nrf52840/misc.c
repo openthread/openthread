@@ -71,6 +71,7 @@ void nrf5MiscDeinit(void)
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
 #if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     gPlatformPseudoResetWasRequested = true;
     sResetReason                     = POWER_RESETREAS_SREQ_Msk;

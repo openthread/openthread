@@ -146,6 +146,7 @@ void da15000RadioInit(void)
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     memcpy(aIeeeEui64, sEui64, RADIO_EUI64_TABLE_SIZE);
 }
 
@@ -220,6 +221,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return (sRadioState != OT_RADIO_STATE_DISABLED);
 }
 
@@ -406,6 +408,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return &sTransmitFrame;
 }
 
@@ -431,18 +434,21 @@ exit:
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return sRssiReal;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return sRadioPromiscuous;
 }
 
@@ -465,8 +471,9 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    otError error = OT_ERROR_NONE;
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
     *aPower = sTxPower;
@@ -609,5 +616,6 @@ exit:
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return DA15000_RECEIVE_SENSITIVITY;
 }

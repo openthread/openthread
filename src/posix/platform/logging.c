@@ -59,13 +59,13 @@ void platformLoggingInit(const char *aName)
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char         logString[LOGGING_MAX_LOG_STRING_SIZE];
     int          charsWritten;
     va_list      args;
     int          logLevel;
     unsigned int offset = 0;
-
-    OT_UNUSED_VARIABLE(aLogRegion);
 
     charsWritten = snprintf(&logString[offset], sizeof(logString), "[%" PRIx64 "] ", gNodeId);
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);

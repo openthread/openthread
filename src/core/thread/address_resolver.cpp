@@ -185,6 +185,8 @@ const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReaso
 
 void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason)
 {
+    OT_UNUSED_VARIABLE(aReason);
+
     for (int i = 0; i < kCacheEntries; i++)
     {
         if (mCache[i].mAge > aEntry.mAge)
@@ -212,8 +214,6 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
 
     aEntry.mAge   = kCacheEntries - 1;
     aEntry.mState = Cache::kStateInvalid;
-
-    OT_UNUSED_VARIABLE(aReason);
 }
 
 void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
@@ -759,17 +759,19 @@ void AddressResolver::HandleIcmpReceive(void *               aContext,
                                         const otMessageInfo *aMessageInfo,
                                         const otIcmp6Header *aIcmpHeader)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),
                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                                                                 *static_cast<const Ip6::IcmpHeader *>(aIcmpHeader));
-
-    OT_UNUSED_VARIABLE(aMessageInfo);
 }
 
 void AddressResolver::HandleIcmpReceive(Message &               aMessage,
                                         const Ip6::MessageInfo &aMessageInfo,
                                         const Ip6::IcmpHeader & aIcmpHeader)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     Ip6::Header ip6Header;
 
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach);
@@ -786,7 +788,7 @@ void AddressResolver::HandleIcmpReceive(Message &               aMessage,
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aMessageInfo);
+    return;
 }
 
 } // namespace ot

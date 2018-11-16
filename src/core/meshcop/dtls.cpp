@@ -112,10 +112,10 @@ Dtls::Dtls(Instance &aInstance)
 
 int Dtls::HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen)
 {
+    OT_UNUSED_VARIABLE(aData);
+
     otError error;
     int     rval = 0;
-
-    OT_UNUSED_VARIABLE(aData);
 
     error = otPlatRandomGetTrue((uint8_t *)aOutput, (uint16_t)aInLen);
     SuccessOrExit(error);
@@ -665,6 +665,8 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
                                   size_t               aKeyLength,
                                   size_t               aIvLength)
 {
+    OT_UNUSED_VARIABLE(aMasterSecret);
+
     uint8_t        kek[Crypto::Sha256::kHashSize];
     Crypto::Sha256 sha256;
 
@@ -684,8 +686,6 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
         otLogInfoCoap("ApplicationCoapSecure Generated KEK");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-    OT_UNUSED_VARIABLE(aMasterSecret);
     return 0;
 }
 
@@ -871,9 +871,9 @@ otError Dtls::MapError(int rval)
 
 void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)
 {
-    Dtls *pThis = static_cast<Dtls *>(ctx);
-    OT_UNUSED_VARIABLE(pThis);
     OT_UNUSED_VARIABLE(str);
+
+    Dtls *pThis = static_cast<Dtls *>(ctx);
 
     if (pThis->mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {

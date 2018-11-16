@@ -53,6 +53,8 @@ otLogLevel otLoggingGetLevel(void)
 
 otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
+    OT_UNUSED_VARIABLE(aLogLevel);
+
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -64,6 +66,5 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
 #endif
 #endif
 
-    OT_UNUSED_VARIABLE(aLogLevel);
     return error;
 }

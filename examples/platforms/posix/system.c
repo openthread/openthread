@@ -61,6 +61,7 @@ static volatile bool gTerminate = false;
 static void handleSignal(int aSignal)
 {
     OT_UNUSED_VARIABLE(aSignal);
+
     gTerminate = true;
 }
 #endif

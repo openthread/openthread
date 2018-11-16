@@ -134,9 +134,9 @@ static void swapDiscard(int aFd)
 
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     {
         struct stat st;
@@ -181,11 +181,12 @@ exit:
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError     error  = OT_ERROR_NOT_FOUND;
     const off_t size   = lseek(sSettingsFd, 0, SEEK_END);
     off_t       offset = lseek(sSettingsFd, 0, SEEK_SET);
 
-    OT_UNUSED_VARIABLE(aInstance);
     VerifyOrExit(offset == 0 && size >= 0, error = OT_ERROR_PARSE);
 
     while (offset < size)
@@ -243,10 +244,10 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     off_t size   = lseek(sSettingsFd, 0, SEEK_END);
     int   swapFd = swapOpen();
-
-    OT_UNUSED_VARIABLE(aInstance);
 
     if (size > 0)
     {
@@ -265,12 +266,13 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error  = OT_ERROR_NOT_FOUND;
     off_t   size   = lseek(sSettingsFd, 0, SEEK_END);
     off_t   offset = lseek(sSettingsFd, 0, SEEK_SET);
     int     swapFd = swapOpen();
 
-    OT_UNUSED_VARIABLE(aInstance);
     assert(swapFd != -1);
     assert(offset == 0);
     VerifyOrExit(offset == 0 && size >= 0, error = OT_ERROR_PARSE);

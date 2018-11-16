@@ -321,9 +321,9 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    bool result;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    bool result;
 
     nrf_802154_channel_set(aChannel);
     nrf_802154_tx_power_set(sDefaultTxPower);
@@ -407,9 +407,9 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    otError error;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
 
     uint8_t shortAddress[SHORT_ADDRESS_SIZE];
     convertShortAddress(shortAddress, aShortAddress);
@@ -428,9 +428,9 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError error;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
 
     if (nrf_802154_pending_bit_for_addr_set(aExtAddress->m8, true))
     {
@@ -446,9 +446,9 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    otError error;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
 
     uint8_t shortAddress[SHORT_ADDRESS_SIZE];
     convertShortAddress(shortAddress, aShortAddress);
@@ -467,9 +467,9 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError error;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
 
     if (nrf_802154_pending_bit_for_addr_clear(aExtAddress->m8, true))
     {
@@ -522,9 +522,9 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    otError error = OT_ERROR_NONE;
-
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
 
     if (aPower == NULL)
     {
@@ -799,6 +799,7 @@ void nrf_802154_energy_detected(uint8_t result)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
     return NRF52840_RECEIVE_SENSITIVITY;
 }
 

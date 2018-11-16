@@ -44,11 +44,11 @@ otInstance *sInstance;
 
 void otSysInit(int argc, char *argv[])
 {
-    uint32_t temp, tempTrim;
-    uint8_t  revId;
-
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    uint32_t temp, tempTrim;
+    uint8_t  revId;
 
     /* enable clock for PORTs */
     CLOCK_EnableClock(kCLOCK_PortA);
