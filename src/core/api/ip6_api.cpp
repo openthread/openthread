@@ -201,6 +201,21 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     return error;
 }
 
+otError otIp6GetPriority(otInstance *       aInstance,
+                         const uint8_t *    aDatagram,
+                         uint16_t           aDatagramLen,
+                         otMessagePriority *aPriority)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    SuccessOrExit(error =
+                      instance.GetIp6().GetPriority(aDatagram, aDatagramLen, *reinterpret_cast<uint8_t *>(aPriority)));
+
+exit:
+    return error;
+}
+
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

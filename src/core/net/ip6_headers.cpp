@@ -57,5 +57,26 @@ exit:
     return error;
 }
 
+otError Header::Init(const uint8_t *aDatagram, uint16_t aDatagramLen)
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t length;
+
+    // check datagram pointer and length
+    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(*this)), error = OT_ERROR_PARSE);
+
+    memcpy(this, aDatagram, sizeof(*this));
+
+    // check Version
+    VerifyOrExit(IsVersion6(), error = OT_ERROR_PARSE);
+
+    // check Payload Length
+    length = sizeof(*this) + GetPayloadLength();
+    VerifyOrExit(length == aDatagramLen && length <= Ip6::kMaxDatagramLength, error = OT_ERROR_PARSE);
+
+exit:
+    return error;
+}
+
 } // namespace Ip6
 } // namespace ot

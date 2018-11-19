@@ -178,6 +178,18 @@ public:
     otError Init(const Message &aMessage);
 
     /**
+     * This method reads the IPv6 header from @p aDatagram.
+     *
+     * @param[in]  aDatagram     The IPv6 datagram.
+     * @param[in]  aDatagramLen  The length of IPv6 datagram.
+     *
+     * @retval OT_ERROR_NONE   Successfully read the IPv6 header.
+     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+     *
+     */
+    otError Init(const uint8_t *aDatagram, uint16_t aDatagramLen);
+
+    /**
      * This method indicates whether or not the IPv6 Version is set to 6.
      *
      * @retval TRUE   If the IPv6 Version is set to 6.

@@ -1737,16 +1737,13 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
 {
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    const uint8_t *metaPtr  = NULL;
-    uint16_t       metaLen  = 0;
-    otMessage *    message  = NULL;
-    otError        error    = OT_ERROR_NONE;
-
-    // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+    const uint8_t *   framePtr    = NULL;
+    uint16_t          frameLen    = 0;
+    const uint8_t *   metaPtr     = NULL;
+    uint16_t          metaLen     = 0;
+    otMessage *       message     = NULL;
+    otError           error       = OT_ERROR_NONE;
+    otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
@@ -1755,6 +1752,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     // May later include TX power, allow retransmits, etc...
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
+
+    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &msgSettings.mPriority));
+
+    // STREAM_NET requires layer 2 security.
+    message = otIp6NewMessage(mInstance, &msgSettings);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
@@ -2588,10 +2591,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     otError           error       = OT_ERROR_NONE;
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, &msgSettings);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
 
@@ -2599,6 +2598,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     // May later include TX power, allow retransmits, etc...
     OT_UNUSED_VARIABLE(metaPtr);
     OT_UNUSED_VARIABLE(metaLen);
+
+    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &msgSettings.mPriority));
+
+    // STREAM_NET_INSECURE packets are not secured at layer 2.
+    message = otIp6NewMessage(mInstance, &msgSettings);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
