@@ -51,6 +51,7 @@ public:
     enum
     {
         kMaxFrameSize = 2048, ///< Maximum frame size (number of bytes).
+        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
     };
 
     /**
@@ -102,7 +103,7 @@ public:
 
     /**
      *
-     * This method returns the socket file descriptor associate with the interface
+     * This method returns the socket file descriptor associated with the interface.
      *
      * @returns The associated socket file descriptor, or -1 if interface is not initializes.
      *
@@ -129,12 +130,15 @@ public:
     /**
      * This method encodes and sends a frame to Radio Co-processor (RCP) over the socket.
      *
-     * @param[in] aFrame  A pointer to buffer containing the frame to send.
-     * @param[in] aLength The length (number of bytes) in the frame
+     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
+     * up to `kMaxWaitTime` interval.
+     *
+     * @param[in] aFrame     A pointer to buffer containing the frame to send.
+     * @param[in] aLength    The length (number of bytes) in the frame.
      *
      * @retval OT_ERROR_NONE     Successfully encoded and sent the frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
-     * @retval OT_ERROR_FAILED   Failed to send frame due to socket write failure.
+     * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
      *
      */
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
@@ -154,8 +158,42 @@ public:
 #endif
 
 private:
+    /**
+     * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
+     * `kMaxWaitTime` interval.
+     *
+     * @retval OT_ERROR_NONE   Socket is writable.
+     * @retval OT_ERROR_FAILED Socket did not become writable within `kMaxWaitTime`.
+     *
+     */
+    otError WaitForWritable(void);
+
+    /**
+     * This method writes a given frame to the socket.
+     *
+     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
+     * up to `kMaxWaitTime` interval.
+     *
+     * @param[in] aFrame  A pointer to buffer containing the frame to write.
+     * @param[in] aLength The length (number of bytes) in the frame.
+     *
+     * @retval OT_ERROR_NONE    Frame was written successfully.
+     * @retval OT_ERROR_FAILED  Failed to write due to socket not becoming writable within `kMaxWaitTime`.
+     *
+     */
     otError Write(const uint8_t *aFrame, uint16_t aLength);
-    void    Decode(const uint8_t *aBuffer, uint16_t aLength);
+
+    /**
+     * This method performs HDLC decoding on received data.
+     *
+     * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
+     * `aCallback` object from constructor) to pass the received frame to be processed.
+     *
+     * @param[in] aBuffer  A pointer to buffer containing data.
+     * @param[in] aLength  The length (number of bytes) in the buffer.
+     *
+     */
+    void Decode(const uint8_t *aBuffer, uint16_t aLength);
 
     static void HandleHdlcFrame(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
     static void HandleHdlcError(void *aContext, otError aError, uint8_t *aFrame, uint16_t aFrameLength);
