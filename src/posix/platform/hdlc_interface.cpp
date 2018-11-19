@@ -141,19 +141,14 @@ void HdlcInterface::Read(void)
 
     rval = read(mSockFd, buffer, sizeof(buffer));
 
-    if (rval < 0)
-    {
-        perror("HdlcInterface::Read()");
-
-        if (errno != EAGAIN)
-        {
-            abort();
-        }
-    }
-
     if (rval > 0)
     {
         Decode(buffer, static_cast<uint16_t>(rval));
+    }
+    else if ((rval < 0) && (errno != EAGAIN) && (errno != EINTR))
+    {
+        perror("HdlcInterface::Read()");
+        exit(OT_EXIT_FAILURE);
     }
 }
 
