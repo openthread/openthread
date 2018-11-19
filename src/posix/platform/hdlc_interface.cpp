@@ -174,7 +174,7 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     SuccessOrExit(error = hdlcEncoder.Encode(aFrame, aLength, encoderBuffer));
     SuccessOrExit(error = hdlcEncoder.Finalize(encoderBuffer));
 
-    SuccessOrExit(error = Write(encoderBuffer.GetBuffer(), encoderBuffer.GetLength()));
+    error = Write(encoderBuffer.GetBuffer(), encoderBuffer.GetLength());
 
 exit:
     return error;
@@ -183,7 +183,6 @@ exit:
 otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
-
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     otSimSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
@@ -195,19 +194,83 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
         {
             aLength -= static_cast<uint16_t>(rval);
             aFrame += static_cast<uint16_t>(rval);
+            continue;
         }
-        else if (rval < 0)
+
+        if ((rval < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
         {
-            perror("HdlcInterface::Write");
-            ExitNow(error = OT_ERROR_FAILED);
+            perror("HdlcInterface::Write()");
+            exit(OT_EXIT_FAILURE);
+        }
+
+        SuccessOrExit(error = WaitForWritable());
+    }
+
+exit:
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+    return error;
+}
+
+otError HdlcInterface::WaitForWritable(void)
+{
+    otError        error   = OT_ERROR_NONE;
+    struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
+    struct timeval end;
+    struct timeval now;
+    fd_set         writeFds;
+    fd_set         errorFds;
+    int            rval;
+
+    otSysGetTime(&now);
+    timeradd(&now, &timeout, &end);
+
+    while (true)
+    {
+        FD_ZERO(&writeFds);
+        FD_ZERO(&errorFds);
+        FD_SET(mSockFd, &writeFds);
+        FD_SET(mSockFd, &errorFds);
+
+        rval = select(mSockFd + 1, NULL, &writeFds, &errorFds, &timeout);
+
+        if (rval > 0)
+        {
+            if (FD_ISSET(mSockFd, &writeFds))
+            {
+                ExitNow();
+            }
+            else if (FD_ISSET(mSockFd, &errorFds))
+            {
+                fprintf(stderr, "HdlcInterface::WaitForWritable(): socket error\n\r");
+                exit(OT_EXIT_FAILURE);
+            }
+            else
+            {
+                fprintf(stderr, "HdlcInterface::WaitForWritable(): select error\n\r");
+                exit(OT_EXIT_FAILURE);
+            }
+        }
+        else if ((rval < 0) && (errno != EINTR))
+        {
+            perror("HdlcInterface::WaitForWritable()");
+            exit(OT_EXIT_FAILURE);
+        }
+
+        otSysGetTime(&now);
+
+        if (timercmp(&end, &now, >))
+        {
+            timersub(&end, &now, &timeout);
         }
         else
         {
-            ExitNow(error = OT_ERROR_FAILED);
+            break;
         }
     }
+
+    error = OT_ERROR_FAILED;
+
 exit:
-#endif
     return error;
 }
 
