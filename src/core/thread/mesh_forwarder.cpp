@@ -59,7 +59,7 @@ namespace ot {
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mDiscoverTimer(aInstance, &MeshForwarder::HandleDiscoverTimer, this)
-    , mReassemblyTimer(aInstance, &MeshForwarder::HandleReassemblyTimer, this)
+    , mUpdateTimer(aInstance, &MeshForwarder::HandleUpdateTimer, this)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
     , mSendMessageIsARetransmission(false)
@@ -115,7 +115,7 @@ otError MeshForwarder::Stop(void)
     VerifyOrExit(mEnabled == true);
 
     mDataPollManager.StopPolling();
-    mReassemblyTimer.Stop();
+    mUpdateTimer.Stop();
 
     if (mScanning)
     {
@@ -133,6 +133,14 @@ otError MeshForwarder::Stop(void)
         mReassemblyList.Dequeue(*message);
         message->Free();
     }
+
+#if OPENTHREAD_FTD
+    while ((message = mFragmentPriorityQueue.GetHead()) != NULL)
+    {
+        mFragmentPriorityQueue.Dequeue(*message);
+        message->Free();
+    }
+#endif
 
     mEnabled     = false;
     mSendMessage = NULL;
@@ -462,6 +470,36 @@ exit:
     return error;
 }
 
+otError MeshForwarder::GetFragmentHeader(const uint8_t *         aFrame,
+                                         uint8_t                 aFrameLength,
+                                         Lowpan::FragmentHeader &aFragmentHeader)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::SkipFragmentHeader(const uint8_t *&aFrame, uint8_t &aFrameLength)
+{
+    otError                error = OT_ERROR_NONE;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader());
+
+    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+    aFrame += fragmentHeader.GetHeaderLength();
+    aFrameLength -= fragmentHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
                                            uint8_t             aFrameLength,
                                            const Mac::Address &aMacSource,
@@ -478,15 +516,11 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
 
     SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
 
-    if (aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
-
         // only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-
-        aFrame += fragmentHeader.GetHeaderLength();
-        aFrameLength -= fragmentHeader.GetHeaderLength();
+        SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
     }
 
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
@@ -1351,9 +1385,9 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
         mReassemblyList.Enqueue(*message);
 
-        if (!mReassemblyTimer.IsRunning())
+        if (!mUpdateTimer.IsRunning())
         {
-            mReassemblyTimer.Start(kStateUpdatePeriod);
+            mUpdateTimer.Start(kStateUpdatePeriod);
         }
     }
     else
@@ -1435,43 +1469,47 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
+void MeshForwarder::HandleUpdateTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<MeshForwarder>().HandleReassemblyTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleUpdateTimer();
 }
 
-void MeshForwarder::HandleReassemblyTimer(void)
+void MeshForwarder::HandleUpdateTimer(void)
 {
-    Message *next = NULL;
-    uint8_t  timeout;
+    UpdateTimeout(mReassemblyList);
 
-    for (Message *message = mReassemblyList.GetHead(); message; message = next)
+#if OPENTHREAD_FTD
+    UpdateTimeout(mFragmentPriorityQueue);
+#endif
+}
+
+void MeshForwarder::UpdateTimeout(MessageQueue &aQueue)
+{
+    for (Message *message = aQueue.GetHead(); message; message = message->GetNext())
     {
-        next    = message->GetNext();
-        timeout = message->GetTimeout();
-
-        if (timeout > 0)
+        if (message->GetTimeout() > 0)
         {
-            message->SetTimeout(timeout - 1);
+            message->SetTimeout(message->GetTimeout() - 1);
         }
         else
         {
-            mReassemblyList.Dequeue(*message);
-
-            LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
-
-            if (message->GetType() == Message::kTypeIp6)
+            if (&aQueue == &mReassemblyList)
             {
-                mIpCounters.mRxFailure++;
+                LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
+                if (message->GetType() == Message::kTypeIp6)
+                {
+                    mIpCounters.mRxFailure++;
+                }
             }
 
+            aQueue.Dequeue(*message);
             message->Free();
         }
     }
 
-    if (mReassemblyList.GetHead() != NULL)
+    if ((aQueue.GetHead() != NULL) && (!mUpdateTimer.IsRunning()))
     {
-        mReassemblyTimer.Start(kStateUpdatePeriod);
+        mUpdateTimer.Start(kStateUpdatePeriod);
     }
 }
 
@@ -1547,7 +1585,7 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
     return netif.GetIp6().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
 }
 
-otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
+otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         uint8_t             aFrameLength,
                                         const Mac::Address &aMacSource,
                                         const Mac::Address &aMacDest,
@@ -1585,6 +1623,69 @@ otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
 exit:
     return error;
 }
+
+#if OPENTHREAD_FTD
+Message *MeshForwarder::FindFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader)
+{
+    Message *message;
+
+    for (message = mFragmentPriorityQueue.GetHead(); message; message = message->GetNext())
+    {
+        if (message->GetDatagramTag() == aFragmentHeader.GetDatagramTag())
+        {
+            break;
+        }
+    }
+
+    return message;
+}
+
+otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority)
+{
+    otError  error = OT_ERROR_NONE;
+    Message *message;
+
+    VerifyOrExit((message = FindFragmentPriorityMessage(aFragmentHeader)) != NULL, error = OT_ERROR_NOT_FOUND);
+    aPriority = message->GetPriority();
+
+exit:
+    return error;
+}
+
+void MeshForwarder::UpdateFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader,
+                                                  uint8_t                 aFragmentLength,
+                                                  uint8_t                 aPriority)
+{
+    Message *message;
+
+    if (aFragmentHeader.GetDatagramOffset() == 0)
+    {
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, aPriority)) != NULL);
+
+        message->SetDatagramTag(aFragmentHeader.GetDatagramTag());
+        message->SetTimeout(kReassemblyTimeout);
+        mFragmentPriorityQueue.Enqueue(*message);
+
+        if (!mUpdateTimer.IsRunning())
+        {
+            mUpdateTimer.Start(kStateUpdatePeriod);
+        }
+    }
+    else
+    {
+        VerifyOrExit((message = FindFragmentPriorityMessage(aFragmentHeader)) != NULL);
+
+        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
+        {
+            mFragmentPriorityQueue.Dequeue(*message);
+            message->Free();
+        }
+    }
+
+exit:
+    return;
+}
+#endif // #if OPENTHREAD_FTD
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 

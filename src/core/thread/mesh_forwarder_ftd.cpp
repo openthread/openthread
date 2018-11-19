@@ -960,6 +960,8 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
+        uint8_t priority = kDefaultMsgPriority;
+
         netif.GetMle().ResolveRoutingLoops(aMacSource.GetShort(), meshDest.GetShort());
 
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
@@ -967,7 +969,8 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0)) != NULL,
+        GetForwardFramePriority(aFrame, aFrameLength, meshDest, meshSource, priority);
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
@@ -1018,6 +1021,44 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 
 exit:
     return;
+}
+
+otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
+                                               uint8_t             aFrameLength,
+                                               const Mac::Address &aMacDest,
+                                               const Mac::Address &aMacSource,
+                                               uint8_t &           aPriority)
+{
+    otError                error = OT_ERROR_NONE;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
+
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+
+        if (fragmentHeader.GetDatagramOffset() == 0)
+        {
+            // Get priority from Ipv6 header or UDP destination port directly
+            SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+        }
+        else
+        {
+            // Get priority from the pre-buffered message
+            SuccessOrExit(error = GetFragmentPriority(fragmentHeader, aPriority));
+        }
+
+        UpdateFragmentPriorityMessage(fragmentHeader, aFrameLength, aPriority);
+    }
+    else
+    {
+        // Get priority from Ipv6 header or UDP destination port directly
+        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+    }
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_ENABLE_SERVICE

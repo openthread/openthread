@@ -227,6 +227,14 @@ public:
     const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 
     /**
+     * This method returns a reference to the fragment priority queue.
+     *
+     * @returns  A reference to the fragment priority queue.
+     *
+     */
+    const MessageQueue &GetFragmentPriorityQueue(void) const { return mFragmentPriorityQueue; }
+
+    /**
      * This method returns a reference to the source match controller.
      *
      * @returns  A reference to the source match controller.
@@ -239,6 +247,11 @@ private:
     enum
     {
         kStateUpdatePeriod = 1000, ///< State update period in milliseconds.
+    };
+
+    enum
+    {
+        kDefaultMsgPriority = Message::kPriorityNormal, ///< Default message priority.
     };
 
     enum
@@ -278,6 +291,7 @@ private:
                          const Mac::Address &aMeshDest);
 
     otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  SkipFragmentHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint8_t             aFrameLength,
                                  const Mac::Address &aMacSource,
@@ -292,6 +306,7 @@ private:
                           Ip6::Header &       aIp6Header);
     otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    otError  GetFragmentHeader(const uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader);
     Message *GetDirectTransmission(void);
     otError  GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
@@ -320,6 +335,7 @@ private:
     otError  UpdateIp6Route(Message &aMessage);
     otError  UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError  UpdateMeshRoute(Message &aMessage);
+    void     UpdateTimeout(MessageQueue &aQueue);
     otError  HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void     ClearReassemblyList(void);
     otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
@@ -333,16 +349,22 @@ private:
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);
-    static void HandleReassemblyTimer(Timer &aTimer);
-    void        HandleReassemblyTimer(void);
+    static void HandleUpdateTimer(Timer &aTimer);
+    void        HandleUpdateTimer(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void        ScheduleTransmissionTask(void);
 
-    otError GetFramePriority(uint8_t *           aFrame,
+    otError GetFramePriority(const uint8_t *     aFrame,
                              uint8_t             aFrameLength,
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,
                              uint8_t &           aPriority);
+    otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority);
+    otError GetForwardFramePriority(const uint8_t *     aFrame,
+                                    uint8_t             aFrameLength,
+                                    const Mac::Address &aMacDest,
+                                    const Mac::Address &aMacSource,
+                                    uint8_t &           aPriority);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
@@ -359,6 +381,12 @@ private:
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
+#if OPENTHREAD_FTD
+    Message *FindFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader);
+    void     UpdateFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader,
+                                           uint8_t                 aFragmentLength,
+                                           uint8_t                 aPriority);
+#endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
     const char *MessageActionToString(MessageAction aAction, otError aError);
@@ -409,7 +437,7 @@ private:
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
     TimerMilli mDiscoverTimer;
-    TimerMilli mReassemblyTimer;
+    TimerMilli mUpdateTimer;
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
@@ -441,6 +469,7 @@ private:
     otIpCounters mIpCounters;
 
 #if OPENTHREAD_FTD
+    MessageQueue          mFragmentPriorityQueue;
     MessageQueue          mResolvingQueue;
     SourceMatchController mSourceMatchController;
     uint32_t              mSendMessageFrameCounter;
