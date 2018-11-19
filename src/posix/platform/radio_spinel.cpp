@@ -670,24 +670,16 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
 {
     int sockFd = mHdlcInterface.GetSocket();
 
-    if ((mState != OT_RADIO_STATE_TRANSMIT || mTxState == kSent))
-    {
-        FD_SET(sockFd, &aReadFdSet);
+    FD_SET(sockFd, &aReadFdSet);
 
-        if (aMaxFd < sockFd)
-        {
-            aMaxFd = sockFd;
-        }
+    if (aMaxFd < sockFd)
+    {
+        aMaxFd = sockFd;
     }
 
     if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kIdle)
     {
         FD_SET(sockFd, &aWriteFdSet);
-
-        if (aMaxFd < sockFd)
-        {
-            aMaxFd = sockFd;
-        }
     }
 
     if (!mFrameQueue.IsEmpty() || (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone))
