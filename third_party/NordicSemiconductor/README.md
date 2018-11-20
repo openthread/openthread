@@ -10,3 +10,6 @@ Directory consists of following folders:
  - /nrfx         - Standalone drivers for peripherals present in Nordic SoCs (https://github.com/NordicSemiconductor/nrfx)
  - /segger_rtt   - Library for the RTT communication
  - /softdevice   - SoftDevice s140 headers
+
+ The following changes comparing to the nRF5 SDK 15.2 have been incorporated:
+- modified nrf_log_ctrl.h file in order to remove unused backend logging functions

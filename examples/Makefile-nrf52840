@@ -64,10 +64,6 @@ else
 configure_OPTIONS              += --with-ncp-bus=uart
 endif
 
-ifeq ($(BOOTLOADER),1)
-configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
-endif
-
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
@@ -102,6 +98,11 @@ endif
 
 ifeq ($(USB),1)
 COMMONCFLAGS += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
+endif
+
+ifeq ($(BOOTLOADER),1)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
+COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
 endif
 
 ifeq ($(DISABLE_CC310), 1)

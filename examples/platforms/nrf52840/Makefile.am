@@ -176,6 +176,8 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.c                             \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.c                      \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_serial_num.c                       \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/app_usbd_nrf_dfu_trigger.c                  \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/usb/nrf_dfu_trigger_usb.c                       \
     @top_builddir@/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c            \
     @top_builddir@/third_party/NordicSemiconductor/libraries/utf_converter/utf.c                             \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_clock.c                             \
@@ -253,6 +255,8 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_internal.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_types.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log.h                                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_ctrl.h                                  \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_log_ctrl_internal.h                         \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_section.h                                   \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_config.h                                   \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_glue.h                                     \
@@ -319,6 +323,9 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_string_desc.h                         \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_types.h                               \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_nrf_dfu_trigger.h                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_nrf_dfu_trigger_types.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_nrf_dfu_trigger_internal.h            \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_desc.h                  \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/app_usbd_cdc_types.h                 \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/class/cdc/acm/app_usbd_cdc_acm_internal.h      \
