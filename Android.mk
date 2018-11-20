@@ -217,6 +217,8 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/ecp.c                  \
     $(NULL)
 
+include $(OT_EXTRAL_BUILD_CONFIG)
+
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -230,11 +232,13 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/cli                                   \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
@@ -258,6 +262,8 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
+include $(OT_EXTRAL_BUILD_CONFIG)
+
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
 
@@ -272,11 +278,13 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
@@ -300,6 +308,8 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_uart.cpp                      \
     src/posix/main.c                          \
     $(NULL)
+
+include $(OT_EXTRAL_BUILD_CONFIG)
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
