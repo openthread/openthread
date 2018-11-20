@@ -118,7 +118,15 @@ public:
      * @param[in]  aLifetime  The remaining lifetime of the fragment priority entry.
      *
      */
-    void SetLifetime(uint8_t aLifetime) { mLifetime = (aLifetime > kMaxLifeTime) ? kMaxLifeTime : aLifetime; }
+    void SetLifetime(uint8_t aLifetime)
+    {
+        if (aLifetime > kMaxLifeTime)
+        {
+            aLifetime = kMaxLifeTime;
+        }
+
+        mLifetime = aLifetime;
+    }
 
 private:
     enum
