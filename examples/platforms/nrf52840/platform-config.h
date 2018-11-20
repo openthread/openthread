@@ -425,7 +425,7 @@
  * @def The USB interface to use for CDC ACM COMM.
  *
  * According to the USB Specification, interface numbers cannot have gaps. Tailor this value to adhere to this
- * limitation. Takes values between 0-255
+ * limitation. Takes values between 0-255.
  */
 #ifndef USB_CDC_ACM_COMM_INTERFACE
 #define USB_CDC_ACM_COMM_INTERFACE 1
@@ -435,7 +435,7 @@
  * @def The USB interface to use for CDC ACM DATA.
  *
  * According to the USB Specification, interface numbers cannot have gaps. Tailor this value to adhere to this
- * limitation. Takes values between 0-255
+ * limitation. Takes values between 0-255.
  */
 #ifndef USB_CDC_ACM_DATA_INTERFACE
 #define USB_CDC_ACM_DATA_INTERFACE 2
@@ -537,4 +537,5 @@
 #define NRF_802154_TX_STARTED_NOTIFY_ENABLED 1
 #endif
 #endif
+
 #endif // PLATFORM_CONFIG_H_
