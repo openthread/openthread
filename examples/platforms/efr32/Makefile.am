@@ -38,9 +38,7 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-BOARD                                        = BRD4170A
-
-EFR32_BOARD_DIR                              = $(shell echo $(BOARD) | tr A-Z a-z)
+EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.3
 
@@ -49,6 +47,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -D__STARTUP_CLEAR_BSS                                                       \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
+    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_BOARD_DIR)                 \
     -I$(top_srcdir)/src/core                                                    \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
@@ -75,11 +74,6 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -Wno-unused-parameter                                                       \
     $(NULL)
 
-BOARD_SOURCES                                                                 = \
-    $(EFR32_BOARD_DIR)/band_config.c                                            \
-    $(EFR32_BOARD_DIR)/rail_config.c                                            \
-    $(NULL)
-
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
@@ -95,6 +89,8 @@ PLATFORM_SOURCES                                                              = 
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
+    @EFR32_BOARD_DIR@/band_config.c                                                                                               \
+    @EFR32_BOARD_DIR@/rail_config.c                                                                                               \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_bcc.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_init.c                                     \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_stk.c                                      \
@@ -129,15 +125,12 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     $(NULL)
 
 noinst_HEADERS                                                                = \
-    $(EFR32_BOARD_DIR)/band_config.h                                            \
-    $(EFR32_BOARD_DIR)/rail_config.h                                            \
     platform-efr32.h                                                            \
     platform-band.h                                                             \
     $(NULL)
 
 libopenthread_efr32_a_SOURCES                                                 = \
     $(PLATFORM_SOURCES)                                                         \
-    $(BOARD_SOURCES)                                                            \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
