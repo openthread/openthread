@@ -91,6 +91,10 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     mIpCounters.mRxSuccess = 0;
     mIpCounters.mTxFailure = 0;
     mIpCounters.mRxFailure = 0;
+
+#if OPENTHREAD_FTD
+    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
+#endif
 }
 
 otError MeshForwarder::Start(void)
@@ -135,11 +139,7 @@ otError MeshForwarder::Stop(void)
     }
 
 #if OPENTHREAD_FTD
-    while ((message = mFragmentPriorityQueue.GetHead()) != NULL)
-    {
-        mFragmentPriorityQueue.Dequeue(*message);
-        message->Free();
-    }
+    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
 #endif
 
     mEnabled     = false;
@@ -490,9 +490,7 @@ otError MeshForwarder::SkipFragmentHeader(const uint8_t *&aFrame, uint8_t &aFram
     otError                error = OT_ERROR_NONE;
     Lowpan::FragmentHeader fragmentHeader;
 
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader());
-
-    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
+    SuccessOrExit(error = GetFragmentHeader(aFrame, aFrameLength, fragmentHeader));
     aFrame += fragmentHeader.GetHeaderLength();
     aFrameLength -= fragmentHeader.GetHeaderLength();
 
@@ -1476,38 +1474,40 @@ void MeshForwarder::HandleUpdateTimer(Timer &aTimer)
 
 void MeshForwarder::HandleUpdateTimer(void)
 {
-    UpdateTimeout(mReassemblyList);
+    UpdateReassemblyList();
 
 #if OPENTHREAD_FTD
-    UpdateTimeout(mFragmentPriorityQueue);
+    UpdateFragmentLifetime();
 #endif
 }
 
-void MeshForwarder::UpdateTimeout(MessageQueue &aQueue)
+void MeshForwarder::UpdateReassemblyList(void)
 {
-    for (Message *message = aQueue.GetHead(); message; message = message->GetNext())
+    Message *next = NULL;
+
+    for (Message *message = mReassemblyList.GetHead(); message; message = next)
     {
+        next = message->GetNext();
+
         if (message->GetTimeout() > 0)
         {
             message->SetTimeout(message->GetTimeout() - 1);
         }
         else
         {
-            if (&aQueue == &mReassemblyList)
+            mReassemblyList.Dequeue(*message);
+
+            LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
+            if (message->GetType() == Message::kTypeIp6)
             {
-                LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
-                if (message->GetType() == Message::kTypeIp6)
-                {
-                    mIpCounters.mRxFailure++;
-                }
+                mIpCounters.mRxFailure++;
             }
 
-            aQueue.Dequeue(*message);
             message->Free();
         }
     }
 
-    if ((aQueue.GetHead() != NULL) && (!mUpdateTimer.IsRunning()))
+    if ((mReassemblyList.GetHead() != NULL) && (!mUpdateTimer.IsRunning()))
     {
         mUpdateTimer.Start(kStateUpdatePeriod);
     }
@@ -1623,69 +1623,6 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
 exit:
     return error;
 }
-
-#if OPENTHREAD_FTD
-Message *MeshForwarder::FindFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader)
-{
-    Message *message;
-
-    for (message = mFragmentPriorityQueue.GetHead(); message; message = message->GetNext())
-    {
-        if (message->GetDatagramTag() == aFragmentHeader.GetDatagramTag())
-        {
-            break;
-        }
-    }
-
-    return message;
-}
-
-otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority)
-{
-    otError  error = OT_ERROR_NONE;
-    Message *message;
-
-    VerifyOrExit((message = FindFragmentPriorityMessage(aFragmentHeader)) != NULL, error = OT_ERROR_NOT_FOUND);
-    aPriority = message->GetPriority();
-
-exit:
-    return error;
-}
-
-void MeshForwarder::UpdateFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader,
-                                                  uint8_t                 aFragmentLength,
-                                                  uint8_t                 aPriority)
-{
-    Message *message;
-
-    if (aFragmentHeader.GetDatagramOffset() == 0)
-    {
-        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, aPriority)) != NULL);
-
-        message->SetDatagramTag(aFragmentHeader.GetDatagramTag());
-        message->SetTimeout(kReassemblyTimeout);
-        mFragmentPriorityQueue.Enqueue(*message);
-
-        if (!mUpdateTimer.IsRunning())
-        {
-            mUpdateTimer.Start(kStateUpdatePeriod);
-        }
-    }
-    else
-    {
-        VerifyOrExit((message = FindFragmentPriorityMessage(aFragmentHeader)) != NULL);
-
-        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
-        {
-            mFragmentPriorityQueue.Dequeue(*message);
-            message->Free();
-        }
-    }
-
-exit:
-    return;
-}
-#endif // #if OPENTHREAD_FTD
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 

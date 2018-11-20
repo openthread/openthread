@@ -181,13 +181,9 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 #if OPENTHREAD_FTD
     instance.GetThreadNetif().GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
                                                                              aBufferInfo->mArpBuffers);
-    instance.GetThreadNetif().GetMeshForwarder().GetFragmentPriorityQueue().GetInfo(
-        aBufferInfo->mFragmentPriorityMessages, aBufferInfo->mFragmentPriorityBuffers);
 #else
-    aBufferInfo->mArpMessages              = 0;
-    aBufferInfo->mArpBuffers               = 0;
-    aBufferInfo->mFragmentPriorityMessages = 0;
-    aBufferInfo->mFragmentPriorityBuffers  = 0;
+    aBufferInfo->mArpMessages             = 0;
+    aBufferInfo->mArpBuffers              = 0;
 #endif
 
     instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
@@ -210,8 +206,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapSecureMessages += messages;
     aBufferInfo->mCoapSecureBuffers += buffers;
 #else
-    aBufferInfo->mCoapSecureMessages       = 0;
-    aBufferInfo->mCoapSecureBuffers        = 0;
+    aBufferInfo->mCoapSecureMessages      = 0;
+    aBufferInfo->mCoapSecureBuffers       = 0;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -221,8 +217,8 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mApplicationCoapMessages += messages;
     aBufferInfo->mApplicationCoapBuffers += buffers;
 #else
-    aBufferInfo->mApplicationCoapMessages  = 0;
-    aBufferInfo->mApplicationCoapBuffers   = 0;
+    aBufferInfo->mApplicationCoapMessages = 0;
+    aBufferInfo->mApplicationCoapBuffers  = 0;
 #endif
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

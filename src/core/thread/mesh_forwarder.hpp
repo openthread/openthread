@@ -65,6 +65,73 @@ enum
  */
 
 /**
+ * This class reprents an IPv6 fragmentation priority entry
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class FragmentEntry
+{
+public:
+    /**
+     * This method returns the fragmentation datagram tag value.
+     *
+     * @returns The fragmentation datagram tag value.
+     *
+     */
+    uint16_t GetDatagramTag() { return mDatagramTag; }
+
+    /**
+     * This method sets the fragmentation datagram tag value.
+     *
+     * @param[in]  aDatagramTag  The fragmentation datagram tag value.
+     *
+     */
+    void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
+
+    /**
+     * This method returns the fragmentation priority value.
+     *
+     * @returns The fragmentation priority value.
+     *
+     */
+    uint8_t GetPriority() { return mPriority; }
+
+    /**
+     * This method sets the fragmentation priotity value.
+     *
+     * @param[in]  aPriority  The fragmentation priority value.
+     *
+     */
+    void SetPriority(uint8_t aPriority) { mPriority = aPriority; }
+
+    /**
+     * This method returns the Fragment Priority entry's remaining lifetime.
+     *
+     * @returns The Fragment Priority entry's remaining lifetime.
+     *
+     */
+    uint8_t GetLifetime() { return mLifetime; }
+
+    /**
+     * This method sets the remaining lifetime of the fragment priority entry.
+     *
+     * @param[in]  aLifetime  The remaining lifetime of the fragment priority entry.
+     *
+     */
+    void SetLifetime(uint8_t aLifetime) { mLifetime = (aLifetime > kMaxLifeTime) ? kMaxLifeTime : aLifetime; }
+
+private:
+    enum
+    {
+        kMaxLifeTime = 31, ///< The maximum lifetime of the entry, in seconds.
+    };
+
+    uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
+    uint8_t  mPriority : 2; ///< The priority level of the first fragment.
+    uint8_t  mLifetime : 5; ///< The lifetime of the entry, in seconds. 0 means the entry is invalid.
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements mesh forwarding within Thread.
  *
  */
@@ -227,14 +294,6 @@ public:
     const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 
     /**
-     * This method returns a reference to the fragment priority queue.
-     *
-     * @returns  A reference to the fragment priority queue.
-     *
-     */
-    const MessageQueue &GetFragmentPriorityQueue(void) const { return mFragmentPriorityQueue; }
-
-    /**
      * This method returns a reference to the source match controller.
      *
      * @returns  A reference to the source match controller.
@@ -246,16 +305,18 @@ public:
 private:
     enum
     {
-        kStateUpdatePeriod = 1000, ///< State update period in milliseconds.
-    };
-
-    enum
-    {
+        kStateUpdatePeriod  = 1000,                     ///< State update period in milliseconds.
         kDefaultMsgPriority = Message::kPriorityNormal, ///< Default message priority.
     };
 
     enum
     {
+        /**
+         * The number of fragment priority entries.
+         *
+         */
+        kNumFragmentEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+
         /**
          * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
          * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
@@ -328,19 +389,22 @@ private:
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
     void     HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
-    otError  SendPoll(Message &aMessage, Mac::Frame &aFrame);
-    otError  SendMesh(Message &aMessage, Mac::Frame &aFrame);
-    otError  SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    otError  SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
-    otError  UpdateIp6Route(Message &aMessage);
-    otError  UpdateIp6RouteFtd(Ip6::Header &ip6Header);
-    otError  UpdateMeshRoute(Message &aMessage);
-    void     UpdateTimeout(MessageQueue &aQueue);
-    otError  HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
-    void     ClearReassemblyList(void);
-    otError  RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
-    void     RemoveMessage(Message &aMessage);
-    void     HandleDiscoverComplete(void);
+
+    otError SendPoll(Message &aMessage, Mac::Frame &aFrame);
+    otError SendMesh(Message &aMessage, Mac::Frame &aFrame);
+    otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
+    otError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
+    otError UpdateIp6Route(Message &aMessage);
+    otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
+    otError UpdateMeshRoute(Message &aMessage);
+    void    UpdateReassemblyList(void);
+    void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t aFragmentLength, uint8_t aPriority);
+    void    UpdateFragmentLifetime(void);
+    otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
+    void    ClearReassemblyList(void);
+    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
+    void    RemoveMessage(Message &aMessage);
+    void    HandleDiscoverComplete(void);
 
     void    HandleReceivedFrame(Mac::Frame &aFrame);
     otError HandleFrameRequest(Mac::Frame &aFrame);
@@ -366,6 +430,8 @@ private:
                                     const Mac::Address &aMacSource,
                                     uint8_t &           aPriority);
 
+    FragmentEntry *GetFragmentEntry(uint16_t aTag, bool aEmpty);
+
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
     void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, otError aError);
@@ -381,12 +447,6 @@ private:
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
-#if OPENTHREAD_FTD
-    Message *FindFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader);
-    void     UpdateFragmentPriorityMessage(Lowpan::FragmentHeader &aFragmentHeader,
-                                           uint8_t                 aFragmentLength,
-                                           uint8_t                 aPriority);
-#endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
     const char *MessageActionToString(MessageAction aAction, otError aError);
@@ -469,7 +529,7 @@ private:
     otIpCounters mIpCounters;
 
 #if OPENTHREAD_FTD
-    MessageQueue          mFragmentPriorityQueue;
+    FragmentEntry         mFragmentEntries[kNumFragmentEntries];
     MessageQueue          mResolvingQueue;
     SourceMatchController mSourceMatchController;
     uint32_t              mSendMessageFrameCounter;

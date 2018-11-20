@@ -1023,6 +1023,91 @@ exit:
     return;
 }
 
+void MeshForwarder::UpdateFragmentLifetime(void)
+{
+    bool shouldRun = false;
+
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
+    {
+        if (mFragmentEntries[i].GetLifetime() != 0)
+        {
+            mFragmentEntries[i].SetLifetime(mFragmentEntries[i].GetLifetime() - 1);
+
+            if (mFragmentEntries[i].GetLifetime() != 0)
+            {
+                shouldRun = true;
+            }
+        }
+    }
+
+    if (shouldRun && !mUpdateTimer.IsRunning())
+    {
+        mUpdateTimer.Start(kStateUpdatePeriod);
+    }
+}
+
+void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                           uint8_t                 aFragmentLength,
+                                           uint8_t                 aPriority)
+{
+    FragmentEntry *entry;
+
+    if (aFragmentHeader.GetDatagramOffset() == 0)
+    {
+        VerifyOrExit((entry = GetFragmentEntry(0, true)) != NULL);
+
+        entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
+        entry->SetPriority(aPriority);
+        entry->SetLifetime(kReassemblyTimeout);
+
+        if (!mUpdateTimer.IsRunning())
+        {
+            mUpdateTimer.Start(kStateUpdatePeriod);
+        }
+    }
+    else
+    {
+        VerifyOrExit((entry = GetFragmentEntry(aFragmentHeader.GetDatagramTag(), false)) != NULL);
+
+        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
+        {
+            entry->SetLifetime(0);
+        }
+    }
+
+exit:
+    return;
+}
+
+FragmentEntry *MeshForwarder::GetFragmentEntry(uint16_t aTag, bool aEmpty)
+{
+    size_t i;
+
+    for (i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
+    {
+        if ((aEmpty && mFragmentEntries[i].GetLifetime() == 0) ||
+            ((!aEmpty && mFragmentEntries[i].GetDatagramTag() == aTag) && (mFragmentEntries[i].GetLifetime() != 0)))
+        {
+            break;
+        }
+    }
+
+    return (i >= OT_ARRAY_LENGTH(mFragmentEntries)) ? NULL : &mFragmentEntries[i];
+}
+
+otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority)
+{
+    otError        error = OT_ERROR_NONE;
+    FragmentEntry *entry;
+
+    VerifyOrExit((entry = GetFragmentEntry(aFragmentHeader.GetDatagramTag(), false)) != NULL,
+                 error = OT_ERROR_NOT_FOUND);
+    aPriority = entry->GetPriority();
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
                                                uint8_t             aFrameLength,
                                                const Mac::Address &aMacDest,
@@ -1045,11 +1130,11 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
         }
         else
         {
-            // Get priority from the pre-buffered message
+            // Get priority from the pre-buffered info
             SuccessOrExit(error = GetFragmentPriority(fragmentHeader, aPriority));
         }
 
-        UpdateFragmentPriorityMessage(fragmentHeader, aFrameLength, aPriority);
+        UpdateFragmentPriority(fragmentHeader, aFrameLength, aPriority);
     }
     else
     {
