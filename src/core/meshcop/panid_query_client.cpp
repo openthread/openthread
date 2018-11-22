@@ -89,9 +89,8 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     panId.Init();
     panId.SetPanId(aPanId);
@@ -130,10 +129,10 @@ void PanIdQueryClient::HandleConflict(void *               aContext,
 
 void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &           netif = GetNetif();
-    MeshCoP::PanIdTlv       panId;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    ThreadNetif &     netif = GetNetif();
+    MeshCoP::PanIdTlv panId;
+    Ip6::MessageInfo  responseInfo(aMessageInfo);
+    uint32_t          mask;
 
     VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -142,12 +141,11 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid());
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && (channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
 
     if (mCallback != NULL)
     {
-        mCallback(panId.GetPanId(), channelMask.GetMask(), mContext);
+        mCallback(panId.GetPanId(), mask, mContext);
     }
 
     SuccessOrExit(netif.GetCoap().SendEmptyAck(aHeader, responseInfo));

@@ -36,6 +36,8 @@
 #ifndef OPENTHREAD_PLATFORM_RADIO_H_
 #define OPENTHREAD_PLATFORM_RADIO_H_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
 #include <openthread/error.h>
@@ -67,19 +69,68 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_FRAME_MAX_SIZE     = 127,                            ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    OT_RADIO_CHANNEL_PAGE       = 0,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_MIN        = 11,                             ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_MAX        = 26,                             ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SUPPORTED_CHANNELS = 0xffff << OT_RADIO_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SYMBOLS_PER_OCTET  = 2,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_BIT_RATE           = 250000,                         ///< 2.4 GHz IEEE 802.15.4 (bits per second)
+    OT_RADIO_FRAME_MAX_SIZE    = 127,    ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_SYMBOLS_PER_OCTET = 2,      ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
+    OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
 
-    OT_RADIO_BITS_PER_OCTET = 8, ///< Number of bits per octet
-    OT_RADIO_SYMBOL_TIME    = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
-
+    OT_RADIO_SYMBOL_TIME  = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
     OT_RADIO_LQI_NONE     = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID = 127, ///< Invalid or unknown RSSI value
+};
+
+/**
+ * This enumeration defines the channel page.
+ *
+ */
+enum
+{
+    OT_RADIO_CHANNEL_PAGE_0      = 0,                               ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_0_MASK = (1U << OT_RADIO_CHANNEL_PAGE_0), ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_2      = 2,                               ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_2_MASK = (1U << OT_RADIO_CHANNEL_PAGE_2), ///< 915 MHz IEEE 802.15.4-2006
+};
+
+/**
+ * This enumeration defines the frequency band channel range.
+ *
+ */
+enum
+{
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN  = 1,                                           ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX  = 10,                                          ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK = 0x3ff << OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,  ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN  = 11,                                          ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX  = 26,                                          ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK = 0xffff << OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
+};
+
+/**
+ * This enumeration defines the channel related parameters.
+ *
+ */
+enum
+{
+#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK) && \
+    (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
+    OT_RADIO_NUM_PAGES               = 2,
+    OT_RADIO_SUPPORTED_CHANNELS      = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK | OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK,
+    OT_RADIO_CHANNEL_MIN             = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
+    OT_RADIO_CHANNEL_MAX             = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+    OT_RADIO_SUPPORTED_CHANNEL_PAGES = OT_RADIO_CHANNEL_PAGE_0_MASK | OT_RADIO_CHANNEL_PAGE_2_MASK,
+#elif (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+    OT_RADIO_NUM_PAGES               = 1,
+    OT_RADIO_SUPPORTED_CHANNELS      = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK,
+    OT_RADIO_CHANNEL_MIN             = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
+    OT_RADIO_CHANNEL_MAX             = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX,
+    OT_RADIO_SUPPORTED_CHANNEL_PAGES = OT_RADIO_CHANNEL_PAGE_2_MASK,
+#else
+    OT_RADIO_NUM_PAGES               = 1,
+    OT_RADIO_SUPPORTED_CHANNELS      = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK,
+    OT_RADIO_CHANNEL_MIN             = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    OT_RADIO_CHANNEL_MAX             = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+    OT_RADIO_SUPPORTED_CHANNEL_PAGES = OT_RADIO_CHANNEL_PAGE_0_MASK,
+#endif
 };
 
 /**

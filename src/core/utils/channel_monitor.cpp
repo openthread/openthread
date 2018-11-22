@@ -37,6 +37,7 @@
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
@@ -44,10 +45,18 @@ namespace ot {
 namespace Utils {
 
 const uint32_t ChannelMonitor::mScanChannelMasks[kNumChannelMasks] = {
+#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+    OT_CHANNEL_1_MASK | OT_CHANNEL_5_MASK | OT_CHANNEL_9_MASK,
+    OT_CHANNEL_2_MASK | OT_CHANNEL_6_MASK | OT_CHANNEL_10_MASK,
+    OT_CHANNEL_3_MASK | OT_CHANNEL_7_MASK,
+    OT_CHANNEL_4_MASK | OT_CHANNEL_8_MASK,
+#endif
+#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
     OT_CHANNEL_11_MASK | OT_CHANNEL_15_MASK | OT_CHANNEL_19_MASK | OT_CHANNEL_23_MASK,
     OT_CHANNEL_12_MASK | OT_CHANNEL_16_MASK | OT_CHANNEL_20_MASK | OT_CHANNEL_24_MASK,
     OT_CHANNEL_13_MASK | OT_CHANNEL_17_MASK | OT_CHANNEL_21_MASK | OT_CHANNEL_25_MASK,
     OT_CHANNEL_14_MASK | OT_CHANNEL_18_MASK | OT_CHANNEL_22_MASK | OT_CHANNEL_26_MASK,
+#endif
 };
 
 ChannelMonitor::ChannelMonitor(Instance &aInstance)
@@ -181,13 +190,14 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 void ChannelMonitor::LogResults(void)
 {
-    otLogInfoUtil(
-        "ChannelMonitor: %u [%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
-        mSampleCount, mChannelOccupancy[0] >> 8, mChannelOccupancy[1] >> 8, mChannelOccupancy[2] >> 8,
-        mChannelOccupancy[3] >> 8, mChannelOccupancy[4] >> 8, mChannelOccupancy[5] >> 8, mChannelOccupancy[6] >> 8,
-        mChannelOccupancy[7] >> 8, mChannelOccupancy[8] >> 8, mChannelOccupancy[9] >> 8, mChannelOccupancy[10] >> 8,
-        mChannelOccupancy[11] >> 8, mChannelOccupancy[12] >> 8, mChannelOccupancy[13] >> 8, mChannelOccupancy[14] >> 8,
-        mChannelOccupancy[15] >> 8);
+    String<kStringSize> logString;
+
+    for (size_t i = 0; i < kNumChannels; i++)
+    {
+        logString.Append("%02x ", mChannelOccupancy[i] >> 8);
+    }
+
+    otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());
 }
 
 Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy)

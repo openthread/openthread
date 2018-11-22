@@ -72,19 +72,18 @@ void PanIdQueryServer::HandleQuery(void *               aContext,
 
 void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::PanIdTlv       panId;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    MeshCoP::PanIdTlv panId;
+    Ip6::MessageInfo  responseInfo(aMessageInfo);
+    uint32_t          mask;
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid());
 
-    mChannelMask  = channelMask.GetMask();
+    mChannelMask  = mask;
     mCommissioner = aMessageInfo.GetPeerAddr();
     mPanId        = panId.GetPanId();
     mTimer.Start(kScanDelay);
@@ -141,9 +140,8 @@ otError PanIdQueryServer::SendConflict(void)
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(mChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(mChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     panId.Init();
     panId.SetPanId(mPanId);

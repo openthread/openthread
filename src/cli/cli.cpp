@@ -3312,7 +3312,7 @@ void Interpreter::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEner
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
-        mServer->OutputFormat("%d ", aEnergyList[i]);
+        mServer->OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
     mServer->OutputFormat("\r\n");

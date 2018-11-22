@@ -80,15 +80,14 @@ void AnnounceBeginServer::HandleRequest(void *               aContext,
 
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::ChannelMaskTlv channelMask;
-    MeshCoP::CountTlv       count;
-    MeshCoP::PeriodTlv      period;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    uint32_t           mask;
+    MeshCoP::CountTlv  count;
+    MeshCoP::PeriodTlv period;
+    Ip6::MessageInfo   responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && (channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
     VerifyOrExit(count.IsValid());
@@ -96,7 +95,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
     VerifyOrExit(period.IsValid());
 
-    SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
+    SendAnnounce(mask, count.GetCount(), period.GetPeriod());
 
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {

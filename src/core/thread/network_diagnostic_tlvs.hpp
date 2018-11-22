@@ -1404,7 +1404,7 @@ public:
     uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
-    uint8_t mChannelPages[1];
+    uint8_t mChannelPages[OT_RADIO_NUM_PAGES];
 } OT_TOOL_PACKED_END;
 
 /**

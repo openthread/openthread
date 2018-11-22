@@ -186,11 +186,17 @@ public:
 private:
     enum
     {
+#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK) && \
+    (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
+        kNumChannelMasks = 8,
+#else
+        kNumChannelMasks = 4,
+#endif
         kNumChannels       = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
-        kNumChannelMasks   = 4,
         kTimerInterval     = (kSampleInterval / kNumChannelMasks),
         kMaxJitterInterval = 4096,
         kMaxOccupancy      = 0xffff,
+        kStringSize        = 128,
     };
 
     static void HandleTimer(Timer &aTimer);
@@ -201,8 +207,8 @@ private:
 
     static const uint32_t mScanChannelMasks[kNumChannelMasks];
 
-    uint8_t    mChannelMaskIndex : 2;
-    uint32_t   mSampleCount : 30;
+    uint8_t    mChannelMaskIndex : 3;
+    uint32_t   mSampleCount : 29;
     uint16_t   mChannelOccupancy[kNumChannels];
     TimerMilli mTimer;
 };

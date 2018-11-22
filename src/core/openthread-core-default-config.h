@@ -1909,4 +1909,36 @@
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
 #define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
 #endif
+
+/** OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK
+ *
+ * This option enables OpenThread to support standard physical layer of Thread.
+ */
+#define OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK (1 << 0)
+
+/** OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK
+ *
+ * This option enables OpenThread to support OQPSK modulation in 915MHz frequency band. The physical layer
+ * parameters of this option are defined in section 6.1 and section 6.8 of IEEE802.15.4-2006.
+ */
+#define OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK (1 << 1)
+
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_SCHEME
+ *
+ * This setting configures the physical layer supported modulations and frequency bands.
+ *
+ * There are two options available:
+ * - @sa OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK
+ * - @sa OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK
+ *
+ * Note:
+ *     If the radio driver supports both 915Mhz and 2.4GHz band. OPENTHREAD_CONFIG_RADIO_SCHEME can be set to
+ *     (OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK | OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK) to enable
+ *     OpenThread to switch channel between 915MHz and 2.4GHz band.
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_SCHEME
+#define OPENTHREAD_CONFIG_RADIO_SCHEME OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK
+#endif
+
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

@@ -97,9 +97,8 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     count.Init();
     count.SetCount(aCount);
@@ -146,9 +145,9 @@ void EnergyScanClient::HandleReport(void *               aContext,
 
 void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &           netif = GetNetif();
-    MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    ThreadNetif &    netif = GetNetif();
+    Ip6::MessageInfo responseInfo(aMessageInfo);
+    uint32_t         mask;
 
     OT_TOOL_PACKED_BEGIN
     struct
@@ -161,15 +160,14 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
 
     otLogInfoMeshCoP("received energy scan report");
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
     VerifyOrExit(energyList.tlv.IsValid());
 
     if (mCallback != NULL)
     {
-        mCallback(channelMask.GetMask(), energyList.list, energyList.tlv.GetLength(), mContext);
+        mCallback(mask, energyList.list, energyList.tlv.GetLength(), mContext);
     }
 
     SuccessOrExit(netif.GetCoap().SendEmptyAck(aHeader, responseInfo));

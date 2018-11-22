@@ -82,8 +82,8 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     MeshCoP::CountTlv        count;
     MeshCoP::PeriodTlv       period;
     MeshCoP::ScanDurationTlv scanDuration;
-    MeshCoP::ChannelMaskTlv  channelMask;
     Ip6::MessageInfo         responseInfo(aMessageInfo);
+    uint32_t                 mask;
 
     VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST);
 
@@ -96,10 +96,9 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
     VerifyOrExit(scanDuration.IsValid());
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
 
-    mChannelMask        = channelMask.GetMask();
+    mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;
     mCount              = count.GetCount();
     mPeriod             = period.GetPeriod();
@@ -200,9 +199,8 @@ otError EnergyScanServer::SendReport(void)
                  error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(mChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(mChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     energyList.Init();
     energyList.SetLength(mScanResultsLength);
