@@ -368,7 +368,7 @@ public:
      * @returns TRUE if the radio is enabled, FALSE otherwise.
      *
      */
-    bool IsEnabled(void) const { return mState != OT_RADIO_STATE_DISABLED; }
+    bool IsEnabled(void) const { return mState != kStateDisabled; }
 
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
@@ -456,6 +456,16 @@ private:
         kMaxWaitTime       = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize = 128,  ///< Max size of version string.
         kCapsBufferSize    = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
+    };
+
+    enum State
+    {
+        kStateDisabled,        ///< Radio is disabled.
+        kStateSleep,           ///< Radio is sleep.
+        kStateReceive,         ///< Radio is in receive mode.
+        kStateTransmitPending, ///< Frame transmission requested, waiting to pass frame to radio.
+        kStateTransmitting,    ///< Frame passed to radio for transmission, waiting for done event from radio.
+        kStateTransmitDone,    ///< Radio indicated frame transmission is done.
     };
 
     otError CheckSpinelVersion(void);
@@ -595,15 +605,14 @@ private:
     otRadioCaps  mRadioCaps;
     uint8_t      mChannel;
     int8_t       mRxSensitivity;
-    uint8_t      mTxState;
     otError      mTxError;
     char         mVersion[kVersionStringSize];
 
-    otRadioState mState;
-    bool         mIsAckRequested : 1;    ///< Ack requested.
-    bool         mIsPromiscuous : 1;     ///< Promiscuous mode.
-    bool         mIsReady : 1;           ///< NCP ready.
-    bool         mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
+    State mState;
+    bool  mIsAckRequested : 1;    ///< Ack requested.
+    bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
+    bool  mIsReady : 1;           ///< NCP ready.
+    bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
 
 #if OPENTHREAD_ENABLE_DIAG
     bool   mDiagMode;
