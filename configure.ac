@@ -1340,6 +1340,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CERT_LOG], [test "${enable_cert_log}" = "yes"]
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CERT_LOG],[${OPENTHREAD_ENABLE_CERT_LOG}],[Define to 1 if you want to enable log for certification test])
 
 #
+# IP6 Flow Labels
+#
+
+AC_ARG_ENABLE(ip6_flow_labels,
+    [AS_HELP_STRING([--enable-ip6-flow-labels],[Enable IP6 Flow Labels support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ip6_flow_labels=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ip6_flow_labels} for --enable-ip6-flow-labels])
+            ;;
+        esac
+    ],
+    [enable_ip6_flow_labels=no])
+
+if test "$enable_ip6_flow_labels" = "yes"; then
+    OPENTHREAD_ENABLE_IP6_FLOW_LABELS=1
+else
+    OPENTHREAD_ENABLE_IP6_FLOW_LABELS=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_IP6_FLOW_LABELS)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_IP6_FLOW_LABELS], [test "${enable_ip6_flow_labels}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_IP6_FLOW_LABELS],[${OPENTHREAD_ENABLE_IP6_FLOW_LABELS}],[Define to 1 if you want to enable IP6 flow labels])
+
+#
 # DHCPv6 Client
 #
 
@@ -2055,6 +2085,7 @@ AC_MSG_NOTICE([
   OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Certification log support      : ${enable_cert_log}
+  OpenThread IP6 Flow Labels support        : ${enable_ip6_flow_labels}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}

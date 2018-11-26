@@ -2604,7 +2604,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     uint16_t          metaLen     = 0;
     otMessage *       message     = NULL;
     otError           error       = OT_ERROR_NONE;
-    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
+    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL, 0};
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
@@ -3202,7 +3202,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_ST
     uint16_t            sockPort;
     otMessage *         message;
     otError             error       = OT_ERROR_NONE;
-    otMessageSettings   msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
+    otMessageSettings   msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL, 0};
 
     message = otIp6NewMessage(mInstance, &msgSettings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);

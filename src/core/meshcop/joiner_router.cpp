@@ -210,7 +210,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     uint16_t           offset;
     uint16_t           length;
     Message *          message  = NULL;
-    otMessageSettings  settings = {false, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
+    otMessageSettings  settings = {false, static_cast<otMessagePriority>(kMeshCoPMessagePriority), 0};
     Ip6::MessageInfo   messageInfo;
 
     VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,

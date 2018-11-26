@@ -1094,7 +1094,7 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr,
 Message *Mle::NewMleMessage(void)
 {
     Message *         message;
-    otMessageSettings settings = {false, static_cast<otMessagePriority>(kMleMessagePriority)};
+    otMessageSettings settings = {false, static_cast<otMessagePriority>(kMleMessagePriority), 0};
 
     message = mSocket.NewMessage(0, &settings);
     VerifyOrExit(message != NULL);

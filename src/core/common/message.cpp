@@ -77,6 +77,7 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserved, uint8_t aPriority)
     message->SetType(aType);
     message->SetReserved(aReserved);
     message->SetLinkSecurityEnabled(true);
+    message->SetFlowLabel(0);
 
     SuccessOrExit(error = message->SetPriority(aPriority));
     SuccessOrExit(error = message->SetLength(0));
@@ -96,22 +97,26 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserved, const otMessageSett
     Message *message;
     bool     linkSecurityEnabled;
     uint8_t  priority;
+    uint32_t flowLabel;
 
     if (aSettings == NULL)
     {
         linkSecurityEnabled = true;
         priority            = OT_MESSAGE_PRIORITY_NORMAL;
+        flowLabel           = 0;
     }
     else
     {
         linkSecurityEnabled = aSettings->mLinkSecurityEnabled;
         priority            = aSettings->mPriority;
+        flowLabel           = aSettings->mFlowLabel;
     }
 
     message = New(aType, aReserved, priority);
     if (message)
     {
         message->SetLinkSecurityEnabled(linkSecurityEnabled);
+        message->SetFlowLabel(flowLabel);
     }
 
     return message;

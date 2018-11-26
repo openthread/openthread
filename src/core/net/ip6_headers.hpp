@@ -220,6 +220,30 @@ public:
     }
 
     /**
+     * This method returns the IPv6 Flow Label value.
+     *
+     * @returns The IPv6 Flow Label value.
+     *
+     */
+    uint32_t GetFlowLabel(void) const
+    {
+        return static_cast<uint8_t>((HostSwap32(mVersionClassFlow.m32[0]) & kFlowLabelMask) >> kFlowLabelOffset);
+    }
+
+    /**
+     * This method sets the IPv6 Flow Label value.
+     *
+     * @param[in]  aFlowLabel  The IPv6 Flow Label value.
+     *
+     */
+    void SetFlowLabel(uint32_t aFlowLabel)
+    {
+        uint32_t tmp = HostSwap32(mVersionClassFlow.m32[0]);
+        tmp = (tmp & static_cast<uint32_t>(~kFlowLabelMask)) | ((aFlowLabel << kFlowLabelOffset) & kFlowLabelMask);
+        mVersionClassFlow.m32[0] = HostSwap32(tmp);
+    }
+
+    /**
      * This method returns the IPv6 Payload Length value.
      *
      * @returns The IPv6 Payload Length value.
@@ -334,10 +358,12 @@ public:
 private:
     enum
     {
-        kVersion6    = 0x60,
-        kVersionMask = 0xf0,
-        kDscpOffset  = 22,
-        kDscpMask    = 0xfc00000,
+        kVersion6        = 0x60,
+        kVersionMask     = 0xf0,
+        kDscpOffset      = 22,
+        kDscpMask        = 0xfc00000,
+        kFlowLabelOffset = 0,
+        kFlowLabelMask   = 0x00fffff,
     };
 } OT_TOOL_PACKED_END;
 

@@ -453,6 +453,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     header.Init();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
+    header.SetFlowLabel(aMessage.GetFlowLabel());
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
     header.SetHopLimit(aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));

@@ -129,6 +129,7 @@
     <ClCompile Include="..\..\src\core\net\ip6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_address.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_filter.cpp" />
+    <ClCompile Include="..\..\src\core\net\ip6_flow_labels.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_headers.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_mpl.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="..\..\src\core\net\ip6.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6_address.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6_filter.hpp" />
+    <ClInclude Include="..\..\src\core\net\ip6_flow_labels.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6_mpl.hpp" />
     <ClInclude Include="..\..\src\core\net\ip6_routes.hpp" />
     <ClInclude Include="..\..\src\core\net\netif.hpp" />

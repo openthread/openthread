@@ -182,6 +182,7 @@ SOURCES_COMMON                      = \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
     net/ip6_filter.cpp                \
+    net/ip6_flow_labels.cpp           \
     net/ip6_headers.cpp               \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
@@ -346,6 +347,7 @@ HEADERS_COMMON                      = \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
     net/ip6_filter.hpp                \
+    net/ip6_flow_labels.hpp           \
     net/ip6_headers.hpp               \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \

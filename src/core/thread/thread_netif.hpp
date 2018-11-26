@@ -64,6 +64,7 @@
 #include "net/dhcp6_server.hpp"
 #include "net/dns_client.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/ip6_flow_labels.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
 #include "thread/address_resolver.hpp"
@@ -212,6 +213,16 @@ public:
      *
      */
     Ip6::Filter &GetIp6Filter(void) { return mIp6Filter; }
+
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+    /**
+     * This method returns a reference to the IPv6 flow label table object.
+     *
+     * @returns A reference to the IPv6 flow label table object.
+     *
+     */
+    Ip6::FlowLabels &GetIp6FlowLabels(void) { return mIp6FlowLabels; }
+#endif // OPENTHREAD_ENABLE_IP6_FLOW_LABELS
 
     /**
      * This method returns a reference to the key manager object.
@@ -462,6 +473,9 @@ private:
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     Sntp::Client mSntpClient;
 #endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+    Ip6::FlowLabels mIp6FlowLabels;
+#endif // OPENTHREAD_ENABLE_IP6_FLOW_LABELS
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter             mIp6Filter;

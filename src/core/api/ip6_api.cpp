@@ -248,6 +248,29 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
     return instance.GetThreadNetif().GetIp6Filter().GetUnsecurePorts(*aNumEntries);
 }
 
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+otError otIp6AddFlowLabel(otInstance *aInstance, uint32_t aFlowLabel)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetIp6FlowLabels().AddFlowLabel(aFlowLabel);
+}
+
+otError otIp6RemoveFlowLabel(otInstance *aInstance, uint32_t aFlowLabel, uint8_t aDelay)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetIp6FlowLabels().RemoveFlowLabel(aFlowLabel, aDelay);
+}
+
+otError otIp6GetNextFlowLabel(otInstance *aInstance, otIp6FlowLabelIterator *aIterator, uint32_t *aFlowLabel)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetIp6FlowLabels().GetNextFlowLabel(*aIterator, *aFlowLabel);
+}
+#endif
+
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
     return *static_cast<const Ip6::Address *>(aFirst) == *static_cast<const Ip6::Address *>(aSecond);

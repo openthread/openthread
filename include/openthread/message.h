@@ -107,6 +107,7 @@ typedef struct otMessageSettings
 {
     bool              mLinkSecurityEnabled; ///< TRUE if the message should be secured at Layer 2.
     otMessagePriority mPriority;            ///< The message priority level.
+    uint32_t          mFlowLabel;           ///< The flow label of IP6 packet.
 } otMessageSettings;
 
 /**

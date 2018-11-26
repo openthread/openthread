@@ -157,6 +157,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6.cpp                                    \
     src/core/net/ip6_address.cpp                            \
     src/core/net/ip6_filter.cpp                             \
+    src/core/net/ip6_flow_labels.cpp                        \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/ip6_routes.cpp                             \

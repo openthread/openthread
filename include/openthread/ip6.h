@@ -122,6 +122,10 @@ typedef struct otNetifMulticastAddress
     const struct otNetifMulticastAddress *mNext;    ///< A pointer to the next network interface multicast address.
 } otNetifMulticastAddress;
 
+#define OT_IP6_FLOW_LABEL_ITERATOR_INIT 0 ///< Initializer for otIp6FlowLabelIterator.
+
+typedef uint8_t otIp6FlowLabelIterator; ///< Used to iterate through IP6 Flow Label table.
+
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.
  *
@@ -547,6 +551,46 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance);
  *
  */
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries);
+
+/**
+ * This function adds a flow label to the flow label table.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aFlowLabel A flow label value.
+ *
+ * @retval OT_ERROR_NONE     The flow label was successfully added to the flow label table.
+ * @retval OT_ERROR_ALREADY  The flow label was already added.
+ * @retval OT_ERROR_NO_BUFS  The flow label table is full.
+ *
+ */
+otError otIp6AddFlowLabel(otInstance *aInstance, uint32_t aFlowLabel);
+
+/**
+ * This function removes a flow label from the flow label table.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aFlowLabel  A flow label value.
+ * @param[in]  aDelay      The delay to remove flow label (in seconds).
+ *
+ * @retval OT_ERROR_NONE       The flow label was successfully removed from the flow label table.
+ * @retval OT_ERROR_NOT_FOUND  The port was not found in the flow label table.
+ *
+ */
+otError otIp6RemoveFlowLabel(otInstance *aInstance, uint32_t aFlowLabel, uint8_t aDelay);
+
+/**
+ * This method gets an in-use IP6 flow label.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aIterator  A reference to the IP6 flow label iterator. To get the first in-use IP6
+ *                           flow label, it should be set to OT_IP6_FLOW_LABEL_ITERATOR_INIT.
+ * @param[out]    aFlowLabel A flow label value.
+ *
+ * @retval OT_ERROR_NONE       Successfully retrieved an in-use IP6 flow label.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent flow label exists.
+ *
+ */
+otError otIp6GetNextFlowLabel(otInstance *aInstance, otIp6FlowLabelIterator *aIterator, uint32_t *aFlowLabel);
 
 /**
  * Test if two IPv6 addresses are the same.

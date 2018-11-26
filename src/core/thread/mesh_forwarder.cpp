@@ -1590,6 +1590,14 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
     SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
                                               nextHeaderCompressed));
     aPriority = GetNetif().GetIp6().DscpToPriority(ip6Header.GetDscp());
+
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+    if (GetNetif().GetIp6FlowLabels().ContainsFlowLabel(ip6Header.GetFlowLabel()))
+    {
+        aPriority = Message::kPriorityVeryHigh;
+    }
+#endif
+
     VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp);
 
     aFrame += headerLength;

@@ -204,6 +204,9 @@
     <ClCompile Include="..\..\src\core\net\ip6_filter.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\net\ip6_flow_labels.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\net\ip6_headers.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
@@ -465,6 +468,9 @@
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\ip6_filter.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\net\ip6_flow_labels.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\ip6_mpl.hpp">

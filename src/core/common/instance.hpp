@@ -516,6 +516,13 @@ template <> inline Ip6::Ip6 &Instance::Get(void)
     return GetIp6();
 }
 
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+template <> inline Ip6::FlowLabels &Instance::Get(void)
+{
+    return GetThreadNetif().GetIp6FlowLabels();
+}
+#endif
+
 template <> inline Mac::Mac &Instance::Get(void)
 {
     return GetThreadNetif().GetMac();
@@ -606,7 +613,6 @@ template <> inline MeshCoP::Commissioner &Instance::Get(void)
     return GetThreadNetif().GetCommissioner();
 }
 #endif
-
 #if OPENTHREAD_ENABLE_JOINER
 template <> inline MeshCoP::Joiner &Instance::Get(void)
 {

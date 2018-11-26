@@ -64,6 +64,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     , mSntpClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+    , mIp6FlowLabels(aInstance)
+#endif // OPENTHREAD_ENABLE_IP6_FLOW_LABELS
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)

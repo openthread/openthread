@@ -46,7 +46,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otInstance *      instance = NULL;
     otMessage *       message  = NULL;
     otError           error    = OT_ERROR_NONE;
-    otMessageSettings settings;
+    otMessageSettings settings = {false, OT_MESSAGE_PRIORITY_NORMAL, 0};
 
     VerifyOrExit(size > 0);
 
@@ -59,7 +59,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otThreadBecomeLeader(instance);
 
     settings.mLinkSecurityEnabled = (data[0] & 0x1) != 0;
-    settings.mPriority            = OT_MESSAGE_PRIORITY_NORMAL;
 
     message = otIp6NewMessage(instance, &settings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);

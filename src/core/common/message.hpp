@@ -107,13 +107,14 @@ struct MessageInfo
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
-    uint8_t mType : 2;         ///< Identifies the type of message.
-    uint8_t mSubType : 4;      ///< Identifies the message sub type.
-    bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
-    bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
-    bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
-    bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+    uint8_t  mType : 2;         ///< Identifies the type of message.
+    uint8_t  mSubType : 4;      ///< Identifies the message sub type.
+    bool     mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
+    bool     mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
+    uint8_t  mPriority : 3;     ///< Identifies the message priority level (higher value is higher priority).
+    bool     mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
+    bool     mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+    uint32_t mFlowLabel : 20;   ///< Identifies the flow label of IP6 packet.
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
@@ -230,12 +231,13 @@ public:
 
     enum
     {
-        kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
-        kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
-        kPriorityHigh   = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
-        kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
+        kPriorityLow      = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
+        kPriorityNormal   = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
+        kPriorityHigh     = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityVeryHigh = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Very High priority level.
+        kPriorityNet      = OT_MESSAGE_PRIORITY_HIGH + 2, ///< Network Control priority level.
 
-        kNumPriorities = 4, ///< Number of priority levels.
+        kNumPriorities = 5, ///< Number of priority levels.
     };
 
     /**
@@ -367,6 +369,22 @@ public:
      *
      */
     otError SetPriority(uint8_t aPriority);
+
+    /**
+     * This method returns the flow label of IP6 packet.
+     *
+     * @returns The flow label value.
+     *
+     */
+    uint32_t GetFlowLabel(void) const { return mBuffer.mHead.mInfo.mFlowLabel; }
+
+    /**
+     * This method sets the flow label of IP6 packet.
+     *
+     * @param[in]  aFlowLabel  The flow label value.
+     *
+     */
+    void SetFlowLabel(uint32_t aFlowLabel) { mBuffer.mHead.mInfo.mFlowLabel = (aFlowLabel & 0xfffff); }
 
     /**
      * This method prepends bytes to the front of the message.

@@ -151,6 +151,9 @@ const struct Command Interpreter::sCommands[] = {
     {"extaddr", &Interpreter::ProcessExtAddress},
     {"extpanid", &Interpreter::ProcessExtPanId},
     {"factoryreset", &Interpreter::ProcessFactoryReset},
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+    {"flowlabel", &Interpreter::ProcessFlowLabel},
+#endif
     {"ifconfig", &Interpreter::ProcessIfconfig},
 #ifdef OTDLL
     {"instance", &Interpreter::ProcessInstance},
@@ -1115,6 +1118,57 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 
     otInstanceFactoryReset(mInstance);
 }
+
+#if OPENTHREAD_ENABLE_IP6_FLOW_LABELS
+void Interpreter::ProcessFlowLabel(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (argc == 0)
+    {
+        otIp6FlowLabelIterator iterator = OT_IP6_FLOW_LABEL_ITERATOR_INIT;
+        uint32_t               flowLabel;
+
+        while (otIp6GetNextFlowLabel(mInstance, &iterator, &flowLabel) == OT_ERROR_NONE)
+        {
+            mServer->OutputFormat("%d\r\n", flowLabel);
+        }
+    }
+    else if (strcmp(argv[0], "add") == 0)
+    {
+        long value;
+
+        VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseLong(argv[1], value));
+        error = otIp6AddFlowLabel(mInstance, static_cast<uint32_t>(value));
+    }
+    else if (strcmp(argv[0], "remove") == 0)
+    {
+        long     value;
+        uint32_t flowLabel;
+        uint8_t  delay = 0;
+
+        VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseLong(argv[1], value));
+        flowLabel = static_cast<uint32_t>(value);
+
+        if (argc > 2)
+        {
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            delay = static_cast<uint8_t>(value);
+        }
+
+        error = otIp6RemoveFlowLabel(mInstance, flowLabel, delay);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_ENABLE_IP6_FLOW_LABELS
 
 void Interpreter::ProcessIfconfig(int argc, char *argv[])
 {
