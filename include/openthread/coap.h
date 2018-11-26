@@ -153,20 +153,145 @@ typedef struct otCoapOption
 
 /**
  * CoAP Content Format codes.  The full list is documented at
- * https://tools.ietf.org/html/rfc7252#page-92
- *
+ * https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats
  */
 typedef enum otCoapOptionContentFormat
 {
-    OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN   = 0,  ///< text/plain
-    OT_COAP_OPTION_CONTENT_FORMAT_LINK_FORMAT  = 40, ///< application/link-format
-    OT_COAP_OPTION_CONTENT_FORMAT_XML          = 41, ///< application/xml
-    OT_COAP_OPTION_CONTENT_FORMAT_OCTET_STREAM = 42, ///< application/octet-stream
-    OT_COAP_OPTION_CONTENT_FORMAT_EXI          = 47, ///< application/exi
-    OT_COAP_OPTION_CONTENT_FORMAT_JSON         = 50, ///< application/json
-    OT_COAP_OPTION_CONTENT_FORMAT_PKCS10       = 70, ///< application/pkcs10
-    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7        = 80, ///< application/pkcs7
-    OT_COAP_OPTION_CONTENT_FORMAT_JWS          = 101 ///< application/json-web-signature
+    /**
+     * text/plain; charset=utf-8: [RFC2046][RFC3676][RFC5147]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN = 0,
+
+    /**
+     * application/cose; cose-type="cose-encrypt0": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_ENCRYPT0 = 16,
+
+    /**
+     * application/cose; cose-type="cose-mac0": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_MAC0 = 17,
+
+    /**
+     * application/cose; cose-type="cose-sign1": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_SIGN1 = 18,
+
+    /**
+     * application/link-format: [RFC6690]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_LINK_FORMAT = 40,
+
+    /**
+     * application/xml: [RFC3023]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_XML = 41,
+
+    /**
+     * application/octet-stream: [RFC2045][RFC2046]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_OCTET_STREAM = 42,
+
+    /**
+     * application/exi:
+     * ["Efficient XML Interchange (EXI) Format 1.0 (Second Edition)", February 2014]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_EXI = 47,
+
+    /**
+     * application/json: [RFC7159]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_JSON = 50,
+
+    /**
+     * application/json-patch+json: [RFC6902]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_JSON_PATCH_JSON = 51,
+
+    /**
+     * application/merge-patch+json: [RFC7396]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_MERGE_PATCH_JSON = 52,
+
+    /**
+     * application/cbor: [RFC7049]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_CBOR = 60,
+
+    /**
+     * application/cwt: [RFC8392]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_CWT = 61,
+
+    /**
+     * application/cose; cose-type="cose-encrypt": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_ENCRYPT = 96,
+
+    /**
+     * application/cose; cose-type="cose-mac": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_MAC = 97,
+
+    /**
+     * application/cose; cose-type="cose-sign": [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_SIGN = 98,
+
+    /**
+     * application/cose-key: [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_KEY = 101,
+
+    /**
+     * application/cose-key-set: [RFC8152]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COSE_KEY_SET = 102,
+
+    /**
+     * application/senml+json: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENML_JSON = 110,
+
+    /**
+     * application/sensml+json: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENSML_JSON = 111,
+
+    /**
+     * application/senml+cbor: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENML_CBOR = 112,
+
+    /**
+     * application/sensml+cbor: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENSML_CBOR = 113,
+
+    /**
+     * application/senml-exi: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENML_EXI = 114,
+
+    /**
+     * application/sensml-exi: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENSML_EXI = 115,
+
+    /**
+     * application/coap-group+json: [RFC7390]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_COAP_GROUP_JSON = 256,
+
+    /**
+     * application/senml+xml: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENML_XML = 310,
+
+    /**
+     * application/sensml+xml: [RFC8428]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_SENSML_XML = 311
 } otCoapOptionContentFormat;
 
 #define OT_COAP_HEADER_MAX_LENGTH 512 ///< Max CoAP header length (bytes)
