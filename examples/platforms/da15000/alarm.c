@@ -74,7 +74,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarm     = t0 + dt;
     sIsRunning = true;
 
@@ -88,7 +89,8 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsRunning = false;
     hw_timer0_freeze();
 }

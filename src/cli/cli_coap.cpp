@@ -341,6 +341,9 @@ void Coap::HandleClientResponse(otCoapHeader *       aHeader,
                                 const otMessageInfo *aMessageInfo,
                                 otError              aError)
 {
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     if (aError != OT_ERROR_NONE)
     {
         mInterpreter.mServer->OutputFormat("Error receiving coap response message: Error %d: %s\r\n", aError,
@@ -351,9 +354,6 @@ void Coap::HandleClientResponse(otCoapHeader *       aHeader,
         mInterpreter.mServer->OutputFormat("Received coap response");
         PrintPayload(aMessage);
     }
-
-    OT_UNUSED_VARIABLE(aHeader);
-    OT_UNUSED_VARIABLE(aMessageInfo);
 }
 
 } // namespace Cli

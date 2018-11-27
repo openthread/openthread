@@ -51,7 +51,7 @@ void platformLoggingInit(const char *aName)
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
 
 #else
-    (void)aName;
+    OT_UNUSED_VARIABLE(aName);
 #endif
 }
 
@@ -59,6 +59,8 @@ void platformLoggingInit(const char *aName)
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char         logString[LOGGING_MAX_LOG_STRING_SIZE];
     int          charsWritten;
     va_list      args;
@@ -103,8 +105,6 @@ exit:
         break;
     }
     syslog(logLevel, "%s", logString);
-
-    (void)aLogRegion;
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

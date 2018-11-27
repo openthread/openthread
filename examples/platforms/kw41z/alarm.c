@@ -79,13 +79,15 @@ void kw41zAlarmProcess(otInstance *aInstance)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarmTime = aT0 + aDt;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarmTime = 0;
 }
 

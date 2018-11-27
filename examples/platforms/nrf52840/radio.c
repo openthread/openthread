@@ -180,7 +180,7 @@ static inline void clearPendingEvents(void)
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
     factoryAddress |= NRF_FICR->DEVICEID[1];
@@ -191,7 +191,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aPanId);
@@ -201,14 +201,14 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     nrf_802154_extended_address_set(aExtAddress->m8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
@@ -231,7 +231,7 @@ void nrf5RadioDeinit(void)
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sDisabled)
     {
@@ -259,9 +259,9 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    sInstance = aInstance;
-
     otError error;
+
+    sInstance = aInstance;
 
     if (sDisabled)
     {
@@ -278,9 +278,9 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    (void)aInstance;
-
     otError error;
+
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (!sDisabled)
     {
@@ -297,14 +297,14 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return !sDisabled;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (nrf_802154_sleep())
     {
@@ -321,7 +321,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     bool result;
 
@@ -365,49 +365,49 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return nrf_802154_rssi_last_get();
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF);
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return nrf_802154_promiscuous_get();
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     nrf_802154_promiscuous_set(aEnable);
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     nrf_802154_auto_pending_bit_set(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error;
 
@@ -428,7 +428,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error;
 
@@ -446,7 +446,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error;
 
@@ -467,7 +467,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error;
 
@@ -485,21 +485,21 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     nrf_802154_pending_bit_for_addr_reset(false);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     nrf_802154_pending_bit_for_addr_reset(true);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sEnergyDetectionTime    = (uint32_t)aScanDuration * 1000UL;
     sEnergyDetectionChannel = aScanChannel;
@@ -522,8 +522,9 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
-    (void)aInstance;
 
     if (aPower == NULL)
     {
@@ -539,7 +540,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sDefaultTxPower = aPower;
     nrf_802154_tx_power_set(aPower);
@@ -797,7 +798,8 @@ void nrf_802154_energy_detected(uint8_t result)
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return NRF52840_RECEIVE_SENSITIVITY;
 }
 

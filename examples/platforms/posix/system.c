@@ -60,7 +60,8 @@ static volatile bool gTerminate = false;
 #ifndef _WIN32
 static void handleSignal(int aSignal)
 {
-    (void)aSignal;
+    OT_UNUSED_VARIABLE(aSignal);
+
     gTerminate = true;
 }
 #endif

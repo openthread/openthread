@@ -58,6 +58,8 @@ exit:
 
 otError otCommissionerStop(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
@@ -69,7 +71,6 @@ otError otCommissionerStop(otInstance *aInstance)
 #endif
 exit:
 #endif
-    OT_UNUSED_VARIABLE(aInstance);
     return error;
 }
 

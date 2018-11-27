@@ -77,14 +77,16 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sMsAlarm     = aT0 + aDt;
     sIsMsRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsMsRunning = false;
 }
 
@@ -95,14 +97,16 @@ uint32_t otPlatAlarmMicroGetNow(void)
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsUsRunning = false;
 }
 

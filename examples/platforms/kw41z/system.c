@@ -44,6 +44,9 @@ otInstance *sInstance;
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     uint32_t temp, tempTrim;
     uint8_t  revId;
 
@@ -94,9 +97,6 @@ void otSysInit(int argc, char *argv[])
     kw41zRadioInit();
 
     otPlatUartEnable();
-
-    (void)argc;
-    (void)argv;
 }
 
 bool otSysPseudoResetWasRequested(void)

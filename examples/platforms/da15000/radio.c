@@ -145,7 +145,7 @@ void da15000RadioInit(void)
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     memcpy(aIeeeEui64, sEui64, RADIO_EUI64_TABLE_SIZE);
 }
@@ -220,7 +220,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return (sRadioState != OT_RADIO_STATE_DISABLED);
 }
@@ -278,8 +278,8 @@ exit:
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
-    (void)aEnable;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
@@ -407,7 +407,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return &sTransmitFrame;
 }
@@ -433,21 +433,21 @@ exit:
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sRssiReal;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sRadioPromiscuous;
 }
@@ -462,17 +462,18 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
-    (void)aInstance;
 
     otEXPECT_ACTION(aPower != NULL, error = OT_ERROR_INVALID_ARGS);
     *aPower = sTxPower;
@@ -543,7 +544,7 @@ exit:
 
 void ftdf_send_frame_transparent_confirm(void *handle, ftdf_bitmap32_t status)
 {
-    (void)handle;
+    OT_UNUSED_VARIABLE(handle);
 
     switch (status)
     {
@@ -614,6 +615,7 @@ exit:
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return DA15000_RECEIVE_SENSITIVITY;
 }

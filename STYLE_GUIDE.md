@@ -75,6 +75,8 @@
   - The symbol used for the guard should be the file name, converted to all uppercase, with any spaces (“ “) or dots (“.”) converted to underscores (“_”).
 - Function and Method Prototypes
   - All void functions or methods shall explicitly declare and specify the void type keyword.
+- Unused parameters
+  - All unused parameters shall be declared as such using the `OT_UNUSED_VARIABLE` macro at the top of a function or method before all local variable declarations.
 
 ### C
 

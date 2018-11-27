@@ -38,15 +38,15 @@ otInstance *sInstance;
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
     cc2538DebugUartInit();
 #endif
     cc2538AlarmInit();
     cc2538RandomInit();
     cc2538RadioInit();
-
-    (void)argc;
-    (void)argv;
 }
 
 bool otSysPseudoResetWasRequested(void)

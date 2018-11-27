@@ -79,6 +79,8 @@ void Leader::HandlePetition(void *               aContext,
 
 void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     CommissioningData data;
     CommissionerIdTlv commissionerId;
     StateTlv::State   state = StateTlv::kReject;
@@ -116,7 +118,6 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
-    OT_UNUSED_VARIABLE(aMessageInfo);
     SendPetitionResponse(aHeader, aMessageInfo, state);
 }
 

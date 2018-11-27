@@ -27,14 +27,17 @@
  */
 
 #include "aes_alt.h"
-#include "mbedtls/aes.h"
 
 #ifdef MBEDTLS_AES_ALT
 
-#include "hw_aes_hash.h"
-#include <common/code_utils.hpp>
 #include <stdint.h>
 #include <string.h>
+
+#include <openthread/platform/toolchain.h>
+
+#include "hw_aes_hash.h"
+#include <common/code_utils.hpp>
+#include "mbedtls/aes.h"
 
 static void mbedtls_zeroize(void *v, size_t n)
 {
@@ -167,7 +170,8 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned cha
 
 int mbedtls_aes_self_test(int verbose)
 {
-    (void)verbose;
+    OT_UNUSED_VARIABLE(verbose);
+
     /* 128-bit Key 2b7e151628aed2a6abf7158809cf4f3c */
     const uint8_t key_128b[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
                                   0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};

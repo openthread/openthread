@@ -116,7 +116,7 @@ void PlatSocketRx(uint16_t length, const char *buffer, uint32_t socketId)
 
 void PlatSocketClose(uint32_t socketId)
 {
-    (void)socketId;
+    OT_UNUSED_VARIABLE(socketId);
 }
 
 otError otPlatUartEnable(void)
@@ -187,7 +187,8 @@ exit:
 
 void PlatSocketRxSignaled(uint8_t id)
 {
-    (void)(id);
+    OT_UNUSED_VARIABLE(id);
+
     //Dummy callback function to flush pipe
     uint8_t readChar;
     //Remove trigger byte from pipe

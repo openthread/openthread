@@ -54,13 +54,6 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
-enum
-{
-    kIdle,
-    kSent,
-    kDone,
-};
-
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
 namespace ot {
@@ -142,13 +135,13 @@ static otError SpinelStatusToOtError(spinel_status_t aError)
 
 static void LogIfFail(const char *aText, otError aError)
 {
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aError);
+
     if (aError != OT_ERROR_NONE)
     {
         otLogWarnPlat("%s: %s", aText, otThreadErrorToString(aError));
     }
-
-    OT_UNUSED_VARIABLE(aText);
-    OT_UNUSED_VARIABLE(aError);
 }
 
 void HdlcInterface::Callbacks::HandleReceivedFrame(const uint8_t *aBuffer, uint16_t aLength)
@@ -165,8 +158,7 @@ RadioSpinel::RadioSpinel(void)
     , mWaitingTid(0)
     , mWaitingKey(SPINEL_PROP_LAST_STATUS)
     , mRxSensitivity(0)
-    , mTxState(kIdle)
-    , mState(OT_RADIO_STATE_DISABLED)
+    , mState(kStateDisabled)
     , mIsPromiscuous(false)
     , mIsReady(false)
     , mSupportsLogStream(false)
@@ -390,7 +382,11 @@ void RadioSpinel::HandleResponse(const uint8_t *aBuffer, uint16_t aLength)
     }
     else if (mTxRadioTid == SPINEL_HEADER_GET_TID(header))
     {
-        HandleTransmitDone(cmd, key, data, static_cast<uint16_t>(len));
+        if (mState == kStateTransmitting)
+        {
+            HandleTransmitDone(cmd, key, data, static_cast<uint16_t>(len));
+        }
+
         FreeTid(mTxRadioTid);
         mTxRadioTid = 0;
     }
@@ -601,7 +597,21 @@ void RadioSpinel::ProcessFrameQueue(void)
 
 void RadioSpinel::RadioReceive(void)
 {
-    VerifyOrExit(mIsPromiscuous || mState == OT_RADIO_STATE_RECEIVE || mState == OT_RADIO_STATE_TRANSMIT);
+    if (!mIsPromiscuous)
+    {
+        switch (mState)
+        {
+        case kStateDisabled:
+        case kStateSleep:
+            ExitNow();
+
+        case kStateReceive:
+        case kStateTransmitPending:
+        case kStateTransmitting:
+        case kStateTransmitDone:
+            break;
+        }
+    }
 
 #if OPENTHREAD_ENABLE_DIAG
     if (otPlatDiagModeGet())
@@ -622,27 +632,19 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
 {
     int sockFd = mHdlcInterface.GetSocket();
 
-    if ((mState != OT_RADIO_STATE_TRANSMIT || mTxState == kSent))
-    {
-        FD_SET(sockFd, &aReadFdSet);
+    FD_SET(sockFd, &aReadFdSet);
 
-        if (aMaxFd < sockFd)
-        {
-            aMaxFd = sockFd;
-        }
+    if (aMaxFd < sockFd)
+    {
+        aMaxFd = sockFd;
     }
 
-    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kIdle)
+    if (mState == kStateTransmitPending)
     {
         FD_SET(sockFd, &aWriteFdSet);
-
-        if (aMaxFd < sockFd)
-        {
-            aMaxFd = sockFd;
-        }
     }
 
-    if (!mFrameQueue.IsEmpty() || (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone))
+    if (!mFrameQueue.IsEmpty() || (mState == kStateTransmitDone))
     {
         aTimeout.tv_sec  = 0;
         aTimeout.tv_usec = 0;
@@ -663,9 +665,9 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         }
     }
 
-    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
+    if (mState == kStateTransmitDone)
     {
-        mState = OT_RADIO_STATE_RECEIVE;
+        mState = kStateReceive;
 
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
@@ -678,13 +680,11 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
             otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
                               mTxError);
         }
-
-        mTxState = kIdle;
     }
 
     if (FD_ISSET(mHdlcInterface.GetSocket(), &aWriteFdSet))
     {
-        if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kIdle)
+        if (mState == kStateTransmitPending)
         {
             RadioTransmit();
         }
@@ -994,7 +994,7 @@ void RadioSpinel::RadioTransmit(void)
 
     assert(mTransmitFrame != NULL);
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
-    assert(mTxState == kIdle);
+    assert(mState == kStateTransmitPending);
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
                     SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, mTransmitFrame->mPsdu,
@@ -1002,11 +1002,11 @@ void RadioSpinel::RadioTransmit(void)
 
     if (error == OT_ERROR_NONE)
     {
-        mTxState = kSent;
+        mState = kStateTransmitting;
     }
     else
     {
-        mState = OT_RADIO_STATE_RECEIVE;
+        mState = kStateReceive;
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -1019,8 +1019,6 @@ void RadioSpinel::RadioTransmit(void)
         {
             otPlatRadioTxDone(mInstance, mTransmitFrame, NULL, error);
         }
-
-        mTxState = kIdle;
     }
 }
 
@@ -1158,7 +1156,7 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     }
 
 exit:
-    mTxState = kDone;
+    mState   = kStateTransmitDone;
     mTxError = error;
     LogIfFail("Handle transmit done failed", error);
 }
@@ -1167,8 +1165,8 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    VerifyOrExit(mState == OT_RADIO_STATE_RECEIVE);
-    mState         = OT_RADIO_STATE_TRANSMIT;
+    VerifyOrExit(mState == kStateReceive);
+    mState         = kStateTransmitPending;
     error          = OT_ERROR_NONE;
     mTransmitFrame = &aFrame;
 
@@ -1180,7 +1178,7 @@ otError RadioSpinel::Receive(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
 
     if (mChannel != aChannel)
     {
@@ -1189,7 +1187,7 @@ otError RadioSpinel::Receive(uint8_t aChannel)
         mChannel = aChannel;
     }
 
-    if (mState == OT_RADIO_STATE_SLEEP)
+    if (mState == kStateSleep)
     {
         error = Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, true);
         VerifyOrExit(error == OT_ERROR_NONE);
@@ -1201,8 +1199,7 @@ otError RadioSpinel::Receive(uint8_t aChannel)
         mTxRadioTid = 0;
     }
 
-    mTxState = kIdle;
-    mState   = OT_RADIO_STATE_RECEIVE;
+    mState = kStateReceive;
 
 exit:
     assert(error == OT_ERROR_NONE);
@@ -1215,14 +1212,14 @@ otError RadioSpinel::Sleep(void)
 
     switch (mState)
     {
-    case OT_RADIO_STATE_RECEIVE:
+    case kStateReceive:
         error = sRadioSpinel.Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
         VerifyOrExit(error == OT_ERROR_NONE);
 
-        mState = OT_RADIO_STATE_SLEEP;
+        mState = kStateSleep;
         break;
 
-    case OT_RADIO_STATE_SLEEP:
+    case kStateSleep:
         break;
 
     default:
@@ -1248,7 +1245,7 @@ otError RadioSpinel::Enable(otInstance *aInstance)
         error = Get(SPINEL_PROP_PHY_RX_SENSITIVITY, SPINEL_DATATYPE_INT8_S, &mRxSensitivity);
         VerifyOrExit(error == OT_ERROR_NONE);
 
-        mState = OT_RADIO_STATE_SLEEP;
+        mState = kStateSleep;
     }
 
 exit:
@@ -1266,7 +1263,7 @@ otError RadioSpinel::Disable(void)
         error     = sRadioSpinel.Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
         VerifyOrExit(error == OT_ERROR_NONE);
 
-        mState = OT_RADIO_STATE_DISABLED;
+        mState = kStateDisabled;
     }
 
 exit:
@@ -1512,9 +1509,9 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
         ProcessFrameQueue();
     }
 
-    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kDone)
+    if (mState == kStateTransmitDone)
     {
-        mState = OT_RADIO_STATE_RECEIVE;
+        mState = kStateReceive;
 
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
@@ -1527,11 +1524,9 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
             otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
                               mTxError);
         }
-
-        mTxState = kIdle;
     }
 
-    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kIdle)
+    if (mState == kStateTransmitPending)
     {
         RadioTransmit();
     }
@@ -1540,7 +1535,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
 void ot::PosixApp::RadioSpinel::Update(struct timeval &aTimeout)
 {
     // Prevent sleep event when transmitting
-    if (mState == OT_RADIO_STATE_TRANSMIT && mTxState == kIdle)
+    if (mState == kStateTransmitPending)
     {
         aTimeout.tv_sec  = 0;
         aTimeout.tv_usec = 0;
@@ -1614,13 +1609,13 @@ exit:
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
-    (void)aFrame;
-    (void)aError;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
 }
 
 void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 #endif // OPENTHREAD_ENABLE_DIAG

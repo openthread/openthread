@@ -221,6 +221,8 @@ void JoinerRouter::HandleRelayTransmit(void *               aContext,
 
 void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
     otError            error;
     JoinerUdpPortTlv   joinerPort;
     JoinerIidTlv       joinerIid;
@@ -280,8 +282,6 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();

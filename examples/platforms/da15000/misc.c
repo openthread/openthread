@@ -35,13 +35,15 @@
 
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     hw_cpm_reboot_system();
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 

@@ -73,7 +73,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
  */
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sTime0     = aT0;
     sAlarmTime = aDt;
     sIsRunning = true;
@@ -84,7 +85,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
  */
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sIsRunning = false;
 }
 

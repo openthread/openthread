@@ -58,6 +58,9 @@
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
     char         logString[512];
     unsigned int offset;
     int          charsWritten;
@@ -79,9 +82,6 @@ exit:
 #else
     printf("%s\r\n", logString);
 #endif
-
-    (void)aLogLevel;
-    (void)aLogRegion;
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

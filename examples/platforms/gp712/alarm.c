@@ -56,7 +56,8 @@ static void qorvoAlarmFired(void *aInstance)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    (void)t0;
+    OT_UNUSED_VARIABLE(t0);
+
     qorvoAlarmUnScheduleEventArg((qorvoAlarmCallback_t)qorvoAlarmFired, aInstance);
     qorvoAlarmScheduleEventArg(dt * 1000, qorvoAlarmFired, aInstance);
 }
@@ -68,7 +69,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 
 void qorvoAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    (void)aTimeout;
+    OT_UNUSED_VARIABLE(aTimeout);
 }
 
 void qorvoAlarmProcess(void)

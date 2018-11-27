@@ -128,13 +128,13 @@ static void initSettings(uint32_t aBase, uint32_t aFlag)
 
 static uint32_t swapSettingsBlock(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t oldBase      = sSettingsBaseAddress;
     uint32_t swapAddress  = oldBase;
     uint32_t usedSize     = sSettingsUsedSize;
     uint8_t  pageNum      = SETTINGS_CONFIG_PAGE_NUM;
     uint32_t settingsSize = pageNum > 1 ? SETTINGS_CONFIG_PAGE_SIZE * pageNum / 2 : SETTINGS_CONFIG_PAGE_SIZE;
-
-    (void)aInstance;
 
     otEXPECT(pageNum > 1);
 
@@ -257,11 +257,11 @@ exit:
 // settings API
 void otPlatSettingsInit(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint8_t  index;
     uint32_t settingsSize = SETTINGS_CONFIG_PAGE_NUM > 1 ? SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2
                                                          : SETTINGS_CONFIG_PAGE_SIZE;
-
-    (void)aInstance;
 
     sSettingsBaseAddress = SETTINGS_CONFIG_BASE_ADDRESS;
 
@@ -306,30 +306,33 @@ void otPlatSettingsInit(otInstance *aInstance)
 
 otError otPlatSettingsBeginChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsCommitChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsAbandonChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError  error       = OT_ERROR_NOT_FOUND;
     uint32_t address     = sSettingsBaseAddress + OT_SETTINGS_FLAG_SIZE;
     uint16_t valueLength = 0;
     int      index       = 0;
-
-    (void)aInstance;
 
     while (address < (sSettingsBaseAddress + sSettingsUsedSize))
     {
@@ -397,11 +400,11 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError  error   = OT_ERROR_NOT_FOUND;
     uint32_t address = sSettingsBaseAddress + OT_SETTINGS_FLAG_SIZE;
     int      index   = 0;
-
-    (void)aInstance;
 
     while (address < (sSettingsBaseAddress + sSettingsUsedSize))
     {

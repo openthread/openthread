@@ -31,14 +31,16 @@
 
 void otPlatReset(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     // Default
-    (void)aInstance;
     mrf24j40_hard_reset();
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     // TODO: Write me!
     return OT_PLAT_RESET_REASON_POWER_ON;
 }

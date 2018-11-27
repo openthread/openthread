@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "mac/channel_mask.hpp"
 #include "utils/parse_cmdline.hpp"
 #include "utils/wrap_string.h"
 
@@ -82,6 +83,14 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #include "cli_coap_secure.hpp"
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#include <openthread/channel_manager.h>
+#endif
+
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#include <openthread/channel_monitor.h>
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
@@ -413,6 +422,9 @@ otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
 
 void Interpreter::ProcessHelp(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mServer->OutputFormat("%s\r\n", sCommands[i].mName);
@@ -422,9 +434,6 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     {
         mServer->OutputFormat("%s\r\n", mUserCommands[i].mName);
     }
-
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
 }
 
 void Interpreter::ProcessAutoStart(int argc, char *argv[])
@@ -460,9 +469,10 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
 
 void Interpreter::ProcessBufferInfo(int argc, char *argv[])
 {
-    otBufferInfo bufferInfo;
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    otBufferInfo bufferInfo;
 
     otMessageGetBufferInfo(mInstance, &bufferInfo);
 
@@ -491,6 +501,112 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     {
         mServer->OutputFormat("%d\r\n", otLinkGetChannel(mInstance));
     }
+#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+    else if (strcmp(argv[0], "monitor") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("enabled: %d\r\n", otChannelMonitorIsEnabled(mInstance));
+            if (otChannelMonitorIsEnabled(mInstance))
+            {
+                mServer->OutputFormat("interval: %lu\r\n", otChannelMonitorGetSampleInterval(mInstance));
+                mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
+                mServer->OutputFormat("window: %lu\r\n", otChannelMonitorGetSampleWindow(mInstance));
+                mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
+
+                mServer->OutputFormat("occupancies:\r\n");
+                for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+                {
+                    uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
+
+                    mServer->OutputFormat("ch %d (0x%04x) ", channel, occupancy);
+                    occupancy = (occupancy * 10000) / 0xffff;
+                    mServer->OutputFormat("%2d.%02d%% busy\r\n", occupancy / 100, occupancy % 100);
+                }
+                mServer->OutputFormat("\r\n");
+            }
+        }
+        else if (strcmp(argv[1], "start") == 0)
+        {
+            error = otChannelMonitorSetEnabled(mInstance, true);
+        }
+        else if (strcmp(argv[1], "stop") == 0)
+        {
+            error = otChannelMonitorSetEnabled(mInstance, false);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#endif
+#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+    else if (strcmp(argv[0], "manager") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("channel: %d\r\n", otChannelManagerGetRequestedChannel(mInstance));
+            mServer->OutputFormat("auto: %d\r\n", otChannelManagerGetAutoChannelSelectionEnabled(mInstance));
+
+            if (otChannelManagerGetAutoChannelSelectionEnabled(mInstance))
+            {
+                Mac::ChannelMask supportedMask(otChannelManagerGetSupportedChannels(mInstance));
+                Mac::ChannelMask favoredMask(otChannelManagerGetFavoredChannels(mInstance));
+
+                mServer->OutputFormat("delay: %d\r\n", otChannelManagerGetDelay(mInstance));
+                mServer->OutputFormat("interval: %lu\r\n", otChannelManagerGetAutoChannelSelectionInterval(mInstance));
+                mServer->OutputFormat("supported: %s\r\n", supportedMask.ToString().AsCString());
+                mServer->OutputFormat("favored: %s\r\n", supportedMask.ToString().AsCString());
+            }
+        }
+        else if (strcmp(argv[1], "change") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerRequestChannelChange(mInstance, static_cast<uint8_t>(value));
+        }
+        else if (strcmp(argv[1], "select") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerRequestChannelSelect(mInstance, (value != 0) ? true : false);
+        }
+        else if (strcmp(argv[1], "auto") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetAutoChannelSelectionEnabled(mInstance, (value != 0) ? true : false);
+        }
+        else if (strcmp(argv[1], "delay") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerSetDelay(mInstance, static_cast<uint8_t>(value));
+        }
+        else if (strcmp(argv[1], "interval") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            error = otChannelManagerSetAutoChannelSelectionInterval(mInstance, static_cast<uint32_t>(value));
+        }
+        else if (strcmp(argv[1], "supported") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetSupportedChannels(mInstance, static_cast<uint32_t>(value));
+        }
+        else if (strcmp(argv[1], "favored") == 0)
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseLong(argv[2], value));
+            otChannelManagerSetFavoredChannels(mInstance, static_cast<uint32_t>(value));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#endif
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
@@ -887,6 +1003,9 @@ void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddres
 #if OPENTHREAD_FTD
 void Interpreter::ProcessEidCache(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otEidCacheEntry entry;
 
     for (uint8_t i = 0;; i++)
@@ -906,14 +1025,14 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     }
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(OT_ERROR_NONE);
 }
 #endif // OPENTHREAD_FTD
 
 void Interpreter::ProcessEui64(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argv);
+
     otError      error = OT_ERROR_NONE;
     otExtAddress extAddress;
 
@@ -924,7 +1043,6 @@ void Interpreter::ProcessEui64(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
 exit:
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -954,9 +1072,10 @@ exit:
 #if OPENTHREAD_POSIX
 void Interpreter::ProcessExit(int argc, char *argv[])
 {
-    exit(EXIT_SUCCESS);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    exit(EXIT_SUCCESS);
 }
 #endif
 
@@ -1000,9 +1119,10 @@ exit:
 
 void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 {
-    otInstanceFactoryReset(mInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    otInstanceFactoryReset(mInstance);
 }
 
 void Interpreter::ProcessIfconfig(int argc, char *argv[])
@@ -1251,6 +1371,9 @@ exit:
 
 void Interpreter::ProcessLeaderData(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError      error;
     otLeaderData leaderData;
 
@@ -1263,8 +1386,6 @@ void Interpreter::ProcessLeaderData(int argc, char *argv[])
     mServer->OutputFormat("Leader Router ID: %d\r\n", leaderData.mLeaderRouterId);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -1494,6 +1615,9 @@ exit:
 #if OPENTHREAD_ENABLE_SERVICE
 void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError error = OT_ERROR_NONE;
     uint8_t data[255];
     uint8_t len = sizeof(data);
@@ -1504,8 +1628,6 @@ void Interpreter::ProcessNetworkDataShow(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -1558,6 +1680,9 @@ exit:
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     SuccessOrExit(error = otBorderRouterRegister(mInstance));
@@ -1566,8 +1691,6 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 #endif
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
@@ -1686,6 +1809,9 @@ exit:
 
 void Interpreter::ProcessParent(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError      error = OT_ERROR_NONE;
     otRouterInfo parentInfo;
 
@@ -1705,8 +1831,6 @@ void Interpreter::ProcessParent(int argc, char *argv[])
     mServer->OutputFormat("Age: %d\r\n", parentInfo.mAge);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -2092,6 +2216,8 @@ exit:
 
 otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
@@ -2120,7 +2246,6 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
     return error;
 }
 
@@ -2234,17 +2359,19 @@ exit:
 
 void Interpreter::ProcessReset(int argc, char *argv[])
 {
-    otInstanceReset(mInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    otInstanceReset(mInstance);
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
-    mServer->OutputFormat("%04x\r\n", otThreadGetRloc16(mInstance));
-    mServer->OutputFormat("Done\r\n");
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+
+    mServer->OutputFormat("%04x\r\n", otThreadGetRloc16(mInstance));
+    mServer->OutputFormat("Done\r\n");
 }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -2692,6 +2819,9 @@ exit:
 
 void Interpreter::ProcessSingleton(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError error = OT_ERROR_NONE;
 
     if (otThreadIsSingleton(mInstance))
@@ -2702,9 +2832,6 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
     {
         mServer->OutputFormat("false\r\n");
     }
-
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
 
     AppendResult(error);
 }
@@ -2853,6 +2980,9 @@ exit:
 
 void Interpreter::ProcessThread(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
@@ -2871,8 +3001,6 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
 
 exit:
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -2910,11 +3038,12 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otStringPtr version(otGetVersionString());
     mServer->OutputFormat("%s\r\n", (const char *)version);
     AppendResult(OT_ERROR_NONE);
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -3232,6 +3361,8 @@ exit:
 
 void Interpreter::ProcessJoinerId(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argv);
+
     otError      error = OT_ERROR_NONE;
     otExtAddress joinerId;
 
@@ -3242,7 +3373,6 @@ void Interpreter::ProcessJoinerId(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
 exit:
-    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
@@ -3796,8 +3926,9 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Interpreter &interpreter = (aOwnerLocator.GetOwner<Interpreter>());
 #else
-    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
     OT_UNUSED_VARIABLE(aOwnerLocator);
+
+    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
 #endif
     return interpreter;
 }
