@@ -609,7 +609,6 @@ private:
     char         mVersion[kVersionStringSize];
 
     State mState;
-    bool  mIsAckRequested : 1;    ///< Ack requested.
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
