@@ -73,7 +73,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
     , mNetworkDataLocal(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE
     , mUniqueServiceManager(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)

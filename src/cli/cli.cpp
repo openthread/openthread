@@ -1632,35 +1632,78 @@ void Interpreter::ProcessService(int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(argv[0], "add") == 0)
+    if (strcmp(argv[0], "add") == 0 && (argc > 1))
     {
         otServiceConfig cfg;
         long            enterpriseNumber = 0;
+        uint8_t         argIndex         = 1;
+        bool            uniqueService    = false;
 
-        VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
+        if (strcmp(argv[argIndex++], "unique") == 0)
+        {
+            uniqueService = true;
+            VerifyOrExit(argc > 4, error = OT_ERROR_INVALID_ARGS);
+        }
+        else
+#endif
+        {
+            VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
+        }
 
-        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+        SuccessOrExit(error = ParseLong(argv[argIndex++], enterpriseNumber));
 
-        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[2]));
-        memcpy(cfg.mServiceData, argv[2], cfg.mServiceDataLength);
+        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[argIndex]));
+        memcpy(cfg.mServiceData, argv[argIndex++], cfg.mServiceDataLength);
         cfg.mEnterpriseNumber               = static_cast<uint32_t>(enterpriseNumber);
         cfg.mServerConfig.mStable           = true;
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[3]));
-        memcpy(cfg.mServerConfig.mServerData, argv[3], cfg.mServerConfig.mServerDataLength);
+        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[argIndex]));
+        memcpy(cfg.mServerConfig.mServerData, argv[argIndex++], cfg.mServerConfig.mServerDataLength);
 
-        SuccessOrExit(error = otServerAddService(mInstance, &cfg));
+        if (!uniqueService)
+        {
+            SuccessOrExit(error = otServerAddService(mInstance, &cfg));
+        }
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
+        else
+        {
+            SuccessOrExit(error = otServerRegisterUniqueService(
+                              mInstance, &cfg, Interpreter::s_HandleServiceUpdateCallback, NULL, this));
+        }
+#endif
     }
-    else if (strcmp(argv[0], "remove") == 0)
+    else if ((strcmp(argv[0], "remove") == 0) && (argc > 1))
     {
-        long enterpriseNumber = 0;
+        long    enterpriseNumber = 0;
+        uint8_t argIndex         = 1;
+        bool    uniqueService    = false;
 
-        VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+        if (strcmp(argv[argIndex++], "unique") == 0)
+        {
+            uniqueService = true;
+            VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
+        }
+        else
+        {
+            VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+        }
 
-        SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+        SuccessOrExit(error = ParseLong(argv[argIndex++], enterpriseNumber));
 
-        SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
-                                                    reinterpret_cast<uint8_t *>(argv[2]),
-                                                    static_cast<uint8_t>(strlen(argv[2]))));
+        if (!uniqueService)
+        {
+            SuccessOrExit(error = otServerRemoveService(mInstance, static_cast<uint32_t>(enterpriseNumber),
+                                                        reinterpret_cast<uint8_t *>(argv[argIndex]),
+                                                        static_cast<uint8_t>(strlen(argv[argIndex]))));
+        }
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
+        else
+        {
+            SuccessOrExit(error = otServerUnregisterUniqueService(mInstance, static_cast<uint32_t>(enterpriseNumber),
+                                                                  reinterpret_cast<uint8_t *>(argv[argIndex]),
+                                                                  static_cast<uint8_t>(strlen(argv[argIndex]))));
+        }
+#endif
     }
     else
     {
@@ -1670,6 +1713,44 @@ void Interpreter::ProcessService(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
+void Interpreter::s_HandleServiceUpdateCallback(const otServiceConfig *aConfig, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleServiceUpdateCallback(aConfig);
+}
+
+void Interpreter::HandleServiceUpdateCallback(const otServiceConfig *aConfig)
+{
+    if (aConfig == NULL)
+    {
+        mServer->OutputFormat("Unique Service Updated: NULL\r\n");
+    }
+    else
+    {
+        mServer->OutputFormat("Unique Service Updated:\r\n");
+        mServer->OutputFormat("Service ID: %d\r\n", aConfig->mServiceID);
+        mServer->OutputFormat("Enterprise Number: %d\r\n", aConfig->mEnterpriseNumber);
+        mServer->OutputFormat("Service Data: ");
+        for (size_t i = 0; i < aConfig->mServiceDataLength; i++)
+        {
+            uint8_t ch = aConfig->mServiceData[i];
+            mServer->OutputFormat("%c", ((0x20 < ch) && (ch < 0x7e)) ? static_cast<char>(ch) : '.');
+        }
+        mServer->OutputFormat("\r\n");
+        mServer->OutputFormat("Stable: %d\r\n", aConfig->mServerConfig.mStable);
+        mServer->OutputFormat("Rloc16: 0x%04x\r\n", aConfig->mServerConfig.mRloc16);
+        mServer->OutputFormat("Server Data: ");
+        for (size_t i = 0; i < aConfig->mServerConfig.mServerDataLength; i++)
+        {
+            uint8_t ch = aConfig->mServerConfig.mServerData[i];
+            mServer->OutputFormat("%c", ((0x20 < ch) && (ch < 0x7e)) ? static_cast<char>(ch) : '.');
+        }
+        mServer->OutputFormat("\r\n");
+    }
+}
+#endif
+
 #endif
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE

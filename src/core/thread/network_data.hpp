@@ -269,13 +269,13 @@ public:
 
     /**
      * This method indicates whether or not the Thread Network Data contains the service with given Enterprise
-     * Number and Server Data
+     * Number and Service Data
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
      *
-     * @returns TRUE if this object contains the service with given Enterprise Number and Server Data,
+     * @returns TRUE if this object contains the service with given Enterprise Number and Service Data,
      *          FALSE otherwise.
      *
      */

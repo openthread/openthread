@@ -677,7 +677,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE
 template <> inline Utils::UniqueServiceManager &Instance::Get(void)
 {
     return GetThreadNetif().GetUniqueServiceManager();

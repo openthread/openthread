@@ -1519,6 +1519,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
+# Unique Service
+#
+
+AC_ARG_ENABLE(unique-service,
+    [AS_HELP_STRING([--enable-unique-service],[Enable Unique Service @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_unique_service=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_unique_service} for --enable-unique-service])
+            ;;
+        esac
+    ],
+    [enable_unique_service=no])
+
+if test "$enable_unique_service" = "yes"; then
+    OPENTHREAD_ENABLE_UNIQUE_SERVICE=1
+else
+    OPENTHREAD_ENABLE_UNIQUE_SERVICE=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_UNIQUE_SERVICE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_UNIQUE_SERVICE], [test "${enable_unique_service}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UNIQUE_SERVICE],[${OPENTHREAD_ENABLE_UNIQUE_SERVICE}],[Define to 1 if you want to enable Unique Service])
+
+#
 # Linker Map Output
 #
 
@@ -1985,6 +2015,7 @@ AC_MSG_NOTICE([
   OpenThread Border Agent support           : ${enable_border_agent}
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
+  OpenThread Unique Service support         : ${enable_unique_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}

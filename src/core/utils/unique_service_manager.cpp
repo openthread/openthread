@@ -38,17 +38,147 @@
 #include "common/random.hpp"
 #include "net/netif.hpp"
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE
 
 namespace ot {
 namespace Utils {
 
+otError ServiceEntry::Init(const otServiceConfig & aConfig,
+                           otServiceUpdateCallback aServiceUpdateCallback,
+                           otServerCompareCallback aServerCompareCallback,
+                           void *                  aContext)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aConfig.mServiceDataLength + aConfig.mServerConfig.mServerDataLength <= sizeof(mData),
+                 error = OT_ERROR_NO_BUFS);
+
+    mEnterpriseNumber  = aConfig.mEnterpriseNumber;
+    mServiceDataLength = aConfig.mServiceDataLength;
+    mServerStable      = aConfig.mServerConfig.mStable;
+    mServerDataLength  = aConfig.mServerConfig.mServerDataLength;
+    mUpdateCallback    = aServiceUpdateCallback;
+    mCompareCallback   = aServerCompareCallback;
+    mContext           = aContext;
+
+    memcpy(mData, aConfig.mServiceData, mServiceDataLength);
+    memcpy(mData + mServiceDataLength, aConfig.mServerConfig.mServerData, mServerDataLength);
+
+exit:
+    return error;
+}
+
+otServiceConfig ServiceEntry::GetServiceConfig(void)
+{
+    otServiceConfig config;
+
+    memset(&config, 0, sizeof(otServiceConfig));
+
+    config.mEnterpriseNumber               = mEnterpriseNumber;
+    config.mServiceDataLength              = mServiceDataLength;
+    config.mServerConfig.mStable           = mServerStable;
+    config.mServerConfig.mServerDataLength = mServerDataLength;
+
+    memcpy(config.mServiceData, GetServiceData(), GetServiceDataLength());
+    memcpy(config.mServerConfig.mServerData, GetServerData(), GetServerDataLength());
+
+    return config;
+}
+
+otError ServiceTable::AddService(const ServiceEntry &aEntry)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aEntry.GetSize() <= sizeof(mData) - mLength, error = OT_ERROR_NO_BUFS);
+    memcpy(mData + mLength, &aEntry, aEntry.GetSize());
+    mLength += aEntry.GetSize();
+
+exit:
+    return error;
+}
+
+otError ServiceTable::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+{
+    otError       error = OT_ERROR_NONE;
+    ServiceEntry *entry;
+    uint8_t *     entryEnd;
+
+    VerifyOrExit((entry = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
+                 error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(entry->GetSize() <= mLength, error = OT_ERROR_PARSE);
+
+    entryEnd = reinterpret_cast<uint8_t *>(entry) + entry->GetSize();
+    memmove(entry, entryEnd, static_cast<size_t>(mData + mLength - entryEnd));
+    mLength -= static_cast<uint8_t>(entryEnd - reinterpret_cast<uint8_t *>(entry));
+
+exit:
+    return error;
+}
+
+otError ServiceTable::GetNextService(Iterator &aIterator, ServiceEntry &aEntry)
+{
+    otError       error  = OT_ERROR_NONE;
+    uint8_t       offset = *reinterpret_cast<uint8_t *>(&aIterator);
+    ServiceEntry *entry;
+
+    VerifyOrExit(offset < mLength, error = OT_ERROR_NOT_FOUND);
+
+    entry = reinterpret_cast<ServiceEntry *>(mData + offset);
+    offset += entry->GetSize();
+    aEntry = *entry;
+
+exit:
+    aIterator = *reinterpret_cast<Iterator *>(&offset);
+
+    return error;
+}
+
+ServiceEntry *ServiceTable::FindService(uint32_t       aEnterpriseNumber,
+                                        const uint8_t *aServiceData,
+                                        uint8_t        aServiceDataLength)
+{
+    uint8_t *     start = mData;
+    ServiceEntry *entry;
+
+    while (start < mData + mLength)
+    {
+        entry = reinterpret_cast<ServiceEntry *>(start);
+        if (entry->MatchService(aEnterpriseNumber, aServiceData, aServiceDataLength))
+        {
+            ExitNow();
+        }
+
+        start += entry->GetSize();
+    }
+
+    entry = NULL;
+
+exit:
+    return entry;
+}
+
+otError ServiceTable::FindService(uint32_t       aEnterpriseNumber,
+                                  const uint8_t *aServiceData,
+                                  uint8_t        aServiceDataLength,
+                                  ServiceEntry & aEntry)
+{
+    otError       error = OT_ERROR_NONE;
+    ServiceEntry *entry;
+
+    VerifyOrExit((entry = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
+                 error = OT_ERROR_NOT_FOUND);
+    aEntry = *entry;
+
+exit:
+    return error;
+}
+
 UniqueServiceManager::UniqueServiceManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mServiceTable()
     , mTimer(aInstance, &UniqueServiceManager::HandleTimer, this)
     , mNotifierCallback(&UniqueServiceManager::HandleStateChanged, this)
 {
-    memset(mEntries, 0, sizeof(mEntries));
     aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
@@ -57,33 +187,30 @@ otError UniqueServiceManager::RegisterService(const otServiceConfig * aConfig,
                                               otServerCompareCallback aServerCompareCallback,
                                               void *                  aContext)
 {
-    otError         error = OT_ERROR_NONE;
-    otServiceConfig config;
-    bool            rlocIn;
-    uint8_t         i;
+    otError                 error = OT_ERROR_NONE;
+    otServiceConfig         config;
+    ServiceEntry            entry;
+    bool                    rlocIn;
+    otServerCompareCallback compareCallback;
 
-    for (i = 0; i < OT_ARRAY_LENGTH(mEntries); i++)
+    VerifyOrExit(
+        !mServiceTable.ContainsService(aConfig->mEnterpriseNumber, aConfig->mServiceData, aConfig->mServiceDataLength),
+        error = OT_ERROR_ALREADY);
+
+    compareCallback = (aServerCompareCallback != NULL) ? aServerCompareCallback : DefaultServerCompare;
+    SuccessOrExit(error = entry.Init(*aConfig, aServiceUpdateCallback, compareCallback, aContext));
+    SuccessOrExit(error = mServiceTable.AddService(entry));
+
+    if (NetworkDataLeaderServiceLookup(entry, config, rlocIn) == OT_ERROR_NONE)
     {
-        if (mEntries[i].mServiceConfig == NULL)
+        if (entry.GetUpdateCallback())
         {
-            break;
+            entry.GetUpdateCallback()(&config, entry.GetContext());
         }
-    }
-
-    VerifyOrExit(i < OT_ARRAY_LENGTH(mEntries), error = OT_ERROR_NO_BUFS);
-
-    mEntries[i].mServiceConfig         = aConfig;
-    mEntries[i].mServiceUpdateCallback = aServiceUpdateCallback;
-    mEntries[i].mServerCompareCallback = aServerCompareCallback != NULL ? aServerCompareCallback : DefaultServerCompare;
-    mEntries[i].mContext               = aContext;
-
-    if (NetworkDataLeaderServiceLookup(i, config, rlocIn) == OT_ERROR_NONE)
-    {
-        mEntries[i].mServiceUpdateCallback(&config, mEntries[i].mContext);
     }
     else
     {
-        AddNetworkDataLocalService(*mEntries[i].mServiceConfig);
+        AddNetworkDataLocalService(entry.GetServiceConfig());
         GetNetif().GetNetworkDataLocal().SendServerDataNotification();
     }
 
@@ -96,29 +223,37 @@ otError UniqueServiceManager::UnregisterService(uint32_t       aEnterpriseNumber
                                                 uint8_t        aServiceDataLength)
 {
     otError         error = OT_ERROR_NONE;
-    otServiceConfig config;
     bool            rlocIn;
-    uint8_t         i;
+    otServiceConfig config;
+    ServiceEntry    entry;
 
-    for (i = 0; i < OT_ARRAY_LENGTH(mEntries); i++)
+    SuccessOrExit(error = mServiceTable.FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, entry));
+
+    if (NetworkDataLeaderServiceLookup(entry, config, rlocIn) == OT_ERROR_NONE && rlocIn)
     {
-        if (mEntries[i].mServiceConfig != NULL && mEntries[i].mServiceConfig->mEnterpriseNumber == aEnterpriseNumber &&
-            mEntries[i].mServiceConfig->mServiceDataLength == aServiceDataLength &&
-            memcmp(mEntries[i].mServiceConfig->mServiceData, aServiceData, aServiceDataLength) == 0)
-        {
-            break;
-        }
-    }
-
-    VerifyOrExit(i < OT_ARRAY_LENGTH(mEntries), error = OT_ERROR_NOT_FOUND);
-
-    if (NetworkDataLeaderServiceLookup(i, config, rlocIn) == OT_ERROR_NONE && rlocIn)
-    {
-        RemoveNetworkDataLocalService(*mEntries[i].mServiceConfig);
+        RemoveNetworkDataLocalService(entry.GetServiceConfig());
         GetNetif().GetNetworkDataLocal().SendServerDataNotification();
     }
 
-    memset(&mEntries[i], 0, sizeof(ServiceEntry));
+    mServiceTable.RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
+
+exit:
+    return error;
+}
+
+otError UniqueServiceManager::GetServerConfig(uint32_t        aEnterpriseNumber,
+                                              const uint8_t * aServiceData,
+                                              uint8_t         aServiceDataLength,
+                                              otServerConfig *aServerConfig)
+{
+    otError         error = OT_ERROR_NONE;
+    ServiceEntry    entry;
+    otServiceConfig config;
+    bool            rlocIn;
+
+    SuccessOrExit(error = mServiceTable.FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, entry));
+    SuccessOrExit(error = NetworkDataLeaderServiceLookup(entry, config, rlocIn));
+    *aServerConfig = config.mServerConfig;
 
 exit:
     return error;
@@ -131,37 +266,41 @@ void UniqueServiceManager::HandleStateChanged(Notifier::Callback &aCallback, otC
 
 void UniqueServiceManager::HandleStateChanged(otChangedFlags aFlags)
 {
-    otServiceConfig config;
-    bool            rlocIn;
-    bool            startTimer = false;
+    ServiceTable::Iterator iterator   = ServiceTable::kIteratorInit;
+    bool                   startTimer = false;
+    otServiceConfig        config;
+    ServiceEntry           entry;
+    bool                   rlocIn;
 
     VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mEntries); i++)
+    while (mServiceTable.GetNextService(iterator, entry) == OT_ERROR_NONE)
     {
-        if (mEntries[i].mServiceConfig == NULL)
+        if (NetworkDataLeaderServiceLookup(entry, config, rlocIn) == OT_ERROR_NONE)
         {
-            continue;
-        }
-
-        if (NetworkDataLeaderServiceLookup(i, config, rlocIn) == OT_ERROR_NONE)
-        {
-            // If the server is not selected as the primary server, it should unregister the service.
+            // If the server is not elected as the primary server, it should unregister the service.
             if (rlocIn && config.mServerConfig.mRloc16 != GetNetif().GetMle().GetRloc16())
             {
                 // MLE layer will send SVR_DATA.ntf when it detects the mismatch between NetworkDataLeader and
                 // NetworkDataLocal in the function HandleStateChanged().
-                RemoveNetworkDataLocalService(*mEntries[i].mServiceConfig);
+                RemoveNetworkDataLocalService(entry.GetServiceConfig());
             }
 
-            mEntries[i].mServiceUpdateCallback(&config, mEntries[i].mContext);
+            if (entry.GetUpdateCallback())
+            {
+                entry.GetUpdateCallback()(&config, entry.GetContext());
+            }
         }
         else
         {
             // If there are no servers provide the service, server delays a random period, and then registers the
             // service.
             startTimer = true;
-            mEntries[i].mServiceUpdateCallback(NULL, mEntries[i].mContext);
+
+            if (entry.GetUpdateCallback())
+            {
+                entry.GetUpdateCallback()(NULL, entry.GetContext());
+            }
         }
     }
 
@@ -181,20 +320,16 @@ void UniqueServiceManager::HandleTimer(Timer &aTimer)
 
 void UniqueServiceManager::HandleTimer(void)
 {
-    bool sendNotification = false;
+    ServiceTable::Iterator iterator         = ServiceTable::kIteratorInit;
+    bool                   sendNotification = false;
+    ServiceEntry           entry;
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mEntries); i++)
+    while (mServiceTable.GetNextService(iterator, entry) == OT_ERROR_NONE)
     {
-        if (mEntries[i].mServiceConfig == NULL)
+        if (!GetNetif().GetNetworkDataLeader().ContainsService(entry.GetEnterpriseNumber(), entry.GetServiceData(),
+                                                               entry.GetServiceDataLength()))
         {
-            continue;
-        }
-
-        if (!GetNetif().GetNetworkDataLeader().ContainsService(mEntries[i].mServiceConfig->mEnterpriseNumber,
-                                                               mEntries[i].mServiceConfig->mServiceData,
-                                                               mEntries[i].mServiceConfig->mServiceDataLength))
-        {
-            AddNetworkDataLocalService(*mEntries[i].mServiceConfig);
+            AddNetworkDataLocalService(entry.GetServiceConfig());
             sendNotification = true;
         }
     }
@@ -205,14 +340,13 @@ void UniqueServiceManager::HandleTimer(void)
     }
 }
 
-otError UniqueServiceManager::NetworkDataLeaderServiceLookup(uint8_t          aEntryIndex,
+otError UniqueServiceManager::NetworkDataLeaderServiceLookup(ServiceEntry &   aEntry,
                                                              otServiceConfig &aConfig,
                                                              bool &           aRlocIn)
 {
     otError               error    = OT_ERROR_NONE;
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     ThreadNetif &         netif    = GetNetif();
-    ServiceEntry *        entry    = &mEntries[aEntryIndex];
     otServiceConfig       config;
     bool                  serviceExistsInNetworkDataLeader = false;
 
@@ -220,9 +354,7 @@ otError UniqueServiceManager::NetworkDataLeaderServiceLookup(uint8_t          aE
 
     while (netif.GetNetworkDataLeader().GetNextService(&iterator, &config) == OT_ERROR_NONE)
     {
-        if (entry->mServiceConfig->mEnterpriseNumber != config.mEnterpriseNumber ||
-            entry->mServiceConfig->mServiceDataLength != config.mServiceDataLength ||
-            memcmp(entry->mServiceConfig->mServiceData, config.mServiceData, config.mServiceDataLength) != 0)
+        if (!aEntry.MatchService(config.mEnterpriseNumber, config.mServiceData, config.mServiceDataLength))
         {
             continue;
         }
@@ -232,7 +364,7 @@ otError UniqueServiceManager::NetworkDataLeaderServiceLookup(uint8_t          aE
             serviceExistsInNetworkDataLeader = true;
             aConfig                          = config;
         }
-        else if (!entry->mServerCompareCallback(&aConfig.mServerConfig, &config.mServerConfig, entry->mContext))
+        else if (!aEntry.GetCompareCallback()(&aConfig.mServerConfig, &config.mServerConfig, aEntry.GetContext()))
         {
             aConfig = config;
         }
@@ -268,32 +400,25 @@ bool UniqueServiceManager::DefaultServerCompare(const otServerConfig *aServerA,
 {
     bool rval = false;
 
-    if ((Mle::Mle::IsActiveRouter(aServerA->mRloc16) && Mle::Mle::IsActiveRouter(aServerB->mRloc16)) ||
-        (!Mle::Mle::IsActiveRouter(aServerA->mRloc16) && !Mle::Mle::IsActiveRouter(aServerB->mRloc16)))
+    if (Mle::Mle::IsActiveRouter(aServerA->mRloc16) == Mle::Mle::IsActiveRouter(aServerB->mRloc16))
     {
+        // Prefer the server with smaller rloc16
         if (aServerA->mRloc16 <= aServerB->mRloc16)
         {
             rval = true;
-        }
-        else
-        {
-            rval = false;
         }
     }
     else if (Mle::Mle::IsActiveRouter(aServerA->mRloc16))
     {
         rval = true;
     }
-    else if (Mle::Mle::IsActiveRouter(aServerA->mRloc16))
-    {
-        rval = false;
-    }
 
     OT_UNUSED_VARIABLE(aContext);
 
     return rval;
 }
+
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // #if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE

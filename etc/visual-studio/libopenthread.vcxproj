@@ -155,6 +155,7 @@
     <ClCompile Include="..\..\src\core\utils\child_supervision.cpp" />
     <ClCompile Include="..\..\src\core\utils\parse_cmdline.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\unique_service_manager.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
     <ClCompile Include="..\..\src\core\utils\missing_strnlen.c" />
     <ClCompile Include="..\..\src\core\utils\missing_strlcat.c" />
@@ -248,6 +249,7 @@
     <ClInclude Include="..\..\src\core\utils\child_supervision.hpp" />
     <ClInclude Include="..\..\src\core\utils\parse_cmdline.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\unique_service_manager.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
     <ClInclude Include="..\..\src\core\utils\wrap_string.h" />
     <ClInclude Include="..\..\src\core\utils\wrap_stdbool.h" />

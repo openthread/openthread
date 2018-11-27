@@ -369,6 +369,10 @@ private:
                                     otError       aResult);
 #endif
 
+#if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE
+    static void s_HandleServiceUpdateCallback(const otServiceConfig *aConfig, void *aContext);
+#endif
+
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     static void s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
@@ -395,6 +399,9 @@ private:
     void HandleJoinerCallback(otError aError);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
+#endif
+#if OPENTHREAD_ENABLE_SERVICE && OPENTHREAD_ENABLE_UNIQUE_SERVICE
+    void HandleServiceUpdateCallback(const otServiceConfig *aConfig);
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     void HandleSntpResponse(uint64_t aTime, otError aResult);

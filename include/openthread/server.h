@@ -198,19 +198,19 @@ OTAPI otError OTCALL otServerRegister(otInstance *aInstance);
 /**
  * This function registers a unique service to the Leader.
  *
- * The memory pointed by @p aConfig must not be freed or modified before calling 'RemoveService()'.
- *
- * @param[in]  aInstance              A pointer to an OpenThread instance.
- * @param[in]  aConfig                A pointer to the service configuration.
- * @param[in]  aServiceUpdateCallback A pointer to a function that is called when the server changes.
- * @param[in]  aServerCompareCallback A pointer to a function for comparing servers.
- * @param[in]  aContext               A pointer to application-specific context.
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aConfig                 A pointer to the service configuration.
+ * @param[in]  aServiceUpdateCallback  A pointer to a function that is called when the server changes.
+ * @param[in]  aServerCompareCallback  A pointer to a function for comparing servers. NULL means the inner
+ *                                     default comparision function used.
+ * @param[in]  aContext                A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE          Successfully added and registered the service configuration.
  * @retval OT_ERROR_INVALID_ARGS  One or more configuration parameters were invalid.
  * @retval OT_ERROR_NO_BUFS       Not enough room is available to add the service configuration.
  *
- * @sa otServerRemoveUniqueService
+ * @sa otServerUnregisterUniqueService
+ * @sa otUniqueServiceGetServerConfig
  *
  */
 OTAPI otError OTCALL otServerRegisterUniqueService(otInstance *            aInstance,
@@ -222,22 +222,44 @@ OTAPI otError OTCALL otServerRegisterUniqueService(otInstance *            aInst
 /**
  * This function unregisters the unique service to the Leader.
  *
- * @param[in]  aInstance          A pointer to an OpenThread instance.
- * @param[in]  aEnterpriseNumber  Enterprise Number of the service to be deleted.
- * @param[in]  aServiceData       A pointer to an Service Data to look for during deletion.
- * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aEnterpriseNumber   Enterprise Number of the service to be deleted.
+ * @param[in]  aServiceData        A pointer to an Service Data to look for during deletion.
+ * @param[in]  aServiceDataLength  The length of @p aServiceData in bytes.
  *
  * @retval OT_ERROR_NONE       Successfully removed and unregistered the service configuration.
- * @retval OT_ERROR_NOT_FOUND  Could not find the service service.
+ * @retval OT_ERROR_NOT_FOUND  Could not find the given service.
  *
- * @sa otServerAddService
+ * @sa otServerRegisterUniqueService
+ * @sa otUniqueServiceGetServerConfig
  *
  */
-
 OTAPI otError OTCALL otServerUnregisterUniqueService(otInstance *   aInstance,
                                                      uint32_t       aEnterpriseNumber,
                                                      const uint8_t *aServiceData,
                                                      uint8_t        aServiceDataLength);
+
+/**
+ * This function gets the server configuration of the given unique service.
+ *
+ * @param[in]   aInstance           A pointer to an OpenThread instance.
+ * @param[in]   aEnterpriseNumber   Enterprise Number of the service.
+ * @param[in]   aServiceData        A pointer to an Service Data.
+ * @param[in]   aServiceDataLength  The length of @p aServiceData in bytes.
+ * @param[out]  aServerConfig       A pointer to where the server configuration will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the server configuration.
+ * @retval OT_ERROR_NOT_FOUND  Could not find the given service.
+ *
+ * @sa otServerRegisterUniqueService
+ * @sa otServerUnregisterUniqueService
+ *
+ */
+OTAPI otError OTCALL otUniqueServiceGetServerConfig(otInstance *    aInstance,
+                                                    uint32_t        aEnterpriseNumber,
+                                                    const uint8_t * aServiceData,
+                                                    uint8_t         aServiceDataLength,
+                                                    otServerConfig *aServerConfig);
 /**
  * @}
  *

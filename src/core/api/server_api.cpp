@@ -108,6 +108,7 @@ otError otServerRegister(otInstance *aInstance)
     return instance.GetThreadNetif().GetNetworkDataLocal().SendServerDataNotification();
 }
 
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
 otError otServerRegisterUniqueService(otInstance *            aInstance,
                                       const otServiceConfig * aConfig,
                                       otServiceUpdateCallback aServiceUpdateCallback,
@@ -130,4 +131,18 @@ otError otServerUnregisterUniqueService(otInstance *   aInstance,
     return instance.GetThreadNetif().GetUniqueServiceManager().UnregisterService(aEnterpriseNumber, aServiceData,
                                                                                  aServiceDataLength);
 }
+
+otError otUniqueServiceGetServerConfig(otInstance *    aInstance,
+                                       uint32_t        aEnterpriseNumber,
+                                       const uint8_t * aServiceData,
+                                       uint8_t         aServiceDataLength,
+                                       otServerConfig *aServerConfig)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetThreadNetif().GetUniqueServiceManager().GetServerConfig(aEnterpriseNumber, aServiceData,
+                                                                               aServiceDataLength, aServerConfig);
+}
+#endif // OPENTHREAD_ENABLE_UNIQUE_SERVICE
+
 #endif // OPENTHREAD_ENABLE_SERVICE
