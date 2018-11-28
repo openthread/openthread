@@ -75,6 +75,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
     $(NULL)
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
