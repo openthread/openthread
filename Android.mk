@@ -28,6 +28,20 @@
 
 LOCAL_PATH := $(call my-dir)
 
+OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
+OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
+
+OPENTHREAD_COMMON_FLAGS                                          := \
+    -DPACKAGE=\"openthread\"                                        \
+    -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
+    -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
+    -DPACKAGE_STRING=\"OPENTHREAD\ $(OPENTHREAD_DEFAULT_VERSION)\"  \
+    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
+    -DPACKAGE_TARNAME=\"openthread\"                                \
+    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
+    -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
+    $(NULL)
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-core
@@ -49,6 +63,7 @@ LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
@@ -240,6 +255,7 @@ LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
@@ -286,6 +302,7 @@ LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
