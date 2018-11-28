@@ -110,6 +110,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
+    src/core/mac/sub_mac.cpp                                \
+    src/core/mac/sub_mac_callbacks.cpp                      \
     src/core/meshcop/announce_begin_client.cpp              \
     src/core/meshcop/border_agent.cpp                       \
     src/core/meshcop/commissioner.cpp                       \
