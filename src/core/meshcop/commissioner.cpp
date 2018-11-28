@@ -75,6 +75,12 @@ Commissioner::Commissioner(Instance &aInstance)
     , mState(OT_COMMISSIONER_STATE_DISABLED)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
+
+    mCommissionerAloc.mPrefixLength       = 64;
+    mCommissionerAloc.mPreferred          = true;
+    mCommissionerAloc.mValid              = true;
+    mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mCommissionerAloc.mScopeOverrideValid = true;
 }
 
 void Commissioner::AddCoapResources(void)
