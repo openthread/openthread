@@ -123,6 +123,7 @@ enum BLE_COMMON_OPTS
   BLE_COMMON_OPT_PA_LNA          = BLE_OPT_BASE + 0, /**< PA and LNA options */
   BLE_COMMON_OPT_CONN_EVT_EXT    = BLE_OPT_BASE + 1, /**< Extended connection events option */
   BLE_COMMON_OPT_EXTENDED_RC_CAL = BLE_OPT_BASE + 2, /**< Extended RC calibration option */
+  BLE_COMMON_OPT_ADV_SCHED_CFG   = BLE_OPT_BASE + 3, /**< Advertiser role scheduling configuration option */
 };
 
 /** @} */
@@ -145,6 +146,12 @@ enum BLE_COMMON_OPTS
 #define BLE_EVT_LEN_MAX(ATT_MTU) ( \
     offsetof(ble_evt_t, evt.gattc_evt.params.prim_srvc_disc_rsp.services) + ((ATT_MTU) - 1) / 4 * sizeof(ble_gattc_service_t) \
 )
+
+/** @defgroup ADV_SCHED_CFG Advertiser Role Scheduling Configuration
+ * @{ */
+#define ADV_SCHED_CFG_DEFAULT  0  /**< Default advertiser role scheduling configuration. */
+#define ADV_SCHED_CFG_IMPROVED 1  /**< Improved advertiser role scheduling configuration in which the housekeeping time is reduced. */
+/** @} */
 
 /** @defgroup BLE_USER_MEM_TYPES User Memory Types
  * @{ */
@@ -303,12 +310,23 @@ typedef struct
    uint8_t enable : 1; /**< Enable extended RC calibration, enabled by default. */
 } ble_common_opt_extended_rc_cal_t;
 
+/**
+ * @brief Configuration of BLE advertiser role scheduling.
+ *
+ * @note @ref sd_ble_opt_get is not supported for this option.
+ */
+typedef struct
+{
+  uint8_t sched_cfg;  /**< See @ref ADV_SCHED_CFG. */
+} ble_common_opt_adv_sched_cfg_t;
+
 /**@brief Option structure for common options. */
 typedef union
 {
   ble_common_opt_pa_lna_t          pa_lna;          /**< Parameters for controlling PA and LNA pin toggling. */
   ble_common_opt_conn_evt_ext_t    conn_evt_ext;    /**< Parameters for enabling extended connection events. */
   ble_common_opt_extended_rc_cal_t extended_rc_cal; /**< Parameters for enabling extended RC calibration. */
+  ble_common_opt_adv_sched_cfg_t   adv_sched_cfg;   /**< Parameters for configuring advertiser role scheduling. */
 } ble_common_opt_t;
 
 /**@brief Common BLE Option type, wrapping the module specific options. */

@@ -876,8 +876,10 @@ typedef struct
                                                            the bitfield indicates the PHYs the scanner will use for scanning
                                                            on primary advertising channels. The scanner will accept
                                                            @ref BLE_GAP_PHYS_SUPPORTED as secondary advertising channel PHYs.
-                                                         - When used with @ref sd_ble_gap_connect, the
-                                                           bitfield indicates the PHYs on where a connection may be initiated.
+                                                         - When used with @ref sd_ble_gap_connect, the bitfield indicates
+                                                           the PHYs the initiator will use for scanning on primary advertising
+                                                           channels. The initiator will accept connections initiated on either
+                                                           of the @ref BLE_GAP_PHYS_SUPPORTED PHYs.
                                                            If scan_phys contains @ref BLE_GAP_PHY_1MBPS and/or @ref BLE_GAP_PHY_2MBPS,
                                                            the primary scan PHY is @ref BLE_GAP_PHY_1MBPS.
                                                            If scan_phys also contains @ref BLE_GAP_PHY_CODED, the primary scan
@@ -2610,6 +2612,9 @@ SVCALL(SD_BLE_GAP_PHY_UPDATE, uint32_t, sd_ble_gap_phy_update(uint16_t conn_hand
  * @note If the application uses @ref BLE_GAP_DATA_LENGTH_AUTO for one or more members of
  *       p_dl_params, the SoftDevice will choose the highest value supported in current
  *       configuration and connection parameters.
+ * @note  If the link PHY is Coded, the SoftDevice will ensure that the MaxTxTime and/or MaxRxTime
+ *        used in the Data Length Update procedure is at least 2704 us. Otherwise, MaxTxTime and
+ *        MaxRxTime will be limited to maximum 2120 us.
  *
  * @param[in]   conn_handle       Connection handle.
  * @param[in]   p_dl_params       Pointer to local parameters to be used in Data Length Update
