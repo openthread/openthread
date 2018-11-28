@@ -219,7 +219,7 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/ecp.c                  \
     $(NULL)
 
-include $(OT_EXTRAL_BUILD_CONFIG)
+include $(OT_EXTRA_BUILD_CONFIG)
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -264,7 +264,7 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
-include $(OT_EXTRAL_BUILD_CONFIG)
+include $(OT_EXTRA_BUILD_CONFIG)
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
@@ -311,7 +311,7 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
-include $(OT_EXTRAL_BUILD_CONFIG)
+include $(OT_EXTRA_BUILD_CONFIG)
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
