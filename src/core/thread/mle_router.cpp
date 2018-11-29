@@ -322,8 +322,6 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
     netif.GetIp6().GetMpl().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     netif.GetMac().SetBeaconEnabled(true);
 
-    mRouterTable.Clear();
-
     // remove children that do not have matching RLOC16
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
@@ -926,8 +924,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         // Route
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
         VerifyOrExit(route.IsValid(), error = OT_ERROR_PARSE);
+        mRouterTable.Clear();
         SuccessOrExit(error = ProcessRouteTlv(route));
-
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != NULL);
 
@@ -3976,8 +3974,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *          aHeader,
 
     // assign short address
     SetRouterId(routerId);
-    SuccessOrExit(SetStateRouter(GetRloc16(mRouterId)));
 
+    SuccessOrExit(SetStateRouter(GetRloc16(mRouterId)));
+    mRouterTable.Clear();
     mRouterTable.ProcessTlv(routerMaskTlv);
 
     router = mRouterTable.GetRouter(routerId);
