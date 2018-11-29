@@ -657,16 +657,16 @@ class OpenThread_WpanCtl(IThci):
             channelList: channel list (i.e. [21, 22, 23])
 
         Returns:
-            a string with range-like format (i.e. '21-23')
+            a comma separated channel string (i.e. '21, 22, 23')
         """
         chan_mask_range = ''
         if isinstance(channelList, list):
-            if len(channelList) == 1:
-                chan_mask_range = str(channelList[0])
-            elif len(channelList) > 1:
-                chan_mask_range = str(channelList[0]) + '-' + str(channelList[-1])
+            if len(channelList):
+                chan_mask_range = ",".join(str(chan) for chan in channelList)
+            else:
+                print 'empty list'
         else:
-            print 'not a list:', channelList
+            print 'not a valid channel list:', channelList
 
         return chan_mask_range
 
@@ -777,7 +777,7 @@ class OpenThread_WpanCtl(IThci):
                         print 'login success (serial)'
                         time.sleep(0.3)
                         self.deviceConnected = True
-                        self.handle.write('stty cols 128\n')
+                        self.handle.write('stty cols 256\n')
                         time.sleep(1)
                         break
                 if self.deviceConnected == False:
@@ -796,7 +796,7 @@ class OpenThread_WpanCtl(IThci):
                 self.handle.connect(self.dutIpv4, port=self.dutPort, username=WPAN_CARRIER_USER, password=WPAN_CARRIER_PASSWD)
                 print 'login success (ssh)'
                 self.deviceConnected = True
-                self.handle.exec_command('stty cols 128\n')
+                self.handle.exec_command('stty cols 256\n')
                 time.sleep(1)
                 self._is_net = True
             except Exception as e:
