@@ -1640,8 +1640,9 @@ void Interpreter::ProcessService(int argc, char *argv[])
         bool            uniqueService    = false;
 
 #if OPENTHREAD_ENABLE_UNIQUE_SERVICE
-        if (strcmp(argv[argIndex++], "unique") == 0)
+        if (strcmp(argv[argIndex], "unique") == 0)
         {
+            argIndex++;
             uniqueService = true;
             VerifyOrExit(argc > 4, error = OT_ERROR_INVALID_ARGS);
         }
@@ -1652,7 +1653,6 @@ void Interpreter::ProcessService(int argc, char *argv[])
         }
 
         SuccessOrExit(error = ParseLong(argv[argIndex++], enterpriseNumber));
-
         cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[argIndex]));
         memcpy(cfg.mServiceData, argv[argIndex++], cfg.mServiceDataLength);
         cfg.mEnterpriseNumber               = static_cast<uint32_t>(enterpriseNumber);
@@ -1678,12 +1678,15 @@ void Interpreter::ProcessService(int argc, char *argv[])
         uint8_t argIndex         = 1;
         bool    uniqueService    = false;
 
-        if (strcmp(argv[argIndex++], "unique") == 0)
+#if OPENTHREAD_ENABLE_UNIQUE_SERVICE
+        if (strcmp(argv[argIndex], "unique") == 0)
         {
+            argIndex++;
             uniqueService = true;
             VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
         }
         else
+#endif
         {
             VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
         }
