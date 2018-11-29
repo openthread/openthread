@@ -1203,7 +1203,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        otLogNoteMle("Different partition (peer:%d, local:%d)", leaderData.GetPartitionId(),
+        otLogNoteMle("Different partition (peer:%u, local:%u)", leaderData.GetPartitionId(),
                      mLeaderData.GetPartitionId());
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
