@@ -80,8 +80,7 @@ enum
     kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
     kNonceSize       = 13,  ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll     = OT_CHANNEL_ALL, ///< All channels.
-    kScanDurationDefault = 300,            ///< Default interval between channels (milliseconds).
+    kScanDurationDefault = 300, ///< Default interval between channels (milliseconds).
 
     kMaxCsmaBackoffsDirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions

@@ -104,7 +104,7 @@ Mle::Mle(Instance &aInstance)
     , mParentSearchBackoffCancelTime(0)
     , mParentSearchTimer(aInstance, &Mle::HandleParentSearchTimer, this)
 #endif
-    , mAnnounceChannel(OT_RADIO_CHANNEL_MIN)
+    , mAnnounceChannel(0)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
@@ -492,12 +492,12 @@ exit:
     return error;
 }
 
-otError Mle::Discover(uint32_t        aScanChannels,
-                      uint16_t        aPanId,
-                      bool            aJoiner,
-                      bool            aEnableEui64Filtering,
-                      DiscoverHandler aCallback,
-                      void *          aContext)
+otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
+                      uint16_t                aPanId,
+                      bool                    aJoiner,
+                      bool                    aEnableEui64Filtering,
+                      DiscoverHandler         aCallback,
+                      void *                  aContext)
 {
     otError                      error   = OT_ERROR_NONE;
     Message *                    message = NULL;
@@ -1671,7 +1671,7 @@ void Mle::HandleAttachTimer(void)
         {
             SetAttachState(kAttachStateAnnounce);
             SendParentRequest(kParentRequestTypeRoutersAndReeds);
-            mAnnounceChannel = OT_RADIO_CHANNEL_MIN;
+            mAnnounceChannel = Mac::ChannelMask::kChannelIteratorFirst;
             delay            = mAnnounceDelay;
             break;
         }
@@ -1707,31 +1707,14 @@ exit:
 
 bool Mle::PrepareAnnounceState(void)
 {
-    bool                               shouldAnnounce = false;
-    uint16_t                           numChannels    = 0;
-    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
-    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
-    MeshCoP::Dataset                   dataset(MeshCoP::Tlv::kActiveTimestamp);
+    bool             shouldAnnounce = false;
+    Mac::ChannelMask channelMask;
 
     VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && !IsFullThreadDevice() && (mReattachState == kReattachStop));
 
-    SuccessOrExit(GetNetif().GetActiveDataset().Get(dataset));
+    SuccessOrExit(GetActiveDatasetChannelMask(channelMask));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != NULL);
-
-    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
-    VerifyOrExit(channelMaskEntry != NULL);
-
-    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
-    {
-        if (channelMaskEntry->IsChannelSet(channel))
-        {
-            numChannels++;
-        }
-    }
-
-    mAnnounceDelay = kAnnounceTimeout / (numChannels + 1);
+    mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
 
     if (mAnnounceDelay < kMinAnnounceDelay)
     {
@@ -1742,6 +1725,30 @@ bool Mle::PrepareAnnounceState(void)
 
 exit:
     return shouldAnnounce;
+}
+
+otError Mle::GetActiveDatasetChannelMask(Mac::ChannelMask &aChannelMask)
+{
+    otError                            error;
+    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
+    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
+    MeshCoP::Dataset                   dataset(MeshCoP::Tlv::kActiveTimestamp);
+
+    SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
+
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+
+    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
+    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
+
+    aChannelMask.SetMask(channelMaskEntry->GetMask());
+    aChannelMask.Intersect(OT_RADIO_SUPPORTED_CHANNELS);
+
+    VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
+
+exit:
+    return error;
 }
 
 uint32_t Mle::Reattach(void)
@@ -2379,29 +2386,17 @@ exit:
 
 otError Mle::SendOrphanAnnounce(void)
 {
-    otError                            error = OT_ERROR_NONE;
-    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
-    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
-    MeshCoP::Dataset                   dataset(MeshCoP::Tlv::kActiveTimestamp);
+    otError          error;
+    Mac::ChannelMask channelMask;
 
-    SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
+    SuccessOrExit(error = GetActiveDatasetChannelMask(channelMask));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-
-    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
-    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
-
-    VerifyOrExit(mAnnounceChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
-
-    while (!channelMaskEntry->IsChannelSet(mAnnounceChannel))
+    if (channelMask.GetNextChannel(mAnnounceChannel) != OT_ERROR_NONE)
     {
-        mAnnounceChannel++;
-        VerifyOrExit(mAnnounceChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_NOT_FOUND);
+        ExitNow(error = OT_ERROR_NOT_FOUND);
     }
 
     SendAnnounce(mAnnounceChannel, true);
-    mAnnounceChannel++;
 
 exit:
     return error;

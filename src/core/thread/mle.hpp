@@ -557,12 +557,12 @@ public:
      * @retval OT_ERROR_BUSY  Thread Discovery is already in progress.
      *
      */
-    otError Discover(uint32_t        aScanChannels,
-                     uint16_t        aPanId,
-                     bool            aJoiner,
-                     bool            aEnableEui64Filtering,
-                     DiscoverHandler aCallback,
-                     void *          aContext);
+    otError Discover(const Mac::ChannelMask &aScanChannels,
+                     uint16_t                aPanId,
+                     bool                    aJoiner,
+                     bool                    aEnableEui64Filtering,
+                     DiscoverHandler         aCallback,
+                     void *                  aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery is currently in progress.
@@ -1681,6 +1681,8 @@ private:
         kDataRequestNone,   ///< Not waiting for a Data Response.
         kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
     };
+
+    otError GetActiveDatasetChannelMask(Mac::ChannelMask &aChannelMask);
 
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
