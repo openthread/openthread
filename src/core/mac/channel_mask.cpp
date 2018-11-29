@@ -40,78 +40,25 @@
 namespace ot {
 namespace Mac {
 
-uint8_t ChannelMask::GetNumberOfChannels(void) const
-{
-    uint8_t num     = 0;
-    uint8_t channel = kChannelIteratorFirst;
-
-    while (GetNextChannel(channel) == OT_ERROR_NONE)
-    {
-        num++;
-    }
-
-    return num;
-}
-
 otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError  error;
+    uint16_t element;
 
     if (aChannel == kChannelIteratorFirst)
     {
-        aChannel = (OT_RADIO_CHANNEL_MIN - 1);
+        element = Set<32>::kSetIteratorFirst;
+    }
+    else
+    {
+        element = aChannel;
     }
 
-    for (aChannel++; aChannel <= OT_RADIO_CHANNEL_MAX; aChannel++)
-    {
-        if (ContainsChannel(aChannel))
-        {
-            ExitNow(error = OT_ERROR_NONE);
-        }
-    }
+    SuccessOrExit(error = mChannels.GetNextElement(element));
+    aChannel = static_cast<uint8_t>(element);
 
 exit:
     return error;
-}
-
-ChannelMask::InfoString ChannelMask::ToString(void) const
-{
-    InfoString string;
-    uint8_t    channel  = kChannelIteratorFirst;
-    bool       addComma = false;
-    otError    error;
-
-    string.Append("{");
-
-    error = GetNextChannel(channel);
-
-    while (error == OT_ERROR_NONE)
-    {
-        uint8_t rangeStart = channel;
-        uint8_t rangeEnd   = channel;
-
-        while ((error = GetNextChannel(channel)) == OT_ERROR_NONE)
-        {
-            if (channel != rangeEnd + 1)
-            {
-                break;
-            }
-
-            rangeEnd = channel;
-        }
-
-        string.Append("%s%d", addComma ? ", " : " ", rangeStart);
-        addComma = true;
-
-        if (rangeStart < rangeEnd)
-        {
-            string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
-        }
-    }
-
-    string.Append("}");
-
-    return string;
 }
 
 } // namespace Mac

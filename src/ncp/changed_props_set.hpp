@@ -38,6 +38,7 @@
 #include <stddef.h>
 
 #include <openthread/error.h>
+#include "common/set.hpp"
 
 #include "spinel.h"
 
@@ -53,6 +54,11 @@ namespace Ncp {
 class ChangedPropsSet
 {
 public:
+    enum
+    {
+        kMaxSize = 48, ///< Specifies the maximum number of entries (max set size).
+    };
+
     /**
      * Defines an entry in the set/list.
      *
@@ -69,8 +75,8 @@ public:
      *
      */
     ChangedPropsSet(void)
-        : mChangedSet(0)
-        , mFilterSet(0)
+        : mChangedSet()
+        , mFilterSet()
     {
     }
 
@@ -78,7 +84,7 @@ public:
      * This method clears the set.
      *
      */
-    void Clear(void) { mChangedSet = 0; }
+    void Clear(void) { mChangedSet.Clear(); }
 
     /**
      * This method indicates if the set is empty or not.
@@ -86,7 +92,7 @@ public:
      * @returns TRUE if the set if empty, FALSE otherwise.
      *
      */
-    bool IsEmpty(void) const { return (mChangedSet == 0); }
+    bool IsEmpty(void) const { return mChangedSet.IsEmpty(); }
 
     /**
      * This method adds a property to the set. The property added must be in the list of supported properties
@@ -141,7 +147,7 @@ public:
      * @returns TRUE if the entry is in the set, FALSE otherwise.
      *
      */
-    bool IsEntryChanged(uint8_t aIndex) const { return IsBitSet(mChangedSet, aIndex); }
+    bool IsEntryChanged(uint8_t aIndex) const { return mChangedSet.Contains(aIndex); }
 
     /**
      * This method removes an entry associated with an index in the set.
@@ -151,7 +157,7 @@ public:
      * @param[in] aIndex               Index of entry to be removed.
      *
      */
-    void RemoveEntry(uint8_t aIndex) { ClearBit(mChangedSet, aIndex); }
+    void RemoveEntry(uint8_t aIndex) { mChangedSet.Remove(aIndex); }
 
     /**
      * This method enables/disables filtering of a given property.
@@ -173,7 +179,7 @@ public:
      * @returns TRUE if the filter is enabled for the given entry, FALSE otherwise.
      *
      */
-    bool IsEntryFiltered(uint8_t aIndex) const { return IsBitSet(mFilterSet, aIndex); }
+    bool IsEntryFiltered(uint8_t aIndex) const { return mFilterSet.Contains(aIndex); }
 
     /**
      * This method determines whether filtering is enabled for a given property key.
@@ -190,20 +196,16 @@ public:
      * This method clears the filter.
      *
      */
-    void ClearFilter(void) { mFilterSet = 0; }
+    void ClearFilter(void) { mFilterSet.Clear(); }
 
 private:
     uint8_t GetNumEntries(void) const;
     void    Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus);
 
-    static void SetBit(uint64_t &aBitset, uint8_t aBitIndex) { aBitset |= (1ULL << aBitIndex); }
-    static void ClearBit(uint64_t &aBitset, uint8_t aBitIndex) { aBitset &= ~(1ULL << aBitIndex); }
-    static bool IsBitSet(uint64_t aBitset, uint8_t aBitIndex) { return (aBitset & (1ULL << aBitIndex)) != 0; }
-
     static const Entry mSupportedProps[];
 
-    uint64_t mChangedSet;
-    uint64_t mFilterSet;
+    Set<kMaxSize> mChangedSet;
+    Set<kMaxSize> mFilterSet;
 };
 
 } // namespace Ncp

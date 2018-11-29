@@ -91,6 +91,7 @@
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
+    <ClCompile Include="..\..\src\core\common\set.cpp" />
     <ClCompile Include="..\..\src\core\common\settings.cpp" />
     <ClCompile Include="..\..\src\core\common\string.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\set.hpp" />
     <ClInclude Include="..\..\src\core\common\string.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />

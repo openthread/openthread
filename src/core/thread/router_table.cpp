@@ -91,7 +91,7 @@ exit:
 
 void RouterTable::Clear(void)
 {
-    memset(mAllocatedRouterIds, 0, sizeof(mAllocatedRouterIds));
+    mAllocatedRouterIds.Clear();
     memset(mRouterIdReuseDelay, 0, sizeof(mRouterIdReuseDelay));
     UpdateAllocation();
 }
@@ -106,7 +106,7 @@ void RouterTable::ClearNeighbors(void)
 
 bool RouterTable::IsAllocated(uint8_t aRouterId) const
 {
-    return (mAllocatedRouterIds[aRouterId / 8] & (1 << (aRouterId % 8))) != 0;
+    return mAllocatedRouterIds.Contains(aRouterId);
 }
 
 void RouterTable::UpdateAllocation(void)
@@ -242,7 +242,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     VerifyOrExit(aRouterId <= Mle::kMaxRouterId && mActiveRouterCount < Mle::kMaxRouters && !IsAllocated(aRouterId) &&
                  mRouterIdReuseDelay[aRouterId] == 0);
 
-    mAllocatedRouterIds[aRouterId / 8] |= 1 << (aRouterId % 8);
+    mAllocatedRouterIds.Add(aRouterId);
     UpdateAllocation();
 
     rval = GetRouter(aRouterId);
@@ -269,7 +269,7 @@ otError RouterTable::Release(uint8_t aRouterId)
     VerifyOrExit(netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
 
-    mAllocatedRouterIds[aRouterId / 8] &= ~(1 << (aRouterId % 8));
+    mAllocatedRouterIds.Remove(aRouterId);
     UpdateAllocation();
 
     mRouterIdReuseDelay[aRouterId] = Mle::kRouterIdReuseDelay;
@@ -507,7 +507,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
 
         if (aTlv.IsRouterIdSet(i))
         {
-            mAllocatedRouterIds[i / 8] |= 1 << (i % 8);
+            mAllocatedRouterIds.Add(i);
         }
         else
         {
@@ -517,7 +517,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
             router->SetNextHop(Mle::kInvalidRouterId);
             RemoveNeighbor(*router);
 
-            mAllocatedRouterIds[i / 8] &= ~(1 << (i % 8));
+            mAllocatedRouterIds.Remove(i);
         }
     }
 
@@ -546,11 +546,11 @@ void RouterTable::ProcessTlv(const ThreadRouterMaskTlv &aTlv)
 
         if (aTlv.IsAssignedRouterIdSet(i))
         {
-            mAllocatedRouterIds[i / 8] |= 1 << (i % 8);
+            mAllocatedRouterIds.Add(i);
         }
         else
         {
-            mAllocatedRouterIds[i / 8] &= ~(1 << (i % 8));
+            mAllocatedRouterIds.Remove(i);
         }
     }
 

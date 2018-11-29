@@ -41,8 +41,6 @@ namespace Ncp {
 // Note that {`SPINEL_PROP_LAST_STATUS`, `SPINEL_STATUS_RESET_UNKNOWN`} should be first entry to ensure that RESET is
 // reported before any other property update.
 //
-// Since a `uint64_t` is used as bit-mask to track which entries are in the changed set, we should ensure that the
-// number of entries in the list is always less than or equal to 64.
 //
 const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
     // Spinel property , Status (if prop is `LAST_STATUS`),  IsFilterable?
@@ -96,6 +94,9 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
+    OT_STATIC_ASSERT(OT_ARRAY_LENGTH(mSupportedProps) < kMaxSize,
+                     "`kMaxSize` is too small for number of entries defined in `mSupportedProps`, increase `kMaxSize`");
+
     return OT_ARRAY_LENGTH(mSupportedProps);
 }
 
@@ -112,7 +113,7 @@ void ChangedPropsSet::Add(spinel_prop_key_t aPropKey, spinel_status_t aStatus)
         {
             if (!IsEntryFiltered(index))
             {
-                SetBit(mChangedSet, index);
+                mChangedSet.Add(index);
             }
 
             break;
@@ -134,16 +135,16 @@ otError ChangedPropsSet::EnablePropertyFilter(spinel_prop_key_t aPropKey, bool a
         {
             if (aEnable)
             {
-                SetBit(mFilterSet, index);
+                mFilterSet.Add(index);
 
                 // If filter is enabled for a property, the `mChangedSet` is cleared
                 // for the same property so to ensure a pending update is also filtered.
 
-                ClearBit(mChangedSet, index);
+                mChangedSet.Remove(index);
             }
             else
             {
-                ClearBit(mFilterSet, index);
+                mFilterSet.Remove(index);
             }
 
             didFind = true;

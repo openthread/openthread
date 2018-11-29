@@ -139,6 +139,7 @@ SOURCES_COMMON                      = \
     common/logging.cpp                \
     common/message.cpp                \
     common/notifier.cpp               \
+    common/set.cpp                    \
     common/settings.cpp               \
     common/string.cpp                 \
     common/tasklet.cpp                \
@@ -239,6 +240,7 @@ libopenthread_radio_a_SOURCES       = \
     common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
+    common/set.cpp                    \
     common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
@@ -303,6 +305,7 @@ HEADERS_COMMON                      = \
     common/notifier.hpp               \
     common/owner-locator.hpp          \
     common/random.hpp                 \
+    common/set.hpp                    \
     common/settings.hpp               \
     common/string.hpp                 \
     common/tasklet.hpp                \

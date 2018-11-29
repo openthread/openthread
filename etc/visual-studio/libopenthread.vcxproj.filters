@@ -144,6 +144,9 @@
     <ClCompile Include="..\..\src\core\common\notifier.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\set.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\settings.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -411,6 +414,9 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\new.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\set.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\string.hpp">

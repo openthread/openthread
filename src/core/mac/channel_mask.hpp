@@ -39,7 +39,7 @@
 #include <limits.h>
 #include <openthread/platform/radio.h>
 
-#include "common/string.hpp"
+#include "common/set.hpp"
 
 namespace ot {
 namespace Mac {
@@ -57,8 +57,6 @@ namespace Mac {
 /**
  * This class defines a channel mask.
  *
- * It is a wrapper class around a `uint32_t` bit vector representing a set of channels.
- *
  */
 class ChannelMask
 {
@@ -66,21 +64,16 @@ public:
     enum
     {
         kChannelIteratorFirst = 0xff, ///< Value to pass in `GetNextChannel()` to get the first channel in the mask.
-        kInfoStringSize       = 45,   ///< Recommended buffer size to use with `ToString()`.
     };
 
-    /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
+    typedef Set<32>::InfoString InfoString;
 
     /**
      * This constructor initializes a `ChannelMask` instance.
      *
      */
     ChannelMask(void)
-        : mMask(0)
+        : mChannels()
     {
     }
 
@@ -91,7 +84,7 @@ public:
      *
      */
     ChannelMask(uint32_t aMask)
-        : mMask(aMask)
+        : mChannels(aMask)
     {
     }
 
@@ -99,7 +92,7 @@ public:
      * This method clears the channel mask.
      *
      */
-    void Clear(void) { mMask = 0; }
+    void Clear(void) { mChannels.Clear(); }
 
     /**
      * This method gets the channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
@@ -107,7 +100,7 @@ public:
      * @returns The channel mask.
      *
      */
-    uint32_t GetMask(void) const { return mMask; }
+    uint32_t GetMask(void) const { return mChannels.GetAsMask(); }
 
     /**
      * This method sets the channel mask.
@@ -115,7 +108,7 @@ public:
      * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
      *
      */
-    void SetMask(uint32_t aMask) { mMask = aMask; }
+    void SetMask(uint32_t aMask) { mChannels.SetFromMask(aMask); }
 
     /**
      * This method indicates if the mask is empty.
@@ -123,7 +116,7 @@ public:
      * @returns TRUE if the mask is empty, FALSE otherwise.
      *
      */
-    bool IsEmpty(void) const { return (mMask == 0); }
+    bool IsEmpty(void) const { return mChannels.IsEmpty(); }
 
     /**
      * This method indicates if the mask contains only a single channel.
@@ -131,7 +124,7 @@ public:
      * @returns TRUE if channel mask contains a single channel, FALSE otherwise
      *
      */
-    bool IsSingleChannel(void) const { return ((mMask != 0) && ((mMask & (mMask - 1)) == 0)); }
+    bool IsSingleChannel(void) const { return GetNumberOfChannels() == 1; }
 
     /**
      * This method indicates if the mask contains a given channel.
@@ -143,7 +136,7 @@ public:
      */
     bool ContainsChannel(uint8_t aChannel) const
     {
-        return (aChannel < sizeof(mMask) * CHAR_BIT) ? ((1UL << aChannel) & mMask) != 0 : false;
+        return (aChannel < mChannels.GetMaxSize()) ? mChannels.Contains(aChannel) : false;
     }
 
     /**
@@ -154,9 +147,9 @@ public:
      */
     void AddChannel(uint8_t aChannel)
     {
-        if (aChannel < sizeof(mMask) * CHAR_BIT)
+        if (aChannel < mChannels.GetMaxSize())
         {
-            mMask |= (1UL << aChannel);
+            mChannels.Add(aChannel);
         }
     }
 
@@ -168,9 +161,9 @@ public:
      */
     void RemoveChannel(uint8_t aChannel)
     {
-        if (aChannel < sizeof(mMask) * CHAR_BIT)
+        if (aChannel < mChannels.GetMaxSize())
         {
-            mMask &= ~(1UL << aChannel);
+            mChannels.Remove(aChannel);
         }
     }
 
@@ -180,7 +173,7 @@ public:
      * @param[in]  aOtherMask  Another channel mask.
      *
      */
-    void Intersect(const ChannelMask &aOtherMask) { mMask &= aOtherMask.mMask; }
+    void Intersect(const ChannelMask &aOtherMask) { mChannels.Intersect(aOtherMask.mChannels); }
 
     /**
      * This method returns the number of channels in the mask.
@@ -188,7 +181,7 @@ public:
      * @returns Number of channels in the mask.
      *
      */
-    uint8_t GetNumberOfChannels(void) const;
+    uint8_t GetNumberOfChannels(void) const { return static_cast<uint8_t>(mChannels.GetNumberOfElements()); }
 
     /**
      * This method gets the next channel in the channel mask.
@@ -214,7 +207,7 @@ public:
      * @returns TRUE if the two masks are equal, FALSE otherwise.
      *
      */
-    bool operator==(const ChannelMask &aAnother) const { return (mMask == aAnother.mMask); }
+    bool operator==(const ChannelMask &aAnother) const { return mChannels == aAnother.mChannels; }
 
     /**
      * This method overloads `!=` operator to indicate whether two masks are different.
@@ -224,7 +217,7 @@ public:
      * @returns TRUE if the two masks are different, FALSE otherwise.
      *
      */
-    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
+    bool operator!=(const ChannelMask &aAnother) const { return mChannels != aAnother.mChannels; }
 
     /**
      * This method converts the channel mask into a human-readable string.
@@ -239,14 +232,14 @@ public:
      * @returns  An `InfoString` object representing the channel mask.
      *
      */
-    InfoString ToString(void) const;
+    InfoString ToString(void) const { return mChannels.ToString(); }
 
 private:
 #if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)
 #error `OT_RADIO_CHANNEL_MAX` or `OT_RADIO_CHANNEL_MIN` are larger than 32. `ChannelMask` uses 32 bit mask.
 #endif
 
-    uint32_t mMask;
+    Set<32> mChannels;
 };
 
 /**

@@ -31,6 +31,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/set.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mle_constants.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -341,12 +342,12 @@ private:
         return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
     }
 
-    Router   mRouters[Mle::kMaxRouters];
-    uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId + 1)];
-    uint8_t  mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
-    uint32_t mRouterIdSequenceLastUpdated;
-    uint8_t  mRouterIdSequence;
-    uint8_t  mActiveRouterCount;
+    Router                     mRouters[Mle::kMaxRouters];
+    uint32_t                   mRouterIdSequenceLastUpdated;
+    uint8_t                    mRouterIdSequence;
+    uint8_t                    mActiveRouterCount;
+    Set<Mle::kMaxRouterId + 1> mAllocatedRouterIds;
+    uint8_t                    mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
 };
 
 #endif // OPENTHREAD_FTD

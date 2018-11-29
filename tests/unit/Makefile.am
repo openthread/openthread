@@ -115,6 +115,7 @@ check_PROGRAMS                                                      = \
     test-network-data                                                 \
     test-priority-queue                                               \
     test-pskc                                                         \
+    test-set                                                          \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
     test-string                                                       \
@@ -202,6 +203,9 @@ test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
 test_pskc_LDADD              = $(COMMON_LDADD)
 test_pskc_SOURCES            = test_platform.cpp test_pskc.cpp
 
+test_set_LDADD               = $(COMMON_LDADD)
+test_set_SOURCES             = test_platform.cpp test_set.cpp
+
 test_string_LDADD            = $(COMMON_LDADD)
 test_string_SOURCES          = test_platform.cpp test_string.cpp
 
@@ -243,6 +247,7 @@ PRETTY_FILES                                                        = \
     $(test_network_data_SOURCES)                                      \
     $(test_priority_queue_SOURCES)                                    \
     $(test_pskc_SOURCES)                                              \
+    $(test_set_SOURCES)                                               \
     $(test_spinel_decoder_SOURCES)                                    \
     $(test_spinel_encoder_SOURCES)                                    \
     $(test_string_SOURCES)                                            \
