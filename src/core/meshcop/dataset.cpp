@@ -256,7 +256,6 @@ otError Dataset::Set(const Dataset &aDataset)
     return OT_ERROR_NONE;
 }
 
-#if OPENTHREAD_FTD
 otError Dataset::Set(const otOperationalDataset &aDataset)
 {
     otError                     error = OT_ERROR_NONE;
@@ -369,7 +368,6 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
-#endif // OPENTHREAD_FTD
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {

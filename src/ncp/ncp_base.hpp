@@ -310,13 +310,14 @@ protected:
 
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
-#if OPENTHREAD_FTD
-    otError EncodeChildInfo(const otChildInfo &aChildInfo);
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
                                      const uint8_t **      aTlvs             = NULL,
                                      uint8_t *             aTlvsLength       = NULL,
                                      const otIp6Address ** aDestIpAddress    = NULL,
                                      bool                  aAllowEmptyValues = false);
+
+#if OPENTHREAD_FTD
+    otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
 #if OPENTHREAD_ENABLE_UDP_FORWARD

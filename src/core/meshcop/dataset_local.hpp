@@ -114,7 +114,6 @@ public:
      */
     uint32_t GetUpdateTime(void) const { return mUpdateTime; }
 
-#if OPENTHREAD_FTD
     /**
      * This method stores the dataset into non-volatile memory.
      *
@@ -122,7 +121,6 @@ public:
      *
      */
     otError Set(const otOperationalDataset &aDataset);
-#endif
 
     /**
      * This method stores the dataset into non-volatile memory.
