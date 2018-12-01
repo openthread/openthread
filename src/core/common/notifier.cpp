@@ -206,8 +206,9 @@ exit:
 
 void Notifier::LogChangedFlags(otChangedFlags aFlags) const
 {
-    otChangedFlags                 flags   = aFlags;
-    bool                           isFirst = true;
+    otChangedFlags                 flags    = aFlags;
+    bool                           addSpace = false;
+    bool                           didLog   = false;
     String<kFlagsStringBufferSize> string;
 
     for (uint8_t bit = 0; bit < sizeof(otChangedFlags) * CHAR_BIT; bit++)
@@ -216,19 +217,33 @@ void Notifier::LogChangedFlags(otChangedFlags aFlags) const
 
         if (flags & (1 << bit))
         {
-            SuccessOrExit(string.Append("%s%s", isFirst ? "" : " ", FlagToString(1 << bit)));
-            isFirst = false;
+            if (string.GetLength() >= kFlagsStringLineLimit)
+            {
+                otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s ...", aFlags, didLog ? "... " : "[",
+                              string.AsCString());
+                string.Clear();
+                didLog   = true;
+                addSpace = false;
+            }
+
+            string.Append("%s%s", addSpace ? " " : "", FlagToString(1 << bit));
+            addSpace = true;
+
             flags ^= (1 << bit);
         }
     }
 
 exit:
-    otLogInfoCore("Notifier: StateChanged (0x%04x) [%s] ", aFlags, string.AsCString());
+    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s] ", aFlags, didLog ? "... " : "[", string.AsCString());
 }
 
 const char *Notifier::FlagToString(otChangedFlags aFlag) const
 {
     const char *retval = "(unknown)";
+
+    // To ensure no clipping of flag names in the logs, the returned
+    // strings from this method should have shorter length than
+    // `kMaxFlagNameLength` value.
 
     switch (aFlag)
     {
