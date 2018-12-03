@@ -49,8 +49,7 @@ Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to 
 It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
 
 ## nRF52840 dongle support (PCA10059)
-
-You can build the libraries with support for USB bootloader present in PCA10059. As this dongle uses native USB support we have to enable it as well. To do so, build the libraries with the following parameter:
+You can build the libraries with support for USB bootloader with automatic USB DFU trigger support in PCA10059. As this dongle uses native USB support we have to enable it as well. To do so, build the libraries with the following parameter:
 ```
 $ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
 ```

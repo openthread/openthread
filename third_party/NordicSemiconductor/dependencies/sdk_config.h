@@ -297,6 +297,15 @@
 #define USBD_ENABLED 0
 #endif
 #endif // USB_CDC_AS_SERIAL_TRANSPORT == 1
+
+// <q> Enable power USB detection.
+
+// <i> Configure if the example supports USB port connection.
+
+#ifndef USBD_POWER_DETECTION
+#define USBD_POWER_DETECTION 1
+#endif
+
 // <o> USBD_CONFIG_IRQ_PRIORITY  - Interrupt priority
 
 // <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
@@ -347,6 +356,77 @@
 
 // </e>
 
+
+// <h> Application info used by the USB DFU.
+ 
+// <q> @def APP_NAME
+
+// <i> Application name in a human readable string.
+
+
+#ifndef APP_NAME
+#define APP_NAME "OpenThread App"
+#endif
+
+
+// <q> APP_VERSION_MAJOR
+
+// <i> Application version major version.
+
+#ifndef APP_VERSION_MAJOR
+#define APP_VERSION_MAJOR 1
+#endif
+
+
+// <q> APP_VERSION_MINOR
+
+// <i> Application version minor version.
+
+
+#ifndef APP_VERSION_MINOR
+#define APP_VERSION_MINOR 0
+#endif
+
+
+// <q> APP_VERSION_PATCH
+
+// <i> Application version patch version.
+
+
+#ifndef APP_VERSION_PATCH
+#define APP_VERSION_PATCH 0
+#endif
+
+
+// <q> @def APP_ID
+
+// <i> Application ID.
+
+
+#ifndef APP_ID
+#define APP_ID 1
+#endif
+
+
+// <q> APP_VERSION_PRERELEASE
+
+// <i> Application prerelease tag.
+
+
+#ifndef APP_VERSION_PRERELEASE
+#define APP_VERSION_PRERELEASE ""
+#endif
+
+
+// <q> APP_VERSION_METADATA
+
+// <i> Application metadata.
+
+
+#ifndef APP_VERSION_METADATA
+#define APP_VERSION_METADATA ""
+#endif
+
 // <h> app_usbd_cdc_acm - USB CDC ACM class
 
 //==========================================================
@@ -368,6 +448,52 @@
 #endif
 
 // </h>
+
+// <h> app_usbd_nrf_dfu_trigger - USB Trigger library
+
+//==========================================================
+// <q> APP_USBD_NRF_DFU_TRIGGER_ENABLED
+
+
+// <i> Enable possibility to enter the bootloader from the application via a software trigger send over USB.
+// <i> Requires configured BSP_SELF_PINRESET_PIN which is a GPIO pin connected to the reset pin.
+
+#ifndef APP_USBD_NRF_DFU_TRIGGER_ENABLED
+#define APP_USBD_NRF_DFU_TRIGGER_ENABLED 0
+#endif
+
+// <q> BSP_SELF_PINRESET_PIN
+
+
+// <i> Enable possibility to enter the bootloader from the application via a software trigger send over USB.
+// <i> Requires configured BSP_SELF_PINRESET_PIN which is a GPIO pin connected to the reset pin.
+// <i> NRF_GPIO_PIN_MAP(0,19) is a pin used on Nordic PCA10059 Dongle.
+
+#ifndef BSP_SELF_PINRESET_PIN
+#define BSP_SELF_PINRESET_PIN NRF_GPIO_PIN_MAP(0, 19)
+#endif
+
+// <q> NRF_DFU_TRIGGER_USB_USB_SHARED
+
+// <i> Flag indicating whether USB is used for other purposes in the application.
+
+#ifndef NRF_DFU_TRIGGER_USB_USB_SHARED
+#define NRF_DFU_TRIGGER_USB_USB_SHARED 1
+#endif
+
+
+// <q> NRF_DFU_TRIGGER_USB_INTERFACE_NUM
+
+// <i> The USB interface to use for the DFU Trigger library.
+// <i> According to the USB Specification, interface numbers cannot have gaps. Tailor this value to adhere to this
+// <i> limitation. Takes values between 0-255
+
+#ifndef NRF_DFU_TRIGGER_USB_INTERFACE_NUM
+#define NRF_DFU_TRIGGER_USB_INTERFACE_NUM 0
+#endif
+
+// </h>
+
 //==========================================================
 
 // <h> nrf_log - Logging
