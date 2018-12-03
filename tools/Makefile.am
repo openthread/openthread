@@ -50,6 +50,7 @@ endif # OPENTHREAD_BUILD_TOOLS
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
+    spi-hdlc-adapter                      \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
