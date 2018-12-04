@@ -500,7 +500,6 @@ class OpenThread_WpanCtl(IThci):
                 nodeType = 'end'
             else:
                 pass
-            self.__setRouterSelectionJitter(1)
             if startType == 'form':
                 startCmd = WPANCTL_CMD + '%s %s -c %s -T %s ' % (startType, self.networkName, str(self.channel), nodeType)
             else:
@@ -1184,6 +1183,7 @@ class OpenThread_WpanCtl(IThci):
                 print 'join as leader'
                 #rsdn
                 mode = 15
+                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
@@ -1191,6 +1191,7 @@ class OpenThread_WpanCtl(IThci):
                 print 'join as router'
                 #rsdn
                 mode = 15
+                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
@@ -1207,6 +1208,7 @@ class OpenThread_WpanCtl(IThci):
                 print 'join as REED'
                 #rsdn
                 mode = 15
+                self.__setRouterSelectionJitter(1)
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:

@@ -36,6 +36,7 @@
 #define OPENTHREAD_DATASET_H_
 
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -287,6 +288,19 @@ OTAPI bool OTCALL otDatasetIsCommissioned(otInstance *aInstance);
 OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
+ * This function sets the Active Operational Dataset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Active Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Active Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
+ *
+ */
+OTAPI otError OTCALL otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
+
+/**
  * This function gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
@@ -297,6 +311,116 @@ OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalData
  *
  */
 OTAPI otError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * This function sets the Pending Operational Dataset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the Pending Operational Dataset.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
+ *
+ */
+OTAPI otError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
+
+/**
+ * This function sends MGMT_ACTIVE_GET.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ *
+ */
+OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
+                                                const otOperationalDatasetComponents *aDatasetComponents,
+                                                const uint8_t *                       aTlvTypes,
+                                                uint8_t                               aLength,
+                                                const otIp6Address *                  aAddress);
+
+/**
+ * This function sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ *
+ */
+OTAPI otError OTCALL otDatasetSendMgmtActiveSet(otInstance *                aInstance,
+                                                const otOperationalDataset *aDataset,
+                                                const uint8_t *             aTlvs,
+                                                uint8_t                     aLength);
+
+/**
+ * This function sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDatasetComponents  A pointer to a Dataset Components structure specifying which components to request.
+ * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+ * @param[in]  aLength             The length of @p aTlvTypes.
+ * @param[in]  aAddress            A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ *
+ */
+OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
+                                                 const otOperationalDatasetComponents *aDatasetComponents,
+                                                 const uint8_t *                       aTlvTypes,
+                                                 uint8_t                               aLength,
+                                                 const otIp6Address *                  aAddress);
+
+/**
+ * This function sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ *
+ */
+OTAPI otError OTCALL otDatasetSendMgmtPendingSet(otInstance *                aInstance,
+                                                 const otOperationalDataset *aDataset,
+                                                 const uint8_t *             aTlvs,
+                                                 uint8_t                     aLength);
+
+/**
+ * Get minimal delay timer.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval the value of minimal delay timer (in ms).
+ *
+ */
+OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
+
+/**
+ * Set minimal delay timer.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
+ *
+ * @retval  OT_ERROR_NONE          Successfully set minimal delay timer.
+ * @retval  OT_ERROR_INVALID_ARGS  If @p aDelayTimerMinimal is not valid.
+ *
+ */
+OTAPI otError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
 
 /**
  * @}
