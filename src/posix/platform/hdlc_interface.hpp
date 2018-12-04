@@ -80,6 +80,12 @@ public:
     explicit HdlcInterface(Callbacks &aCallbacks);
 
     /**
+     * This destructor deinitializes the object.
+     *
+     */
+    ~HdlcInterface(void);
+
+    /**
      * This method initializes the interface to the Radio Co-processor (RCP)
      *
      * @note This method should be called before reading and sending frames to the interface.

@@ -121,9 +121,14 @@ exit:
     return error;
 }
 
+HdlcInterface::~HdlcInterface(void)
+{
+    Deinit();
+}
+
 void HdlcInterface::Deinit(void)
 {
-    assert(mSockFd != -1);
+    VerifyOrExit(mSockFd != -1);
 
     VerifyOrExit(0 == close(mSockFd), perror("close NCP"));
     VerifyOrExit(-1 != wait(NULL), perror("wait NCP"));
