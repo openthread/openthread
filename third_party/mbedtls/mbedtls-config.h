@@ -29,6 +29,7 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <openthread/config.h>
@@ -165,6 +166,10 @@ __inline void mbedtls_platform_zeroize( void *buf, size_t len)
 
 #if defined(MBEDTLS_USER_CONFIG_FILE)
 #include MBEDTLS_USER_CONFIG_FILE
+#endif
+
+#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE)
+typedef void mbedtls_ecp_restart_ctx;
 #endif
 
 #include "mbedtls/check_config.h"
