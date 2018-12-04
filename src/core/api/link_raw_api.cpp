@@ -59,7 +59,7 @@ bool otLinkRawIsEnabled(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled();
 }
 
-otError otLinkSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
+otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     return static_cast<Instance *>(aInstance)->GetLinkRaw().SetShortAddress(aShortAddress);
 }
