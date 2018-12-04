@@ -192,7 +192,6 @@ public:
      */
     otError Set(const Dataset &aDataset);
 
-#if OPENTHREAD_FTD
     /**
      * This method sets the Dataset.
      *
@@ -202,7 +201,6 @@ public:
      *
      */
     otError Set(const otOperationalDataset &aDataset);
-#endif
 
     /**
      * This method removes a TLV from the Dataset.

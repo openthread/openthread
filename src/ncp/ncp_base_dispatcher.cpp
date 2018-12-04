@@ -792,6 +792,26 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE>;
         break;
 #endif
+
+    case SPINEL_PROP_THREAD_ACTIVE_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ACTIVE_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_PENDING_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET>;
+        break;
+    case SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET>;
+        break;
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_JAM_DETECT_ENABLE>;
@@ -865,24 +885,6 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_STREAM>;
         break;
 #endif
-    case SPINEL_PROP_THREAD_ACTIVE_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ACTIVE_DATASET>;
-        break;
-    case SPINEL_PROP_THREAD_PENDING_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PENDING_DATASET>;
-        break;
-    case SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET>;
-        break;
-    case SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_PENDING_DATASET>;
-        break;
-    case SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_ACTIVE_DATASET>;
-        break;
-    case SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET:
-        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET>;
-        break;
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
     case SPINEL_PROP_CHILD_SUPERVISION_INTERVAL:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>;
