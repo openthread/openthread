@@ -98,6 +98,18 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance);
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
 
 /**
+ * Set the Short Address for address filtering.
+ *
+ * @param[in] aInstance      A pointer to an OpenThread instance.
+ * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError OTCALL otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+
+/**
  * Transition the radio from Receive to Sleep.
  * Turn off the radio.
  *
