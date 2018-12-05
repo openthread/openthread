@@ -1142,6 +1142,7 @@ exit:
 void MeshForwarder::SetDiscoverParameters(const Mac::ChannelMask &aScanChannels)
 {
     uint32_t mask;
+
     mask = aScanChannels.IsEmpty() ? static_cast<uint32_t>(OT_RADIO_SUPPORTED_CHANNELS) : aScanChannels.GetMask();
     mScanChannels.SetMask(mask & OT_RADIO_SUPPORTED_CHANNELS);
 }
