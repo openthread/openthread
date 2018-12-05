@@ -936,9 +936,10 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         else
         {
             SetStateRouter(GetRloc16());
-            mRetrieveNewNetworkData = true;
-            SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
         }
+
+        mRetrieveNewNetworkData = true;
+        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
         GetNetif().GetTimeSync().HandleTimeSyncMessage(aMessage);
