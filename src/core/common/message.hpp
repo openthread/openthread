@@ -107,6 +107,7 @@ struct MessageInfo
         uint8_t  mChannel; ///< Used for MLE Announce.
     } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
 
+    uint32_t mFlowLabel : 20;   ///< Identifies the flow label of IP6 packet.
     uint8_t  mType : 2;         ///< Identifies the type of message.
     uint8_t  mSubType : 4;      ///< Identifies the message sub type.
     bool     mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
@@ -114,7 +115,6 @@ struct MessageInfo
     uint8_t  mPriority : 3;     ///< Identifies the message priority level (higher value is higher priority).
     bool     mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool     mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
-    uint32_t mFlowLabel : 20;   ///< Identifies the flow label of IP6 packet.
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.

@@ -227,7 +227,7 @@ public:
      */
     uint32_t GetFlowLabel(void) const
     {
-        return static_cast<uint8_t>((HostSwap32(mVersionClassFlow.m32[0]) & kFlowLabelMask) >> kFlowLabelOffset);
+        return static_cast<uint32_t>((HostSwap32(mVersionClassFlow.m32[0]) & kFlowLabelMask) >> kFlowLabelOffset);
     }
 
     /**
