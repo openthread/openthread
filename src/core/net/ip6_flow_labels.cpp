@@ -50,7 +50,7 @@ FlowLabels::FlowLabels(Instance &aInstance)
 
 bool FlowLabels::ContainsFlowLabel(uint32_t aFlowLabel)
 {
-    return (FindFlowLabelEntry(aFlowLabel, true) != NULL) ? true : false;
+    return (FindFlowLabelEntry(true, aFlowLabel) != NULL) ? true : false;
 }
 
 otError FlowLabels::AddFlowLabel(uint32_t aFlowLabel)
@@ -59,8 +59,8 @@ otError FlowLabels::AddFlowLabel(uint32_t aFlowLabel)
     FlowLabelEntry *entry;
 
     VerifyOrExit((aFlowLabel & static_cast<uint32_t>(~kFlowLabelMask)) == 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(FindFlowLabelEntry(aFlowLabel, true) == NULL, error = OT_ERROR_ALREADY);
-    VerifyOrExit((entry = FindFlowLabelEntry(0, false)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(FindFlowLabelEntry(true, aFlowLabel) == NULL, error = OT_ERROR_ALREADY);
+    VerifyOrExit((entry = FindFlowLabelEntry(false)) != NULL, error = OT_ERROR_NO_BUFS);
 
     entry->mFlowLabel = aFlowLabel;
     entry->mValid     = true;
@@ -75,7 +75,7 @@ otError FlowLabels::RemoveFlowLabel(uint32_t aFlowLabel, uint8_t aDelay)
     otError         error = OT_ERROR_NONE;
     FlowLabelEntry *entry;
 
-    VerifyOrExit((entry = FindFlowLabelEntry(aFlowLabel, true)) != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((entry = FindFlowLabelEntry(true, aFlowLabel)) != NULL, error = OT_ERROR_NOT_FOUND);
 
     entry->mDelay = aDelay;
     if (entry->mDelay == 0)
@@ -145,7 +145,7 @@ void FlowLabels::HandleTimer(void)
     }
 }
 
-FlowLabels::FlowLabelEntry *FlowLabels::FindFlowLabelEntry(uint32_t aFlowLabel, bool aValid)
+FlowLabels::FlowLabelEntry *FlowLabels::FindFlowLabelEntry(bool aValid, uint32_t aFlowLabel)
 {
     FlowLabelEntry *entry = NULL;
 

@@ -135,7 +135,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    FlowLabelEntry *FindFlowLabelEntry(uint32_t aFlowLabel, bool aValid);
+    FlowLabelEntry *FindFlowLabelEntry(bool aValid, uint32_t aFlowLabel = 0);
 
     FlowLabelEntry mEntries[kNumFlowLabelEntries];
     TimerMilli     mTimer;
