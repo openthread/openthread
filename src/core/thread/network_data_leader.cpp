@@ -429,6 +429,14 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
         RemoveTemporaryData(mTlvs, mLength);
     }
 
+#if OPENTHREAD_FTD
+    // Synchronize internal 6LoWPAN Context ID Set with recently obtained Network Data.
+    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    {
+        GetNetif().GetNetworkDataLeader().UpdateContextsAfterReset();
+    }
+#endif
+
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
     GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
