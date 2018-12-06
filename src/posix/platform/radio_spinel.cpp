@@ -157,6 +157,14 @@ RadioSpinel::RadioSpinel(void)
     , mTxRadioTid(0)
     , mWaitingTid(0)
     , mWaitingKey(SPINEL_PROP_LAST_STATUS)
+    , mPropertyFormat(NULL)
+    , mExpectedCommand(0)
+    , mError(OT_ERROR_NONE)
+    , mTransmitFrame(NULL)
+    , mShortAddress(0)
+    , mPanId(0xffff)
+    , mRadioCaps(0)
+    , mChannel(0)
     , mRxSensitivity(0)
     , mState(kStateDisabled)
     , mIsPromiscuous(false)
@@ -186,8 +194,8 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
     SuccessOrExit(error = CheckRadioCapabilities());
 
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
-
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
+
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
@@ -705,8 +713,9 @@ exit:
 
 otError RadioSpinel::SetShortAddress(uint16_t aAddress)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mShortAddress != aAddress);
     SuccessOrExit(error = sRadioSpinel.Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
@@ -732,9 +741,11 @@ exit:
 
 otError RadioSpinel::SetPanId(uint16_t aPanId)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mPanId != aPanId);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, aPanId));
-    mPanid = aPanId;
+    mPanId = aPanId;
 
 exit:
     return error;
@@ -1239,8 +1250,9 @@ otError RadioSpinel::Enable(otInstance *aInstance)
     {
         mInstance = aInstance;
 
-        error = Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true);
-        VerifyOrExit(error == OT_ERROR_NONE);
+        SuccessOrExit(error = Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
+        SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
+        SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
 
         error = Get(SPINEL_PROP_PHY_RX_SENSITIVITY, SPINEL_DATATYPE_INT8_S, &mRxSensitivity);
         VerifyOrExit(error == OT_ERROR_NONE);

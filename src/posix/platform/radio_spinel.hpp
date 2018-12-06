@@ -601,7 +601,7 @@ private:
 
     otExtAddress mExtendedAddress;
     uint16_t     mShortAddress;
-    uint16_t     mPanid;
+    uint16_t     mPanId;
     otRadioCaps  mRadioCaps;
     uint8_t      mChannel;
     int8_t       mRxSensitivity;
