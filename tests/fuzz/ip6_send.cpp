@@ -46,7 +46,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otInstance *      instance = NULL;
     otMessage *       message  = NULL;
     otError           error    = OT_ERROR_NONE;
-    otMessageSettings settings = {false, OT_MESSAGE_PRIORITY_NORMAL, 0};
+    otMessageSettings settings = {false, 0, OT_MESSAGE_PRIORITY_NORMAL};
 
     VerifyOrExit(size > 0);
 

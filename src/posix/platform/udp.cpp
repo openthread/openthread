@@ -400,7 +400,7 @@ void platformUdpInit(const char *aIfName)
 
 void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
-    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL, 0};
+    otMessageSettings msgSettings = {false, 0, OT_MESSAGE_PRIORITY_NORMAL};
 
     VerifyOrExit(sPlatNetifIndex != 0);
 

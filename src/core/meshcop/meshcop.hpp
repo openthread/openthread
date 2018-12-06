@@ -58,7 +58,7 @@ enum
  */
 inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
 {
-    otMessageSettings settings = {true, static_cast<otMessagePriority>(kMeshCoPMessagePriority), 0};
+    otMessageSettings settings = {true, 0, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
     return aCoap.NewMessage(&settings);
 }
 
