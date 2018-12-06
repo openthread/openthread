@@ -40,42 +40,30 @@ namespace Ip6 {
 
 otError Header::Init(const Message &aMessage)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t length;
+    otError error = OT_ERROR_NONE;
 
     // check aMessage length
     VerifyOrExit(aMessage.Read(0, sizeof(*this), this) == sizeof(*this), error = OT_ERROR_PARSE);
 
-    // check Version
-    VerifyOrExit(IsVersion6(), error = OT_ERROR_PARSE);
-
-    // check Payload Length
-    length = sizeof(*this) + GetPayloadLength();
-    VerifyOrExit(length == aMessage.GetLength() && length <= Ip6::kMaxDatagramLength, error = OT_ERROR_PARSE);
+    VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
+    VerifyOrExit((sizeof(*this) + GetPayloadLength()) == aMessage.GetLength(), error = OT_ERROR_PARSE);
 
 exit:
     return error;
 }
 
-otError Header::Init(const uint8_t *aDatagram, uint16_t aDatagramLen)
+bool Header::IsValid(void) const
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t length;
-
-    // check datagram pointer and length
-    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(*this)), error = OT_ERROR_PARSE);
-
-    memcpy(this, aDatagram, sizeof(*this));
+    bool ret = true;
 
     // check Version
-    VerifyOrExit(IsVersion6(), error = OT_ERROR_PARSE);
+    VerifyOrExit(IsVersion6(), ret = false);
 
     // check Payload Length
-    length = sizeof(*this) + GetPayloadLength();
-    VerifyOrExit(length == aDatagramLen && length <= Ip6::kMaxDatagramLength, error = OT_ERROR_PARSE);
+    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= Ip6::kMaxDatagramLength, ret = false);
 
 exit:
-    return error;
+    return ret;
 }
 
 } // namespace Ip6

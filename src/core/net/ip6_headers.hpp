@@ -178,16 +178,13 @@ public:
     otError Init(const Message &aMessage);
 
     /**
-     * This method reads the IPv6 header from @p aDatagram.
+     * This method indicates whether or not the header appears to be well-formed.
      *
-     * @param[in]  aDatagram     The IPv6 datagram.
-     * @param[in]  aDatagramLen  The length of IPv6 datagram.
-     *
-     * @retval OT_ERROR_NONE   Successfully read the IPv6 header.
-     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+     * @retval TRUE  if the header appears to be well-formed.
+     * @retval FALSE if the header does not appear to be well-formed.
      *
      */
-    otError Init(const uint8_t *aDatagram, uint16_t aDatagramLen);
+    bool IsValid(void) const;
 
     /**
      * This method indicates whether or not the IPv6 Version is set to 6.
@@ -228,7 +225,7 @@ public:
      * @returns The IPv6 Payload Length value.
      *
      */
-    uint16_t GetPayloadLength(void) { return HostSwap16(mPayloadLength); }
+    uint16_t GetPayloadLength(void) const { return HostSwap16(mPayloadLength); }
 
     /**
      * This method sets the IPv6 Payload Length value.

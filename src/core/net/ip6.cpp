@@ -129,11 +129,16 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
 
 otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority) const
 {
-    otError error = OT_ERROR_NONE;
-    Header  header;
+    otError       error = OT_ERROR_NONE;
+    const Header *header;
 
-    SuccessOrExit(error = header.Init(aDatagram, aDatagramLen));
-    aPriority = DscpToPriority(header.GetDscp());
+    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(Header)), error = OT_ERROR_PARSE);
+
+    header = reinterpret_cast<const Header *>(aDatagram);
+    VerifyOrExit(header->IsValid(), error = OT_ERROR_PARSE);
+    VerifyOrExit(sizeof(Header) + header->GetPayloadLength() == aDatagramLen, error = OT_ERROR_PARSE);
+
+    aPriority = DscpToPriority(header->GetDscp());
 
 exit:
     return error;
