@@ -44,6 +44,14 @@ OPENTHREAD_COMMON_FLAGS                                          := \
 
 include $(CLEAR_VARS)
 
+LOCAL_MODULE := spi-hdlc-adapter
+LOCAL_MODULE_TAGS := eng
+LOCAL_SRC_FILES := tools/spi-hdlc-adapter/spi-hdlc-adapter.c
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
 LOCAL_MODULE := ot-core
 LOCAL_MODULE_TAGS := eng
 

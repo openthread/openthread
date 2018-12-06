@@ -99,9 +99,11 @@ main() {
     make showcommands ot-core
     make showcommands ot-cli
     make showcommands ot-ncp
+    make showcommands spi-hdlc-adapter
 
     test -x out/target/product/generic/system/bin/ot-cli
     test -x out/target/product/generic/system/bin/ot-ncp
+    test -x out/target/product/generic/system/bin/spi-hdlc-adapter
 }
 
 main "$@"
