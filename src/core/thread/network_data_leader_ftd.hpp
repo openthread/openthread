@@ -151,6 +151,14 @@ public:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This method synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
+     *
+     * Note that this method should be called only by the Leader once after reset.
+     *
+     */
+    void UpdateContextsAfterReset(void);
+
 #if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method scans network data for given service ID and returns pointer to the respective TLV, if present.
@@ -185,6 +193,8 @@ private:
 
     int     AllocateContext(void);
     otError FreeContext(uint8_t aContextId);
+    void    StartContextReuseTimer(uint8_t aContextId);
+    void    StopContextReuseTimer(uint8_t aContextId);
 
     otError RemoveContext(uint8_t aContextId);
     otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
@@ -232,7 +242,7 @@ private:
                                       MeshCoP::StateTlv::State aState);
 
     /**
-     * Thread Specification Constants
+     * Thread Specification Constants.
      *
      */
     enum
@@ -240,8 +250,9 @@ private:
         kMinContextId        = 1,            ///< Minimum Context ID (0 is used for Mesh Local)
         kNumContextIds       = 15,           ///< Maximum Context ID
         kContextIdReuseDelay = 48 * 60 * 60, ///< CONTEXT_ID_REUSE_DELAY (seconds)
-        kStateUpdatePeriod   = 1000,         ///< State update period in milliseconds
+        kStateUpdatePeriod   = 60 * 1000,    ///< State update period in milliseconds
     };
+
     uint16_t   mContextUsed;
     uint32_t   mContextLastUsed[kNumContextIds];
     uint32_t   mContextIdReuseDelay;
