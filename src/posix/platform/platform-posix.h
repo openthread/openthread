@@ -242,9 +242,10 @@ void platformNetifInit(otInstance *aInstance);
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
  *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aReadFdSet    A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet   A pointer to the write file descriptors.
+ * @param[inout]  aErrorFdSet   A pointer to the error file descriptors.
+ * @param[inout]  aMaxFd        A pointer to the max file descriptor.
  *
  */
 void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
