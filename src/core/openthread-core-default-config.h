@@ -1663,6 +1663,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
+ *
+ * Specifies the desired number of router links that a REED / FED attempts to maintain.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
+#define OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS 3
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
