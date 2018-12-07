@@ -40,6 +40,8 @@ LEADER = 1
 DUT_ROUTER1 = 2
 DUT_REED = 17
 
+MLE_MIN_LINKS = 3
+
 class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
@@ -84,28 +86,30 @@ class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
         assert msg is True, "Error: The DUT_REED sent an Address Solicit Request"
 
         # 3. DUT_REED: Verify sent a Link Request to at least 3 neighboring Routers.
-        for i in range(0, 3):
+        for i in range(0, MLE_MIN_LINKS):
             msg = reed_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
             command.check_link_request(msg, source_address = command.CheckType.CONTAIN, \
                 leader_data = command.CheckType.CONTAIN)
 
-        # 4. DUT_ROUTER1: Verify sent a Link Accept to DUT_REED.
-        self.simulator.go(30)
-        dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        flag_link_accept = False
-        while True:
-            msg = dut_messages.next_mle_message(mle.CommandType.LINK_ACCEPT, False)
-            if msg == None :
-                break
+        # 4. DUT_REED: Verify at least 3 Link Accept messages sent to DUT_REED.
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
-            destination_link_local = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
-            if ipv6.ip_address(destination_link_local) == msg.ipv6_packet.ipv6_header.destination_address:
-                flag_link_accept = True
-                break
+        link_accept_count = 0
+        destination_link_local = self.nodes[DUT_REED].get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)
 
-        assert flag_link_accept is True, "Error: DUT_ROUTER1 didn't send a Link Accept to DUT_REED"
+        for i in range(1, DUT_REED):
+            dut_messages = self.simulator.get_messages_sent_by(i)
 
-        command.check_link_accept(msg, self.nodes[DUT_REED])
+            while True:
+                msg = dut_messages.next_mle_message(mle.CommandType.LINK_ACCEPT, False)
+                if msg == None:
+                    break
+                if ipv6.ip_address(destination_link_local) == msg.ipv6_packet.ipv6_header.destination_address:
+                    command.check_link_accept(msg, self.nodes[DUT_REED])
+                    link_accept_count += 1
+                    break
+
+        assert (link_accept_count >= MLE_MIN_LINKS) is True, "Error: too few Link Accept sent to DUT_REED"
 
 if __name__ == '__main__':
     unittest.main()
