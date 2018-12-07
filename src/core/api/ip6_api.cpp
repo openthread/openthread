@@ -209,6 +209,7 @@ otError otIp6GetPriority(otInstance *       aInstance,
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    VerifyOrExit((aDatagram != NULL) && (aPriority != NULL), error = OT_ERROR_INVALID_ARGS);
     SuccessOrExit(error =
                       instance.GetIp6().GetPriority(aDatagram, aDatagramLen, *reinterpret_cast<uint8_t *>(aPriority)));
 

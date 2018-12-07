@@ -132,7 +132,7 @@ otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_
     otError       error = OT_ERROR_NONE;
     const Header *header;
 
-    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(Header)), error = OT_ERROR_PARSE);
+    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(Header)), error = OT_ERROR_INVALID_ARGS);
 
     header = reinterpret_cast<const Header *>(aDatagram);
     VerifyOrExit(header->IsValid(), error = OT_ERROR_PARSE);
