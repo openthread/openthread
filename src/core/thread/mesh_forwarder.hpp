@@ -78,7 +78,7 @@ public:
      * @returns The fragment datagram tag value.
      *
      */
-    uint16_t GetDatagramTag() { return mDatagramTag; }
+    uint16_t GetDatagramTag(void) const { return mDatagramTag; }
 
     /**
      * This method sets the fragment datagram tag value.
@@ -94,7 +94,7 @@ public:
      * @returns The fragment priority value.
      *
      */
-    uint8_t GetPriority() { return mPriority; }
+    uint8_t GetPriority(void) const { return mPriority; }
 
     /**
      * This method sets the fragment priotity value.
@@ -110,7 +110,7 @@ public:
      * @returns The fragment priority entry's remaining lifetime.
      *
      */
-    uint8_t GetLifetime() { return mLifetime; }
+    uint8_t GetLifetime(void) const { return mLifetime; }
 
     /**
      * This method sets the remaining lifetime of the fragment priority entry.
