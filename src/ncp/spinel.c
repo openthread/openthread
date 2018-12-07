@@ -2411,6 +2411,18 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "802_15_4_868MHZ_ASK";
         break;
 
+    case SPINEL_CAP_CONFIG_FTD:
+        ret = "CONFIG_FTD";
+        break;
+
+    case SPINEL_CAP_CONFIG_MTD:
+        ret = "CONFIG_MTD";
+        break;
+
+    case SPINEL_CAP_CONFIG_RADIO:
+        ret = "CONFIG_RADIO";
+        break;
+
     case SPINEL_CAP_ROLE_ROUTER:
         ret = "ROLE_ROUTER";
         break;
