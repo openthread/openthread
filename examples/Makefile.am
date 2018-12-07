@@ -41,11 +41,11 @@ EXTRA_DIST                              = \
 
 # Always build (e.g. for 'make all') these subdirectories.
 
-if OPENTHREAD_ENABLE_EXAMPLES
 SUBDIRS                                 = \
     platforms                             \
     $(NULL)
 
+if OPENTHREAD_ENABLE_EXAMPLES
 SUBDIRS                                += \
     apps                                  \
     $(NULL)
