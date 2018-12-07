@@ -1050,11 +1050,11 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
                                            uint8_t                 aFragmentLength,
                                            uint8_t                 aPriority)
 {
-    FragmentEntry *entry;
+    FragmentPriorityEntry *entry;
 
     if (aFragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((entry = GetFragmentEntry(0, true)) != NULL);
+        VerifyOrExit((entry = GetFragmentPriorityEntry(false)) != NULL);
 
         entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
         entry->SetPriority(aPriority);
@@ -1067,7 +1067,7 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
     }
     else
     {
-        VerifyOrExit((entry = GetFragmentEntry(aFragmentHeader.GetDatagramTag(), false)) != NULL);
+        VerifyOrExit((entry = GetFragmentPriorityEntry(true, aFragmentHeader.GetDatagramTag())) != NULL);
 
         if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
         {
@@ -1079,14 +1079,14 @@ exit:
     return;
 }
 
-FragmentEntry *MeshForwarder::GetFragmentEntry(uint16_t aTag, bool aEmpty)
+FragmentPriorityEntry *MeshForwarder::GetFragmentPriorityEntry(bool aValid, uint16_t aTag)
 {
     size_t i;
 
     for (i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
     {
-        if ((aEmpty && mFragmentEntries[i].GetLifetime() == 0) ||
-            ((!aEmpty && mFragmentEntries[i].GetDatagramTag() == aTag) && (mFragmentEntries[i].GetLifetime() != 0)))
+        if ((!aValid && (mFragmentEntries[i].GetLifetime() == 0)) ||
+            (aValid && (mFragmentEntries[i].GetLifetime() != 0) && (mFragmentEntries[i].GetDatagramTag() == aTag)))
         {
             break;
         }
@@ -1097,10 +1097,10 @@ FragmentEntry *MeshForwarder::GetFragmentEntry(uint16_t aTag, bool aEmpty)
 
 otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority)
 {
-    otError        error = OT_ERROR_NONE;
-    FragmentEntry *entry;
+    otError                error = OT_ERROR_NONE;
+    FragmentPriorityEntry *entry;
 
-    VerifyOrExit((entry = GetFragmentEntry(aFragmentHeader.GetDatagramTag(), false)) != NULL,
+    VerifyOrExit((entry = GetFragmentPriorityEntry(true, aFragmentHeader.GetDatagramTag())) != NULL,
                  error = OT_ERROR_NOT_FOUND);
     aPriority = entry->GetPriority();
 
@@ -1139,7 +1139,7 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
     else
     {
         // Get priority from Ipv6 header or UDP destination port directly
-        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
+        error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
     }
 
 exit:

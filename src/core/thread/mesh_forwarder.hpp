@@ -65,49 +65,49 @@ enum
  */
 
 /**
- * This class reprents an IPv6 fragmentation priority entry
+ * This class reprents an IPv6 fragment priority entry
  *
  */
 OT_TOOL_PACKED_BEGIN
-class FragmentEntry
+class FragmentPriorityEntry
 {
 public:
     /**
-     * This method returns the fragmentation datagram tag value.
+     * This method returns the fragment datagram tag value.
      *
-     * @returns The fragmentation datagram tag value.
+     * @returns The fragment datagram tag value.
      *
      */
     uint16_t GetDatagramTag() { return mDatagramTag; }
 
     /**
-     * This method sets the fragmentation datagram tag value.
+     * This method sets the fragment datagram tag value.
      *
-     * @param[in]  aDatagramTag  The fragmentation datagram tag value.
+     * @param[in]  aDatagramTag  The fragment datagram tag value.
      *
      */
     void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
 
     /**
-     * This method returns the fragmentation priority value.
+     * This method returns the fragment priority value.
      *
-     * @returns The fragmentation priority value.
+     * @returns The fragment priority value.
      *
      */
     uint8_t GetPriority() { return mPriority; }
 
     /**
-     * This method sets the fragmentation priotity value.
+     * This method sets the fragment priotity value.
      *
-     * @param[in]  aPriority  The fragmentation priority value.
+     * @param[in]  aPriority  The fragment priority value.
      *
      */
     void SetPriority(uint8_t aPriority) { mPriority = aPriority; }
 
     /**
-     * This method returns the Fragment Priority entry's remaining lifetime.
+     * This method returns the fragment priority entry's remaining lifetime.
      *
-     * @returns The Fragment Priority entry's remaining lifetime.
+     * @returns The fragment priority entry's remaining lifetime.
      *
      */
     uint8_t GetLifetime() { return mLifetime; }
@@ -115,7 +115,7 @@ public:
     /**
      * This method sets the remaining lifetime of the fragment priority entry.
      *
-     * @param[in]  aLifetime  The remaining lifetime of the fragment priority entry.
+     * @param[in]  aLifetime  The remaining lifetime of the fragment priority entry (in seconds).
      *
      */
     void SetLifetime(uint8_t aLifetime)
@@ -131,12 +131,12 @@ public:
 private:
     enum
     {
-        kMaxLifeTime = 31, ///< The maximum lifetime of the entry, in seconds.
+        kMaxLifeTime = 31, ///< The maximum lifetime of the fragment entry (in seconds).
     };
 
     uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
-    uint8_t  mPriority : 2; ///< The priority level of the first fragment.
-    uint8_t  mLifetime : 5; ///< The lifetime of the entry, in seconds. 0 means the entry is invalid.
+    uint8_t  mPriority : 3; ///< The priority level of the first fragment.
+    uint8_t  mLifetime : 5; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
 } OT_TOOL_PACKED_END;
 
 /**
@@ -323,7 +323,7 @@ private:
          * The number of fragment priority entries.
          *
          */
-        kNumFragmentEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+        kNumFragmentPriorityEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
 
         /**
          * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
@@ -438,7 +438,7 @@ private:
                                     const Mac::Address &aMacSource,
                                     uint8_t &           aPriority);
 
-    FragmentEntry *GetFragmentEntry(uint16_t aTag, bool aEmpty);
+    FragmentPriorityEntry *GetFragmentPriorityEntry(bool aValid, uint16_t aTag = 0);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
@@ -537,7 +537,7 @@ private:
     otIpCounters mIpCounters;
 
 #if OPENTHREAD_FTD
-    FragmentEntry         mFragmentEntries[kNumFragmentEntries];
+    FragmentPriorityEntry mFragmentEntries[kNumFragmentPriorityEntries];
     MessageQueue          mResolvingQueue;
     SourceMatchController mSourceMatchController;
     uint32_t              mSendMessageFrameCounter;
