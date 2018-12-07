@@ -2390,11 +2390,7 @@ otError Mle::SendOrphanAnnounce(void)
     Mac::ChannelMask channelMask;
 
     SuccessOrExit(error = GetActiveDatasetChannelMask(channelMask));
-
-    if (channelMask.GetNextChannel(mAnnounceChannel) != OT_ERROR_NONE)
-    {
-        ExitNow(error = OT_ERROR_NOT_FOUND);
-    }
+    SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
     SendAnnounce(mAnnounceChannel, true);
 
