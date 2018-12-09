@@ -1724,6 +1724,14 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MCU_POWER_STATE));
 #endif
 
+#if OPENTHREAD_FTD
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_FTD));
+#elif OPENTHREAD_MTD
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_MTD));
+#elif OPENTHREAD_RADIO
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_RADIO));
+#endif
+
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif

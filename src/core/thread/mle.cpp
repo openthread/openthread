@@ -1255,6 +1255,8 @@ otError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
     otError        error = OT_ERROR_NONE;
     NetworkDataTlv tlv;
 
+    VerifyOrExit(!mRetrieveNewNetworkData, error = OT_ERROR_INVALID_STATE);
+
     tlv.Init();
     FillNetworkDataTlv(tlv, aStableOnly);
 

@@ -383,6 +383,16 @@ public:
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    /**
+     * This method returns a reference to LinkRaw object.
+     *
+     * @returns A reference to the LinkRaw object.
+     *
+     */
+    Mac::LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
+#endif
+
     /**
      * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
      *
@@ -399,16 +409,6 @@ public:
      *
      */
     template <typename Type> inline Type &Get(void);
-
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
-    /**
-     * This method returns a reference to LinkRaw object.
-     *
-     * @returns A reference to the LinkRaw object.
-     *
-     */
-    Mac::LinkRaw &GetLinkRaw(void) { return mLinkRaw; }
-#endif
 
 private:
     Instance(void);
@@ -518,6 +518,11 @@ template <> inline Ip6::Ip6 &Instance::Get(void)
 template <> inline Mac::Mac &Instance::Get(void)
 {
     return GetThreadNetif().GetMac();
+}
+
+template <> inline Mac::SubMac &Instance::Get(void)
+{
+    return GetThreadNetif().GetMac().GetSubMac();
 }
 
 template <> inline KeyManager &Instance::Get(void)
@@ -707,6 +712,14 @@ template <> inline Mac::LinkRaw &Instance::Get(void)
 {
     return GetLinkRaw();
 }
+
+#if OPENTHREAD_RADIO
+template <> inline Mac::SubMac &Instance::Get(void)
+{
+    return GetLinkRaw().GetSubMac();
+}
+#endif
+
 #endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 
 template <> inline TaskletScheduler &Instance::Get(void)

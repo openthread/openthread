@@ -142,8 +142,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_FTD
-
 otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
@@ -158,8 +156,6 @@ otError DatasetLocal::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_FTD
 
 otError DatasetLocal::Set(const Dataset &aDataset)
 {

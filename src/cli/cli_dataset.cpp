@@ -37,9 +37,7 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#if OPENTHREAD_FTD
-#include <openthread/dataset_ftd.h>
-#endif
+#include <openthread/dataset.h>
 
 #include "cli/cli.hpp"
 
@@ -49,7 +47,6 @@ namespace Cli {
 const DatasetCommand Dataset::sCommands[] = {
     {"help", &ProcessHelp},
     {"active", &ProcessActive},
-#if OPENTHREAD_FTD
     {"activetimestamp", &ProcessActiveTimestamp},
     {"channel", &ProcessChannel},
     {"channelmask", &ProcessChannelMask},
@@ -63,13 +60,10 @@ const DatasetCommand Dataset::sCommands[] = {
     {"mgmtsetcommand", &ProcessMgmtSetCommand},
     {"networkname", &ProcessNetworkName},
     {"panid", &ProcessPanId},
-#endif
     {"pending", &ProcessPending},
-#if OPENTHREAD_FTD
     {"pendingtimestamp", &ProcessPendingTimestamp},
     {"pskc", &ProcessPSKc},
     {"securitypolicy", &ProcessSecurityPolicy},
-#endif
 };
 
 Server *             Dataset::sServer;
@@ -254,7 +248,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_FTD
 otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -747,7 +740,6 @@ otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *ar
 exit:
     return error;
 }
-#endif // OPENTHREAD_FTD
 
 } // namespace Cli
 } // namespace ot

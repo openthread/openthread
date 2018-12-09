@@ -55,7 +55,7 @@ class OpenThread(IThci):
 
     # Used for reference firmware version control for Test Harness.
     # This variable will be updated to match the OpenThread reference firmware officially released.
-    firmwarePrefix = "OPENTHREAD/201806"
+    firmwarePrefix = "OPENTHREAD/"
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -402,7 +402,6 @@ class OpenThread(IThci):
                             self.addBlockedMAC(addr)
 
             if self.__sendCommand('ifconfig up')[0] == 'Done':
-                self.__setRouterSelectionJitter(1)
                 if self.__sendCommand('thread start')[0] == 'Done':
                     self.isPowerDown = False
                     return True
@@ -1008,12 +1007,14 @@ class OpenThread(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 mode = 'rsdn'
+                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 mode = 'rsdn'
+                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
@@ -1027,6 +1028,7 @@ class OpenThread(IThci):
             elif eRoleId == Thread_Device_Role.REED:
                 print 'join as REED'
                 mode = 'rsdn'
+                self.__setRouterSelectionJitter(1)
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
@@ -2020,10 +2022,11 @@ class OpenThread(IThci):
             False: fail to set provisioning Url
         """
         print '%s call setProvisioningUrl' % self.port
-        cmd = 'commissioner provisioningurl %s' %(strURL)
         self.provisioningUrl = strURL
-        print cmd
-        return self.__sendCommand(cmd)[0] == "Done"
+        if self.deviceRole == Thread_Device_Role.Commissioner:
+            cmd = 'commissioner provisioningurl %s' %(strURL)
+            return self.__sendCommand(cmd)[0] == "Done"
+        return True
 
     def allowCommission(self):
         """start commissioner candidate petition process

@@ -82,15 +82,6 @@ public:
     int Compare(const Timestamp &aTimestamp) const;
 
     /**
-     * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
-     *
-     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
-     *
-     */
-    otError AppendMleDatasetTlv(Message &aMessage) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
@@ -140,6 +131,36 @@ public:
      */
     void HandleDetach(void);
 
+    /**
+     * This method sends a MGMT_SET request to the Leader.
+     *
+     * @param[in]  aDataset  The Operational Datset.
+     * @param[in]  aTlvs     Any additional raw TLVs to include.
+     * @param[in]  aLength   Number of bytes in @p aTlvs.
+     *
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
+     *
+     */
+    otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
+     * This method sends a MGMT_GET request.
+     *
+     * @param[in]  aDatasetComponents  An Operational Dataset components structure specifying components to request.
+     * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
+     * @param[in]  aLength             Number of bytes in @p aTlvTypes.
+     * @param[in]  aAddress            The IPv6 destination address for the MGMT_GET request.
+     *
+     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
+     *
+     */
+    otError SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
+                           const uint8_t *                       aTlvTypes,
+                           uint8_t                               aLength,
+                           const otIp6Address *                  aAddress) const;
+
 protected:
     /**
      * This constructor initializes the object.
@@ -173,6 +194,14 @@ protected:
      *
      */
     otError Set(const Dataset &aDataset);
+
+    /**
+     * This method sets the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     */
+    otError Set(const otOperationalDataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -226,6 +255,11 @@ private:
                             uint8_t *               aTlvs,
                             uint8_t                 aLength) const;
 
+    enum
+    {
+        kMaxDatasetTlvs = 16, // Maximum number of TLVs in an `otOperationalDataset`.
+    };
+
     TimerMilli mTimer;
 
     const char *mUriGet;
@@ -234,44 +268,15 @@ private:
 #if OPENTHREAD_FTD
 public:
     /**
-     * This method sends a MGMT_SET request to the Leader.
+     * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
      *
-     * @param[in]  aDataset  The Operational Datset.
-     * @param[in]  aTlvs     Any additional raw TLVs to include.
-     * @param[in]  aLength   Number of bytes in @p aTlvs.
-     *
-     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
+     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
      *
      */
-    otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-
-    /**
-     * This method sends a MGMT_GET request.
-     *
-     * @param[in]  aDatasetComponents  An Operational Dataset components structure specifying components to request.
-     * @param[in]  aTlvTypes           A pointer to array containing additional raw TLV types to be requested.
-     * @param[in]  aLength             Number of bytes in @p aTlvTypes.
-     * @param[in]  aAddress            The IPv6 destination address for the MGMT_GET request.
-     *
-     * @retval OT_ERROR_NONE     Successfully send the meshcop dataset command.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send.
-     *
-     */
-    otError SendGetRequest(const otOperationalDatasetComponents &aDatasetComponents,
-                           const uint8_t *                       aTlvTypes,
-                           uint8_t                               aLength,
-                           const otIp6Address *                  aAddress) const;
+    otError AppendMleDatasetTlv(Message &aMessage) const;
 
 protected:
-    /**
-     * This method sets the Operational Dataset in non-volatile memory.
-     *
-     * @param[in]  aDataset  The Operational Dataset.
-     *
-     */
-    otError Set(const otOperationalDataset &aDataset);
-
     /**
      * This method handles the MGMT_SET request message.
      *
@@ -286,11 +291,6 @@ protected:
     otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    enum
-    {
-        kMaxDatasetTlvs = 16, // Maximum number of TLVs in an `otOperationalDataset`.
-    };
-
     void SendSetResponse(const Coap::Header &    aRequestHeader,
                          const Ip6::MessageInfo &aMessageInfo,
                          StateTlv::State         aState);
@@ -338,7 +338,6 @@ public:
      */
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-#if OPENTHREAD_FTD
     /**
      * This method sets the Operational Dataset in non-volatile memory.
      *
@@ -346,6 +345,8 @@ public:
      *
      */
     otError Set(const otOperationalDataset &aDataset);
+
+#if OPENTHREAD_FTD
 
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
@@ -424,6 +425,16 @@ public:
     void ClearNetwork(void);
 
     /**
+     * This method sets the Operational Dataset in non-volatile memory.
+     *
+     * This method also starts the Delay Timer.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     */
+    otError Set(const otOperationalDataset &aDataset);
+
+    /**
      * This method sets the Operational Dataset for the partition.
      *
      * This method also updates the non-volatile version if the partition's Operational Dataset is newer.
@@ -439,15 +450,6 @@ public:
     otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 #if OPENTHREAD_FTD
-    /**
-     * This method sets the Operational Dataset in non-volatile memory.
-     *
-     * This method also starts the Delay Timer.
-     *
-     * @param[in]  aDataset  The Operational Dataset.
-     *
-     */
-    otError Set(const otOperationalDataset &aDataset);
 
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.

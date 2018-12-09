@@ -223,6 +223,22 @@ class TimerScheduler : public InstanceLocator
 {
     friend class Timer;
 
+public:
+    /**
+     * This static method compares two times and indicates if the first time is strictly before (earlier) than the
+     * second time.
+     *
+     * This method requires that the difference between the two given times to be smaller than kMaxDt.
+     *
+     * @param[in] aTimerA   The first time for comparison.
+     * @param[in] aTimerB   The second time for comparison.
+     *
+     * @returns TRUE  if aTimeA is before aTimeB.
+     * @returns FALSE if aTimeA is same time or after aTimeB.
+     *
+     */
+    static bool IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB);
+
 protected:
     /**
      * The Alarm APIs definition
@@ -280,21 +296,6 @@ protected:
      *
      */
     void SetAlarm(const AlarmApi &aAlarmApi);
-
-    /**
-     * This static method compares two times and indicates if the first time is strictly before (earlier) than the
-     * second time.
-     *
-     * This method requires that the difference between the two given times to be smaller than kMaxDt.
-     *
-     * @param[in] aTimerA   The first time for comparison.
-     * @param[in] aTimerB   The second time for comparison.
-     *
-     * @returns TRUE  if aTimeA is before aTimeB.
-     * @returns FALSE if aTimeA is same time or after aTimeB.
-     *
-     */
-    static bool IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB);
 
     Timer *mHead;
 };

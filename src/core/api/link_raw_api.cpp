@@ -59,7 +59,7 @@ bool otLinkRawIsEnabled(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled();
 }
 
-otError otLinkSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
+otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     return static_cast<Instance *>(aInstance)->GetLinkRaw().SetShortAddress(aShortAddress);
 }
@@ -105,7 +105,7 @@ otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetTransmitFrame();
+    return &static_cast<Instance *>(aInstance)->GetLinkRaw().GetTransmitFrame();
 }
 
 otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback)
@@ -263,7 +263,8 @@ const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 
 otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetExtAddress(*aExtAddress);
+    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetExtAddress(
+        *static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 uint16_t otLinkGetShortAddress(otInstance *aInstance)

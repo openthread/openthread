@@ -187,7 +187,9 @@ private:
     enum
     {
         kMaxExternalHandlers   = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
-        kFlagsStringBufferSize = 128,
+        kFlagsStringLineLimit  = 70, // Character limit to divide the log into multiple lines in `LogChangedFlags()`.
+        kMaxFlagNameLength     = 25, // Max length for string representation of a flag by `FlagToString()`.
+        kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength,
     };
 
     struct ExternalCallback

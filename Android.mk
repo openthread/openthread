@@ -28,6 +28,28 @@
 
 LOCAL_PATH := $(call my-dir)
 
+OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
+OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
+
+OPENTHREAD_COMMON_FLAGS                                          := \
+    -DPACKAGE=\"openthread\"                                        \
+    -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
+    -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
+    -DPACKAGE_STRING=\"OPENTHREAD\ $(OPENTHREAD_DEFAULT_VERSION)\"  \
+    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
+    -DPACKAGE_TARNAME=\"openthread\"                                \
+    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
+    -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
+    $(NULL)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := spi-hdlc-adapter
+LOCAL_MODULE_TAGS := eng
+LOCAL_SRC_FILES := tools/spi-hdlc-adapter/spi-hdlc-adapter.c
+
+include $(BUILD_EXECUTABLE)
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-core
@@ -49,6 +71,7 @@ LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
@@ -110,6 +133,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
+    src/core/mac/sub_mac.cpp                                \
+    src/core/mac/sub_mac_callbacks.cpp                      \
     src/core/meshcop/announce_begin_client.cpp              \
     src/core/meshcop/border_agent.cpp                       \
     src/core/meshcop/commissioner.cpp                       \
@@ -217,6 +242,8 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/ecp.c                  \
     $(NULL)
 
+include $(OT_EXTRA_BUILD_CONFIG)
+
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -230,12 +257,15 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/cli                                   \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
@@ -258,6 +288,8 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
+include $(OT_EXTRA_BUILD_CONFIG)
+
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
 
@@ -272,12 +304,15 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
     -D_GNU_SOURCE                                                              \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
+    $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
@@ -300,6 +335,8 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_uart.cpp                      \
     src/posix/main.c                          \
     $(NULL)
+
+include $(OT_EXTRA_BUILD_CONFIG)
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)

@@ -183,6 +183,12 @@
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\mac\sub_mac.cpp">
+      <Filter>Source Files\mac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\mac\sub_mac_callbacks.cpp">
+      <Filter>Source Files\mac</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
@@ -438,6 +444,9 @@
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_frame.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\sub_mac.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp">
