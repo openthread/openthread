@@ -122,24 +122,6 @@ void AnnounceSender::HandleTimer(Timer &aTimer)
     aTimer.GetOwner<AnnounceSender>().AnnounceSenderBase::HandleTimer();
 }
 
-otError AnnounceSender::GetActiveDatasetChannelMask(Mac::ChannelMask &aMask) const
-{
-    otError                        error = OT_ERROR_NONE;
-    const MeshCoP::ChannelMaskTlv *channelMaskTlv;
-    MeshCoP::Dataset               dataset(MeshCoP::Tlv::kActiveTimestamp);
-
-    SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
-
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != NULL && channelMaskTlv->GetChannelPage() == OT_RADIO_CHANNEL_PAGE,
-                 error = OT_ERROR_NOT_FOUND);
-
-    aMask.SetMask(channelMaskTlv->GetMask());
-
-exit:
-    return error;
-}
-
 void AnnounceSender::CheckState(void)
 {
     Mle::MleRouter & mle      = GetInstance().Get<Mle::MleRouter>();
@@ -169,9 +151,7 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    VerifyOrExit(GetActiveDatasetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
-    channelMask.Intersect(OT_RADIO_SUPPORTED_CHANNELS);
-    VerifyOrExit(!channelMask.IsEmpty(), Stop());
+    SuccessOrExit(GetNetif().GetActiveDataset().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
 
     period = interval / channelMask.GetNumberOfChannels();
 

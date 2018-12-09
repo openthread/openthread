@@ -1712,7 +1712,7 @@ bool Mle::PrepareAnnounceState(void)
 
     VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && !IsFullThreadDevice() && (mReattachState == kReattachStop));
 
-    SuccessOrExit(GetActiveDatasetChannelMask(channelMask));
+    SuccessOrExit(GetNetif().GetActiveDataset().GetChannelMask(channelMask));
 
     mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
 
@@ -1725,30 +1725,6 @@ bool Mle::PrepareAnnounceState(void)
 
 exit:
     return shouldAnnounce;
-}
-
-otError Mle::GetActiveDatasetChannelMask(Mac::ChannelMask &aChannelMask)
-{
-    otError                            error;
-    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
-    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
-    MeshCoP::Dataset                   dataset(MeshCoP::Tlv::kActiveTimestamp);
-
-    SuccessOrExit(error = GetNetif().GetActiveDataset().Get(dataset));
-
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
-    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-
-    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
-    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
-
-    aChannelMask.SetMask(channelMaskEntry->GetMask());
-    aChannelMask.Intersect(OT_RADIO_SUPPORTED_CHANNELS);
-
-    VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
-
-exit:
-    return error;
 }
 
 uint32_t Mle::Reattach(void)
@@ -2389,7 +2365,7 @@ otError Mle::SendOrphanAnnounce(void)
     otError          error;
     Mac::ChannelMask channelMask;
 
-    SuccessOrExit(error = GetActiveDatasetChannelMask(channelMask));
+    SuccessOrExit(error = GetNetif().GetActiveDataset().GetChannelMask(channelMask));
     SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
     SendAnnounce(mAnnounceChannel, true);

@@ -1682,8 +1682,6 @@ private:
         kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
     };
 
-    otError GetActiveDatasetChannelMask(Mac::ChannelMask &aChannelMask);
-
     void GenerateNonce(const Mac::ExtAddress &aMacAddr,
                        uint32_t               aFrameCounter,
                        uint8_t                aSecurityLevel,
