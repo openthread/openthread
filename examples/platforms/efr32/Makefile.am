@@ -88,9 +88,18 @@ PLATFORM_SOURCES                                                              = 
     uart.c                                                                      \
     $(NULL)
 
+BOARD_SOURCES                                                                 = \
+    brd4161a/band_config.c                                                      \
+    brd4161a/rail_config.c                                                      \
+    brd4166a/band_config.c                                                      \
+    brd4166a/rail_config.c                                                      \
+    brd4170a/band_config.c                                                      \
+    brd4170a/rail_config.c                                                      \
+    brd4304a/band_config.c                                                      \
+    brd4304a/rail_config.c                                                      \
+    $(NULL)
+
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
-    @EFR32_BOARD_DIR@/band_config.c                                                                                               \
-    @EFR32_BOARD_DIR@/rail_config.c                                                                                               \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_bcc.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_init.c                                     \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_stk.c                                      \
@@ -130,6 +139,7 @@ noinst_HEADERS                                                                = 
     $(NULL)
 
 libopenthread_efr32_a_SOURCES                                                 = \
+    $(BOARD_SOURCES)                                                            \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
