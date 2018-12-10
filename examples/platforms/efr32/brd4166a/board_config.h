@@ -28,20 +28,13 @@
 
 /**
  * @file
- *   This file includes frequency band configuration constants.
+ *   This file includes dev borad compile-time configuration constants for efr32.
  *
-*/
+ */
 
-#ifndef BAND_CONFIG_H_
-#define BAND_CONFIG_H_
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
 
-#include "rail_config.h"
-#include "platform-band.h"
+#define RADIO_SUPPORT_2P4GHZ_OQPSK 1 ///< Dev board suppports OQPSK modulation in 2.4GHz band.
 
-#define EFR32_NUM_BAND_CONFIGS 1
-
-extern BandConfig bandConfigs[EFR32_NUM_BAND_CONFIGS];
-
-void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events));
-
-#endif  // BAND_CONFIG_H_
+#endif // __BOARD_CONFIG_H__

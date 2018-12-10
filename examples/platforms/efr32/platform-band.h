@@ -30,7 +30,7 @@
  * @file
  *   This file defines the frequency band configuration structure for efr32.
  *
-*/
+ */
 
 #ifndef PLATFORM_BAND_H_
 #define PLATFORM_BAND_H_
@@ -44,7 +44,7 @@
 typedef struct BandConfig
 {
     RAIL_Handle_t               mRailHandle;
-    RAIL_Config_t               mBandConfig;
+    RAIL_Config_t               mRailConfig;
     RAILSched_Config_t          mRailSchedState;
     const RAIL_ChannelConfig_t *mChannelConfig;
     uint8_t                     mRailTxFifo[OT_RADIO_FRAME_MAX_SIZE + 1];
@@ -52,4 +52,4 @@ typedef struct BandConfig
     uint8_t                     mChannelMax;
 } BandConfig;
 
-#endif  // PLATFORM_BAND_H_
+#endif // PLATFORM_BAND_H_

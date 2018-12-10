@@ -28,29 +28,14 @@
 
 /**
  * @file
- *   This file implements the frequency band configuration.
+ *   This file includes dev borad compile-time configuration constants for efr32.
  *
  */
 
-#include <openthread/platform/radio.h>
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
 
-#include "band_config.h"
+#define RADIO_SUPPORT_2P4GHZ_OQPSK 1 ///< Dev board suppports OQPSK modulation in 2.4GHz band.
+#define RADIO_SUPPORT_915MHZ_OQPSK 1 ///< Dev board suppports OQPSK modulation in 915MHz band.
 
-BandConfig bandConfigs[EFR32_NUM_BAND_CONFIGS];
-
-void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
-{
-    bandConfigs[0].mBandConfig.eventsCallback = aEventCallback;
-    bandConfigs[0].mBandConfig.protocol       = NULL;
-    bandConfigs[0].mBandConfig.scheduler      = &bandConfigs[0].mRailSchedState;
-    bandConfigs[0].mChannelConfig             = NULL;
-    bandConfigs[0].mChannelMin                = OT_CHANNEL_11;
-    bandConfigs[0].mChannelMax                = OT_CHANNEL_26;
-
-    bandConfigs[1].mBandConfig.eventsCallback = aEventCallback;
-    bandConfigs[1].mBandConfig.protocol       = NULL;
-    bandConfigs[1].mBandConfig.scheduler      = &bandConfigs[1].mRailSchedState;
-    bandConfigs[1].mChannelConfig             = channelConfigs[0];
-    bandConfigs[1].mChannelMin                = OT_CHANNEL_1;
-    bandConfigs[1].mChannelMax                = OT_CHANNEL_10;
-}
+#endif // __BOARD_CONFIG_H__

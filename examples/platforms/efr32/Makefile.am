@@ -74,6 +74,10 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -Wno-unused-parameter                                                       \
     $(NULL)
 
+RAIL_SOURCES                                                                  = \
+    rail_config.c                                                               \
+    $(NULL)
+
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
@@ -86,17 +90,6 @@ PLATFORM_SOURCES                                                              = 
     startup-gcc.c                                                               \
     system.c                                                                    \
     uart.c                                                                      \
-    $(NULL)
-
-BOARD_SOURCES                                                                 = \
-    brd4161a/band_config.c                                                      \
-    brd4161a/rail_config.c                                                      \
-    brd4166a/band_config.c                                                      \
-    brd4166a/rail_config.c                                                      \
-    brd4170a/band_config.c                                                      \
-    brd4170a/rail_config.c                                                      \
-    brd4304a/band_config.c                                                      \
-    brd4304a/rail_config.c                                                      \
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
@@ -139,12 +132,13 @@ noinst_HEADERS                                                                = 
     $(NULL)
 
 libopenthread_efr32_a_SOURCES                                                 = \
-    $(BOARD_SOURCES)                                                            \
     $(PLATFORM_SOURCES)                                                         \
+    $(RAIL_SOURCES)                                                             \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
     $(PLATFORM_SOURCES)                                                         \
+    $(noinst_HEADERS)                                                           \
     $(NULL)
 
 Dash                                                                                                 = -
