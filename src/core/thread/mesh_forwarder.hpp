@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "mac/channel_mask.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6.hpp"
 #include "thread/address_resolver.hpp"
@@ -137,10 +138,11 @@ public:
     /**
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
-     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanChannels  A reference to channel mask indicating which channels to scan.
+     *                            If @p aScanChannels is empty, then all channels are used instead.
      *
      */
-    void SetDiscoverParameters(uint32_t aScanChannels);
+    void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
 
     /**
      * This method frees any indirect messages queued for a specific child.
@@ -430,11 +432,11 @@ private:
     Tasklet mScheduleTransmissionTask;
     bool    mEnabled;
 
-    uint32_t mScanChannels;
-    uint8_t  mScanChannel;
-    uint16_t mMacRadioAcquisitionId;
-    uint16_t mRestorePanId;
-    bool     mScanning;
+    Mac::ChannelMask mScanChannels;
+    uint8_t          mScanChannel;
+    uint16_t         mMacRadioAcquisitionId;
+    uint16_t         mRestorePanId;
+    bool             mScanning;
 
     otIpCounters mIpCounters;
 
