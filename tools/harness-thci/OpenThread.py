@@ -1299,7 +1299,7 @@ class OpenThread(IThci):
     def getPollingRate(self):
         """get data polling rate for sleepy end device"""
         print '%s call getPollingRate' % self.port
-        return self.__sendCommand('pollperiod')[0]
+        return self.__sendCommand('pollperiod')[0]/1000
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
@@ -1312,9 +1312,11 @@ class OpenThread(IThci):
             False: fail to set the data polling rate for sleepy end device
         """
         print '%s call setPollingRate' % self.port
-        print iPollingRate
+        # convert s to ms
+        iPollingRate *= 1000
+        print int(iPollingRate)
         try:
-            cmd = 'pollperiod %s' % str(iPollingRate)
+            cmd = 'pollperiod %d' % int(iPollingRate)
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
@@ -1533,9 +1535,10 @@ class OpenThread(IThci):
             False: fail to set the data poll period for SED
         """
         print '%s call setKeepAliveTimeOut' % self.port
-        print iTimeOut
+        iTimeOut *= 1000
+        print int(iTimeOut)
         try:
-            cmd = 'pollperiod %s' % str(iTimeOut)
+            cmd = 'pollperiod %d' % int(iTimeOut)
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
