@@ -91,7 +91,7 @@ enum
 OT_TOOL_PACKED_BEGIN
 class CoapMetadata
 {
-    friend class CoapBase;
+    friend class Coap;
 
 public:
     /**
@@ -198,7 +198,7 @@ private:
  */
 class Resource : public otCoapResource
 {
-    friend class CoapBase;
+    friend class Coap;
 
 public:
     enum
@@ -438,10 +438,10 @@ private:
 };
 
 /**
- * This class implements the common base for CoAP client and server.
+ * This class implements the CoAP client and server.
  *
  */
-class CoapBase : public InstanceLocator
+class Coap : public InstanceLocator
 {
     friend class ResponsesQueue;
 
@@ -460,6 +460,14 @@ public:
      *
      */
     typedef otError (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance    A reference to the OpenThread instance.
+     *
+     */
+    explicit Coap(Instance &aInstance);
 
     /**
      * This method starts the CoAP service.
@@ -664,14 +672,6 @@ public:
 
 protected:
     /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance    A reference to the OpenThread instance.
-     *
-     */
-    explicit CoapBase(Instance &aInstance);
-
-    /**
      * This method sends a message.
      *
      * @param[in]  aMessage      A reference to the message to send.
@@ -729,42 +729,6 @@ private:
     otCoapRequestHandler mDefaultHandler;
     void *               mDefaultHandlerContext;
 };
-
-/**
- * This class implements the CoAP client and server.
- *
- */
-class Coap : public CoapBase
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in] aInstance      A reference to the OpenThread instance.
-     *
-     */
-    explicit Coap(Instance &aInstance);
-};
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-
-/**
- * This class implements the application CoAP client and server.
- *
- */
-class ApplicationCoap : public CoapBase
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in] aInstance      A reference to the OpenThread instance.
-     *
-     */
-    explicit ApplicationCoap(Instance &aInstance);
-};
-
-#endif
 
 } // namespace Coap
 } // namespace ot
