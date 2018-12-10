@@ -76,7 +76,7 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aInstance   A reference to the instance object.
+     * @param[in]  aInstance   A reference to the OpenThread instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
      * @param[in]  aOwner      A pointer to owner of this `Tasklet` object.
      *
@@ -94,6 +94,44 @@ private:
 
     Handler  mHandler;
     Tasklet *mNext;
+};
+
+/**
+ * This class defines a tasklet that also maintains a user context pointer.
+ *
+ * In typical `Tasklet` use, in the handler callback, the owner of the tasklet is determined using `GetOwner<Type>`
+ * method. This method works if there is a single instance of `Type` within OpenThread instance hierarchy. The
+ * `TaskletContext` is intended for cases where there may be multiple instances of the same class/type using a `Tasklet`
+ * object. `TaskletContext` will store a context `void *` information.
+ *
+ */
+class TaskletContext : public Tasklet
+{
+public:
+    /**
+     * This constructor creates a tasklet instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
+     * @param[in]  aContext    A pointer to an arbitrary context information.
+     *
+     */
+    TaskletContext(Instance &aInstance, Handler aHandler, void *aContext)
+        : Tasklet(aInstance, aHandler, aContext)
+        , mContext(aContext)
+    {
+    }
+
+    /**
+     * This method returns the pointer to the arbitrary context information.
+     *
+     * @returns Pointer to the arbitrary context information.
+     *
+     */
+    void *GetContext(void) { return mContext; }
+
+private:
+    void *mContext;
 };
 
 /**
