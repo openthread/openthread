@@ -37,15 +37,15 @@ install_packages_apt()
 {
     # apt update and install dependencies
     sudo apt-get update
-    sudo apt-get install automake g++ libtool make
+    sudo apt-get -y install automake g++ libtool make
 
     # add gcc-arm-embedded ppa
-    sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
+    sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
     sudo apt-get update
-    sudo apt-get install gcc-arm-embedded
+    sudo apt-get -y install gcc-arm-embedded
 
     # add clang-format for pretty
-    sudo apt-get install clang-format-6.0
+    sudo apt-get -y install clang-format-6.0
 }
 
 install_packages_opkg()
