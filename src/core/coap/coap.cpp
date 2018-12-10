@@ -48,16 +48,14 @@
 namespace ot {
 namespace Coap {
 
-CoapBase::CoapBase(Instance &     aInstance,
-                   Timer::Handler aRetransmissionTimerHandler,
-                   Timer::Handler aResponsesQueueTimerHandler)
+CoapBase::CoapBase(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
-    , mRetransmissionTimer(aInstance, aRetransmissionTimerHandler, this)
+    , mRetransmissionTimer(aInstance, &CoapBase::HandleRetransmissionTimer, this)
     , mResources(NULL)
     , mContext(NULL)
     , mInterceptor(NULL)
-    , mResponsesQueue(aInstance, aResponsesQueueTimerHandler, this)
+    , mResponsesQueue(aInstance)
     , mDefaultHandler(NULL)
     , mDefaultHandlerContext(NULL)
 {
@@ -290,6 +288,11 @@ exit:
     }
 
     return error;
+}
+
+void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
+{
+    static_cast<CoapBase *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleRetransmissionTimer();
 }
 
 void CoapBase::HandleRetransmissionTimer(void)
@@ -756,9 +759,9 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mConfirmable  = aConfirmable;
 }
 
-ResponsesQueue::ResponsesQueue(Instance &aInstance, Timer::Handler aHandler, void *aContext)
+ResponsesQueue::ResponsesQueue(Instance &aInstance)
     : mQueue()
-    , mTimer(aInstance, aHandler, aContext)
+    , mTimer(aInstance, &ResponsesQueue::HandleTimer, this)
 {
 }
 
@@ -895,6 +898,11 @@ void ResponsesQueue::DequeueAllResponses(void)
     }
 }
 
+void ResponsesQueue::HandleTimer(Timer &aTimer)
+{
+    static_cast<ResponsesQueue *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+}
+
 void ResponsesQueue::HandleTimer(void)
 {
     Message *              message;
@@ -924,35 +932,15 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 }
 
 Coap::Coap(Instance &aInstance)
-    : CoapBase(aInstance, &Coap::HandleRetransmissionTimer, &Coap::HandleResponsesQueueTimer)
+    : CoapBase(aInstance)
 {
-}
-
-void Coap::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Coap>().CoapBase::HandleRetransmissionTimer();
-}
-
-void Coap::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Coap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
 ApplicationCoap::ApplicationCoap(Instance &aInstance)
-    : CoapBase(aInstance, &ApplicationCoap::HandleRetransmissionTimer, &ApplicationCoap::HandleResponsesQueueTimer)
+    : CoapBase(aInstance)
 {
-}
-
-void ApplicationCoap::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleRetransmissionTimer();
-}
-
-void ApplicationCoap::HandleResponsesQueueTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<ApplicationCoap>().CoapBase::HandleResponsesQueueTimer();
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
