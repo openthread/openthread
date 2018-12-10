@@ -214,6 +214,29 @@ exit:
     return error;
 }
 
+otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
+{
+    otError                            error;
+    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
+    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
+    Dataset                            dataset(mLocal.GetType());
+
+    SuccessOrExit(error = mLocal.Get(dataset));
+
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+
+    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
+    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
+
+    aChannelMask.SetMask(channelMaskEntry->GetMask() & OT_RADIO_SUPPORTED_CHANNELS);
+
+    VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
+
+exit:
+    return error;
+}
+
 void DatasetManager::HandleTimer(void)
 {
     ThreadNetif &netif = GetNetif();

@@ -203,24 +203,17 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     VerifyOrExit(!mScanning);
 
-    mScanChannel = OT_RADIO_CHANNEL_MIN;
-    mScanChannels >>= OT_RADIO_CHANNEL_MIN;
+    mScanChannel  = Mac::ChannelMask::kChannelIteratorFirst;
     mRestorePanId = netif.GetMac().GetPanId();
 
     SuccessOrExit(error = netif.GetMac().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
     mScanning = true;
 
-    while ((mScanChannels & 1) == 0)
+    if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
     {
-        mScanChannels >>= 1;
-        mScanChannel++;
-
-        if (mScanChannel > OT_RADIO_CHANNEL_MAX)
-        {
-            HandleDiscoverComplete();
-            ExitNow(error = OT_ERROR_DROP);
-        }
+        HandleDiscoverComplete();
+        ExitNow(error = OT_ERROR_DROP);
     }
 
 exit:
@@ -1146,9 +1139,12 @@ exit:
     }
 }
 
-void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
+void MeshForwarder::SetDiscoverParameters(const Mac::ChannelMask &aScanChannels)
 {
-    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(Mac::kScanChannelsAll) : aScanChannels;
+    uint32_t mask;
+
+    mask = aScanChannels.IsEmpty() ? static_cast<uint32_t>(OT_RADIO_SUPPORTED_CHANNELS) : aScanChannels.GetMask();
+    mScanChannels.SetMask(mask & OT_RADIO_SUPPORTED_CHANNELS);
 }
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
@@ -1158,21 +1154,15 @@ void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
 
 void MeshForwarder::HandleDiscoverTimer(void)
 {
-    do
+    if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
     {
-        mScanChannels >>= 1;
-        mScanChannel++;
+        mSendQueue.Dequeue(*mSendMessage);
+        mSendMessage->Free();
+        mSendMessage = NULL;
 
-        if (mScanChannel > OT_RADIO_CHANNEL_MAX)
-        {
-            mSendQueue.Dequeue(*mSendMessage);
-            mSendMessage->Free();
-            mSendMessage = NULL;
-
-            HandleDiscoverComplete();
-            ExitNow();
-        }
-    } while ((mScanChannels & 1) == 0);
+        HandleDiscoverComplete();
+        ExitNow();
+    }
 
     mSendMessage->SetDirectTransmission();
 

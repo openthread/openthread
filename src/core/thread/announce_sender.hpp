@@ -156,7 +156,6 @@ private:
         kMaxJitter        = 500,  // in ms
     };
 
-    otError     GetActiveDatasetChannelMask(Mac::ChannelMask &aMask) const;
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);

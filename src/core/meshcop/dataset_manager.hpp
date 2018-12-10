@@ -40,6 +40,7 @@
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/channel_mask.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/dataset_local.hpp"
 #include "net/udp6.hpp"
@@ -101,6 +102,17 @@ public:
      *
      */
     otError Get(otOperationalDataset &aDataset) const { return mLocal.Get(aDataset); }
+
+    /**
+     * This method retrieves the channel mask from local dataset.
+     *
+     * @param[out]  aChannelMask  A reference to the channel mask.
+     *
+     * @retval OT_ERROR_NONE       Successfully retrieved the channel mask.
+     * @retval OT_ERROR_NOT_FOUND  There is no valid channel mask stored in local dataset.
+     *
+     */
+    otError GetChannelMask(Mac::ChannelMask &aChannelMask) const;
 
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
