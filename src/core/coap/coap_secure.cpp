@@ -48,7 +48,7 @@ namespace ot {
 namespace Coap {
 
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
-    : CoapBase(aInstance)
+    : Coap(aInstance)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
     , mTransportCallback(NULL)
@@ -71,7 +71,7 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
     // to transmit/receive messages, so do not open it in that case.
     if (mTransportCallback == NULL)
     {
-        error = CoapBase::Start(aPort);
+        error = Coap::Start(aPort);
     }
 
     return error;
@@ -99,7 +99,7 @@ otError CoapSecure::Stop(void)
     mTransportCallback = NULL;
     mTransportContext  = NULL;
 
-    return CoapBase::Stop();
+    return Coap::Stop();
 }
 
 otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
@@ -209,7 +209,7 @@ otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandle
 
     VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
 
-    error = CoapBase::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
+    error = Coap::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
 
 exit:
     return error;
@@ -220,7 +220,7 @@ otError CoapSecure::SendMessage(Message &               aMessage,
                                 otCoapResponseHandler   aHandler,
                                 void *                  aContext)
 {
-    return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
+    return Coap::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
 otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -299,7 +299,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    CoapBase::Receive(*message, mPeerAddress);
+    Coap::Receive(*message, mPeerAddress);
 
 exit:
 
@@ -381,15 +381,6 @@ exit:
         otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
     }
 }
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-ApplicationCoapSecure::ApplicationCoapSecure(Instance &aInstance)
-    : CoapSecure(aInstance, /* aLayerTwoSecurity */ true)
-{
-}
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 } // namespace Coap
 } // namespace ot

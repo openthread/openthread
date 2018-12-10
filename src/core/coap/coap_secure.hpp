@@ -45,7 +45,7 @@ namespace ot {
 
 namespace Coap {
 
-class CoapSecure : public CoapBase
+class CoapSecure : public Coap
 {
 public:
     /**
@@ -342,31 +342,6 @@ private:
 
     bool mLayerTwoSecurity : 1;
 };
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-/**
- * This class implements the application CoAP Secure client and server.
- *
- */
-class ApplicationCoapSecure : public CoapSecure
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in] aInstance      A reference to the OpenThread instance.
-     *
-     */
-    explicit ApplicationCoapSecure(Instance &aInstance);
-
-private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
-    static void HandleTransmit(Tasklet &aTasklet);
-};
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 } // namespace Coap
 } // namespace ot
