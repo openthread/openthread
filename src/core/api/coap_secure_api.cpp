@@ -36,7 +36,7 @@
 #include <openthread/coap_secure.h>
 #include <openthread/ip6.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
 
@@ -198,7 +198,7 @@ otError otCoapSecureSendRequest(otInstance *          aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage), aHandler, aContext);
+    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Coap::Message *>(aMessage), aHandler, aContext);
 }
 
 otError otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource)
@@ -235,7 +235,7 @@ otError otCoapSecureSendResponse(otInstance *aInstance, otMessage *aMessage, con
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Message *>(aMessage),
+    return instance.GetApplicationCoapSecure().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 

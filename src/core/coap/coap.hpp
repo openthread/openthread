@@ -33,7 +33,7 @@
 
 #include <openthread/coap.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/debug.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -238,9 +238,9 @@ public:
     const char *GetUriPath(void) const { return mUriPath; };
 
 private:
-    void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+    void HandleRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
     {
-        mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
+        mHandler(mContext, &aMessage, &aMessageInfo);
     }
 };
 
@@ -363,12 +363,11 @@ public:
      * response is not added.
      * The CoAP response is copied before it is added to the cache.
      *
-     * @param[in]  aHeader       A reference to a CoAP header.
      * @param[in]  aMessage      The CoAP response to add to the cache.
      * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
      *
      */
-    void EnqueueResponse(const Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * Remove the oldest response from the cache.
@@ -385,7 +384,7 @@ public:
     /**
      * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
      *
-     * @param[in]  aHeader       The CoAP message header containing Message ID.
+     * @param[in]  aRequest      The CoAP message containing Message ID.
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
      * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
      *
@@ -394,7 +393,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Matching response not found.
      *
      */
-    otError GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
+    otError GetMatchedResponseCopy(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
 
     /**
      * Get a reference to the cached CoAP responses queue.
@@ -505,13 +504,12 @@ public:
      * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
      * OT_MESSAGE_PRIORITY_NORMAL by default.
      *
-     * @param[in]  aHeader    A reference to a CoAP header that is used to create the message.
      * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
      */
-    Message *NewMessage(const Header &aHeader, const otMessageSettings *aSettings = NULL);
+    Message *NewMessage(const otMessageSettings *aSettings = NULL);
 
     /**
      * This method sends a CoAP message.
@@ -537,80 +535,80 @@ public:
     /**
      * This method sends a CoAP reset message.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest is not of confirmable type.
      *
      */
-    otError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
-        return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequestHeader, aMessageInfo);
+        return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequest, aMessageInfo);
     };
 
     /**
      * This method sends header-only CoAP response message.
      *
      * @param[in]  aCode           The CoAP code of this response.
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    otError SendHeaderResponse(Message::Code aCode, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
-        return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
+        return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequest, aMessageInfo);
     };
 
     /**
      * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
      *
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequest header is not of confirmable type.
      *
      */
-    otError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
-        return (aRequestHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE
-                    ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequestHeader, aMessageInfo)
+        return (aRequest.GetType() == OT_COAP_TYPE_CONFIRMABLE
+                    ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequest, aMessageInfo)
                     : OT_ERROR_INVALID_ARGS);
     }
 
     /**
      * This method sends a header-only CoAP message to indicate no resource matched for the request.
      *
-     * @param[in]  aRequestHeader        A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
      * @param[in]  aMessageInfo          The message info corresponding to the CoAP request.
      *
      * @retval OT_ERROR_NONE         Successfully enqueued the CoAP response message.
      * @retval OT_ERROR_NO_BUFS      Insufficient buffers available to send the CoAP response.
      *
      */
-    otError SendNotFound(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+    otError SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
-        return SendHeaderResponse(OT_COAP_CODE_NOT_FOUND, aRequestHeader, aMessageInfo);
+        return SendHeaderResponse(OT_COAP_CODE_NOT_FOUND, aRequest, aMessageInfo);
     }
 
     /**
@@ -664,7 +662,7 @@ protected:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method receives a message.
@@ -673,7 +671,7 @@ protected:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Ip6::UdpSocket mSocket;
 
@@ -685,22 +683,20 @@ private:
 
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, const CoapMetadata &aCoapMetadata);
     void     DequeueMessage(Message &aMessage);
-    Message *FindRelatedRequest(const Header &          aResponseHeader,
+    Message *FindRelatedRequest(const Message &         aResponse,
                                 const Ip6::MessageInfo &aMessageInfo,
-                                Header &                aRequestHeader,
                                 CoapMetadata &          aCoapMetadata);
     void     FinalizeCoapTransaction(Message &               aRequest,
                                      const CoapMetadata &    aCoapMetadata,
-                                     Header *                aResponseHeader,
                                      Message *               aResponse,
                                      const Ip6::MessageInfo *aMessageInfo,
                                      otError                 aResult);
 
-    void ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void ProcessReceivedResponse(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     MessageQueue      mPendingRequests;
     uint16_t          mMessageId;

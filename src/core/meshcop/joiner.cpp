@@ -339,21 +339,21 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 
 void Joiner::SendJoinerFinalize(void)
 {
-    ThreadNetif &         netif = GetNetif();
-    Coap::Header          header;
+    ThreadNetif &         netif   = GetNetif();
     otError               error   = OT_ERROR_NONE;
-    Message *             message = NULL;
+    Coap::Message *       message = NULL;
     StateTlv              stateTlv;
     VendorNameTlv         vendorNameTlv;
     VendorModelTlv        vendorModelTlv;
     VendorSwVersionTlv    vendorSwVersionTlv;
     VendorStackVersionTlv vendorStackVersionTlv;
 
-    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoapSecure())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoapSecure(), header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
+    message->SetPayloadMarker();
+    message->SetOffset(message->GetLength());
 
     stateTlv.Init();
     stateTlv.SetState(MeshCoP::StateTlv::kAccept);
@@ -394,9 +394,10 @@ void Joiner::SendJoinerFinalize(void)
 
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+
     VerifyOrExit(message->GetLength() <= sizeof(buf));
-    message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf, message->GetLength() - header.GetLength());
+    message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), buf);
+    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf, message->GetLength() - message->GetOffset());
 #endif
 
     SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this));
@@ -412,18 +413,15 @@ exit:
 }
 
 void Joiner::HandleJoinerFinalizeResponse(void *               aContext,
-                                          otCoapHeader *       aHeader,
                                           otMessage *          aMessage,
                                           const otMessageInfo *aMessageInfo,
                                           otError              aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
-        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+        *static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Joiner::HandleJoinerFinalizeResponse(Coap::Header *          aHeader,
-                                          Message *               aMessage,
+void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
                                           const Ip6::MessageInfo *aMessageInfo,
                                           otError                 aResult)
 {
@@ -432,9 +430,9 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *          aHeader,
     StateTlv state;
 
     VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE &&
-                 aHeader->GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aHeader->GetCode() == OT_COAP_CODE_CHANGED);
+                 aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aMessage.GetCode() == OT_COAP_CODE_CHANGED);
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
+    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
 
     mState = OT_JOINER_STATE_ENTRUST;
@@ -443,26 +441,23 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *          aHeader,
     otLogInfoMeshCoP("received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(aMessage->GetLength() <= sizeof(buf));
-    aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp |", buf, aMessage->GetLength() - aHeader->GetLength());
+
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
+    aMessage.Read(aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(), buf);
+    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp |", buf, aMessage.GetLength() - aMessage.GetOffset());
 #endif
 
 exit:
     Close();
 }
 
-void Joiner::HandleJoinerEntrust(void *               aContext,
-                                 otCoapHeader *       aHeader,
-                                 otMessage *          aMessage,
-                                 const otMessageInfo *aMessageInfo)
+void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(*static_cast<Coap::Header *>(aHeader),
-                                                         *static_cast<Message *>(aMessage),
+    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(*static_cast<Coap::Message *>(aMessage),
                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &         netif = GetNetif();
     otError               error;
@@ -473,8 +468,8 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     ActiveTimestampTlv    activeTimestamp;
     NetworkKeySequenceTlv networkKeySeq;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
-                     aHeader.GetCode() == OT_COAP_CODE_POST,
+    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                     aMessage.GetCode() == OT_COAP_CODE_POST,
                  error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Received joiner entrust");
@@ -505,6 +500,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     {
         otNetworkName name;
+
         memcpy(name.m8, networkName.GetNetworkName(), networkName.GetLength());
         name.m8[networkName.GetLength()] = '\0';
         netif.GetMac().SetNetworkName(name.m8);
@@ -513,7 +509,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     otLogInfoMeshCoP("join success!");
 
     // Send dummy response.
-    SendJoinerEntrustResponse(aHeader, aMessageInfo);
+    SendJoinerEntrustResponse(aMessage, aMessageInfo);
 
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);
@@ -526,17 +522,15 @@ exit:
     }
 }
 
-void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo)
+void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)
 {
     ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
-    Message *        message;
-    Coap::Header     responseHeader;
+    Coap::Message *  message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetDefaultResponseHeader(aRequest);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));

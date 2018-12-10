@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for generating and processing CoAP headers.
+ *   This file includes definitions for generating and processing CoAP messages.
  */
 
 #ifndef COAP_HEADER_HPP_
@@ -66,18 +66,47 @@ namespace Coap {
  */
 
 /**
- * This class implements CoAP header generation and parsing.
+ * This class implements CoAP message generation and parsing.
  *
  */
-class Header : public otCoapHeader
+class Message : public ot::Message
 {
+    /**
+     * This structure represents a CoAP header excluding CoAP options.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    struct Header
+    {
+        uint8_t  mVersionTypeToken;                ///< The CoAP Version, Type, and Token Length
+        uint8_t  mCode;                            ///< The CoAP Code
+        uint16_t mMessageId;                       ///< The CoAP Message ID
+        uint8_t  mToken[OT_COAP_MAX_TOKEN_LENGTH]; ///< The CoAP Token
+    } OT_TOOL_PACKED_END;
+
+    /**
+     * This structure represents a HelpData used by this CoAP message.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    struct HelpData
+    {
+        Header       mHeader;
+        otCoapOption mOption;
+        uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
+        uint16_t     mOptionLast;
+        uint16_t     mHeaderOffset;
+        uint16_t     mHeaderLength;
+    } OT_TOOL_PACKED_END;
+
 public:
     enum
     {
-        kVersion1           = 1,                         ///< Version 1
-        kMinHeaderLength    = 4,                         ///< Minimum header length
-        kMaxHeaderLength    = OT_COAP_HEADER_MAX_LENGTH, ///< Maximum header length
-        kDefaultTokenLength = 2                          ///< Default token length
+        kVersion1           = 1,   ///< Version 1
+        kMinHeaderLength    = 4,   ///< Minimum header length
+        kMaxHeaderLength    = 512, ///< Maximum header length
+        kDefaultTokenLength = 2,   ///< Default token length
+        kHelpDataSize       = sizeof(HelpData),
     };
 
     /**
@@ -108,16 +137,10 @@ public:
     void Init(Type aType, Code aCode);
 
     /**
-     * This method parses the CoAP header from a message.
-     *
-     * @param[in]  aMessage       A reference to the message.
-     * @param[in]  aMetadataSize  A size of metadata appended to the message.
-     *
-     * @retval OT_ERROR_NONE   Successfully parsed the message.
-     * @retval OT_ERROR_PARSE  Failed to parse the message.
+     * This method writes header to the message. This must be called before sending the message.
      *
      */
-    otError FromMessage(const Message &aMessage, uint16_t aMetadataSize);
+    void Finish(void);
 
     /**
      * This method returns the Version value.
@@ -125,7 +148,10 @@ public:
      * @returns The Version value.
      *
      */
-    uint8_t GetVersion(void) const { return (mHeader.mFields.mVersionTypeToken & kVersionMask) >> kVersionOffset; }
+    uint8_t GetVersion(void) const
+    {
+        return (GetHelpData().mHeader.mVersionTypeToken & kVersionMask) >> kVersionOffset;
+    }
 
     /**
      * This method sets the Version value.
@@ -135,8 +161,8 @@ public:
      */
     void SetVersion(uint8_t aVersion)
     {
-        mHeader.mFields.mVersionTypeToken &= ~kVersionMask;
-        mHeader.mFields.mVersionTypeToken |= aVersion << kVersionOffset;
+        GetHelpData().mHeader.mVersionTypeToken &= ~kVersionMask;
+        GetHelpData().mHeader.mVersionTypeToken |= aVersion << kVersionOffset;
     }
 
     /**
@@ -145,7 +171,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
+    Type GetType(void) const { return static_cast<Type>(GetHelpData().mHeader.mVersionTypeToken & kTypeMask); }
 
     /**
      * This method sets the Type value.
@@ -155,8 +181,8 @@ public:
      */
     void SetType(Type aType)
     {
-        mHeader.mFields.mVersionTypeToken &= ~kTypeMask;
-        mHeader.mFields.mVersionTypeToken |= aType;
+        GetHelpData().mHeader.mVersionTypeToken &= ~kTypeMask;
+        GetHelpData().mHeader.mVersionTypeToken |= aType;
     }
 
     /**
@@ -165,7 +191,7 @@ public:
      * @returns The Code value.
      *
      */
-    Code GetCode(void) const { return static_cast<Code>(mHeader.mFields.mCode); }
+    Code GetCode(void) const { return static_cast<Code>(GetHelpData().mHeader.mCode); }
 
     /**
      * This method sets the Code value.
@@ -173,7 +199,7 @@ public:
      * @param[in]  aCode  The Code value.
      *
      */
-    void SetCode(Code aCode) { mHeader.mFields.mCode = static_cast<uint8_t>(aCode); }
+    void SetCode(Code aCode) { GetHelpData().mHeader.mCode = static_cast<uint8_t>(aCode); }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     /**
@@ -191,7 +217,7 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const { return HostSwap16(mHeader.mFields.mMessageId); }
+    uint16_t GetMessageId(void) const { return HostSwap16(GetHelpData().mHeader.mMessageId); }
 
     /**
      * This method sets the Message ID value.
@@ -199,7 +225,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { mHeader.mFields.mMessageId = HostSwap16(aMessageId); }
+    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.mMessageId = HostSwap16(aMessageId); }
 
     /**
      * This method returns the Token length.
@@ -209,7 +235,7 @@ public:
      */
     uint8_t GetTokenLength(void) const
     {
-        return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
+        return (GetHelpData().mHeader.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset;
     }
 
     /**
@@ -218,7 +244,7 @@ public:
      * @returns A pointer to the Token value.
      *
      */
-    const uint8_t *GetToken(void) const { return mHeader.mBytes + kTokenOffset; }
+    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.mToken; }
 
     /**
      * This method sets the Token value and length.
@@ -227,13 +253,7 @@ public:
      * @param[in]  aTokenLength  The Length of @p aToken.
      *
      */
-    void SetToken(const uint8_t *aToken, uint8_t aTokenLength)
-    {
-        mHeader.mFields.mVersionTypeToken = (mHeader.mFields.mVersionTypeToken & ~kTokenLengthMask) |
-                                            ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
-        memcpy(mHeader.mBytes + kTokenOffset, aToken, aTokenLength);
-        mHeaderLength += aTokenLength;
-    }
+    void SetToken(const uint8_t *aToken, uint8_t aTokenLength);
 
     /**
      * This method sets the Token length and randomizes its value.
@@ -246,39 +266,17 @@ public:
     /**
      *  This method checks if Tokens in two CoAP headers are equal.
      *
-     *  @param[in]  aHeader  A header to compare.
+     *  @param[in]  aMessage  A header to compare.
      *
      * @retval TRUE   If two Tokens are equal.
      * @retval FALSE  If Tokens differ in length or value.
      *
      */
-    bool IsTokenEqual(const Header &aHeader) const
+    bool IsTokenEqual(const Message &aMessage) const
     {
-        return ((this->GetTokenLength() == aHeader.GetTokenLength()) &&
-                (memcmp(this->GetToken(), aHeader.GetToken(), this->GetTokenLength()) == 0));
+        return ((this->GetTokenLength() == aMessage.GetTokenLength()) &&
+                (memcmp(this->GetToken(), aMessage.GetToken(), this->GetTokenLength()) == 0));
     }
-
-    /**
-     * This structure represents a CoAP option.
-     *
-     */
-    struct Option : public otCoapOption
-    {
-        /**
-         * Protocol Constants
-         *
-         */
-        enum
-        {
-            kOptionDeltaOffset = 4,                         ///< Delta Offset
-            kOptionDeltaMask   = 0xf << kOptionDeltaOffset, ///< Delta Mask
-        };
-
-        /**
-         * Option Numbers
-         */
-        typedef otCoapOptionType Type;
-    };
 
     /**
      * This method appends a CoAP option.
@@ -290,7 +288,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    otError AppendOption(const Option &aOption);
+    otError AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue);
 
     /**
      * This method appends an unsigned integer CoAP option as specified in
@@ -391,43 +389,51 @@ public:
     /**
      * This method returns a pointer to the first option.
      *
-     * @returns A pointer to the first option.
-     *
      */
-    const Option *GetFirstOption(void);
+    const otCoapOption *GetFirstOption(void);
 
     /**
      * This method returns a pointer to the next option.
      *
-     * @returns A pointer to the next option.
+     */
+    const otCoapOption *GetNextOption(void);
+
+    /**
+     * This function fills current option value into @p aValue.
+     *
+     * @retval  OT_ERROR_NONE       Successfully filled value.
+     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
      *
      */
-    const Option *GetNextOption(void);
+    otError GetOptionValue(void *aValue) const;
 
     /**
      * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
+     * It also set offset to the start of payload.
+     *
      * @retval OT_ERROR_NONE     Payload Marker successfully added.
-     * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
+     * @retval OT_ERROR_NO_BUFS  Message Payload Marker exceeds the buffer size.
      *
      */
     otError SetPayloadMarker(void);
 
     /**
-     * This method returns a pointer to the first byte of the header.
+     * This method returns the offset of the first CoAP option.
      *
-     * @returns A pointer to the first byte of the header.
+     * @returns The offset of the first CoAP option.
      *
      */
-    const uint8_t *GetBytes(void) const { return mHeader.mBytes; }
+    uint16_t GetOptionStart(void) const { return kMinHeaderLength + GetTokenLength(); }
 
     /**
-     * This method returns the header length in bytes.
+     * This method parses CoAP header and moves offset end of CoAP header.
      *
-     * @returns The header length in bytes.
+     * @retval  OT_ERROR_NONE   Successfully parsed CoAP header from the message.
+     * @retval  OT_ERROR_PARSE  Failed to parse the CoAP header.
      *
      */
-    uint16_t GetLength(void) const { return mHeaderLength; }
+    otError ParseHeader(void);
 
     /**
      * This method sets a default response header based on request header.
@@ -435,13 +441,13 @@ public:
      * @param[in]  aRequestHeader  Request header to base on.
      *
      */
-    void SetDefaultResponseHeader(const Header &aRequestHeader);
+    void SetDefaultResponseHeader(const Message &aRequestHeader);
 
     /**
      * This method checks if a header is an empty message header.
      *
-     * @retval TRUE   Header is an empty message header.
-     * @retval FALSE  Header is not an empty message header.
+     * @retval TRUE   Message is an empty message header.
+     * @retval FALSE  Message is not an empty message header.
      *
      */
     bool IsEmpty(void) const { return (GetCode() == 0); };
@@ -449,8 +455,8 @@ public:
     /**
      * This method checks if a header is a request header.
      *
-     * @retval TRUE   Header is a request header.
-     * @retval FALSE  Header is not a request header.
+     * @retval TRUE   Message is a request header.
+     * @retval FALSE  Message is not a request header.
      *
      */
     bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); };
@@ -458,8 +464,8 @@ public:
     /**
      * This method checks if a header is a response header.
      *
-     * @retval TRUE   Header is a response header.
-     * @retval FALSE  Header is not a response header.
+     * @retval TRUE   Message is a response header.
+     * @retval FALSE  Message is not a response header.
      *
      */
     bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); };
@@ -467,8 +473,8 @@ public:
     /**
      * This method checks if a header is a CON message header.
      *
-     * @retval TRUE   Header is a CON message header.
-     * @retval FALSE  Header is not is a CON message header.
+     * @retval TRUE   Message is a CON message header.
+     * @retval FALSE  Message is not is a CON message header.
      *
      */
     bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); };
@@ -476,8 +482,8 @@ public:
     /**
      * This method checks if a header is a NON message header.
      *
-     * @retval TRUE   Header is a NON message header.
-     * @retval FALSE  Header is not is a NON message header.
+     * @retval TRUE   Message is a NON message header.
+     * @retval FALSE  Message is not is a NON message header.
      *
      */
     bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); };
@@ -485,8 +491,8 @@ public:
     /**
      * This method checks if a header is a ACK message header.
      *
-     * @retval TRUE   Header is a ACK message header.
-     * @retval FALSE  Header is not is a ACK message header.
+     * @retval TRUE   Message is a ACK message header.
+     * @retval FALSE  Message is not is a ACK message header.
      *
      */
     bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); };
@@ -494,11 +500,44 @@ public:
     /**
      * This method checks if a header is a RST message header.
      *
-     * @retval TRUE   Header is a RST message header.
-     * @retval FALSE  Header is not is a RST message header.
+     * @retval TRUE   Message is a RST message header.
+     * @retval FALSE  Message is not is a RST message header.
      *
      */
     bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET); };
+
+    /**
+     * This method creates a copy of this CoAP message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
+     * cloned message are also copied from the original one.
+     *
+     * @param[in] aLength  Number of payload bytes to copy.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
+     */
+    Message *Clone(uint16_t aLength) const
+    {
+        Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
+
+        memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
+
+        return message;
+    }
+
+    /**
+     * This method creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
+     */
+    Message *Clone(void) const { return Clone(GetLength()); };
 
 private:
     /**
@@ -507,6 +546,11 @@ private:
      */
     enum
     {
+        kOptionDeltaOffset = 4,                         ///< Delta Offset
+        kOptionDeltaMask   = 0xf << kOptionDeltaOffset, ///< Delta Mask
+
+        kMaxTokenLength = OT_COAP_MAX_TOKEN_LENGTH,
+
         kVersionMask   = 0xc0, ///< Version mask as specified (RFC 7252).
         kVersionOffset = 6,    ///< Version offset as specified (RFC 7252).
 
@@ -524,6 +568,14 @@ private:
         kOption1ByteExtensionOffset = 13,  ///< Delta/Length offset as specified (RFC 7252).
         kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
     };
+
+    const HelpData &GetHelpData(void) const
+    {
+        return *reinterpret_cast<const HelpData *>(((unsigned long)mBuffer.mHead.mData + sizeof(void *) - 1) &
+                                                   ~(sizeof(void *) - 1));
+    }
+
+    HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
 };
 
 /**

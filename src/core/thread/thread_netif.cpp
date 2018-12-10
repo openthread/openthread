@@ -196,7 +196,7 @@ exit:
     return error;
 }
 
-otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+otError ThreadNetif::TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 

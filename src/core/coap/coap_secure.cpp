@@ -90,7 +90,7 @@ otError CoapSecure::Stop(void)
         Disconnect();
     }
 
-    for (Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
+    for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
     {
         mTransmitQueue.Dequeue(*message);
         message->Free();
@@ -223,16 +223,17 @@ otError CoapSecure::SendMessage(Message &               aMessage,
     return Coap::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
-otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
+    static_cast<Message &>(aMessage).Finish();
     mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
     return OT_ERROR_NONE;
 }
 
-void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapSecure::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -294,9 +295,9 @@ void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLeng
 
 void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
-    Message *message = NULL;
+    ot::Message *message = NULL;
 
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, Message::kHelpDataSize)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     Coap::Receive(*message, mPeerAddress);
@@ -316,8 +317,8 @@ otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 
 otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
-    otError  error   = OT_ERROR_NONE;
-    Message *message = NULL;
+    otError      error   = OT_ERROR_NONE;
+    ot::Message *message = NULL;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(aMessageSubType);
@@ -357,8 +358,8 @@ void CoapSecure::HandleTransmit(Tasklet &aTasklet)
 
 void CoapSecure::HandleTransmit(void)
 {
-    otError  error   = OT_ERROR_NONE;
-    Message *message = mTransmitQueue.GetHead();
+    otError      error   = OT_ERROR_NONE;
+    ot::Message *message = mTransmitQueue.GetHead();
 
     VerifyOrExit(message != NULL);
     mTransmitQueue.Dequeue(*message);

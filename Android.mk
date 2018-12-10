@@ -109,7 +109,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
     src/core/coap/coap.cpp                                  \
-    src/core/coap/coap_header.cpp                           \
+    src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
     src/core/common/crc16.cpp                               \
     src/core/common/instance.cpp                            \

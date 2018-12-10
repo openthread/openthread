@@ -41,7 +41,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "coap/coap.hpp"
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac_frame.hpp"
@@ -726,7 +726,7 @@ private:
     void    StopAdvertiseTimer(void);
     otError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     otError SendAddressRelease(void);
-    void    SendAddressSolicitResponse(const Coap::Header &    aRequest,
+    void    SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                        const Router *          aRouter,
                                        const Ip6::MessageInfo &aMessageInfo);
     otError SendAdvertisement(void);
@@ -756,24 +756,14 @@ private:
     void    UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
     static void HandleAddressSolicitResponse(void *               aContext,
-                                             otCoapHeader *       aHeader,
                                              otMessage *          aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              otError              result);
-    void        HandleAddressSolicitResponse(Coap::Header *          aHeader,
-                                             Message *               aMessage,
-                                             const Ip6::MessageInfo *aMessageInfo,
-                                             otError                 result);
-    static void HandleAddressRelease(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
-    void        HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleAddressSolicit(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
-    void        HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError result);
+    static void HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static bool IsSingleton(const RouteTlv &aRouteTlv);
 
