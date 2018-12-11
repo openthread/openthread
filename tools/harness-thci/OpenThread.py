@@ -1299,7 +1299,13 @@ class OpenThread(IThci):
     def getPollingRate(self):
         """get data polling rate for sleepy end device"""
         print '%s call getPollingRate' % self.port
-        return self.__sendCommand('pollperiod')[0]/1000
+        sPollingRate = self.__sendCommand('pollperiod')[0]
+        try:
+            iPollingRate = int(sPollingRate)/1000
+            fPollingRate = round(float(sPollingRate)/1000, 3)
+            return fPollingRate if fPollingRate > iPollingRate else iPollingRate
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("getPollingRate() Error: " + str(e))
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
