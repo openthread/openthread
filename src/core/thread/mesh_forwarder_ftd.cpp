@@ -723,17 +723,20 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
             mSourceMatchController.DecrementMessageCount(*child);
         }
 
-        LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
-
-        if (mSendMessage->GetType() == Message::kTypeIp6)
+        if (!mSendMessage->GetDirectTransmission())
         {
-            if (mSendMessage->GetTxSuccess())
+            LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
+
+            if (mSendMessage->GetType() == Message::kTypeIp6)
             {
-                mIpCounters.mTxSuccess++;
-            }
-            else
-            {
-                mIpCounters.mTxFailure++;
+                if (mSendMessage->GetTxSuccess())
+                {
+                    mIpCounters.mTxSuccess++;
+                }
+                else
+                {
+                    mIpCounters.mTxFailure++;
+                }
             }
         }
     }
