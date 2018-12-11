@@ -61,6 +61,8 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
 
     mbedtls_pk_init(&pkCtx);
     mbedtls_ecdsa_init(&ctx);
+    mbedtls_mpi_init(&rMpi);
+    mbedtls_mpi_init(&sMpi);
 
     // Parse a private key in PEM format.
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, NULL, 0) == 0,
@@ -71,9 +73,6 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
     assert(keypair != NULL);
 
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
-
-    mbedtls_mpi_init(&rMpi);
-    mbedtls_mpi_init(&sMpi);
 
     // Sign using ECDSA.
     VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength, FillRandom, NULL) ==
