@@ -361,7 +361,7 @@ otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, voi
  * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
  * @param[inout]  aContext    A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
  *
- * @retval OT_ERROR_NONE                         Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
  * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not create valid IID for given IPv6 address.
  *
  */
@@ -375,8 +375,9 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
  * @param[in]   aDatagramLen  The length of the IPv6 datagram.
  * @param[out]  aPriority     A pointer to the priority level of the IPv6 datagram.
  *
- * @retval OT_ERROR_NONE   Successfully get the priority level.
- * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+ * @retval OT_ERROR_NONE          Successfully get the priority level.
+ * @retval OT_ERROR_INVALID_ARGS  If @p aDatagram or @p aPriority is NULL.
+ * @retval OT_ERROR_PARSE         Malformed IPv6 header.
  *
  * @sa otFreeMessage
  */
