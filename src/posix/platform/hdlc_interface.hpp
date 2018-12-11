@@ -55,6 +55,15 @@ public:
     };
 
     /**
+     * This type defines a receive frame buffer to store received (and decoded) frame(s).
+     *
+     * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
+     * frames in a FIFO queue manner.
+     *
+     */
+    typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
+
+    /**
      * This class defines the callbacks provided by `HdlcInterfac` to its owner/user.
      *
      */
@@ -64,11 +73,15 @@ public:
         /**
          * This callback is invoked to notify owner/user of `HdlcInterface` of a received (and decoded) frame.
          *
-         * @param[in] aFrame   A pointer to buffer containing the received frame.
-         * @param[in] aLength  The length (number of bytes) of the received frame.
+         * The newly received frame is available in `RxFrameBuffer` from `HdclInterface::GetRxFrameBuffer()`. The
+         * user can read and process the frame. The callback is expected to either discard the new frame using
+         * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
+         * processed later.
+         *
+         * @param[in] aHdlcInterface    A reference to the `HdlcInterface` object.
          *
          */
-        void HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength);
+        void HandleReceivedFrame(HdlcInterface &aHdlcInterface);
     };
 
     /**
@@ -132,6 +145,22 @@ public:
      *
      */
     void Read(void);
+
+    /**
+     * This method gets the `RxFrameBuffer`.
+     *
+     * The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
+     * frames in a FIFO queue manner. The `RxFrameBuffer` contains the decoded received frames.
+     *
+     * Wen during `Read()` the `Callbacks::HandleReceivedFrame()` is invoked, the newly received decoded frame is
+     * available in the receive frame buffer. The callback is expected to either process and then discard the frame
+     * (using `RxFrameBuffer::DiscardFrame()` method) or save the frame (using `RxFrameBuffer::SaveFrame()` so that
+     * it can be read later.
+     *
+     * @returns A reference to receive frame buffer containing newly received frame or previously saved frames.
+     *
+     */
+    RxFrameBuffer &GetRxFrameBuffer(void) { return mRxFrameBuffer; }
 
     /**
      * This method encodes and sends a frame to Radio Co-processor (RCP) over the socket.
@@ -201,8 +230,8 @@ private:
      */
     void Decode(const uint8_t *aBuffer, uint16_t aLength);
 
-    static void HandleHdlcFrame(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
-    static void HandleHdlcError(void *aContext, otError aError, uint8_t *aFrame, uint16_t aFrameLength);
+    static void HandleHdlcFrame(void *aContext, otError aError);
+    void        HandleHdlcFrame(otError aError);
 
     static int OpenFile(const char *aFile, const char *aConfig);
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
@@ -212,8 +241,8 @@ private:
     Callbacks &   mCallbacks;
     int           mSockFd;
     bool          mIsDecoding;
+    RxFrameBuffer mRxFrameBuffer;
     Hdlc::Decoder mHdlcDecoder;
-    uint8_t       mDecoderBuffer[kMaxFrameSize];
 };
 
 } // namespace PosixApp

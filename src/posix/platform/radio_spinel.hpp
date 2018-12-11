@@ -36,7 +36,6 @@
 
 #include <openthread/platform/radio.h>
 
-#include "frame_queue.hpp"
 #include "hdlc_interface.hpp"
 #include "spinel.h"
 
@@ -443,11 +442,9 @@ public:
     /**
      *  This method processes a received Spinel frame.
      *
-     * @param[in] aBuffer  A pointer to buffer containing the frame.
-     * @param[in] aLength  Length (number of bytes) in the received frame.
-     *
+     * @param[in] aFrameBuffer The frame buffer constaining the newly received frame.
      */
-    void HandleSpinelFrame(const uint8_t *aFrame, uint16_t aLength);
+    void HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer);
 
 private:
     enum
@@ -543,11 +540,6 @@ private:
                         va_list           args);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
 
-    static void HandleSpinelFrame(void *aContext, uint8_t *aBuffer, uint16_t aLength)
-    {
-        static_cast<RadioSpinel *>(aContext)->HandleSpinelFrame(aBuffer, aLength);
-    }
-
     /**
      * This method returns if the property changed event is safe to be handled now.
      *
@@ -565,6 +557,7 @@ private:
                  (aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
     }
 
+    void HandleNotification(HdlcInterface::RxFrameBuffer &aFrameBuffer);
     void HandleNotification(const uint8_t *aBuffer, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
@@ -588,8 +581,6 @@ private:
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
-
-    FrameQueue mFrameQueue;
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
