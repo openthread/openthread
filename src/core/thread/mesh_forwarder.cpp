@@ -485,19 +485,6 @@ exit:
     return error;
 }
 
-otError MeshForwarder::SkipFragmentHeader(const uint8_t *&aFrame, uint8_t &aFrameLength)
-{
-    otError                error = OT_ERROR_NONE;
-    Lowpan::FragmentHeader fragmentHeader;
-
-    SuccessOrExit(error = GetFragmentHeader(aFrame, aFrameLength, fragmentHeader));
-    aFrame += fragmentHeader.GetHeaderLength();
-    aFrameLength -= fragmentHeader.GetHeaderLength();
-
-exit:
-    return error;
-}
-
 otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
                                            uint8_t             aFrameLength,
                                            const Mac::Address &aMacSource,
@@ -518,7 +505,8 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
     {
         // only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-        SuccessOrExit(error = SkipFragmentHeader(aFrame, aFrameLength));
+        aFrame += fragmentHeader.GetHeaderLength();
+        aFrameLength -= fragmentHeader.GetHeaderLength();
     }
 
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
@@ -1491,7 +1479,7 @@ void MeshForwarder::UpdateReassemblyList(void)
 
         if (message->GetTimeout() > 0)
         {
-            message->SetTimeout(message->GetTimeout() - 1);
+            message->DecrementTimeout();
         }
         else
         {
@@ -1507,7 +1495,7 @@ void MeshForwarder::UpdateReassemblyList(void)
         }
     }
 
-    if ((mReassemblyList.GetHead() != NULL) && (!mUpdateTimer.IsRunning()))
+    if (mReassemblyList.GetHead() != NULL)
     {
         mUpdateTimer.Start(kStateUpdatePeriod);
     }

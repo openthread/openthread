@@ -68,7 +68,6 @@ enum
  * This class reprents an IPv6 fragment priority entry
  *
  */
-OT_TOOL_PACKED_BEGIN
 class FragmentPriorityEntry
 {
 public:
@@ -128,6 +127,12 @@ public:
         mLifetime = aLifetime;
     }
 
+    /**
+     * This method decrements the entry lifetime.
+     *
+     */
+    void DecrementLifetime(void) { mLifetime--; }
+
 private:
     enum
     {
@@ -137,7 +142,7 @@ private:
     uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
     uint8_t  mPriority : 3; ///< The priority level of the first fragment.
     uint8_t  mLifetime : 5; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements mesh forwarding within Thread.
@@ -360,7 +365,6 @@ private:
                          const Mac::Address &aMeshDest);
 
     otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
-    otError  SkipFragmentHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint8_t             aFrameLength,
                                  const Mac::Address &aMacSource,
@@ -438,7 +442,8 @@ private:
                                     const Mac::Address &aMacSource,
                                     uint8_t &           aPriority);
 
-    FragmentPriorityEntry *GetFragmentPriorityEntry(bool aValid, uint16_t aTag = 0);
+    FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag);
+    FragmentPriorityEntry *GetUnusedFragementPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
