@@ -67,12 +67,14 @@ enum
 enum
 {
     EFR32_RECEIVE_SENSITIVITY = -100, // dBm
+    EFR32_RSSI_AVERAGING_TIME = 16,   // us
 };
 
 enum
 {
-    EFR32_SCHEDULER_TX_PRIORITY = 10, // High priority
-    EFR32_SCHEDULER_RX_PRIORITY = 20, // Low priority
+    EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY = 10, // High priority
+    EFR32_SCHEDULER_TX_PRIORITY          = 10, // High priority
+    EFR32_SCHEDULER_RX_PRIORITY          = 20, // Low priority
 };
 
 enum
@@ -89,6 +91,9 @@ static volatile bool sTransmitBusy      = false;
 static bool          sPromiscuous       = false;
 static bool          sIsSrcMatchEnabled = false;
 static otRadioState  sState             = OT_RADIO_STATE_DISABLED;
+
+static volatile bool   sSampleRssiDone = false;
+static volatile int8_t sRssi;
 
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
 static otRadioFrame sReceiveFrame;
@@ -188,6 +193,7 @@ RAIL_Handle_t efr32RailConfigInit(BandConfig *aBandConfig)
                                RAIL_EVENT_RX_ACK_TIMEOUT |                      //
                                    RAIL_EVENT_TX_PACKET_SENT |                  //
                                    RAIL_EVENT_RX_PACKET_RECEIVED |              //
+                                   RAIL_EVENT_RSSI_AVERAGE_DONE |               //
                                    RAIL_EVENT_SCHEDULER_STATUS |                //
                                    RAIL_EVENT_TX_CHANNEL_BUSY |                 //
                                    RAIL_EVENT_TX_ABORTED |                      //
@@ -508,8 +514,23 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
+    RAIL_Status_t        status;
+    RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
     OT_UNUSED_VARIABLE(aInstance);
-    return (int8_t)(RAIL_GetAverageRssi(sRxBandConfig->mRailHandle) >> 2);
+
+    RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
+
+    sSampleRssiDone = true;
+    status = RAIL_StartAverageRssi(sRxBandConfig->mRailHandle, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME,
+                                   &schedulerInfo);
+    otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, sRssi = OT_RADIO_RSSI_INVALID);
+
+    // waiting for the event RAIL_EVENT_RSSI_AVERAGE_DONE
+    while (sSampleRssiDone)
+        ;
+
+exit:
+    return sRssi;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
@@ -917,6 +938,14 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
         status = RAIL_Calibrate(aRailHandle, NULL, RAIL_CAL_ALL_PENDING);
         assert(status == RAIL_STATUS_NO_ERROR);
+    }
+
+    if (aEvents & RAIL_EVENT_RSSI_AVERAGE_DONE)
+    {
+        sSampleRssiDone = false;
+        sRssi           = (int8_t)(RAIL_GetAverageRssi(aRailHandle) >> 2);
+
+        RAIL_YieldRadio(aRailHandle);
     }
 }
 
