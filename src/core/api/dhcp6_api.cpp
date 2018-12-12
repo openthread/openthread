@@ -33,21 +33,11 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/dhcp6_client.h>
 #include <openthread/dhcp6_server.h>
 
 #include "common/instance.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.GetThreadNetif().GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
-}
-#endif
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 void otDhcp6ServerUpdate(otInstance *aInstance)
