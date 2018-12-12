@@ -87,6 +87,11 @@ extern "C" void otCliUartOutputFormat(const char *aFmt, ...)
     va_end(aAp);
 }
 
+extern "C" void otCliUartOutput(const char *aString, uint16_t aLength)
+{
+    Uart::sUartServer->Output(aString, aLength);
+}
+
 extern "C" void otCliUartAppendResult(otError aError)
 {
     Uart::sUartServer->GetInterpreter().AppendResult(aError);
