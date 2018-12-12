@@ -401,7 +401,7 @@ otError Dhcp6Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             continue;
         }
 
-        if (otIp6PrefixMatch(option.GetAddress(), &(prefix->mPrefix)) >= prefix->mLength)
+        if (otIp6PrefixMatch(&option.GetAddress(), &prefix->mPrefix) >= prefix->mLength)
         {
             mPrefixAgentsMask |= (1 << i);
             break;
@@ -553,9 +553,8 @@ otError Dhcp6Server::AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix, Cl
     IaAddress option;
 
     option.Init();
-    memcpy((option.GetAddress()->mFields.m8), &(aIp6Prefix.mPrefix), 8);
-    static_cast<Ip6::Address *>(option.GetAddress())
-        ->SetIid(*reinterpret_cast<Mac::ExtAddress *>(aClient.GetDuidLinkLayerAddress()));
+    memcpy(option.GetAddress().mFields.m8, &aIp6Prefix.mPrefix, 8);
+    option.GetAddress().SetIid(*reinterpret_cast<Mac::ExtAddress *>(aClient.GetDuidLinkLayerAddress()));
     option.SetPreferredLifetime(OT_DHCP6_DEFAULT_PREFERRED_LIFETIME);
     option.SetValidLifetime(OT_DHCP6_DEFAULT_VALID_LIFETIME);
     SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));

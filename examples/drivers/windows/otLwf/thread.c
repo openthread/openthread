@@ -547,10 +547,6 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
         otDhcp6ServerUpdate(pFilter->otCtx);
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-        otDhcp6ClientUpdate(pFilter->otCtx, pFilter->otDhcpAddresses, ARRAYSIZE(pFilter->otDhcpAddresses), NULL);
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
     }
 
     if ((aFlags & OT_CHANGED_THREAD_ML_ADDR) != 0)
