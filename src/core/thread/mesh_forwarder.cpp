@@ -455,6 +455,18 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     return OT_ERROR_NONE;
 }
 
+otError MeshForwarder::GetMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader)
+{
+    otError error;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::MeshHeader *>(aFrame)->IsMeshHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(error = aMeshHeader.Init(aFrame, aFrameLength));
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength)
 {
     otError            error = OT_ERROR_NONE;
@@ -1411,6 +1423,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
+        message->SetTimeout(kReassemblyTimeout);
     }
 
 exit:
@@ -1462,14 +1475,19 @@ void MeshForwarder::HandleUpdateTimer(Timer &aTimer)
 
 void MeshForwarder::HandleUpdateTimer(void)
 {
-    UpdateReassemblyList();
+    bool shouldRun = false;
 
 #if OPENTHREAD_FTD
-    UpdateFragmentLifetime();
+    shouldRun = UpdateFragmentLifetime();
 #endif
+
+    if (UpdateReassemblyList() | shouldRun)
+    {
+        mUpdateTimer.Start(kStateUpdatePeriod);
+    }
 }
 
-void MeshForwarder::UpdateReassemblyList(void)
+bool MeshForwarder::UpdateReassemblyList(void)
 {
     Message *next = NULL;
 
@@ -1495,10 +1513,7 @@ void MeshForwarder::UpdateReassemblyList(void)
         }
     }
 
-    if (mReassemblyList.GetHead() != NULL)
-    {
-        mUpdateTimer.Start(kStateUpdatePeriod);
-    }
+    return (mReassemblyList.GetHead() != NULL) ? true : false;
 }
 
 void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,

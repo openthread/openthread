@@ -88,6 +88,22 @@ public:
     void SetDatagramTag(uint16_t aDatagramTag) { mDatagramTag = aDatagramTag; }
 
     /**
+     * This method returns the source Rloc16 of the fragment.
+     *
+     * @returns The source Rloc16 value.
+     *
+     */
+    uint16_t GetSrcRloc16(void) const { return mSrcRloc16; }
+
+    /**
+     * This method sets the source Rloc16 value of the fragment.
+     *
+     * @param[in]  aSrcRloc16  The source Rloc16 value.
+     *
+     */
+    void SetSrcRloc16(uint16_t aSrcRloc16) { mSrcRloc16 = aSrcRloc16; }
+
+    /**
      * This method returns the fragment priority value.
      *
      * @returns The fragment priority value.
@@ -139,6 +155,7 @@ private:
         kMaxLifeTime = 31, ///< The maximum lifetime of the fragment entry (in seconds).
     };
 
+    uint16_t mSrcRloc16;    ///< The source Rloc16 of the datagram.
     uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
     uint8_t  mPriority : 3; ///< The priority level of the first fragment.
     uint8_t  mLifetime : 5; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
@@ -364,6 +381,7 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
+    otError  GetMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader);
     otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint8_t             aFrameLength,
@@ -379,7 +397,6 @@ private:
                           Ip6::Header &       aIp6Header);
     otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    otError  GetFragmentHeader(const uint8_t *aFrame, uint8_t aFrameLength, Lowpan::FragmentHeader &aFragmentHeader);
     Message *GetDirectTransmission(void);
     otError  GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
@@ -402,6 +419,10 @@ private:
                             const otThreadLinkInfo &aLinkInfo);
     void     HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
 
+    static otError GetFragmentHeader(const uint8_t *         aFrame,
+                                     uint8_t                 aFrameLength,
+                                     Lowpan::FragmentHeader &aFragmentHeader);
+
     otError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     otError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
@@ -409,9 +430,12 @@ private:
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);
-    void    UpdateReassemblyList(void);
-    void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t aFragmentLength, uint8_t aPriority);
-    void    UpdateFragmentLifetime(void);
+    bool    UpdateReassemblyList(void);
+    bool    UpdateFragmentLifetime(void);
+    void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                   uint8_t                 aFragmentLength,
+                                   uint16_t                aSrcRloc16,
+                                   uint8_t                 aPriority);
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void    ClearReassemblyList(void);
     otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
@@ -435,14 +459,14 @@ private:
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,
                              uint8_t &           aPriority);
-    otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint8_t &aPriority);
+    otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint16_t aSrcRloc16, uint8_t &aPriority);
     otError GetForwardFramePriority(const uint8_t *     aFrame,
                                     uint8_t             aFrameLength,
                                     const Mac::Address &aMacDest,
                                     const Mac::Address &aMacSource,
                                     uint8_t &           aPriority);
 
-    FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag);
+    FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
     FragmentPriorityEntry *GetUnusedFragementPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);

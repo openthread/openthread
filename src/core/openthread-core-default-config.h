@@ -392,11 +392,11 @@
 /**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
- * The 6LoWPAN fragment reassembly timeout in seconds.
+ * The maximum timeout between 6LoWPAN fragments in seconds.
  *
  */
 #ifndef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
-#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 5
+#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 2
 #endif
 
 /**
