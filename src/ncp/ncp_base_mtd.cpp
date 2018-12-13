@@ -1737,29 +1737,22 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
 {
-    const uint8_t *   framePtr    = NULL;
-    uint16_t          frameLen    = 0;
-    const uint8_t *   metaPtr     = NULL;
-    uint16_t          metaLen     = 0;
-    otMessage *       message     = NULL;
-    otError           error       = OT_ERROR_NONE;
-    otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    const uint8_t *framePtr = NULL;
+    uint16_t       frameLen = 0;
+    const uint8_t *metaPtr  = NULL;
+    uint16_t       metaLen  = 0;
+    otMessage *    message  = NULL;
+    otError        error    = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    OT_UNUSED_VARIABLE(metaPtr);
-    OT_UNUSED_VARIABLE(metaLen);
-
-    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &msgSettings.mPriority));
 
     // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, &msgSettings);
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, true);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     error = otIp6Send(mInstance, message);
 
@@ -2583,29 +2576,22 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_REQUIRE_JOIN_EXIS
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(void)
 {
-    const uint8_t *   framePtr    = NULL;
-    uint16_t          frameLen    = 0;
-    const uint8_t *   metaPtr     = NULL;
-    uint16_t          metaLen     = 0;
-    otMessage *       message     = NULL;
-    otError           error       = OT_ERROR_NONE;
-    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
+    const uint8_t *framePtr = NULL;
+    uint16_t       frameLen = 0;
+    const uint8_t *metaPtr  = NULL;
+    uint16_t       metaLen  = 0;
+    otMessage *    message  = NULL;
+    otError        error    = OT_ERROR_NONE;
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    OT_UNUSED_VARIABLE(metaPtr);
-    OT_UNUSED_VARIABLE(metaLen);
-
-    SuccessOrExit(error = otIp6GetPriority(mInstance, framePtr, frameLen, &msgSettings.mPriority));
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, &msgSettings);
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, false);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);

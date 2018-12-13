@@ -73,6 +73,24 @@ Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
         Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
+Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength)
+{
+    uint8_t  priority = 1;
+    Message *message;
+
+    VerifyOrExit(GetDatagramPriority(aData, aDataLength, priority) == OT_ERROR_NONE, message = NULL);
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL);
+
+    if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
+    {
+        message->Free();
+        message = NULL;
+    }
+
+exit:
+    return message;
+}
+
 uint8_t Ip6::DscpToPriority(uint8_t aDscp)
 {
     uint8_t priority;
@@ -127,16 +145,16 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
     return dscp;
 }
 
-otError Ip6::GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority) const
+otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority) const
 {
     otError       error = OT_ERROR_NONE;
     const Header *header;
 
-    VerifyOrExit((aDatagram != NULL) && (aDatagramLen >= sizeof(Header)), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aData != NULL) && (aDataLen >= sizeof(Header)), error = OT_ERROR_INVALID_ARGS);
 
-    header = reinterpret_cast<const Header *>(aDatagram);
+    header = reinterpret_cast<const Header *>(aData);
     VerifyOrExit(header->IsValid(), error = OT_ERROR_PARSE);
-    VerifyOrExit(sizeof(Header) + header->GetPayloadLength() == aDatagramLen, error = OT_ERROR_PARSE);
+    VerifyOrExit(sizeof(Header) + header->GetPayloadLength() == aDataLen, error = OT_ERROR_PARSE);
 
     aPriority = DscpToPriority(header->GetDscp());
 

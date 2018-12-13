@@ -122,6 +122,17 @@ public:
     Message *NewMessage(uint16_t aReserved, const otMessageSettings *aSettings = NULL);
 
     /**
+     * This method allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.
+     *
+     * @param[in]  aData        A pointer to the IPv6 datagram buffer.
+     * @param[in]  aDataLength  The size of the IPV6 datagram buffer pointed by @p aData.
+     *
+     * @returns A pointer to the message or NULL if malformed IPv6 header or insufficient message buffers are available.
+     *
+     */
+    Message *NewMessage(const uint8_t *aData, uint16_t aDataLength);
+
+    /**
      * This method converts the message priority level to IPv6 DSCP value.
      *
      * @param[in]  aPriority  The message priority level.
@@ -140,19 +151,6 @@ public:
      *
      */
     static uint8_t DscpToPriority(uint8_t aDscp);
-
-    /**
-     * This method gets the priority level of the IPv6 datagram
-     *
-     * @param[in]   aDatagram     A pointer to the IPv6 datagram.
-     * @param[in]   aDatagramLen  The length of the IPv6 datagram.
-     * @param[out]  aPriority     A reference to the priority level of the IPv6 datagram.
-     *
-     * @retval OT_ERROR_NONE   Successfully get the priority level.
-     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
-     *
-     */
-    otError GetPriority(const uint8_t *aDatagram, uint16_t aDatagramLen, uint8_t &aPriority) const;
 
     /**
      * This constructor initializes the object.
@@ -424,6 +422,7 @@ private:
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
+    otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority) const;
     otError ProcessReceiveCallback(const Message &    aMessage,
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,

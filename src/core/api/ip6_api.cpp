@@ -201,22 +201,6 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     return error;
 }
 
-otError otIp6GetPriority(otInstance *       aInstance,
-                         const uint8_t *    aDatagram,
-                         uint16_t           aDatagramLen,
-                         otMessagePriority *aPriority)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit((aDatagram != NULL) && (aPriority != NULL), error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error =
-                      instance.GetIp6().GetPriority(aDatagram, aDatagramLen, *reinterpret_cast<uint8_t *>(aPriority)));
-
-exit:
-    return error;
-}
-
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -228,6 +212,21 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
     }
 
     message = instance.GetMessagePool().New(Message::kTypeIp6, 0, aSettings);
+
+exit:
+    return message;
+}
+
+otMessage *otIp6NewMessageFromBuffer(otInstance *   aInstance,
+                                     const uint8_t *aData,
+                                     uint16_t       aDataLength,
+                                     bool           aLinkSecurityEnabled)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message;
+
+    VerifyOrExit((message = instance.GetIp6().NewMessage(aData, aDataLength)) != NULL);
+    message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
 
 exit:
     return message;

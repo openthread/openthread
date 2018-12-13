@@ -368,25 +368,6 @@ otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, voi
 otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
- * Get the priority level of the IPv6 datagram.
- *
- * @param[in]   aInstance     A pointer to an OpenThread instance.
- * @param[in]   aDatagram     A pointer to an IPv6 datagram.
- * @param[in]   aDatagramLen  The length of the IPv6 datagram.
- * @param[out]  aPriority     A pointer to the priority level of the IPv6 datagram.
- *
- * @retval OT_ERROR_NONE          Successfully get the priority level.
- * @retval OT_ERROR_INVALID_ARGS  If @p aDatagram or @p aPriority is NULL.
- * @retval OT_ERROR_PARSE         Malformed IPv6 header.
- *
- * @sa otFreeMessage
- */
-otError otIp6GetPriority(otInstance *       aInstance,
-                         const uint8_t *    aDatagram,
-                         uint16_t           aDatagramLen,
-                         otMessagePriority *aPriority);
-
-/**
  * Allocate a new message buffer for sending an IPv6 message.
  *
  * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
@@ -400,6 +381,23 @@ otError otIp6GetPriority(otInstance *       aInstance,
  * @sa otFreeMessage
  */
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
+
+/**
+ * Allocate a new message buffer and write the IPv6 datagram to the message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aData                 A pointer to the IPv6 datagram buffer.
+ * @param[in]  aDataLength           The size of the IPv6 datagram buffer pointed by @p aData.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2, FALSE otherwise.
+ *
+ * @returns A pointer to the message or NULL if malformed IPv6 header or insufficient message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage *otIp6NewMessageFromBuffer(otInstance *   aInstance,
+                                     const uint8_t *aData,
+                                     uint16_t       aDataLength,
+                                     bool           aLinkSecurityEnabled);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.
