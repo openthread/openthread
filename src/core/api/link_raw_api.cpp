@@ -43,6 +43,7 @@
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
 #include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
@@ -158,17 +159,14 @@ exit:
 
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otExtAddress addr;
+    Mac::Address address;
     otError      error = OT_ERROR_NONE;
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    for (uint8_t i = 0; i < sizeof(addr); i++)
-    {
-        addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
-    }
+    address.SetExtended(aExtAddress->m8, /* aReverse */ true);
 
-    error = otPlatRadioAddSrcMatchExtEntry(aInstance, &addr);
+    error = otPlatRadioAddSrcMatchExtEntry(aInstance, &address.GetExtended());
 
 exit:
     return error;
@@ -188,17 +186,14 @@ exit:
 
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otExtAddress addr;
+    Mac::Address address;
     otError      error = OT_ERROR_NONE;
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    for (uint8_t i = 0; i < sizeof(addr); i++)
-    {
-        addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
-    }
+    address.SetExtended(aExtAddress->m8, /* aReverse */ true);
 
-    error = otPlatRadioClearSrcMatchExtEntry(aInstance, &addr);
+    error = otPlatRadioClearSrcMatchExtEntry(aInstance, &address.GetExtended());
 
 exit:
     return error;
