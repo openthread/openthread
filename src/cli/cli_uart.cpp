@@ -296,7 +296,13 @@ void Uart::Send(void)
         /* duplicate the output to the debug uart */
         otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
 #endif
+#if OPENTHREAD_UART_LOCK
+        otPlatUartLockAcquire();
+#endif
         otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
+#if OPENTHREAD_UART_LOCK
+        otPlatUartLockRelease();
+#endif
     }
 
 exit:

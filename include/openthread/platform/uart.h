@@ -98,6 +98,27 @@ extern void otPlatUartSendDone(void);
  */
 extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
 
+#if OPENTHREAD_UART_LOCK
+/**
+ * The UART driver calls this method to acquire an exclusive lock of uart
+ *
+ * @retval OT_ERROR_NONE    Successfully acquired lock.
+ * @retval OT_ERROR_FAILED  Failed to acquire lock.
+ *
+ */
+otError otPlatUartLockAcquire();
+
+/**
+ * The UART driver calls this method to release the exclusive lock of uart
+ *
+ * @retval OT_ERROR_NONE    Successfully released lock.
+ * @retval OT_ERROR_FAILED  Failed to released lock.
+ *
+ */
+otError otPlatUartLockRelease();
+
+#endif //OPENTHREAD_UART_LOCK
+
 /**
  * @}
  *

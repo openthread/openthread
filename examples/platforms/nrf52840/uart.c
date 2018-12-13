@@ -334,3 +334,21 @@ OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);
 }
+
+#if OPENTHREAD_UART_LOCK
+
+/**
+ * The UART driver weak lock functions
+ *
+ */
+OT_TOOL_WEAK otError otPlatUartLockAcquire(void)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatUartLockRelease(void)
+{
+    return OT_ERROR_NONE;
+}
+
+#endif //OPENTHREAD_UART_LOCK

@@ -199,6 +199,13 @@ exit:
         {
             assert(false);
         }
+
+#if OPENTHREAD_UART_LOCK
+        if (otPlatUartLockRelease() != OT_ERROR_NONE)
+        {
+            assert(false);
+        }
+#endif
     }
 }
 
