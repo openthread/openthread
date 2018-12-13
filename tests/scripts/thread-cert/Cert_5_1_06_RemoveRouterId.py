@@ -100,26 +100,31 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         msg = router1_messages.next_coap_message("0.02")
         msg.assertCoapMessageRequestUriPath("/a/as")
 
-        msg = leader_messages.next_coap_message("2.04")
+        leader_messages.next_coap_message("2.04")
 
         # 3 - Router1
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER1])
-            
+        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg.assertSentToNode(self.nodes[LEADER])
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
+
         msg = router1_messages.next_coap_message(code="0.02", uri_path="/a/as")
         msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
         msg.assertCoapMessageContainsTlv(network_layer.Status)
-
-        msg = leader_messages.next_coap_message("2.04")
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
-        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
-
-        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
 
 
 if __name__ == '__main__':
