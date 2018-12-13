@@ -39,6 +39,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#include "mac/mac_frame.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -151,17 +152,12 @@ otError SourceMatchController::AddAddress(const Child &aChild)
     }
     else
     {
-        otExtAddress addr;
+        Mac::Address address;
 
-        for (uint8_t i = 0; i < sizeof(addr); i++)
-        {
-            addr.m8[i] = aChild.GetExtAddress().m8[sizeof(addr) - 1 - i];
-        }
+        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
+        error = otPlatRadioAddSrcMatchExtEntry(&GetInstance(), &address.GetExtended());
 
-        error = otPlatRadioAddSrcMatchExtEntry(&GetInstance(), &addr);
-
-        otLogDebgMac("SrcAddrMatch - Adding addr: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)", addr.m8[7],
-                     addr.m8[6], addr.m8[5], addr.m8[4], addr.m8[3], addr.m8[2], addr.m8[1], addr.m8[0],
+        otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
     }
 
@@ -183,22 +179,17 @@ void SourceMatchController::ClearEntry(Child &aChild)
     {
         error = otPlatRadioClearSrcMatchShortEntry(&GetInstance(), aChild.GetRloc16());
 
-        otLogDebgMac("SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)", aChild.GetRloc16(),
+        otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
                      otThreadErrorToString(error), error);
     }
     else
     {
-        otExtAddress addr;
+        Mac::Address address;
 
-        for (uint8_t i = 0; i < sizeof(addr); i++)
-        {
-            addr.m8[i] = aChild.GetExtAddress().m8[sizeof(aChild.GetExtAddress()) - 1 - i];
-        }
+        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
+        error = otPlatRadioClearSrcMatchExtEntry(&GetInstance(), &address.GetExtended());
 
-        error = otPlatRadioClearSrcMatchExtEntry(&GetInstance(), &addr);
-
-        otLogDebgMac("SrcAddrMatch - Clearing addr: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)", addr.m8[7],
-                     addr.m8[6], addr.m8[5], addr.m8[4], addr.m8[3], addr.m8[2], addr.m8[1], addr.m8[0],
+        otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
     }
 
