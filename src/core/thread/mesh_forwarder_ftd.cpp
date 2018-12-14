@@ -1167,7 +1167,7 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac("Failed to get forwarded frame priority, error:%s, len:%d, dst:%d, src:%s",
+        otLogWarnMac("Failed to get forwarded frame priority, error:%s, len:%d, dst:%s, src:%s",
                      otThreadErrorToString(error), aFrameLength, aMacDest.ToString().AsCString(),
                      aMacSource.ToString().AsCString());
     }
