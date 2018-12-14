@@ -174,6 +174,8 @@ typedef uint32_t otChannelMaskPage0;
 #define OT_CHANNEL_25_MASK (1 << 25) ///< Channel 25
 #define OT_CHANNEL_26_MASK (1 << 26) ///< Channel 26
 
+#define OT_CHANNEL_ALL 0xffffffff ///< All channels
+
 /**
  * This structure represents presence of different components in Active or Pending Operational Dataset.
  *
