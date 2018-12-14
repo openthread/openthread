@@ -236,6 +236,7 @@ otError Uart::ProcessCommand(void)
 
 int Uart::Output(const char *aBuf, uint16_t aBufLength)
 {
+    OT_CLI_UART_OUTPUT_LOCK();
     uint16_t remaining = kTxBufferSize - mTxLength;
     uint16_t tail;
 
@@ -252,6 +253,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
     }
 
     Send();
+    OT_CLI_UART_OUTPUT_UNLOCK();
 
     return aBufLength;
 }
@@ -296,9 +298,7 @@ void Uart::Send(void)
         /* duplicate the output to the debug uart */
         otPlatDebugUart_write_bytes(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
 #endif
-        OT_CLI_UART_OUTPUT_LOCK();
         otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
-        OT_CLI_UART_OUTPUT_UNLOCK();
     }
 
 exit:
