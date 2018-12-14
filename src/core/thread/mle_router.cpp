@@ -1690,6 +1690,8 @@ void MleRouter::HandleStateUpdateTimer(void)
 {
     bool routerStateUpdate = false;
 
+    VerifyOrExit(IsRouterRoleEnabled());
+
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
     if (mChallengeTimeout > 0)
