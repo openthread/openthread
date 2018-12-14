@@ -214,4 +214,8 @@
     _Pragma("diag_suppress=128")
 #endif
 
+#if OPENTHREAD_UART_LOCK
+#include "uart_lock.h"
+#endif
+
 #endif  // OPENTHREAD_CORE_NRF52840_CONFIG_H_

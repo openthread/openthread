@@ -92,6 +92,7 @@ PLATFORM_COMMON_SOURCES                                                         
     spi-slave.c                                                                                              \
     system.c                                                                                                 \
     uart.c                                                                                                   \
+    uart_lock.h                                                                                              \
     usb-cdc-uart.c                                                                                           \
     $(NULL)
 
