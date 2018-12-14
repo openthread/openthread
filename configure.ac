@@ -1829,6 +1829,7 @@ src/diag/Makefile
 src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
+third_party/jlink/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
 examples/apps/Makefile
