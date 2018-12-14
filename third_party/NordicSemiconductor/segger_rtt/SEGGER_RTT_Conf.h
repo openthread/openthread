@@ -67,6 +67,10 @@ Revision: $Rev: 7020 $
 #ifndef SEGGER_RTT_CONF_H
 #define SEGGER_RTT_CONF_H
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+
 #include "nordic_common.h"
 #include "app_util_platform.h"
 #include "sdk_config.h"

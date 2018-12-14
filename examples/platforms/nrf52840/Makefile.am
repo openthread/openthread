@@ -73,7 +73,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
     $(NULL)
@@ -187,7 +186,6 @@ NORDICSEMI_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/nrfx/hal/nrf_nvmc.c                                       \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/mdk/gcc_startup_nrf52840.S                           \
     @top_builddir@/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.c                                \
-    @top_builddir@/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.c                                   \
     $(NULL)
 
 HWCRYPTO_SOURCES                                                                                           = \
@@ -360,8 +358,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_bitfields.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/nrf52840_peripherals.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk/system_nrf52840.h                                   \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT.h                                      \
-    $(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble.h                                \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_err.h                            \
     $(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/ble_gap.h                            \
@@ -390,12 +386,15 @@ PRETTY_FILES                                                                    
 Dash                                                                                                       = -
 
 libopenthread_nrf52840_a_LIBADD                                                                            = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_sdk_a_LIBADD                                                                        = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
+    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
