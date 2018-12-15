@@ -73,13 +73,20 @@ Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
         Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
-Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength)
+Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
 {
-    uint8_t  priority = 1;
-    Message *message;
+    otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    Message *         message;
 
-    VerifyOrExit(GetDatagramPriority(aData, aDataLength, priority) == OT_ERROR_NONE, message = NULL);
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, priority)) != NULL);
+    if (aSettings != NULL)
+    {
+        settings = *aSettings;
+    }
+
+    VerifyOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)) ==
+                     OT_ERROR_NONE,
+                 message = NULL);
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, &settings)) != NULL);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
     {

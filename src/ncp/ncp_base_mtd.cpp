@@ -1751,7 +1751,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     // May later include TX power, allow retransmits, etc...
 
     // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, true);
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otIp6Send(mInstance, message);
@@ -2576,12 +2576,13 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_REQUIRE_JOIN_EXIS
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(void)
 {
-    const uint8_t *framePtr = NULL;
-    uint16_t       frameLen = 0;
-    const uint8_t *metaPtr  = NULL;
-    uint16_t       metaLen  = 0;
-    otMessage *    message  = NULL;
-    otError        error    = OT_ERROR_NONE;
+    const uint8_t *   framePtr    = NULL;
+    uint16_t          frameLen    = 0;
+    const uint8_t *   metaPtr     = NULL;
+    uint16_t          metaLen     = 0;
+    otMessage *       message     = NULL;
+    otError           error       = OT_ERROR_NONE;
+    otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
@@ -2590,7 +2591,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     // May later include TX power, allow retransmits, etc...
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, false);
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, &msgSettings);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // Ensure the insecure message is forwarded using direct transmission.

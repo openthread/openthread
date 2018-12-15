@@ -385,19 +385,23 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 /**
  * Allocate a new message buffer and write the IPv6 datagram to the message buffer for sending an IPv6 message.
  *
- * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aData                 A pointer to the IPv6 datagram buffer.
- * @param[in]  aDataLength           The size of the IPv6 datagram buffer pointed by @p aData.
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2, FALSE otherwise.
+ * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is obtained from IPv6
+ *       message itself.
+ *       If @p aSettings is not "NULL", the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aData        A pointer to the IPv6 datagram buffer.
+ * @param[in]  aDataLength  The size of the IPv6 datagram buffer pointed by @p aData.
+ * @param[in]  aSettings    A pointer to the message settings or NULL to set default settings.
  *
  * @returns A pointer to the message or NULL if malformed IPv6 header or insufficient message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage *otIp6NewMessageFromBuffer(otInstance *   aInstance,
-                                     const uint8_t *aData,
-                                     uint16_t       aDataLength,
-                                     bool           aLinkSecurityEnabled);
+otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
+                                     const uint8_t *          aData,
+                                     uint16_t                 aDataLength,
+                                     const otMessageSettings *aSettings);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.

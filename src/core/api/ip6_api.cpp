@@ -217,16 +217,15 @@ exit:
     return message;
 }
 
-otMessage *otIp6NewMessageFromBuffer(otInstance *   aInstance,
-                                     const uint8_t *aData,
-                                     uint16_t       aDataLength,
-                                     bool           aLinkSecurityEnabled)
+otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
+                                     const uint8_t *          aData,
+                                     uint16_t                 aDataLength,
+                                     const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    VerifyOrExit((message = instance.GetIp6().NewMessage(aData, aDataLength)) != NULL);
-    message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    VerifyOrExit((message = instance.GetIp6().NewMessage(aData, aDataLength, aSettings)) != NULL);
 
 exit:
     return message;
