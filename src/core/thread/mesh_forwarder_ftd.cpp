@@ -1132,7 +1132,8 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
                                                const Mac::Address &aMacSource,
                                                uint8_t &           aPriority)
 {
-    otError                error = OT_ERROR_NONE;
+    otError                error      = OT_ERROR_NONE;
+    bool                   isFragment = false;
     Lowpan::MeshHeader     meshHeader;
     Lowpan::FragmentHeader fragmentHeader;
 
@@ -1142,34 +1143,30 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
 
     if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
     {
+        isFragment = true;
         aFrame += fragmentHeader.GetHeaderLength();
         aFrameLength -= fragmentHeader.GetHeaderLength();
 
-        if (fragmentHeader.GetDatagramOffset() == 0)
-        {
-            // Get priority from Ipv6 header or UDP destination port directly
-            SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority));
-        }
-        else
+        if (fragmentHeader.GetDatagramOffset() > 0)
         {
             // Get priority from the pre-buffered info
-            SuccessOrExit(error = GetFragmentPriority(fragmentHeader, meshHeader.GetSource(), aPriority));
+            ExitNow(error = GetFragmentPriority(fragmentHeader, meshHeader.GetSource(), aPriority));
         }
+    }
 
-        UpdateFragmentPriority(fragmentHeader, aFrameLength, meshHeader.GetSource(), aPriority);
-    }
-    else
-    {
-        // Get priority from Ipv6 header or UDP destination port directly
-        error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
-    }
+    // Get priority from Ipv6 header or UDP destination port directly
+    error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac("Failed to get forwarded frame priority, error:%s, len:%d, dst:%s, src:%s",
+        otLogNoteMac("Failed to get forwarded frame priority, error:%s, len:%d, dst:%s, src:%s",
                      otThreadErrorToString(error), aFrameLength, aMacDest.ToString().AsCString(),
                      aMacSource.ToString().AsCString());
+    }
+    else if (isFragment)
+    {
+        UpdateFragmentPriority(fragmentHeader, aFrameLength, meshHeader.GetSource(), aPriority);
     }
 
     return error;

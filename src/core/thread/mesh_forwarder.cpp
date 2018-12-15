@@ -1481,7 +1481,7 @@ void MeshForwarder::HandleUpdateTimer(void)
     shouldRun = UpdateFragmentLifetime();
 #endif
 
-    if (UpdateReassemblyList() | shouldRun)
+    if (UpdateReassemblyList() || shouldRun)
     {
         mUpdateTimer.Start(kStateUpdatePeriod);
     }
@@ -1513,7 +1513,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
         }
     }
 
-    return (mReassemblyList.GetHead() != NULL) ? true : false;
+    return mReassemblyList.GetHead() != NULL;
 }
 
 void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,

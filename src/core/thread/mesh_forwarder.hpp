@@ -152,13 +152,13 @@ public:
 private:
     enum
     {
-        kMaxLifeTime = 31, ///< The maximum lifetime of the fragment entry (in seconds).
+        kMaxLifeTime = 5, ///< The maximum lifetime of the fragment entry (in seconds).
     };
 
     uint16_t mSrcRloc16;    ///< The source Rloc16 of the datagram.
     uint16_t mDatagramTag;  ///< The datagram tag of the fragment header.
     uint8_t  mPriority : 3; ///< The priority level of the first fragment.
-    uint8_t  mLifetime : 5; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
+    uint8_t  mLifetime : 3; ///< The lifetime of the entry (in seconds). 0 means the entry is invalid.
 };
 
 /**
