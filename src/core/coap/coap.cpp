@@ -171,7 +171,7 @@ otError Coap::SendMessage(Message &               aMessage,
     if ((header.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT || header.GetType() == OT_COAP_TYPE_RESET) &&
         header.GetCode() != OT_COAP_CODE_EMPTY)
     {
-        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
+        mResponsesQueue.EnqueueResponse(header, aMessage, aMessageInfo);
     }
 
     // Set Message Id if it was not already set.
@@ -809,32 +809,14 @@ exit:
     return error;
 }
 
-otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
-                                               const Ip6::MessageInfo &aMessageInfo,
-                                               Message **              aResponse)
+void ResponsesQueue::EnqueueResponse(const Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Header  header;
-
-    SuccessOrExit(error = header.FromMessage(aRequest, 0));
-
-    error = GetMatchedResponseCopy(header, aMessageInfo, aResponse);
-
-exit:
-    return error;
-}
-
-void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    Header                 header;
     Message *              copy;
     EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
     uint16_t               messageCount;
     uint16_t               bufferCount;
 
-    SuccessOrExit(header.FromMessage(aMessage, 0));
-
-    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &copy))
+    switch (GetMatchedResponseCopy(aHeader, aMessageInfo, &copy))
     {
     case OT_ERROR_NOT_FOUND:
         break;
