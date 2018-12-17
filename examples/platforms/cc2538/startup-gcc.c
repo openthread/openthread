@@ -76,7 +76,7 @@ extern void RFCoreRxTxIntHandler(void);
 extern void RFCoreErrIntHandler(void);
 extern void main(void);
 
-static uint64_t stack[512] __attribute__((section(".stack")));
+static uint64_t stack[640] __attribute__((section(".stack")));
 
 __attribute__((section(".vectors"), used)) void (*const vectors[])(void) = {
     (void (*)(void))((unsigned long)stack + sizeof(stack)), // Initial Stack Pointer
