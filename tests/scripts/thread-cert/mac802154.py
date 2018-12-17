@@ -77,6 +77,9 @@ class MacHeader:
         SHORT = 2
         EXTENDED = 3
 
+    class CommandIdentifier:
+        DATA_REQUEST = 4
+
     def __init__(self, frame_type, frame_pending, ack_request, frame_version, seq,
                  dest_pan_id=None, dest_address=None, src_pan_id=None, src_address=None, command_type=None,
                  aux_sec_header=None, mic=None,
@@ -92,6 +95,7 @@ class MacHeader:
         self.dest_address = dest_address
         self.src_pan_id = src_pan_id
         self.src_address = src_address
+        self.command_type = command_type
 
         self.aux_sec_header = aux_sec_header
         self.mic = mic

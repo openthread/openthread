@@ -399,6 +399,29 @@ class MessagesSet(object):
 
         return message
 
+
+    def next_message_of(self, message_type, assert_enabled=True):
+        message = None
+
+        while self.messages:
+            m = self.messages.pop(0)
+            if m.type != message_type:
+                continue
+
+            message = m
+            break
+
+        if assert_enabled:
+            assert message is not None, "Could not find 802.15.4 Data Message"
+
+        return message
+
+    def next_data_message(self):
+        return self.next_message_of(MessageType.DATA)
+
+    def next_command_message(self):
+        return self.next_message_of(MessageType.COMMAND)
+
     def contains_icmp_message(self):
         for m in self.messages:
             if m.type == MessageType.ICMP:
