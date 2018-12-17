@@ -30,6 +30,8 @@
 import time
 import unittest
 
+import command
+from command import CheckType
 import config
 import mle
 import network_layer
@@ -104,27 +106,16 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
 
         # 3 - Router1
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::2")
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.ScanMask)
-        msg.assertMleMessageContainsTlv(mle.Version)
+        command.check_parent_request(msg)
 
         msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[LEADER])
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Timeout)
-        msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.TlvRequest)
-        msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
+        command.check_child_id_request(msg, tlv_request=CheckType.CONTAIN,
+            mle_frame_counter=CheckType.OPTIONAL, address_registration=CheckType.NOT_CONTAIN,
+            active_timestamp=CheckType.OPTIONAL, pending_timestamp=CheckType.OPTIONAL)
 
-        msg = router1_messages.next_coap_message(code="0.02", uri_path="/a/as")
-        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg = router1_messages.next_coap_message(code="0.02")
+        command.check_address_solicit(msg, was_router=True)
 
 
 if __name__ == '__main__':

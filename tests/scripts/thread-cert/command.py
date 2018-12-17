@@ -96,6 +96,15 @@ def check_address_error_notification(command_msg, source_node, destination_addre
             + str(ipv6.ip_address(destination_address)) + ", but the destination_address in command msg is: " \
             + str(command_msg.ipv6_packet.ipv6_header.destination_address)
 
+def check_address_solicit(command_msg, was_router):
+    command_msg.assertCoapMessageRequestUriPath('/a/as')
+    command_msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+    command_msg.assertCoapMessageContainsTlv(network_layer.Status)
+    if was_router:
+        command_msg.assertCoapMessageContainsTlv(network_layer.Rloc16)
+    else:
+        command_msg.assertMleMessageDoesNotContainTlv(network_layer.Rloc16)
+
 def check_address_release(command_msg, destination_node):
     """Verify the message is a properly formatted address release destined to the given node.
     """
