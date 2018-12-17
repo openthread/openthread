@@ -84,9 +84,6 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertTrue(self.nodes[LEADER].ping(addr))
-
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
 
@@ -104,6 +101,8 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
 
         leader_messages.next_coap_message("2.04")
 
+        # 2 - N/A
+
         # 3 - Router1
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         command.check_parent_request(msg, is_first_request=True)
@@ -116,6 +115,10 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
 
         msg = router1_messages.next_coap_message(code="0.02")
         command.check_address_solicit(msg, was_router=True)
+
+        # 4 - Router1
+        for addr in self.nodes[ROUTER1].get_addrs():
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 
 if __name__ == '__main__':
