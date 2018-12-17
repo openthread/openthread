@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openthread-core-config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
