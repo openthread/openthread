@@ -243,14 +243,22 @@ def check_mle_advertisement(command_msg):
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
     command_msg.assertMleMessageContainsTlv(mle.Route64)
 
-def check_parent_request(command_msg):
+def check_parent_request(command_msg, is_first_request):
     """Verify a properly formatted Parent Request command message.
     """
     command_msg.assertSentWithHopLimit(255)
     command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
     command_msg.assertMleMessageContainsTlv(mle.Challenge)
-    command_msg.assertMleMessageContainsTlv(mle.ScanMask)
+    scan_mask = command_msg.assertMleMessageContainsTlv(mle.ScanMask)
+    if not scan_mask.router:
+        raise ValueError("Parent request without R bit set")
+    if is_first_request:
+        if scan_mask.end_device:
+            raise ValueError("First parent request with E bit set")
+    elif not scan_mask.end_device:
+        raise ValueError("Second parent request without E bit set")
+
     command_msg.assertMleMessageContainsTlv(mle.Version)
 
 def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):

@@ -106,7 +106,7 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
 
         # 3 - Router1
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        command.check_parent_request(msg)
+        command.check_parent_request(msg, is_first_request=True)
 
         msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[LEADER])
