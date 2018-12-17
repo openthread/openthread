@@ -363,11 +363,12 @@ public:
      * response is not added.
      * The CoAP response is copied before it is added to the cache.
      *
+     * @param[in]  aHeader       A reference to a CoAP header.
      * @param[in]  aMessage      The CoAP response to add to the cache.
      * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
      *
      */
-    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EnqueueResponse(const Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * Remove the oldest response from the cache.
@@ -394,21 +395,6 @@ public:
      *
      */
     otError GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
-
-    /**
-     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
-     *
-     * @param[in]  aRequest      The CoAP message containing Message ID.
-     * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
-     *
-     * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
-     * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
-     * @retval OT_ERROR_NOT_FOUND  Matching response not found.
-     * @retval OT_ERROR_PARSE      Could not parse CoAP header in the request message.
-     *
-     */
-    otError GetMatchedResponseCopy(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
 
     /**
      * Get a reference to the cached CoAP responses queue.
