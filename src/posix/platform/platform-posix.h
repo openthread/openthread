@@ -35,15 +35,20 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-
 #include <sys/select.h>
 #include <sys/time.h>
 
 #include <openthread/instance.h>
 
-#include "openthread-core-config.h"
+/**
+ * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+ *
+ * Define as 1 to enable PTY device support in POSIX app.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
+#endif
 
 #ifdef __cplusplus
 extern "C" {
