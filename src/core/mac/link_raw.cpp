@@ -69,7 +69,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogInfoPlat("LinkRaw Enabled=%d", aEnabled ? 1 : 0);
+    otLogDebgMac("LinkRaw::Enabled(%s)", aEnabled ? "true" : "false");
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!GetInstance().GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
@@ -150,17 +150,12 @@ exit:
 
 void LinkRaw::InvokeReceiveDone(Frame *aFrame, otError aError)
 {
-    if (mReceiveDoneCallback)
+    otLogDebgMac("LinkRaw::ReceiveDone(%d bytes), error:%s", (aFrame != NULL) ? aFrame->mLength : 0,
+                 otThreadErrorToString(aError));
+
+    if (mReceiveDoneCallback && (aError == OT_ERROR_NONE))
     {
-        if (aError == OT_ERROR_NONE)
-        {
-            otLogInfoPlat("LinkRaw Invoke Receive Done (%d bytes)", aFrame->mLength);
-            mReceiveDoneCallback(&GetInstance(), aFrame, aError);
-        }
-        else
-        {
-            otLogWarnPlat("LinkRaw Invoke Receive Done (err=0x%x)", aError);
-        }
+        mReceiveDoneCallback(&GetInstance(), aFrame, aError);
     }
 }
 
@@ -179,14 +174,7 @@ exit:
 
 void LinkRaw::InvokeTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 {
-    if (aError == OT_ERROR_NONE)
-    {
-        otLogDebgPlat("LinkRaw Transmit Done: %s", otThreadErrorToString(aError));
-    }
-    else
-    {
-        otLogWarnPlat("LinkRaw Transmit Done: %s", otThreadErrorToString(aError));
-    }
+    otLogDebgMac("LinkRaw::TransmitDone(%d bytes), error:%s", aFrame.mLength, otThreadErrorToString(aError));
 
     if (mTransmitDoneCallback)
     {
