@@ -1560,6 +1560,69 @@ AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
+#
+# Support for OQPSK modulation in 915MHz band
+#
+
+AC_MSG_CHECKING([whether to support OQPSK modulation in 915MHz band])
+AC_ARG_ENABLE(radio_scheme_915mhz_oqpsk,
+    [AS_HELP_STRING([--enable-radio-scheme-915mhz-oqpsk], [Enable OQPSK modulation in 915MHz band @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_radio_scheme_915mhz_oqpsk=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ftd} for --enable-radio-scheme-915mhz-oqpsk])
+            ;;
+        esac
+    ],
+    [enable_radio_scheme_915mhz_oqpsk=no])
+
+if test "$enable_radio_scheme_915mhz_oqpsk" = "yes"; then
+    OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK=1
+else
+    OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK=0
+fi
+
+AC_MSG_RESULT(${enable_radio_scheme_915mhz_oqpsk})
+AC_SUBST(OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK], [test "${enable_radio_scheme_915mhz_oqpsk}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK], [${OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK}], [Define to 1 to enable OQPSK modulation in 915MHz band.])
+
+#
+# Support for OQPSK modulation in 2.4GHz band
+#
+
+AC_MSG_CHECKING([whether to support OQPSK modulation in 2.4GHz band])
+AC_ARG_ENABLE(radio_scheme_2p4ghz_oqpsk,
+    [AS_HELP_STRING([--enable-radio-scheme-2p4ghz-oqpsk], [Enable OQPSK modulation in 2.4GHz band @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_radio_scheme_2p4ghz_oqpsk=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ftd} for --enable-radio-scheme-2p4ghz-oqpsk])
+            ;;
+        esac
+    ],
+    [enable_radio_scheme_2p4ghz_oqpsk=yes])
+
+if test "$enable_radio_scheme_2p4ghz_oqpsk" = "yes"; then
+    OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK=1
+else
+    OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK=0
+fi
+
+AC_MSG_RESULT(${enable_radio_scheme_2p4ghz_oqpsk})
+AC_SUBST(OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK], [test "${enable_radio_scheme_2p4ghz_oqpsk}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK], [${OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK}], [Define to 1 to enable OQPSK modulation in 2.4GHz band.])
 
 #
 # Examples
@@ -1953,6 +2016,8 @@ AC_MSG_NOTICE([
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
+  OpenThread Radio 915MHz OQPSK Support     : ${enable_radio_scheme_915mhz_oqpsk}
+  OpenThread Radio 2.4GHz OQPSK Support     : ${enable_radio_scheme_2p4ghz_oqpsk}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

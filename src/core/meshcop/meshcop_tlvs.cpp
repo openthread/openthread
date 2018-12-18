@@ -130,7 +130,7 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
 {
     uint8_t channelPage = OT_RADIO_CHANNEL_PAGE_0;
 
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK
     if ((OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX))
     {
         channelPage = OT_RADIO_CHANNEL_PAGE_2;
@@ -191,7 +191,7 @@ otError ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 
     VerifyOrExit((entry = static_cast<ChannelMaskEntry *>(GetFirstEntry())) != NULL, error = OT_ERROR_NO_BUFS);
 
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK
     if (aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK)
     {
         entry->Init();
@@ -205,7 +205,7 @@ otError ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
     }
 #endif
 
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK
     if (aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK)
     {
         entry->Init();
@@ -231,14 +231,14 @@ otError ChannelMaskTlv::GetChannelMask(uint32_t &aChannelMask) const
     VerifyOrExit((entry = static_cast<const ChannelMaskEntry *>(GetFirstEntry())) != NULL, error = OT_ERROR_NOT_FOUND);
     while (entry != NULL)
     {
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK
         if (entry->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
         {
             mask |= entry->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
 
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK
         if (entry->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_0)
         {
             mask |= entry->GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
@@ -275,14 +275,14 @@ otError ChannelMaskTlv::GetChannelMask(const Message &aMessage, uint32_t &aChann
     {
         VerifyOrExit(aMessage.Read(offset, sizeof(entry), &entry) == sizeof(entry), error = OT_ERROR_PARSE);
         offset += sizeof(entry);
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_915MHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_915MHZ_OQPSK
         if (entry.GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
         {
             mask |= entry.GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
 
-#if (OPENTHREAD_CONFIG_RADIO_SCHEME & OPENTHREAD_CONFIG_RADIO_SCHEME_2P4GHZ_OQPSK)
+#if OPENTHREAD_ENABLE_RADIO_SCHEME_2P4GHZ_OQPSK
         if (entry.GetChannelPage() == OT_RADIO_CHANNEL_PAGE_0)
         {
             mask |= entry.GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
