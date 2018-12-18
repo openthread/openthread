@@ -304,9 +304,6 @@ protected:
     void        HandleJoinerCallback(otError aError);
 #endif
 
-    static void SendDoneTask(void *aContext);
-    void        SendDoneTask(void);
-
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
