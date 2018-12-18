@@ -27,15 +27,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
+import mle
 import node
 
 LEADER = 1
 REED = 2
-ED = 3
+MED = 3
 
 class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
     def setUp(self):
@@ -43,7 +43,7 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
 
         self.nodes = {}
         for i in range(1,4):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
+            self.nodes[i] = node.Node(i, (i == MED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -53,14 +53,15 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
         self.nodes[REED].set_panid(0xface)
         self.nodes[REED].set_mode('rsdn')
         self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[ED].get_addr64())
+        self.nodes[REED].add_whitelist(self.nodes[MED].get_addr64())
         self.nodes[REED].enable_whitelist()
         self.nodes[REED].set_router_upgrade_threshold(0)
 
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[ED].enable_whitelist()
+        self.nodes[MED].set_panid(0xface)
+        self.nodes[MED].set_mode('rsn')
+        self.nodes[MED].add_whitelist(self.nodes[REED].get_addr64())
+        self.nodes[MED].enable_whitelist()
+        self.nodes[MED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -77,10 +78,70 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
-        self.nodes[ED].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.nodes[MED].start()
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)
+        self.assertEqual(self.nodes[MED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
+
+        med_messages = self.simulator.get_messages_sent_by(MED)
+
+        # Step 2 - DUT send MLE Parent Request
+        msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(0, scan_mask_tlv.end_device)
+
+        # Step 4 - DUT send MLE Parent Request again
+        msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(1, scan_mask_tlv.end_device)
+
+        # Step 6 - DUT send Child ID Request
+        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
+        msg.assertSentToNode(self.nodes[REED])
+        msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertMleMessageContainsOptionalTlv(mle.Route64)
+
+        tlv_request_tlv = msg.get_mle_message_tlv(mle.TlvRequest)
+        self.assertEqual(mle.TlvType.ADDRESS16, tlv_request_tlv.tlvs[0])
+        self.assertEqual(mle.TlvType.NETWORK_DATA, tlv_request_tlv.tlvs[1])
+
+        # Step 8 - DUT send Child Update messages
+        msg = med_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+
+        # Step 10 - Leader send ICMPv6 echo request
+        ed_addrs = self.nodes[MED].get_addrs()
+        for addr in ed_addrs:
+            if addr[0:4] != 'fe80':
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()
