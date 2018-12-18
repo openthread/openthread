@@ -385,9 +385,9 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 /**
  * Allocate a new message buffer and write the IPv6 datagram to the message buffer for sending an IPv6 message.
  *
- * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is obtained from IPv6
+ * @note If @p aSettings is NULL, the link layer security is enabled and the message priority is obtained from IPv6
  *       message itself.
- *       If @p aSettings is not "NULL", the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
+ *       If @p aSettings is not NULL, the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aData        A pointer to the IPv6 datagram buffer.

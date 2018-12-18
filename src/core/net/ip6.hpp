@@ -124,9 +124,9 @@ public:
     /**
      * This method allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.
      *
-     *@note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is obtained from
+     *@note If @p aSettings is NULL, the link layer security is enabled and the message priority is obtained from
      *      IPv6 message itself.
-     *      If @p aSettings is not "NULL", the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
+     *      If @p aSettings is not NULL, the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
      *
      * @param[in]  aData        A pointer to the IPv6 datagram buffer.
      * @param[in]  aDataLength  The size of the IPV6 datagram buffer pointed by @p aData.
@@ -427,7 +427,8 @@ private:
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
-    otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority) const;
+    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority);
+
     otError ProcessReceiveCallback(const Message &    aMessage,
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,

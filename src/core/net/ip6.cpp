@@ -76,16 +76,14 @@ Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
 {
     otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
-    Message *         message;
+    Message *         message  = NULL;
 
     if (aSettings != NULL)
     {
         settings = *aSettings;
     }
 
-    VerifyOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)) ==
-                     OT_ERROR_NONE,
-                 message = NULL);
+    SuccessOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)));
     VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, &settings)) != NULL);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
@@ -152,7 +150,7 @@ uint8_t Ip6::PriorityToDscp(uint8_t aPriority)
     return dscp;
 }
 
-otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority) const
+otError Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, uint8_t &aPriority)
 {
     otError       error = OT_ERROR_NONE;
     const Header *header;
