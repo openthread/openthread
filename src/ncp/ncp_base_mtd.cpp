@@ -1744,19 +1744,15 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     otMessage *    message  = NULL;
     otError        error    = OT_ERROR_NONE;
 
-    // STREAM_NET requires layer 2 security.
-    message = otIp6NewMessage(mInstance, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
     SuccessOrExit(error = mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(error = mDecoder.ReadData(metaPtr, metaLen));
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    OT_UNUSED_VARIABLE(metaPtr);
-    OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
+    // STREAM_NET requires layer 2 security.
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, NULL);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = otIp6Send(mInstance, message);
 
@@ -2588,19 +2584,15 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     otError           error       = OT_ERROR_NONE;
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    // STREAM_NET_INSECURE packets are not secured at layer 2.
-    message = otIp6NewMessage(mInstance, &msgSettings);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
     SuccessOrExit(mDecoder.ReadDataWithLen(framePtr, frameLen));
     SuccessOrExit(mDecoder.ReadData(metaPtr, metaLen));
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    OT_UNUSED_VARIABLE(metaPtr);
-    OT_UNUSED_VARIABLE(metaLen);
 
-    SuccessOrExit(error = otMessageAppend(message, framePtr, frameLen));
+    // STREAM_NET_INSECURE packets are not secured at layer 2.
+    message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, &msgSettings);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);
