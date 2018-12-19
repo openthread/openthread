@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 
 import unittest
 
+import command
 import config
 import mle
 import node
@@ -37,7 +38,7 @@ LEADER = 1
 REED = 2
 MED = 3
 
-class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
+class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -85,7 +86,7 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
 
         med_messages = self.simulator.get_messages_sent_by(MED)
 
-        # Step 2 - DUT send MLE Parent Request
+        # Step 2 - DUT sends MLE Parent Request
         msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentWithHopLimit(255)
@@ -99,7 +100,7 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
         self.assertEqual(1, scan_mask_tlv.router)
         self.assertEqual(0, scan_mask_tlv.end_device)
 
-        # Step 4 - DUT send MLE Parent Request again
+        # Step 4 - DUT sends MLE Parent Request again
         msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentWithHopLimit(255)
@@ -113,7 +114,7 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
         self.assertEqual(1, scan_mask_tlv.router)
         self.assertEqual(1, scan_mask_tlv.end_device)
 
-        # Step 6 - DUT send Child ID Request
+        # Step 6 - DUT sends Child ID Request
         msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentToNode(self.nodes[REED])
@@ -131,13 +132,11 @@ class Cert_6_1_2_REEDAttach_ED(unittest.TestCase):
         self.assertEqual(mle.TlvType.ADDRESS16, tlv_request_tlv.tlvs[0])
         self.assertEqual(mle.TlvType.NETWORK_DATA, tlv_request_tlv.tlvs[1])
 
-        # Step 8 - DUT send Child Update messages
+        # Step 8 - DUT sends Child Update messages
         msg = med_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        command.check_child_update_request_by_child(msg)
 
-        # Step 10 - Leader send ICMPv6 echo request
+        # Step 10 - Leader sends ICMPv6 echo request
         ed_addrs = self.nodes[MED].get_addrs()
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':

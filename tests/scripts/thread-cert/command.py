@@ -214,7 +214,7 @@ def get_routing_cost(command_msg, router_id):
     assert router_id_mask_str[router_id - prefix_len] == '1', "Error: The router isn't in the topology. \n" \
             + "route64 tlv is: %s. \nrouter_id is: %s. \nrouting_entry_pos is: %s. \nrouter_id_mask_str is: %s." \
             %(tlv, router_id, routing_entry_pos, router_id_mask_str)
- 
+
     return tlv.link_quality_and_route_data[routing_entry_pos].route
 
 def check_mle_optional_tlv(command_msg, type, tlv):
@@ -292,6 +292,11 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
+
+def check_child_update_request_by_child(command_msg):
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    command_msg.assertMleMessageContainsTlv(mle.Mode)
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
 
 def check_coap_optional_tlv(coap_msg, type, tlv):
     if (type == CheckType.CONTAIN):
