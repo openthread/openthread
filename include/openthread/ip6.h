@@ -256,7 +256,7 @@ OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstanc
  * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is invalid address.
  * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast
- * addresses.
+ *                                addresses.
  *
  */
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
@@ -279,6 +279,7 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the first Network Interface Multicast Address.
+ *
  */
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance);
 
@@ -288,6 +289,7 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otIp6SetMulticastPromiscuousEnabled
+ *
  */
 bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
 
@@ -298,6 +300,7 @@ bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
  * @param[in]  aEnabled   TRUE to enable Multicast Promiscuous mode, FALSE otherwise.
  *
  * @sa otIp6IsMulticastPromiscuousEnabled
+ *
  */
 void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
 
@@ -308,7 +311,7 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
  * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
  * @param[inout]  aContext   A pointer to creator-specific context.
  *
- * @retval OT_ERROR_NONE                        Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
  * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
  *
  */
@@ -361,7 +364,7 @@ otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, voi
  * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
  * @param[inout]  aContext    A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
  *
- * @retval OT_ERROR_NONE                         Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
  * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not create valid IID for given IPv6 address.
  *
  */
@@ -378,9 +381,32 @@ otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
- * @sa otFreeMessage
+ * @sa otMessageFree
+ *
  */
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
+
+/**
+ * Allocate a new message buffer and write the IPv6 datagram to the message buffer for sending an IPv6 message.
+ *
+ * @note If @p aSettings is NULL, the link layer security is enabled and the message priority is obtained from IPv6
+ *       message itself.
+ *       If @p aSettings is not NULL, the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aData        A pointer to the IPv6 datagram buffer.
+ * @param[in]  aDataLength  The size of the IPv6 datagram buffer pointed by @p aData.
+ * @param[in]  aSettings    A pointer to the message settings or NULL to set default settings.
+ *
+ * @returns A pointer to the message or NULL if malformed IPv6 header or insufficient message buffers are available.
+ *
+ * @sa otMessageFree
+ *
+ */
+otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
+                                     const uint8_t *          aData,
+                                     uint16_t                 aDataLength,
+                                     const otMessageSettings *aSettings);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.
@@ -485,8 +511,8 @@ otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
  * This function removes a port from the allowed unsecure port list.
  *
  * @note This function removes @p aPort by overwriting @p aPort with the element after @p aPort in the internal port
- * list. Be careful when calling otIp6GetUnsecurePorts() followed by otIp6RemoveUnsecurePort() to remove unsecure
- * ports.
+ *       list. Be careful when calling otIp6GetUnsecurePorts() followed by otIp6RemoveUnsecurePort() to remove unsecure
+ *       ports.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
@@ -526,6 +552,7 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
  *
  * @retval TRUE   The two IPv6 addresses are the same.
  * @retval FALSE  The two IPv6 addresses are not the same.
+ *
  */
 OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
@@ -537,6 +564,7 @@ OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Add
  *
  * @retval OT_ERROR_NONE          Successfully parsed the string.
  * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
+ *
  */
 OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
 
