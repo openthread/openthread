@@ -111,7 +111,7 @@ public:
      * This method allocates a new message buffer from the buffer pool.
      *
      * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
-     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *       OT_MESSAGE_PRIORITY_NORMAL by default.
      *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
@@ -124,9 +124,9 @@ public:
     /**
      * This method allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.
      *
-     *@note If @p aSettings is NULL, the link layer security is enabled and the message priority is obtained from
-     *      IPv6 message itself.
-     *      If @p aSettings is not NULL, the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
+     * @note If @p aSettings is NULL, the link layer security is enabled and the message priority is obtained from
+     *       IPv6 message itself.
+     *       If @p aSettings is not NULL, the @p aSetting->mPriority is ignored and obtained from IPv6 message itself.
      *
      * @param[in]  aData        A pointer to the IPv6 datagram buffer.
      * @param[in]  aDataLength  The size of the IPV6 datagram buffer pointed by @p aData.
