@@ -99,30 +99,6 @@ extern void otPlatUartSendDone(void);
 extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
- * The UART driver use this macro to acquire an exclusive lock of uart
- * Default implementation does nothing
- *
- */
-#ifndef OT_CLI_UART_OUTPUT_LOCK
-#define OT_CLI_UART_OUTPUT_LOCK() \
-    do                            \
-    {                             \
-    } while (0)
-#endif
-
-/**
- * The UART driver use this macro to release the exclusive lock of uart
- * Default implementation does nothing
- *
- */
-#ifndef OT_CLI_UART_OUTPUT_UNLOCK
-#define OT_CLI_UART_OUTPUT_UNLOCK() \
-    do                              \
-    {                               \
-    } while (0)
-#endif
-
-/**
  * @}
  *
  */

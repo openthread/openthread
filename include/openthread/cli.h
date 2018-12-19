@@ -154,6 +154,30 @@ void otCliUartAppendResult(otError aError);
 void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 /**
+ * Macro to acquire an exclusive lock of uart cli output
+ * Default implementation does nothing
+ *
+ */
+#ifndef OT_CLI_UART_OUTPUT_LOCK
+#define OT_CLI_UART_OUTPUT_LOCK() \
+    do                            \
+    {                             \
+    } while (0)
+#endif
+
+/**
+ * Macro to release the exclusive lock of uart cli output
+ * Default implementation does nothing
+ *
+ */
+#ifndef OT_CLI_UART_OUTPUT_UNLOCK
+#define OT_CLI_UART_OUTPUT_UNLOCK() \
+    do                              \
+    {                               \
+    } while (0)
+#endif
+
+/**
  * @}
  *
  */
