@@ -53,6 +53,12 @@ configure_OPTIONS               = \
     MBEDTLS_CPPFLAGS="$(DA15000_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
+ifeq ($(NO_BUILTIN_MBEDTLS), 1)
+configure_OPTIONS              += --disable-builtin-mbedtls
+else
+configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(DA15000_MBEDTLS_CPPFLAGS)"
+endif
+
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 

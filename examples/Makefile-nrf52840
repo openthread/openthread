@@ -51,8 +51,13 @@ configure_OPTIONS                                 = \
     --enable-radio-only                             \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
-    MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
+
+ifeq ($(NO_BUILTIN_MBEDTLS), 1)
+configure_OPTIONS              += --disable-builtin-mbedtls
+else
+configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)"
+endif
 
 ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
