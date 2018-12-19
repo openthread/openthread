@@ -577,6 +577,12 @@ public:
     void SetTimeout(uint8_t aTimeout) { mBuffer.mHead.mInfo.mTimeout = aTimeout; }
 
     /**
+     * This method decrements the timeout.
+     *
+     */
+    void DecrementTimeout(void) { mBuffer.mHead.mInfo.mTimeout--; }
+
+    /**
      * This method returns the interface ID.
      *
      * @returns The interface ID.
