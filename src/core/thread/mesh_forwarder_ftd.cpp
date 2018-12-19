@@ -963,6 +963,8 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
+        uint8_t priority = kDefaultMsgPriority;
+
         netif.GetMle().ResolveRoutingLoops(aMacSource.GetShort(), meshDest.GetShort());
 
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
@@ -970,7 +972,8 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         meshHeader.SetHopsLeft(meshHeader.GetHopsLeft() - 1);
         meshHeader.AppendTo(aFrame);
 
-        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, 0)) != NULL,
+        GetForwardFramePriority(aFrame, aFrameLength, meshDest, meshSource, priority);
+        VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kType6lowpan, priority)) != NULL,
                      error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
@@ -1021,6 +1024,155 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 
 exit:
     return;
+}
+
+bool MeshForwarder::UpdateFragmentLifetime(void)
+{
+    bool shouldRun = false;
+
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
+    {
+        if (mFragmentEntries[i].GetLifetime() != 0)
+        {
+            mFragmentEntries[i].DecrementLifetime();
+
+            if (mFragmentEntries[i].GetLifetime() != 0)
+            {
+                shouldRun = true;
+            }
+        }
+    }
+
+    return shouldRun;
+}
+
+void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                           uint8_t                 aFragmentLength,
+                                           uint16_t                aSrcRloc16,
+                                           uint8_t                 aPriority)
+{
+    FragmentPriorityEntry *entry;
+
+    if (aFragmentHeader.GetDatagramOffset() == 0)
+    {
+        VerifyOrExit((entry = GetUnusedFragementPriorityEntry()) != NULL);
+
+        entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
+        entry->SetSrcRloc16(aSrcRloc16);
+        entry->SetPriority(aPriority);
+        entry->SetLifetime(kReassemblyTimeout);
+
+        if (!mUpdateTimer.IsRunning())
+        {
+            mUpdateTimer.Start(kStateUpdatePeriod);
+        }
+    }
+    else
+    {
+        VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != NULL);
+
+        entry->SetLifetime(kReassemblyTimeout);
+
+        if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
+        {
+            entry->SetLifetime(0);
+        }
+    }
+
+exit:
+    return;
+}
+
+FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16)
+{
+    size_t i;
+
+    for (i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
+    {
+        if ((mFragmentEntries[i].GetLifetime() != 0) && (mFragmentEntries[i].GetDatagramTag() == aTag) &&
+            (mFragmentEntries[i].GetSrcRloc16() == aSrcRloc16))
+        {
+            break;
+        }
+    }
+
+    return (i >= OT_ARRAY_LENGTH(mFragmentEntries)) ? NULL : &mFragmentEntries[i];
+}
+
+FragmentPriorityEntry *MeshForwarder::GetUnusedFragementPriorityEntry(void)
+{
+    size_t i;
+
+    for (i = 0; i < OT_ARRAY_LENGTH(mFragmentEntries); i++)
+    {
+        if (mFragmentEntries[i].GetLifetime() == 0)
+        {
+            break;
+        }
+    }
+
+    return (i >= OT_ARRAY_LENGTH(mFragmentEntries)) ? NULL : &mFragmentEntries[i];
+}
+
+otError MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                           uint16_t                aSrcRloc16,
+                                           uint8_t &               aPriority)
+{
+    otError                error = OT_ERROR_NONE;
+    FragmentPriorityEntry *entry;
+
+    VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != NULL,
+                 error = OT_ERROR_NOT_FOUND);
+    aPriority = entry->GetPriority();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
+                                               uint8_t             aFrameLength,
+                                               const Mac::Address &aMacDest,
+                                               const Mac::Address &aMacSource,
+                                               uint8_t &           aPriority)
+{
+    otError                error      = OT_ERROR_NONE;
+    bool                   isFragment = false;
+    Lowpan::MeshHeader     meshHeader;
+    Lowpan::FragmentHeader fragmentHeader;
+
+    SuccessOrExit(error = GetMeshHeader(aFrame, aFrameLength, meshHeader));
+    aFrame += meshHeader.GetHeaderLength();
+    aFrameLength -= meshHeader.GetHeaderLength();
+
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    {
+        isFragment = true;
+        aFrame += fragmentHeader.GetHeaderLength();
+        aFrameLength -= fragmentHeader.GetHeaderLength();
+
+        if (fragmentHeader.GetDatagramOffset() > 0)
+        {
+            // Get priority from the pre-buffered info
+            ExitNow(error = GetFragmentPriority(fragmentHeader, meshHeader.GetSource(), aPriority));
+        }
+    }
+
+    // Get priority from Ipv6 header or UDP destination port directly
+    error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteMac("Failed to get forwarded frame priority, error:%s, len:%d, dst:%s, src:%s",
+                     otThreadErrorToString(error), aFrameLength, aMacDest.ToString().AsCString(),
+                     aMacSource.ToString().AsCString());
+    }
+    else if (isFragment)
+    {
+        UpdateFragmentPriority(fragmentHeader, aFrameLength, meshHeader.GetSource(), aPriority);
+    }
+
+    return error;
 }
 
 #if OPENTHREAD_ENABLE_SERVICE

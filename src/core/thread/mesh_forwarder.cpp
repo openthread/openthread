@@ -59,7 +59,7 @@ namespace ot {
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mDiscoverTimer(aInstance, &MeshForwarder::HandleDiscoverTimer, this)
-    , mReassemblyTimer(aInstance, &MeshForwarder::HandleReassemblyTimer, this)
+    , mUpdateTimer(aInstance, &MeshForwarder::HandleUpdateTimer, this)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
     , mSendMessageIsARetransmission(false)
@@ -91,6 +91,10 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     mIpCounters.mRxSuccess = 0;
     mIpCounters.mTxFailure = 0;
     mIpCounters.mRxFailure = 0;
+
+#if OPENTHREAD_FTD
+    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
+#endif
 }
 
 otError MeshForwarder::Start(void)
@@ -115,7 +119,7 @@ otError MeshForwarder::Stop(void)
     VerifyOrExit(mEnabled == true);
 
     mDataPollManager.StopPolling();
-    mReassemblyTimer.Stop();
+    mUpdateTimer.Stop();
 
     if (mScanning)
     {
@@ -133,6 +137,10 @@ otError MeshForwarder::Stop(void)
         mReassemblyList.Dequeue(*message);
         message->Free();
     }
+
+#if OPENTHREAD_FTD
+    memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
+#endif
 
     mEnabled     = false;
     mSendMessage = NULL;
@@ -447,6 +455,18 @@ otError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Ma
     return OT_ERROR_NONE;
 }
 
+otError MeshForwarder::GetMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader)
+{
+    otError error;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::MeshHeader *>(aFrame)->IsMeshHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(error = aMeshHeader.Init(aFrame, aFrameLength));
+
+exit:
+    return error;
+}
+
 otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength)
 {
     otError            error = OT_ERROR_NONE;
@@ -457,6 +477,21 @@ otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLen
     SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
     aFrame += meshHeader.GetHeaderLength();
     aFrameLength -= meshHeader.GetHeaderLength();
+
+exit:
+    return error;
+}
+
+otError MeshForwarder::GetFragmentHeader(const uint8_t *         aFrame,
+                                         uint8_t                 aFrameLength,
+                                         Lowpan::FragmentHeader &aFragmentHeader)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
+                 error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
 
 exit:
     return error;
@@ -478,13 +513,10 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
 
     SuccessOrExit(error = SkipMeshHeader(aFrame, aFrameLength));
 
-    if (aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
     {
-        SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
-
         // only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-
         aFrame += fragmentHeader.GetHeaderLength();
         aFrameLength -= fragmentHeader.GetHeaderLength();
     }
@@ -1351,9 +1383,9 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
         mReassemblyList.Enqueue(*message);
 
-        if (!mReassemblyTimer.IsRunning())
+        if (!mUpdateTimer.IsRunning())
         {
-            mReassemblyTimer.Start(kStateUpdatePeriod);
+            mUpdateTimer.Start(kStateUpdatePeriod);
         }
     }
     else
@@ -1391,6 +1423,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
+        message->SetTimeout(kReassemblyTimeout);
     }
 
 exit:
@@ -1435,31 +1468,42 @@ void MeshForwarder::ClearReassemblyList(void)
     }
 }
 
-void MeshForwarder::HandleReassemblyTimer(Timer &aTimer)
+void MeshForwarder::HandleUpdateTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<MeshForwarder>().HandleReassemblyTimer();
+    aTimer.GetOwner<MeshForwarder>().HandleUpdateTimer();
 }
 
-void MeshForwarder::HandleReassemblyTimer(void)
+void MeshForwarder::HandleUpdateTimer(void)
+{
+    bool shouldRun = false;
+
+#if OPENTHREAD_FTD
+    shouldRun = UpdateFragmentLifetime();
+#endif
+
+    if (UpdateReassemblyList() || shouldRun)
+    {
+        mUpdateTimer.Start(kStateUpdatePeriod);
+    }
+}
+
+bool MeshForwarder::UpdateReassemblyList(void)
 {
     Message *next = NULL;
-    uint8_t  timeout;
 
     for (Message *message = mReassemblyList.GetHead(); message; message = next)
     {
-        next    = message->GetNext();
-        timeout = message->GetTimeout();
+        next = message->GetNext();
 
-        if (timeout > 0)
+        if (message->GetTimeout() > 0)
         {
-            message->SetTimeout(timeout - 1);
+            message->DecrementTimeout();
         }
         else
         {
             mReassemblyList.Dequeue(*message);
 
             LogMessage(kMessageReassemblyDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
-
             if (message->GetType() == Message::kTypeIp6)
             {
                 mIpCounters.mRxFailure++;
@@ -1469,10 +1513,7 @@ void MeshForwarder::HandleReassemblyTimer(void)
         }
     }
 
-    if (mReassemblyList.GetHead() != NULL)
-    {
-        mReassemblyTimer.Start(kStateUpdatePeriod);
-    }
+    return mReassemblyList.GetHead() != NULL;
 }
 
 void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
@@ -1547,7 +1588,7 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
     return netif.GetIp6().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
 }
 
-otError MeshForwarder::GetFramePriority(uint8_t *           aFrame,
+otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                         uint8_t             aFrameLength,
                                         const Mac::Address &aMacSource,
                                         const Mac::Address &aMacDest,
