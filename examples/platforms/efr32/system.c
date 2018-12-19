@@ -71,6 +71,7 @@ void otSysInit(int argc, char *argv[])
     wakeupFem();
 #endif
 
+    efr32LogInit();
     efr32RadioInit();
     efr32AlarmInit();
     efr32MiscInit();
@@ -85,6 +86,7 @@ bool otSysPseudoResetWasRequested(void)
 void otSysDeinit(void)
 {
     efr32RadioDeinit();
+    efr32LogDeinit();
 }
 
 void otSysProcessDrivers(otInstance *aInstance)

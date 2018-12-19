@@ -320,7 +320,7 @@ public:
      * @returns A reference to the application COAP object.
      *
      */
-    Coap::ApplicationCoap &GetApplicationCoap(void) { return mApplicationCoap; }
+    Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
@@ -330,7 +330,7 @@ public:
      * @returns A reference to the application COAP Secure object.
      *
      */
-    Coap::ApplicationCoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -438,11 +438,11 @@ private:
     ThreadNetif mThreadNetif;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    Coap::ApplicationCoap mApplicationCoap;
+    Coap::Coap mApplicationCoap;
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    Coap::ApplicationCoapSecure mApplicationCoapSecure;
+    Coap::CoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -596,20 +596,6 @@ template <> inline MeshCoP::PendingDataset &Instance::Get(void)
 template <> inline TimeSync &Instance::Get(void)
 {
     return GetThreadNetif().GetTimeSync();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-template <> inline Coap::ApplicationCoap &Instance::Get(void)
-{
-    return GetApplicationCoap();
-}
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-template <> inline Coap::ApplicationCoapSecure &Instance::Get(void)
-{
-    return GetApplicationCoapSecure();
 }
 #endif
 

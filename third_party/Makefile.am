@@ -46,11 +46,26 @@ endif
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    jlink                                 \
     mbedtls                               \
     $(NULL)
 
+SUBDIRS =
+
+if OPENTHREAD_EXAMPLES_EFR32
+SUBDIRS                                += \
+    jlink                                 \
+    $(NULL)
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52840
+SUBDIRS                                += \
+    jlink                                 \
+    $(NULL)
+endif
+
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-SUBDIRS                                 = \
+SUBDIRS                                += \
     mbedtls                               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS

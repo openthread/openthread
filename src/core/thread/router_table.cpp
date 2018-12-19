@@ -335,6 +335,28 @@ void RouterTable::RemoveNeighbor(Router &aRouter)
     }
 }
 
+uint8_t RouterTable::GetActiveLinkCount(void) const
+{
+    uint8_t activeLinks = 0;
+
+    for (int i = 0; i < Mle::kMaxRouters; i++)
+    {
+        const Router &cur = mRouters[i];
+
+        if (cur.GetRloc16() == 0xffff)
+        {
+            break;
+        }
+
+        if (cur.GetState() == Neighbor::kStateValid)
+        {
+            activeLinks++;
+        }
+    }
+
+    return activeLinks;
+}
+
 Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 {
     Router *router = NULL;
