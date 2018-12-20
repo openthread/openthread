@@ -567,6 +567,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_ONLY], [test "${enable_radio_only}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_ONLY], [${OPENTHREAD_ENABLE_RADIO_ONLY}], [Define to 1 to build radio-only library.])
 
 #
+# cli & ncp executables
+#
+
+AC_MSG_CHECKING([whether to build executables])
+AC_ARG_ENABLE(executable,
+    [AS_HELP_STRING([--enable-executable], [Build CLI library @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_executable=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_cli} for --enable-cli])
+            ;;
+        esac
+    ],
+    [enable_executable=yes])
+
+if test "$enable_executable" = "yes"; then
+    OPENTHREAD_ENABLE_EXECUTABLE=1
+else
+    OPENTHREAD_ENABLE_EXECUTABLE=0
+fi
+
+AC_MSG_RESULT(${enable_executable})
+AC_SUBST(OPENTHREAD_ENABLE_EXECUTABLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_EXECUTABLE], [test "${enable_executable}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EXECUTABLE], [${OPENTHREAD_ENABLE_EXECUTABLE}], [Define to 1 to build executables.])
+
+#
 # CLI Library
 #
 

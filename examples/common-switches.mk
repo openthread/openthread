@@ -123,6 +123,10 @@ ifeq ($(UDP_PROXY),1)
 configure_OPTIONS              += --enable-udp-proxy
 endif
 
+ifeq ($(DISABLE_EXECUTABLE), 1)
+configure_OPTIONS              += --enable-executable=no
+endif
+
 ifeq ($(DEBUG_UART),1)
 CFLAGS   += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1
 CXXFLAGS += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1
