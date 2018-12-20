@@ -53,10 +53,6 @@ configure_OPTIONS               = \
     --with-examples=cc2538        \
     $(NULL)
 
-ifeq ($(NO_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += --disable-builtin-mbedtls
-endif
-
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 

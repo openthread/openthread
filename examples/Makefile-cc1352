@@ -53,9 +53,7 @@ configure_OPTIONS                                          = \
     MBEDTLS_CPPFLAGS="$(CC1352_MBEDTLS_CPPFLAGS)"            \
     $(NULL)
 
-ifeq ($(NO_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += --disable-builtin-mbedtls
-else
+ifneq ($(DISABLE_BUILTIN_MBEDTLS), 1)
 configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(CC1352_MBEDTLS_CPPFLAGS)"
 endif
 

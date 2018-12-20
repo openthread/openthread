@@ -53,9 +53,7 @@ configure_OPTIONS                                 = \
     --with-examples=nrf52840                        \
     $(NULL)
 
-ifeq ($(NO_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += --disable-builtin-mbedtls
-else
+ifneq ($(DISABLE_BUILTIN_MBEDTLS), 1)
 configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)"
 endif
 
