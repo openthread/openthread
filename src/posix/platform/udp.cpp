@@ -381,6 +381,11 @@ exit:
 
 void platformUdpInit(const char *aIfName)
 {
+    if (aIfName == NULL)
+    {
+        exit(OT_EXIT_INVALID_ARGUMENTS);
+    }
+
     sPlatNetifIndex = if_nametoindex(aIfName);
 
     if (sPlatNetifIndex == 0)
