@@ -59,7 +59,7 @@ class otApi:
     def thread_stop(self):
         if self.Api.otNodeThreadStop(self.otNode) != 0:
             raise OSError("otNodeThreadStop failed!")
-            
+
     def commissioner_start(self):
         if self.Api.otNodeCommissionerStart(self.otNode) != 0:
             raise OSError("otNodeCommissionerStart failed!")
@@ -317,15 +317,15 @@ class otApi:
         if binary == None:
             binary = ""
         if self.Api.otNodeSendActiveSet(
-                self.otNode, 
-                ctypes.c_ulonglong(active_timestamp), 
-                ctypes.c_ushort(panid), 
-                ctypes.c_ushort(channel), 
-                ctypes.c_uint(channel_mask), 
-                extended_panid.encode('utf-8'), 
-                master_key.encode('utf-8'), 
-                mesh_local.encode('utf-8'), 
-                network_name.encode('utf-8'), 
+                self.otNode,
+                ctypes.c_ulonglong(active_timestamp),
+                ctypes.c_ushort(panid),
+                ctypes.c_ushort(channel),
+                ctypes.c_uint(channel_mask),
+                extended_panid.encode('utf-8'),
+                master_key.encode('utf-8'),
+                mesh_local.encode('utf-8'),
+                network_name.encode('utf-8'),
                 binary.encode('utf-8')
             ) != 0:
             raise OSError("otNodeSendActiveSet failed!")
@@ -371,7 +371,7 @@ class otApi:
         self.Api = ctypes.WinDLL("otnodeapi.dll")
         if self.Api == None:
             raise OSError("Failed to load otnodeapi.dll!")
-        
+
         # Define the functions
         self.Api.otNodeLog.argtypes = [ctypes.c_char_p]
 
@@ -380,7 +380,7 @@ class otApi:
 
         self.Api.otNodeFinalize.argtypes = [ctypes.c_void_p]
 
-        self.Api.otNodeSetMode.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetMode.argtypes = [ctypes.c_void_p,
                                            ctypes.c_char_p]
 
         self.Api.otNodeInterfaceUp.argtypes = [ctypes.c_void_p]
@@ -393,13 +393,13 @@ class otApi:
 
         self.Api.otNodeCommissionerStart.argtypes = [ctypes.c_void_p]
 
-        self.Api.otNodeCommissionerJoinerAdd.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeCommissionerJoinerAdd.argtypes = [ctypes.c_void_p,
                                                          ctypes.c_char_p,
                                                          ctypes.c_char_p]
 
         self.Api.otNodeCommissionerStop.argtypes = [ctypes.c_void_p]
 
-        self.Api.otNodeJoinerStart.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeJoinerStart.argtypes = [ctypes.c_void_p,
                                                ctypes.c_char_p,
                                                ctypes.c_char_p]
 
@@ -411,16 +411,16 @@ class otApi:
 
         self.Api.otNodeDisableWhitelist.argtypes = [ctypes.c_void_p]
 
-        self.Api.otNodeAddWhitelist.argtypes = [ctypes.c_void_p, 
-                                                ctypes.c_char_p, 
+        self.Api.otNodeAddWhitelist.argtypes = [ctypes.c_void_p,
+                                                ctypes.c_char_p,
                                                 ctypes.c_byte]
 
-        self.Api.otNodeRemoveWhitelist.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeRemoveWhitelist.argtypes = [ctypes.c_void_p,
                                                    ctypes.c_char_p]
-        
+
         self.Api.otNodeGetAddr16.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetAddr16.restype = ctypes.c_ushort
-        
+
         self.Api.otNodeGetAddr64.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetAddr64.restype = ctypes.c_char_p
 
@@ -429,128 +429,128 @@ class otApi:
 
         self.Api.otNodeGetJoinerId.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetJoinerId.restype = ctypes.c_char_p
-        
-        self.Api.otNodeSetChannel.argtypes = [ctypes.c_void_p, 
+
+        self.Api.otNodeSetChannel.argtypes = [ctypes.c_void_p,
                                               ctypes.c_ubyte]
-        
+
         self.Api.otNodeGetChannel.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetChannel.restype = ctypes.c_ubyte
 
-        self.Api.otNodeSetMasterkey.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetMasterkey.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_char_p]
-        
+
         self.Api.otNodeGetMasterkey.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetMasterkey.restype = ctypes.c_char_p
-        
+
         self.Api.otNodeGetKeySequenceCounter.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetKeySequenceCounter.restype = ctypes.c_uint
 
-        self.Api.otNodeSetKeySequenceCounter.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetKeySequenceCounter.argtypes = [ctypes.c_void_p,
                                                          ctypes.c_uint]
 
-        self.Api.otNodeSetKeySwitchGuardTime.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetKeySwitchGuardTime.argtypes = [ctypes.c_void_p,
                                                          ctypes.c_uint]
 
-        self.Api.otNodeSetNetworkIdTimeout.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetNetworkIdTimeout.argtypes = [ctypes.c_void_p,
                                                        ctypes.c_ubyte]
-        
+
         self.Api.otNodeGetNetworkName.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetNetworkName.restype = ctypes.c_char_p
 
-        self.Api.otNodeSetNetworkName.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetNetworkName.argtypes = [ctypes.c_void_p,
                                                   ctypes.c_char_p]
-        
+
         self.Api.otNodeGetPanId.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetPanId.restype = ctypes.c_ushort
 
-        self.Api.otNodeSetPanId.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetPanId.argtypes = [ctypes.c_void_p,
                                             ctypes.c_ushort]
-        
+
         self.Api.otNodeGetPartitionId.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetPartitionId.restype = ctypes.c_uint
 
-        self.Api.otNodeSetPartitionId.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetPartitionId.argtypes = [ctypes.c_void_p,
                                                   ctypes.c_uint]
 
-        self.Api.otNodeSetRouterUpgradeThreshold.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetRouterUpgradeThreshold.argtypes = [ctypes.c_void_p,
                                                              ctypes.c_ubyte]
 
-        self.Api.otNodeSetRouterDowngradeThreshold.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetRouterDowngradeThreshold.argtypes = [ctypes.c_void_p,
                                                                ctypes.c_ubyte]
 
-        self.Api.otNodeReleaseRouterId.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeReleaseRouterId.argtypes = [ctypes.c_void_p,
                                                    ctypes.c_ubyte]
-        
+
         self.Api.otNodeGetState.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetState.restype = ctypes.c_char_p
 
-        self.Api.otNodeSetState.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetState.argtypes = [ctypes.c_void_p,
                                             ctypes.c_char_p]
-        
+
         self.Api.otNodeGetTimeout.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetTimeout.restype = ctypes.c_uint
 
-        self.Api.otNodeSetTimeout.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetTimeout.argtypes = [ctypes.c_void_p,
                                             ctypes.c_uint]
-        
+
         self.Api.otNodeGetWeight.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetWeight.restype = ctypes.c_ubyte
 
-        self.Api.otNodeSetWeight.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetWeight.argtypes = [ctypes.c_void_p,
                                              ctypes.c_ubyte]
 
-        self.Api.otNodeAddIpAddr.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeAddIpAddr.argtypes = [ctypes.c_void_p,
                                              ctypes.c_char_p]
-        
+
         self.Api.otNodeGetAddrs.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetAddrs.restype = ctypes.c_char_p
-        
+
         self.Api.otNodeGetContextReuseDelay.argtypes = [ctypes.c_void_p]
         self.Api.otNodeGetContextReuseDelay.restype = ctypes.c_uint
 
-        self.Api.otNodeSetContextReuseDelay.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetContextReuseDelay.argtypes = [ctypes.c_void_p,
                                                         ctypes.c_uint]
 
-        self.Api.otNodeAddPrefix.argtypes = [ctypes.c_void_p, 
-                                             ctypes.c_char_p, 
-                                             ctypes.c_char_p, 
+        self.Api.otNodeAddPrefix.argtypes = [ctypes.c_void_p,
+                                             ctypes.c_char_p,
+                                             ctypes.c_char_p,
                                              ctypes.c_char_p]
 
-        self.Api.otNodeRemovePrefix.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeRemovePrefix.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_char_p]
 
-        self.Api.otNodeAddRoute.argtypes = [ctypes.c_void_p, 
-                                            ctypes.c_char_p, 
+        self.Api.otNodeAddRoute.argtypes = [ctypes.c_void_p,
+                                            ctypes.c_char_p,
                                             ctypes.c_char_p]
 
-        self.Api.otNodeRemoveRoute.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeRemoveRoute.argtypes = [ctypes.c_void_p,
                                                ctypes.c_char_p]
 
         self.Api.otNodeRegisterNetdata.argtypes = [ctypes.c_void_p]
 
-        self.Api.otNodeEnergyScan.argtypes = [ctypes.c_void_p, 
-                                              ctypes.c_uint, 
-                                              ctypes.c_ubyte, 
-                                              ctypes.c_ushort, 
-                                              ctypes.c_ushort, 
+        self.Api.otNodeEnergyScan.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_uint,
+                                              ctypes.c_ubyte,
+                                              ctypes.c_ushort,
+                                              ctypes.c_ushort,
                                               ctypes.c_char_p]
 
-        self.Api.otNodePanIdQuery.argtypes = [ctypes.c_void_p, 
-                                              ctypes.c_ushort, 
-                                              ctypes.c_uint, 
+        self.Api.otNodePanIdQuery.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_ushort,
+                                              ctypes.c_uint,
                                               ctypes.c_char_p]
 
         self.Api.otNodeScan.argtypes = [ctypes.c_void_p]
         self.Api.otNodeScan.restype = ctypes.c_char_p
 
-        self.Api.otNodePing.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodePing.argtypes = [ctypes.c_void_p,
                                         ctypes.c_char_p,
                                         ctypes.c_ushort,
                                         ctypes.c_uint,
                                         ctypes.c_uint16]
         self.Api.otNodePing.restype = ctypes.c_uint
 
-        self.Api.otNodeSetRouterSelectionJitter.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetRouterSelectionJitter.argtypes = [ctypes.c_void_p,
                                                             ctypes.c_ubyte]
 
         self.Api.otNodeCommissionerAnnounceBegin.argtypes = [ctypes.c_void_p,
@@ -593,9 +593,9 @@ class otApi:
                                                  ctypes.c_char_p,
                                                  ctypes.c_char_p]
 
-        self.Api.otNodeSetMaxChildren.argtypes = [ctypes.c_void_p, 
+        self.Api.otNodeSetMaxChildren.argtypes = [ctypes.c_void_p,
                                                   ctypes.c_ubyte]
-        
+
         # Initialize a new node
         self.otNode = self.Api.otNodeInit(ctypes.c_uint(nodeid))
         if self.otNode == None:

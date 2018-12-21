@@ -55,10 +55,7 @@
 namespace ot {
 namespace Cli {
 
-static const char sCommandPrompt[] = {'>', ' '};
-static const char sEraseString[]   = {'\b', ' ', '\b'};
-static const char CRNL[]           = {'\r', '\n'};
-Uart *            Uart::sUartServer;
+Uart *Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
@@ -115,7 +112,25 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 
 void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    const uint8_t *end;
+    static const char sCommandPrompt[] = {'>', ' '};
+
+#if OPENTHREAD_CONFIG_UART_CLI_RAW
+    if (aBufLength > 0)
+    {
+        memcpy(mRxBuffer + mRxLength, aBuf, aBufLength);
+        mRxLength += aBufLength;
+    }
+
+    if (aBuf[aBufLength - 1] == '\r' || aBuf[aBufLength - 1] == '\n')
+    {
+        mRxBuffer[mRxLength] = '\0';
+        ProcessCommand();
+        Output(sCommandPrompt, sizeof(sCommandPrompt));
+    }
+#else // OPENTHREAD_CONFIG_UART_CLI_RAW
+    static const char sEraseString[] = {'\b', ' ', '\b'};
+    static const char CRNL[]         = {'\r', '\n'};
+    const uint8_t *   end;
 
     end = aBuf + aBufLength;
 
@@ -164,6 +179,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
             break;
         }
     }
+#endif // OPENTHREAD_CONFIG_UART_CLI_RAW
 }
 
 otError Uart::ProcessCommand(void)
@@ -208,7 +224,10 @@ otError Uart::ProcessCommand(void)
     otLogInfoCli("execute command: %s", mRxBuffer);
 #endif
 #endif
-    mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
+    if (mRxLength > 0)
+    {
+        mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
+    }
 
     mRxLength = 0;
 
