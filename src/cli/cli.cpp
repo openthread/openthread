@@ -2006,7 +2006,7 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(!(value < OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD), error = OT_ERROR_PARSE);
+        VerifyOrExit(value >= OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD, error = OT_ERROR_PARSE);
         otLinkSetPollPeriod(mInstance, static_cast<uint32_t>(value));
     }
 
