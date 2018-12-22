@@ -499,6 +499,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
     else
     {
+        mRxFrameBuffer.DiscardFrame();
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
 }
