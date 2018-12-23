@@ -27,18 +27,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+from binascii import hexlify
 import time
 import unittest
-
+import mle
 import config
+from command import contains_tlv
+from network_data import Prefix, BorderRouter, LowpanId
 import node
 
 LEADER = 1
 ROUTER = 2
 SED1 = 3
-ED1 = 4
+MED1 = 4
 
-MTDS = [SED1, ED1]
+MTDS = [SED1, MED1]
+
+LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
 class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
     def setUp(self):
@@ -52,7 +57,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[MED1].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
         self.nodes[ROUTER].set_panid(0xface)
@@ -67,10 +72,10 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[SED1].enable_whitelist()
         self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED1].enable_whitelist()
+        self.nodes[MED1].set_panid(0xface)
+        self.nodes[MED1].set_mode('rsn')
+        self.nodes[MED1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[MED1].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -79,6 +84,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.simulator.stop()
 
     def test(self):
+        # 1 - All
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
@@ -91,10 +97,11 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[ED1].start()
+        self.nodes[MED1].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
+        # 2 - N/A
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[LEADER].register_netdata()
@@ -107,12 +114,66 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        addrs = self.nodes[ED1].get_addrs()
+        addrs = self.nodes[MED1].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        med1_messages = self.simulator.get_messages_sent_by(MED1)
+        sed1_messages = self.simulator.get_messages_sent_by(SED1)
+
+        # 3 - Leader
+        # Ignore the first DATA_RESPONSE message sent when it became leader
+        leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+
+        msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
+        prefixes = filter(lambda tlv : isinstance(tlv, Prefix), network_data_tlv.tlvs)
+        self.assertTrue(len(prefixes) >= 2)
+        for prefix in prefixes:
+            self.assertTrue(contains_tlv(prefix.sub_tlvs, BorderRouter))
+            self.assertTrue(contains_tlv(prefix.sub_tlvs, LowpanId))
+
+        # 4 - N/A
+        msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        med1_addresses = addr_reg_tlv.addresses
+
+        # 5 - Leader
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+        msg.assertSentToNode(self.nodes[MED1])
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        self.assertTrue(all(addr in addr_reg_tlv.addresses for addr in med1_addresses))
+        msg.assertMleMessageContainsTlv(mle.Mode)
+
+        # 6A & 6B - Leader
+        if LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
+            msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        else:
+            msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+        msg.assertSentToNode(self.nodes[SED1])
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.NetworkData)
+        msg.assertMleMessageContainsTlv(mle.ActiveTimestamp)
+
+        # 7 - N/A
+        msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        sed1_addresses = addr_reg_tlv.addresses
+
+        # 8 - Leader
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+        msg.assertSentToNode(self.nodes[SED1])
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        self.assertTrue(all(addr in addr_reg_tlv.addresses for addr in sed1_addresses))
+        msg.assertMleMessageContainsTlv(mle.Mode)
+
 
 if __name__ == '__main__':
     unittest.main()
