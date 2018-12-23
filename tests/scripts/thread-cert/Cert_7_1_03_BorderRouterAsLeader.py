@@ -151,6 +151,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.Mode)
 
         # 6A & 6B - Leader
+        """
         if LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
             msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         else:
@@ -160,6 +161,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.NetworkData)
         msg.assertMleMessageContainsTlv(mle.ActiveTimestamp)
+        """
 
         # 7 - N/A
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
