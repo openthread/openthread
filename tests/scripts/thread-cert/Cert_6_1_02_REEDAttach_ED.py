@@ -137,8 +137,8 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         command.check_child_update_request_by_child(msg)
 
         # Step 10 - Leader sends ICMPv6 echo request
-        ed_addrs = self.nodes[MED].get_addrs()
-        for addr in ed_addrs:
+        med_addrs = self.nodes[MED].get_addrs()
+        for addr in med_addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
