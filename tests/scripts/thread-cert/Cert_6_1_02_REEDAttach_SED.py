@@ -137,8 +137,8 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(msg.mac_header.command_type, mac802154.MacHeader.CommandIdentifier.DATA_REQUEST)
 
         # Step 12 - REED sends ICMPv6 echo request
-        ed_addrs = self.nodes[SED].get_addrs()
-        for addr in ed_addrs:
+        sed_addrs = self.nodes[SED].get_addrs()
+        for addr in sed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[REED].ping(addr))
 
