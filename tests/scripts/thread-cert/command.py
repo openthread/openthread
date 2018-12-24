@@ -311,3 +311,6 @@ def check_router_id_cached(node, router_id, cached = True):
         assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches)
     else:
         assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches) is False
+
+def contains_tlv(sub_tlvs, tlv_type):
+    return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
