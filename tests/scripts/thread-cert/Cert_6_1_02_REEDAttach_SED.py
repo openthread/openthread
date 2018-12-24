@@ -84,10 +84,10 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(self.nodes[SED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 
-        med_messages = self.simulator.get_messages_sent_by(SED)
+        sed_messages = self.simulator.get_messages_sent_by(SED)
 
         # Step 2 - DUT sends MLE Parent Request
-        msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentWithHopLimit(255)
         msg.assertSentToDestinationAddress("ff02::2")
@@ -101,7 +101,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # Step 4 - DUT sends MLE Parent Request again
-        msg = med_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentWithHopLimit(255)
         msg.assertSentToDestinationAddress("ff02::2")
@@ -115,7 +115,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(1, scan_mask_tlv.end_device)
 
         # Step 6 - DUT sends Child ID Request
-        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         msg.assertSentToNode(self.nodes[REED])
         msg.assertMleMessageContainsTlv(mle.AddressRegistration)
@@ -133,7 +133,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(mle.TlvType.NETWORK_DATA, tlv_request_tlv.tlvs[1])
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
-        msg = med_messages.next_command_message()
+        msg = sed_messages.next_command_message()
         self.assertEqual(msg.mac_header.command_type, mac802154.MacHeader.CommandIdentifier.DATA_REQUEST)
 
         # Step 12 - REED sends ICMPv6 echo request

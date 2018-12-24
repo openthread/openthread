@@ -412,7 +412,7 @@ class MessagesSet(object):
             break
 
         if assert_enabled:
-            assert message is not None, "Could not find 802.15.4 Data Message"
+            assert message is not None, "Could not find Message of the type: {}".format(message_type)
 
         return message
 
