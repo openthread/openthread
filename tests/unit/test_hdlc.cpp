@@ -360,6 +360,7 @@ void TestEncoderDecoder(void)
     Hdlc::Decoder                       decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
     uint8_t *                           frame;
     uint16_t                            length;
+    uint8_t                             badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder");
 
@@ -383,13 +384,18 @@ void TestEncoderDecoder(void)
     SuccessOrQuit(encoder.EndFrame(), "Encoder::EndFrame() failed");
     encoderBuffer.SaveFrame();
 
+    SuccessOrQuit(encoder.BeginFrame(), "Encoder::BeginFrame() failed");
+    // Empty frame
+    SuccessOrQuit(encoder.EndFrame(), "Encoder::EndFrame() failed");
+    encoderBuffer.SaveFrame();
+
     byte = kFlagSequence;
     SuccessOrQuit(encoder.BeginFrame(), "Encoder::BeginFrame() failed");
     SuccessOrQuit(encoder.Encode(&byte, sizeof(uint8_t)), "Encoder::Encode() failed");
     SuccessOrQuit(encoder.EndFrame(), "Encoder::EndFrame() failed");
     encoderBuffer.SaveFrame();
 
-    // Feed the encoded frame to decoder and saved the content
+    // Feed the encoded frames to decoder and save the content
     while (encoderBuffer.ReadSavedFrame(frame, length) == OT_ERROR_NONE)
     {
         decoderContext.mWasCalled = false;
@@ -402,7 +408,7 @@ void TestEncoderDecoder(void)
         decoderBuffer.SaveFrame();
     }
 
-    // Verify the decoded frame match the original frames
+    // Verify the decoded frames match the original frames
 
     SuccessOrQuit(decoderBuffer.ReadSavedFrame(frame, length), "Incorrect decoded frame");
     VerifyOrQuit(length == sizeof(sOpenThreadText) - 1, "Decoded frame length does not match original frame");
@@ -419,6 +425,9 @@ void TestEncoderDecoder(void)
     SuccessOrQuit(decoderBuffer.ReadSavedFrame(frame, length), "Incorrect decoded frame");
     VerifyOrQuit(length == sizeof(sHelloText) - 1, "Decoded frame length does not match original frame");
     VerifyOrQuit(memcmp(frame, sHelloText, length) == 0, "Decoded frame content does not match original frame");
+
+    SuccessOrQuit(decoderBuffer.ReadSavedFrame(frame, length), "Incorrect decoded frame");
+    VerifyOrQuit(length == 0, "Decoded frame length does not match original frame");
 
     SuccessOrQuit(decoderBuffer.ReadSavedFrame(frame, length), "Incorrect decoded frame");
     VerifyOrQuit(length == sizeof(uint8_t), "Decoded frame length does not match original frame");
@@ -458,6 +467,30 @@ void TestEncoderDecoder(void)
     decoder.Decode(encoderBuffer.GetFrame(), encoderBuffer.GetLength());
     VerifyOrQuit(decoderContext.mWasCalled, "Decoder::Decode() failed");
     VerifyOrQuit(decoderContext.mError == OT_ERROR_PARSE, "Decoder::Decode() did not fail with bad FCS");
+
+    decoderBuffer.Clear();
+
+    // Test `Decoder` behavior with short frame (smaller than FCS)
+
+    decoderContext.mWasCalled = false;
+    decoder.Decode(badShortFrame, sizeof(badShortFrame));
+    VerifyOrQuit(decoderContext.mWasCalled, "Decoder::Decode() failed");
+    VerifyOrQuit(decoderContext.mError == OT_ERROR_PARSE, "Decoder::Decode() did not fail for short frame");
+
+    decoderBuffer.Clear();
+
+    // Test `Decoder` with back to back `kFlagSequence` and ensure callback is not invoked.
+
+    byte                      = kFlagSequence;
+    decoderContext.mWasCalled = false;
+    decoder.Decode(&byte, sizeof(uint8_t));
+    VerifyOrQuit(!decoderContext.mWasCalled, "Decoder::Decode() failed");
+    decoder.Decode(&byte, sizeof(uint8_t));
+    VerifyOrQuit(!decoderContext.mWasCalled, "Decoder::Decode() failed");
+    decoder.Decode(&byte, sizeof(uint8_t));
+    VerifyOrQuit(!decoderContext.mWasCalled, "Decoder::Decode() failed");
+    decoder.Decode(&byte, sizeof(uint8_t));
+    VerifyOrQuit(!decoderContext.mWasCalled, "Decoder::Decode() failed");
 
     printf(" -- PASS\n");
 }
