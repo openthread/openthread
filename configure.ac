@@ -572,7 +572,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_ONLY], [${OPENTHREAD_ENABLE_RADIO_ON
 
 AC_MSG_CHECKING([whether to build executables])
 AC_ARG_ENABLE(executable,
-    [AS_HELP_STRING([--enable-executable], [Build CLI library @<:@default=yes@:>@.])],
+    [AS_HELP_STRING([--enable-executable], [Build executables @<:@default=yes@:>@.])],
     [
         case "${enableval}" in
 
@@ -581,7 +581,7 @@ AC_ARG_ENABLE(executable,
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_cli} for --enable-cli])
+            AC_MSG_ERROR([Invalid value ${enable_executable} for --enable-executable])
             ;;
         esac
     ],
