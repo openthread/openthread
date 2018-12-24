@@ -567,7 +567,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_ONLY], [test "${enable_radio_only}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_ONLY], [${OPENTHREAD_ENABLE_RADIO_ONLY}], [Define to 1 to build radio-only library.])
 
 #
-# cli & ncp executables
+# whether to build executables
 #
 
 AC_MSG_CHECKING([whether to build executables])
