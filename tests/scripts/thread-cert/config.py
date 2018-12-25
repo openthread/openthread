@@ -74,6 +74,8 @@ DEFAULT_CHILD_TIMEOUT = 6
 
 VIRTUAL_TIME = bool(os.getenv('VIRTUAL_TIME', False))
 
+LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
+
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
         network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(

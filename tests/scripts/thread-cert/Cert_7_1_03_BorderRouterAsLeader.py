@@ -32,7 +32,8 @@ import time
 import unittest
 import mle
 import config
-from command import contains_tlv
+import command
+from command import CheckType
 from network_data import Prefix, BorderRouter, LowpanId
 import node
 
@@ -42,8 +43,6 @@ SED1 = 3
 MED1 = 4
 
 MTDS = [SED1, MED1]
-
-LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
 class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
     def setUp(self):
@@ -132,49 +131,46 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
+        command.check_data_response(msg, network_data=CheckType.CONTAIN)
+        network_data_tlv = msg.get_mle_message_tlv(mle.NetworkData)
         prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
         self.assertTrue(len(prefixes) >= 2)
         for prefix in prefixes:
-            self.assertTrue(contains_tlv(prefix.sub_tlvs, BorderRouter))
-            self.assertTrue(contains_tlv(prefix.sub_tlvs, LowpanId))
+            self.assertTrue(command.contains_tlv(prefix.sub_tlvs, BorderRouter))
+            self.assertTrue(command.contains_tlv(prefix.sub_tlvs, LowpanId))
 
         # 4 - N/A
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
-        med1_addresses = addr_reg_tlv.addresses
+        med1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
 
         # 5 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
         msg.assertSentToNode(self.nodes[MED1])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
-        self.assertTrue(all(addr in addr_reg_tlv.addresses for addr in med1_addresses))
-        msg.assertMleMessageContainsTlv(mle.Mode)
+        command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
+        leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
+        self.assertTrue(all(addr in leader_addresses for addr in med1_addresses))
 
         # 6A & 6B - Leader
-        if LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
+        if config.LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
             msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+            command.check_child_update_request_from_parent(msg,
+                leader_data=CheckType.CONTAIN, network_data=CheckType.CONTAIN)
         else:
             msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+            command.check_data_response(msg, network_data=CheckType.CONTAIN)
         msg.assertSentToNode(self.nodes[SED1])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.NetworkData)
         msg.assertMleMessageContainsTlv(mle.ActiveTimestamp)
 
         # 7 - N/A
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
-        sed1_addresses = addr_reg_tlv.addresses
+        sed1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
 
         # 8 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
         msg.assertSentToNode(self.nodes[SED1])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        addr_reg_tlv = msg.assertMleMessageContainsTlv(mle.AddressRegistration)
-        self.assertTrue(all(addr in addr_reg_tlv.addresses for addr in sed1_addresses))
-        msg.assertMleMessageContainsTlv(mle.Mode)
+        command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
+        leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
+        self.assertTrue(all(addr in leader_addresses for addr in sed1_addresses))
 
 
 if __name__ == '__main__':

@@ -313,4 +313,40 @@ def check_router_id_cached(node, router_id, cached = True):
         assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches) is False
 
 def contains_tlv(sub_tlvs, tlv_type):
+    """Verify if a specific type of tlv is included in a sub-tlv list.
+    """
     return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
+
+def check_data_response(command_msg, network_data=CheckType.OPTIONAL):
+    """Verify a properly formatted Data Response command message.
+    """
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
+
+def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OPTIONAL,
+    network_data=CheckType.OPTIONAL, challenge=CheckType.OPTIONAL, tlv_request=CheckType.OPTIONAL):
+    """Verify a properly formatted Child Update Request(from parent) command message.
+    """
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    check_mle_optional_tlv(command_msg, leader_data, mle.LeaderData)
+    check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
+    check_mle_optional_tlv(command_msg, challenge, mle.Challenge)
+    check_mle_optional_tlv(command_msg, tlv_request, mle.TlvRequest)
+
+def check_child_update_response_from_parent(command_msg, timeout=CheckType.OPTIONAL,
+    address_registration=CheckType.OPTIONAL, address16=CheckType.OPTIONAL,
+    leader_data=CheckType.OPTIONAL, network_data=CheckType.OPTIONAL, response=CheckType.OPTIONAL,
+    link_layer_frame_counter=CheckType.OPTIONAL, mle_frame_counter=CheckType.OPTIONAL):
+    """Verify a properly formatted Child Update Response from parent
+    """
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.Mode)
+    check_mle_optional_tlv(command_msg, timeout, mle.Timeout)
+    check_mle_optional_tlv(command_msg, address_registration, mle.AddressRegistration)
+    check_mle_optional_tlv(command_msg, address16, mle.Address16)
+    check_mle_optional_tlv(command_msg, leader_data, mle.LeaderData)
+    check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
+    check_mle_optional_tlv(command_msg, response, mle.Response)
+    check_mle_optional_tlv(command_msg, link_layer_frame_counter, mle.LinkLayerFrameCounter)
+    check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
