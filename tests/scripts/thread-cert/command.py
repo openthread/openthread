@@ -246,6 +246,9 @@ def check_mle_advertisement(command_msg):
 def check_parent_request(command_msg, is_first_request):
     """Verify a properly formatted Parent Request command message.
     """
+    if command_msg.mle.aux_sec_hdr.key_id_mode != 0x2:
+        raise ValueError("The Key Identifier Mode of the Security Control Field SHALL be set to 0x02")
+
     command_msg.assertSentWithHopLimit(255)
     command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
@@ -274,7 +277,7 @@ def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
 
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
 
-def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
+def check_child_id_request(command_msg, sent_to_node, tlv_request = CheckType.OPTIONAL, \
     mle_frame_counter = CheckType.OPTIONAL, address_registration = CheckType.OPTIONAL, \
     active_timestamp = CheckType.OPTIONAL, pending_timestamp = CheckType.OPTIONAL,
     route64 = CheckType.OPTIONAL):
@@ -283,6 +286,7 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     if command_msg.mle.aux_sec_hdr.key_id_mode != 0x2:
         raise ValueError("The Key Identifier Mode of the Security Control Field SHALL be set to 0x02")
 
+    command_msg.assertSentToNode(sent_to_node)
     command_msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
     command_msg.assertMleMessageContainsTlv(mle.Response)
@@ -295,6 +299,9 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
     check_mle_optional_tlv(command_msg, route64, mle.Route64)
+
+    check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
+    check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \

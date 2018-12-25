@@ -31,8 +31,6 @@ import unittest
 
 from command import check_parent_request
 from command import check_child_id_request
-from command import check_child_update_request_by_child
-from command import check_tlv_request_tlv
 from command import CheckType
 import config
 import mac802154
@@ -94,22 +92,17 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
 
         # Step 2 - DUT sends MLE Parent Request
         msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         check_parent_request(msg, is_first_request=True)
 
         # Step 4 - DUT sends MLE Parent Request again
         msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        self.assertEqual(0x02, msg.mle.aux_sec_hdr.key_id_mode)
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
         msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        check_child_id_request(msg, address_registration=CheckType.CONTAIN,
+        check_child_id_request(msg, self.nodes[REED], address_registration=CheckType.CONTAIN,
             tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
             route64=CheckType.OPTIONAL)
-        msg.assertSentToNode(self.nodes[REED])
-        check_tlv_request_tlv(msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
-        check_tlv_request_tlv(msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
         msg = sed_messages.next_message()
