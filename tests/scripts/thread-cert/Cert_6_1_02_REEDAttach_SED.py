@@ -36,6 +36,7 @@ from command import check_tlv_request_tlv
 from command import CheckType
 import config
 import mac802154
+import message
 import mle
 import node
 
@@ -111,7 +112,8 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         check_tlv_request_tlv(msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
-        msg = sed_messages.next_command_message()
+        msg = sed_messages.next_message()
+        self.assertEqual(msg.type, message.MessageType.COMMAND)
         self.assertEqual(msg.mac_header.command_type, mac802154.MacHeader.CommandIdentifier.DATA_REQUEST)
 
         # Step 12 - REED sends ICMPv6 echo request, to DUT link local address

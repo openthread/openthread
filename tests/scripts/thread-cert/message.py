@@ -399,6 +399,11 @@ class MessagesSet(object):
 
         return message
 
+    def next_message(self, assert_enabled=True):
+        message = self.messages.pop(0)
+        if assert_enabled:
+            assert message is not None, "Could not find next Message"
+        return message
 
     def next_message_of(self, message_type, assert_enabled=True):
         message = None
