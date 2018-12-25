@@ -53,6 +53,10 @@ configure_OPTIONS                                          = \
     MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \
     $(NULL)
 
+ifneq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"
+endif
+
 DEFAULT_LOGGING                                           ?= 1
 
 CC2652_MBEDTLS_CPPFLAGS                                    = \

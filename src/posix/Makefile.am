@@ -76,6 +76,7 @@ endif # OPENTHREAD_ENABLE_DIAG
 bin_PROGRAMS                                                           = \
     $(NULL)
 
+if OPENTHREAD_ENABLE_EXECUTABLE
 if OPENTHREAD_ENABLE_NCP
 bin_PROGRAMS                                                          += \
     ot-ncp                                                               \
@@ -150,5 +151,6 @@ CPPFLAGS_COMMON                                                       += \
 
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
+endif # OPENTHREAD_ENABLE_EXECUTABLE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

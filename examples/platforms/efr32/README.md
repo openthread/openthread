@@ -37,8 +37,8 @@ $ ./script/bootstrap
 
 2. Install Flex (Gecko) SDK including RAIL Library from Simplicity Studio.
    - Connect EFR32MG12P Wireless Starter Kit to Simplicity Studio.
-   - Find the latest Flex SDK in the Software Update page and click Install.
-   - Flex SDK will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
+   - Find Flex SDK v2.3 in the Software Update page and click Install.
+   - Flex SDK v2.3 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
 
 For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32)
 portfolio using RAIL, see [Getting Started with RAIL Library quick start guide][QSG121]. For more information

@@ -205,7 +205,6 @@ LOCAL_SRC_FILES                                          := \
     src/ncp/spinel_decoder.cpp                              \
     src/ncp/spinel_encoder.cpp                              \
     src/posix/platform/alarm.c                              \
-    src/posix/platform/frame_queue.cpp                      \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.c                            \
     src/posix/platform/misc.c                               \
