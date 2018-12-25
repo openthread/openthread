@@ -140,6 +140,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
             self.assertTrue(command.contains_tlv(prefix.sub_tlvs, LowpanId))
 
         # 4 - N/A
+        # Get addresses registered by MED1
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         med1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
 
@@ -162,6 +163,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.ActiveTimestamp)
 
         # 7 - N/A
+        # Get addresses registered by SED1
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         sed1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
 
