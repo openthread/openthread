@@ -109,9 +109,6 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         msg.assertSentToNode(self.nodes[REED])
         check_tlv_request_tlv(msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
         check_tlv_request_tlv(msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
-        # tlv_request_tlv = msg.get_mle_message_tlv(mle.TlvRequest)
-        # self.assertEqual(mle.TlvType.ADDRESS16, tlv_request_tlv.tlvs[0])
-        # self.assertEqual(mle.TlvType.NETWORK_DATA, tlv_request_tlv.tlvs[1])
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
         msg = sed_messages.next_command_message()
