@@ -226,26 +226,6 @@ class Message(object):
             if isinstance(tlv, tlv_class_type):
                 return tlv
 
-    def sentToNode(self, node):
-        sent_to_node = False
-        dst_addr = self.ipv6_packet.ipv6_header.destination_address
-
-        for addr in node.get_addrs():
-            if dst_addr == ipaddress.ip_address(addr):
-                sent_to_node = True
-
-        if self.mac_header.dest_address.type == common.MacAddressType.SHORT:
-            mac_address = common.MacAddress.from_rloc16(node.get_addr16())
-            if self.mac_header.dest_address == mac_address:
-                sent_to_node = True
-
-        elif self.mac_header.dest_address.type == common.MacAddressType.LONG:
-            mac_address = common.MacAddress.from_eui64(bytearray(node.get_addr64(), encoding="utf-8"))
-            if self.mac_header.dest_address == mac_address:
-                sent_to_node = True
-
-        return sent_to_node
-
     def assertCoapMessageContainsTlv(self, tlv_class_type):
         if self.type != MessageType.COAP:
             raise ValueError("Invalid message type. Expected CoAP message.")
@@ -295,7 +275,24 @@ class Message(object):
         assert(code == self.coap.code)
 
     def assertSentToNode(self, node):
-        assert self.sentToNode(node) == True
+        sent_to_node = False
+        dst_addr = self.ipv6_packet.ipv6_header.destination_address
+
+        for addr in node.get_addrs():
+            if dst_addr == ipaddress.ip_address(addr):
+                sent_to_node = True
+
+        if self.mac_header.dest_address.type == common.MacAddressType.SHORT:
+            mac_address = common.MacAddress.from_rloc16(node.get_addr16())
+            if self.mac_header.dest_address == mac_address:
+                sent_to_node = True
+
+        elif self.mac_header.dest_address.type == common.MacAddressType.LONG:
+            mac_address = common.MacAddress.from_eui64(bytearray(node.get_addr64(), encoding="utf-8"))
+            if self.mac_header.dest_address == mac_address:
+                sent_to_node = True
+
+        return sent_to_node == True
 
     def assertSentToDestinationAddress(self, ipv6_address):
         if sys.version_info[0] == 2:
@@ -373,23 +370,23 @@ class MessagesSet(object):
         return message
 
     def next_mle_message(self, command_type, assert_enabled=True, sent_to_node=None):
-        message = self.next_mle_message_of_one_of_command_types(command_type, sent_to_node)
+        message = self.next_mle_message_of_one_of_command_types(sent_to_node, command_type)
 
         if assert_enabled:
             assert message is not None, "Could not find MleMessage of the type: {}".format(command_type)
 
+        if sent_to_node != None:
+            message.assertSentToNode(sent_to_node)
+
         return message
 
-    def next_mle_message_of_one_of_command_types(self, *command_types, sent_to_node=None):
+    def next_mle_message_of_one_of_command_types(self, *command_types):
         message = None
 
         while self.messages:
             m = self.messages.pop(0)
 
             if m.type != MessageType.MLE:
-                continue
-
-            if sent_to_node != None and not self.sentToNode(sent_to_node):
                 continue
 
             command_found = False

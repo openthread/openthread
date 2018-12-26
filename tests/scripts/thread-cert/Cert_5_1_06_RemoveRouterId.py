@@ -107,8 +107,8 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         command.check_parent_request(msg, is_first_request=True)
 
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        command.check_child_id_request(msg, self.nodes[LEADER], tlv_request=CheckType.CONTAIN,
+        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER])
+        command.check_child_id_request(msg, tlv_request=CheckType.CONTAIN,
             mle_frame_counter=CheckType.OPTIONAL, address_registration=CheckType.NOT_CONTAIN,
             active_timestamp=CheckType.OPTIONAL, pending_timestamp=CheckType.OPTIONAL)
 
