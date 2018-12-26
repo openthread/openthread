@@ -27,18 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import functools
 import time
 import unittest
 
 import config
+import mle
+from network_data import Prefix, BorderRouter, LowpanId
 import node
+from binascii import hexlify
+
+from command import check_network_data_tlv
+from command import check_prefix
+from command import check_prefix_and_border_router_16
+from command import check_address_registration_tlv
+from command import check_child_update_response_base
 
 LEADER = 1
 ROUTER = 2
 SED1 = 3
-ED1 = 4
+MED1 = 4
 
-MTDS = [SED1, ED1]
+MTDS = [SED1, MED1]
 
 class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
     def setUp(self):
@@ -52,7 +62,7 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[MED1].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
         self.nodes[ROUTER].set_panid(0xface)
@@ -67,10 +77,10 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[SED1].enable_whitelist()
         self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED1].enable_whitelist()
+        self.nodes[MED1].set_panid(0xface)
+        self.nodes[MED1].set_mode('rsn')
+        self.nodes[MED1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[MED1].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -95,9 +105,9 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[ED1].start()
+        self.nodes[MED1].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ED1].get_state(), 'child')
+        self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
@@ -106,12 +116,58 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        addrs = self.nodes[ED1].get_addrs()
+        addrs = self.nodes[MED1].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        med1_messages = self.simulator.get_messages_sent_by(MED1)
+        sed1_messages = self.simulator.get_messages_sent_by(SED1)
+
+        # Step 1 - DUT sends MLE Advertisements
+        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        # Step 2 - DUT creates network data
+        msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
+        network_data_tlv = msg.get_mle_message_tlv(mle.NetworkData)
+        prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
+        self.assertTrue(len(prefixes) >= 2)
+        self.assertEqual(hexlify(prefixes[0].prefix), b'2001000200000001')
+        self.assertEqual(hexlify(prefixes[1].prefix), b'2001000200000002')
+
+        # Step 4 - DUT sends a MLE Child ID Response to Router1
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
+        check_network_data_tlv(network_data_tlv, 2, check_prefix)
+
+        # Step 6 - DUT sends a MLE Child ID Response to SED1
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
+        check_network_data_tlv(network_data_tlv, 1, functools.partial(check_prefix_and_border_router_16, border_router_16 = 0xFFFE))
+        # For Step 10
+        msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+
+        # Step 8 - DUT sends a MLE Child ID Response to MED1
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
+        check_network_data_tlv(network_data_tlv, 2, check_prefix)
+
+        # Step 10 - DUT sends Child Update Response
+        msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
+        check_child_update_response_base(msg_chd_upd_res_to_med)
+        dut_addr_reg_tlv = msg_chd_upd_res_to_med.get_mle_message_tlv(mle.AddressRegistration)
+        msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        med1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)
+        check_address_registration_tlv(dut_addr_reg_tlv, med1_addr_reg_tlv.addresses)
+
+        check_child_update_response_base(msg_chd_upd_res_to_sed)
+        dut_addr_reg_tlv = msg_chd_upd_res_to_sed.get_mle_message_tlv(mle.AddressRegistration)
+        msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
+        sed1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)
+        check_address_registration_tlv(dut_addr_reg_tlv, sed1_addr_reg_tlv.addresses)
 
 if __name__ == '__main__':
     unittest.main()
