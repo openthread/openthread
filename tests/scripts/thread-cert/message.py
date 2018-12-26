@@ -370,7 +370,7 @@ class MessagesSet(object):
         return message
 
     def next_mle_message(self, command_type, assert_enabled=True, sent_to_node=None):
-        message = self.next_mle_message_of_one_of_command_types(sent_to_node, command_type)
+        message = self.next_mle_message_of_one_of_command_types(command_type)
 
         if assert_enabled:
             assert message is not None, "Could not find MleMessage of the type: {}".format(command_type)
