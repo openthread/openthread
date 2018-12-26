@@ -277,7 +277,7 @@ def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
 
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
 
-def check_child_id_request(command_msg, sent_to_node, tlv_request = CheckType.OPTIONAL, \
+def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     mle_frame_counter = CheckType.OPTIONAL, address_registration = CheckType.OPTIONAL, \
     active_timestamp = CheckType.OPTIONAL, pending_timestamp = CheckType.OPTIONAL,
     route64 = CheckType.OPTIONAL):
@@ -286,7 +286,6 @@ def check_child_id_request(command_msg, sent_to_node, tlv_request = CheckType.OP
     if command_msg.mle.aux_sec_hdr.key_id_mode != 0x2:
         raise ValueError("The Key Identifier Mode of the Security Control Field SHALL be set to 0x02")
 
-    command_msg.assertSentToNode(sent_to_node)
     command_msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
     command_msg.assertMleMessageContainsTlv(mle.Response)

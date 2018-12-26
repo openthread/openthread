@@ -98,8 +98,8 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
-        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        check_child_id_request(msg, self.nodes[REED], address_registration=CheckType.CONTAIN,
+        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED])
+        check_child_id_request(msg, address_registration=CheckType.CONTAIN,
             tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
             route64=CheckType.OPTIONAL)
 
