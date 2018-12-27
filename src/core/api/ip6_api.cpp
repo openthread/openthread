@@ -211,7 +211,7 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
         VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     }
 
-    message = instance.GetMessagePool().New(Message::kTypeIp6, 0, aSettings);
+    message = instance.GetIp6().NewMessage(0, aSettings);
 
 exit:
     return message;
