@@ -292,7 +292,7 @@ class Message(object):
             if self.mac_header.dest_address == mac_address:
                 sent_to_node = True
 
-        assert sent_to_node == True
+        assert sent_to_node
 
     def assertSentToDestinationAddress(self, ipv6_address):
         if sys.version_info[0] == 2:
@@ -369,11 +369,13 @@ class MessagesSet(object):
 
         return message
 
-    def next_mle_message(self, command_type, assert_enabled=True):
+    def next_mle_message(self, command_type, assert_enabled=True, dst_node=None):
         message = self.next_mle_message_of_one_of_command_types(command_type)
 
         if assert_enabled:
             assert message is not None, "Could not find MleMessage of the type: {}".format(command_type)
+        if dst_node:
+            message.assertSentToNode(dst_node)
 
         return message
 
@@ -434,6 +436,11 @@ class MessagesSet(object):
             return False
 
         return True
+
+    def copy(self):
+        """Make a copy of current MessageSet.
+        """
+        return MessagesSet(self.messages[:])
 
 
 class MessageFactory:
