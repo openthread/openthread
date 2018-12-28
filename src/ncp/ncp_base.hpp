@@ -553,18 +553,18 @@ protected:
     uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
-#endif                                        // OPENTHREAD_MTD || OPENTHREAD_FTD
-    uint32_t mFramingErrorCounter;            // Number of improperly formed received spinel frames.
-    uint32_t mRxSpinelFrameCounter;           // Number of received (inbound) spinel frames.
-    uint32_t mRxSpinelOutOfOrderTidCounter;   // Number of out of order received spinel frames (tid increase > 1).
-    uint32_t mTxSpinelFrameCounter;           // Number of sent (outbound) spinel frames.
-
 #if OPENTHREAD_ENABLE_LEGACY
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
     otExtAddress               mLegacyLastJoinedNode;
     bool                       mLegacyNodeDidJoin;
 #endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    uint32_t mFramingErrorCounter;          // Number of improperly formed received spinel frames.
+    uint32_t mRxSpinelFrameCounter;         // Number of received (inbound) spinel frames.
+    uint32_t mRxSpinelOutOfOrderTidCounter; // Number of out of order received spinel frames (tid increase > 1).
+    uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
 };
