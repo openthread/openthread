@@ -90,9 +90,6 @@ Dtls::Dtls(Instance &aInstance)
     memset(&mCaChain, 0, sizeof(mCaChain));
     memset(&mOwnCert, 0, sizeof(mOwnCert));
     memset(&mPrivateKey, 0, sizeof(mPrivateKey));
-    mbedtls_x509_crt_init(&mCaChain);
-    mbedtls_x509_crt_init(&mOwnCert);
-    mbedtls_pk_init(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -135,21 +132,43 @@ exit:
     return rval;
 }
 
+void Dtls::FreeMbedtls(MbedtlsFreeStage aStage)
+{
+    switch (aStage)
+    {
+    case kFreeClient:
+#ifdef MBEDTLS_SSL_COOKIE_C
+        mbedtls_ssl_cookie_free(&mCookieCtx);
+#endif
+        // fall through
+
+    case kFreeCommon:
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+        mbedtls_x509_crt_free(&mCaChain);
+        mbedtls_x509_crt_free(&mOwnCert);
+        mbedtls_pk_free(&mPrivateKey);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+        mbedtls_entropy_free(&mEntropy);
+        mbedtls_ctr_drbg_free(&mCtrDrbg);
+        mbedtls_ssl_config_free(&mConf);
+        mbedtls_ssl_free(&mSsl);
+        // fall through
+
+    case kFreeNone:
+        break;
+    }
+}
+
 otError Dtls::Start(bool             aClient,
                     ConnectedHandler aConnectedHandler,
                     ReceiveHandler   aReceiveHandler,
                     SendHandler      aSendHandler,
                     void *           aContext)
 {
-    otExtAddress eui64;
-    int          rval;
-
-    mConnectedHandler = aConnectedHandler;
-    mReceiveHandler   = aReceiveHandler;
-    mSendHandler      = aSendHandler;
-    mContext          = aContext;
-    mReceiveMessage   = NULL;
-    mMessageSubType   = Message::kSubTypeNone;
+    int              rval;
+    MbedtlsFreeStage freeStage = kFreeNone;
 
     // do not handle new connection before guard time expired
     VerifyOrExit(mGuardTimerSet == false, rval = MBEDTLS_ERR_SSL_TIMEOUT);
@@ -158,6 +177,15 @@ otError Dtls::Start(bool             aClient,
     mbedtls_ssl_config_init(&mConf);
     mbedtls_ctr_drbg_init(&mCtrDrbg);
     mbedtls_entropy_init(&mEntropy);
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    mbedtls_x509_crt_init(&mCaChain);
+    mbedtls_x509_crt_init(&mOwnCert);
+    mbedtls_pk_init(&mPrivateKey);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    freeStage = kFreeCommon;
+
     rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
                                       MBEDTLS_ENTROPY_SOURCE_STRONG);
     VerifyOrExit(rval == 0);
@@ -167,9 +195,12 @@ otError Dtls::Start(bool             aClient,
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
 
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
-    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
-    VerifyOrExit(rval == 0);
+    {
+        otExtAddress eui64;
+        otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+        rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
+        VerifyOrExit(rval == 0);
+    }
 
     rval = mbedtls_ssl_config_defaults(&mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
@@ -200,6 +231,7 @@ otError Dtls::Start(bool             aClient,
     if (!aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
+        freeStage = kFreeClient;
 
         rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, &mCtrDrbg);
         VerifyOrExit(rval == 0);
@@ -226,8 +258,13 @@ otError Dtls::Start(bool             aClient,
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     VerifyOrExit(rval == 0);
 
-    mStarted = true;
-    Process();
+    mConnectedHandler = aConnectedHandler;
+    mReceiveHandler   = aReceiveHandler;
+    mSendHandler      = aSendHandler;
+    mContext          = aContext;
+    mReceiveMessage   = NULL;
+    mMessageSubType   = Message::kSubTypeNone;
+    mStarted          = true;
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
@@ -240,7 +277,14 @@ otError Dtls::Start(bool             aClient,
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+    Process();
+
 exit:
+    if (rval != 0)
+    {
+        FreeMbedtls(freeStage);
+    }
+
     return MapError(rval);
 }
 
@@ -317,23 +361,7 @@ void Dtls::Close(void)
     mTimer.Start(kGuardTimeNewConnectionMilli);
     VerifyOrExit(mStarted);
     mStarted = false;
-    mbedtls_ssl_free(&mSsl);
-    mbedtls_ssl_config_free(&mConf);
-    mbedtls_ctr_drbg_free(&mCtrDrbg);
-    mbedtls_entropy_free(&mEntropy);
-
-#ifdef MBEDTLS_SSL_COOKIE_C
-    mbedtls_ssl_cookie_free(&mCookieCtx);
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    mbedtls_x509_crt_free(&mCaChain);
-    mbedtls_x509_crt_free(&mOwnCert);
-    mbedtls_pk_free(&mPrivateKey);
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
+    FreeMbedtls(mConf.endpoint == MBEDTLS_SSL_IS_CLIENT ? kFreeClient : kFreeCommon);
     if (mConnectedHandler != NULL)
     {
         mConnectedHandler(mContext, false);

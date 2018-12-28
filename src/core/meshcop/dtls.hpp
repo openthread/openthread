@@ -316,6 +316,14 @@ public:
     ProvisioningUrlTlv mProvisioningUrl;
 
 private:
+    enum MbedtlsFreeStage
+    {
+        kFreeNone   = 0, // Nonthing to free
+        kFreeCommon = 1, // Free data used by both server and client
+        kFreeClient = 2, // Free data used by client
+    };
+    void FreeMbedtls(MbedtlsFreeStage aType);
+
     static otError MapError(int rval);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
