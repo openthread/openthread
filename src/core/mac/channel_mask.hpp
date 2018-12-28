@@ -140,7 +140,7 @@ public:
      * @returns TRUE if the channel @p aChannel is included in the mask, FALSE otherwise.
      *
      */
-    bool ContainsChannel(uint8_t aChannel) const { return ((1U << aChannel) & mMask) != 0; }
+    bool ContainsChannel(uint8_t aChannel) const { return ((1UL << aChannel) & mMask) != 0; }
 
     /**
      * This method adds a channel to the channel mask.
@@ -148,7 +148,7 @@ public:
      * @param[in]  aChannel  A channel
      *
      */
-    void AddChannel(uint8_t aChannel) { mMask |= (1U << aChannel); }
+    void AddChannel(uint8_t aChannel) { mMask |= (1UL << aChannel); }
 
     /**
      * This method removes a channel from the channel mask.
@@ -156,7 +156,7 @@ public:
      * @param[in]  aChannel  A channel
      *
      */
-    void RemoveChannel(uint8_t aChannel) { mMask &= ~(1U << aChannel); }
+    void RemoveChannel(uint8_t aChannel) { mMask &= ~(1UL << aChannel); }
 
     /**
      * This method updates the channel mask by intersecting it with another mask.

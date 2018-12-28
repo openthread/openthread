@@ -246,7 +246,7 @@ void SubMac::StartCsmaBackoff(void)
         backoffExponent = kMaxBE;
     }
 
-    backoff = Random::GetUint32InRange(0, 1U << backoffExponent);
+    backoff = Random::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
     if (mRxOnWhenBackoff)
