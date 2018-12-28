@@ -83,7 +83,8 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[MED].start()
-        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)
+        # Wait for a little bit longer than default child timeout to make sure the second parent request would be sent
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)    
         self.assertEqual(self.nodes[MED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 

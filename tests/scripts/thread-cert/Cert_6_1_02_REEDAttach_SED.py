@@ -84,6 +84,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[SED].start()
+        # Wait for a little bit longer than default child timeout to make sure the second parent request would be sent
         self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + 5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
