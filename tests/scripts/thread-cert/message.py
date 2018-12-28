@@ -303,6 +303,9 @@ class Message(object):
     def assertSentWithHopLimit(self, hop_limit):
         assert self.ipv6_packet.ipv6_header.hop_limit == hop_limit
 
+    def isMacAddressTypeLong(self):
+        return self.mac_header.dest_address.type == common.MacAddressType.LONG
+
     def __repr__(self):
         return "Message(type={})".format(MessageType(self.type).name)
 

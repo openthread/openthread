@@ -84,9 +84,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[SED].start()
-        # Wait 5 secs for MED to attach,
-        # and DEFAULT_CHILD_TIMEOUT secs to make sure the second message of MED would be sent
-        self.simulator.go(5 + config.DEFAULT_CHILD_TIMEOUT) 
+        self.simulator.go(5) 
         self.assertEqual(self.nodes[SED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 
@@ -106,8 +104,15 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
             tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
             route64=CheckType.OPTIONAL)
 
+        # Wait DEFAULT_CHILD_TIMEOUT seconds,
+        # ensure SED has received the CHILD_ID_RESPONSE,
+        # and the next data requests would be keep-alive messages
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
+        sed_messages = self.simulator.get_messages_sent_by(SED)
+
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
         msg = sed_messages.next_message()
+        self.assertEqual(False, msg.isMacAddressTypeLong())    # Extra check, keep-alive messages are of short types of mac address
         self.assertEqual(msg.type, message.MessageType.COMMAND)
         self.assertEqual(msg.mac_header.command_type, mac802154.MacHeader.CommandIdentifier.DATA_REQUEST)
 

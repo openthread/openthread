@@ -83,12 +83,10 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[MED].start()
-        # Wait 5 secs for MED to attach,
-        # and DEFAULT_CHILD_TIMEOUT secs to make sure the second message of MED would be sent
-        self.simulator.go(5 + config.DEFAULT_CHILD_TIMEOUT)    
+        
+        self.simulator.go(5)    
         self.assertEqual(self.nodes[MED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
-
         med_messages = self.simulator.get_messages_sent_by(MED)
 
         # Step 2 - DUT sends MLE Parent Request
@@ -105,6 +103,10 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
             tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
             route64=CheckType.OPTIONAL)
 
+        # Wait additional DEFAULT_CHILD_TIMEOUT to ensure the keep-alive message (child update request from MED) happens.
+        self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
+        med_messages = self.simulator.get_messages_sent_by(MED)
+        
         # Step 8 - DUT sends Child Update messages
         msg = med_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         check_child_update_request_by_child(msg)
