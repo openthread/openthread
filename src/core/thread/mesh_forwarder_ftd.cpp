@@ -1157,7 +1157,7 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
         }
     }
 
-    // Get priority from Ipv6 header or UDP destination port directly
+    // Get priority from IPv6 header or UDP destination port directly
     error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
 
 exit:

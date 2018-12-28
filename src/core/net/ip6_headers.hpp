@@ -514,8 +514,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not
- * followdefault option header structure.
+ * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not follow default option header structure.
  *
  */
 OT_TOOL_PACKED_BEGIN

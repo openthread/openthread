@@ -153,7 +153,7 @@ public:
         void TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError);
 
         /**
-         * This method notifies user of `SubMac` that energy sfcan is complete.
+         * This method notifies user of `SubMac` that energy scan is complete.
          *
          * @param[in]  aMaxRssi  Maximum RSSI seen on the channel, or `SubMac::kInvalidRssiValue` if failed.
          *
