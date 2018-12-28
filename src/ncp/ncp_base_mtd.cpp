@@ -175,7 +175,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>
 
     SuccessOrExit(error = mDecoder.ReadUint32(pollPeriod));
 
-    otLinkSetPollPeriod(mInstance, pollPeriod);
+    error = otLinkSetPollPeriod(mInstance, pollPeriod);
 
 exit:
     return error;
