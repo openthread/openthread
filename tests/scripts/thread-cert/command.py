@@ -420,8 +420,8 @@ def get_sub_tlv(tlvs, tlv_type):
 def check_prefix(prefix):
     """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV
     """
-    assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter), "Prefix doesn't contain a border router sub-TLV!"
-    assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId), "Prefix doesn't contain a LowpanId sub-TLV!"
+    assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter), 'Prefix doesn\'t contain a border router sub-TLV!'
+    assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId), 'Prefix doesn\'t contain a LowpanId sub-TLV!'
 
 def check_prefix_and_border_router_16(prefix, border_router_16):
     """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV.
@@ -429,18 +429,18 @@ def check_prefix_and_border_router_16(prefix, border_router_16):
     """
     check_prefix(prefix)
     border_router_tlv = get_sub_tlv(prefix.sub_tlvs, network_data.BorderRouter)
-    assert border_router_tlv.border_router_16 == border_router_16, "border_router_16 value is not correct, expect:{}".format(border_router_16)
+    assert border_router_tlv.border_router_16 == border_router_16, 'border_router_16 value is not correct, expect:{}'.format(border_router_16)
 
 def check_network_data_tlv(network_data_tlv, min_prefix_count, prefix_check_func):
     """Verify the prefixes in network_data_tlv with the given check function
     """
     prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
-    assert len(prefixes) >= min_prefix_count, "Prefix count is less than {}".format(min_prefix_count)
+    assert len(prefixes) >= min_prefix_count, 'Prefix count is less than {}'.format(min_prefix_count)
     for prefix in prefixes:
         prefix_check_func(prefix)
 
 def check_address_registration_tlv(addr_reg_tlv, address_set):
     """Verify all addresses contained in address_set are contained in add_reg_tlv
     """
-    assert all(addr in addr_reg_tlv.addresses for addr in address_set), "Some addresses are not included in AddressRegistration TLV"
+    assert all(addr in addr_reg_tlv.addresses for addr in address_set), 'Some addresses are not included in AddressRegistration TLV'
 

@@ -33,8 +33,8 @@ import unittest
 
 import config
 import mle
-from network_data import Prefix, BorderRouter, LowpanId
 import node
+
 from binascii import hexlify
 
 from command import check_network_data_tlv
@@ -42,6 +42,7 @@ from command import check_prefix
 from command import check_prefix_and_border_router_16
 from command import check_address_registration_tlv
 from command import check_child_update_response_base
+from network_data import Prefix, BorderRouter, LowpanId
 
 LEADER = 1
 ROUTER = 2
