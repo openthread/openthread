@@ -130,7 +130,8 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        command.check_data_response(msg, network_data=CheckType.CONTAIN, prefix_num=2)
+        command.check_data_response(msg, network_data=CheckType.CONTAIN,
+            prefixes=[('2001:2:0:1::/64', 'paros'), ('2001:2:0:2::/64', 'paro')])
 
         # 4 - N/A
         # Get addresses registered by MED1
@@ -139,19 +140,19 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 5 - Leader
         # Make a copy of leader's messages to ensure that we don't miss messages to SED1
-        leader_messages1 = leader_messages.copy()
-        msg = leader_messages1.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, dst_node=self.nodes[MED1])
+        leader_messages_copy = leader_messages.copy()
+        msg = leader_messages_copy.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[MED1])
         command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in med1_addresses))
 
         # 6A & 6B - Leader
         if config.LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
-            msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST, dst_node=self.nodes[SED1])
+            msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST, sent_to_node=self.nodes[SED1])
             command.check_child_update_request_from_parent(msg,
                 leader_data=CheckType.CONTAIN, network_data=CheckType.CONTAIN, active_timestamp=CheckType.CONTAIN)
         else:
-            msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE, dst_node=self.nodes[SED1])
+            msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE, sent_to_node=self.nodes[SED1])
             command.check_data_response(msg, network_data=CheckType.CONTAIN, active_timestamp=CheckType.CONTAIN)
 
         # 7 - N/A
@@ -160,7 +161,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         sed1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
 
         # 8 - Leader
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, dst_node=self.nodes[SED1])
+        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[SED1])
         command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in sed1_addresses))

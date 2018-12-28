@@ -318,28 +318,28 @@ def contains_tlv(sub_tlvs, tlv_type):
     """
     return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
 
-def check_key_id_mode(command_msg, key_id_mode):
+def check_secure_mle_key_id_mode(command_msg, key_id_mode):
     """Verify if the mle command message sets the right key id mode.
     """
     assert isinstance(command_msg.mle, mle.MleMessageSecured)
     assert command_msg.mle.aux_sec_hdr.key_id_mode == key_id_mode
 
-def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefix_num=0,
+def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefixes=[],
     active_timestamp=CheckType.OPTIONAL):
     """Verify a properly formatted Data Response command message.
     """
-    check_key_id_mode(command_msg, 0x02)
+    check_secure_mle_key_id_mode(command_msg, 0x02)
 
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
     check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
 
-    if network_data == CheckType.CONTAIN and prefix_num > 0:
+    if network_data == CheckType.CONTAIN and len(prefixes) > 0:
         network_data_tlv = command_msg.get_mle_message_tlv(mle.NetworkData)
-        prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
-        assert len(prefixes) >= prefix_num
-        for prefix in prefixes:
+        prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
+        assert len(prefix_tlvs) >= len(prefixes)
+        for prefix in prefix_tlvs:
             assert contains_tlv(prefix.sub_tlvs, BorderRouter)
             assert contains_tlv(prefix.sub_tlvs, LowpanId)
 
@@ -348,7 +348,7 @@ def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OP
     tlv_request=CheckType.OPTIONAL, active_timestamp=CheckType.OPTIONAL):
     """Verify a properly formatted Child Update Request(from parent) command message.
     """
-    check_key_id_mode(command_msg, 0x02)
+    check_secure_mle_key_id_mode(command_msg, 0x02)
 
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
     check_mle_optional_tlv(command_msg, leader_data, mle.LeaderData)
@@ -363,7 +363,7 @@ def check_child_update_response_from_parent(command_msg, timeout=CheckType.OPTIO
     link_layer_frame_counter=CheckType.OPTIONAL, mle_frame_counter=CheckType.OPTIONAL):
     """Verify a properly formatted Child Update Response from parent
     """
-    check_key_id_mode(command_msg, 0x02)
+    check_secure_mle_key_id_mode(command_msg, 0x02)
 
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
