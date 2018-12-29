@@ -30,8 +30,11 @@
 
 #include <openthread-core-config.h>
 #include <setjmp.h>
+#include <signal.h>
 #include <unistd.h>
-#include <openthread/config.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
 
 #define OPENTHREAD_POSIX_APP_NCP 1
 #define OPENTHREAD_POSIX_APP_CLI 2
@@ -61,6 +64,12 @@ void otTaskletsSignalPending(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+
+#ifdef __linux__
+    // Ensure we terminate this process if the
+    // parent process dies.
+    prctl(PR_SET_PDEATHSIG, SIGHUP);
+#endif
 
     if (setjmp(gResetJump))
     {

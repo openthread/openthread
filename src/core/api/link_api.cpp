@@ -145,11 +145,11 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance)
     return instance.GetThreadNetif().GetMeshForwarder().GetDataPollManager().GetKeepAlivePollPeriod();
 }
 
-void otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
+otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetMeshForwarder().GetDataPollManager().SetExternalPollPeriod(aPollPeriod);
+    return instance.GetThreadNetif().GetMeshForwarder().GetDataPollManager().SetExternalPollPeriod(aPollPeriod);
 }
 
 otError otLinkSendDataRequest(otInstance *aInstance)

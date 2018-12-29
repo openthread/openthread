@@ -31,6 +31,7 @@ import os
 import sys
 import time
 import pexpect
+import pexpect.popen_spawn
 import re
 import socket
 import ipaddress
@@ -78,7 +79,7 @@ class otCli:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=4)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=4)
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
@@ -141,11 +142,14 @@ class otCli:
         self.destroy()
 
     def destroy(self):
-        if self.pexpect and self.pexpect.isalive():
+        if not self.pexpect:
+            return
+
+        if hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or \
+                not hasattr(self.pexpect, 'proc') and self.pexpect.isalive():
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
-            self.pexpect.terminate()
             self.pexpect = None
 
     def send_command(self, cmd, go=True):

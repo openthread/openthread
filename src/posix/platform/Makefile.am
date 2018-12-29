@@ -41,7 +41,6 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    frame_queue.cpp                         \
     hdlc_interface.cpp                      \
     logging.c                               \
     misc.c                                  \
@@ -74,7 +73,6 @@ libopenthread_posix_a_SOURCES            += \
 endif
 
 noinst_HEADERS                            = \
-    frame_queue.hpp                         \
     openthread-system.h                     \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
@@ -90,17 +88,7 @@ if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
-check_PROGRAMS = test-frame-queue test-settings
-
-test_frame_queue_CPPFLAGS                 = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src/core                \
-    -DSELF_TEST                             \
-    $(NULL)
-
-test_frame_queue_SOURCES                  = \
-    frame_queue.cpp                         \
-    $(NULL)
+check_PROGRAMS = test-settings
 
 test_settings_CPPFLAGS                    = \
     -I$(top_srcdir)/include                 \
@@ -113,7 +101,6 @@ test_settings_SOURCES                     = \
     $(NULL)
 
 TESTS                                     = \
-    test-frame-queue                        \
     test-settings                           \
     $(NULL)
 

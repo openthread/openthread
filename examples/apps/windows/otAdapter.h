@@ -164,7 +164,7 @@ public:
     property uint32_t PollPeriod
     {
         uint32_t get() { return otLinkGetPollPeriod(DeviceInstance); }
-        void set(uint32_t value) { otLinkSetPollPeriod(DeviceInstance, value); }
+        void set(uint32_t value) { ThrowOnFailure(otLinkSetPollPeriod(DeviceInstance, value)); }
     }
 
     property uint8_t Channel

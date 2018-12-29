@@ -418,18 +418,24 @@ OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
 OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
 
 /**
- * Set the data poll period for sleepy end device.
+ * Set/clear user-specified/external data poll period for sleepy end device.
  *
  * @note This function updates only poll period of sleepy end device. To update child timeout the function
  *       `otSetChildTimeout()` shall be called.
  *
+ * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms).
+ *       Or zero to clear user-specified poll period.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set/cleared user-specified poll period.
+ * @retval OT_ERROR_INVALID_ARGS   If aPollPeriod is invalid.
  *
  * @sa otLinkGetPollPeriod
  *
  */
-OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
+OTAPI otError OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
  * Get the IEEE 802.15.4 Short Address.

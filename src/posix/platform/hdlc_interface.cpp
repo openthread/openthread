@@ -66,27 +66,12 @@
 namespace ot {
 namespace PosixApp {
 
-class EncoderBuffer : public Hdlc::Encoder::BufferWriteIterator
-{
-public:
-    EncoderBuffer(void)
-    {
-        mWritePointer    = mBuffer;
-        mRemainingLength = sizeof(mBuffer);
-    }
-
-    uint16_t       GetLength(void) const { return static_cast<uint16_t>(mWritePointer - mBuffer); }
-    const uint8_t *GetBuffer(void) const { return mBuffer; }
-
-private:
-    uint8_t mBuffer[HdlcInterface::kMaxFrameSize];
-};
-
 HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
     : mCallbacks(aCallbacks)
     , mSockFd(-1)
     , mIsDecoding(false)
-    , mHdlcDecoder(mDecoderBuffer, sizeof(mDecoderBuffer), HandleHdlcFrame, HandleHdlcError, this)
+    , mRxFrameBuffer()
+    , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
 {
 }
 
@@ -166,15 +151,15 @@ void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength)
 
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
-    otError       error = OT_ERROR_NONE;
-    Hdlc::Encoder hdlcEncoder;
-    EncoderBuffer encoderBuffer;
+    otError                          error = OT_ERROR_NONE;
+    Hdlc::FrameBuffer<kMaxFrameSize> encoderBuffer;
+    Hdlc::Encoder                    hdlcEncoder(encoderBuffer);
 
-    SuccessOrExit(error = hdlcEncoder.Init(encoderBuffer));
-    SuccessOrExit(error = hdlcEncoder.Encode(aFrame, aLength, encoderBuffer));
-    SuccessOrExit(error = hdlcEncoder.Finalize(encoderBuffer));
+    SuccessOrExit(error = hdlcEncoder.BeginFrame());
+    SuccessOrExit(error = hdlcEncoder.Encode(aFrame, aLength));
+    SuccessOrExit(error = hdlcEncoder.EndFrame());
 
-    error = Write(encoderBuffer.GetBuffer(), encoderBuffer.GetLength());
+    error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength());
 
 exit:
     return error;
@@ -501,19 +486,22 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 
-void HdlcInterface::HandleHdlcFrame(void *aContext, uint8_t *aFrame, uint16_t aFrameLength)
+void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 {
-    static_cast<HdlcInterface *>(aContext)->mCallbacks.HandleReceivedFrame(aFrame, aFrameLength);
+    static_cast<HdlcInterface *>(aContext)->HandleHdlcFrame(aError);
 }
 
-void HdlcInterface::HandleHdlcError(void *aContext, otError aError, uint8_t *aFrame, uint16_t aFrameLength)
+void HdlcInterface::HandleHdlcFrame(otError aError)
 {
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aFrameLength);
-
-    otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
+    if (aError == OT_ERROR_NONE)
+    {
+        mCallbacks.HandleReceivedFrame(*this);
+    }
+    else
+    {
+        mRxFrameBuffer.DiscardFrame();
+        otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
+    }
 }
 
 } // namespace PosixApp
