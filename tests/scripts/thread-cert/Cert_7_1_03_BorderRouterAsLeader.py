@@ -30,10 +30,11 @@
 from binascii import hexlify
 import time
 import unittest
-import mle
+
 import config
 import command
 from command import CheckType
+import mle
 import node
 
 LEADER = 1
@@ -140,7 +141,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 5 - Leader
         # Make a copy of leader's messages to ensure that we don't miss messages to SED1
-        leader_messages_copy = leader_messages.copy()
+        leader_messages_copy = leader_messages.clone()
         msg = leader_messages_copy.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[MED1])
         command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
