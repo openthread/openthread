@@ -571,7 +571,7 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
-        return *reinterpret_cast<const HelpData *>(((unsigned long)mBuffer.mHead.mData + sizeof(void *) - 1) &
+        return *reinterpret_cast<const HelpData *>(((uintptr_t)mBuffer.mHead.mData + sizeof(void *) - 1) &
                                                    ~(sizeof(void *) - 1));
     }
 
