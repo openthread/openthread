@@ -69,6 +69,7 @@ enum
 {
     kInitFcs = 0xffff, ///< Initial FCS value.
     kGoodFcs = 0xf0b8, ///< Good FCS value.
+    kFcsSize = 2,      ///< FCS size (number of bytes).
 };
 
 uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
@@ -237,19 +238,15 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
 
             case kFlagSequence:
 
-                // Ignore frames which are smaller than the size of the FCS.
-                if (mDecodedLength > sizeof(uint16_t))
+                if (mDecodedLength > 0)
                 {
-                    otError error = OT_ERROR_NONE;
+                    otError error = OT_ERROR_PARSE;
 
-                    if (mFcs == kGoodFcs)
+                    if ((mDecodedLength >= kFcsSize) && (mFcs == kGoodFcs))
                     {
                         // Remove the FCS from the frame.
-                        mWritePointer.UndoLastWrites(sizeof(uint16_t));
-                    }
-                    else
-                    {
-                        error = OT_ERROR_PARSE;
+                        mWritePointer.UndoLastWrites(kFcsSize);
+                        error = OT_ERROR_NONE;
                     }
 
                     mFrameHandler(mContext, error);

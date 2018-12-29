@@ -131,6 +131,10 @@ ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
 configure_OPTIONS              += --disable-builtin-mbedtls
 endif
 
+ifeq ($(DISABLE_EXECUTABLE), 1)
+configure_OPTIONS              += --enable-executable=no
+endif
+
 ifeq ($(DEBUG_UART),1)
 CFLAGS   += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1
 CXXFLAGS += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1

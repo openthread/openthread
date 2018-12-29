@@ -97,6 +97,15 @@ def check_address_error_notification(command_msg, source_node, destination_addre
             + str(ipv6.ip_address(destination_address)) + ", but the destination_address in command msg is: " \
             + str(command_msg.ipv6_packet.ipv6_header.destination_address)
 
+def check_address_solicit(command_msg, was_router):
+    command_msg.assertCoapMessageRequestUriPath('/a/as')
+    command_msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+    command_msg.assertCoapMessageContainsTlv(network_layer.Status)
+    if was_router:
+        command_msg.assertCoapMessageContainsTlv(network_layer.Rloc16)
+    else:
+        command_msg.assertMleMessageDoesNotContainTlv(network_layer.Rloc16)
+
 def check_address_release(command_msg, destination_node):
     """Verify the message is a properly formatted address release destined to the given node.
     """
@@ -215,7 +224,7 @@ def get_routing_cost(command_msg, router_id):
     assert router_id_mask_str[router_id - prefix_len] == '1', "Error: The router isn't in the topology. \n" \
             + "route64 tlv is: %s. \nrouter_id is: %s. \nrouting_entry_pos is: %s. \nrouter_id_mask_str is: %s." \
             %(tlv, router_id, routing_entry_pos, router_id_mask_str)
- 
+
     return tlv.link_quality_and_route_data[routing_entry_pos].route
 
 def check_mle_optional_tlv(command_msg, type, tlv):
@@ -235,15 +244,25 @@ def check_mle_advertisement(command_msg):
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
     command_msg.assertMleMessageContainsTlv(mle.Route64)
 
-def check_parent_request(command_msg):
+def check_parent_request(command_msg, is_first_request):
     """Verify a properly formatted Parent Request command message.
     """
+    if command_msg.mle.aux_sec_hdr.key_id_mode != 0x2:
+        raise ValueError("The Key Identifier Mode of the Security Control Field SHALL be set to 0x02")
+
     command_msg.assertSentWithHopLimit(255)
     command_msg.assertSentToDestinationAddress(config.LINK_LOCAL_ALL_ROUTERS_ADDRESS)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
     command_msg.assertMleMessageContainsTlv(mle.Challenge)
-    command_msg.assertMleMessageContainsTlv(mle.ScanMask)
     command_msg.assertMleMessageContainsTlv(mle.Version)
+    scan_mask = command_msg.assertMleMessageContainsTlv(mle.ScanMask)
+    if not scan_mask.router:
+        raise ValueError("Parent request without R bit set")
+    if is_first_request:
+        if scan_mask.end_device:
+            raise ValueError("First parent request with E bit set")
+    elif not scan_mask.end_device:
+        raise ValueError("Second parent request without E bit set")
 
 def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
     """Verify a properly formatted Parent Response command message.
@@ -261,9 +280,13 @@ def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
 
 def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     mle_frame_counter = CheckType.OPTIONAL, address_registration = CheckType.OPTIONAL, \
-    active_timestamp = CheckType.OPTIONAL, pending_timestamp = CheckType.OPTIONAL):
+    active_timestamp = CheckType.OPTIONAL, pending_timestamp = CheckType.OPTIONAL,
+    route64 = CheckType.OPTIONAL):
     """Verify a properly formatted Child Id Request command message.
     """
+    if command_msg.mle.aux_sec_hdr.key_id_mode != 0x2:
+        raise ValueError("The Key Identifier Mode of the Security Control Field SHALL be set to 0x02")
+
     command_msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
     command_msg.assertMleMessageContainsTlv(mle.Mode)
     command_msg.assertMleMessageContainsTlv(mle.Response)
@@ -275,6 +298,10 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     check_mle_optional_tlv(command_msg, address_registration, mle.AddressRegistration)
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
+    check_mle_optional_tlv(command_msg, route64, mle.Route64)
+
+    check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
+    check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
@@ -293,6 +320,11 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
+
+def check_child_update_request_by_child(command_msg):
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    command_msg.assertMleMessageContainsTlv(mle.Mode)
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
 
 def check_coap_optional_tlv(coap_msg, type, tlv):
     if (type == CheckType.CONTAIN):
@@ -375,3 +407,8 @@ def check_child_update_response_from_parent(command_msg, timeout=CheckType.OPTIO
     check_mle_optional_tlv(command_msg, response, mle.Response)
     check_mle_optional_tlv(command_msg, link_layer_frame_counter, mle.LinkLayerFrameCounter)
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
+
+def get_sub_tlv(tlvs, tlv_type):
+    for sub_tlv in tlvs:
+        if isinstance(sub_tlv, tlv_type):
+            return sub_tlv
