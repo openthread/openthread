@@ -132,33 +132,22 @@ exit:
     return rval;
 }
 
-void Dtls::FreeMbedtls(MbedtlsFreeStage aStage)
+void Dtls::FreeMbedtls(void)
 {
-    switch (aStage)
-    {
-    case kFreeClient:
 #ifdef MBEDTLS_SSL_COOKIE_C
-        mbedtls_ssl_cookie_free(&mCookieCtx);
+    mbedtls_ssl_cookie_free(&mCookieCtx);
 #endif
-        // fall through
-
-    case kFreeCommon:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-        mbedtls_x509_crt_free(&mCaChain);
-        mbedtls_x509_crt_free(&mOwnCert);
-        mbedtls_pk_free(&mPrivateKey);
+    mbedtls_x509_crt_free(&mCaChain);
+    mbedtls_x509_crt_free(&mOwnCert);
+    mbedtls_pk_free(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-        mbedtls_entropy_free(&mEntropy);
-        mbedtls_ctr_drbg_free(&mCtrDrbg);
-        mbedtls_ssl_config_free(&mConf);
-        mbedtls_ssl_free(&mSsl);
-        // fall through
-
-    case kFreeNone:
-        break;
-    }
+    mbedtls_entropy_free(&mEntropy);
+    mbedtls_ctr_drbg_free(&mCtrDrbg);
+    mbedtls_ssl_config_free(&mConf);
+    mbedtls_ssl_free(&mSsl);
 }
 
 otError Dtls::Start(bool             aClient,
@@ -167,8 +156,7 @@ otError Dtls::Start(bool             aClient,
                     SendHandler      aSendHandler,
                     void *           aContext)
 {
-    int              rval;
-    MbedtlsFreeStage freeStage = kFreeNone;
+    int rval;
 
     // do not handle new connection before guard time expired
     VerifyOrExit(mGuardTimerSet == false, rval = MBEDTLS_ERR_SSL_TIMEOUT);
@@ -184,7 +172,6 @@ otError Dtls::Start(bool             aClient,
     mbedtls_pk_init(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    freeStage = kFreeCommon;
 
     rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
                                       MBEDTLS_ENTROPY_SOURCE_STRONG);
@@ -231,7 +218,6 @@ otError Dtls::Start(bool             aClient,
     if (!aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
-        freeStage = kFreeClient;
 
         rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, &mCtrDrbg);
         VerifyOrExit(rval == 0);
@@ -282,7 +268,7 @@ otError Dtls::Start(bool             aClient,
 exit:
     if (rval != 0)
     {
-        FreeMbedtls(freeStage);
+        FreeMbedtls();
     }
 
     return MapError(rval);
@@ -361,7 +347,7 @@ void Dtls::Close(void)
     mTimer.Start(kGuardTimeNewConnectionMilli);
     VerifyOrExit(mStarted);
     mStarted = false;
-    FreeMbedtls(mConf.endpoint == MBEDTLS_SSL_IS_CLIENT ? kFreeClient : kFreeCommon);
+    FreeMbedtls();
     if (mConnectedHandler != NULL)
     {
         mConnectedHandler(mContext, false);
