@@ -438,7 +438,7 @@ class MessagesSet(object):
 
         return True
 
-    def copy(self):
+    def clone(self):
         """Make a copy of current MessageSet.
         """
         return MessagesSet(self.messages[:])
