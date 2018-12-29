@@ -303,7 +303,7 @@ Set to true to enable the TMF proxy. This property is deprecated.
 * Packed-Encoding: `dSS`
 * Required capability: `CAP_THREAD_TMF_PROXY`
 
-This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_PROXY_STREAM`.
+This property is deprecated. Please see `SPINEL_PROP_THREAD_UDP_FORWARD_STREAM`.
 
 Data per item is:
 
@@ -589,11 +589,11 @@ Data per item is:
 * `S` : RLOC16 of target
 * `C` : Age (order of use, 0 indicates most recently used entry)
 
-### PROP 5412: SPINEL_PROP_THREAD_UDP_PROXY_STREAM (#prop-thread-udp-proxy-stream)
+### PROP 5412: SPINEL_PROP_THREAD_UDP_FORWARD_STREAM (#prop-thread-udp-proxy-stream)
 
 * Type: Write-Stream
 * Packed-Encoding: `dS6S`
-* Required capability: `CAP_THREAD_UDP_PROXY`
+* Required capability: `CAP_THREAD_UDP_FORWARD`
 
 This property helps exchange UDP packets with host.
 
