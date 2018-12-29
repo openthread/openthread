@@ -143,7 +143,7 @@ public:
      */
     bool ContainsChannel(uint8_t aChannel) const
     {
-        return (aChannel < sizeof(mMask) * CHAR_BIT) ? ((1U << aChannel) & mMask) != 0 : false;
+        return (aChannel < sizeof(mMask) * CHAR_BIT) ? ((1UL << aChannel) & mMask) != 0 : false;
     }
 
     /**
@@ -156,7 +156,7 @@ public:
     {
         if (aChannel < sizeof(mMask) * CHAR_BIT)
         {
-            mMask |= (1UL << aChannel); }
+            mMask |= (1UL << aChannel);
         }
     }
 
@@ -168,10 +168,10 @@ public:
      */
     void RemoveChannel(uint8_t aChannel)
     {
-       if (aChannel < sizeof(mMask) * CHAR_BIT)
-       {
-          mMask &= ~(1UL << aChannel);
-       }
+        if (aChannel < sizeof(mMask) * CHAR_BIT)
+        {
+            mMask &= ~(1UL << aChannel);
+        }
     }
 
     /**
