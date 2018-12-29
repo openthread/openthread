@@ -41,8 +41,6 @@
 extern "C" {
 #endif
 
-#include "common/code_utils.hpp"
-
 typedef struct
 {
         uint8_t hwKeyLen;

@@ -134,4 +134,30 @@
         }                             \
     } while (false)
 
+#ifdef __cplusplus
+
+namespace ot {
+
+template <int> struct StaticAssertError;
+template <> struct StaticAssertError<true>
+{
+};
+
+} // namespace ot
+
+/**
+ * This macro does static assert.
+ *
+ * @param[in]   aCheck      The value to assert.
+ * @param[in]   aErrorType  Underscore connected error message type, e.g. invalid_heap_size.
+ *
+ */
+#define OT_STATIC_ASSERT(aCheck, aErrorType)                     \
+    {                                                            \
+        ot::StaticAssertError<(aCheck) != 0> ERROR_##aErrorType; \
+        (void)ERROR_##aErrorType;                                \
+    }
+
+#endif //__cplusplus
+
 #endif // CODE_UTILS_HPP_
