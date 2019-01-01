@@ -31,18 +31,28 @@
 #      example compilation and programming.
 #
 
-# Establish some key directories
+die()
+{
+    echo " *** ERROR: " $*
+    exit 1
+}
 
 install_packages_apt()
 {
     # apt update and install dependencies
-    sudo apt-get update
-    sudo apt-get -y install automake g++ libtool make
+    sudo apt-get update || die
+    sudo apt-get -y install automake g++ libtool lsb-release make || die
 
-    # add gcc-arm-embedded ppa
-    sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
-    sudo apt-get update
-    sudo apt-get -y install gcc-arm-embedded
+    PLATFORM=$(lsb_release -is)
+
+    if [ $PLATFORM = "Raspbian" ]; then
+        sudo apt-get -y install binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib || die
+    else
+        # add gcc-arm-embedded ppa
+        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa || die
+        sudo apt-get update || die
+        sudo apt-get -y install gcc-arm-embedded || die
+    fi
 
     # add clang-format for pretty
     sudo apt-get -y install clang-format-6.0

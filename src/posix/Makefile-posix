@@ -32,6 +32,9 @@
 
 COVERAGE                       ?= 0
 DEBUG                          ?= 0
+DISABLE_BUILTIN_MBEDTLS        ?= 0
+DISABLE_EXECUTABLE             ?= 0
+SNTP_CLIENT                    ?= 0
 
 ECHO                           := @echo
 MAKE                           := make
@@ -71,6 +74,18 @@ configure_OPTIONS                   = \
 
 ifeq ($(COVERAGE),1)
 configure_OPTIONS              += --enable-coverage
+endif
+
+ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+configure_OPTIONS              += --disable-builtin-mbedtls
+endif
+
+ifeq ($(DISABLE_EXECUTABLE), 1)
+configure_OPTIONS              += --enable-executable=no
+endif
+
+ifeq (${SNTP_CLIENT}, 1)
+configure_OPTIONS              += --enable-sntp-client
 endif
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..

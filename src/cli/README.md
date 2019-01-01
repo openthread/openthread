@@ -1404,7 +1404,7 @@ Done
 
 ### pollperiod
 
-Get the customized data poll period of sleepy end device (seconds). Only for certification test
+Get the customized data poll period of sleepy end device (milliseconds). Only for certification test
 
 ```bash
 > pollperiod
@@ -1414,7 +1414,7 @@ Done
 
 ### pollperiod \<pollperiod\>
 
-Set the customized data poll period for sleepy end device (seconds). Only for certification test
+Set the customized data poll period for sleepy end device (milliseconds >= 10ms). Only for certification test
 
 ```bash
 > pollperiod 10

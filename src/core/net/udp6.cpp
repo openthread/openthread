@@ -200,6 +200,10 @@ Udp::Udp(Instance &aInstance)
     , mEphemeralPort(kDynamicPortMin)
     , mReceivers(NULL)
     , mSockets(NULL)
+#if OPENTHREAD_ENABLE_UDP_FORWARD
+    , mUdpForwarderContext(NULL)
+    , mUdpForwarder(NULL)
+#endif
 {
 }
 
@@ -415,6 +419,7 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
         }
 
         socket->HandleUdpReceive(aMessage, aMessageInfo);
+        break;
     }
 }
 

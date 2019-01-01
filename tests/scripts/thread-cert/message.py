@@ -292,7 +292,7 @@ class Message(object):
             if self.mac_header.dest_address == mac_address:
                 sent_to_node = True
 
-        assert sent_to_node == True
+        assert sent_to_node
 
     def assertSentToDestinationAddress(self, ipv6_address):
         if sys.version_info[0] == 2:
@@ -468,6 +468,11 @@ class MessagesSet(object):
             return False
 
         return True
+
+    def clone(self):
+        """Make a copy of current MessageSet.
+        """
+        return MessagesSet(self.messages[:])
 
 
 class MessageFactory:
