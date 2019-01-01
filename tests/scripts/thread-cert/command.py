@@ -346,10 +346,6 @@ def check_router_id_cached(node, router_id, cached = True):
         assert any(router_id == (int(rloc, 16) >> 10) for (_, rloc) in eidcaches) is False
 
 def contains_tlv(sub_tlvs, tlv_type):
-<<<<<<< HEAD
-    return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
-
-=======
     """Verify if a specific type of tlv is included in a sub-tlv list.
     """
     return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
@@ -412,7 +408,6 @@ def check_child_update_response_from_parent(command_msg, timeout=CheckType.OPTIO
     check_mle_optional_tlv(command_msg, link_layer_frame_counter, mle.LinkLayerFrameCounter)
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
 
->>>>>>> e0c802569ead34482c41f65fa4a39e400a5dcaa3
 def get_sub_tlv(tlvs, tlv_type):
     for sub_tlv in tlvs:
         if isinstance(sub_tlv, tlv_type):
