@@ -856,7 +856,7 @@ private:
     };
     uint8_t mRouterIdSequence;
     uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
-    // Since we do hold 12 (compressable to 11) bits of data per router, each entry occupies 1.5 bytes, consecutively.
+    // Since we do hold 12 (compressible to 11) bits of data per router, each entry occupies 1.5 bytes, consecutively.
     // First 4 bits are link qualities, remaining 8 bits are route cost.
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;

@@ -489,7 +489,7 @@ public:
     otIp6Address &GetAddress(void) { return mAddress; }
 
 private:
-    otIp6Address mAddress; ///< Ipv6 Address of AAAA Resource Record.
+    otIp6Address mAddress; ///< IPv6 Address of AAAA Resource Record.
 
 } OT_TOOL_PACKED_END;
 

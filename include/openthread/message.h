@@ -89,7 +89,7 @@ typedef struct otBufferInfo
 } otBufferInfo;
 
 /**
- * This enumeration defines the Openthread message priority levels.
+ * This enumeration defines the OpenThread message priority levels.
  *
  */
 typedef enum otMessagePriority

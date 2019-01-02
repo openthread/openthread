@@ -247,7 +247,7 @@ bool otCoapSecureIsConncetionActive(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully sent CoAP message.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
- * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+ * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
  *
  */
 otError otCoapSecureSendRequest(otInstance *          aInstance,
