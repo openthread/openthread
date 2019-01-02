@@ -203,6 +203,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
         StateTlv stateTlv;
 
         SuccessOrExit(error = Tlv::GetTlv(*message, Tlv::kState, sizeof(stateTlv), stateTlv));
+        VerifyOrExit(stateTlv.IsValid(), error = OT_ERROR_PARSE);
 
         if (stateTlv.GetState() == StateTlv::kAccept)
         {
@@ -210,6 +211,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
             SuccessOrExit(error =
                               Tlv::GetTlv(*message, Tlv::kCommissionerSessionId, sizeof(sessionIdTlv), sessionIdTlv));
+            VerifyOrExit(sessionIdTlv.IsValid(), error = OT_ERROR_PARSE);
 
             netif.GetMle().GetCommissionerAloc(borderAgent.mCommissionerAloc.GetAddress(),
                                                sessionIdTlv.GetCommissionerSessionId());
