@@ -669,7 +669,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         uint16_t       counter = mAttachCounter - 1;
         const uint32_t ratio   = kAttachBackoffMaxInterval / kAttachBackoffMinInterval;
 
-        if ((counter <= sizeof(ratio) * CHAR_BIT) && ((1U << counter) <= ratio))
+        if ((counter < sizeof(ratio) * CHAR_BIT) && ((1UL << counter) <= ratio))
         {
             delay = kAttachBackoffMinInterval;
             delay <<= counter;
