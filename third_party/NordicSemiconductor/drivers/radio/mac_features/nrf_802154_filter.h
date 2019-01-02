@@ -48,7 +48,6 @@
  * @brief Procedures used to discard incoming frames that contain unexpected data in PHR or MHR.
  */
 
-
 /**
  * @brief Verify if given part of the frame is valid.
  *
@@ -75,4 +74,3 @@
 nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_psdu, uint8_t * p_num_bytes);
 
 #endif /* NRF_802154_FILTER_H_ */
-

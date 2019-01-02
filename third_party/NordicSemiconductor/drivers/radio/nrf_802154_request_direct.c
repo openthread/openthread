@@ -42,13 +42,12 @@
 #include "nrf_802154_core.h"
 #include "hal/nrf_radio.h"
 
-#define REQUEST_FUNCTION(func_core, ...)                                                           \
-    bool result;                                                                                   \
-                                                                                                   \
-    result = func_core(__VA_ARGS__);                                                               \
-                                                                                                   \
+#define REQUEST_FUNCTION(func_core, ...) \
+    bool result;                         \
+                                         \
+    result = func_core(__VA_ARGS__);     \
+                                         \
     return result;
-
 
 void nrf_802154_request_init(void)
 {
@@ -75,7 +74,13 @@ bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  bool                           immediate,
                                  nrf_802154_notification_func_t notify_function)
 {
-    REQUEST_FUNCTION(nrf_802154_core_transmit, term_lvl, req_orig, p_data, cca, immediate, notify_function)
+    REQUEST_FUNCTION(nrf_802154_core_transmit,
+                     term_lvl,
+                     req_orig,
+                     p_data,
+                     cca,
+                     immediate,
+                     notify_function)
 }
 
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_us)

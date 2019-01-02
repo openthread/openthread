@@ -57,34 +57,34 @@ static inline void assert_interrupt_status(void)
     assert(nrf_is_nvic_irq_enabled(NRF_802154_SWI_IRQN));
 }
 
-#define REQUEST_FUNCTION(func_core, func_swi, ...)                                                 \
-    bool result = false;                                                                           \
-                                                                                                   \
-    if (active_vector_priority_is_high())                                                          \
-    {                                                                                              \
-        result = func_core(__VA_ARGS__);                                                           \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        assert_interrupt_status();                                                                 \
-        func_swi(__VA_ARGS__, &result);                                                            \
-    }                                                                                              \
-                                                                                                   \
+#define REQUEST_FUNCTION(func_core, func_swi, ...) \
+    bool result = false;                           \
+                                                   \
+    if (active_vector_priority_is_high())          \
+    {                                              \
+        result = func_core(__VA_ARGS__);           \
+    }                                              \
+    else                                           \
+    {                                              \
+        assert_interrupt_status();                 \
+        func_swi(__VA_ARGS__, &result);            \
+    }                                              \
+                                                   \
     return result;
 
-#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi)                                              \
-    bool result = false;                                                                           \
-                                                                                                   \
-    if (active_vector_priority_is_high())                                                          \
-    {                                                                                              \
-        result = func_core();                                                                      \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        assert_interrupt_status();                                                                 \
-        func_swi(&result);                                                                         \
-    }                                                                                              \
-                                                                                                   \
+#define REQUEST_FUNCTION_NO_ARGS(func_core, func_swi) \
+    bool result = false;                              \
+                                                      \
+    if (active_vector_priority_is_high())             \
+    {                                                 \
+        result = func_core();                         \
+    }                                                 \
+    else                                              \
+    {                                                 \
+        assert_interrupt_status();                    \
+        func_swi(&result);                            \
+    }                                                 \
+                                                      \
     return result;
 
 /** Check if active vector priority is high enough to call requests directly.
@@ -154,7 +154,8 @@ bool nrf_802154_request_cca(nrf_802154_term_t term_lvl)
 
 bool nrf_802154_request_continuous_carrier(nrf_802154_term_t term_lvl)
 {
-    REQUEST_FUNCTION(nrf_802154_core_continuous_carrier, nrf_802154_swi_continuous_carrier, term_lvl)
+    REQUEST_FUNCTION(nrf_802154_core_continuous_carrier, nrf_802154_swi_continuous_carrier,
+                     term_lvl)
 }
 
 bool nrf_802154_request_buffer_free(uint8_t * p_data)
@@ -171,4 +172,3 @@ bool nrf_802154_request_cca_cfg_update(void)
 {
     REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_cca_cfg_update, nrf_802154_swi_cca_cfg_update)
 }
-

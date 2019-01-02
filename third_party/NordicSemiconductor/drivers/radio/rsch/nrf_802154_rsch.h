@@ -68,6 +68,32 @@ typedef enum
 } rsch_prec_t;
 
 /**
+ * @brief Priorities of the 802.15.4 radio operations.
+ */
+typedef enum
+{
+    RSCH_PRIO_IDLE,                                    ///< Priority used in the sleep state. With this priority RSCH releases all preconditions.
+    RSCH_PRIO_IDLE_LISTENING,                          ///< Priority used during the idle listening procedure.
+    RSCH_PRIO_RX,                                      ///< Priority used when a frame is being received.
+    RSCH_PRIO_DETECT,                                  ///< Priority used to detect channel conditions (CCA, ED).
+    RSCH_PRIO_TX,                                      ///< Priority used to transmit a frame.
+
+    RSCH_PRIO_MIN_APPROVED = RSCH_PRIO_IDLE_LISTENING, ///< Minimal priority indicating that given precondition is approved.
+    RSCH_PRIO_MAX          = RSCH_PRIO_TX,             ///< Maximal priority available in the RSCH module.
+} rsch_prio_t;
+
+/**
+ * @brief Enumeration of delayed timeslots ids.
+ */
+typedef enum
+{
+    RSCH_DLY_TX,     ///< Timeslot for delayed tx operation.
+    RSCH_DLY_RX,     ///< Timeslot for delayed rx operation.
+
+    RSCH_DLY_TS_NUM, ///< Number of delayed timeslots.
+} rsch_dly_ts_id_t;
+
+/**
  * @brief Initialize Radio Scheduler.
  *
  * @note This function shall be called once, before any other function from this module.
@@ -87,25 +113,28 @@ void nrf_802154_rsch_init(void);
 void nrf_802154_rsch_uninit(void);
 
 /**
- * @brief Enter continuous radio mode.
+ * @brief Set priority for the continuous radio mode.
  *
  * In the continuous mode the radio scheduler should try to satisfy all preconditions as long as
  * possible in order to give to the radio driver core as much radio time as possible while
  * disturbing the other activities as little as possible.
  *
  * @note The start of a timeslot will be indicated by @ref nrf_802154_rsch_prec_approved call.
+ * @note To disable the continuous radio mode, the @ref RSCH_PRIO_IDLE should be used.
+ *
+ * @param[in]  prio  Priority level used in the continuous radio mode.
  *
  */
-void nrf_802154_rsch_continuous_mode_enter(void);
+void nrf_802154_rsch_continuous_mode_priority_set(rsch_prio_t prio);
 
 /**
- * @brief Exit continuous radio mode.
+ * @brief Confirm that current part of continuous timeslot is ended by the core.
  *
- * In this mode the radio scheduler should not try to satisfy any of radio activity preconditions
- * unless it was requested by other functionalities of this module.
+ * This confirmation is used by the core to synchronize ending of continuous timeslot parts with
+ * the RSCH module.
  *
  */
-void nrf_802154_rsch_continuous_mode_exit(void);
+void nrf_802154_rsch_continuous_ended(void);
 
 /**
  * @brief Request timeslot for radio communication immediately.
@@ -135,21 +164,28 @@ bool nrf_802154_rsch_timeslot_request(uint32_t length_us);
  * @param[in]  t0      Base time of the timestamp of the timeslot start [us].
  * @param[in]  dt      Time delta between @p t0 and the timestamp of the timeslot start [us].
  * @param[in]  length  Requested radio timeslot length [us].
+ * @param[in]  prio    Priority level required for the delayed timeslot.
+ * @param[in]  dly_ts  Type of the requested timeslot.
  *
  * @retval true   Requested timeslot has been scheduled.
  * @retval false  Requested timeslot cannot be scheduled and will not be granted.
  */
-bool nrf_802154_rsch_delayed_timeslot_request(uint32_t t0, uint32_t dt, uint32_t length);
+bool nrf_802154_rsch_delayed_timeslot_request(uint32_t         t0,
+                                              uint32_t         dt,
+                                              uint32_t         length,
+                                              rsch_prio_t      prio,
+                                              rsch_dly_ts_id_t dly_ts);
 
 /**
  * @brief Check if the RSCH precondition is satisfied.
  *
  * @param[in]  prec    RSCH precondition to be checked.
- * 
+ * @param[in]  prio    Minimal required priority level of given precondition.
+ *
  * @retval true   Precondition @p prec is currently granted.
  * @retval false  Precondition @p prec is not currently granted.
  */
-bool nrf_802154_rsch_prec_is_approved(rsch_prec_t prec);
+bool nrf_802154_rsch_prec_is_approved(rsch_prec_t prec, rsch_prio_t prio);
 
 /**
  * @brief Get left time of currently granted timeslot [us].
@@ -159,50 +195,33 @@ bool nrf_802154_rsch_prec_is_approved(rsch_prec_t prec);
 uint32_t nrf_802154_rsch_timeslot_us_left_get(void);
 
 /**
- * @brief The Radio Scheduler calls this function to notify the core
- *        about granting all preconditions.
+ * @brief This function is called to notify the core about changes of approved priority level.
  *
- * The radio driver now has exclusive access to the peripherals until
- * @ref nrf_802154_rsch_prec_denied is called.
+ * If the @p prio is greater than @ref RSCH_PRIO_IDLE, the radio driver has exclusive access to the
+ * peripherals until this function is called with the @p prio equal to @ref RSCH_PRIO_IDLE.
  *
- * @note The end of the timeslot will be indicated by @ref nrf_802154_rsch_prec_denied function.
+ * @note The end of the timeslot is indicated by @p prio equal to the @ref RSCH_PRIO_IDLE.
  *
+ * @param[in]  prio  Currently approved priority level.
  */
-extern void nrf_802154_rsch_prec_approved(void);
-
-/**
- * @brief The Radio Scheduler calls this function to notify the core
- *        about denial of one or all preconditions.
- *
- * Depending on the preconditions configuration, radio driver has NRF_RAAL_MAX_CLEAN_UP_TIME_US
- * microseconds to do any clean-up actions on RADIO peripheral and stop using it completely.
- * Thus the Radio Scheduler has to call this function NRF_RAAL_MAX_CLEAN_UP_TIME_US microseconds
- * before the timeslot is finished.
- *
- * If the Radio Scheduler is in the continuous mode, the next timeslot will be indicated again by
- * the @ref nrf_802154_rsch_prec_approved.
- *
- * @note Because the radio driver core needs to stop any operation on the RADIO peripheral within
- *       NRF_RAAL_MAX_CLEAN_UP_TIME_US microseconds, this function should be called with high
- *       interrupt priority level to avoid unwanted delays.
- * 
- * @note This function may be called after @ref nrf_802154_rsch_continuous_mode_exit is called.
- *
- */
-extern void nrf_802154_rsch_prec_denied(void);
+extern void nrf_802154_rsch_continuous_prio_changed(rsch_prio_t prio);
 
 /**
  * @brief Notification that previously requested delayed timeslot has started just now.
+ *
+ * @param[in]  dly_ts_id  Type of the started timeslot.
  */
-extern void nrf_802154_rsch_delayed_timeslot_started(void);
+extern void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id);
 
 /**
  * @brief Notification that previously requested delayed timeslot cannot be started.
  *
  * This function may be called when any of radio activity precondition is not satisfied at the
  * time when the timeslot should start.
+ *
+ * @param[in]  dly_ts_id  Type of the failed timeslot.
  */
-extern void nrf_802154_rsch_delayed_timeslot_failed(void);
+extern void nrf_802154_rsch_delayed_timeslot_failed(rsch_dly_ts_id_t dly_ts_id);
 
 /**
  *@}

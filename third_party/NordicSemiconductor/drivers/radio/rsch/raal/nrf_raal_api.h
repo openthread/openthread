@@ -85,12 +85,19 @@ void nrf_raal_uninit(void);
 void nrf_raal_continuous_mode_enter(void);
 
 /**
- * @brief Exit arbiter from continous mode.
+ * @brief Exit arbiter from continuous mode.
  *
  * In this mode radio arbiter will not extend or allocate any more timeslots for radio driver.
  *
  */
 void nrf_raal_continuous_mode_exit(void);
+
+/**
+ * @brief Confirm to RAAL that current part of the continuous timeslot is ended.
+ *
+ * The core cannot use the RADIO peripheral after this call until the timeslot is started again.
+ */
+void nrf_raal_continuous_ended(void);
 
 /**
  * @brief Request timeslot for radio communication.
