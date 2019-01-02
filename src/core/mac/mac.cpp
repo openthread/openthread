@@ -329,7 +329,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         {
             mTimer.Stop();
             FinishOperation();
-            PerformNextOperation();
+            mOperationTask.Post();
         }
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -1234,14 +1234,20 @@ void Mac::HandleTimer(void)
         PerformNextOperation();
         break;
 
-    default:
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-        otLogDebgMac("Sleep delay timeout expired");
-        mDelayingSleep = false;
-        UpdateIdleMode();
-#else
-        assert(false);
+    case kOperationIdle:
+        if (mDelayingSleep)
+        {
+            otLogDebgMac("Sleep delay timeout expired");
+            mDelayingSleep = false;
+            UpdateIdleMode();
+        }
+
+        break;
 #endif
+
+    default:
+        assert(false);
         break;
     }
 }
