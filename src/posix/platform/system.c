@@ -275,15 +275,17 @@ void otSysProcessDrivers(otInstance *aInstance)
         perror("select");
         exit(OT_EXIT_FAILURE);
     }
-
+    else if (rval >= 0)
+    {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimProcess(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
+        otSimProcess(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
 #else
-    platformRadioProcess(aInstance, &readFdSet, &writeFdSet);
+        platformRadioProcess(aInstance, &readFdSet, &writeFdSet);
 #endif
-    platformUartProcess(&readFdSet, &writeFdSet, &errorFdSet);
-    platformAlarmProcess(aInstance);
+        platformUartProcess(&readFdSet, &writeFdSet, &errorFdSet);
+        platformAlarmProcess(aInstance);
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-    platformUdpProcess(aInstance, &readFdSet);
+        platformUdpProcess(aInstance, &readFdSet);
 #endif
+    }
 }
