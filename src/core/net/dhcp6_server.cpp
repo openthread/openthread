@@ -142,7 +142,7 @@ otError Dhcp6Server::UpdateService(void)
             }
         }
 
-        // alreay added
+        // already added
         if (found)
         {
             continue;

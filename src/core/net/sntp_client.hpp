@@ -513,7 +513,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Sntp client.
+ * This class implements SNTP client.
  *
  */
 class Client

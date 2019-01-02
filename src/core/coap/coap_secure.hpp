@@ -109,7 +109,7 @@ public:
     /**
      * This method initializes DTLS session with a peer.
      *
-     * @param[in]  aSockAddr               A reference to the remote sockaddr.
+     * @param[in]  aSockAddr               A reference to the remote socket address,
      * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
      * established.
      *
@@ -168,7 +168,7 @@ public:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
-     * This method sets the Pre Shared Key (PSK) for DTLS sessions
+     * This method sets the Pre-Shared Key (PSK) for DTLS sessions
      * identified by a PSK.
      * DTLS mode "TLS with AES 128 CCM 8" for Application CoAPS.
      *
@@ -272,7 +272,7 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully sent CoAP message.
      * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
     otError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
@@ -291,7 +291,7 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully sent CoAP message.
      * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
     otError SendMessage(Message &               aMessage,
