@@ -1651,7 +1651,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_UNSOL_UPDATE_FILTER);
+        IgnoreReturnValue(
+            WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_UNSOL_UPDATE_FILTER));
     }
 
     return error;
