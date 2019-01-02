@@ -69,6 +69,7 @@ enum
 {
     kInitFcs = 0xffff, ///< Initial FCS value.
     kGoodFcs = 0xf0b8, ///< Good FCS value.
+    kFcsSize = 2,      ///< FCS size (number of bytes).
 };
 
 uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
@@ -96,7 +97,7 @@ uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
-bool HdlcByteNeedsEscape(uint8_t aByte)
+static bool HdlcByteNeedsEscape(uint8_t aByte)
 {
     bool rval;
 
@@ -118,143 +119,112 @@ bool HdlcByteNeedsEscape(uint8_t aByte)
     return rval;
 }
 
-Encoder::BufferWriteIterator::BufferWriteIterator(void)
-{
-    mWritePointer    = NULL;
-    mRemainingLength = 0;
-}
-
-otError Encoder::BufferWriteIterator::WriteByte(uint8_t aByte)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mRemainingLength > 0, error = OT_ERROR_NO_BUFS);
-
-    *mWritePointer++ = aByte;
-    mRemainingLength--;
-
-exit:
-    return error;
-}
-
-bool Encoder::BufferWriteIterator::CanWrite(uint16_t aWriteLength) const
-{
-    return (mRemainingLength >= aWriteLength);
-}
-
-Encoder::Encoder(void)
-    : mFcs(0)
-{
-}
-
-otError Encoder::Init(BufferWriteIterator &aIterator)
-{
-    mFcs = kInitFcs;
-
-    return aIterator.WriteByte(kFlagSequence);
-}
-
-otError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (HdlcByteNeedsEscape(aInByte))
-    {
-        VerifyOrExit(aIterator.CanWrite(2), error = OT_ERROR_NO_BUFS);
-
-        aIterator.WriteByte(kEscapeSequence);
-        aIterator.WriteByte(aInByte ^ 0x20);
-    }
-    else
-    {
-        SuccessOrExit(error = aIterator.WriteByte(aInByte));
-    }
-
-    mFcs = UpdateFcs(mFcs, aInByte);
-
-exit:
-    return error;
-}
-
-otError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator)
-{
-    otError             error = OT_ERROR_NONE;
-    BufferWriteIterator oldIterator(aIterator);
-    uint16_t            oldFcs = mFcs;
-
-    for (int i = 0; i < aInLength; i++)
-    {
-        SuccessOrExit(error = Encode(aInBuf[i], aIterator));
-    }
-
-exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        aIterator = oldIterator;
-        mFcs      = oldFcs;
-    }
-
-    return error;
-}
-
-otError Encoder::Finalize(BufferWriteIterator &aIterator)
-{
-    otError             error = OT_ERROR_NONE;
-    BufferWriteIterator oldIterator(aIterator);
-    uint16_t            oldFcs = mFcs;
-    uint16_t            fcs    = mFcs;
-
-    fcs ^= 0xffff;
-
-    SuccessOrExit(error = Encode(fcs & 0xff, aIterator));
-    SuccessOrExit(error = Encode(fcs >> 8, aIterator));
-
-    SuccessOrExit(error = aIterator.WriteByte(kFlagSequence));
-
-exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        aIterator = oldIterator;
-        mFcs      = oldFcs;
-    }
-
-    return error;
-}
-
-Decoder::Decoder(uint8_t *    aOutBuf,
-                 uint16_t     aOutLength,
-                 FrameHandler aFrameHandler,
-                 ErrorHandler aErrorHandler,
-                 void *       aContext)
-    : mState(kStateNoSync)
-    , mFrameHandler(aFrameHandler)
-    , mErrorHandler(aErrorHandler)
-    , mContext(aContext)
-    , mOutBuf(aOutBuf)
-    , mOutOffset(0)
-    , mOutLength(aOutLength)
+Encoder::Encoder(FrameWritePointer &aWritePointer)
+    : mWritePointer(aWritePointer)
     , mFcs(0)
 {
 }
 
-void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
+otError Encoder::BeginFrame(void)
 {
-    uint8_t byte;
+    mFcs = kInitFcs;
 
-    for (int i = 0; i < aInLength; i++)
+    return mWritePointer.WriteByte(kFlagSequence);
+}
+
+otError Encoder::Encode(uint8_t aByte)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (HdlcByteNeedsEscape(aByte))
     {
-        byte = aInBuf[i];
+        VerifyOrExit(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
+
+        mWritePointer.WriteByte(kEscapeSequence);
+        mWritePointer.WriteByte(aByte ^ 0x20);
+    }
+    else
+    {
+        SuccessOrExit(error = mWritePointer.WriteByte(aByte));
+    }
+
+    mFcs = UpdateFcs(mFcs, aByte);
+
+exit:
+    return error;
+}
+
+otError Encoder::Encode(const uint8_t *aData, uint16_t aLength)
+{
+    otError           error      = OT_ERROR_NONE;
+    uint16_t          oldFcs     = mFcs;
+    FrameWritePointer oldPointer = mWritePointer;
+
+    while (aLength--)
+    {
+        SuccessOrExit(error = Encode(*aData++));
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mWritePointer = oldPointer;
+        mFcs          = oldFcs;
+    }
+
+    return error;
+}
+
+otError Encoder::EndFrame(void)
+{
+    otError           error      = OT_ERROR_NONE;
+    FrameWritePointer oldPointer = mWritePointer;
+    uint16_t          oldFcs     = mFcs;
+    uint16_t          fcs        = mFcs;
+
+    fcs ^= 0xffff;
+
+    SuccessOrExit(error = Encode(fcs & 0xff));
+    SuccessOrExit(error = Encode(fcs >> 8));
+
+    SuccessOrExit(error = mWritePointer.WriteByte(kFlagSequence));
+
+exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        mWritePointer = oldPointer;
+        mFcs          = oldFcs;
+    }
+
+    return error;
+}
+
+Decoder::Decoder(FrameWritePointer &aWritePointer, FrameHandler aFrameHandler, void *aContext)
+    : mState(kStateNoSync)
+    , mWritePointer(aWritePointer)
+    , mFrameHandler(aFrameHandler)
+    , mContext(aContext)
+    , mFcs(0)
+    , mDecodedLength(0)
+{
+}
+
+void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
+{
+    while (aLength--)
+    {
+        uint8_t byte = *aData++;
 
         switch (mState)
         {
         case kStateNoSync:
             if (byte == kFlagSequence)
             {
-                mState     = kStateSync;
-                mOutOffset = 0;
-                mFcs       = kInitFcs;
+                mState         = kStateSync;
+                mDecodedLength = 0;
+                mFcs           = kInitFcs;
             }
 
             break;
@@ -268,38 +238,34 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
 
             case kFlagSequence:
 
-                // We ignore frames which are smaller
-                // than the size of the CRC check.
-                if (mOutOffset > sizeof(uint16_t))
+                if (mDecodedLength > 0)
                 {
-                    if (mFcs == kGoodFcs)
+                    otError error = OT_ERROR_PARSE;
+
+                    if ((mDecodedLength >= kFcsSize) && (mFcs == kGoodFcs))
                     {
-                        mFrameHandler(mContext, mOutBuf, mOutOffset - sizeof(uint16_t));
+                        // Remove the FCS from the frame.
+                        mWritePointer.UndoLastWrites(kFcsSize);
+                        error = OT_ERROR_NONE;
                     }
-                    else if (mErrorHandler != NULL)
-                    {
-                        mErrorHandler(mContext, OT_ERROR_PARSE, mOutBuf, mOutOffset);
-                    }
+
+                    mFrameHandler(mContext, error);
                 }
 
-                mOutOffset = 0;
-                mFcs       = kInitFcs;
-
+                mDecodedLength = 0;
+                mFcs           = kInitFcs;
                 break;
 
             default:
-                if (mOutOffset < mOutLength)
+                if (mWritePointer.CanWrite(sizeof(uint8_t)))
                 {
-                    mFcs                  = UpdateFcs(mFcs, byte);
-                    mOutBuf[mOutOffset++] = byte;
+                    mFcs = UpdateFcs(mFcs, byte);
+                    mWritePointer.WriteByte(byte);
+                    mDecodedLength++;
                 }
                 else
                 {
-                    if (mErrorHandler != NULL)
-                    {
-                        mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
-                    }
-
+                    mFrameHandler(mContext, OT_ERROR_NO_BUFS);
                     mState = kStateNoSync;
                 }
 
@@ -309,20 +275,17 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             break;
 
         case kStateEscaped:
-            if (mOutOffset < mOutLength)
+            if (mWritePointer.CanWrite(sizeof(uint8_t)))
             {
                 byte ^= 0x20;
-                mFcs                  = UpdateFcs(mFcs, byte);
-                mOutBuf[mOutOffset++] = byte;
-                mState                = kStateSync;
+                mFcs = UpdateFcs(mFcs, byte);
+                mWritePointer.WriteByte(byte);
+                mDecodedLength++;
+                mState = kStateSync;
             }
             else
             {
-                if (mErrorHandler != NULL)
-                {
-                    mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
-                }
-
+                mFrameHandler(mContext, OT_ERROR_NO_BUFS);
                 mState = kStateNoSync;
             }
 

@@ -61,6 +61,8 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
 
     mbedtls_pk_init(&pkCtx);
     mbedtls_ecdsa_init(&ctx);
+    mbedtls_mpi_init(&rMpi);
+    mbedtls_mpi_init(&sMpi);
 
     // Parse a private key in PEM format.
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, NULL, 0) == 0,
@@ -72,9 +74,6 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
 
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
 
-    mbedtls_mpi_init(&rMpi);
-    mbedtls_mpi_init(&sMpi);
-
     // Sign using ECDSA.
     VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength, FillRandom, NULL) ==
                      0,
@@ -83,7 +82,7 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
 
     // Concatenate the two octet sequences in the order R and then S.
     VerifyOrExit(mbedtls_mpi_write_binary(&rMpi, aOutput, mbedtls_mpi_size(&rMpi)) == 0, error = OT_ERROR_FAILED);
-    *aOutputLength = mbedtls_mpi_size(&rMpi);
+    *aOutputLength = static_cast<uint16_t>(mbedtls_mpi_size(&rMpi));
 
     VerifyOrExit(mbedtls_mpi_write_binary(&sMpi, aOutput + *aOutputLength, mbedtls_mpi_size(&sMpi)) == 0,
                  error = OT_ERROR_FAILED);
@@ -100,7 +99,7 @@ exit:
 
 int Ecdsa::FillRandom(void *, unsigned char *aBuffer, size_t aSize)
 {
-    Random::FillBuffer(aBuffer, aSize);
+    Random::FillBuffer(aBuffer, static_cast<uint16_t>(aSize));
 
     return 0;
 }

@@ -104,6 +104,7 @@ check_PROGRAMS                                                      = \
     test-aes                                                          \
     test-child                                                        \
     test-child-table                                                  \
+    test-hdlc                                                         \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-link-quality                                                 \
@@ -164,6 +165,9 @@ test_child_SOURCES           = test_platform.cpp test_child.cpp
 
 test_child_table_LDADD       = $(COMMON_LDADD)
 test_child_table_SOURCES     = test_platform.cpp test_child_table.cpp
+
+test_hdlc_LDADD              = $(COMMON_LDADD)
+test_hdlc_SOURCES            = test_platform.cpp test_hdlc.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = test_platform.cpp test_heap.cpp
@@ -227,6 +231,7 @@ PRETTY_FILES                                                        = \
     $(test_aes_SOURCES)                                               \
     $(test_child_SOURCES)                                             \
     $(test_child_table_SOURCES)                                       \
+    $(test_hdlc_SOURCES)                                              \
     $(test_heap_SOURCES)                                              \
     $(test_hmac_sha256_SOURCES)                                       \
     $(test_link_quality_SOURCES)                                      \

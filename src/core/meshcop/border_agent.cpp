@@ -335,7 +335,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Header &aHeader, const Message
         UdpEncapsulationTlv tlv;
 
         SuccessOrExit(error = Tlv::GetOffset(aMessage, Tlv::kUdpEncapsulation, offset));
-        aMessage.Read(offset, sizeof(tlv), &tlv);
+        VerifyOrExit(aMessage.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv), error = OT_ERROR_PARSE);
 
         VerifyOrExit((message = GetInstance().GetIp6().GetUdp().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = message->SetLength(tlv.GetUdpLength()));

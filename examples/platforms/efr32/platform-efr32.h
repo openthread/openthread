@@ -97,4 +97,16 @@ void efr32MiscInit(void);
  */
 void efr32RandomInit(void);
 
+/**
+ * Initialization of Logger driver.
+ *
+ */
+void efr32LogInit(void);
+
+/**
+ * Deinitialization of Logger driver.
+ *
+ */
+void efr32LogDeinit(void);
+
 #endif // PLATFORM_EFR32_H_

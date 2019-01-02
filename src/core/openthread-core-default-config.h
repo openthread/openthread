@@ -392,11 +392,11 @@
 /**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
- * The 6LoWPAN fragment reassembly timeout in seconds.
+ * The reassembly timeout between 6LoWPAN fragments in seconds.
  *
  */
 #ifndef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
-#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 5
+#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 2
 #endif
 
 /**
@@ -1663,6 +1663,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
+ *
+ * Specifies the desired number of router links that a REED / FED attempts to maintain.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS
+#define OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS 3
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
@@ -1908,6 +1918,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
 #define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES
+ *
+ * The number of fragment priority entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES
+#define OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES 8
 #endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

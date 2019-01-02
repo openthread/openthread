@@ -45,7 +45,7 @@ namespace ot {
 
 namespace Coap {
 
-class CoapSecure : public CoapBase
+class CoapSecure : public Coap
 {
 public:
     /**
@@ -70,27 +70,11 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
+     * @param[in]  aInstance           A reference to the OpenThread instance.
+     * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
      *
      */
-    explicit CoapSecure(Instance &aInstance);
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    /**
-     * This constructor initializes the object.
-     * (Used for Application CoAPS)
-     *
-     * @param[in]  aInstance             A reference to the OpenThread instance.
-     * @param[in]  aUdpTransmitHandle    Handler for udp transmit.
-     * @param[in]  aRetransmissionTimer  Handler for retransmission.
-     * @param[in]  aResponsesQueueTimer  Handler for Queue Responses.
-     *
-     */
-    explicit CoapSecure(Instance &       aInstance,
-                        Tasklet::Handler aUdpTransmitHandle,
-                        Timer::Handler   aRetransmissionTimer,
-                        Timer::Handler   aResponsesQueueTimer);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    explicit CoapSecure(Instance &aInstance, bool aLayerTwoSecurity = false);
 
     /**
      * This method starts the secure CoAP agent.
@@ -333,9 +317,6 @@ public:
      */
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
-protected:
-    void HandleTransmit(void);
-
 private:
     virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -348,9 +329,8 @@ private:
     static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
     otError        HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
     static void HandleTransmit(Tasklet &aTasklet);
+    void        HandleTransmit(void);
 
     Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
@@ -358,35 +338,10 @@ private:
     TransportCallback mTransportCallback;
     void *            mTransportContext;
     MessageQueue      mTransmitQueue;
-    Tasklet           mTransmitTask;
+    TaskletContext    mTransmitTask;
 
     bool mLayerTwoSecurity : 1;
 };
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-/**
- * This class implements the application CoAP Secure client and server.
- *
- */
-class ApplicationCoapSecure : public CoapSecure
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in] aInstance      A reference to the OpenThread instance.
-     *
-     */
-    explicit ApplicationCoapSecure(Instance &aInstance);
-
-private:
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    static void HandleResponsesQueueTimer(Timer &aTimer);
-    static void HandleTransmit(Tasklet &aTasklet);
-};
-
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 } // namespace Coap
 } // namespace ot

@@ -121,7 +121,7 @@ void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength
 void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
 /**
- * Write formatted string the CLI console
+ * Write formatted string to the CLI console
  *
  * @param[in]  aFmt   A pointer to the format string.
  * @param[in]  ...    A matching list of arguments.
@@ -129,7 +129,15 @@ void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 void otCliUartOutputFormat(const char *aFmt, ...);
 
 /**
- * Write error code the CLI console
+ * Write string to the CLI console
+ *
+ * @param[in]  aString  A pointer to the string, which may not be null-terminated.
+ * @param[in]  aLength  Number of bytes.
+ */
+void otCliUartOutput(const char *aString, uint16_t aLength);
+
+/**
+ * Write error code to the CLI console
  *
  * @param[in]  aError Error code value.
  */

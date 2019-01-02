@@ -4971,8 +4971,7 @@ otLwfIoCtl_otPollPeriod(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otLinkSetPollPeriod(pFilter->otCtx, *(uint32_t*)InBuffer);
-        status = STATUS_SUCCESS;
+        status = ThreadErrorToNtstatus(otLinkSetPollPeriod(pFilter->otCtx, *(uint32_t*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))

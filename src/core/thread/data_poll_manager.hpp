@@ -102,18 +102,22 @@ public:
     otError SendDataPoll(void);
 
     /**
-     * This method sets a user-specified/external data poll period.
+     * This method sets/clears a user-specified/external data poll period.
      *
      * If the user provides a non-zero poll period, the user value specifies the maximum period between data
      * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
      * a control-message from a parent or in case of data poll transmission failures or timeouts.
      *
-     * Default value for the external poll period is zero (i.e., no user-specified poll period).
+     * Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear user-specified
+     * poll period.
      *
-     * @param[in]  aPeriod  The data poll period in milliseconds, or zero to mean no user-specified poll period.
+     * @param[in]  aPeriod  The data poll period in milliseconds.
+     *
+     * @retval OT_ERROR_NONE           Successfully set/cleared user-specified poll period.
+     * @retval OT_ERROR_INVALID_ARGS   If aPeriod is invalid.
      *
      */
-    void SetExternalPollPeriod(uint32_t aPeriod);
+    otError SetExternalPollPeriod(uint32_t aPeriod);
 
     /**
      * This method gets the current user-specified/external data poll period.

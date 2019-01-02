@@ -59,7 +59,6 @@
 #include "common/instance.hpp"
 
 #ifndef OTDLL
-#include <openthread/dhcp6_client.h>
 #include <openthread/dns.h>
 #include <openthread/sntp.h>
 #include "common/timer.hpp"
@@ -433,9 +432,6 @@ private:
     TimerMilli mPingTimer;
 
     otNetifAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT

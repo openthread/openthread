@@ -104,7 +104,7 @@ typedef struct otUdpSocket
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
- * @sa otFreeMessage
+ * @sa otMessageFree
  *
  */
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);

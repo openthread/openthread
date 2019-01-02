@@ -1352,7 +1352,8 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             }
         }
         else if (IsFullThreadDevice() && (router->GetState() != Neighbor::kStateValid) &&
-                 (router->GetState() != Neighbor::kStateLinkRequest))
+                 (router->GetState() != Neighbor::kStateLinkRequest) &&
+                 (mRouterTable.GetActiveLinkCount() < OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS))
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
@@ -1688,6 +1689,8 @@ void MleRouter::HandleStateUpdateTimer(Timer &aTimer)
 void MleRouter::HandleStateUpdateTimer(void)
 {
     bool routerStateUpdate = false;
+
+    VerifyOrExit(IsRouterRoleEnabled());
 
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 

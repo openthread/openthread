@@ -64,7 +64,6 @@
 #endif
 
 #ifndef OTDLL
-#include <openthread/dhcp6_client.h>
 #include <openthread/dhcp6_server.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -323,10 +322,6 @@ Interpreter::Interpreter(Instance *aInstance)
     mIcmpHandler.mReceiveCallback = Interpreter::s_HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
     otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
@@ -2001,12 +1996,12 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 
     if (argc == 0)
     {
-        mServer->OutputFormat("%d\r\n", (otLinkGetPollPeriod(mInstance) / 1000)); // ms->s
+        mServer->OutputFormat("%d\r\n", otLinkGetPollPeriod(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otLinkSetPollPeriod(mInstance, static_cast<uint32_t>(value * 1000)); // s->ms
+        error = otLinkSetPollPeriod(mInstance, static_cast<uint32_t>(value));
     }
 
 exit:
@@ -3829,9 +3824,6 @@ void Interpreter::HandleNetifStateChanged(otChangedFlags aFlags)
     otDhcp6ServerUpdate(mInstance);
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, OT_ARRAY_LENGTH(mDhcpAddresses), NULL);
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 #endif
 
 exit:

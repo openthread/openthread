@@ -161,8 +161,15 @@ exit:
     return error;
 }
 
-void DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
+otError DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
 {
+    otError error = OT_ERROR_NONE;
+
+    if (aPeriod != 0 && aPeriod < OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
     if (mExternalPollPeriod != aPeriod)
     {
         mExternalPollPeriod = aPeriod;
@@ -172,6 +179,9 @@ void DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
             ScheduleNextPoll(kRecalculatePollPeriod);
         }
     }
+
+exit:
+    return error;
 }
 
 uint32_t DataPollManager::GetKeepAlivePollPeriod(void) const

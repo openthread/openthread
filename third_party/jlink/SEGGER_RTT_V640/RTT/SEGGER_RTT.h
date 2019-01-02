@@ -1,9 +1,9 @@
 /*********************************************************************
-*                SEGGER Microcontroller GmbH & Co. KG                *
+*                    SEGGER Microcontroller GmbH                     *
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2014 - 2017  SEGGER Microcontroller GmbH & Co. KG        *
+*            (c) 1995 - 2018 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -31,7 +31,7 @@
 *   disclaimer in the documentation and/or other materials provided  *
 *   with the distribution.                                           *
 *                                                                    *
-* o Neither the name of SEGGER Microcontroller GmbH & Co. KG         *
+* o Neither the name of SEGGER Microcontroller GmbH                  *
 *   nor the names of its contributors may be used to endorse or      *
 *   promote products derived from this software without specific     *
 *   prior written permission.                                        *
@@ -51,23 +51,27 @@
 * DAMAGE.                                                            *
 *                                                                    *
 **********************************************************************
-*                                                                    *
-*       RTT version: 6.18a                                           *
-*                                                                    *
-**********************************************************************
 ---------------------------END-OF-HEADER------------------------------
 File    : SEGGER_RTT.h
 Purpose : Implementation of SEGGER real-time transfer which allows
           real-time communication on targets which support debugger 
           memory accesses while the CPU is running.
-Revision: $Rev: 6849 $
+Revision: $Rev: 12826 $
 ----------------------------------------------------------------------
 */
 
 #ifndef SEGGER_RTT_H
 #define SEGGER_RTT_H
 
+#ifdef SEGGER_RTT_CONFIG_H
+#include SEGGER_RTT_CONFIG_H
+#else
 #include "SEGGER_RTT_Conf.h"
+#endif
+
+#ifndef SEGGER_RTT_ASM  // defined when SEGGER_RTT.h is included from assembly file
+#include <stdlib.h>
+#include <stdarg.h>
 
 /*********************************************************************
 *
@@ -146,6 +150,7 @@ int          SEGGER_RTT_ConfigDownBuffer        (unsigned BufferIndex, const cha
 int          SEGGER_RTT_GetKey                  (void);
 unsigned     SEGGER_RTT_HasData                 (unsigned BufferIndex);
 int          SEGGER_RTT_HasKey                  (void);
+unsigned     SEGGER_RTT_HasDataUp               (unsigned BufferIndex);
 void         SEGGER_RTT_Init                    (void);
 unsigned     SEGGER_RTT_Read                    (unsigned BufferIndex,       void* pBuffer, unsigned BufferSize);
 unsigned     SEGGER_RTT_ReadNoLock              (unsigned BufferIndex,       void* pData,   unsigned BufferSize);
@@ -183,9 +188,13 @@ int     SEGGER_RTT_TerminalOut        (char TerminalId, const char* s);
 **********************************************************************
 */
 int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
+int SEGGER_RTT_vprintf(unsigned BufferIndex, const char * sFormat, va_list * pParamList);
+
 #ifdef __cplusplus
   }
 #endif
+
+#endif // SEGGER_RTT_ASM
 
 /*********************************************************************
 *
@@ -197,53 +206,53 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 //
 // Operating modes. Define behavior if buffer is full (not enough space for entire message)
 //
-#define SEGGER_RTT_MODE_NO_BLOCK_SKIP         (0U)     // Skip. Do not block, output nothing. (Default)
-#define SEGGER_RTT_MODE_NO_BLOCK_TRIM         (1U)     // Trim: Do not block, output as much as fits.
-#define SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL    (2U)     // Block: Wait until there is space in the buffer.
-#define SEGGER_RTT_MODE_MASK                  (3U)
+#define SEGGER_RTT_MODE_NO_BLOCK_SKIP         (0)     // Skip. Do not block, output nothing. (Default)
+#define SEGGER_RTT_MODE_NO_BLOCK_TRIM         (1)     // Trim: Do not block, output as much as fits.
+#define SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL    (2)     // Block: Wait until there is space in the buffer.
+#define SEGGER_RTT_MODE_MASK                  (3)
 
 //
 // Control sequences, based on ANSI.
 // Can be used to control color, and clear the screen
 //
-#define RTT_CTRL_RESET                "[0m"         // Reset to default colors
-#define RTT_CTRL_CLEAR                "[2J"         // Clear screen, reposition cursor to top left
+#define RTT_CTRL_RESET                "\x1B[0m"         // Reset to default colors
+#define RTT_CTRL_CLEAR                "\x1B[2J"         // Clear screen, reposition cursor to top left
 
-#define RTT_CTRL_TEXT_BLACK           "[2;30m"
-#define RTT_CTRL_TEXT_RED             "[2;31m"
-#define RTT_CTRL_TEXT_GREEN           "[2;32m"
-#define RTT_CTRL_TEXT_YELLOW          "[2;33m"
-#define RTT_CTRL_TEXT_BLUE            "[2;34m"
-#define RTT_CTRL_TEXT_MAGENTA         "[2;35m"
-#define RTT_CTRL_TEXT_CYAN            "[2;36m"
-#define RTT_CTRL_TEXT_WHITE           "[2;37m"
+#define RTT_CTRL_TEXT_BLACK           "\x1B[2;30m"
+#define RTT_CTRL_TEXT_RED             "\x1B[2;31m"
+#define RTT_CTRL_TEXT_GREEN           "\x1B[2;32m"
+#define RTT_CTRL_TEXT_YELLOW          "\x1B[2;33m"
+#define RTT_CTRL_TEXT_BLUE            "\x1B[2;34m"
+#define RTT_CTRL_TEXT_MAGENTA         "\x1B[2;35m"
+#define RTT_CTRL_TEXT_CYAN            "\x1B[2;36m"
+#define RTT_CTRL_TEXT_WHITE           "\x1B[2;37m"
 
-#define RTT_CTRL_TEXT_BRIGHT_BLACK    "[1;30m"
-#define RTT_CTRL_TEXT_BRIGHT_RED      "[1;31m"
-#define RTT_CTRL_TEXT_BRIGHT_GREEN    "[1;32m"
-#define RTT_CTRL_TEXT_BRIGHT_YELLOW   "[1;33m"
-#define RTT_CTRL_TEXT_BRIGHT_BLUE     "[1;34m"
-#define RTT_CTRL_TEXT_BRIGHT_MAGENTA  "[1;35m"
-#define RTT_CTRL_TEXT_BRIGHT_CYAN     "[1;36m"
-#define RTT_CTRL_TEXT_BRIGHT_WHITE    "[1;37m"
+#define RTT_CTRL_TEXT_BRIGHT_BLACK    "\x1B[1;30m"
+#define RTT_CTRL_TEXT_BRIGHT_RED      "\x1B[1;31m"
+#define RTT_CTRL_TEXT_BRIGHT_GREEN    "\x1B[1;32m"
+#define RTT_CTRL_TEXT_BRIGHT_YELLOW   "\x1B[1;33m"
+#define RTT_CTRL_TEXT_BRIGHT_BLUE     "\x1B[1;34m"
+#define RTT_CTRL_TEXT_BRIGHT_MAGENTA  "\x1B[1;35m"
+#define RTT_CTRL_TEXT_BRIGHT_CYAN     "\x1B[1;36m"
+#define RTT_CTRL_TEXT_BRIGHT_WHITE    "\x1B[1;37m"
 
-#define RTT_CTRL_BG_BLACK             "[24;40m"
-#define RTT_CTRL_BG_RED               "[24;41m"
-#define RTT_CTRL_BG_GREEN             "[24;42m"
-#define RTT_CTRL_BG_YELLOW            "[24;43m"
-#define RTT_CTRL_BG_BLUE              "[24;44m"
-#define RTT_CTRL_BG_MAGENTA           "[24;45m"
-#define RTT_CTRL_BG_CYAN              "[24;46m"
-#define RTT_CTRL_BG_WHITE             "[24;47m"
+#define RTT_CTRL_BG_BLACK             "\x1B[24;40m"
+#define RTT_CTRL_BG_RED               "\x1B[24;41m"
+#define RTT_CTRL_BG_GREEN             "\x1B[24;42m"
+#define RTT_CTRL_BG_YELLOW            "\x1B[24;43m"
+#define RTT_CTRL_BG_BLUE              "\x1B[24;44m"
+#define RTT_CTRL_BG_MAGENTA           "\x1B[24;45m"
+#define RTT_CTRL_BG_CYAN              "\x1B[24;46m"
+#define RTT_CTRL_BG_WHITE             "\x1B[24;47m"
 
-#define RTT_CTRL_BG_BRIGHT_BLACK      "[4;40m"
-#define RTT_CTRL_BG_BRIGHT_RED        "[4;41m"
-#define RTT_CTRL_BG_BRIGHT_GREEN      "[4;42m"
-#define RTT_CTRL_BG_BRIGHT_YELLOW     "[4;43m"
-#define RTT_CTRL_BG_BRIGHT_BLUE       "[4;44m"
-#define RTT_CTRL_BG_BRIGHT_MAGENTA    "[4;45m"
-#define RTT_CTRL_BG_BRIGHT_CYAN       "[4;46m"
-#define RTT_CTRL_BG_BRIGHT_WHITE      "[4;47m"
+#define RTT_CTRL_BG_BRIGHT_BLACK      "\x1B[4;40m"
+#define RTT_CTRL_BG_BRIGHT_RED        "\x1B[4;41m"
+#define RTT_CTRL_BG_BRIGHT_GREEN      "\x1B[4;42m"
+#define RTT_CTRL_BG_BRIGHT_YELLOW     "\x1B[4;43m"
+#define RTT_CTRL_BG_BRIGHT_BLUE       "\x1B[4;44m"
+#define RTT_CTRL_BG_BRIGHT_MAGENTA    "\x1B[4;45m"
+#define RTT_CTRL_BG_BRIGHT_CYAN       "\x1B[4;46m"
+#define RTT_CTRL_BG_BRIGHT_WHITE      "\x1B[4;47m"
 
 
 #endif

@@ -211,7 +211,21 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
         VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     }
 
-    message = instance.GetMessagePool().New(Message::kTypeIp6, 0, aSettings);
+    message = instance.GetIp6().NewMessage(0, aSettings);
+
+exit:
+    return message;
+}
+
+otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
+                                     const uint8_t *          aData,
+                                     uint16_t                 aDataLength,
+                                     const otMessageSettings *aSettings)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Message * message;
+
+    VerifyOrExit((message = instance.GetIp6().NewMessage(aData, aDataLength, aSettings)) != NULL);
 
 exit:
     return message;

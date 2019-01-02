@@ -2424,15 +2424,19 @@ otLinkGetPollPeriod(
     return Result;
 }
 
-OTAPI 
-void 
+OTAPI
+otError
 OTCALL
 otLinkSetPollPeriod(
-    _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance,
     uint32_t aPollPeriod
     )
 {
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_POLL_PERIOD, aPollPeriod);
+    otError result = OT_ERROR_INVALID_ARGS;
+
+    if (aInstance) result = DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_POLL_PERIOD, aPollPeriod));
+
+    return result;
 }
 
 OTAPI

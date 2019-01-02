@@ -34,15 +34,31 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/toolchain.h>
+
+#include <utils/logging_rtt.h>
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+void efr32LogInit(void)
+{
+    utilsLogRttInit();
+}
+
+void efr32LogDeinit(void)
+{
+    utilsLogRttDeinit();
+}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-    OT_UNUSED_VARIABLE(aFormat);
+    va_list ap;
+
+    va_start(ap, aFormat);
+
+    utilsLogRttOutput(aLogLevel, aLogRegion, aFormat, ap);
+
+    va_end(ap);
 }
 #endif

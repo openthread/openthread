@@ -331,6 +331,8 @@ otError Message::SetLength(uint16_t aLength)
     uint16_t totalLengthCurrent = GetReserved() + GetLength();
     int      bufs               = 0;
 
+    VerifyOrExit(totalLengthRequest >= GetReserved(), error = OT_ERROR_INVALID_ARGS);
+
     if (totalLengthRequest > kHeadBufferDataSize)
     {
         bufs = (((totalLengthRequest - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
