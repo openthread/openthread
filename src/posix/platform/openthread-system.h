@@ -56,7 +56,7 @@ extern "C" {
 otInstance *otSysInit(int argc, char *argv[]);
 
 /**
- * This function initialize platform initialization.
+ * This function performs platform network interface initialization.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  *
