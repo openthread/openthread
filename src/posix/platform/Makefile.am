@@ -44,6 +44,7 @@ libopenthread_posix_a_SOURCES             = \
     hdlc_interface.cpp                      \
     logging.c                               \
     misc.c                                  \
+    netif.cpp                               \
     radio_spinel.cpp                        \
     random.c                                \
     settings.cpp                            \
