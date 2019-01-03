@@ -74,11 +74,13 @@
   * - Hardware accelerated EC point multiplication.
   * - Hardware accelerated EC key pair generation.
   *
-  * Added lines [496 - 749]
-  * Changed code in [2620 - 2631]
-  * Changed code in [3005 - 3013]
+  * Added lines [103 - 107]
+  * Added lines [126 - 185] from ecp.h (lines [188 - 250] with lines [246 - 248] excluded)
+  * Added lines [502 - 749]
+  * Changed code in [2620 - 2631] to use HW acceleration if possible
+  * Changed code in [3005 - 3013] to use HW acceleration if possible
   *
-  * Original file (ecp.c) from d369956d42764dc8173a8bf8106ed0f1defedec6
+  * Original files (ecp.c, ecp.h) from d369956d42764dc8173a8bf8106ed0f1defedec6
   */
 
 
@@ -97,6 +99,12 @@
 #include <string.h>
 
 #if defined(MBEDTLS_ECP_ALT)
+
+#include "cc310_mbedtls.h"
+#include "crys_rnd.h"
+#include "crys_ecpki_kg.h"
+#include "crys_ecpki_domain.h"
+#include "ssi_bitops.h"
 
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
@@ -181,9 +189,6 @@ int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
 #else /* MBEDTLS_ECP_RESTARTABLE */
 
 #define MBEDTLS_ECP_BUDGET( ops )   /* no-op; for compatibility */
-
-/* We want to declare restartable versions of existing functions anyway */
-typedef void mbedtls_ecp_restart_ctx;
 
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
@@ -494,12 +499,6 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
                         sizeof( ecp_supported_curves[0] )
 
 static mbedtls_ecp_group_id ecp_supported_grp_id[ECP_NB_CURVES];
-
-#include "cc310_mbedtls.h"
-#include "crys_rnd.h"
-#include "crys_ecpki_kg.h"
-#include "crys_ecpki_domain.h"
-#include "ssi_bitops.h"
 
 extern CRYSError_t PkaEcWrstScalarMult(const CRYS_ECPKI_Domain_t *pDomain,
                                        const uint32_t            *scalar,
