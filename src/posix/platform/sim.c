@@ -146,7 +146,7 @@ void otSimSendSleepEvent(const struct timeval *aTimeout)
 {
     struct Event event;
 
-    event.mDelay      = aTimeout->tv_sec * kUsPerSecond + aTimeout->tv_usec;
+    event.mDelay      = (uint64_t)aTimeout->tv_sec * kUsPerSecond + (uint64_t)aTimeout->tv_usec;
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
@@ -203,7 +203,7 @@ void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set 
 
 void otSimGetTime(struct timeval *aTime)
 {
-    aTime->tv_sec  = sNow / kUsPerSecond;
+    aTime->tv_sec  = (time_t)sNow / kUsPerSecond;
     aTime->tv_usec = sNow % kUsPerSecond;
 }
 
