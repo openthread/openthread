@@ -65,7 +65,7 @@ enum
  */
 
 /**
- * This class reprents an IPv6 fragment priority entry
+ * This class represents an IPv6 fragment priority entry
  *
  */
 class FragmentPriorityEntry
@@ -112,7 +112,7 @@ public:
     uint8_t GetPriority(void) const { return mPriority; }
 
     /**
-     * This method sets the fragment priotity value.
+     * This method sets the fragment priority value.
      *
      * @param[in]  aPriority  The fragment priority value.
      *

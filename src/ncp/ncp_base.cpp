@@ -1471,7 +1471,7 @@ otError NcpBase::DecodeChannelMask(uint32_t &aChannelMask)
     {
         SuccessOrExit(error = mDecoder.ReadUint8(channel));
         VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-        aChannelMask |= (1U << channel);
+        aChannelMask |= (1UL << channel);
     }
 
 exit:
@@ -1651,7 +1651,8 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_UNSOL_UPDATE_FILTER);
+        IgnoreReturnValue(
+            WritePropertyValueIsFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_UNSOL_UPDATE_FILTER));
     }
 
     return error;

@@ -330,7 +330,7 @@ void RouterTable::RemoveNeighbor(Router &aRouter)
     {
         netif.GetMle().ResetAdvertiseInterval();
 
-        // Clear all EID-to-RLOC entries assossiated with the router.
+        // Clear all EID-to-RLOC entries associated with the router.
         netif.GetAddressResolver().Remove(aRouter.GetRouterId());
     }
 }

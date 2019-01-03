@@ -1171,7 +1171,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                 {
                     SuccessOrExit(error = mDecoder.ReadUint8(channel));
                     VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                    aDataset.mChannelMaskPage0 |= (1U << channel);
+                    aDataset.mChannelMaskPage0 |= (1UL << channel);
                 }
             }
 

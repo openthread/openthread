@@ -292,7 +292,7 @@ class Message(object):
             if self.mac_header.dest_address == mac_address:
                 sent_to_node = True
 
-        assert sent_to_node == True
+        assert sent_to_node
 
     def assertSentToDestinationAddress(self, ipv6_address):
         if sys.version_info[0] == 2:
@@ -302,6 +302,9 @@ class Message(object):
 
     def assertSentWithHopLimit(self, hop_limit):
         assert self.ipv6_packet.ipv6_header.hop_limit == hop_limit
+
+    def isMacAddressTypeLong(self):
+        return self.mac_header.dest_address.type == common.MacAddressType.LONG
 
     def __repr__(self):
         return "Message(type={})".format(MessageType(self.type).name)
@@ -369,11 +372,14 @@ class MessagesSet(object):
 
         return message
 
-    def next_mle_message(self, command_type, assert_enabled=True):
+    def next_mle_message(self, command_type, assert_enabled=True, sent_to_node=None):
         message = self.next_mle_message_of_one_of_command_types(command_type)
 
         if assert_enabled:
             assert message is not None, "Could not find MleMessage of the type: {}".format(command_type)
+
+        if sent_to_node != None:
+            message.assertSentToNode(sent_to_node)
 
         return message
 
@@ -398,6 +404,34 @@ class MessagesSet(object):
                 break
 
         return message
+
+    def next_message(self, assert_enabled=True):
+        message = self.messages.pop(0)
+        if assert_enabled:
+            assert message is not None, "Could not find next Message"
+        return message
+
+    def next_message_of(self, message_type, assert_enabled=True):
+        message = None
+
+        while self.messages:
+            m = self.messages.pop(0)
+            if m.type != message_type:
+                continue
+
+            message = m
+            break
+
+        if assert_enabled:
+            assert message is not None, "Could not find Message of the type: {}".format(message_type)
+
+        return message
+
+    def next_data_message(self):
+        return self.next_message_of(MessageType.DATA)
+
+    def next_command_message(self):
+        return self.next_message_of(MessageType.COMMAND)
 
     def contains_icmp_message(self):
         for m in self.messages:
@@ -434,6 +468,11 @@ class MessagesSet(object):
             return False
 
         return True
+
+    def clone(self):
+        """Make a copy of current MessageSet.
+        """
+        return MessagesSet(self.messages[:])
 
 
 class MessageFactory:

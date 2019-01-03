@@ -168,7 +168,7 @@ public:
     /**
      * This method returns a pointer to the Link Info.
      *
-     * @returns A poitner to the Link Info.
+     * @returns A pointer to the Link Info.
      *
      */
     const void *GetLinkInfo(void) const { return mLinkInfo; }
@@ -193,7 +193,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    SockAddr(void) { memset(&mAddress, 0, sizeof(*this)); }
+    SockAddr(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the IPv6 address.

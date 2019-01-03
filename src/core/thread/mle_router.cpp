@@ -266,7 +266,7 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
         break;
 
     case kAttachAny:
-        // if attach was started due to receiving MLE Annouce Messageas, all rx-on-when-idle devices would
+        // If attach was started due to receiving MLE Announce Messages, all rx-on-when-idle devices would
         // start attach immediately when receiving such Announce message as in Thread 1.1 specification,
         // Section 4.8.1,
         // "If the received value is newer and the channel and/or PAN ID in the Announce message differ
@@ -1495,7 +1495,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
                 if (nextHop == NULL || nextHop == neighbor)
                 {
-                    // route has no nexthop or nexthop is neighbor (sender)
+                    // route has no next hop or next hop is neighbor (sender)
 
                     if (router != neighbor)
                     {
@@ -3188,7 +3188,7 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
             if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFullThreadDevice)
             {
-                // Clear all EID-to-RLOC entries assossiated with the child.
+                // Clear all EID-to-RLOC entries associated with the child.
                 netif.GetAddressResolver().Remove(aNeighbor.GetRloc16());
             }
 
