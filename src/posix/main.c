@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
     otNcpInit(instance);
 #elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+    otSysInitNetif(instance);
+#endif
     otCliUartInit(instance);
 #endif
 
