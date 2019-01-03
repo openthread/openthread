@@ -279,7 +279,10 @@ public:
      *          FALSE otherwise.
      *
      */
-    bool ContainsService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+    bool ContainsService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+    {
+        return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength) != NULL;
+    }
 #endif
 
     /**

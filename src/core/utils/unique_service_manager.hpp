@@ -108,7 +108,7 @@ public:
      * @returns The service configuration structure.
      *
      */
-    otServiceConfig GetServiceConfig(void);
+    otError GetServiceConfig(otServiceConfig &aConfig) const;
 
     /**
      * This method returns the enterprise number of the service.
@@ -375,8 +375,8 @@ private:
     void        HandleTimer(void);
 
     otError NetworkDataLeaderServiceLookup(ServiceEntry &aEntry, otServiceConfig &aConfig, bool &aRlocIn);
-    otError AddNetworkDataLocalService(const otServiceConfig &aConfig);
-    otError RemoveNetworkDataLocalService(const otServiceConfig &aConfig);
+    otError AddNetworkDataLocalService(const ServiceEntry &aEntry);
+    otError RemoveNetworkDataLocalService(const ServiceEntry &aEntry);
 
     static bool DefaultServerCompare(const otServerConfig *aServerA, const otServerConfig *aServerB, void *aContext);
 

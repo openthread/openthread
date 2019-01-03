@@ -68,21 +68,26 @@ exit:
     return error;
 }
 
-otServiceConfig ServiceEntry::GetServiceConfig(void)
+otError ServiceEntry::GetServiceConfig(otServiceConfig &aConfig) const
 {
-    otServiceConfig config;
+    otError error = OT_ERROR_NONE;
 
-    memset(&config, 0, sizeof(otServiceConfig));
+    VerifyOrExit((GetServiceDataLength() <= sizeof(aConfig.mServiceData)) &&
+                     (GetServerDataLength() <= sizeof(aConfig.mServerConfig.mServerData)),
+                 error = OT_ERROR_PARSE);
 
-    config.mEnterpriseNumber               = mEnterpriseNumber;
-    config.mServiceDataLength              = mServiceDataLength;
-    config.mServerConfig.mStable           = mServerStable;
-    config.mServerConfig.mServerDataLength = mServerDataLength;
+    memset(&aConfig, 0, sizeof(otServiceConfig));
 
-    memcpy(config.mServiceData, GetServiceData(), GetServiceDataLength());
-    memcpy(config.mServerConfig.mServerData, GetServerData(), GetServerDataLength());
+    aConfig.mEnterpriseNumber               = mEnterpriseNumber;
+    aConfig.mServiceDataLength              = mServiceDataLength;
+    aConfig.mServerConfig.mStable           = mServerStable;
+    aConfig.mServerConfig.mServerDataLength = mServerDataLength;
 
-    return config;
+    memcpy(aConfig.mServiceData, GetServiceData(), GetServiceDataLength());
+    memcpy(aConfig.mServerConfig.mServerData, GetServerData(), GetServerDataLength());
+
+exit:
+    return error;
 }
 
 otError ServiceTable::AddService(const ServiceEntry &aEntry)
@@ -210,7 +215,7 @@ otError UniqueServiceManager::RegisterService(const otServiceConfig * aConfig,
     }
     else
     {
-        AddNetworkDataLocalService(entry.GetServiceConfig());
+        AddNetworkDataLocalService(entry);
         GetNetif().GetNetworkDataLocal().SendServerDataNotification();
     }
 
@@ -231,7 +236,7 @@ otError UniqueServiceManager::UnregisterService(uint32_t       aEnterpriseNumber
 
     if (NetworkDataLeaderServiceLookup(entry, config, rlocIn) == OT_ERROR_NONE && rlocIn)
     {
-        RemoveNetworkDataLocalService(entry.GetServiceConfig());
+        RemoveNetworkDataLocalService(entry);
         GetNetif().GetNetworkDataLocal().SendServerDataNotification();
     }
 
@@ -283,7 +288,7 @@ void UniqueServiceManager::HandleStateChanged(otChangedFlags aFlags)
             {
                 // MLE layer will send SVR_DATA.ntf when it detects the mismatch between NetworkDataLeader and
                 // NetworkDataLocal in the function HandleStateChanged().
-                RemoveNetworkDataLocalService(entry.GetServiceConfig());
+                RemoveNetworkDataLocalService(entry);
             }
 
             if (entry.GetUpdateCallback())
@@ -329,7 +334,7 @@ void UniqueServiceManager::HandleTimer(void)
         if (!GetNetif().GetNetworkDataLeader().ContainsService(entry.GetEnterpriseNumber(), entry.GetServiceData(),
                                                                entry.GetServiceDataLength()))
         {
-            AddNetworkDataLocalService(entry.GetServiceConfig());
+            AddNetworkDataLocalService(entry);
             sendNotification = true;
         }
     }
@@ -381,17 +386,31 @@ exit:
     return error;
 }
 
-otError UniqueServiceManager::AddNetworkDataLocalService(const otServiceConfig &aConfig)
+otError UniqueServiceManager::AddNetworkDataLocalService(const ServiceEntry &aEntry)
 {
-    return GetNetif().GetNetworkDataLocal().AddService(
-        aConfig.mEnterpriseNumber, aConfig.mServiceData, aConfig.mServiceDataLength, aConfig.mServerConfig.mStable,
-        aConfig.mServerConfig.mServerData, aConfig.mServerConfig.mServerDataLength);
+    otError         error;
+    otServiceConfig config;
+
+    SuccessOrExit(error = aEntry.GetServiceConfig(config));
+    error = GetNetif().GetNetworkDataLocal().AddService(
+        config.mEnterpriseNumber, config.mServiceData, config.mServiceDataLength, config.mServerConfig.mStable,
+        config.mServerConfig.mServerData, config.mServerConfig.mServerDataLength);
+
+exit:
+    return error;
 }
 
-otError UniqueServiceManager::RemoveNetworkDataLocalService(const otServiceConfig &aConfig)
+otError UniqueServiceManager::RemoveNetworkDataLocalService(const ServiceEntry &aEntry)
 {
-    return GetNetif().GetNetworkDataLocal().RemoveService(aConfig.mEnterpriseNumber, aConfig.mServiceData,
-                                                          aConfig.mServiceDataLength);
+    otError         error;
+    otServiceConfig config;
+
+    SuccessOrExit(error = aEntry.GetServiceConfig(config));
+    error = GetNetif().GetNetworkDataLocal().RemoveService(config.mEnterpriseNumber, config.mServiceData,
+                                                           config.mServiceDataLength);
+
+exit:
+    return error;
 }
 
 bool UniqueServiceManager::DefaultServerCompare(const otServerConfig *aServerA,
