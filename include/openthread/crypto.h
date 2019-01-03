@@ -118,7 +118,7 @@ void otCryptoAesCcm(const uint8_t *aKey,
  * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
  * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
  * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
- * @rerval  OT_ERROR_FAILED       Error during signing.
+ * @retval  OT_ERROR_FAILED       Error during signing.
  */
 otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           uint16_t *     aOutputLength,

@@ -329,7 +329,7 @@ typedef struct otCoapHeader
  * @param[in]  aResult       A result of the CoAP transaction.
  *
  * @retval  OT_ERROR_NONE              A response was received successfully.
- * @retval  OT_ERROR_ABORT             A CoAP transaction was reseted by peer.
+ * @retval  OT_ERROR_ABORT             A CoAP transaction was reset by peer.
  * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
  *
  */
