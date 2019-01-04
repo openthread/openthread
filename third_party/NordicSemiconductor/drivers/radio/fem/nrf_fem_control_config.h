@@ -40,10 +40,10 @@ extern "C" {
  */
 
 /** Time in us when PA GPIO is activated before radio is ready for transmission. */
-#define NRF_FEM_PA_TIME_IN_ADVANCE          23
+#define NRF_FEM_PA_TIME_IN_ADVANCE  23
 
 /** Time in us when LNA GPIO is activated before radio is ready for reception. */
-#define NRF_FEM_LNA_TIME_IN_ADVANCE         5
+#define NRF_FEM_LNA_TIME_IN_ADVANCE 5
 
 #ifdef NRF52840_XXAA
 

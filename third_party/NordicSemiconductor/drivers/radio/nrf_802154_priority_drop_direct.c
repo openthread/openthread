@@ -37,21 +37,20 @@
 
 #include "nrf_802154_priority_drop.h"
 
-#include "nrf_802154_rsch.h"
+#include "platform/clock/nrf_802154_clock.h"
 
 void nrf_802154_priority_drop_init(void)
 {
     // Intentionally empty
 }
 
-void nrf_802154_priority_drop_timeslot_exit(void)
+void nrf_802154_priority_drop_hfclk_stop(void)
 {
-    nrf_802154_rsch_continuous_mode_exit();
+    nrf_802154_clock_hfclk_stop();
 }
 
-void nrf_802154_priority_drop_timeslot_exit_terminate(void)
+void nrf_802154_priority_drop_hfclk_stop_terminate(void)
 {
     // Intentionally empty:
-    // nrf_802154_priority_drop_timeslot_exit is synchronous and cannot be terminated.
+    // nrf_802154_priority_drop_hfclk_stop is synchronous and cannot be terminated.
 }
-

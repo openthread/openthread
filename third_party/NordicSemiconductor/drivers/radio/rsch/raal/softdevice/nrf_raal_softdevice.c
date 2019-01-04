@@ -45,46 +45,69 @@
 #include <hal/nrf_timer.h>
 #include <nrf_raal_api.h>
 #include <nrf_802154.h>
+#include <nrf_802154_const.h>
 #include <nrf_802154_debug.h>
+#include <nrf_802154_procedures_duration.h>
+#include <nrf_802154_utils.h>
 
 #if defined(__GNUC__)
-    _Pragma("GCC diagnostic push")
-    _Pragma("GCC diagnostic ignored \"-Wreturn-type\"")
-    _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
-    _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+_Pragma("GCC diagnostic push")
+_Pragma("GCC diagnostic ignored \"-Wreturn-type\"")
+_Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+_Pragma("GCC diagnostic ignored \"-Wpedantic\"")
 #endif
 
+#include <ble.h>
+#include <nrf_mbr.h>
+#include <nrf_sdm.h>
 #include <nrf_soc.h>
 
 #if defined(__GNUC__)
-    _Pragma("GCC diagnostic pop")
+_Pragma("GCC diagnostic pop")
 #endif
 
 /***************************************************************************************************
  * @section Defines and typedefs.
  **************************************************************************************************/
 
+/*
+ * @brief Defines the minimum version of the SoftDevice that supports configuration of BLE advertising
+ *        role scheduling.
+ *
+ *        The first SoftDevice that supports this option is S140 6.1.1 (6001001). The full version
+ *        number for the SoftDevice binary is a decimal number in the form Mmmmbbb, where:
+ *           - M is major version (one or more digits)
+ *           - mmm is minor version (three digits)
+ *           - bbb is bugfix version (three digits).
+ */
+#define BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION     (6001001)
+
 /**@brief Enable Request and End on timeslot safety interrupt. */
-#define ENABLE_REQUEST_AND_END_ON_TIMESLOT_END 0
+#define ENABLE_REQUEST_AND_END_ON_TIMESLOT_END       0
 
 /**@brief RAAL Timer instance. */
-#define RAAL_TIMER                NRF_TIMER0
+#define RAAL_TIMER                                   NRF_TIMER0
 
 /**@brief RAAL Timer interrupt number. */
-#define RAAL_TIMER_IRQn           TIMER0_IRQn
+#define RAAL_TIMER_IRQn                              TIMER0_IRQn
 
-/**@brief Maximum jitter relative to the start time of START and TIMER0 (safety margin) events . */
-#define TIMER_TO_SIGNAL_JITTER_US NRF_RADIO_START_JITTER_US + 6
+/**@brief Minimum time prior safe margin reached by RTC when TIMER reports reached margin in microseconds. */
+#define MIN_TIME_PRIOR_MARGIN_IS_REACHED_US          31
 
 /**@brief Timer compare channel definitions. */
-#define TIMER_CC_ACTION           NRF_TIMER_CC_CHANNEL0
-#define TIMER_CC_ACTION_EVENT     NRF_TIMER_EVENT_COMPARE0
-#define TIMER_CC_ACTION_INT       NRF_TIMER_INT_COMPARE0_MASK
+#define TIMER_CC_ACTION                              NRF_TIMER_CC_CHANNEL0
+#define TIMER_CC_ACTION_EVENT                        NRF_TIMER_EVENT_COMPARE0
+#define TIMER_CC_ACTION_INT                          NRF_TIMER_INT_COMPARE0_MASK
 
-#define TIMER_CC_CAPTURE          NRF_TIMER_CC_CHANNEL1
-#define TIMER_CC_CAPTURE_TASK     NRF_TIMER_TASK_CAPTURE1
+#define TIMER_CC_CAPTURE                             NRF_TIMER_CC_CHANNEL1
+#define TIMER_CC_CAPTURE_TASK                        NRF_TIMER_TASK_CAPTURE1
 
-#define NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_TICKS NRF_802154_US_TO_RTC_TICKS(NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_US)
+#define MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_TICKS NRF_802154_US_TO_RTC_TICKS( \
+        NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_US)
+
+/**@brief PPM constants. */
+#define PPM_UNIT                                     1000000UL
+#define MAX_HFCLK_PPM                                40
 
 /**@brief Defines states of timeslot. */
 typedef enum
@@ -129,8 +152,30 @@ static timer_action_t m_timer_action;
 /**@brief Current timeslot length. */
 static uint16_t m_timeslot_length;
 
+/**@brief Previously granted timeslot length. */
+static uint16_t m_prev_timeslot_length;
+
+/**@brief Interval between successive timeslot extensions. */
+static uint16_t m_extension_interval;
+
 /**@brief Number of already performed extentions tries on failed event. */
 static volatile uint16_t m_timeslot_extend_tries;
+
+/***************************************************************************************************
+ * @section Drift calculations
+ **************************************************************************************************/
+
+static uint32_t time_corrected_for_drift_get(uint32_t time)
+{
+    uint32_t ppm = m_config.lf_clk_accuracy_ppm + MAX_HFCLK_PPM;
+
+    return time - NRF_802154_DIVIDE_AND_CEIL(time * ppm, PPM_UNIT);
+}
+
+static void calculate_config(void)
+{
+    m_extension_interval = time_corrected_for_drift_get(m_config.timeslot_length);
+}
 
 /***************************************************************************************************
  * @section Operations on RAAL TIMER.
@@ -185,7 +230,7 @@ static inline uint32_t ticks_to_timeslot_end_get(void)
 
 static inline uint32_t safe_time_to_timeslot_end_get(void)
 {
-    uint32_t margin       = m_config.timeslot_safe_margin + TIMER_TO_SIGNAL_JITTER_US;
+    uint32_t margin       = m_config.timeslot_safe_margin + NRF_RADIO_START_JITTER_US;
     uint32_t timeslot_end = NRF_802154_RTC_TICKS_TO_US(ticks_to_timeslot_end_get());
 
     if (timeslot_end > margin)
@@ -201,7 +246,10 @@ static inline uint32_t safe_time_to_timeslot_end_get(void)
 /**@brief Get timeslot margin. */
 static uint32_t timer_get_cc_margin(void)
 {
-    return timer_time_get() + safe_time_to_timeslot_end_get();
+    uint32_t corrected_time_to_margin = time_corrected_for_drift_get(
+        safe_time_to_timeslot_end_get());
+
+    return timer_time_get() + corrected_time_to_margin;
 }
 
 /**@brief Set timer action to the timeslot margin. */
@@ -219,7 +267,8 @@ static inline void timer_to_margin_set(void)
 /**@brief Check if margin is already reached. */
 static inline bool timer_is_margin_reached(void)
 {
-    return timer_is_set_to_margin() && nrf_timer_event_check(RAAL_TIMER, TIMER_CC_ACTION_EVENT);
+    return timer_is_set_to_margin() && nrf_timer_event_check(RAAL_TIMER, TIMER_CC_ACTION_EVENT) &&
+           safe_time_to_timeslot_end_get() <= MIN_TIME_PRIOR_MARGIN_IS_REACHED_US;
 }
 
 /**@brief Set timer on extend event. */
@@ -230,13 +279,18 @@ static void timer_on_extend_update(void)
     if (timer_is_set_to_margin())
     {
         uint32_t margin_cc = nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION);
+
         margin_cc += m_timeslot_length;
         nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION, margin_cc);
     }
     else
     {
+        uint16_t extension_interval = (m_prev_timeslot_length == m_config.timeslot_length) ?
+                                      m_extension_interval :
+                                      time_corrected_for_drift_get(m_prev_timeslot_length);
+
         nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION,
-                           nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION) + m_timeslot_length);
+                           nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION) + extension_interval);
         nrf_timer_int_enable(RAAL_TIMER, TIMER_CC_ACTION_INT);
     }
 }
@@ -355,27 +409,30 @@ static void timer_irq_handle(void)
     {
         if (timer_is_set_to_margin())
         {
-            // Safe margin exceeded.
-            nrf_802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
-            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_MARGIN);
+            if (timer_is_margin_reached())
+            {
+                // Safe margin exceeded.
+                nrf_802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
+                nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_MARGIN);
 
-            m_timeslot_state = TIMESLOT_STATE_IDLE;
-            timeslot_ended_notify();
+                m_timeslot_state = TIMESLOT_STATE_IDLE;
+                timeslot_ended_notify();
 
-            // Ignore any other events.
-            timer_reset();
+                // Ignore any other events.
+                timer_reset();
 
-    #if (ENABLE_REQUEST_AND_END_ON_TIMESLOT_END == 1)
-            timeslot_data_init();
-            timeslot_request_prepare();
-            m_ret_param.callback_action       = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
-            m_ret_param.params.request.p_next = &m_request;
-    #else
-            // Return and wait for NRF_EVT_RADIO_SESSION_IDLE event.
-            m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-    #endif
+                // Return and wait for NRF_EVT_RADIO_SESSION_IDLE event.
+                m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
-            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_MARGIN);
+                nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_MARGIN);
+            }
+            else
+            {
+                // Move safety margin a little further to suppress clocks drift
+                nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_MARGIN_MOVE);
+                timer_to_margin_set();
+                nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_MARGIN_MOVE);
+            }
         }
         else
         {
@@ -387,7 +444,7 @@ static void timer_irq_handle(void)
 
             if (m_continuous &&
                 (nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION) +
-                m_config.timeslot_length < m_config.timeslot_max_length))
+                 m_config.timeslot_length < m_config.timeslot_max_length))
             {
                 // Try to extend timeslot.
                 timeslot_extend(m_config.timeslot_length);
@@ -415,7 +472,7 @@ static void timer_irq_handle(void)
  **************************************************************************************************/
 
 /**@brief Signal handler. */
-static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_type)
+static nrf_radio_signal_callback_return_param_t * signal_handler(uint8_t signal_type)
 {
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_HANDLER);
 
@@ -427,7 +484,7 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
         nrf_802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
         nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_ENDED);
 
-        m_timeslot_state    = TIMESLOT_STATE_IDLE;
+        m_timeslot_state = TIMESLOT_STATE_IDLE;
 
         // TODO: Change to NRF_RADIO_SIGNAL_CALLBACK_ACTION_END (KRKNWK-937)
         m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
@@ -440,97 +497,107 @@ static nrf_radio_signal_callback_return_param_t *signal_handler(uint8_t signal_t
 
     switch (signal_type)
     {
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START: /**< This signal indicates the start of the radio timeslot. */
-    {
-        nrf_802154_pin_set(PIN_DBG_TIMESLOT_ACTIVE);
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_START);
-
-        assert(m_timeslot_state == TIMESLOT_STATE_REQUESTED);
-
-        m_timeslot_state = TIMESLOT_STATE_GRANTED;
-
-        // Set up timer first with requested timeslot length.
-        timer_start();
-
-        // Re-initialize timeslot data for future extensions.
-        timeslot_data_init();
-
-        timeslot_started_notify();
-
-        // Try to extend right after start.
-        timeslot_extend(m_timeslot_length);
-
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_START);
-        break;
-    }
-
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0: /**< This signal indicates the TIMER0 interrupt. */
-        timer_irq_handle();
-        break;
-
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO: /**< This signal indicates the NRF_RADIO interrupt. */
-        nrf_802154_pin_set(PIN_DBG_TIMESLOT_RADIO_IRQ);
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_RADIO);
-
-        if (timeslot_is_granted())
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START: /**< This signal indicates the start of the radio timeslot. */
         {
-            if (!timer_is_margin_reached())
-            {
-                nrf_802154_radio_irq_handler();
-            }
-            else
-            {
-                // Handle margin exceeded event.
-                timer_irq_handle();
-            }
-        }
-        else
-        {
-            NVIC_DisableIRQ(RADIO_IRQn);
-        }
+            nrf_802154_pin_set(PIN_DBG_TIMESLOT_ACTIVE);
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_START);
 
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_RADIO);
-        nrf_802154_pin_clr(PIN_DBG_TIMESLOT_RADIO_IRQ);
-        break;
+            assert(m_timeslot_state == TIMESLOT_STATE_REQUESTED);
 
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED: /**< This signal indicates extend action failed. */
-        nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_FAILED);
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL);
+            // Set up timer first with requested timeslot length.
+            timer_start();
 
-        if (!timer_is_set_to_margin())
-        {
-            timer_to_margin_set();
-        }
+            // Re-initialize timeslot data for future extensions.
+            m_prev_timeslot_length = m_timeslot_length;
+            timeslot_data_init();
 
-        timeslot_next_extend();
+            // Try to extend right after start.
+            timeslot_extend(m_timeslot_length);
 
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL);
-        break;
+            // Do not notify started timeslot here. Notify after successful extend to make sure
+            // enough timeslot length is available before notification.
 
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED: /**< This signal indicates extend action succeeded. */
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS);
-
-        if ((!timer_is_set_to_margin()) && (ticks_to_timeslot_end_get() < NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_TICKS))
-        {
-            timer_to_margin_set();
-
-            m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_START);
             break;
         }
 
-        timer_on_extend_update();
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0: /**< This signal indicates the TIMER0 interrupt. */
+            timer_irq_handle();
+            break;
 
-        // Request futher extension only if any of previous one failed.
-        if (m_timeslot_extend_tries != 0)
-        {
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO: /**< This signal indicates the NRF_RADIO interrupt. */
+            nrf_802154_pin_set(PIN_DBG_TIMESLOT_RADIO_IRQ);
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_RADIO);
+
+            if (timeslot_is_granted())
+            {
+                if (!timer_is_margin_reached())
+                {
+                    nrf_802154_radio_irq_handler();
+                }
+                else
+                {
+                    // Handle margin exceeded event.
+                    timer_irq_handle();
+                }
+            }
+            else
+            {
+                NVIC_DisableIRQ(RADIO_IRQn);
+            }
+
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_RADIO);
+            nrf_802154_pin_clr(PIN_DBG_TIMESLOT_RADIO_IRQ);
+            break;
+
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED: /**< This signal indicates extend action failed. */
+            nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_FAILED);
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL);
+
+            if (!timer_is_set_to_margin())
+            {
+                timer_to_margin_set();
+            }
+
             timeslot_next_extend();
-        }
 
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS);
-        break;
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL);
+            break;
 
-    default:
-        break;
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED: /**< This signal indicates extend action succeeded. */
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS);
+
+            if ((!timer_is_set_to_margin()) &&
+                (ticks_to_timeslot_end_get() <
+                 MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_TICKS))
+            {
+                timer_to_margin_set();
+
+                m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+            }
+            else
+            {
+                timer_on_extend_update();
+                m_prev_timeslot_length = m_timeslot_length;
+
+                // Request further extension only if any of previous one failed.
+                if (m_timeslot_extend_tries != 0)
+                {
+                    timeslot_next_extend();
+                }
+            }
+
+            if (!timeslot_is_granted())
+            {
+                m_timeslot_state = TIMESLOT_STATE_GRANTED;
+                timeslot_started_notify();
+            }
+
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS);
+            break;
+
+        default:
+            break;
     }
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_HANDLER);
@@ -542,55 +609,55 @@ void nrf_raal_softdevice_soc_evt_handler(uint32_t evt_id)
 {
     switch (evt_id)
     {
-    case NRF_EVT_RADIO_BLOCKED:
-    case NRF_EVT_RADIO_CANCELED:
-    {
-        nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_BLOCKED);
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_EVT_BLOCKED);        
-
-        assert(!timeslot_is_granted());
-
-        m_timeslot_state = TIMESLOT_STATE_IDLE;
-
-        if (m_continuous)
+        case NRF_EVT_RADIO_BLOCKED:
+        case NRF_EVT_RADIO_CANCELED:
         {
-            if (m_timeslot_extend_tries < m_config.timeslot_alloc_iters)
+            nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_BLOCKED);
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_EVT_BLOCKED);
+
+            assert(!timeslot_is_granted());
+
+            m_timeslot_state = TIMESLOT_STATE_IDLE;
+
+            if (m_continuous)
             {
-                timeslot_length_decrease();
+                if (m_timeslot_extend_tries < m_config.timeslot_alloc_iters)
+                {
+                    timeslot_length_decrease();
+                }
+
+                timeslot_request();
             }
 
-            timeslot_request();
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_EVT_BLOCKED);
+
+            break;
         }
 
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_EVT_BLOCKED);
+        case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
+            assert(false);
+            break;
 
-        break;
-    }
+        case NRF_EVT_RADIO_SESSION_IDLE:
 
-    case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
-        assert(false);
-        break;
+            nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_EVT_SESSION_IDLE);
+            nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_SESSION_IDLE);
 
-    case NRF_EVT_RADIO_SESSION_IDLE:
+            if (m_continuous && timeslot_is_idle())
+            {
+                timeslot_data_init();
+                timeslot_request();
+            }
 
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RAAL_EVT_SESSION_IDLE);
-        nrf_802154_pin_tgl(PIN_DBG_TIMESLOT_SESSION_IDLE);
+            nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_EVT_SESSION_IDLE);
 
-        if (m_continuous && timeslot_is_idle())
-        {
-            timeslot_data_init();
-            timeslot_request();
-        }
+            break;
 
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_EVT_SESSION_IDLE);
+        case NRF_EVT_RADIO_SESSION_CLOSED:
+            break;
 
-        break;
-
-    case NRF_EVT_RADIO_SESSION_CLOSED:
-        break;
-
-    default:
-        break;
+        default:
+            break;
     }
 }
 
@@ -605,24 +672,47 @@ void nrf_raal_softdevice_config(const nrf_raal_softdevice_cfg_t * p_cfg)
     assert(p_cfg);
 
     m_config = *p_cfg;
+
+    calculate_config();
 }
 
 void nrf_raal_init(void)
 {
     assert(!m_initialized);
 
-    m_continuous        = false;
-    m_timeslot_state    = TIMESLOT_STATE_IDLE;
+    m_continuous     = false;
+    m_timeslot_state = TIMESLOT_STATE_IDLE;
 
     m_config.timeslot_length      = NRF_RAAL_TIMESLOT_DEFAULT_LENGTH;
     m_config.timeslot_alloc_iters = NRF_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS;
     m_config.timeslot_safe_margin = NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN;
     m_config.timeslot_max_length  = NRF_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH;
     m_config.timeslot_timeout     = NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT;
+    m_config.lf_clk_accuracy_ppm  = NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM;
+
+    calculate_config();
 
     uint32_t err_code = sd_radio_session_open(signal_handler);
+
     assert(err_code == NRF_SUCCESS);
     (void)err_code;
+
+#if (SD_VERSION >= BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION)
+    // Ensure that correct SoftDevice version is flashed.
+    if (SD_VERSION_GET(MBR_SIZE) >= BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION)
+    {
+        // Use improved Advertiser Role Scheduling configuration.
+        ble_opt_t opt;
+
+        memset(&opt, 0, sizeof(opt));
+        opt.common_opt.adv_sched_cfg.sched_cfg = ADV_SCHED_CFG_IMPROVED;
+
+        err_code = sd_ble_opt_set(BLE_COMMON_OPT_ADV_SCHED_CFG, &opt);
+
+        assert(err_code == NRF_SUCCESS);
+        (void)err_code;
+    }
+#endif
 
     m_initialized = true;
 }
@@ -632,11 +722,12 @@ void nrf_raal_uninit(void)
     assert(m_initialized);
 
     uint32_t err_code = sd_radio_session_close();
+
     assert(err_code == NRF_SUCCESS);
     (void)err_code;
 
-    m_continuous        = false;
-    m_timeslot_state    = TIMESLOT_STATE_IDLE;
+    m_continuous     = false;
+    m_timeslot_state = TIMESLOT_STATE_IDLE;
 
     nrf_802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
 }
@@ -677,14 +768,26 @@ void nrf_raal_continuous_mode_exit(void)
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CONTINUOUS_EXIT);
 }
 
+void nrf_raal_continuous_ended(void)
+{
+    // Intentionally empty.
+}
+
 bool nrf_raal_timeslot_request(uint32_t length_us)
 {
+    uint32_t us_left;
+
     if (!m_continuous || !timeslot_is_granted())
     {
         return false;
     }
 
-    return length_us < nrf_raal_timeslot_us_left_get();
+    us_left = nrf_raal_timeslot_us_left_get();
+
+    assert((us_left >= nrf_802154_rx_duration_get(MAX_PACKET_SIZE,
+                                                  true)) || timer_is_set_to_margin());
+
+    return length_us < us_left;
 }
 
 uint32_t nrf_raal_timeslot_us_left_get(void)

@@ -45,23 +45,24 @@
 #include "platform/hp_timer/nrf_802154_hp_timer.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
 
-#define DIV_ROUND_POSITIVE(n, d) (((n) + (d)/2)/(d))
-#define DIV_ROUND_NEGATIVE(n, d) (((n) - (d)/2)/(d))
-#define DIV_ROUND(n, d) ((((n) < 0) ^ ((d) < 0)) ? DIV_ROUND_NEGATIVE(n, d) : DIV_ROUND_POSITIVE(n, d))
+#define DIV_ROUND_POSITIVE(n, d) (((n) + (d) / 2) / (d))
+#define DIV_ROUND_NEGATIVE(n, d) (((n) - (d) / 2) / (d))
+#define DIV_ROUND(n, d)          ((((n) < 0) ^ ((d) < 0)) ?  \
+                                  DIV_ROUND_NEGATIVE(n, d) : \
+                                  DIV_ROUND_POSITIVE(n, d))
 
+#define TIME_BASE                (1UL << 22)      ///< Unit used to calculate PPTB (Point per Time Base). It is not equal million to speed up computations and increase precision.
+#define FIRST_RESYNC_TIME        TIME_BASE        ///< Delay of the first resynchronization. The first resynchronization is needed to measure timers drift.
+#define RESYNC_TIME              (64 * TIME_BASE) ///< Delay of following resynchronizations.
+#define EWMA_COEF                (8)              ///< Weight used in the EWMA algorithm.
 
-#define TIME_BASE         (1UL << 22)       ///< Unit used to calculate PPTB (Point per Time Base). It is not equal million to speed up computations and increase precision.
-#define FIRST_RESYNC_TIME TIME_BASE         ///< Delay of the first resynchronization. The first resynchronization is needed to measure timers drift.
-#define RESYNC_TIME       (64 * TIME_BASE)  ///< Delay of following resynchronizations.
-#define EWMA_COEF         (8)               ///< Weight used in the EWMA algorithm.
+#define PPI_CH0                  NRF_PPI_CHANNEL13
+#define PPI_CH1                  NRF_PPI_CHANNEL14
+#define PPI_CHGRP0               NRF_PPI_CHANNEL_GROUP1
 
-#define PPI_CH0    NRF_PPI_CHANNEL13
-#define PPI_CH1    NRF_PPI_CHANNEL14
-#define PPI_CHGRP0 NRF_PPI_CHANNEL_GROUP1
-
-#define PPI_SYNC            PPI_CH0
-#define PPI_TIMESTAMP       PPI_CH1
-#define PPI_TIMESTAMP_GROUP PPI_CHGRP0
+#define PPI_SYNC                 PPI_CH0
+#define PPI_TIMESTAMP            PPI_CH1
+#define PPI_TIMESTAMP_GROUP      PPI_CHGRP0
 
 #if NRF_802154_FRAME_TIMESTAMP_ENABLED
 // Structure holding common timepoint from both timers.
@@ -71,6 +72,7 @@ typedef struct
     uint32_t hp_timer_time; ///< HP Timer time of common timepoint.
 } common_timepoint_t;
 
+// Static variables.
 static common_timepoint_t m_last_sync;    ///< Common timepoint of last synchronization event.
 static volatile bool      m_synchronized; ///< If timers were synchronized since last start.
 static bool               m_drift_known;  ///< If timer drift value is known.
@@ -125,7 +127,8 @@ void nrf_802154_timer_coord_timestamp_prepare(uint32_t event_addr)
     nrf_ppi_channel_and_fork_endpoint_setup(PPI_TIMESTAMP,
                                             event_addr,
                                             nrf_802154_hp_timer_timestamp_task_get(),
-                                            (uint32_t)nrf_ppi_task_group_disable_address_get(PPI_TIMESTAMP_GROUP));
+                                            (uint32_t)nrf_ppi_task_group_disable_address_get(
+                                                PPI_TIMESTAMP_GROUP));
 
     nrf_ppi_group_enable(PPI_TIMESTAMP_GROUP);
 }

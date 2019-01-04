@@ -108,4 +108,3 @@ bool nrf_802154_ack_pending_bit_should_be_set(const uint8_t * p_psdu);
 #endif
 
 #endif /* NRF_802154_ACK_PENDING_BIT_H_ */
-

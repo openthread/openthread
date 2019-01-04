@@ -43,14 +43,15 @@
 
 #include "mac_features/nrf_802154_ack_timeout.h"
 #include "mac_features/nrf_802154_csma_ca.h"
+#include "mac_features/nrf_802154_delayed_trx.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_types.h"
-
 
 typedef bool (* abort_hook)(nrf_802154_term_t term_lvl, req_originator_t req_orig);
 typedef void (* transmitted_hook)(const uint8_t * p_frame);
 typedef bool (* tx_failed_hook)(const uint8_t * p_frame, nrf_802154_tx_error_t error);
 typedef bool (* tx_started_hook)(const uint8_t * p_frame);
+typedef void (* rx_started_hook)(void);
 
 /* Since some compilers do not allow empty initializers for arrays with unspecified bounds,
  * NULL pointer is appended to below arrays if the compiler used is not GCC. It is intentionally
@@ -65,6 +66,10 @@ static const abort_hook m_abort_hooks[] =
 
 #if NRF_802154_ACK_TIMEOUT_ENABLED
     nrf_802154_ack_timeout_abort,
+#endif
+
+#if NRF_802154_DELAYED_TRX_ENABLED
+    nrf_802154_delayed_trx_abort,
 #endif
 
     NULL,
@@ -100,6 +105,15 @@ static const tx_started_hook m_tx_started_hooks[] =
 
 #if NRF_802154_ACK_TIMEOUT_ENABLED
     nrf_802154_ack_timeout_tx_started_hook,
+#endif
+
+    NULL,
+};
+
+static const rx_started_hook m_rx_started_hooks[] =
+{
+#if NRF_802154_DELAYED_TRX_ENABLED
+    nrf_802154_delayed_trx_rx_started_hook,
 #endif
 
     NULL,
@@ -182,4 +196,17 @@ bool nrf_802154_core_hooks_tx_started(const uint8_t * p_frame)
     }
 
     return result;
+}
+
+void nrf_802154_core_hooks_rx_started(void)
+{
+    for (uint32_t i = 0; i < sizeof(m_rx_started_hooks) / sizeof(m_rx_started_hooks[0]); i++)
+    {
+        if (m_rx_started_hooks[i] == NULL)
+        {
+            break;
+        }
+
+        m_rx_started_hooks[i]();
+    }
 }

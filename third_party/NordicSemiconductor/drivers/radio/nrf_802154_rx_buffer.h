@@ -51,7 +51,7 @@ extern "C" {
 typedef struct
 {
     uint8_t psdu[MAX_PACKET_SIZE + 1];
-    bool    free;                      // If this buffer is free or contains a frame.
+    bool    free; // If this buffer is free or contains a frame.
 } rx_buffer_t;
 
 /**
@@ -80,4 +80,3 @@ rx_buffer_t * nrf_802154_rx_buffer_free_find(void);
 #endif
 
 #endif /* NRF_802154_RX_BUFFER_H_ */
-

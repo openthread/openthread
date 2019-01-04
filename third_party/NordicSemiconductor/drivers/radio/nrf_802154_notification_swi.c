@@ -89,4 +89,3 @@ void nrf_802154_notify_cca_failed(nrf_802154_cca_error_t error)
 {
     nrf_802154_swi_notify_cca_failed(error);
 }
-

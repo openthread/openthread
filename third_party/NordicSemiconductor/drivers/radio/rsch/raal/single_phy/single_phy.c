@@ -28,49 +28,62 @@
  *
  */
 
-#ifndef NRF_802154_PRIORITY_DROP_H__
-#define NRF_802154_PRIORITY_DROP_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @defgroup nrf_802154_priority_drop 802.15.4 driver procedures with lower priority.
- * @{
- * @ingroup nrf_802154
- * @brief Internal procedures of 802.15.4 driver that should be called with lower priority than
- *        the caller's priority.
- */
-
-/**
- * @brief Initialize notification module.
- */
-void nrf_802154_priority_drop_init(void);
-
-/**
- * @brief Request stop of the high frequency clock.
+ * @file
+ *   This file implements the nrf 802.15.4 radio arbiter for single phy.
  *
- * @note This function should be called through this module to prevent calling it from the arbiter
- *       context.
- */
-void nrf_802154_priority_drop_hfclk_stop(void);
-
-/**
- * @brief Terminate requesting of high frequency clock stop.
+ * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
  *
- * Function used to to terminate HFClk stop procedure requested by previous call to
- * @rev nrf_802154_priority_drop_hfclk_stop. The HFClk stop procedure is terminated only if it has
- * not been started.
  */
-void nrf_802154_priority_drop_hfclk_stop_terminate(void);
 
-/**
- *@}
- **/
+#include "nrf_raal_api.h"
 
-#ifdef __cplusplus
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+static bool m_continuous;
+
+void nrf_raal_init(void)
+{
+    m_continuous = false;
 }
-#endif
 
-#endif // NRF_802154_PRIORITY_DROP_H__
+void nrf_raal_uninit(void)
+{
+    // Intentionally empty.
+}
+
+void nrf_raal_continuous_mode_enter(void)
+{
+    assert(!m_continuous);
+
+    m_continuous = true;
+    nrf_raal_timeslot_started();
+}
+
+void nrf_raal_continuous_mode_exit(void)
+{
+    assert(m_continuous);
+
+    m_continuous = false;
+}
+
+void nrf_raal_continuous_ended(void)
+{
+    // Intentionally empty.
+}
+
+bool nrf_raal_timeslot_request(uint32_t length_us)
+{
+    (void)length_us;
+
+    assert(m_continuous);
+
+    return true;
+}
+
+uint32_t nrf_raal_timeslot_us_left_get(void)
+{
+    return UINT32_MAX;
+}

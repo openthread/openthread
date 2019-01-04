@@ -57,4 +57,3 @@ int8_t nrf_802154_temperature_get(void)
 {
     return DEFAULT_TEMPERATURE;
 }
-

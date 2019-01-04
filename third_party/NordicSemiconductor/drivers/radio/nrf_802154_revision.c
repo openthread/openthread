@@ -115,17 +115,17 @@ bool nrf_802154_revision_has_phyend_event(void)
 
     switch (m_nrf52840_revision)
     {
-    case NRF52840_REVISION_AAAA:
-        result = false;
-        break;
+        case NRF52840_REVISION_AAAA:
+            result = false;
+            break;
 
-    case NRF52840_REVISION_AABA:
-    case NRF52840_REVISION_UNKNOWN:
-        result = true;
-        break;
+        case NRF52840_REVISION_AABA:
+        case NRF52840_REVISION_UNKNOWN:
+            result = true;
+            break;
 
-    default:
-        assert(false);
+        default:
+            assert(false);
     }
 
     return result;

@@ -42,25 +42,26 @@
 
 #include "nrf_802154_const.h"
 
-#define TX_RAMP_UP_TIME       40  // us
-#define RX_RAMP_UP_TIME       40  // us
-#define RX_RAMP_DOWN_TIME     0   // us
-#define MAX_RAMP_DOWN_TIME    6   // us
-#define RX_TX_TURNAROUND_TIME 20  // us
+#define TX_RAMP_UP_TIME                   40 // us
+#define RX_RAMP_UP_TIME                   40 // us
+#define RX_RAMP_DOWN_TIME                 0  // us
+#define MAX_RAMP_DOWN_TIME                6  // us
+#define RX_TX_TURNAROUND_TIME             20 // us
 
-#define A_CCA_DURATION_SYMBOLS    8   // sym
-#define A_TURNAROUND_TIME_SYMBOLS 12  // sym
-#define A_UNIT_BACKOFF_SYMBOLS    20  // sym
+#define A_CCA_DURATION_SYMBOLS            8  // sym
+#define A_TURNAROUND_TIME_SYMBOLS         12 // sym
+#define A_UNIT_BACKOFF_SYMBOLS            20 // sym
 
 #define PHY_SYMBOLS_FROM_OCTETS(octets)   ((octets) * PHY_SYMBOLS_PER_OCTET)
 #define PHY_US_TIME_FROM_SYMBOLS(symbols) ((symbols) * PHY_US_PER_SYMBOL)
 
-#define IMM_ACK_SYMBOLS  (PHY_SHR_SYMBOLS + PHY_SYMBOLS_FROM_OCTETS(IMM_ACK_LENGTH + PHR_SIZE))
-#define IMM_ACK_DURATION (PHY_US_TIME_FROM_SYMBOLS(IMM_ACK_SYMBOLS))
+#define IMM_ACK_SYMBOLS                   (PHY_SHR_SYMBOLS + \
+                                           PHY_SYMBOLS_FROM_OCTETS(IMM_ACK_LENGTH + PHR_SIZE))
+#define IMM_ACK_DURATION                  (PHY_US_TIME_FROM_SYMBOLS(IMM_ACK_SYMBOLS))
 
-#define MAC_IMM_ACK_WAIT_SYMBOLS (A_UNIT_BACKOFF_SYMBOLS +    \
-                                  A_TURNAROUND_TIME_SYMBOLS + \
-                                  IMM_ACK_SYMBOLS)
+#define MAC_IMM_ACK_WAIT_SYMBOLS          (A_UNIT_BACKOFF_SYMBOLS +    \
+                                           A_TURNAROUND_TIME_SYMBOLS + \
+                                           IMM_ACK_SYMBOLS)
 
 __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
                                                     bool    cca,
@@ -101,7 +102,10 @@ __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
     // if CCA: + RX ramp up + CCA + RX ramp down
     // + TX ramp up + SHR + PHR + PSDU
     // if ACK: + macAckWaitDuration
-    uint16_t us_time = MAX_RAMP_DOWN_TIME + TX_RAMP_UP_TIME + nrf_802154_frame_duration_get(psdu_length, true, true);
+    uint16_t us_time = MAX_RAMP_DOWN_TIME + TX_RAMP_UP_TIME + nrf_802154_frame_duration_get(
+        psdu_length,
+        true,
+        true);
 
     if (ack_requested)
     {
@@ -110,7 +114,8 @@ __STATIC_INLINE uint16_t nrf_802154_tx_duration_get(uint8_t psdu_length,
 
     if (cca)
     {
-        us_time += RX_RAMP_UP_TIME + RX_RAMP_DOWN_TIME + PHY_US_TIME_FROM_SYMBOLS(A_CCA_DURATION_SYMBOLS);
+        us_time += RX_RAMP_UP_TIME + RX_RAMP_DOWN_TIME + PHY_US_TIME_FROM_SYMBOLS(
+            A_CCA_DURATION_SYMBOLS);
     }
 
     return us_time;
