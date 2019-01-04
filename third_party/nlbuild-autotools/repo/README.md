@@ -130,8 +130,8 @@ these dependencies into your own package.
 
 nlbuild-autotools supports this by providing a means to pull down
 external git package repositories that your package depends on using
-git submodules when you use and support --with-<package>=internal as a
-location for your dependent packages.
+either git clone (default) or git submodules when you use and support
+--with-<package>=internal as a location for your dependent packages.
 
 The example 'Makefile-bootstrap' has been provided as infrastructure to
 make this easy for you as a package maintainer and for your package
@@ -202,9 +202,11 @@ depends.
 
 In addition to the 'repos' target, the bootstrap makefile also
 supports the 'clean-repos' target that undoes the work of the 'repos'
-target. It will clean-up all of the synchronized repositories, all the
-while being careful to ensure it does not disturb existing git or git
-submodule state your project might be using.
+target. When using either the 'clone' or 'submodule' pull methods, it
+will clean-up all of the synchronized repositories. When using the
+'submodule' pull method, it also is careful to ensure it does not
+disturb existing git or git submodule state your project might be
+using.
 
 The infrastructure all works, of course, whether you are working in or
 out of git and whether you have colocated or non-colocated source and
@@ -219,9 +221,16 @@ to pull down, the location of their git server, the branch you want to
 pull, and the location in your project in which you want to place
 them.
 
-The format of 'repos.conf' precisely follows that used by git
-submodules. More information is available in 'Makefile-bootstrap' or
-with `man gitmodules` or `git help gitmodules`.
+The format of 'repos.conf' _almost_ precisely follows that used by git
+submodules with two notable additions, the 'pull' section and the
+'commit' key. The 'pull' section allows you to optionally specify the
+'method' key as 'clone' or 'submodule' (defaulting to 'clone' when the
+key is not present). This selects whether 'git clone' or 'git
+submodule' is used to pull down repositories. The 'commit' key allows
+you to specify not only what branch to checkout but, more precisely,
+what commit or tag to checkout rather than just _HEAD_ of a
+branch. More information is available in 'Makefile-bootstrap' or with
+`man gitmodules` or `git help gitmodules`.
 
 # FAQ {#FAQ}
 
