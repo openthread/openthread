@@ -239,4 +239,3 @@ void nrf_802154_core_irq_handler(void);
 #endif
 
 #endif /* NRF_802154_CORE_H_ */
-

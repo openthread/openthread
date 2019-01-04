@@ -128,22 +128,22 @@ int8_t nrf_802154_tx_power_get(void);
 typedef nrf_fem_control_cfg_t nrf_802154_fem_control_cfg_t;
 
 /** Macro with default configuration of the FEM module. */
-#define NRF_802154_FEM_DEFAULT_SETTINGS                                                            \
-    ((nrf_802154_fem_control_cfg_t) {                                                              \
-        .pa_cfg = {                                                                                \
-                .enable      = 1,                                                                  \
-                .active_high = 1,                                                                  \
-                .gpio_pin    = NRF_FEM_CONTROL_DEFAULT_PA_PIN,                                     \
-        },                                                                                         \
-        .lna_cfg = {                                                                               \
-                .enable      = 1,                                                                  \
-                .active_high = 1,                                                                  \
-                .gpio_pin    = NRF_FEM_CONTROL_DEFAULT_LNA_PIN,                                    \
-        },                                                                                         \
-        .pa_gpiote_ch_id   = NRF_FEM_CONTROL_DEFAULT_PA_GPIOTE_CHANNEL,                            \
-        .lna_gpiote_ch_id  = NRF_FEM_CONTROL_DEFAULT_LNA_GPIOTE_CHANNEL,                           \
-        .ppi_ch_id_set     = NRF_FEM_CONTROL_DEFAULT_SET_PPI_CHANNEL,                              \
-        .ppi_ch_id_clr     = NRF_FEM_CONTROL_DEFAULT_CLR_PPI_CHANNEL,                              \
+#define NRF_802154_FEM_DEFAULT_SETTINGS                                 \
+    ((nrf_802154_fem_control_cfg_t) {                                   \
+        .pa_cfg = {                                                     \
+            .enable = 1,                                                \
+            .active_high = 1,                                           \
+            .gpio_pin = NRF_FEM_CONTROL_DEFAULT_PA_PIN,                 \
+        },                                                              \
+        .lna_cfg = {                                                    \
+            .enable = 1,                                                \
+            .active_high = 1,                                           \
+            .gpio_pin = NRF_FEM_CONTROL_DEFAULT_LNA_PIN,                \
+        },                                                              \
+        .pa_gpiote_ch_id = NRF_FEM_CONTROL_DEFAULT_PA_GPIOTE_CHANNEL,   \
+        .lna_gpiote_ch_id = NRF_FEM_CONTROL_DEFAULT_LNA_GPIOTE_CHANNEL, \
+        .ppi_ch_id_set = NRF_FEM_CONTROL_DEFAULT_SET_PPI_CHANNEL,       \
+        .ppi_ch_id_clr = NRF_FEM_CONTROL_DEFAULT_CLR_PPI_CHANNEL,       \
     })
 
 /**
@@ -166,9 +166,8 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 
 #endif // ENABLE_FEM
 
-
 /**
- * @} 
+ * @}
  * @defgroup nrf_802154_addresses Setting addresses and PAN ID of the device
  * @{
  */
@@ -180,7 +179,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  *
  * This function makes a copy of the PAN ID.
  */
-void nrf_802154_pan_id_set(const uint8_t *p_pan_id);
+void nrf_802154_pan_id_set(const uint8_t * p_pan_id);
 
 /**
  * @brief Set the extended address of the device.
@@ -189,7 +188,7 @@ void nrf_802154_pan_id_set(const uint8_t *p_pan_id);
  *
  * This function makes a copy of the address.
  */
-void nrf_802154_extended_address_set(const uint8_t *p_extended_address);
+void nrf_802154_extended_address_set(const uint8_t * p_extended_address);
 
 /**
  * @brief Set the short address of the device.
@@ -198,8 +197,7 @@ void nrf_802154_extended_address_set(const uint8_t *p_extended_address);
  *
  * This function makes a copy of the address.
  */
-void nrf_802154_short_address_set(const uint8_t *p_short_address);
-
+void nrf_802154_short_address_set(const uint8_t * p_short_address);
 
 /**
  * @}
@@ -235,7 +233,6 @@ uint8_t nrf_802154_ccaedthres_from_dbm_calculate(int8_t dbm);
  * @return  Timestamp of the beginning of the first preamble symbol of a given frame (in us).
  */
 uint32_t nrf_802154_first_symbol_timestamp_get(uint32_t end_timestamp, uint8_t psdu_length);
-
 
 /**
  * @}
@@ -290,11 +287,36 @@ nrf_802154_sleep_error_t nrf_802154_sleep_if_idle(void);
  */
 bool nrf_802154_receive(void);
 
+/**
+ * @brief Request reception at specified time.
+ *
+ * This function works as delayed version of the @sref nrf_802154_receive. It is not
+ * blocking, but queues delayed reception using Radio Scheduler module. If delayed reception
+ * cannot be performed (the @ref nrf_802154_receive_at would return false) or requested
+ * reception timeslot is denied, the @ref nrf_drv_radio802154_receive_failed with the
+ * @ref NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED argument is called.
+ *
+ * If the requested reception time is in the past, the function returns false and does not
+ * schedule reception.
+ *
+ * @param[in]  t0       Base of delay time - absolute time used by the Timer Scheduler [us].
+ * @param[in]  dt       Delta of delay time from @p t0 [us].
+ * @param[in]  timeout  Reception timeout (counted from @p t0 + @p dt) [us].
+ * @param[in]  channel  Radio channel on which the frame should be received.
+ *
+ * @retval  true   If the transmission procedure was scheduled.
+ * @retval  false  If the driver could not schedule the transmission procedure.
+ */
+bool nrf_802154_receive_at(uint32_t t0,
+                           uint32_t dt,
+                           uint32_t timeout,
+                           uint8_t  channel);
+
 #if NRF_802154_USE_RAW_API
 /**
  * @brief Change radio state to transmit.
  *
- * @note If the CPU is halted or interrupted while this function is executed, 
+ * @note If the CPU is halted or interrupted while this function is executed,
  *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed may be called before this
  *       function returns a result.
  * @note This function is implemented in zero-copy fashion. It passes the given buffer pointer to
@@ -334,7 +356,7 @@ bool nrf_802154_transmit_raw(const uint8_t * p_data, bool cca);
 /**
  * @brief Change radio state to transmit.
  *
- * @note If the CPU is halted or interrupted while this function is executed, 
+ * @note If the CPU is halted or interrupted while this function is executed,
  *       @ref nrf_802154_transmitted or @ref nrf_802154_transmit_failed must be called before this
  *       function returns a result.
  * @note This function copies the given buffer. It maintains an internal buffer, which is used to
@@ -454,7 +476,6 @@ bool nrf_802154_cca(void);
  * @retval  false  If the driver could not schedule the continuous carrier procedure.
  */
 bool nrf_802154_continuous_carrier(void);
-
 
 /**
  * @}
@@ -586,7 +607,7 @@ extern void nrf_802154_receive_failed(nrf_802154_rx_error_t error);
  * @brief Notify that transmitting a frame has started.
  *
  * @note Usually, @ref nrf_802154_transmitted is called shortly after this function.
- *       However, if the transmit procedure is interrupted, it might happen that 
+ *       However, if the transmit procedure is interrupted, it might happen that
  *       @ref nrf_802154_transmitted is not called.
  * @note This function should be very short to prevent dropping frames by the driver.
  *
@@ -694,7 +715,7 @@ extern void nrf_802154_transmitted(const uint8_t * p_frame,
  *
  * @param[in]  p_frame  Pointer to the buffer containing PSDU of the transmitted frame.
  * @param[in]  p_ack    Pointer to the buffer containing the received ACK payload (PHR excluding FCS).
-  *                     If ACK was not requested, @p p_ack is set to NULL.
+ *                      If ACK was not requested, @p p_ack is set to NULL.
  * @param[in]  length   Length of the received ACK payload.
  * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi      LQI of received frame or 0 if ACK was not requested.
@@ -752,7 +773,6 @@ extern void nrf_802154_cca_done(bool channel_free);
  * @param[in]  error  Reason of the failure.
  */
 extern void nrf_802154_cca_failed(nrf_802154_cca_error_t error);
-
 
 /**
  * @}
@@ -822,7 +842,6 @@ bool nrf_802154_buffer_free_immediately(uint8_t * p_data);
 
 #endif // NRF_802154_USE_RAW_API
 
-
 /**
  * @}
  * @defgroup nrf_802154_rssi RSSI measurement function
@@ -845,7 +864,6 @@ void nrf_802154_rssi_measure(void);
  * @returns RSSI measurement result [dBm].
  */
 int8_t nrf_802154_rssi_last_get(void);
-
 
 /**
  * @}
@@ -875,7 +893,6 @@ void nrf_802154_promiscuous_set(bool enabled);
  * @retval False  Radio is not in promiscuous mode.
  */
 bool nrf_802154_promiscuous_get(void);
-
 
 /**
  * @}
@@ -958,7 +975,7 @@ void nrf_802154_auto_pending_bit_set(bool enabled);
  * @retval True   If the address is successfully added to the list.
  * @retval False  If there is not enough memory to store the address in the list.
  */
-bool nrf_802154_pending_bit_for_addr_set(const uint8_t *p_addr, bool extended);
+bool nrf_802154_pending_bit_for_addr_set(const uint8_t * p_addr, bool extended);
 
 /**
  * @brief Remove address of a peer node for which there is no more pending data in the buffer.
@@ -969,7 +986,7 @@ bool nrf_802154_pending_bit_for_addr_set(const uint8_t *p_addr, bool extended);
  * @retval True   If the address is successfully removed from the list.
  * @retval False  If there is no such address in the list.
  */
-bool nrf_802154_pending_bit_for_addr_clear(const uint8_t *p_addr, bool extended);
+bool nrf_802154_pending_bit_for_addr_clear(const uint8_t * p_addr, bool extended);
 
 /**
  * @brief Remove all addresses of a given type from the pending bit list.
@@ -1063,9 +1080,9 @@ void nrf_802154_transmit_csma_ca(const uint8_t * p_data, uint8_t length);
 
 /**
  * @brief Set timeout for the ACK timeout feature.
- * 
+ *
  * A timeout is notified by @ref nrf_802154_transmit_failed.
- * 
+ *
  * @param[in]  time  Timeout in us.
  *                   A default value is defined in nrf_802154_config.h.
  */

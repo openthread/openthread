@@ -57,7 +57,8 @@ extern "C" {
  * @enum nrf_radio_task_t
  * @brief RADIO tasks.
  */
-typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
+/*lint -save -e30 -esym(628,__INTADDR__) */
+typedef enum
 {
     NRF_RADIO_TASK_TXEN      = offsetof(NRF_RADIO_Type, TASKS_TXEN),      /**< Enable radio transmitter. */
     NRF_RADIO_TASK_RXEN      = offsetof(NRF_RADIO_Type, TASKS_RXEN),      /**< Enable radio receiver. */
@@ -69,13 +70,13 @@ typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
     NRF_RADIO_TASK_EDSTART   = offsetof(NRF_RADIO_Type, TASKS_EDSTART),   /**< Start Energy Detection procedure. */
     NRF_RADIO_TASK_EDSTOP    = offsetof(NRF_RADIO_Type, TASKS_EDSTOP),    /**< Stop Energy Detection procedure. */
     NRF_RADIO_TASK_RSSISTART = offsetof(NRF_RADIO_Type, TASKS_RSSISTART), /**< Start the RSSI and take one single sample of received signal strength. */
-} nrf_radio_task_t;                                                       /*lint -restore */
+} nrf_radio_task_t;
 
 /**
  * @enum nrf_radio_event_t
  * @brief RADIO events.
  */
-typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
+typedef enum
 {
     NRF_RADIO_EVENT_READY      = offsetof(NRF_RADIO_Type, EVENTS_READY),      /**< Radio has ramped up and is ready to be started. */
     NRF_RADIO_EVENT_ADDRESS    = offsetof(NRF_RADIO_Type, EVENTS_ADDRESS),    /**< Address sent or received. */
@@ -93,7 +94,8 @@ typedef enum /*lint -save -e30 -esym(628,__INTADDR__) */
     NRF_RADIO_EVENT_RXREADY    = offsetof(NRF_RADIO_Type, EVENTS_RXREADY),    /**< Radio has ramped up and is ready to be started RX path. */
     NRF_RADIO_EVENT_MHRMATCH   = offsetof(NRF_RADIO_Type, EVENTS_MHRMATCH),   /**< MAC Header match found. */
     NRF_RADIO_EVENT_PHYEND     = offsetof(NRF_RADIO_Type, EVENTS_PHYEND),     /**< Generated in Ble_LR125Kbit, Ble_LR500Kbit and Ieee802154_250Kbit modes when last bit is sent on air. */
-} nrf_radio_event_t;                                                          /*lint -restore */
+} nrf_radio_event_t;
+/*lint -restore */
 
 /**
  * @enum nrf_radio_int_mask_t
@@ -222,8 +224,8 @@ typedef enum
  */
 typedef enum
 {
-    NRF_RADIO_RAMP_UP_MODE_DEFAULT = RADIO_MODECNF0_RU_Default,  /**< Default ramp-up mode. */
-    NRF_RADIO_RAMP_UP_MODE_FAST    = RADIO_MODECNF0_RU_Fast      /**< Fast ramp-up mode. */
+    NRF_RADIO_RAMP_UP_MODE_DEFAULT = RADIO_MODECNF0_RU_Default, /**< Default ramp-up mode. */
+    NRF_RADIO_RAMP_UP_MODE_FAST    = RADIO_MODECNF0_RU_Fast     /**< Fast ramp-up mode. */
 } nrf_radio_ramp_up_mode_t;
 
 /**
@@ -257,7 +259,7 @@ __STATIC_INLINE bool nrf_radio_int_get(nrf_radio_int_mask_t radio_int_mask);
  *
  * @param[in]  radio_task              Task.
  */
-__STATIC_INLINE uint32_t *nrf_radio_task_address_get(nrf_radio_task_t radio_task);
+__STATIC_INLINE uint32_t * nrf_radio_task_address_get(nrf_radio_task_t radio_task);
 
 /**
  * @brief Function for setting a specific task.
@@ -273,7 +275,7 @@ __STATIC_INLINE void nrf_radio_task_trigger(nrf_radio_task_t radio_task);
  *
  * @param[in]  radio_event              Event.
  */
-__STATIC_INLINE uint32_t *nrf_radio_event_address_get(nrf_radio_event_t radio_event);
+__STATIC_INLINE uint32_t * nrf_radio_event_address_get(nrf_radio_event_t radio_event);
 
 /**
  * @brief Function for clearing a specific event.
@@ -334,7 +336,7 @@ __STATIC_INLINE nrf_radio_state_t nrf_radio_state_get(void);
  *
  * @param[in]  p_radio_packet_ptr           Pointer to tx or rx packet buffer.
  */
-__STATIC_INLINE void nrf_radio_packet_ptr_set(const void *p_radio_packet_ptr);
+__STATIC_INLINE void nrf_radio_packet_ptr_set(const void * p_radio_packet_ptr);
 
 /**
  * @brief Function for getting CRC status of last received packet.
@@ -532,7 +534,6 @@ __STATIC_INLINE void nrf_radio_ed_loop_count_set(uint32_t radio_ed_loop_count);
  */
 __STATIC_INLINE void nrf_radio_power_set(bool radio_power);
 
-
 /**
  *@}
  **/
@@ -554,7 +555,7 @@ __STATIC_INLINE bool nrf_radio_int_get(nrf_radio_int_mask_t radio_int_mask)
     return (bool)(NRF_RADIO->INTENCLR & radio_int_mask);
 }
 
-__STATIC_INLINE uint32_t *nrf_radio_task_address_get(nrf_radio_task_t radio_task)
+__STATIC_INLINE uint32_t * nrf_radio_task_address_get(nrf_radio_task_t radio_task)
 {
     return (uint32_t *)((uint8_t *)NRF_RADIO + radio_task);
 }
@@ -564,7 +565,7 @@ __STATIC_INLINE void nrf_radio_task_trigger(nrf_radio_task_t radio_task)
     *((volatile uint32_t *)((uint8_t *)NRF_RADIO + radio_task)) = NRF_RADIO_TASK_SET;
 }
 
-__STATIC_INLINE uint32_t *nrf_radio_event_address_get(nrf_radio_event_t radio_event)
+__STATIC_INLINE uint32_t * nrf_radio_event_address_get(nrf_radio_event_t radio_event)
 {
     return (uint32_t *)((uint8_t *)NRF_RADIO + radio_event);
 }
@@ -574,13 +575,14 @@ __STATIC_INLINE void nrf_radio_event_clear(nrf_radio_event_t radio_event)
     *((volatile uint32_t *)((uint8_t *)NRF_RADIO + radio_event)) = NRF_RADIO_EVENT_CLEAR;
 #if __CORTEX_M == 0x04
     volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_RADIO + radio_event));
+
     (void)dummy;
 #endif
 }
 
 __STATIC_INLINE bool nrf_radio_event_get(nrf_radio_event_t radio_event)
 {
-    return (bool) * ((volatile uint32_t *)((uint8_t *)NRF_RADIO + radio_event));
+    return (bool)*((volatile uint32_t *)((uint8_t *)NRF_RADIO + radio_event));
 }
 
 __STATIC_INLINE void nrf_radio_shorts_enable(uint32_t radio_short_mask)
@@ -605,84 +607,85 @@ __STATIC_INLINE uint32_t nrf_radio_shorts_get(void)
 
 __STATIC_INLINE nrf_radio_state_t nrf_radio_state_get(void)
 {
-    return (nrf_radio_state_t) NRF_RADIO->STATE;
+    return (nrf_radio_state_t)NRF_RADIO->STATE;
 }
 
-__STATIC_INLINE void nrf_radio_packet_ptr_set(const void *p_radio_packet_ptr)
+__STATIC_INLINE void nrf_radio_packet_ptr_set(const void * p_radio_packet_ptr)
 {
-    NRF_RADIO->PACKETPTR = (uint32_t) p_radio_packet_ptr;
+    NRF_RADIO->PACKETPTR = (uint32_t)p_radio_packet_ptr;
 }
 
 __STATIC_INLINE nrf_radio_crc_status_t nrf_radio_crc_status_get(void)
 {
-    return (nrf_radio_crc_status_t) NRF_RADIO->CRCSTATUS;
+    return (nrf_radio_crc_status_t)NRF_RADIO->CRCSTATUS;
 }
 
 __STATIC_INLINE void nrf_radio_cca_mode_set(nrf_radio_cca_mode_t radio_cca_mode)
 {
     NRF_RADIO->CCACTRL &= (~RADIO_CCACTRL_CCAMODE_Msk);
-    NRF_RADIO->CCACTRL |= ((uint32_t) radio_cca_mode << RADIO_CCACTRL_CCAMODE_Pos);
+    NRF_RADIO->CCACTRL |= ((uint32_t)radio_cca_mode << RADIO_CCACTRL_CCAMODE_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_cca_ed_threshold_set(uint8_t radio_cca_ed_threshold)
 {
     NRF_RADIO->CCACTRL &= (~RADIO_CCACTRL_CCAEDTHRES_Msk);
-    NRF_RADIO->CCACTRL |= ((uint32_t) radio_cca_ed_threshold << RADIO_CCACTRL_CCAEDTHRES_Pos);
+    NRF_RADIO->CCACTRL |= ((uint32_t)radio_cca_ed_threshold << RADIO_CCACTRL_CCAEDTHRES_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_cca_corr_threshold_set(uint8_t radio_cca_corr_threshold_set)
 {
     NRF_RADIO->CCACTRL &= (~RADIO_CCACTRL_CCACORRTHRES_Msk);
-    NRF_RADIO->CCACTRL |= ((uint32_t) radio_cca_corr_threshold_set << RADIO_CCACTRL_CCACORRTHRES_Pos);
+    NRF_RADIO->CCACTRL |=
+        ((uint32_t)radio_cca_corr_threshold_set << RADIO_CCACTRL_CCACORRTHRES_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_cca_corr_counter_set(uint8_t radio_cca_corr_counter_set)
 {
     NRF_RADIO->CCACTRL &= (~RADIO_CCACTRL_CCACORRCNT_Msk);
-    NRF_RADIO->CCACTRL |= ((uint32_t) radio_cca_corr_counter_set << RADIO_CCACTRL_CCACORRCNT_Pos);
+    NRF_RADIO->CCACTRL |= ((uint32_t)radio_cca_corr_counter_set << RADIO_CCACTRL_CCACORRCNT_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_mode_set(nrf_radio_mode_t radio_mode)
 {
-    NRF_RADIO->MODE = ((uint32_t) radio_mode << RADIO_MODE_MODE_Pos);
+    NRF_RADIO->MODE = ((uint32_t)radio_mode << RADIO_MODE_MODE_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_config_length_field_length_set(uint8_t radio_length_length)
 {
     NRF_RADIO->PCNF0 &= (~RADIO_PCNF0_LFLEN_Msk);
-    NRF_RADIO->PCNF0 |= ((uint32_t) radio_length_length << RADIO_PCNF0_LFLEN_Pos);
+    NRF_RADIO->PCNF0 |= ((uint32_t)radio_length_length << RADIO_PCNF0_LFLEN_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_config_preamble_length_set(
     nrf_radio_preamble_length_t radio_preamble_length)
 {
     NRF_RADIO->PCNF0 &= (~RADIO_PCNF0_PLEN_Msk);
-    NRF_RADIO->PCNF0 |= ((uint32_t) radio_preamble_length << RADIO_PCNF0_PLEN_Pos);
+    NRF_RADIO->PCNF0 |= ((uint32_t)radio_preamble_length << RADIO_PCNF0_PLEN_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_config_crc_included_set(bool radio_length_contains_crc)
 {
     NRF_RADIO->PCNF0 &= (~RADIO_PCNF0_CRCINC_Msk);
-    NRF_RADIO->PCNF0 |= ((uint32_t) radio_length_contains_crc << RADIO_PCNF0_CRCINC_Pos);
+    NRF_RADIO->PCNF0 |= ((uint32_t)radio_length_contains_crc << RADIO_PCNF0_CRCINC_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_config_max_length_set(uint8_t radio_max_packet_length)
 {
     NRF_RADIO->PCNF1 &= (~RADIO_PCNF1_MAXLEN_Msk);
-    NRF_RADIO->PCNF1 |= ((uint32_t) radio_max_packet_length << RADIO_PCNF1_MAXLEN_Pos);
+    NRF_RADIO->PCNF1 |= ((uint32_t)radio_max_packet_length << RADIO_PCNF1_MAXLEN_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_crc_length_set(uint8_t radio_crc_length)
 {
     NRF_RADIO->CRCCNF &= (~RADIO_CRCCNF_LEN_Msk);
-    NRF_RADIO->CRCCNF |= ((uint32_t) radio_crc_length << RADIO_CRCCNF_LEN_Pos);
+    NRF_RADIO->CRCCNF |= ((uint32_t)radio_crc_length << RADIO_CRCCNF_LEN_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_crc_includes_address_set(
     nrf_radio_crc_includes_addr_t radio_crc_skip_address)
 {
     NRF_RADIO->CRCCNF &= (~RADIO_CRCCNF_SKIPADDR_Msk);
-    NRF_RADIO->CRCCNF |= ((uint32_t) radio_crc_skip_address << RADIO_CRCCNF_SKIPADDR_Pos);
+    NRF_RADIO->CRCCNF |= ((uint32_t)radio_crc_skip_address << RADIO_CRCCNF_SKIPADDR_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_crc_polynominal_set(uint32_t radio_crc_polynominal)
@@ -714,7 +717,7 @@ __STATIC_INLINE void nrf_radio_mhmu_pattern_mask_set(uint32_t radio_mhmu_pattern
 __STATIC_INLINE void nrf_radio_ramp_up_mode_set(nrf_radio_ramp_up_mode_t ramp_up_mode)
 {
     NRF_RADIO->MODECNF0 &= (~RADIO_MODECNF0_RU_Msk);
-    NRF_RADIO->MODECNF0 |= ((uint32_t) ramp_up_mode << RADIO_MODECNF0_RU_Pos);
+    NRF_RADIO->MODECNF0 |= ((uint32_t)ramp_up_mode << RADIO_MODECNF0_RU_Pos);
 }
 
 __STATIC_INLINE void nrf_radio_frequency_set(uint32_t radio_frequency)
@@ -729,7 +732,7 @@ __STATIC_INLINE uint32_t nrf_radio_frequency_get(void)
 
 __STATIC_INLINE void nrf_radio_tx_power_set(int8_t radio_tx_power)
 {
-    NRF_RADIO->TXPOWER = (uint8_t) radio_tx_power;
+    NRF_RADIO->TXPOWER = (uint8_t)radio_tx_power;
 }
 
 __STATIC_INLINE void nrf_radio_ifs_set(uint32_t radio_ifs)
@@ -754,7 +757,7 @@ __STATIC_INLINE uint32_t nrf_radio_bcc_get(void)
 
 __STATIC_INLINE uint8_t nrf_radio_ed_sample_get(void)
 {
-    return (uint8_t) NRF_RADIO->EDSAMPLE;
+    return (uint8_t)NRF_RADIO->EDSAMPLE;
 }
 
 __STATIC_INLINE void nrf_radio_ed_loop_count_set(uint32_t radio_ed_loop_count)
@@ -764,7 +767,7 @@ __STATIC_INLINE void nrf_radio_ed_loop_count_set(uint32_t radio_ed_loop_count)
 
 __STATIC_INLINE void nrf_radio_power_set(bool radio_power)
 {
-    NRF_RADIO->POWER = (uint32_t) radio_power;
+    NRF_RADIO->POWER = (uint32_t)radio_power;
 }
 
 #endif /* SUPPRESS_INLINE_IMPLEMENTATION */
@@ -774,4 +777,3 @@ __STATIC_INLINE void nrf_radio_power_set(bool radio_power)
 #endif
 
 #endif /* NRF_RADIO_H__ */
-

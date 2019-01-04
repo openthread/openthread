@@ -737,6 +737,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     case NRF_802154_RX_ERROR_RUNTIME:
     case NRF_802154_RX_ERROR_TIMESLOT_ENDED:
     case NRF_802154_RX_ERROR_ABORTED:
+    case NRF_802154_RX_ERROR_INVALID_LENGTH:
         sReceiveError = OT_ERROR_FAILED;
         break;
 

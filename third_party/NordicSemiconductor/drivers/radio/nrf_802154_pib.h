@@ -95,7 +95,6 @@ bool nrf_802154_pib_pan_coord_get(void);
  */
 void nrf_802154_pib_pan_coord_set(bool enabled);
 
-
 /**
  * @brief Get currently used channel.
  *
@@ -191,4 +190,3 @@ void nrf_802154_pib_cca_cfg_get(nrf_802154_cca_cfg_t * p_cca_cfg);
 #endif
 
 #endif /* NRF_802154_PIB_H_ */
-

@@ -121,18 +121,19 @@ void nrf_802154_swi_notify_cca(bool channel_free);
 void nrf_802154_swi_notify_cca_failed(nrf_802154_cca_error_t error);
 
 /**
- * @brief Request discarding of the timeslot from SWI priority level.
+ * @brief Request stop of the HF clock from the SWI priority level.
  *
- * @note This function should be called through notification module to prevent calling it from arbiter context.
+ * @note This function should be called through notification module to prevent calling it from
+ *       the arbiter context.
  */
-void nrf_802154_swi_timeslot_exit(void);
+void nrf_802154_swi_hfclk_stop(void);
 
 /**
- * @brief Terminate discarding of the timeslot.
+ * @brief Terminate stopping of the HF clock.
  *
- * @note This function terminates discrading of timeslot only if it has not been performed.
+ * @note This function terminates stopping of the HF clock only if it has not been performed.
  */
-void nrf_802154_swi_timeslot_exit_terminate(void);
+void nrf_802154_swi_hfclk_stop_terminate(void);
 
 /**
  * @brief Request entering sleep state from SWI priority.

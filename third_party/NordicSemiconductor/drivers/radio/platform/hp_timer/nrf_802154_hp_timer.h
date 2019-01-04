@@ -134,7 +134,6 @@ uint32_t nrf_802154_hp_timer_timestamp_task_get(void);
  */
 uint32_t nrf_802154_hp_timer_timestamp_get(void);
 
-
 /**
  *@}
  **/

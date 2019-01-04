@@ -46,18 +46,19 @@
 
 typedef struct
 {
-    int8_t               tx_power;                                ///< Transmit power.
-    uint8_t              pan_id[PAN_ID_SIZE];                     ///< Pan Id of this node.
-    uint8_t              short_addr[SHORT_ADDRESS_SIZE];          ///< Short Address of this node.
-    uint8_t              extended_addr[EXTENDED_ADDRESS_SIZE];    ///< Extended Address of this node.
-    nrf_802154_cca_cfg_t cca;                                     ///< CCA mode and thresholds.
-    bool                 promiscuous                          :1; ///< Indicating if radio is in promiscuous mode.
-    bool                 auto_ack                             :1; ///< Indicating if auto ACK procedure is enabled.
-    bool                 pan_coord                            :1; ///< Indicating if radio is configured as the PAN coordinator.
-    uint8_t              channel                              :5; ///< Channel on which the node receives messages.
+    int8_t               tx_power;                             ///< Transmit power.
+    uint8_t              pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
+    uint8_t              short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
+    uint8_t              extended_addr[EXTENDED_ADDRESS_SIZE]; ///< Extended Address of this node.
+    nrf_802154_cca_cfg_t cca;                                  ///< CCA mode and thresholds.
+    bool                 promiscuous : 1;                      ///< Indicating if radio is in promiscuous mode.
+    bool                 auto_ack    : 1;                      ///< Indicating if auto ACK procedure is enabled.
+    bool                 pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
+    uint8_t              channel     : 5;                      ///< Channel on which the node receives messages.
 } nrf_802154_pib_data_t;
 
-static nrf_802154_pib_data_t m_data;  ///< Buffer containing PIB data.
+// Static variables.
+static nrf_802154_pib_data_t m_data; ///< Buffer containing PIB data.
 
 void nrf_802154_pib_init(void)
 {
@@ -125,7 +126,9 @@ int8_t nrf_802154_pib_tx_power_get(void)
 void nrf_802154_pib_tx_power_set(int8_t dbm)
 {
     const int8_t allowed_values[] = {-40, -20, -16, -12, -8, -4, 0, 2, 3, 4, 5, 6, 7, 8};
-    const int8_t highest_value    = allowed_values[(sizeof(allowed_values) / sizeof(allowed_values[0])) - 1];
+    const int8_t highest_value    =
+        allowed_values[(sizeof(allowed_values) / sizeof(allowed_values[0])) - 1];
+
     if (dbm > highest_value)
     {
         dbm = highest_value;

@@ -43,26 +43,25 @@
  */
 
 /**@brief RTC clock frequency. */
-#define NRF_802154_RTC_FREQUENCY                32768UL
+#define NRF_802154_RTC_FREQUENCY               32768UL
 
 /**@brief Defines number of microseconds in one second. */
-#define NRF_802154_US_PER_S                     1000000ULL
+#define NRF_802154_US_PER_S                    1000000ULL
 
 /**@brief Number of microseconds in one RTC tick. (rounded up) */
-#define NRF_802154_US_PER_TICK                  NRF_802154_RTC_TICKS_TO_US(1)
+#define NRF_802154_US_PER_TICK                 NRF_802154_RTC_TICKS_TO_US(1)
 
 /**@brief Number of bits to shift RTC_FREQUENCY and US_PER_S to achieve division by greatest common divisor. */
-#define NRF_802154_FREQUENCY_US_PER_S_GCD_BITS  6
-
+#define NRF_802154_FREQUENCY_US_PER_S_GCD_BITS 6
 
 /**@brief Ceil division helper */
-#define NRF_802154_DIVIDE_AND_CEIL(A, B) (((A) + (B) - 1) / (B))
+#define NRF_802154_DIVIDE_AND_CEIL(A, B)       (((A) + (B)-1) / (B))
 
 /**@brief RTC ticks to us conversion. */
-#define NRF_802154_RTC_TICKS_TO_US(ticks)                                                          \
-    NRF_802154_DIVIDE_AND_CEIL(                                                                    \
-            (ticks) * (NRF_802154_US_PER_S >> NRF_802154_FREQUENCY_US_PER_S_GCD_BITS),             \
-            (NRF_802154_RTC_FREQUENCY >> NRF_802154_FREQUENCY_US_PER_S_GCD_BITS))
+#define NRF_802154_RTC_TICKS_TO_US(ticks)                                          \
+    NRF_802154_DIVIDE_AND_CEIL(                                                    \
+        (ticks) * (NRF_802154_US_PER_S >> NRF_802154_FREQUENCY_US_PER_S_GCD_BITS), \
+        (NRF_802154_RTC_FREQUENCY >> NRF_802154_FREQUENCY_US_PER_S_GCD_BITS))
 
 static inline uint64_t NRF_802154_US_TO_RTC_TICKS(uint64_t time)
 {
@@ -101,11 +100,11 @@ static inline uint64_t NRF_802154_US_TO_RTC_TICKS(uint64_t time)
 
        There is a possible loss of precision so that t1 will be up to 93*15625 _smaller_
        than the accurate number. This is taken into account in the next step.
-    */
+     */
 
-    t1 = ((time >> 13) * 0x8637bd0) >> 28; // ((time >> 13) * (2^41 / 15625)) >> (41 - 13)
+    t1     = ((time >> 13) * 0x8637bd0) >> 28; // ((time >> 13) * (2^41 / 15625)) >> (41 - 13)
     result = t1 * 512;
-    t1 = time - t1 * 15625;
+    t1     = time - t1 * 15625;
 
     /* This second step of the calculation is to find out how many RTC units there are
        still left in the remaining microseconds.
@@ -130,9 +129,9 @@ static inline uint64_t NRF_802154_US_TO_RTC_TICKS(uint64_t time)
 
     // ceil((time * (2^56 / 15625)) >> (56 - 9))
     assert(t1 <= 1453125);
-    u1 = (t1 * 0x431bde82d7b); // (time * (2^56 / 15625))
-    u1 += 0x7fffffffffff;      // round up
-    u1 >>= 47;                 // ceil(u1 >> (56 - 9))
+    u1   = (t1 * 0x431bde82d7b); // (time * (2^56 / 15625))
+    u1  += 0x7fffffffffff;       // round up
+    u1 >>= 47;                   // ceil(u1 >> (56 - 9))
 
     result += u1;
 
@@ -149,7 +148,8 @@ static inline uint64_t NRF_802154_US_TO_RTC_TICKS(uint64_t time)
  */
 static inline uint32_t nrf_is_nvic_irq_enabled(IRQn_Type IRQn)
 {
-    return (NVIC->ISER[(((uint32_t)(int32_t)IRQn) >> 5UL)]) & ((uint32_t)(1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL)));
+    return (NVIC->ISER[(((uint32_t)(int32_t)IRQn) >> 5UL)]) &
+           ((uint32_t)(1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL)));
 }
 
 /**
