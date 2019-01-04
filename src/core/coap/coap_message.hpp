@@ -40,6 +40,7 @@
 
 #include <openthread/coap.h>
 
+#include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 
@@ -71,34 +72,6 @@ namespace Coap {
  */
 class Message : public ot::Message
 {
-    /**
-     * This structure represents a CoAP header excluding CoAP options.
-     *
-     */
-    OT_TOOL_PACKED_BEGIN
-    struct Header
-    {
-        uint8_t  mVersionTypeToken;                ///< The CoAP Version, Type, and Token Length
-        uint8_t  mCode;                            ///< The CoAP Code
-        uint16_t mMessageId;                       ///< The CoAP Message ID
-        uint8_t  mToken[OT_COAP_MAX_TOKEN_LENGTH]; ///< The CoAP Token
-    } OT_TOOL_PACKED_END;
-
-    /**
-     * This structure represents a HelpData used by this CoAP message.
-     *
-     */
-    OT_TOOL_PACKED_BEGIN
-    struct HelpData
-    {
-        Header       mHeader;
-        otCoapOption mOption;
-        uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
-        uint16_t     mOptionLast;
-        uint16_t     mHeaderOffset;
-        uint16_t     mHeaderLength;
-    } OT_TOOL_PACKED_END;
-
 public:
     enum
     {
@@ -106,7 +79,6 @@ public:
         kMinHeaderLength    = 4,   ///< Minimum header length
         kMaxHeaderLength    = 512, ///< Maximum header length
         kDefaultTokenLength = 2,   ///< Default token length
-        kHelpDataSize       = sizeof(HelpData),
     };
 
     /**
@@ -539,6 +511,12 @@ public:
      */
     Message *Clone(void) const { return Clone(GetLength()); };
 
+    /**
+     * This method returns the minimal reserved bytes required for CoAP message.
+     *
+     */
+    static uint16_t GetHelpDataReserved(void) { return sizeof(HelpData) + kHelpDataAlignment; }
+
 private:
     /**
      * Protocol Constants (RFC 7252).
@@ -567,12 +545,41 @@ private:
 
         kOption1ByteExtensionOffset = 13,  ///< Delta/Length offset as specified (RFC 7252).
         kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
+
+        kHelpDataAlignment = sizeof(uint16_t), ///< Alignment of help data.
     };
+
+    /**
+     * This structure represents a CoAP header excluding CoAP options.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    struct Header
+    {
+        uint8_t  mVersionTypeToken;                ///< The CoAP Version, Type, and Token Length
+        uint8_t  mCode;                            ///< The CoAP Code
+        uint16_t mMessageId;                       ///< The CoAP Message ID
+        uint8_t  mToken[OT_COAP_MAX_TOKEN_LENGTH]; ///< The CoAP Token
+    } OT_TOOL_PACKED_END;
+
+    /**
+     * This structure represents a HelpData used by this CoAP message.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    struct HelpData
+    {
+        Header       mHeader;
+        otCoapOption mOption;
+        uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
+        uint16_t     mOptionLast;
+        uint16_t     mHeaderOffset;
+        uint16_t     mHeaderLength;
+    } OT_TOOL_PACKED_END;
 
     const HelpData &GetHelpData(void) const
     {
-        return *reinterpret_cast<const HelpData *>(((uintptr_t)mBuffer.mHead.mData + sizeof(void *) - 1) &
-                                                   ~(sizeof(void *) - 1));
+        return *static_cast<const HelpData *>(otALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
     }
 
     HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
