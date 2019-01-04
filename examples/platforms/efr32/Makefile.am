@@ -49,6 +49,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_BOARD_DIR)                 \
     -I$(top_srcdir)/src/core                                                    \
+    -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/protocol/ieee802154         \
@@ -74,10 +75,6 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -Wno-unused-parameter                                                       \
     $(NULL)
 
-RAIL_SOURCES                                                                  = \
-    rail_config.c                                                               \
-    $(NULL)
-
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
@@ -93,6 +90,7 @@ PLATFORM_SOURCES                                                              = 
     $(NULL)
 
 nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
+    @top_builddir@/third_party/silabs/rail_config/rail_config.c                                                                   \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_bcc.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_init.c                                     \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.3/hardware/kit/common/bsp/bsp_stk.c                                      \
@@ -133,7 +131,6 @@ noinst_HEADERS                                                                = 
 
 libopenthread_efr32_a_SOURCES                                                 = \
     $(PLATFORM_SOURCES)                                                         \
-    $(RAIL_SOURCES)                                                             \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
