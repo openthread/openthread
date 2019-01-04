@@ -512,12 +512,13 @@ void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessage
 
 void Coap::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError  error;
     Message &message = static_cast<Message &>(aMessage);
 
-    SuccessOrExit(error = message.ParseHeader());
-
-    if (message.IsRequest())
+    if (message.ParseHeader() != OT_ERROR_NONE)
+    {
+        otLogDebgCoap("Failed to parse CoAP header");
+    }
+    else if (message.IsRequest())
     {
         ProcessReceivedRequest(message, aMessageInfo);
     }
@@ -525,9 +526,6 @@ void Coap::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
         ProcessReceivedResponse(message, aMessageInfo);
     }
-
-exit:
-    assert(error == OT_ERROR_NONE);
 }
 
 void Coap::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

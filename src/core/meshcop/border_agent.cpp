@@ -410,10 +410,12 @@ exit:
 
 void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
 {
-    Coap::Message *message;
+    Coap::Message *message = NULL;
+    otError        error;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
-    VerifyOrExit((message = NewMeshCoPMessage(GetNetif().GetCoapSecure())) != NULL);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
+                 error = OT_ERROR_DROP);
+    VerifyOrExit((message = NewMeshCoPMessage(GetNetif().GetCoapSecure())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     message->AppendUriPathOptions(OT_URI_PATH_RELAY_RX);
@@ -423,11 +425,14 @@ void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
         message->SetPayloadMarker();
     }
 
-    SuccessOrExit(ForwardToCommissioner(*message, aMessage));
+    SuccessOrExit(error = ForwardToCommissioner(*message, aMessage));
     otLogInfoMeshCoP("Sent to commissioner on %s", OT_URI_PATH_RELAY_RX);
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE && message != NULL)
+    {
+        message->Free();
+    }
 }
 
 otError BorderAgent::ForwardToCommissioner(Coap::Message &aNewMessage, const Message &aMessage)
@@ -448,7 +453,6 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP("Failed to send to commissioner: %s", otThreadErrorToString(error));
-        aNewMessage.Free();
     }
 
     return error;
