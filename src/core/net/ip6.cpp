@@ -75,7 +75,7 @@ Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
 {
-    otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    otMessageSettings settings = {true, 0, OT_MESSAGE_PRIORITY_NORMAL};
     Message *         message  = NULL;
 
     if (aSettings != NULL)
