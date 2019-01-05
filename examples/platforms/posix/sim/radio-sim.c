@@ -671,7 +671,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     sSrcMatchEnabled = aEnable;
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -711,7 +711,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
