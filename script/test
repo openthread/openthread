@@ -61,14 +61,14 @@ print_usage() {
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
 ENVIRONMENTS:
-    NODE_TYPE       sim for CLI, ncp-sim for NCP. Default to sim
-    NODE_MODE       transceiver for transceiver mode, otherwise for standalone mode. Default to standalone mode
-    VIRTUAL_TIME    1 for virtual time, otherwise real time. Default to 1
+    NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
+    NODE_MODE       'transceiver' for transceiver mode, otherwise for standalone mode. The default is standalone mode.
+    VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
     build           Build project for running tests. This can be used to rebuild the project for changes.
-    cert            Run a single thread-cert test. OPTIONS should be the same as those given to build or update.
+    cert            Run a single thread-cert test. ENVIRONMENTS should be the same as those given to build or update.
     help            Print this help.
 
 EXAMPLES:
@@ -89,7 +89,7 @@ EXAMPLES:
     VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 "
 
-    exit
+    exit $1
 }
 
 main()
@@ -105,7 +105,7 @@ main()
     fi
 
     if [[ -z "$1" ]]; then
-        print_usage
+        print_usage 1
     fi
 
     [[ -n "${RADIO_DEVICE}" ]] && echo "Using transceiver mode" || echo "Using standalone mode"
@@ -123,6 +123,9 @@ main()
             cert)
                 shift
                 do_cert "$1"
+                ;;
+            help)
+                print_usage
                 ;;
         esac
         shift
