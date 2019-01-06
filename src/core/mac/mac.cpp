@@ -323,7 +323,11 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     if (mRxOnWhenIdle)
     {
-        mPendingWaitingForData = false;
+        if (mPendingWaitingForData)
+        {
+            mTimer.Stop();
+            mPendingWaitingForData = false;
+        }
 
         if (mOperation == kOperationWaitingForData)
         {
