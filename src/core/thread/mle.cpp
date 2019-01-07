@@ -976,7 +976,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     {
         GetNetif().GetMle().HandlePartitionChange();
         GetNotifier().Signal(OT_CHANGED_THREAD_PARTITION_ID);
-        mCounters.mParitionIdChanges++;
+        mCounters.mPartitionIdChanges++;
     }
     else
     {
