@@ -564,7 +564,7 @@ public:
     otError ResetToSaved(void);
 
 private:
-    otError ReadItem(const uint8_t **aPtr, size_t aSize);
+    otError ReadItem(const uint8_t **aPtr, uint16_t aSize);
     void    ClearSavedPosition(void) { mSavedIndex = mLength; }
     bool    IsSavedPositionValid(void) const { return (mSavedIndex < mLength); }
 
