@@ -556,11 +556,14 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
         }
         else
         {
-            Router *router = GetRouter(i);
+            if (IsAllocated(i))
+            {
+                Router *router = GetRouter(i);
 
-            assert(router != NULL);
-            router->SetNextHop(Mle::kInvalidRouterId);
-            RemoveNeighbor(*router);
+                assert(router != NULL);
+                router->SetNextHop(Mle::kInvalidRouterId);
+                RemoveNeighbor(*router);
+            }
 
             mAllocatedRouterIds[i / 8] &= ~(1 << (i % 8));
         }
