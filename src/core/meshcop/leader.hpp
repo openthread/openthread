@@ -97,7 +97,7 @@ public:
     /**
      * This method gets minimal delay timer.
      *
-     * @retval the miniaml delay timer (in ms).
+     * @retval the minimal delay timer (in ms).
      *
      */
     uint32_t GetDelayTimerMinimal(void) const;

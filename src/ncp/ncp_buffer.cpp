@@ -432,7 +432,7 @@ otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition,
 
     VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead, error = OT_ERROR_INVALID_ARGS);
 
-    // Ensure the overwrite does not go beyond current sgement tail.
+    // Ensure the overwrite does not go beyond current segment tail.
     segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
     distance      = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
     VerifyOrExit(distance + aDataBufferLength <= segmentLength, error = OT_ERROR_INVALID_ARGS);

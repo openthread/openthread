@@ -403,7 +403,7 @@ public:
     Udp &GetUdp(void) { return mUdp; }
 
     /**
-     * This method returns a reference to the UDMPL message processing controller instance.
+     * This method returns a reference to the MPL message processing controller instance.
      *
      * @returns A reference to the Mpl instance.
      *

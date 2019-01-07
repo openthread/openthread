@@ -164,7 +164,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit ChildTable(Instance &aIntsance);
+    explicit ChildTable(Instance &aInstance);
 
     /**
      * This method clears the child table.
@@ -206,7 +206,7 @@ public:
     /**
      * This method searches the child table for a `Child` with a given RLOC16 also matching a given state filter.
      *
-     * @param[in]  aRloc16  A RLCO16 address.
+     * @param[in]  aRloc16  A RLOC16 address.
      * @param[in]  aFilter  A child state filter.
      *
      * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
@@ -332,8 +332,8 @@ public:
         Child *GetChild(void) { return NULL; }
     };
 
-    explicit ChildTable(Instance &aIntsance)
-        : InstanceLocator(aIntsance)
+    explicit ChildTable(Instance &aInstance)
+        : InstanceLocator(aInstance)
     {
     }
     void Clear(void) {}
