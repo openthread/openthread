@@ -38,4 +38,5 @@
 
 #if defined(__CC_ARM)
     _Pragma("diag_suppress=550")
+    _Pragma("diag_suppress=68")
 #endif
