@@ -37,11 +37,13 @@ import node
 
 from binascii import hexlify
 
+from command import check_address_registration_tlv
+from command import check_child_update_response
+from command import check_data_response
 from command import check_network_data_tlv
 from command import check_prefix
 from command import check_prefix_and_border_router_16
-from command import check_address_registration_tlv
-from command import check_child_update_response_base
+from command import CheckType
 from network_data import Prefix, BorderRouter, LowpanId
 
 LEADER = 1
@@ -133,11 +135,8 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 2 - DUT creates network data
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        network_data_tlv = msg.get_mle_message_tlv(mle.NetworkData)
-        prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
-        self.assertTrue(len(prefixes) >= 2)
-        self.assertEqual(hexlify(prefixes[0].prefix), b'2001000200000001')
-        self.assertEqual(hexlify(prefixes[1].prefix), b'2001000200000002')
+        check_data_response(msg, network_data_opt=CheckType.CONTAIN,
+            prefixes=[ b'2001000200000001', b'2001000200000002' ])
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
@@ -158,13 +157,13 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
-        check_child_update_response_base(msg_chd_upd_res_to_med)
+        check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
         dut_addr_reg_tlv = msg_chd_upd_res_to_med.get_mle_message_tlv(mle.AddressRegistration)
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         med1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)
         check_address_registration_tlv(dut_addr_reg_tlv, med1_addr_reg_tlv.addresses)
 
-        check_child_update_response_base(msg_chd_upd_res_to_sed)
+        check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
         dut_addr_reg_tlv = msg_chd_upd_res_to_sed.get_mle_message_tlv(mle.AddressRegistration)
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         sed1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)

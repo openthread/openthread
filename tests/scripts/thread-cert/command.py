@@ -30,15 +30,12 @@
 import sys
 
 import ipv6
-<<<<<<< HEAD
-from network_data import Prefix, BorderRouter, LowpanId
-=======
 import network_data
->>>>>>> [tests] Add test case Cert_7_1_01
 import network_layer
 import config
 import mle
 
+from binascii import hexlify
 from enum import IntEnum
 
 class CheckType(IntEnum):
@@ -375,9 +372,12 @@ def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefixes=[
         network_data_tlv = command_msg.get_mle_message_tlv(mle.NetworkData)
         prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
         assert len(prefix_tlvs) >= len(prefixes)
+        idx = 0
         for prefix in prefix_tlvs:
-            assert contains_tlv(prefix.sub_tlvs, BorderRouter)
-            assert contains_tlv(prefix.sub_tlvs, LowpanId)
+            assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter)
+            assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId)
+            assert hexlify(prefix.prefix) == prefixes[idx]
+            idx = idx + 1
 
 def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OPTIONAL,
     network_data=CheckType.OPTIONAL, challenge=CheckType.OPTIONAL,
@@ -393,7 +393,7 @@ def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OP
     check_mle_optional_tlv(command_msg, tlv_request, mle.TlvRequest)
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
 
-def check_child_update_response_from_parent(command_msg, timeout=CheckType.OPTIONAL,
+def check_child_update_response(command_msg, timeout=CheckType.OPTIONAL,
     address_registration=CheckType.OPTIONAL, address16=CheckType.OPTIONAL,
     leader_data=CheckType.OPTIONAL, network_data=CheckType.OPTIONAL, response=CheckType.OPTIONAL,
     link_layer_frame_counter=CheckType.OPTIONAL, mle_frame_counter=CheckType.OPTIONAL):
