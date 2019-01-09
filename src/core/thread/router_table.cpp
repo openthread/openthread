@@ -115,8 +115,9 @@ void RouterTable::UpdateAllocation(void)
     // build index map
     for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
     {
-        if (IsAllocated(i) && mActiveRouterCount < Mle::kMaxRouters)
+        if (IsAllocated(i))
         {
+            assert(mActiveRouterCount < Mle::kMaxRouters);
             indexMap[i] = mActiveRouterCount++;
         }
         else
