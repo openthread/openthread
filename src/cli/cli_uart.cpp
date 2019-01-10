@@ -52,6 +52,38 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
+#ifdef OT_UART_LOCK_HDR_FILE
+
+#include OT_UART_LOCK_HDR_FILE
+
+#else
+
+/**
+ * Macro to acquire an exclusive lock of uart cli output
+ * Default implementation does nothing
+ *
+ */
+#ifndef OT_CLI_UART_OUTPUT_LOCK
+#define OT_CLI_UART_OUTPUT_LOCK() \
+    do                            \
+    {                             \
+    } while (0)
+#endif
+
+/**
+ * Macro to release the exclusive lock of uart cli output
+ * Default implementation does nothing
+ *
+ */
+#ifndef OT_CLI_UART_OUTPUT_UNLOCK
+#define OT_CLI_UART_OUTPUT_UNLOCK() \
+    do                              \
+    {                               \
+    } while (0)
+#endif
+
+#endif // OT_UART_LOCK_HDR_FILE
+
 namespace ot {
 namespace Cli {
 

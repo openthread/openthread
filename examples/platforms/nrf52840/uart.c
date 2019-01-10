@@ -45,8 +45,6 @@
 #include "openthread-system.h"
 
 #include "platform-nrf5.h"
-#include "uart_lock.h"
-
 #include <drivers/clock/nrf_drv_clock.h>
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_uart.h>
@@ -336,15 +334,3 @@ OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);
 }
-
-#if OPENTHREAD_UART_LOCK
-
-OT_TOOL_WEAK void otCliUartLock(void)
-{
-}
-
-OT_TOOL_WEAK void otCliUartUnlock(void)
-{
-}
-
-#endif
