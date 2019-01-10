@@ -846,7 +846,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 #endif
         else
         {
-            // TODO: support ALOC for Commissioner, Neighbor Discovery Agent
+            // TODO: support for Neighbor Discovery Agent ALOC
             ExitNow(error = OT_ERROR_DROP);
         }
     }
