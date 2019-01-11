@@ -276,9 +276,9 @@ otError CoapSecure::Process(int argc, char *argv[])
         mInterpreter.mServer->OutputFormat(">'coaps start (false)'                               "
                                            ": start coap secure service, false disable peer cert verification\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set psk <psk> <client id>'                   "
-                                           ": set Preshared Key and Client Identity (Ciphresuit PSK_AES128)\r\n");
+                                           ": set Preshared Key and Client Identity (Ciphersuite PSK_AES128)\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps set x509'                                    "
-                                           ": set X509 Cert und Private Key (Ciphresuit ECDHE_ECDSA_AES128)\r\n");
+                                           ": set X509 Cert und Private Key (Ciphersuite ECDHE_ECDSA_AES128)\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps connect <servers ipv6 addr> (port)'          "
                                            ": start dtls session with a server\r\n");
         mInterpreter.mServer->OutputFormat(">'coaps get' 'coaps put' 'coaps post' 'coaps delete' "
