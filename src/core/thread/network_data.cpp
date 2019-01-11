@@ -50,9 +50,9 @@
 namespace ot {
 namespace NetworkData {
 
-NetworkData::NetworkData(Instance &aInstance, bool aLocal)
+NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
-    , mLocal(aLocal)
+    , mType(aType)
     , mLastAttemptWait(false)
     , mLastAttempt(0)
 {
@@ -1013,7 +1013,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (mLocal)
+    if (mType == kTypeLocal)
     {
         ThreadTlv tlv;
         tlv.SetType(ThreadTlv::kThreadNetworkData);
@@ -1035,7 +1035,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
 
-    if (mLocal)
+    if (mType == kTypeLocal)
     {
         mLastAttempt     = TimerMilli::GetNow();
         mLastAttemptWait = true;

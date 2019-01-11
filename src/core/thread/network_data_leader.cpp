@@ -58,7 +58,7 @@ namespace ot {
 namespace NetworkData {
 
 LeaderBase::LeaderBase(Instance &aInstance)
-    : NetworkData(aInstance, false)
+    : NetworkData(aInstance, kTypeLeader)
 {
     Reset();
 }
