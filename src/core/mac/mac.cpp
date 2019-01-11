@@ -323,7 +323,11 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     if (mRxOnWhenIdle)
     {
-        mPendingWaitingForData = false;
+        if (mPendingWaitingForData)
+        {
+            mTimer.Stop();
+            mPendingWaitingForData = false;
+        }
 
         if (mOperation == kOperationWaitingForData)
         {
@@ -1166,14 +1170,8 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
     case kOperationTransmitData:
         if (aFrame.IsDataRequestCommand())
         {
-            bool framePending = false;
-
-            if ((aError == OT_ERROR_NONE) && aFrame.GetAckRequest() && (aAckFrame != NULL))
-            {
-                framePending = aAckFrame->GetFramePending();
-            }
-
-            if (mEnabled && framePending)
+            if (mEnabled && (aError == OT_ERROR_NONE) && aFrame.GetAckRequest() && (aAckFrame != NULL) &&
+                aAckFrame->GetFramePending())
             {
                 mTimer.Start(kDataPollTimeout);
                 StartOperation(kOperationWaitingForData);

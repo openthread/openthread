@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#define NRF_802154_DEBUG_LOG_BUFFER_LEN 1024
+#define NRF_802154_DEBUG_LOG_BUFFER_LEN        1024
 
 #define EVENT_TRACE_ENTER                      0x0001UL
 #define EVENT_TRACE_EXIT                       0x0002UL
@@ -60,6 +60,7 @@ extern "C" {
 #define FUNCTION_CONTINUOUS_CARRIER            0x0007UL
 #define FUNCTION_CSMACA                        0x0008UL
 #define FUNCTION_TRANSMIT_AT                   0x0009UL
+#define FUNCTION_RECEIVE_AT                    0x000AUL
 
 #define FUNCTION_IRQ_HANDLER                   0x0100UL
 #define FUNCTION_EVENT_FRAMESTART              0x0101UL
@@ -96,21 +97,22 @@ extern "C" {
 #define FUNCTION_RAAL_EVT_BLOCKED              0x0408UL
 #define FUNCTION_RAAL_EVT_SESSION_IDLE         0x0409UL
 #define FUNCTION_RAAL_EVT_HFCLK_READY          0x040AUL
+#define FUNCTION_RAAL_SIG_EVENT_MARGIN_MOVE    0x040BUL
 
-#define FUNCTION_RSCH_CONTINUOUS_ENTER         0x040BUL
-#define FUNCTION_RSCH_CONTINUOUS_EXIT          0x040CUL
-#define FUNCTION_RSCH_CRITICAL_SECTION_ENTER   0x040DUL
-#define FUNCTION_RSCH_CRITICAL_SECTION_EXIT    0x040EUL
-#define FUNCTION_RSCH_TIMESLOT_STARTED         0x040FUL
-#define FUNCTION_RSCH_TIMESLOT_ENDED           0x0410UL
-#define FUNCTION_RSCH_PEND_GRANTED             0x0411UL
-#define FUNCTION_RSCH_PEND_REVOKED             0x0412UL
-#define FUNCTION_RSCH_NOTIFY_GRANTED           0x0413UL
-#define FUNCTION_RSCH_NOTIFY_REVOKED           0x0414UL
-#define FUNCTION_RSCH_NOTIFY_IF_PENDING        0x0415UL
-#define FUNCTION_RSCH_DELAYED_TIMESLOT_REQ     0x0416UL
-#define FUNCTION_RSCH_TIMER_DELAYED_PREC       0x0417UL
-#define FUNCTION_RSCH_TIMER_DELAYED_START      0x0418UL
+#define FUNCTION_RSCH_CONTINUOUS_ENTER         0x0480UL
+#define FUNCTION_RSCH_CONTINUOUS_EXIT          0x0481UL
+#define FUNCTION_RSCH_CRITICAL_SECTION_ENTER   0x0482UL
+#define FUNCTION_RSCH_CRITICAL_SECTION_EXIT    0x0483UL
+#define FUNCTION_RSCH_TIMESLOT_STARTED         0x0484UL
+#define FUNCTION_RSCH_TIMESLOT_ENDED           0x0485UL
+#define FUNCTION_RSCH_PEND_GRANTED             0x0486UL
+#define FUNCTION_RSCH_PEND_REVOKED             0x0487UL
+#define FUNCTION_RSCH_NOTIFY_GRANTED           0x0488UL
+#define FUNCTION_RSCH_NOTIFY_REVOKED           0x0489UL
+#define FUNCTION_RSCH_NOTIFY_IF_PENDING        0x048AUL
+#define FUNCTION_RSCH_DELAYED_TIMESLOT_REQ     0x048BUL
+#define FUNCTION_RSCH_TIMER_DELAYED_PREC       0x048CUL
+#define FUNCTION_RSCH_TIMER_DELAYED_START      0x048DUL
 
 #define FUNCTION_CSMA_ABORT                    0x0500UL
 #define FUNCTION_CSMA_TX_FAILED                0x0501UL
@@ -140,16 +142,19 @@ extern "C" {
 
 #if ENABLE_DEBUG_LOG
 extern volatile uint32_t nrf_802154_debug_log_buffer[
-        NRF_802154_DEBUG_LOG_BUFFER_LEN];
+    NRF_802154_DEBUG_LOG_BUFFER_LEN];
 extern volatile uint32_t nrf_802154_debug_log_ptr;
 
-#define nrf_802154_log(EVENT_CODE, EVENT_ARG)                                                      \
-    do {                                                                                           \
-        uint32_t ptr = nrf_802154_debug_log_ptr;                                                   \
-        nrf_802154_debug_log_buffer[ptr] = ((EVENT_CODE) | ((EVENT_ARG) << 16));                   \
-        nrf_802154_debug_log_ptr =                                                                 \
-                ptr < (NRF_802154_DEBUG_LOG_BUFFER_LEN - 1) ? ptr + 1 : 0;                         \
-    } while (0)
+#define nrf_802154_log(EVENT_CODE, EVENT_ARG)                                    \
+    do                                                                           \
+    {                                                                            \
+        uint32_t ptr = nrf_802154_debug_log_ptr;                                 \
+                                                                                 \
+        nrf_802154_debug_log_buffer[ptr] = ((EVENT_CODE) | ((EVENT_ARG) << 16)); \
+        nrf_802154_debug_log_ptr         =                                       \
+            ptr < (NRF_802154_DEBUG_LOG_BUFFER_LEN - 1) ? ptr + 1 : 0;           \
+    }                                                                            \
+    while (0)
 
 #else // ENABLE_DEBUG_LOG
 
@@ -161,10 +166,15 @@ extern volatile uint32_t nrf_802154_debug_log_ptr;
 
 #define nrf_802154_pin_set(pin) NRF_P0->OUTSET = (1UL << (pin))
 #define nrf_802154_pin_clr(pin) NRF_P0->OUTCLR = (1UL << (pin))
-#define nrf_802154_pin_tgl(pin) do { volatile uint32_t ps = NRF_P0->OUT;                           \
-                                            NRF_P0->OUTSET = (~ps & (1UL << (pin)));               \
-                                            NRF_P0->OUTCLR = (ps & (1UL << (pin)));                \
-                                         } while(0);
+#define nrf_802154_pin_tgl(pin)                  \
+    do                                           \
+    {                                            \
+        volatile uint32_t ps = NRF_P0->OUT;      \
+                                                 \
+        NRF_P0->OUTSET = (~ps & (1UL << (pin))); \
+        NRF_P0->OUTCLR = (ps & (1UL << (pin)));  \
+    }                                            \
+    while (0);
 
 #else // ENABLE_DEBUG_GPIO
 

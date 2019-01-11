@@ -46,30 +46,35 @@ extern "C" {
 #endif
 
 /** @brief RAAL Softdevice default parameters. */
-#define NRF_RAAL_TIMESLOT_DEFAULT_LENGTH      6400
-#define NRF_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS 5
-#define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN nrf_raal_softdevice_safe_margin_calc(NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM)
-#define NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT     6400
-#define NRF_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH  120000000
-#define NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM  500
+#define NRF_RAAL_TIMESLOT_DEFAULT_LENGTH                    6400
+#define NRF_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS               5
+#define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN               nrf_raal_softdevice_safe_margin_calc( \
+        NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM)
+#define NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT                   4500
+#define NRF_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH                120000000
+#define NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM                500
 
 #define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_LFRC_TICKS    4
 #define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_CRYSTAL_TICKS 3
 #define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_US            3
 
-#define NRF_RAAL_PPM_THRESHOLD 500
+#define NRF_RAAL_PPM_THRESHOLD                              500
 
-#define NRF_RAAL_TIMESLOT_SAFE_MARGIN_TICKS(ppm) ((ppm >= NRF_RAAL_PPM_THRESHOLD) ? \
-                                                  NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_LFRC_TICKS : \
-                                                  NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_CRYSTAL_TICKS)
+#define NRF_RAAL_TIMESLOT_SAFE_MARGIN_TICKS(ppm)            ((ppm >= NRF_RAAL_PPM_THRESHOLD) ?                \
+                                                             NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_LFRC_TICKS \
+                                                             :                                                \
+                                                             NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_CRYSTAL_TICKS)
 
 /**
  * @brief Function used to calculate safe margin from LF clock accuracy in ppm unit.
  *
  * @param[in]  ppm  LF clock accuracy in ppm unit.
  */
-#define nrf_raal_softdevice_safe_margin_calc(ppm) (NRF_802154_RTC_TICKS_TO_US(NRF_RAAL_TIMESLOT_SAFE_MARGIN_TICKS(ppm)) \
-                                                   + NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_US)
+#define nrf_raal_softdevice_safe_margin_calc(ppm)           (NRF_802154_RTC_TICKS_TO_US(              \
+                                                                 NRF_RAAL_TIMESLOT_SAFE_MARGIN_TICKS( \
+                                                                     ppm))                            \
+                                                             +                                        \
+                                                             NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_US)
 
 /** @brief RAAL Softdevice configuration parameters. */
 typedef struct
@@ -99,12 +104,10 @@ typedef struct
      * @ref nrf_raal_softdevice_safe_margin_calc can be used to calculate proper value based on clock accuracy.
      * This value can also be selected experimentally.
      */
-    uint16_t timeslot_safe_margin; 
+    uint16_t timeslot_safe_margin;
 
     /**
-     * @brief @deprecated Clock accuracy in ppm unit.
-     * This value is not used anymore.
-     * Clock accuracy is embedded into timeslot_safe_margin.
+     * @brief Clock accuracy in ppm unit.
      */
     uint16_t lf_clk_accuracy_ppm;
 } nrf_raal_softdevice_cfg_t;

@@ -44,13 +44,12 @@ void nrf_802154_priority_drop_init(void)
     nrf_802154_swi_init();
 }
 
-void nrf_802154_priority_drop_timeslot_exit(void)
+void nrf_802154_priority_drop_hfclk_stop(void)
 {
-    nrf_802154_swi_timeslot_exit();
+    nrf_802154_swi_hfclk_stop();
 }
 
-void nrf_802154_priority_drop_timeslot_exit_terminate(void)
+void nrf_802154_priority_drop_hfclk_stop_terminate(void)
 {
-    nrf_802154_swi_timeslot_exit_terminate();
+    nrf_802154_swi_hfclk_stop_terminate();
 }
-

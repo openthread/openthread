@@ -347,10 +347,10 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // Check the Kiss-o'-death packet.
     if (!responseHeader.GetStratum())
     {
-        char kissCode[Header::GetKissCodeLength() + 1];
+        char kissCode[Header::kKissCodeLength + 1];
 
-        memcpy(kissCode, responseHeader.GetKissCode(), Header::GetKissCodeLength());
-        kissCode[Header::GetKissCodeLength()] = 0;
+        memcpy(kissCode, responseHeader.GetKissCode(), Header::kKissCodeLength);
+        kissCode[Header::kKissCodeLength] = 0;
 
         otLogInfoIp6("SNTP response contains the Kiss-o'-death packet with %s code", kissCode);
         ExitNow(error = OT_ERROR_BUSY);

@@ -54,7 +54,8 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal                                       \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                       \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/power                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/systick                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd                                             \
@@ -100,7 +101,7 @@ SINGLEPHY_SOURCES                                                               
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_notification_direct.c            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_direct.c           \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_direct.c                 \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/raal/single_phy/single_phy.c                \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/rsch/raal/single_phy/single_phy.c           \
     $(NULL)
 
 SINGLEPHY_CPPFLAGS                                                                                         = \
@@ -115,11 +116,11 @@ SOFTDEVICE_SOURCES                                                              
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_priority_drop_swi.c              \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request_swi.c                    \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_swi.c                            \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.c       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice/nrf_raal_softdevice.c  \
     $(NULL)
 
 SOFTDEVICE_CPPFLAGS                                                                                        = \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice                            \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -DSOFTDEVICE_PRESENT                                                                                     \
     -DS140                                                                                                   \
@@ -149,7 +150,6 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_debug.c                            \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_pib.c                              \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.c                         \
-    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rsch.c                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rssi.c                             \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.c                        \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/nrf_802154_timer_coord.c                      \
@@ -160,6 +160,8 @@ RADIO_DRIVER_SOURCES                                                            
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/mac_features/nrf_802154_filter.c              \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/clock/nrf_802154_clock_sdk.c         \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/platform/hp_timer/nrf_802154_hp_timer.c       \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/rsch/nrf_802154_rsch.c                        \
+    @top_builddir@/third_party/NordicSemiconductor/drivers/radio/rsch/nrf_802154_rsch_crit_sect.c              \
     @top_builddir@/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.c      \
     $(NULL)
 
@@ -286,7 +288,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_procedures_duration.h               \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_request.h                           \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_revision.h                          \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rsch.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rssi.h                              \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_rx_buffer.h                         \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/nrf_802154_timer_coord.h                       \
@@ -302,9 +303,12 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature/nrf_802154_temperature.h  \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/hp_timer/nrf_802154_hp_timer.h        \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/lp_timer/nrf_802154_lp_timer.h        \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_api.h                            \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/nrf_raal_config.h                         \
-    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/raal/softdevice/nrf_raal_softdevice.h          \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/nrf_802154_rsch.h                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/nrf_802154_wifi_coex.h                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/nrf_802154_rsch_crit_sect.h               \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/nrf_raal_api.h                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/nrf_raal_config.h                    \
+    $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice/nrf_raal_softdevice.h     \
     $(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/timer_scheduler/nrf_802154_timer_sched.h       \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error_weak.h                         \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error/app_error.h                              \
@@ -390,11 +394,8 @@ libopenthread_nrf52840_a_LIBADD                                                 
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_sdk_a_LIBADD                                                                        = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
-    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")                   \
-    $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
-
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

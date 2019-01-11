@@ -3742,7 +3742,7 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
     // all diagnostics related features are processed within diagnostics module
     output[sizeof(output) - 1] = '\0';
     otDiagProcessCmd(argc, argv, output, sizeof(output) - 1);
-    mServer->OutputFormat("%s\n", output);
+    mServer->Output(output, static_cast<uint16_t>(strlen(output)));
 }
 #endif
 

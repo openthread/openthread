@@ -177,7 +177,7 @@ bool otCoapSecureIsConnected(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().IsConnected();
 }
 
-bool otCoapSecureIsConncetionActive(otInstance *aInstance)
+bool otCoapSecureIsConnectionActive(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
