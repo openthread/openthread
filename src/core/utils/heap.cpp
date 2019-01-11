@@ -44,8 +44,6 @@ namespace Utils {
 
 Heap::Heap(void)
 {
-    OT_STATIC_ASSERT(kMemorySize % sizeof(void *) == 0, invalid_memory_size);
-
     Block &super = BlockAt(kSuperBlockOffset);
     super.SetSize(kSuperBlockSize);
 

@@ -39,6 +39,7 @@
 
 #include <stddef.h>
 
+#include "utils/static_assert.hpp"
 #include "utils/wrap_stdint.h"
 
 namespace ot {
@@ -233,7 +234,7 @@ private:
 #else
         kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
 #endif
-        kAlignSize          = sizeof(long),                                       ///< The alignment size.
+        kAlignSize          = sizeof(void *),                                     ///< The alignment size.
         kBlockRemainderSize = kAlignSize - sizeof(uint16_t) * 2,                  ///< Block unit remainder size.
         kSuperBlockSize     = kAlignSize - sizeof(Block),                         ///< Super block size.
         kFirstBlockSize     = kMemorySize - kAlignSize * 3 + kBlockRemainderSize, ///< First block size.
@@ -241,6 +242,8 @@ private:
         kFirstBlockOffset   = kAlignSize * 2 - sizeof(uint16_t),                  ///< Offset of the first block.
         kGuardBlockOffset   = kMemorySize - sizeof(uint16_t),                     ///< Offset of the guard block.
     };
+
+    OT_STATIC_ASSERT(kMemorySize % kAlignSize == 0, "The heap memory size is not aligned to kAlignSize!");
 
     /**
      * This method returns the block at offset @p aOffset.
