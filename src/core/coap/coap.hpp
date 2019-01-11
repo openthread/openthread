@@ -662,7 +662,7 @@ protected:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method receives a message.

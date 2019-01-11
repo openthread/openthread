@@ -318,7 +318,7 @@ public:
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 private:
-    virtual otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void        HandleDtlsConnected(bool aConnected);

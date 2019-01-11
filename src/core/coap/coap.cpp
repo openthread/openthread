@@ -206,7 +206,7 @@ exit:
     return error;
 }
 
-otError Coap::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Coap::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     static_cast<Message &>(aMessage).Finish();
     return mSocket.SendTo(aMessage, aMessageInfo);
