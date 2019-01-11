@@ -44,7 +44,7 @@
 namespace ot {
 
 /**
- * This class implements the base class for an `AnnounceSender` and `AnnoucneBeginSever`.
+ * This class implements the base class for an `AnnounceSender` and `AnnounceBeginSever`.
  *
  * This class provides APIs to schedule periodic transmission of MLE Announcement messages for a given number
  * transmissions per channel.

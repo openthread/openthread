@@ -54,7 +54,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argc);
 
-    // Add more plarform specific diagnostics features here.
+    // Add more platform specific diagnostics features here.
     snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
 }
 

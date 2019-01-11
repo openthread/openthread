@@ -100,7 +100,7 @@ otError otPlatUartDisable(void)
     // Set the shutdown event
     SetEvent(s_StopWorkerEvent);
 
-    // Wait for the worker to compelte
+    // Wait for the worker to complete
     WaitForSingleObject(s_WorkerThread, INFINITE);
     
     CloseHandle(s_WorkerThread);

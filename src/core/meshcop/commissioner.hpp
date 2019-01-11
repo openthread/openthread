@@ -162,7 +162,7 @@ public:
      *
      * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
      * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
-     * @retval OT_COMIMSSIONER_STATE_ACTIVE    Commissioner enabled.
+     * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
      *
      */
     otCommissionerState GetState(void) const;
@@ -265,19 +265,19 @@ private:
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
                                                   otError              aResult);
-    void        HandleMgmtCommissisonerSetResponse(Coap::Header *          aHeader,
-                                                   Message *               aMessage,
-                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                   otError                 aResult);
+    void        HandleMgmtCommissionerSetResponse(Coap::Header *          aHeader,
+                                                  Message *               aMessage,
+                                                  const Ip6::MessageInfo *aMessageInfo,
+                                                  otError                 aResult);
     static void HandleMgmtCommissionerGetResponse(void *               aContext,
                                                   otCoapHeader *       aHeader,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
                                                   otError              aResult);
-    void        HandleMgmtCommissisonerGetResponse(Coap::Header *          aHeader,
-                                                   Message *               aMessage,
-                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                   otError                 aResult);
+    void        HandleMgmtCommissionerGetResponse(Coap::Header *          aHeader,
+                                                  Message *               aMessage,
+                                                  const Ip6::MessageInfo *aMessageInfo,
+                                                  otError                 aResult);
     static void HandleLeaderPetitionResponse(void *               aContext,
                                              otCoapHeader *       aHeader,
                                              otMessage *          aMessage,
