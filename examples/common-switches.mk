@@ -135,6 +135,10 @@ ifeq ($(DISABLE_EXECUTABLE), 1)
 configure_OPTIONS              += --enable-executable=no
 endif
 
+ifeq ($(PLATFORM_UDP), 1)
+    configure_OPTIONS              += --enable-platform-udp
+endif
+
 ifeq ($(DEBUG_UART),1)
 CFLAGS   += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1
 CXXFLAGS += -DOPENTHREAD_CONFIG_ENABLE_DEBUG_UART=1
