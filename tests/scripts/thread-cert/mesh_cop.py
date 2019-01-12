@@ -63,7 +63,6 @@ def create_mesh_cop_message_type_set():
              MeshCopMessageType.JOIN_ENT_NTF,
              MeshCopMessageType.JOIN_ENT_RSP ]
 
-
 class State(object):
 
     def __init__(self, state):
@@ -86,7 +85,6 @@ class StateFactory:
         state = ord(data.read(1))
         return State(state)
 
-
 class VendorName(object):
 
     def __init__(self, vendor_name):
@@ -102,13 +100,11 @@ class VendorName(object):
     def __repr__(self):
         return "VendorName(vendor_name={})".format(self.vendor_name)
 
-
 class VendorNameFactory:
 
     def parse(self, data):
         vendor_name = data.getvalue().decode('utf-8')
         return VendorName(vendor_name)
-
 
 class VendorModel(object):
 
@@ -124,7 +120,6 @@ class VendorModel(object):
 
     def __repr__(self):
         return "VendorModel(vendor_model={})".format(self.vendor_model)
-
 
 class VendorModelFactory:
 
@@ -146,7 +141,6 @@ class VendorSWVersion(object):
 
     def __repr__(self):
         return "VendorName(vendor_sw_version={})".format(self.vendor_sw_version)
-
 
 class VendorSWVersionFactory:
 
@@ -221,12 +215,10 @@ class ProvisioningUrlFactory:
         url = data.decode('utf-8')
         return ProvisioningUrl(url)
 
-
 class VendorData(object):
 
     def __init__(self, data):
         self._vendor_data = data
-
     @property
     def vendor_data(self):
         return self._vendor_data
@@ -234,12 +226,10 @@ class VendorData(object):
     def __repr__(self):
         return "Vendor(url={})".format(self.vendor_data)
 
-
 class VendorDataFactory(object):
 
     def parse(self, data):
         return VendorData(data)
-
 
 class MeshCopCommand(object):
 
@@ -259,7 +249,6 @@ class MeshCopCommand(object):
         tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.tlvs])
         return "MeshCopCommand(type={}, tlvs=[{}])".format(self.type, tlvs_str)
 
-
 def create_deault_mesh_cop_msg_type_map():
     return {
         'JOIN_FIN.req': MeshCopMessageType.JOIN_FIN_REQ,
@@ -267,7 +256,6 @@ def create_deault_mesh_cop_msg_type_map():
         'JOIN_ENT.ntf': MeshCopMessageType.JOIN_ENT_NTF,
         'JOIN_ENT.rsp': MeshCopMessageType.JOIN_ENT_RSP
     }
-
 
 class MeshCopCommandFactory:
 
