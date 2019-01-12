@@ -30,6 +30,7 @@ import os
 from enum import Enum
 
 import coap
+import dtls
 import ipv6
 import lowpan
 import message
@@ -39,6 +40,7 @@ import network_data
 import network_layer
 import simulator
 import sniffer
+import thread_discovery
 
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
@@ -150,6 +152,24 @@ def create_default_mle_tlv_address_registration_factory():
         addr_compressed_factory=mle.AddressCompressedFactory(),
         addr_full_factory=mle.AddressFullFactory())
 
+def create_default_mle_tlv_thread_discovery_factory():
+    return mle.ThreadDiscoveryFactory(
+        thread_discovery_tvls_factory=create_default_thread_discovery_tlvs_factory())
+
+def create_default_thread_discovery_tlvs_factory():
+    return thread_discovery.ThreadDiscoveryTlvsFactory(
+        sub_tlvs_factories=create_default_thread_discovery_sub_tlvs_factories())
+
+def create_default_thread_discovery_sub_tlvs_factories():
+    return {
+        thread_discovery.TlvType.REQUEST: thread_discovery.DiscoveryRequestFactory(),
+        thread_discovery.TlvType.RESPONSE: thread_discovery.DiscoveryResponseFactory(),
+        thread_discovery.TlvType.EXTENDED_PANID: thread_discovery.ExtendedPanidFactory(),
+        thread_discovery.TlvType.NETWORK_NAME: thread_discovery.NetworkNameFactory(),
+        thread_discovery.TlvType.STEERING_DATA: network_data.SteeringDataFactory(),
+        thread_discovery.TlvType.JOINER_UDP_PORT: thread_discovery.JoinerUdpPortFactory(),
+        thread_discovery.TlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory()
+    }
 
 def create_default_mle_tlvs_factories():
     return {
@@ -177,9 +197,9 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.PENDING_TIMESTAMP: mle.PendingTimestampFactory(),
         mle.TlvType.ACTIVE_OPERATIONAL_DATASET: mle.ActiveOperationalDatasetFactory(),
         mle.TlvType.PENDING_OPERATIONAL_DATASET: mle.PendingOperationalDatasetFactory(),
-        mle.TlvType.THREAD_DISCOVERY: mle.ThreadDiscoveryFactory(),
         mle.TlvType.TIME_REQUEST: mle.TimeRequestFactory(),
         mle.TlvType.TIME_PARAMETER: mle.TimeParameterFactory(),
+        mle.TlvType.THREAD_DISCOVERY: create_default_mle_tlv_thread_discovery_factory()
     }
 
 
@@ -253,13 +273,19 @@ def create_default_ipv6_hop_by_hop_options_factory():
 def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
     mle_message_factory = create_default_mle_message_factory(master_key)
     coap_message_factory = create_default_coap_message_factory()
+    dtls_message_factory = create_default_dtls_message_factory()
 
     return ipv6.UdpBasedOnSrcDstPortsPayloadFactory(
         src_dst_port_based_payload_factories={
             19788: mle_message_factory,
-            61631: coap_message_factory
+            61631: coap_message_factory,
+            1000: dtls_message_factory
         }
     )
+
+
+def create_default_dtls_message_factory():
+    return dtls.MessageFactory()
 
 
 def create_default_ipv6_icmp_body_factories():

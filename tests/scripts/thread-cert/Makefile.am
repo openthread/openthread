@@ -125,9 +125,11 @@ EXTRA_DIST                                                         = \
     command.py                                                       \
     common.py                                                        \
     config.py                                                        \
+    dtls.py                                                          \
     ipv6.py                                                          \
     lowpan.py                                                        \
     mac802154.py                                                     \
+    mesh_cop.py                                                      \
     message.py                                                       \
     mle.py                                                           \
     net_crypto.py                                                    \
@@ -151,6 +153,7 @@ EXTRA_DIST                                                         = \
     test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    thread_discovery.py                                              \
     $(NULL)
 
 check_PROGRAMS                                                     = \
