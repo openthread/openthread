@@ -69,7 +69,7 @@ public:
         , mPetition(aPetition)
         , mSeparate(aSeparate)
         , mTokenLength(aMessage.GetTokenLength())
-        , mType(aMessage.GetType() >> kTypeOffset)
+        , mType(aMessage.GetType() >> Coap::Message::kTypeOffset)
     {
         memcpy(mToken, aMessage.GetToken(), mTokenLength);
     }
@@ -108,7 +108,7 @@ public:
      */
     void ToHeader(Coap::Message &aMessage, Coap::Message::Code aCode)
     {
-        if (mType == (OT_COAP_TYPE_NON_CONFIRMABLE >> kTypeOffset) || mSeparate)
+        if (mType == (OT_COAP_TYPE_NON_CONFIRMABLE >> Coap::Message::kTypeOffset) || mSeparate)
         {
             aMessage.Init(OT_COAP_TYPE_NON_CONFIRMABLE, aCode);
         }
@@ -124,10 +124,8 @@ public:
 private:
     enum
     {
-        kTypeOffset     = 4, ///< The type offset in the first byte of coap header
-        kMaxTokenLength = 8, ///< The max token size
+        kMaxTokenLength = OT_COAP_MAX_TOKEN_LENGTH, ///< The max token size
     };
-
     BorderAgent &mBorderAgent;
     uint16_t     mMessageId;              ///< The CoAP Message ID of the original request.
     bool         mPetition : 1;           ///< Whether the forwarding request is leader petition.
@@ -157,6 +155,60 @@ static Coap::Message::Code CoapCodeFromError(otError aError)
     }
 
     return code;
+}
+
+static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aForwardContext)
+{
+    otError        error   = OT_ERROR_NONE;
+    Coap::Message *message = NULL;
+
+    VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != NULL, error = OT_ERROR_NO_BUFS);
+    aForwardContext.ToHeader(*message, CoapCodeFromError(error));
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerMessageInfo()));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        if (message != NULL)
+        {
+            message->Free();
+        }
+
+        otLogWarnMeshCoP("Failed to send error CoAP message: %s", otThreadErrorToString(error));
+    }
+}
+
+static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, const Coap::Message &aRequest, bool aSeparate)
+{
+    otError        error   = OT_ERROR_NONE;
+    Coap::Message *message = NULL;
+
+    VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != NULL, error = OT_ERROR_NO_BUFS);
+
+    if (aRequest.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE || aSeparate)
+    {
+        message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, CoapCodeFromError(error));
+    }
+    else
+    {
+        message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, CoapCodeFromError(error));
+    }
+
+    message->SetMessageId(aSeparate ? 0 : aRequest.GetMessageId());
+    message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
+
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerMessageInfo()));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        if (message != NULL)
+        {
+            message->Free();
+        }
+
+        otLogWarnMeshCoP("Failed to send error CoAP message: %s", otThreadErrorToString(error));
+    }
 }
 
 void BorderAgent::HandleCoapResponse(void *               aContext,
@@ -208,30 +260,20 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
     SuccessOrExit(error = borderAgent.ForwardToCommissioner(*message, *response));
 
 exit:
-    do
+    if (error != OT_ERROR_NONE)
     {
-        if (error == OT_ERROR_NONE)
+        if (message != NULL)
         {
-            break;
+            message->Free();
         }
 
         otLogWarnMeshCoP("Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
                          otThreadErrorToString(error));
 
-        if (message == NULL)
-        {
-            break;
-        }
+        SendErrorMessage(netif.GetCoapSecure(), forwardContext);
+    }
 
-        forwardContext.ToHeader(*message, CoapCodeFromError(error));
-
-        if (OT_ERROR_NONE != netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()))
-        {
-            message->Free();
-        }
-    } while (false);
-
-    netif.GetInstance().GetHeap().Free(&forwardContext);
+    borderAgent.GetInstance().GetHeap().Free(&forwardContext);
 }
 
 template <>
@@ -569,42 +611,22 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     otLogInfoMeshCoP("Forwarded request to leader on %s", aPath);
 
 exit:
-    do
+    if (error != OT_ERROR_NONE)
     {
-        if (error == OT_ERROR_NONE)
-        {
-            break;
-        }
-
-        otLogWarnMeshCoP("Failed to forward to leader: %s", otThreadErrorToString(error));
-
         if (forwardContext != NULL)
         {
             GetInstance().GetHeap().Free(forwardContext);
         }
 
-        if (message == NULL)
-        {
-            break;
-        }
-
-        if (aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE || aSeparate)
-        {
-            message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, CoapCodeFromError(error));
-        }
-        else
-        {
-            message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, CoapCodeFromError(error));
-        }
-
-        message->SetMessageId(aSeparate ? 0 : aMessage.GetMessageId());
-        message->SetToken(aMessage.GetToken(), aMessage.GetTokenLength());
-
-        if (OT_ERROR_NONE != netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()))
+        if (message != NULL)
         {
             message->Free();
         }
-    } while (false);
+
+        otLogWarnMeshCoP("Failed to forward to leader: %s", otThreadErrorToString(error));
+
+        SendErrorMessage(netif.GetCoapSecure(), aMessage, aSeparate);
+    }
 
     return error;
 }

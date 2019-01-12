@@ -60,8 +60,7 @@ exit:
 
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 {
-    Coap::Message *message = static_cast<Coap::Message *>(aMessage);
-    message->Init(aType, aCode);
+    static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
 }
 
 void otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)

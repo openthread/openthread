@@ -581,6 +581,7 @@ const otCoapOption *otCoapMessageGetNextOption(otMessage *aMessage);
  * This function fills current option value into @p aValue.
  *
  * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[out] aValue    A pointer to a buffer to receive the option value.
  *
  * @retval  OT_ERROR_NONE       Successfully filled value.
  * @retval  OT_ERROR_NOT_FOUND  No current option.

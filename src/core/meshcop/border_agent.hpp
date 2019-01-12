@@ -107,7 +107,6 @@ private:
                                    const otMessageInfo *aMessageInfo,
                                    otError              aResult);
 
-    void        SendErrorMessage(Coap::Message &aMessage);
     otError     ForwardToLeader(const Coap::Message &   aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
                                 const char *            aPath,

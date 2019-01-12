@@ -385,7 +385,7 @@ Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLeng
     uint32_t alarmFireTime;
 
     // Create a message copy of requested size.
-    VerifyOrExit((messageCopy = static_cast<Message *>(aMessage.Clone(aCopyLength))) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((messageCopy = aMessage.Clone(aCopyLength)) != NULL, error = OT_ERROR_NO_BUFS);
 
     // Append the copy with retransmission data.
     SuccessOrExit(error = aCoapMetadata.AppendTo(*messageCopy));
@@ -443,8 +443,7 @@ otError Coap::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessage
     Message *messageCopy = NULL;
 
     // Create a message copy for lower layers.
-    VerifyOrExit((messageCopy = static_cast<Message *>(aMessage.Clone(aMessage.GetLength() - sizeof(CoapMetadata)))) !=
-                     NULL,
+    VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(CoapMetadata))) != NULL,
                  error = OT_ERROR_NO_BUFS);
 
     // Send the copy.
@@ -758,8 +757,7 @@ otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
             continue;
         }
 
-        *aResponse = static_cast<Message *>(message->Clone());
-        VerifyOrExit(*aResponse != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((*aResponse = message->Clone()) != NULL, error = OT_ERROR_NO_BUFS);
 
         EnqueuedResponseHeader::RemoveFrom(**aResponse);
 
@@ -800,8 +798,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
         DequeueOldestResponse();
     }
 
-    copy = static_cast<Message *>(aMessage.Clone());
-    VerifyOrExit(copy != NULL);
+    VerifyOrExit((copy = aMessage.Clone()) != NULL);
 
     enqueuedResponseHeader.AppendTo(*copy);
     mQueue.Enqueue(*copy);

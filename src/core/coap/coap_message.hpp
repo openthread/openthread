@@ -79,6 +79,7 @@ public:
         kMinHeaderLength    = 4,   ///< Minimum header length
         kMaxHeaderLength    = 512, ///< Maximum header length
         kDefaultTokenLength = 2,   ///< Default token length
+        kTypeOffset         = 4,   ///< The type offset in the first byte of a coap header
     };
 
     /**

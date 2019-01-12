@@ -393,7 +393,7 @@ void CoapSecure::HandleServerResponse(otMessage *aMessage, const otMessageInfo *
     PrintPayload(aMessage);
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
-        otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
+        (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
     {
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
