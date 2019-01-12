@@ -46,7 +46,7 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey('deadbeefdeadbeefdeadbeefdeadbeef')
+        self.nodes[COMMISSIONER].set_masterkey('00112233445566778899aabbccddeeff')
 
         self.nodes[JOINER].set_mode('rsdn')
         self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
@@ -70,7 +70,12 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('OPENTHREAD')
         self.simulator.go(10)
+        self.simulator.read_cert_messages_in_commissioning_log([COMMISSIONER,JOINER])
         self.assertEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
+
+        joiner_messages = self.simulator.get_messages_sent_by(JOINER)
+        print(joiner_messages.commissioning_messages)
+        assert len(joiner_messages.commissioning_messages) >= 2
 
         self.nodes[JOINER].thread_start()
         self.simulator.go(5)
