@@ -439,6 +439,9 @@ public:
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
+     *
      */
     typedef otError (*SendCallback)(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -458,10 +461,10 @@ public:
     typedef otError (*Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
-     * This method clears caches used by this CoAP agent.
+     * This method clears requests and responses used by this CoAP agent.
      *
      */
-    void FlushCaches(void);
+    void ClearRequestsAndResponses(void);
 
     /**
      * This method adds a resource to the CoAP server.
@@ -663,6 +666,9 @@ protected:
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
+     *
      */
     otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -734,7 +740,8 @@ public:
      *
      * @param[in]  aPort  The local UDP port to bind to.
      *
-     * @retval OT_ERROR_NONE  Successfully started the CoAP service.
+     * @retval OT_ERROR_NONE    Successfully started the CoAP service.
+     * @retval OT_ERROR_ALREADY Already started.
      *
      */
     otError Start(uint16_t aPort);

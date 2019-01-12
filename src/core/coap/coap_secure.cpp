@@ -76,7 +76,7 @@ otError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aCo
 
         sockaddr.mPort = aPort;
         SuccessOrExit(error = mSocket.Open(&CoapSecure::HandleUdpReceive, this));
-        SuccessOrExit(error = mSocket.Bind(sockaddr));
+        VerifyOrExit((error = mSocket.Bind(sockaddr)) == OT_ERROR_NONE, mSocket.Close());
     }
 
 exit:
@@ -109,7 +109,7 @@ otError CoapSecure::Stop(void)
     mTransportCallback = NULL;
     mTransportContext  = NULL;
 
-    FlushCaches();
+    ClearRequestsAndResponses();
 
 exit:
     return error;

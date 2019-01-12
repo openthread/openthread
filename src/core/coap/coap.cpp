@@ -62,7 +62,7 @@ CoapBase::CoapBase(Instance &aInstance, SendCallback aSendCallback)
     mMessageId = Random::GetUint16();
 }
 
-void CoapBase::FlushCaches(void)
+void CoapBase::ClearRequestsAndResponses(void)
 {
     Message *    message = mPendingRequests.GetHead();
     Message *    messageToRemove;
@@ -906,7 +906,7 @@ otError Coap::Start(uint16_t aPort)
 
     sockaddr.mPort = aPort;
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(sockaddr));
+    VerifyOrExit((error = mSocket.Bind(sockaddr)) == OT_ERROR_NONE, mSocket.Close());
 
 exit:
     return error;
@@ -917,7 +917,7 @@ otError Coap::Stop(void)
     otError error;
 
     SuccessOrExit(error = mSocket.Close());
-    FlushCaches();
+    ClearRequestsAndResponses();
 
 exit:
     return error;

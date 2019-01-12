@@ -84,7 +84,8 @@ public:
      *                        If NULL, the message is sent directly to the socket.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE  Successfully started the CoAP agent.
+     * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
+     * @retval OT_ERROR_ALREADY     Already started.
      *
      */
     otError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
