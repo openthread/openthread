@@ -93,7 +93,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     , mJamDetector(aInstance)
-#endif // OPENTHREAD_ENABLE_JAM_DETECTTION
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 #if OPENTHREAD_FTD
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)

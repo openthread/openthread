@@ -364,7 +364,7 @@ exit:
     return error;
 }
 
-bool ChannelManager::ShouldAttamptChannelChange(void)
+bool ChannelManager::ShouldAttemptChannelChange(void)
 {
     uint16_t ccaFailureRate = GetInstance().Get<Mac::Mac>().GetCcaFailureRate();
     bool     shouldAttempt  = (ccaFailureRate >= kCcaFailureRateThreshold);
@@ -386,7 +386,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     VerifyOrExit(GetInstance().Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aSkipQualityCheck || ShouldAttamptChannelChange());
+    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 

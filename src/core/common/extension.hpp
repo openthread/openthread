@@ -93,7 +93,7 @@ public:
      * @param[in] aNcpInstance   A reference to the NCP object.
      *
      */
-    void SignalNcpInit(Ncp::NcpBase &aNcpInsatnce);
+    void SignalNcpInit(Ncp::NcpBase &aNcpInstance);
 
 protected:
     /**

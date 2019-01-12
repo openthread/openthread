@@ -318,7 +318,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     mRxOnWhenIdle = aRxOnWhenIdle;
 
     // If the new value for `mRxOnWhenIdle` is `true` (i.e., radio should
-    // remain in Rx while idle) we stop any ongoing or pending `WaitinForData`
+    // remain in Rx while idle) we stop any ongoing or pending `WaitingForData`
     // operation (since this operation only applies to sleepy devices).
 
     if (mRxOnWhenIdle)
@@ -795,7 +795,7 @@ bool Mac::ShouldSendBeacon(void) const
         // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
         // the device should transmit IEEE 802.15.4 Beacons in response
         // to IEEE 802.15.4 Beacon Requests even while the device is not
-        // router capable and detached (i.e., `IsBeaconeEnabled()` is
+        // router capable and detached (i.e., `IsBeaconEnabled()` is
         // false) but only if it is in joinable state (unsecure port
         // list is not empty).
 

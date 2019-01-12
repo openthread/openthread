@@ -271,6 +271,9 @@ class AuxiliarySecurityHeader:
     def sequence_counter(self):
         """ Compute or extract sequence counter based on currently set Key Index Mode. """
 
+        if self.key_id_mode == 0:
+            key_source = self.key_id[:8]
+            format = ">Q" if self._big_endian else "<Q"
         if self.key_id_mode == 1:
             # Try to guess valid Key Sequence Counter based on Key Index. This one should work for now.
             return self.key_index - 1
@@ -278,10 +281,6 @@ class AuxiliarySecurityHeader:
             # In this mode sequence counter is stored on the first four bytes of Key ID.
             key_source = self.key_id[:4]
             format = ">I" if self._big_endian else "<I"
-        elif self.key_id_mode == 3:
-            key_source = self.key_id[:8]
-            format = ">Q" if self._big_endian else "<Q"
-
         else:
             raise ValueError("Unsupported Key Index Mode: {}".format(self.key_id_mode))
 

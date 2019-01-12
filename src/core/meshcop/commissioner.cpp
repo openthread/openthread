@@ -472,13 +472,13 @@ void Commissioner::HandleMgmtCommissionerGetResponse(void *               aConte
                                                      const otMessageInfo *aMessageInfo,
                                                      otError              aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerGetResponse(
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(
         static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Message *         aMessage,
-                                                      const Ip6::MessageInfo *aMessageInfo,
-                                                      otError                 aResult)
+void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
+                                                     const Ip6::MessageInfo *aMessageInfo,
+                                                     otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -572,13 +572,13 @@ void Commissioner::HandleMgmtCommissionerSetResponse(void *               aConte
                                                      const otMessageInfo *aMessageInfo,
                                                      otError              aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerSetResponse(
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(
         static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Message *         aMessage,
-                                                      const Ip6::MessageInfo *aMessageInfo,
-                                                      otError                 aResult)
+void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
+                                                     const Ip6::MessageInfo *aMessageInfo,
+                                                     otError                 aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 

@@ -73,7 +73,7 @@ public:
         /**
          * This callback is invoked to notify owner/user of `HdlcInterface` of a received (and decoded) frame.
          *
-         * The newly received frame is available in `RxFrameBuffer` from `HdclInterface::GetRxFrameBuffer()`. The
+         * The newly received frame is available in `RxFrameBuffer` from `HdlcInterface::GetRxFrameBuffer()`. The
          * user can read and process the frame. The callback is expected to either discard the new frame using
          * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
          * processed later.

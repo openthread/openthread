@@ -497,7 +497,7 @@ public:
     static int ComparePartitions(bool                 aSingletonA,
                                  const LeaderDataTlv &aLeaderDataA,
                                  bool                 aSingletonB,
-                                 const LeaderDataTlv &aleaderDataB);
+                                 const LeaderDataTlv &aLeaderDataB);
 
     /**
      * This method checks if the destination is reachable.
