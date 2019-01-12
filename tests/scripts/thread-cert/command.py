@@ -37,6 +37,7 @@ import common
 import config
 import mesh_cop
 import mle
+import thread_discovery
 
 from collections import Counter
 from enum import IntEnum
