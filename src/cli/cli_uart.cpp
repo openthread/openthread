@@ -52,9 +52,9 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
-#ifdef OT_UART_LOCK_HDR_FILE
+#ifdef OT_CLI_UART_LOCK_HDR_FILE
 
-#include OT_UART_LOCK_HDR_FILE
+#include OT_CLI_UART_LOCK_HDR_FILE
 
 #else
 
@@ -82,7 +82,7 @@
     } while (0)
 #endif
 
-#endif // OT_UART_LOCK_HDR_FILE
+#endif // OT_CLI_UART_LOCK_HDR_FILE
 
 namespace ot {
 namespace Cli {
