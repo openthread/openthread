@@ -96,13 +96,23 @@ public:
     };
 
     /**
+     * This enumeration specifies the type of Network Data (local or leader).
+     *
+     */
+    enum Type
+    {
+        kTypeLocal,  ///< Local Network Data.
+        kTypeLeader, ///< Leader Network Data.
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
+     * @param[in]  aType         Network data type
      *
      */
-    NetworkData(Instance &aInstance, bool aLocal);
+    NetworkData(Instance &aInstance, Type aType);
 
     /**
      * This method clears the network data.
@@ -510,7 +520,7 @@ private:
         uint8_t *mIteratorBuffer;
     };
 
-    const bool mLocal;
+    const Type mType;
     bool       mLastAttemptWait;
     uint32_t   mLastAttempt;
 };
