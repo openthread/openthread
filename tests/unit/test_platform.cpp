@@ -571,4 +571,20 @@ void otPlatSettingsWipe(otInstance *aInstance)
     (void)aInstance;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint64_t otPlatTimeGet(void)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    return (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
+}
+
+uint16_t otPlatTimeGetXtalAccuracy(void)
+{
+    return 0;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
 } // extern "C"
