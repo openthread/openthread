@@ -31,6 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 bin_PROGRAMS                                              = \
     ip6-send-fuzzer                                         \
     radio-receive-done-fuzzer                               \
+    ncp-uart-received-fuzzer                                \
     $(NULL)
 
 AM_CPPFLAGS                                               = \
@@ -39,6 +40,7 @@ AM_CPPFLAGS                                               = \
     $(NULL)
 
 COMMON_LDADD                                              = \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a         \
     $(top_builddir)/src/core/libopenthread-ftd.a            \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a     \
     $(LIB_FUZZING_ENGINE)                                   \
@@ -49,5 +51,8 @@ ip6_send_fuzzer_SOURCES                                   = ip6_send.cpp fuzzer_
 
 radio_receive_done_fuzzer_LDADD                           = $(COMMON_LDADD)
 radio_receive_done_fuzzer_SOURCES                         = radio_receive_done.cpp fuzzer_platform.c
+
+ncp_uart_received_fuzzer_LDADD                            = $(COMMON_LDADD)
+ncp_uart_received_fuzzer_SOURCES                          = ncp_uart_received.cpp fuzzer_platform.c
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
