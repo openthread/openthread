@@ -31,7 +31,6 @@
 
 #include "openthread-core-config.h"
 
-#include <limits.h>
 #include <openthread/sntp.h>
 
 #include "common/message.hpp"
