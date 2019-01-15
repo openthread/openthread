@@ -39,7 +39,7 @@
 
 #include <openthread/platform/random.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -320,16 +320,15 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
     ThreadNetif &    netif = GetNetif();
     otError          error;
-    Message *        message;
-    Coap::Header     header;
+    Coap::Message *  message;
     ThreadTargetTlv  targetTlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = netif.GetCoap().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
+    message->SetPayloadMarker();
 
     targetTlv.Init();
     targetTlv.SetTarget(aEid);
@@ -360,19 +359,13 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressNotification(void *               aContext,
-                                                otCoapHeader *       aHeader,
-                                                otMessage *          aMessage,
-                                                const otMessageInfo *aMessageInfo)
+void AddressResolver::HandleAddressNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressNotification(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void AddressResolver::HandleAddressNotification(Coap::Header &          aHeader,
-                                                Message &               aMessage,
-                                                const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &                netif = GetNetif();
     ThreadTargetTlv              targetTlv;
@@ -381,7 +374,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &          aHeader,
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
     uint32_t                     lastTransactionTime;
 
-    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid());
@@ -447,7 +440,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &          aHeader,
             otLogNoteArp("Cache entry updated (notification): %s, 0x%04x, lastTrans:%d",
                          targetTlv.GetTarget().ToString().AsCString(), rloc16Tlv.GetRloc16(), lastTransactionTime);
 
-            if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
+            if (netif.GetCoap().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
             {
                 otLogInfoArp("Sending address notification acknowledgment");
             }
@@ -467,15 +460,14 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
 {
     ThreadNetif &    netif = GetNetif();
     otError          error;
-    Message *        message;
-    Coap::Header     header;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(aDestination == NULL ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = netif.GetCoap().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(aDestination == NULL ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
+    message->SetPayloadMarker();
 
     SuccessOrExit(error = message->Append(&aTarget, sizeof(aTarget)));
     SuccessOrExit(error = message->Append(&aEid, sizeof(aEid)));
@@ -508,17 +500,13 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressError(void *               aContext,
-                                         otCoapHeader *       aHeader,
-                                         otMessage *          aMessage,
-                                         const otMessageInfo *aMessageInfo)
+void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressError(*static_cast<Coap::Header *>(aHeader),
-                                                                 *static_cast<Message *>(aMessage),
+    static_cast<AddressResolver *>(aContext)->HandleAddressError(*static_cast<Coap::Message *>(aMessage),
                                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &         netif = GetNetif();
     otError               error = OT_ERROR_NONE;
@@ -527,14 +515,14 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     Mac::ExtAddress       macAddr;
     Ip6::Address          destination;
 
-    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST,
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
                  error = OT_ERROR_DROP);
 
     otLogInfoArp("Received address error notification");
 
-    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (netif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
+        if (netif.GetCoap().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoArp("Sent address error notification acknowledgment");
         }
@@ -596,24 +584,20 @@ exit:
     return;
 }
 
-void AddressResolver::HandleAddressQuery(void *               aContext,
-                                         otCoapHeader *       aHeader,
-                                         otMessage *          aMessage,
-                                         const otMessageInfo *aMessageInfo)
+void AddressResolver::HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(*static_cast<Coap::Header *>(aHeader),
-                                                                 *static_cast<Message *>(aMessage),
+    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(*static_cast<Coap::Message *>(aMessage),
                                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &                netif = GetNetif();
     ThreadTargetTlv              targetTlv;
     ThreadMeshLocalEidTlv        mlIidTlv;
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
 
-    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid());
@@ -661,16 +645,15 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
 {
     ThreadNetif &    netif = GetNetif();
     otError          error;
-    Message *        message;
-    Coap::Header     header;
+    Coap::Message *  message;
     ThreadRloc16Tlv  rloc16Tlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = netif.GetCoap().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = netif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
+    message->SetPayloadMarker();
 
     SuccessOrExit(error = message->Append(&aTargetTlv, sizeof(aTargetTlv)));
     SuccessOrExit(error = message->Append(&aMlIidTlv, sizeof(aMlIidTlv)));

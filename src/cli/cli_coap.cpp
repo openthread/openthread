@@ -38,7 +38,7 @@
 #include <ctype.h>
 
 #include "cli/cli.hpp"
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 
 namespace ot {
 namespace Cli {
@@ -115,21 +115,17 @@ exit:
     return error;
 }
 
-void OTCALL Coap::HandleServerResponse(void *               aContext,
-                                       otCoapHeader *       aHeader,
-                                       otMessage *          aMessage,
-                                       const otMessageInfo *aMessageInfo)
+void OTCALL Coap::HandleServerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Coap *>(aContext)->HandleServerResponse(aHeader, aMessage, aMessageInfo);
+    static_cast<Coap *>(aContext)->HandleServerResponse(aMessage, aMessageInfo);
 }
 
-void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void Coap::HandleServerResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError      error = OT_ERROR_NONE;
-    otCoapHeader responseHeader;
-    otMessage *  responseMessage = NULL;
-    otCoapCode   responseCode    = OT_COAP_CODE_EMPTY;
-    char         responseContent = '0';
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = NULL;
+    otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
+    char       responseContent = '0';
 
     mInterpreter.mServer->OutputFormat(
         "Received coap request from [%x:%x:%x:%x:%x:%x:%x:%x]: ", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
@@ -138,7 +134,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
         HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
         HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
 
-    switch (otCoapHeaderGetCode(aHeader))
+    switch (otCoapMessageGetCode(aMessage))
     {
     case OT_COAP_CODE_GET:
         mInterpreter.mServer->OutputFormat("GET");
@@ -163,9 +159,10 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
 
     PrintPayload(aMessage);
 
-    if ((otCoapHeaderGetType(aHeader) == OT_COAP_TYPE_CONFIRMABLE) || otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
+    if (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE ||
+        otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
     {
-        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
+        if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
             responseCode = OT_COAP_CODE_CONTENT;
         }
@@ -174,19 +171,19 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, cons
             responseCode = OT_COAP_CODE_VALID;
         }
 
-        otCoapHeaderInit(&responseHeader, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
-        otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
-        otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
-
-        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
-        {
-            otCoapHeaderSetPayloadMarker(&responseHeader);
-        }
-
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, &responseHeader, NULL);
+        responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
+        otCoapMessageInit(responseMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
+        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
+        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+
+        if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
+        {
+            otCoapMessageSetPayloadMarker(responseMessage);
+        }
+
+        if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
             SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
         }
@@ -216,7 +213,6 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     otError       error   = OT_ERROR_NONE;
     otMessage *   message = NULL;
     otMessageInfo messageInfo;
-    otCoapHeader  header;
     uint16_t      payloadLength = 0;
 
     // Default parameters
@@ -278,9 +274,12 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         }
     }
 
-    otCoapHeaderInit(&header, coapType, coapCode);
-    otCoapHeaderGenerateToken(&header, ot::Coap::Header::kDefaultTokenLength);
-    SuccessOrExit(error = otCoapHeaderAppendUriPathOptions(&header, coapUri));
+    message = otCoapNewMessage(mInterpreter.mInstance, NULL);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    otCoapMessageInit(message, coapType, coapCode);
+    otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
+    SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 
     if (argc > 4)
     {
@@ -288,12 +287,9 @@ otError Coap::ProcessRequest(int argc, char *argv[])
 
         if (payloadLength > 0)
         {
-            otCoapHeaderSetPayloadMarker(&header);
+            otCoapMessageSetPayloadMarker(message);
         }
     }
-
-    message = otCoapNewMessage(mInterpreter.mInstance, &header, NULL);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     // Embed content into message if given
     if (payloadLength > 0)
@@ -328,20 +324,15 @@ exit:
 }
 
 void OTCALL Coap::HandleClientResponse(void *               aContext,
-                                       otCoapHeader *       aHeader,
                                        otMessage *          aMessage,
                                        const otMessageInfo *aMessageInfo,
                                        otError              aError)
 {
-    static_cast<Coap *>(aContext)->HandleClientResponse(aHeader, aMessage, aMessageInfo, aError);
+    static_cast<Coap *>(aContext)->HandleClientResponse(aMessage, aMessageInfo, aError);
 }
 
-void Coap::HandleClientResponse(otCoapHeader *       aHeader,
-                                otMessage *          aMessage,
-                                const otMessageInfo *aMessageInfo,
-                                otError              aError)
+void Coap::HandleClientResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError)
 {
-    OT_UNUSED_VARIABLE(aHeader);
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     if (aError != OT_ERROR_NONE)

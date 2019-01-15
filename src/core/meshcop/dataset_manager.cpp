@@ -271,17 +271,16 @@ otError DatasetManager::Register(void)
 {
     ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
-    Coap::Header     header;
-    Message *        message;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
     Dataset          dataset(mLocal.GetType());
 
-    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(mUriSet);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->SetToken(Coap::Message::kDefaultTokenLength);
+    message->AppendUriPathOptions(mUriSet);
+    message->SetPayloadMarker();
 
     mLocal.Get(dataset);
     SuccessOrExit(error = message->Append(dataset.GetBytes(), dataset.GetSize()));
@@ -303,9 +302,7 @@ exit:
     return error;
 }
 
-void DatasetManager::Get(const Coap::Header &    aHeader,
-                         const Message &         aMessage,
-                         const Ip6::MessageInfo &aMessageInfo) const
+void DatasetManager::Get(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
     Tlv      tlv;
     uint16_t offset = aMessage.GetOffset();
@@ -345,26 +342,25 @@ void DatasetManager::Get(const Coap::Header &    aHeader,
         }
     }
 
-    SendGetResponse(aHeader, aMessageInfo, tlvs, length);
+    SendGetResponse(aMessage, aMessageInfo, tlvs, length);
 }
 
-void DatasetManager::SendGetResponse(const Coap::Header &    aRequestHeader,
+void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      uint8_t *               aTlvs,
                                      uint8_t                 aLength) const
 {
-    ThreadNetif &netif = GetNetif();
-    otError      error = OT_ERROR_NONE;
-    Coap::Header responseHeader;
-    Message *    message;
-    Dataset      dataset(mLocal.GetType());
+    ThreadNetif &  netif = GetNetif();
+    otError        error = OT_ERROR_NONE;
+    Coap::Message *message;
+    Dataset        dataset(mLocal.GetType());
 
     mLocal.Get(dataset);
 
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-    responseHeader.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetDefaultResponseHeader(aRequest);
+    message->SetPayloadMarker();
 
     if (aLength == 0)
     {
@@ -401,7 +397,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &    aRequestHeader,
         }
     }
 
-    if (message->GetLength() == responseHeader.GetLength())
+    if (message->GetLength() == message->GetOffset())
     {
         // no payload, remove coap payload marker
         message->SetLength(message->GetLength() - 1);
@@ -423,16 +419,15 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 {
     ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
-    Coap::Header     header;
-    Message *        message;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(mUriSet);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->SetToken(Coap::Message::kDefaultTokenLength);
+    message->AppendUriPathOptions(mUriSet);
+    message->SetPayloadMarker();
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -555,7 +550,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
-    if (message->GetLength() == header.GetLength())
+    if (message->GetLength() == message->GetOffset())
     {
         // no payload, remove coap payload marker
         message->SetLength(message->GetLength() - 1);
@@ -585,16 +580,11 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
 {
     ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
-    Coap::Header     header;
-    Message *        message;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
     Tlv              tlv;
     uint8_t          datasetTlvs[kMaxDatasetTlvs];
     uint8_t          length;
-
-    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(mUriGet);
 
     length = 0;
 
@@ -658,12 +648,16 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+
+    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->SetToken(Coap::Message::kDefaultTokenLength);
+    message->AppendUriPathOptions(mUriGet);
+
     if (aLength + length > 0)
     {
-        header.SetPayloadMarker();
+        message->SetPayloadMarker();
     }
-
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     if (aLength + length > 0)
     {
@@ -749,19 +743,15 @@ exit:
     return error;
 }
 
-void ActiveDataset::HandleGet(void *               aContext,
-                              otCoapHeader *       aHeader,
-                              otMessage *          aMessage,
-                              const otMessageInfo *aMessageInfo)
+void ActiveDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(*static_cast<Coap::Header *>(aHeader),
-                                                      *static_cast<Message *>(aMessage),
+    static_cast<ActiveDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
+    DatasetManager::Get(aMessage, aMessageInfo);
 }
 
 void ActiveDataset::HandleTimer(Timer &aTimer)
@@ -885,19 +875,15 @@ exit:
     return;
 }
 
-void PendingDataset::HandleGet(void *               aContext,
-                               otCoapHeader *       aHeader,
-                               otMessage *          aMessage,
-                               const otMessageInfo *aMessageInfo)
+void PendingDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(*static_cast<Coap::Header *>(aHeader),
-                                                       *static_cast<Message *>(aMessage),
+    static_cast<PendingDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
                                                        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
+    DatasetManager::Get(aMessage, aMessageInfo);
 }
 
 void PendingDataset::HandleTimer(Timer &aTimer)

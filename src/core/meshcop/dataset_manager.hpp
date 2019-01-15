@@ -224,7 +224,7 @@ protected:
      * @param[in]  aMessageInfo  The message info.
      *
      */
-    void Get(const Coap::Header &aHeader, const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void Get(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
      * This method compares the partition's Operational Dataset with that stored in non-volatile memory.
@@ -247,10 +247,10 @@ protected:
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUdpReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otError Register(void);
-    void    SendGetResponse(const Coap::Header &    aRequestHeader,
+    void    SendGetResponse(const Coap::Message &   aRequest,
                             const Ip6::MessageInfo &aMessageInfo,
                             uint8_t *               aTlvs,
                             uint8_t                 aLength) const;
@@ -288,12 +288,10 @@ protected:
      * @retval OT_ERROR_DROP  The MGMT_SET request message was dropped.
      *
      */
-    otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    void SendSetResponse(const Coap::Header &    aRequestHeader,
-                         const Ip6::MessageInfo &aMessageInfo,
-                         StateTlv::State         aState);
+    void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif // OPENTHREAD_FTD
 };
 
@@ -374,18 +372,12 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
-    static void HandleGet(void *               aContext,
-                          otCoapHeader *       aHeader,
-                          otMessage *          aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void        HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    static void HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_FTD
-    static void HandleSet(void *               aContext,
-                          otCoapHeader *       aHeader,
-                          otMessage *          aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void        HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     bool IsTlvInitialized(Tlv::Type aType);
 #endif
@@ -470,7 +462,7 @@ public:
      * @param[in]  aMessage    The MGMT_SET message that contains an Active Dataset.
      *
      */
-    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage);
 #endif
 
 private:
@@ -482,18 +474,12 @@ private:
     static void HandleDelayTimer(Timer &aTimer);
     void        HandleDelayTimer(void);
 
-    static void HandleGet(void *               aContext,
-                          otCoapHeader *       aHeader,
-                          otMessage *          aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void        HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    static void HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
 #if OPENTHREAD_FTD
-    static void HandleSet(void *               aContext,
-                          otCoapHeader *       aHeader,
-                          otMessage *          aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void        HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     TimerMilli mDelayTimer;

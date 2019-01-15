@@ -117,21 +117,15 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandlePetition(void *               aContext,
-                               otCoapHeader *       aHeader,
-                               otMessage *          aMessage,
-                               const otMessageInfo *aMessageInfo);
-    void        HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError     SendPetitionResponse(const Coap::Header &    aRequestHeader,
+    static void HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError     SendPetitionResponse(const Coap::Message &   aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State         aState);
 
-    static void HandleKeepAlive(void *               aContext,
-                                otCoapHeader *       aHeader,
-                                otMessage *          aMessage,
-                                const otMessageInfo *aMessageInfo);
-    void        HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError     SendKeepAliveResponse(const Coap::Header &    aRequestHeader,
+    static void HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError     SendKeepAliveResponse(const Coap::Message &   aRequest,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       StateTlv::State         aState);
 
