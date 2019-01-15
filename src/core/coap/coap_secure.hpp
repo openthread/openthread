@@ -65,7 +65,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef otError (*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This constructor initializes the object.
@@ -307,7 +307,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method returns the DTLS session's peer address.

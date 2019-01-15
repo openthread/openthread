@@ -38,7 +38,7 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 
 namespace ot {
 namespace Cli {
@@ -80,21 +80,14 @@ private:
 
     otError ProcessRequest(int argc, char *argv[]);
 
-    static void OTCALL HandleServerResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo);
-    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void OTCALL HandleServerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void               HandleServerResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static void OTCALL HandleClientResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
-    void               HandleClientResponse(otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
+    void               HandleClientResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

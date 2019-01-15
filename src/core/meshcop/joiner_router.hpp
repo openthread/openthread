@@ -37,7 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
@@ -92,28 +92,21 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *               aContext,
-                                    otCoapHeader *       aHeader,
-                                    otMessage *          aMessage,
-                                    const otMessageInfo *aMessageInfo);
-    void        HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRelayTransmit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRelayTransmit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleJoinerEntrustResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              result);
-    void        HandleJoinerEntrustResponse(Coap::Header *          aHeader,
-                                            Message *               aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo,
-                                            otError                 result);
+    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError result);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
     void    SendDelayedJoinerEntrust(void);
-    otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;

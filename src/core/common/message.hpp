@@ -183,6 +183,7 @@ private:
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
+protected:
     union
     {
         struct

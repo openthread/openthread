@@ -37,7 +37,7 @@
 
 #include <openthread/platform/random.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -62,24 +62,21 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
                                          const Ip6::Address &aAddress)
 {
     otError                           error = OT_ERROR_NONE;
-    Coap::Header                      header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
     MeshCoP::ChannelMaskTlv           channelMask;
     MeshCoP::CountTlv                 count;
     MeshCoP::PeriodTlv                period;
 
     Ip6::MessageInfo messageInfo;
-    Message *        message = NULL;
+    Coap::Message *  message = NULL;
 
     VerifyOrExit(GetNetif().GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(GetNetif().GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
-    header.SetPayloadMarker();
-
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(GetNetif().GetCoap(), header)) != NULL,
-                 error = OT_ERROR_NO_BUFS);
+    message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    message->SetToken(Coap::Message::kDefaultTokenLength);
+    message->AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
+    message->SetPayloadMarker();
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(GetNetif().GetCommissioner().GetSessionId());

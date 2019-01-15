@@ -132,7 +132,7 @@ SOURCES_COMMON                      = \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
     coap/coap.cpp                     \
-    coap/coap_header.cpp              \
+    coap/coap_message.cpp             \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/instance.cpp               \
@@ -289,7 +289,7 @@ HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     coap/coap.hpp                     \
-    coap/coap_header.hpp              \
+    coap/coap_message.hpp             \
     coap/coap_secure.hpp              \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
