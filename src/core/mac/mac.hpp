@@ -235,6 +235,7 @@ public:
      * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
      * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
      * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+     * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
      *
      */
     otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
