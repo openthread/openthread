@@ -567,7 +567,6 @@ private:
      * This structure represents a HelpData used by this CoAP message.
      *
      */
-    OT_TOOL_PACKED_BEGIN
     struct HelpData
     {
         Header       mHeader;
@@ -576,7 +575,7 @@ private:
         uint16_t     mOptionLast;
         uint16_t     mHeaderOffset;
         uint16_t     mHeaderLength;
-    } OT_TOOL_PACKED_END;
+    };
 
     const HelpData &GetHelpData(void) const
     {
