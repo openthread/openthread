@@ -171,11 +171,8 @@ public:
 #endif
 
 private:
-    static void HandleServerData(void *               aContext,
-                                 otCoapHeader *       aHeader,
-                                 otMessage *          aMessage,
-                                 const otMessageInfo *aMessageInfo);
-    void        HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -221,23 +218,17 @@ private:
 
     bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
 
-    static void HandleCommissioningSet(void *               aContext,
-                                       otCoapHeader *       aHeader,
-                                       otMessage *          aMessage,
-                                       const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleCommissioningGet(void *               aContext,
-                                       otCoapHeader *       aHeader,
-                                       otMessage *          aMessage,
-                                       const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleCommissioningGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendCommissioningGetResponse(const Coap::Header &    aRequestHeader,
+    void SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       uint8_t *               aTlvs,
                                       uint8_t                 aLength);
-    void SendCommissioningSetResponse(const Coap::Header &     aRequestHeader,
+    void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
 

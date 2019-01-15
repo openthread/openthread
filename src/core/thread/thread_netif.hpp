@@ -440,7 +440,7 @@ public:
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static otError TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

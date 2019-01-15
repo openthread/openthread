@@ -418,6 +418,8 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
             }
         }
 
+        aMessage.RemoveHeader(aMessage.GetOffset());
+        assert(aMessage.GetOffset() == 0);
         socket->HandleUdpReceive(aMessage, aMessageInfo);
         break;
     }

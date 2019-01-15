@@ -58,7 +58,19 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_INFO
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "NRF52840"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MAX_CHILDREN                          32
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
@@ -66,7 +78,19 @@
  * The number of message buffers in the buffer pool.
  *
  */
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   128
+#ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   160
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+ *
+ * The maximum number of supported IPv6 address registrations per child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                    6
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
@@ -84,7 +108,9 @@
  * The number of EID-to-RLOC cache entries.
  *
  */
-#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES                 20
+#ifndef OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
+#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES                 32
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPREND_LEVEL
@@ -96,21 +122,25 @@
 #define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL                     0
 #endif
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-  *
-  * Define to 1 if you want to enable software ACK timeout logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
+#endif
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-  *
-  * Define to 1 if you want to enable software retransmission logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -118,7 +148,9 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          0
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -126,7 +158,9 @@
  * Define to 1 if you want to support microsecond timer in platform.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER     1
+#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+#endif
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -134,7 +168,9 @@
  * The base address of settings.
  *
  */
+#ifndef SETTINGS_CONFIG_BASE_ADDRESS
 #define SETTINGS_CONFIG_BASE_ADDRESS                            0
+#endif
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -142,7 +178,9 @@
  * The page size of settings.
  *
  */
+#ifndef SETTINGS_CONFIG_PAGE_SIZE
 #define SETTINGS_CONFIG_PAGE_SIZE                               4096
+#endif
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -150,7 +188,9 @@
  * The page number of settings.
  *
  */
+#ifndef SETTINGS_CONFIG_PAGE_NUM
 #define SETTINGS_CONFIG_PAGE_NUM                                4
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEAP_SIZE
@@ -158,7 +198,9 @@
  * The size of heap buffer when DTLS is enabled.
  *
  */
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
 #define OPENTHREAD_CONFIG_HEAP_SIZE                             (4096 * sizeof(void *))
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
@@ -166,7 +208,9 @@
  * The size of heap buffer when DTLS is disabled.
  *
  */
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
 #define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS                     2048
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -174,7 +218,19 @@
  * Define as 1 to enable the time synchronization service feature.
  *
  */
+#ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC                      0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
+ *
+ *  The size of CLI message buffer in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE               2048
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT

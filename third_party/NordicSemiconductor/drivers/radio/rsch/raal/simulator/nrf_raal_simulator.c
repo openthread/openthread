@@ -95,11 +95,11 @@ void nrf_raal_init(void)
     NVIC_ClearPendingIRQ(MWU_IRQn);
     NVIC_EnableIRQ(MWU_IRQn);
 
-    NRF_TIMER0->MODE       = TIMER_MODE_MODE_Timer;
-    NRF_TIMER0->BITMODE    = TIMER_BITMODE_BITMODE_24Bit;
-    NRF_TIMER0->PRESCALER  = 4;
-    NRF_TIMER0->INTENSET   = TIMER_INTENSET_COMPARE0_Msk;
-    NRF_TIMER0->CC[0]      = m_started_timestamp;
+    NRF_TIMER0->MODE      = TIMER_MODE_MODE_Timer;
+    NRF_TIMER0->BITMODE   = TIMER_BITMODE_BITMODE_24Bit;
+    NRF_TIMER0->PRESCALER = 4;
+    NRF_TIMER0->INTENSET  = TIMER_INTENSET_COMPARE0_Msk;
+    NRF_TIMER0->CC[0]     = m_started_timestamp;
 
     NVIC_SetPriority(TIMER0_IRQn, 1);
     NVIC_ClearPendingIRQ(TIMER0_IRQn);
@@ -153,6 +153,11 @@ void nrf_raal_continuous_mode_exit(void)
     nrf_802154_pin_clr(PIN_DBG_TIMESLOT_ACTIVE);
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CONTINUOUS_EXIT);
+}
+
+void nrf_raal_continuous_ended(void)
+{
+    // Intentionally empty.
 }
 
 bool nrf_raal_timeslot_request(uint32_t length_us)

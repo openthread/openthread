@@ -467,7 +467,7 @@ private:
                                     uint8_t &           aPriority);
 
     FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
-    FragmentPriorityEntry *GetUnusedFragementPriorityEntry(void);
+    FragmentPriorityEntry *GetUnusedFragmentPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 

@@ -49,20 +49,20 @@
 #include "nrf_802154_config.h"
 
 /**@brief Timer instance. */
-#define TIMER                       NRF_TIMER0
+#define TIMER                 NRF_TIMER0
 
 /**@brief Timer compare channel definitions. */
-#define TIMER_CC_CAPTURE            NRF_TIMER_CC_CHANNEL1
-#define TIMER_CC_CAPTURE_TASK       NRF_TIMER_TASK_CAPTURE1
+#define TIMER_CC_CAPTURE      NRF_TIMER_CC_CHANNEL1
+#define TIMER_CC_CAPTURE_TASK NRF_TIMER_TASK_CAPTURE1
 
-#define TIMER_CC_SYNC               NRF_TIMER_CC_CHANNEL2
-#define TIMER_CC_SYNC_TASK          NRF_TIMER_TASK_CAPTURE2
-#define TIMER_CC_SYNC_EVENT         NRF_TIMER_EVENT_COMPARE2
-#define TIMER_CC_SYNC_INT           NRF_TIMER_INT_COMPARE2_MASK
+#define TIMER_CC_SYNC         NRF_TIMER_CC_CHANNEL2
+#define TIMER_CC_SYNC_TASK    NRF_TIMER_TASK_CAPTURE2
+#define TIMER_CC_SYNC_EVENT   NRF_TIMER_EVENT_COMPARE2
+#define TIMER_CC_SYNC_INT     NRF_TIMER_INT_COMPARE2_MASK
 
-#define TIMER_CC_EVT                NRF_TIMER_CC_CHANNEL3
-#define TIMER_CC_EVT_TASK           NRF_TIMER_TASK_CAPTURE3
-#define TIMER_CC_EVT_INT            NRF_TIMER_INT_COMPARE3_MASK
+#define TIMER_CC_EVT          NRF_TIMER_CC_CHANNEL3
+#define TIMER_CC_EVT_TASK     NRF_TIMER_TASK_CAPTURE3
+#define TIMER_CC_EVT_INT      NRF_TIMER_INT_COMPARE3_MASK
 
 /**@brief Unexpected value in the sync compare channel. */
 static uint32_t m_unexpected_sync;
@@ -139,4 +139,3 @@ uint32_t nrf_802154_hp_timer_timestamp_get(void)
 {
     return nrf_timer_cc_read(TIMER, TIMER_CC_EVT);
 }
-

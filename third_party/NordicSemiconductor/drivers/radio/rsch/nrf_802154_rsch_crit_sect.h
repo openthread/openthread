@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,58 +28,44 @@
  *
  */
 
+#ifndef NRF_802154_RSCH_CRIT_SECT_H__
+#define NRF_802154_RSCH_CRIT_SECT_H__
+
+#include <stdbool.h>
+
+#include "nrf_802154_rsch.h"
+
 /**
- * @file
- *   This file implements the nrf 802.15.4 radio arbiter for single phy.
- *
- * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
- *
+ * @defgroup nrf_802154_rsch_crit_sect RSCH event queue used during critical sections
+ * @{
+ * @ingroup nrf_802154_rsch
+ * @brief Critical section implementation for the RSCH module.
  */
 
-#include "nrf_raal_api.h"
+/**
+ * @brief Initialize the RSCH critical section module.
+ */
+void nrf_802154_rsch_crit_sect_init(void);
 
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
+/**
+ * @brief Request priority level from RSCH through the critical section module.
+ *
+ * @param[in]  prio  Requested priority level.
+ */
+void nrf_802154_rsch_crit_sect_prio_request(rsch_prio_t prio);
 
-static bool m_continuous;
+/**
+ * @brief This function is called to notify the core that approved RSCH priority has changed.
+ *
+ * @note This function is called from critical section context and does not preempt other critical
+ *       sections.
+ *
+ * @param[in]  prio  Approved priority level.
+ */
+extern void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio);
 
-void nrf_raal_init(void)
-{
-    m_continuous = false;
-}
+/**
+ *@}
+ **/
 
-void nrf_raal_uninit(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_raal_continuous_mode_enter(void)
-{
-    assert(!m_continuous);
-
-    m_continuous = true;
-    nrf_raal_timeslot_started();
-}
-
-void nrf_raal_continuous_mode_exit(void)
-{
-    assert(m_continuous);
-
-    m_continuous = false;
-}
-
-bool nrf_raal_timeslot_request(uint32_t length_us)
-{
-    (void) length_us;
-
-    assert(m_continuous);
-
-    return true;
-}
-
-uint32_t nrf_raal_timeslot_us_left_get(void)
-{
-    return UINT32_MAX;
-}
-
+#endif // NRF_802154_RSCH_CRIT_SECT_H__

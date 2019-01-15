@@ -231,12 +231,12 @@ class MacFrame:
         security_level = security_control & 0x07
         key_id_mode = (security_control & 0x18) >> 3
 
-        if key_id_mode == 1:
+        if key_id_mode == 0:
+            key_id = data.read(9)
+        elif key_id_mode == 1:
             key_id = data.read(1)
         elif key_id_mode == 2:
             key_id = data.read(5)
-        elif key_id_mode == 3:
-            key_id = data.read(9)
         else:
             key_source = None
             key_index = None

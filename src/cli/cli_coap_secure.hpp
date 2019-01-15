@@ -38,7 +38,7 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 
 /**
@@ -84,7 +84,7 @@ private:
         kPskIdMaxLength = 32
     };
 
-    void PrintHeaderInfos(otCoapHeader *aHeader) const;
+    void PrintHeaderInfos(otMessage *aMessage) const;
 
     void PrintPayload(otMessage *aMessage) const;
 
@@ -92,28 +92,18 @@ private:
 
     otError Stop(void);
 
-    static void OTCALL HandleServerResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo);
-    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void OTCALL HandleServerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void               HandleServerResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     static void OTCALL HandleClientResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aError);
-    void               HandleClientResponse(otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
+    void               HandleClientResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-    static void OTCALL DefaultHandle(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
-    void               DefaultHandle(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void OTCALL DefaultHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void               DefaultHandle(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
     static void OTCALL HandleClientConnect(bool aConnected, void *aContext);

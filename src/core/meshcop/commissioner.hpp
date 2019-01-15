@@ -162,7 +162,7 @@ public:
      *
      * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
      * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
-     * @retval OT_COMIMSSIONER_STATE_ACTIVE    Commissioner enabled.
+     * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
      *
      */
     otCommissionerState GetState(void) const;
@@ -261,61 +261,40 @@ private:
     void UpdateJoinerExpirationTimer(void);
 
     static void HandleMgmtCommissionerSetResponse(void *               aContext,
-                                                  otCoapHeader *       aHeader,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
                                                   otError              aResult);
-    void        HandleMgmtCommissisonerSetResponse(Coap::Header *          aHeader,
-                                                   Message *               aMessage,
-                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                   otError                 aResult);
+    void        HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
+                                                  const Ip6::MessageInfo *aMessageInfo,
+                                                  otError                 aResult);
     static void HandleMgmtCommissionerGetResponse(void *               aContext,
-                                                  otCoapHeader *       aHeader,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
                                                   otError              aResult);
-    void        HandleMgmtCommissisonerGetResponse(Coap::Header *          aHeader,
-                                                   Message *               aMessage,
-                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                   otError                 aResult);
+    void        HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
+                                                  const Ip6::MessageInfo *aMessageInfo,
+                                                  otError                 aResult);
     static void HandleLeaderPetitionResponse(void *               aContext,
-                                             otCoapHeader *       aHeader,
                                              otMessage *          aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              otError              aResult);
-    void        HandleLeaderPetitionResponse(Coap::Header *          aHeader,
-                                             Message *               aMessage,
-                                             const Ip6::MessageInfo *aMessageInfo,
-                                             otError                 aResult);
+    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderKeepAliveResponse(void *               aContext,
-                                              otCoapHeader *       aHeader,
                                               otMessage *          aMessage,
                                               const otMessageInfo *aMessageInfo,
                                               otError              aResult);
-    void        HandleLeaderKeepAliveResponse(Coap::Header *          aHeader,
-                                              Message *               aMessage,
-                                              const Ip6::MessageInfo *aMessageInfo,
-                                              otError                 aResult);
+    void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
-    static void HandleRelayReceive(void *               aContext,
-                                   otCoapHeader *       aHeader,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo);
-    void        HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRelayReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDatasetChanged(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
-    void        HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDatasetChanged(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerFinalize(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
-    void        HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
+    void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
     static otError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

@@ -231,7 +231,7 @@ bool otCoapSecureIsConnected(otInstance *aInstance);
  * @retval FALSE If DTLS session is not active.
  *
  */
-bool otCoapSecureIsConncetionActive(otInstance *aInstance);
+bool otCoapSecureIsConnectionActive(otInstance *aInstance);
 
 /**
  * This method sends a CoAP request over secure DTLS connection.

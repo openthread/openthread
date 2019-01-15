@@ -84,7 +84,7 @@ public:
     /**
      * This method sets the "flag byte" field in the SPI frame header.
      *
-     * @param[in] aResetFalg     The status of reset flag (TRUE to set the flag, FALSE to clear flag).
+     * @param[in] aResetFlag     The status of reset flag (TRUE to set the flag, FALSE to clear flag).
      *
      */
     void SetHeaderFlagByte(bool aResetFlag) { mBuffer[kIndexFlagByte] = kFlagPattern | (aResetFlag ? kFlagReset : 0); }

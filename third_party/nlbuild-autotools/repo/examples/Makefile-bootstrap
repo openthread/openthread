@@ -36,6 +36,7 @@
 #            path = third_party/nlunit-test/repo
 #            url = git@github.com:nestlabs/nlunit-test.git
 #            branch = master
+#            commit = 561a155bb7257e54198cf5496f74ed5bc41cf85f
 #            update = none
 #
 

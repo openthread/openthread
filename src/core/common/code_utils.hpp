@@ -48,6 +48,17 @@
  */
 #define OT_ARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
 
+/**
+ * This macro returns a pointer aligned by @p aAlignment.
+ *
+ * @param[in] aPointer      A pointer to contiguous space.
+ * @param[in] aAlignment    The desired alignment.
+ *
+ * @returns The aligned pointer.
+ *
+ */
+#define otALIGN(aPointer, aAlignment) ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1U) & ~((aAlignment)-1U)))
+
 // Calculates the aligned variable size.
 #define otALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 

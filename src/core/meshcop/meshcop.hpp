@@ -55,10 +55,10 @@ enum
  * This function create Message for MeshCoP
  *
  */
-inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHeader)
+inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
 {
     otMessageSettings settings = {true, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
-    return aCoap.NewMessage(aHeader, &settings);
+    return aCoap.NewMessage(&settings);
 }
 
 /**

@@ -872,6 +872,7 @@ otError Dtls::MapError(int rval)
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     case MBEDTLS_ERR_SSL_TIMEOUT:
+    case MBEDTLS_ERR_SSL_WANT_READ:
         error = OT_ERROR_BUSY;
         break;
 

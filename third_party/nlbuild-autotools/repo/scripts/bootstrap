@@ -277,6 +277,10 @@ esac
 
 # Bootstrap the package.
 
+if [ -n "${verbose}" ]; then
+    echo "${local_action} && ${tool_action} && ${header_action} && ${make_action} && ${config_action}"
+fi
+
 ${local_action} && ${tool_action} && ${header_action} && ${make_action} && ${config_action}
 
 # Clean up any temporary files created.

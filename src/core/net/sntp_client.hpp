@@ -31,6 +31,7 @@
 
 #include "openthread-core-config.h"
 
+#include <limits.h>
 #include <openthread/sntp.h>
 
 #include "common/message.hpp"
@@ -74,6 +75,15 @@ public:
     {
         kModeClient = 3,
         kModeServer = 4,
+    };
+
+    /**
+     * Kiss code length.
+     *
+     */
+    enum
+    {
+        kKissCodeLength = 4, ///< Length of the kiss code in ASCII format
     };
 
     /**
@@ -203,14 +213,6 @@ public:
      *
      */
     char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
-
-    /**
-     * This method returns the length of the kiss code in ASCII format.
-     *
-     * @returns The length of the kiss code in ASCII format.
-     *
-     */
-    static uint16_t GetKissCodeLength(void) { return sizeof(uint32_t); };
 
     /**
      * This method returns the reference timestamp seconds field.

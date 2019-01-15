@@ -379,10 +379,14 @@ exit:
     return;
 }
 
-void platformUdpInit(void)
+void platformUdpInit(const char *aIfName)
 {
-    const char *platformNetif = getenv("PLATFORM_NETIF");
-    sPlatNetifIndex           = if_nametoindex(platformNetif);
+    if (aIfName == NULL)
+    {
+        exit(OT_EXIT_INVALID_ARGUMENTS);
+    }
+
+    sPlatNetifIndex = if_nametoindex(aIfName);
 
     if (sPlatNetifIndex == 0)
     {

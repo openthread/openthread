@@ -168,7 +168,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError GetValueOffset(const Message &aMesasge, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
+    static otError GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
 protected:
     /**

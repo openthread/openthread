@@ -100,7 +100,7 @@ otError CoapSecure::Stop(void)
         Disconnect();
     }
 
-    for (Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
+    for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
     {
         mTransmitQueue.Dequeue(*message);
         message->Free();
@@ -180,9 +180,9 @@ otError CoapSecure::SetCertificate(const uint8_t *aX509Cert,
     return GetNetif().GetDtls().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLenth)
+otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    return GetNetif().GetDtls().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLenth);
+    return GetNetif().GetDtls().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
@@ -240,6 +240,7 @@ otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
+    static_cast<Message &>(aMessage).Finish();
     mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
     return OT_ERROR_NONE;
@@ -247,11 +248,11 @@ otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo
 
 void CoapSecure::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapSecure *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
+    static_cast<CoapSecure *>(aContext)->HandleUdpReceive(*static_cast<ot::Message *>(aMessage),
                                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void CoapSecure::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapSecure::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -313,9 +314,10 @@ void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLeng
 
 void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
-    Message *message = NULL;
+    ot::Message *message = NULL;
 
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0)) != NULL);
+    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, Message::GetHelpDataReserved())) !=
+                 NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     CoapBase::Receive(*message, mPeerAddress);
@@ -335,8 +337,8 @@ otError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 
 otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
-    otError  error   = OT_ERROR_NONE;
-    Message *message = NULL;
+    otError      error   = OT_ERROR_NONE;
+    ot::Message *message = NULL;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(aMessageSubType);
@@ -376,8 +378,8 @@ void CoapSecure::HandleTransmit(Tasklet &aTasklet)
 
 void CoapSecure::HandleTransmit(void)
 {
-    otError  error   = OT_ERROR_NONE;
-    Message *message = mTransmitQueue.GetHead();
+    otError      error   = OT_ERROR_NONE;
+    ot::Message *message = mTransmitQueue.GetHead();
 
     VerifyOrExit(message != NULL);
     mTransmitQueue.Dequeue(*message);

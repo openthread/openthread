@@ -56,6 +56,14 @@ extern "C" {
 otInstance *otSysInit(int argc, char *argv[]);
 
 /**
+ * This function performs platform network interface initialization.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ *
+ */
+void otSysInitNetif(otInstance *aInstance);
+
+/**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function

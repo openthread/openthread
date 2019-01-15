@@ -242,7 +242,7 @@ public:
      * @param[in]   aIsSecure  TRUE to indicate that the received frame is secure, FALSE otherwise.
      *
      */
-    void UpdateOnReceive(const Mac::Address &aSource, bool aIsSeucre);
+    void UpdateOnReceive(const Mac::Address &aSource, bool aIsSecure);
 
 private:
     enum
