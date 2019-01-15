@@ -4,7 +4,7 @@ This directory contains example platform drivers for the [Microchip ATSAMR21G18A
 based on [SAM R21 Xplained Pro Evaluation Kit][SAMR21_XPLAINED_PRO].
 
 [samr21]: http://www.microchip.com/wwwproducts/en/ATSAMR21G18A
-[SAMR21_XPLAINED_PRO]: http://www.microchip.com/DevelopmentTools/ProductDetails.aspx?PartNO=ATSAMR21-XPRO
+[SAMR21_XPLAINED_PRO]: https://www.microchip.com/DevelopmentTools/ProductDetails/ATSAMR21-XPRO
 
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread. See the "Run the example with SAMR21 boards" section below
@@ -28,31 +28,44 @@ $ ./script/bootstrap
 
 1. Download [Advanced Software Framework (ASF)][ASF].
 
-[ASF]: http://www.microchip.com/avr-support/advanced-software-framework-(asf)
+[ASF]: https://www.microchip.com/mplab/avr-support/advanced-software-framework
 
 2. Unzip it to <path-to-openthread>/third_party/microchip folder
 
 ```bash
-$ unzip asf-standalone-archive-3.35.1.54.zip 
-$ cp xdk-asf-3.35.1 -rf  <path-to-openthread>/third_party/microchip/asf
+$ unzip asf-standalone-archive-3.45.0.85.zip 
+$ cp xdk-asf-3.45.0 -rf  <path-to-openthread>/third_party/microchip/asf
 ```
-3. This example can be built for other SAMR21 based modules. For example [ATSAMR21G18-MR21][MODULE-MR21],
-[ATSAMR21B18-MZ21][MODULE-MZ21]. To build for these modules set
-SAMR21_BOARD=USER_BOARD and SAMR21_CPU=\_\_SAMR21XXXX\_\_ in `examples/samr21/Makefile.am`. Then
-configure peripherals in `third_party/microchip/include/user_board.h`.
-For these modules IEEE address is stored at special address in ROM and retreived
-from this location if CONF_IEEE_ADDRESS macro is not set.
 
-[MODULE-MR21]: http://www.atmel.com/Images/Atmel-42475-ATSAMR21G18-MR210UA_Datasheet.pdf
-[MODULE-MZ21]: http://www.atmel.com/images/Atmel-42486-atsamr21b18-mz210pa_datasheet.pdf
-
-4. Build OpenThread Firmware (CLI example) on SAMR21 platform.
+3. Build OpenThread Firmware (CLI example) on SAMR21 platform.
 
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f examples/Makefile-samr21
 ```
+
+4. This example can be built for other SAMR21 based modules e.g.:
+* [ATSAMR21G18-MR210UA][MODULE-MR210UA]
+* [ATSAMR21B18-MZ210PA][MODULE-MZ210PA]
+
+To build for these modules set BOARD variable in command line as following:
+```bash
+$ make -f examples/Makefile-samr21 BOARD=<MODULE>
+```
+
+where:
+
+
+| `<module>`            | Board                               |
+| ----------------------|-------------------------------------|
+| `SAMR21_XPLAINED_PRO` | SAM R21 Xplained Pro Evaluation Kit |
+| `SAMR21G18_MODULE`    | ATSAMR21G18-MR210UA                 |
+| `SAMR21B18_MODULE`    | ATSAMR21B18-MZ210PA                 |
+
+[MODULE-MR210UA]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42475-atsamr21g18-mr210ua_datasheet.pdf
+[MODULE-MZ210PA]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42486-atsamr21b18-mz210pa_datasheet.pdf
+
 
 After a successful build, the `elf` files are found in
 `<path-to-openthread>/output/samr21/bin`.
@@ -180,5 +193,5 @@ For a list of all available commands, visit [OpenThread CLI Reference README.md]
 ## Verification
 
 The following toolchain has been used for testing and verification:
-   - gcc version 6.3.1
-   - Advanced Software Framework (ASF) version 3.35.1
+   - gcc version 7.3.1
+   - Advanced Software Framework (ASF) version 3.45.0
