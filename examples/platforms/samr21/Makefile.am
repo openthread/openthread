@@ -78,7 +78,6 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/i2c/i2c_sam0                                 \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/spi                                          \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/usart                                        \
-    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils                                                       \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/include                                  \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/source                                   \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/header_files                                          \
