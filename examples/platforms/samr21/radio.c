@@ -56,7 +56,7 @@ enum
 };
 
 static otRadioFrame sTransmitFrame;
-static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 static otRadioFrame sReceiveFrame;
 
@@ -307,7 +307,7 @@ void PHY_DataConf(uint8_t status)
 void samr21RadioInit(void)
 {
     sTransmitFrame.mLength = 0;
-    sTransmitFrame.mPsdu   = sTransmitPsdu;
+    sTransmitFrame.mPsdu   = sTransmitPsdu + 1;
 
     sReceiveFrame.mLength = 0;
     sReceiveFrame.mPsdu   = NULL;
@@ -492,14 +492,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
-    uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
-
     setChannel(aFrame->mChannel);
 
-    frame[0] = aFrame->mLength - IEEE802154_FCS_SIZE;
-    memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
+    aFrame->mPsdu[-1] = aFrame->mLength - IEEE802154_FCS_SIZE;
 
-    PHY_DataReq(frame);
+    PHY_DataReq(&aFrame->mPsdu[-1]);
 
     otPlatRadioTxStarted(aInstance, aFrame);
 
