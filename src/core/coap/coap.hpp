@@ -749,7 +749,8 @@ public:
     /**
      * This method stops the CoAP service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the CoAP service.
+     * @retval OT_ERROR_NONE    Successfully stopped the CoAP service.
+     * @retval OT_ERROR_FAILED  Failed to stop CoAP agent.
      *
      */
     otError Stop(void);

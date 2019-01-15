@@ -137,7 +137,8 @@ public:
      *
      * @param[in]  aSockAddr  A reference to the socket address.
      *
-     * @retval OT_ERROR_NONE  Successfully bound the socket.
+     * @retval OT_ERROR_NONE    Successfully bound the socket.
+     * @retval OT_ERROR_FAILED  Failed to bind UDP Socket.
      *
      */
     otError Bind(const SockAddr &aSockAddr);
@@ -147,14 +148,17 @@ public:
      *
      * @param[in]  aSockAddr  A reference to the socket address.
      *
-     * @retval OT_ERROR_NONE  Successfully connected the socket.
+     * @retval OT_ERROR_NONE    Successfully connected the socket.
+     * @retval OT_ERROR_FAILED  Failed to connect UDP Socket.
+     *
      */
     otError Connect(const SockAddr &aSockAddr);
 
     /**
      * This method closes the UDP socket.
      *
-     * @retval OT_ERROR_NONE  Successfully closed the UDP socket.
+     * @retval OT_ERROR_NONE    Successfully closed the UDP socket.
+     * @retval OT_ERROR_FAILED  Failed to close UDP Socket.
      *
      */
     otError Close(void);
