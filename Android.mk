@@ -78,7 +78,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX_APP=1                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_SRC_FILES                                          := \
@@ -272,7 +272,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX_APP=2                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
@@ -319,7 +319,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX_APP=1                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
