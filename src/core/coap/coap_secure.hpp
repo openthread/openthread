@@ -45,7 +45,7 @@ namespace ot {
 
 namespace Coap {
 
-class CoapSecure : public Coap
+class CoapSecure : public CoapBase
 {
 public:
     /**
@@ -84,7 +84,8 @@ public:
      *                        If NULL, the message is sent directly to the socket.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE  Successfully started the CoAP agent.
+     * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
+     * @retval OT_ERROR_ALREADY     Already started.
      *
      */
     otError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
@@ -300,14 +301,14 @@ public:
                         void *                  aContext = NULL);
 
     /**
-     * This method is used to pass messages to the secure CoAP server.
+     * This method is used to pass UDP messages to the secure CoAP server.
      * It can be used when messages are received other way that via server's socket.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual void Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method returns the DTLS session's peer address.
@@ -318,7 +319,11 @@ public:
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 private:
-    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static otError Send(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    {
+        return static_cast<CoapSecure &>(aCoapBase).Send(aMessage, aMessageInfo);
+    }
+    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void        HandleDtlsConnected(bool aConnected);
@@ -332,6 +337,8 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
     Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
     void *            mConnectedContext;
@@ -339,6 +346,7 @@ private:
     void *            mTransportContext;
     MessageQueue      mTransmitQueue;
     TaskletContext    mTransmitTask;
+    Ip6::UdpSocket    mSocket;
 
     bool mLayerTwoSecurity : 1;
 };
