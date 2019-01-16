@@ -199,11 +199,15 @@ const otCoapOption *Message::GetFirstOption(void)
     const otCoapOption *option = NULL;
 
     memset(&GetHelpData().mOption, 0, sizeof(GetHelpData().mOption));
+
+    VerifyOrExit(GetLength() - GetHelpData().mHeaderOffset >= GetOptionStart());
+
     GetHelpData().mNextOptionOffset = GetHelpData().mHeaderOffset + GetOptionStart();
 
-    VerifyOrExit(GetLength() - GetHelpData().mHeaderOffset > GetOptionStart());
-
-    option = GetNextOption();
+    if (GetHelpData().mNextOptionOffset < GetLength())
+    {
+        option = GetNextOption();
+    }
 
 exit:
     return option;
@@ -315,6 +319,8 @@ otError Message::ParseHeader(void)
 
     assert(mBuffer.mHead.mData + mBuffer.mHead.mInfo.mReserved >=
            reinterpret_cast<uint8_t *>(&GetHelpData()) + sizeof(GetHelpData()));
+
+    memset(&GetHelpData(), 0, sizeof(GetHelpData()));
 
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
