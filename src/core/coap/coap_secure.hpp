@@ -319,9 +319,9 @@ public:
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 private:
-    static otError Send(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static otError Send(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
-        return static_cast<CoapSecure *>(aCoapBase)->Send(aMessage, aMessageInfo);
+        return static_cast<CoapSecure &>(aCoapBase).Send(aMessage, aMessageInfo);
     }
     otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -337,7 +337,8 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    static void       HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
     Ip6::MessageInfo  mPeerAddress;
     ConnectedCallback mConnectedCallback;
     void *            mConnectedContext;

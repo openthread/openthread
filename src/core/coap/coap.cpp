@@ -48,7 +48,7 @@
 namespace ot {
 namespace Coap {
 
-CoapBase::CoapBase(Instance &aInstance, SendCallback aSendCallback)
+CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
     , mRetransmissionTimer(aInstance, &Coap::HandleRetransmissionTimer, this)
     , mResources(NULL)
@@ -57,7 +57,7 @@ CoapBase::CoapBase(Instance &aInstance, SendCallback aSendCallback)
     , mResponsesQueue(aInstance)
     , mDefaultHandler(NULL)
     , mDefaultHandlerContext(NULL)
-    , mSendCallback(aSendCallback)
+    , mSender(aSender)
 {
     mMessageId = Random::GetUint16();
 }
@@ -194,7 +194,7 @@ exit:
 otError CoapBase::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     static_cast<Message &>(aMessage).Finish();
-    return mSendCallback(this, aMessage, aMessageInfo);
+    return mSender(*this, aMessage, aMessageInfo);
 }
 
 otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)

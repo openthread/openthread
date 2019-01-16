@@ -434,7 +434,7 @@ public:
     /**
      * This function pointer is called to send a CoAP message.
      *
-     * @param[in]  aCoapBase     A pointer to the CoAP agent.
+     * @param[in]  aCoapBase     A reference to the CoAP agent.
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
@@ -442,7 +442,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
      *
      */
-    typedef otError (*SendCallback)(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*Sender)(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
@@ -652,11 +652,11 @@ protected:
      * This constructor initializes the object.
      *
      * @param[in]  aInstance        A reference to the OpenThread instance.
-     * @param[in]  aSendCallback    A function pointer to send CoAP message, which SHOULD be a static
+     * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
      *                              member method of a descendent of this class.
      *
      */
-    explicit CoapBase(Instance &aInstance, SendCallback aSendCallback);
+    explicit CoapBase(Instance &aInstance, Sender aSender);
 
     /**
      * This method sends a CoAP message.
@@ -713,7 +713,7 @@ private:
     otCoapRequestHandler mDefaultHandler;
     void *               mDefaultHandlerContext;
 
-    SendCallback mSendCallback;
+    Sender mSender;
 };
 
 /**
@@ -752,9 +752,9 @@ public:
     otError Stop(void);
 
 private:
-    static otError Send(CoapBase *aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static otError Send(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
-        return static_cast<Coap *>(aCoapBase)->Send(aMessage, aMessageInfo);
+        return static_cast<Coap &>(aCoapBase).Send(aMessage, aMessageInfo);
     }
     otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
