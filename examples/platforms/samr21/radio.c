@@ -247,9 +247,9 @@ static void handleTx(void)
     if (sTxDone)
     {
         sTxDone = false;
+        sState  = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
-
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, sTxStatus);
