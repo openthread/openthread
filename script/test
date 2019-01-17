@@ -33,7 +33,7 @@
 set -e
 set -o pipefail
 
-readonly SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess)"
+readonly SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g')"
 export top_builddir="build/${SYSTEM_TRIPLET}"
 
 do_build() {
