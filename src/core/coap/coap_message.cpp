@@ -317,8 +317,9 @@ otError Message::ParseHeader(void)
 {
     otError error = OT_ERROR_NONE;
 
-    assert(mBuffer.mHead.mData + mBuffer.mHead.mInfo.mReserved >=
-           reinterpret_cast<uint8_t *>(&GetHelpData()) + sizeof(GetHelpData()));
+    assert(mBuffer.mHead.mInfo.mReserved >=
+           sizeof(GetHelpData()) +
+               static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
 
     memset(&GetHelpData(), 0, sizeof(GetHelpData()));
 
