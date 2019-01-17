@@ -365,6 +365,18 @@ void Message::SetDefaultResponseHeader(const Message &aRequest)
     SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
 }
 
+Message *Message::Clone(uint16_t aLength) const
+{
+    Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
+
+    VerifyOrExit(message != NULL);
+
+    memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
+
+exit:
+    return message;
+}
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 const char *Message::CodeToString(void) const
 {
