@@ -491,14 +491,7 @@ public:
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *Clone(uint16_t aLength) const
-    {
-        Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
-
-        memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
-
-        return message;
-    }
+    Message *Clone(uint16_t aLength) const;
 
     /**
      * This method creates a copy of the message.
