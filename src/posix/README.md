@@ -105,3 +105,20 @@ sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev
 # CC2538
 sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyUSB0 115200'
 ```
+
+Daemon Mode Support
+-------------------
+
+OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client
+can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
+
+```
+# build daemon mode core stack for POSIX
+make -f src/posix/Makefile-posix DAEMON=1
+# Daemon with simulation
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1
+# Daemon with real device
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon /dev/ttyACM0 115200
+# Built-in controller
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-ctl
+```
