@@ -91,7 +91,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
     src/core/api/dataset_ftd_api.cpp                        \
-    src/core/api/dhcp6_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
