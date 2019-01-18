@@ -570,6 +570,9 @@ private:
         uint16_t     mHeaderLength;
     };
 
+    OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mInfo) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+                     "Insufficient buffer size for CoAP processing!");
+
     const HelpData &GetHelpData(void) const
     {
         return *static_cast<const HelpData *>(otALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
