@@ -74,6 +74,30 @@ typedef struct otUdpReceiver
 } otUdpReceiver;
 
 /**
+ * This function adds a UDP receiver.
+ *
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
+ * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
+ *
+ * @retval  OT_ERROR_NONE       The receiver is successfully added.
+ * @retval  OT_ERROR_ALREADY    The UDP receiver was already added.
+ *
+ */
+otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
+
+/**
+ * This function removes a UDP receiver.
+ *
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
+ * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
+ *
+ * @retval  OT_ERROR_NONE       The receiver is successfully removed.
+ * @retval  OT_ERROR_NOT_FOUND  The UDP receiver was not added.
+ *
+ */
+otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
+
+/**
  * This callback allows OpenThread to inform the application of a received UDP message.
  *
  */
