@@ -81,13 +81,26 @@ CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-posix-
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/posix/
 
 COMMONCFLAGS                   := \
-    -O1                           \
-    -g                            \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
+
+ifeq ($(DEBUG),1)
+configure_OPTIONS += --enable-optimizations=no
+COMMONCFLAGS                   += \
+    -O0                           \
+    -ggdb3                        \
+    -DENABLE_DEBUG_LOG            \
+    $(NULL)
+else
+configure_OPTIONS += --enable-optimizations=yes
+COMMONCFLAGS                   += \
+    -O1                           \
+    -g                            \
+    $(NULL)
+endif
 
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
