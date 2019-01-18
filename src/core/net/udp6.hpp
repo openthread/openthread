@@ -226,7 +226,8 @@ public:
      *
      * @param[in]  aReceiver  A reference to the UDP receiver.
      *
-     * @retval OT_ERROR_NONE  Successfully added the UDP receiver.
+     * @retval OT_ERROR_NONE    Successfully added the UDP receiver.
+     * @retval OT_ERROR_ALREADY The UDP receiver was already added.
      *
      */
     otError AddReceiver(UdpReceiver &aReceiver);
@@ -236,7 +237,8 @@ public:
      *
      * @param[in]  aReceiver  A reference to the UDP receiver.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the UDP receiver.
+     * @retval OT_ERROR_NONE        Successfully removed the UDP receiver.
+     * @retval OT_ERROR_NOT_FOUND   The UDP receiver was not added.
      *
      */
     otError RemoveReceiver(UdpReceiver &aReceiver);
