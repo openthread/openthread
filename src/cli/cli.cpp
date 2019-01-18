@@ -310,11 +310,12 @@ Interpreter::Interpreter(Instance *aInstance)
     , mInstance(aInstance)
 {
 #ifdef OTDLL
+    // On Windows, mInstance presents the current selected otInstance
+    // which should be NULL now.
+    assert(aInstance = NULL);
     assert(mApiInstance);
     CacheInstances();
 #else
-    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
-    otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 #endif
@@ -3795,32 +3796,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
             AppendResult(OT_ERROR_PARSE);
         }
     }
-
-exit:
-    return;
-}
-
-void OTCALL Interpreter::s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext)
-{
-#ifdef OTDLL
-    otCliContext *cliContext = static_cast<otCliContext *>(aContext);
-    cliContext->mInterpreter->HandleNetifStateChanged(cliContext->mInstance, aFlags);
-#else
-    static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
-#endif
-}
-
-#ifdef OTDLL
-void Interpreter::HandleNetifStateChanged(otInstance *mInstance, otChangedFlags aFlags)
-#else
-void Interpreter::HandleNetifStateChanged(otChangedFlags aFlags)
-#endif
-{
-    VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
-
-#ifndef OTDLL
-    otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
-#endif
 
 exit:
     return;
