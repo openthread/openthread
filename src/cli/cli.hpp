@@ -42,6 +42,7 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_dataset.hpp"
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
 
@@ -100,6 +101,7 @@ class Interpreter
 {
     friend class Coap;
     friend class CoapSecure;
+    friend class Dataset;
     friend class UdpExample;
 
 public:
@@ -208,7 +210,6 @@ private:
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
     void ProcessCounters(int argc, char *argv[]);
-    void ProcessDataset(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
@@ -317,6 +318,7 @@ private:
 #endif
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
+    void ProcessDataset(int argc, char *argv[]);
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
@@ -447,7 +449,7 @@ private:
 
 #endif
 
-    Instance *mInstance;
+    Dataset mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -459,6 +461,7 @@ private:
     CoapSecure mCoapSecure;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    Instance *mInstance;
 };
 
 } // namespace Cli
