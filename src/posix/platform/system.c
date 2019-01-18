@@ -49,6 +49,8 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
+#include "openthread-system.h"
+
 uint64_t gNodeId = 0;
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -213,53 +215,50 @@ static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSe
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-void otSysProcessDrivers(otInstance *aInstance)
+void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 {
-    fd_set         readFdSet;
-    fd_set         writeFdSet;
-    fd_set         errorFdSet;
-    struct timeval timeout;
-    int            maxFd = -1;
-    int            rval;
-
-    FD_ZERO(&readFdSet);
-    FD_ZERO(&writeFdSet);
-    FD_ZERO(&errorFdSet);
-
-    platformAlarmUpdateTimeout(&timeout);
-    platformUartUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd);
+    platformAlarmUpdateTimeout(&aMainloop->mTimeout);
+    platformUartUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
+                            &aMainloop->mMaxFd);
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-    platformUdpUpdateFdSet(aInstance, &readFdSet, &maxFd);
+    platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_ENABLE_PLATFORM_NETIF
-    platformNetifUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd);
+    platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
+                             &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimUpdateFdSet(&readFdSet, &writeFdSet, &errorFdSet, &maxFd, &timeout);
+    otSimUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
+                     &aMainloop->mTimeout);
 #else
-    platformRadioUpdateFdSet(&readFdSet, &writeFdSet, &maxFd, &timeout);
+    platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
 #endif
 
     if (otTaskletsArePending(aInstance))
     {
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = 0;
+        aMainloop->mTimeout.tv_sec  = 0;
+        aMainloop->mTimeout.tv_usec = 0;
     }
+}
+
+void otSysMainloopPoll(otSysMainloopContext *aMainloop)
+{
+    int rval;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    if (timerisset(&timeout))
+    if (timerisset(&aMainloop->mTimeout))
     {
         // Make sure there are no data ready in UART
-        rval = trySelect(&readFdSet, &writeFdSet, &errorFdSet, maxFd);
+        rval = trySelect(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, aMainloop->mMaxFd);
 
         if (rval == 0)
         {
             bool noWrite = true;
 
             // If there are write requests, the device is supposed to wake soon
-            for (int i = 0; i < maxFd + 1; ++i)
+            for (int i = 0; i < aMainloop->mMaxFd + 1; ++i)
             {
-                if (FD_ISSET(i, &writeFdSet))
+                if (FD_ISSET(i, &aMainloop->mWriteFdSet))
                 {
                     noWrite = false;
                     break;
@@ -268,17 +267,19 @@ void otSysProcessDrivers(otInstance *aInstance)
 
             if (noWrite)
             {
-                otSimSendSleepEvent(&timeout);
+                otSimSendSleepEvent(&aMainloop->mTimeout);
             }
 
-            rval = select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, NULL);
+            rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet,
+                          &aMainloop->mErrorFdSet, NULL);
             assert(rval > 0);
         }
     }
     else
 #endif
     {
-        rval = select(maxFd + 1, &readFdSet, &writeFdSet, &errorFdSet, &timeout);
+        rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
+                      &aMainloop->mTimeout);
     }
 
     if ((rval < 0) && (errno != EINTR))
@@ -286,20 +287,21 @@ void otSysProcessDrivers(otInstance *aInstance)
         perror("select");
         exit(OT_EXIT_FAILURE);
     }
-    else if (rval >= 0)
-    {
+}
+
+void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
+{
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-        otSimProcess(aInstance, &readFdSet, &writeFdSet, &errorFdSet);
+    otSimProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else
-        platformRadioProcess(aInstance, &readFdSet, &writeFdSet);
+    platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
 #endif
-        platformUartProcess(&readFdSet, &writeFdSet, &errorFdSet);
-        platformAlarmProcess(aInstance);
+    platformUartProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    platformAlarmProcess(aInstance);
 #if OPENTHREAD_ENABLE_PLATFORM_NETIF
-        platformNetifProcess(&readFdSet, &writeFdSet, &errorFdSet);
+    platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #endif
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-        platformUdpProcess(aInstance, &readFdSet);
+    platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
 #endif
-    }
 }

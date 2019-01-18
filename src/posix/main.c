@@ -97,8 +97,21 @@ int main(int argc, char *argv[])
 
     while (true)
     {
+        otSysMainloopContext mainloop;
+
         otTaskletsProcess(instance);
-        otSysProcessDrivers(instance);
+
+        FD_ZERO(&mainloop.mReadFdSet);
+        FD_ZERO(&mainloop.mWriteFdSet);
+        FD_ZERO(&mainloop.mErrorFdSet);
+
+        mainloop.mMaxFd           = -1;
+        mainloop.mTimeout.tv_sec  = 10;
+        mainloop.mTimeout.tv_usec = 0;
+
+        otSysMainloopUpdate(instance, &mainloop);
+        otSysMainloopPoll(&mainloop);
+        otSysMainloopProcess(instance, &mainloop);
     }
 
     otInstanceFinalize(instance);

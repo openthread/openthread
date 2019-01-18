@@ -200,7 +200,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
  * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
-void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet);
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
 /**
  * This function initializes the random number service used by OpenThread.
