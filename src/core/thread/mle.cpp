@@ -1510,6 +1510,10 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 #endif
 #endif
 
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+        GetNetif().GetDhcp6Server().UpdateService();
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
+
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
         GetNetif().GetDhcp6Client().UpdateAddresses();
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
