@@ -210,7 +210,6 @@ private:
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
     void ProcessCounters(int argc, char *argv[]);
-    void ProcessDataset(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
@@ -319,6 +318,7 @@ private:
 #endif
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
+    void ProcessDataset(int argc, char *argv[]);
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
@@ -445,12 +445,11 @@ private:
     bool           mSntpQueryingInProgress;
 #endif
 
-    Dataset    mDataset;
     UdpExample mUdp;
 
 #endif
 
-    Instance *mInstance;
+    Dataset mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -462,6 +461,7 @@ private:
     CoapSecure mCoapSecure;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    Instance *mInstance;
 };
 
 } // namespace Cli

@@ -299,16 +299,16 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mResolvingInProgress(0)
 #endif
-    , mDataset(*this)
     , mUdp(*this)
 #endif
-    , mInstance(aInstance)
+    , mDataset(*this)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     , mCoapSecure(*this)
 #endif
+    , mInstance(aInstance)
 {
 #ifdef OTDLL
     assert(mApiInstance);
@@ -851,13 +851,6 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
         }
     }
-}
-
-void Interpreter::ProcessDataset(int argc, char *argv[])
-{
-    otError error;
-    error = mDataset.Process(argc, argv);
-    AppendResult(error);
 }
 
 #if OPENTHREAD_FTD
@@ -2997,6 +2990,13 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessDataset(int argc, char *argv[])
+{
+    otError error;
+    error = mDataset.Process(argc, argv);
     AppendResult(error);
 }
 
