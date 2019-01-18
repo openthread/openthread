@@ -286,6 +286,39 @@ cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=f
 $(foreach arch,$(ARCHS),$(eval $(call ARCH_template,$(arch))))
 
 #
+# Flashing / Debugging
+#
+
+JLINK_FLAGS =                                      \
+    -device NRF52                                  \
+    -if SWD                                        \
+    -singlerun                                     \
+    -rtos GDBServer/RTOSPlugin_FreeRTOS            \
+    $(NULL)
+
+GDB_CMD_FILE = .gdb_cmds
+APP_FILE_NAME = $(TopResultDir)/$(TargetTuple)/bin/ot-cli-ftd
+APP_FILE_HEX = $(TopResultDir)/$(TargetTuple)/bin/ot-cli-ftd.hex
+
+.PHONY: gdb
+gdb:    $(APP_FILE_NAME)
+	# Trap CTRL-C from killing JLinkGDBServer in background
+	set -m
+	JLinkGDBServer $(JLINK_FLAGS) > /dev/null &
+	set +m
+	rm -f $(GDB_CMD_FILE)
+	echo "target remote:2331"                >> $(GDB_CMD_FILE)
+	echo "mon reset"                         >> $(GDB_CMD_FILE)
+	echo "mon halt"                          >> $(GDB_CMD_FILE)
+	echo "load $(APP_FILE_NAME)"             >> $(GDB_CMD_FILE)
+	echo "bt"                                >> $(GDB_CMD_FILE)
+	arm-none-eabi-gdb -x $(GDB_CMD_FILE) $(APP_FILE_NAME) 2>&1
+
+flash: $(APP_FILE_NAME)
+	arm-none-eabi-objcopy -O ihex $(<) $(APP_FILE_HEX)
+	nrfjprog -f NRF52 --sectorerase  --reset --program $(APP_FILE_HEX)
+
+#
 # Common / Finalization
 #
 
