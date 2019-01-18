@@ -147,6 +147,7 @@ SOURCES_COMMON =                      \
     cli_coap_secure.cpp               \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
+    cli_server.cpp                    \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
     $(NULL)
