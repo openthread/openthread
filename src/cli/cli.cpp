@@ -64,7 +64,6 @@
 #endif
 
 #ifndef OTDLL
-#include <openthread/dhcp6_server.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/platform/uart.h>
@@ -3820,10 +3819,6 @@ void Interpreter::HandleNetifStateChanged(otChangedFlags aFlags)
 
 #ifndef OTDLL
     otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-    otDhcp6ServerUpdate(mInstance);
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
-
 #endif
 
 exit:

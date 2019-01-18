@@ -176,7 +176,6 @@
     <ClInclude Include="..\..\include\openthread\dataset.h" />
     <ClInclude Include="..\..\include\openthread\dataset_ftd.h" />
     <ClInclude Include="..\..\include\openthread\dhcp6_client.h" />
-    <ClInclude Include="..\..\include\openthread\dhcp6_server.h" />
     <ClInclude Include="..\..\include\openthread\error.h" />
     <ClInclude Include="..\..\include\openthread\icmp6.h" />
     <ClInclude Include="..\..\include\openthread\instance.h" />

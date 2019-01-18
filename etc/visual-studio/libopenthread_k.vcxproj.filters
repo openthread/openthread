@@ -659,7 +659,6 @@
     <ClInclude Include="..\..\include\openthread\dhcp6_client.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\openthread\dhcp6_server.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\error.h">
