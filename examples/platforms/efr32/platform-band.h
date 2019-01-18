@@ -41,7 +41,7 @@
 #include "rail_config.h"
 #include "rail_ieee802154.h"
 
-typedef struct BandConfig
+typedef struct efr32BandConfig
 {
     RAIL_Handle_t               mRailHandle;
     RAIL_Config_t               mRailConfig;
@@ -50,6 +50,6 @@ typedef struct BandConfig
     uint8_t                     mRailTxFifo[OT_RADIO_FRAME_MAX_SIZE + 1];
     uint8_t                     mChannelMin;
     uint8_t                     mChannelMax;
-} BandConfig;
+} efr32BandConfig;
 
 #endif // PLATFORM_BAND_H_

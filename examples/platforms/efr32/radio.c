@@ -66,8 +66,17 @@ enum
 
 enum
 {
-    EFR32_RECEIVE_SENSITIVITY = -100, // dBm
-    EFR32_RSSI_AVERAGING_TIME = 16,   // us
+    EFR32_915MHZ_OQPSK_CHANNEL_MIN = 1,
+    EFR32_915MHZ_OQPSK_CHANNEL_MAX = 10,
+    EFR32_2P4GHZ_OQPSK_CHANNEL_MIN = 11,
+    EFR32_2P4GHZ_OQPSK_CHANNEL_MAX = 26,
+};
+
+enum
+{
+    EFR32_RECEIVE_SENSITIVITY    = -100, // dBm
+    EFR32_RSSI_AVERAGING_TIME    = 16,   // us
+    EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
 };
 
 enum
@@ -92,7 +101,7 @@ static bool          sPromiscuous       = false;
 static bool          sIsSrcMatchEnabled = false;
 static otRadioState  sState             = OT_RADIO_STATE_DISABLED;
 
-static volatile bool   sSampleRssiDone = false;
+static volatile bool   sSampleRssiDone;
 static volatile int8_t sRssi;
 
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
@@ -112,7 +121,7 @@ typedef struct srcMatchEntry
 static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
 static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
 
-BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
+efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
 
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents);
 
@@ -151,10 +160,10 @@ RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curve
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
-static BandConfig *sTxBandConfig = NULL;
-static BandConfig *sRxBandConfig = NULL;
+static efr32BandConfig *sTxBandConfig = NULL;
+static efr32BandConfig *sRxBandConfig = NULL;
 
-RAIL_Handle_t efr32RailConfigInit(BandConfig *aBandConfig)
+RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t     status;
     RAIL_Handle_t     handle;
@@ -209,13 +218,15 @@ RAIL_Handle_t efr32RailConfigInit(BandConfig *aBandConfig)
     return handle;
 }
 
-static void efr32RadioSetTxPower(RAIL_Handle_t aRailHandle, const RAIL_ChannelConfig_t *aBandConfig, uint8_t aPowerDbm)
+static void efr32RadioSetTxPower(RAIL_Handle_t               aRailHandle,
+                                 const RAIL_ChannelConfig_t *aChannelConfig,
+                                 uint8_t                     aPowerDbm)
 {
     RAIL_Status_t              status;
     RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
     RAIL_TxPowerConfig_t       txPowerConfig       = {RAIL_TX_POWER_MODE_2P4_HP, 3300, 10};
 
-    if ((aBandConfig != NULL) && (aBandConfig->configs[0].baseFrequency < 1000000000UL))
+    if ((aChannelConfig != NULL) && (aChannelConfig->configs[0].baseFrequency < 1000000000UL))
     {
         txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG;
     }
@@ -230,9 +241,9 @@ static void efr32RadioSetTxPower(RAIL_Handle_t aRailHandle, const RAIL_ChannelCo
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
+efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
-    BandConfig *config = NULL;
+    efr32BandConfig *config = NULL;
 
     for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
@@ -255,8 +266,8 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = NULL;
-    sBandConfigs[index].mChannelMin                = 11;
-    sBandConfigs[index].mChannelMax                = 26;
+    sBandConfigs[index].mChannelMin                = EFR32_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = EFR32_2P4GHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
     index++;
@@ -267,8 +278,8 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = channelConfigs[0];
-    sBandConfigs[index].mChannelMin                = 1;
-    sBandConfigs[index].mChannelMax                = 10;
+    sBandConfigs[index].mChannelMin                = EFR32_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = EFR32_915MHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
 #endif
@@ -429,7 +440,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError              error         = OT_ERROR_NONE;
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_RX_PRIORITY};
     RAIL_Status_t        status;
-    BandConfig *         config;
+    efr32BandConfig *    config;
 
     OT_UNUSED_VARIABLE(aInstance);
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
@@ -460,7 +471,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_CsmaConfig_t    csmaConfig    = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
     RAIL_TxOptions_t     txOptions     = RAIL_TX_OPTIONS_NONE;
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_TX_PRIORITY};
-    BandConfig *         config;
+    efr32BandConfig *    config;
     RAIL_Status_t        status;
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
@@ -516,17 +527,22 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     RAIL_Status_t        status;
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
+    uint32_t             start;
     OT_UNUSED_VARIABLE(aInstance);
 
     RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
 
-    sSampleRssiDone = true;
+    sSampleRssiDone = false;
+    sRssi           = OT_RADIO_RSSI_INVALID;
+
     status = RAIL_StartAverageRssi(sRxBandConfig->mRailHandle, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME,
                                    &schedulerInfo);
-    otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, sRssi = OT_RADIO_RSSI_INVALID);
+    otEXPECT(status == RAIL_STATUS_NO_ERROR);
+
+    start = RAIL_GetTime();
 
     // waiting for the event RAIL_EVENT_RSSI_AVERAGE_DONE
-    while (sSampleRssiDone)
+    while (!sSampleRssiDone && ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
         ;
 
 exit:
@@ -942,7 +958,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
     if (aEvents & RAIL_EVENT_RSSI_AVERAGE_DONE)
     {
-        sSampleRssiDone = false;
+        sSampleRssiDone = true;
         sRssi           = (int8_t)(RAIL_GetAverageRssi(aRailHandle) >> 2);
 
         RAIL_YieldRadio(aRailHandle);
