@@ -283,7 +283,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_uart.cpp                      \
-    src/cli/cli_udp_example.cpp               \
+    src/cli/cli_udp.cpp                       \
     src/posix/main.c                          \
     $(NULL)
 

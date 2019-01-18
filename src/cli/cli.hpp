@@ -44,7 +44,7 @@
 
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_server.hpp"
-#include "cli/cli_udp_example.hpp"
+#include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_message.hpp>
