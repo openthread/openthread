@@ -42,6 +42,7 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_dataset.hpp"
 #include "cli/cli_server.hpp"
 #include "cli/cli_udp_example.hpp"
 
@@ -101,6 +102,7 @@ class Interpreter
     friend class Coap;
     friend class CoapSecure;
     friend class UdpExample;
+    friend class Dataset;
 
 public:
     /**
@@ -443,6 +445,7 @@ private:
     bool           mSntpQueryingInProgress;
 #endif
 
+    Dataset    mDataset;
     UdpExample mUdp;
 
 #endif

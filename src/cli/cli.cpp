@@ -299,6 +299,7 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mResolvingInProgress(0)
 #endif
+    , mDataset(*this)
     , mUdp(*this)
 #endif
     , mInstance(aInstance)
@@ -855,7 +856,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
 void Interpreter::ProcessDataset(int argc, char *argv[])
 {
     otError error;
-    error = Dataset::Process(mInstance, argc, argv, *mServer);
+    error = mDataset.Process(argc, argv);
     AppendResult(error);
 }
 
