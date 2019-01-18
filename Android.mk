@@ -281,10 +281,10 @@ LOCAL_LDLIBS                               := \
 LOCAL_SRC_FILES                            := \
     src/cli/cli.cpp                           \
     src/cli/cli_coap.cpp                      \
-    src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
-    src/cli/cli_uart.cpp                      \
     src/cli/cli_udp_example.cpp               \
+    src/cli/console.cpp                       \
+    src/cli/uart.cpp                          \
     src/posix/main.c                          \
     $(NULL)
 
