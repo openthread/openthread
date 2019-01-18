@@ -1047,7 +1047,9 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
             if (netif.GetMle().IsActiveRouter(neighbor->GetRloc16()))
             {
-                if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
+                if ((netif.GetMle().GetRole() == OT_DEVICE_ROLE_ROUTER ||
+                     netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER) &&
+                    neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
                 {
                     netif.GetMle().RemoveNeighbor(*neighbor);
                 }
