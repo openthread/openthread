@@ -101,8 +101,8 @@ class Interpreter
 {
     friend class Coap;
     friend class CoapSecure;
-    friend class UdpExample;
     friend class Dataset;
+    friend class UdpExample;
 
 public:
     /**
