@@ -649,7 +649,7 @@ uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
     return aPosition;
 }
 
-otError NcpBase::PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGetResponse, unsigned int aKeyOrStatus)
+otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aKeyOrStatus)
 {
     otError        error = OT_ERROR_NONE;
     spinel_tid_t   tid   = SPINEL_HEADER_GET_TID(aHeader);
@@ -661,7 +661,7 @@ otError NcpBase::PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGe
         // `LAST_STATUS` error status (if not filtered) for TID
         // zero (e.g., for a dropped `STREAM_NET` set command).
 
-        if (aIsLastStatus)
+        if (aType == kResponseTypeLastStatus)
         {
             mChangedPropsSet.AddLastStatus(static_cast<spinel_status_t>(aKeyOrStatus));
         }
@@ -707,8 +707,7 @@ otError NcpBase::PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGe
 
     entry->mTid             = tid;
     entry->mIsInUse         = true;
-    entry->mIsLastStatus    = aIsLastStatus;
-    entry->mIsGetResponse   = aIsGetResponse;
+    entry->mType            = aType;
     entry->mPropKeyOrStatus = aKeyOrStatus;
 
     mResponseQueueTail++;
@@ -731,7 +730,7 @@ otError NcpBase::SendQueuedResponses(void)
 
             header |= static_cast<uint8_t>(entry.mTid << SPINEL_HEADER_TID_SHIFT);
 
-            if (entry.mIsLastStatus)
+            if (entry.mType == kResponseTypeLastStatus)
             {
                 spinel_status_t status = static_cast<spinel_status_t>(entry.mPropKeyOrStatus);
 
@@ -739,9 +738,10 @@ otError NcpBase::SendQueuedResponses(void)
             }
             else
             {
-                spinel_prop_key_t propKey = static_cast<spinel_prop_key_t>(entry.mPropKeyOrStatus);
+                spinel_prop_key_t propKey       = static_cast<spinel_prop_key_t>(entry.mPropKeyOrStatus);
+                bool              isGetResponse = (entry.mType == kResponseTypeGet);
 
-                SuccessOrExit(error = WritePropertyValueIsFrame(header, propKey, entry.mIsGetResponse));
+                SuccessOrExit(error = WritePropertyValueIsFrame(header, propKey, isGetResponse));
             }
         }
 
