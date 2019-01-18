@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the CONSOLE service.
  */
 
-#include "cli_console.hpp"
+#include "console.hpp"
 
 #include <stdarg.h>
 #include <stdio.h>

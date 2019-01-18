@@ -74,7 +74,7 @@
 #endif
 
 #include "cli_dataset.hpp"
-#include "cli_uart.hpp"
+#include "uart.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include "cli_coap.hpp"

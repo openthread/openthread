@@ -28,27 +28,27 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on the UART service.
+ *   This file contains definitions for a CLI server on the CONSOLE service.
  */
 
-#ifndef CLI_UART_HPP_
-#define CLI_UART_HPP_
+#ifndef OPENTHREAD_CLI_CONSOLE_HPP_
+#define OPENTHREAD_CLI_CONSOLE_HPP_
 
 #include "openthread-core-config.h"
 
+#include <openthread/cli.h>
+
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
-#include "common/instance.hpp"
-#include "common/tasklet.hpp"
 
 namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI server on top of the UART platform abstraction.
+ * This class implements the CLI server on top of the CONSOLE platform abstraction.
  *
  */
-class Uart : public Server
+class Console : public Server
 {
 public:
     /**
@@ -57,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Uart(Instance *aInstance);
+    Console(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -82,55 +82,36 @@ public:
     virtual int OutputFormat(const char *fmt, ...);
 
     /**
-     * This method delivers formatted output to the client.
+     * This method sets a callback that is called when console has some output.
      *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  aAp   A variable list of arguments for format.
-     *
-     * @returns The number of bytes placed in the output queue.
+     * @param[in]  aCallback   A pointer to a callback method.
      *
      */
-    int OutputFormatV(const char *aFmt, va_list aAp);
+    void SetOutputCallback(otCliConsoleOutputCallback aCallback);
 
     /**
-     * This method returns a reference to the interpreter object.
+     * This method sets a context that is returned with the callback.
      *
-     * @returns A reference to the interpreter object.
+     * @param[in]  aContext   A pointer to a user context.
      *
      */
-    Interpreter &GetInterpreter(void) { return mInterpreter; }
+    void SetContext(void *aContext);
 
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
-    void SendDoneTask(void);
-
-    static Uart *sUartServer;
+    void ReceiveTask(char *aBuf, uint16_t aBufLength);
 
 private:
     enum
     {
-        kRxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-        kTxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
-        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kMaxLineLength = 128,
     };
 
-    otError ProcessCommand(void);
-    void    Send(void);
-
-    char     mRxBuffer[kRxBufferSize];
-    uint16_t mRxLength;
-
-    char     mTxBuffer[kTxBufferSize];
-    uint16_t mTxHead;
-    uint16_t mTxLength;
-
-    uint16_t mSendLength;
+    otCliConsoleOutputCallback mCallback;
+    void *                     mContext;
 
     Interpreter mInterpreter;
-
-    friend class Interpreter;
 };
 
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UART_HPP_
+#endif // OPENTHREAD_CLI_CONSOLE_HPP_

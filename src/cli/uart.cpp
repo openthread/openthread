@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the UART service.
  */
 
-#include "cli_uart.hpp"
+#include "uart.hpp"
 
 #include <stdarg.h>
 #include <stdio.h>
