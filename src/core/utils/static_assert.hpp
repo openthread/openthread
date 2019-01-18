@@ -34,6 +34,8 @@
 #ifndef OPENTHREAD_STATIC_ASSERT_HPP_
 #define OPENTHREAD_STATIC_ASSERT_HPP_
 
+#ifdef __cplusplus
+
 namespace ot {
 
 template <int> struct StaticAssertError;
@@ -56,5 +58,7 @@ template <> struct StaticAssertError<true>
     {                                                                                              \
         StaticAssertError##__LINE__ = sizeof(ot::StaticAssertError<(aExpression) != 0>(aMessage)), \
     }
+
+#endif // __cplusplus
 
 #endif // OPENTHREAD_STATIC_ASSERT_HPP_
