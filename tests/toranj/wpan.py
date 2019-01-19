@@ -197,6 +197,8 @@ THREAD_MODE_FLAG_FULL_THREAD_DEV     = (1 << 1)
 THREAD_MODE_FLAG_SECURE_DATA_REQUEST = (1 << 2)
 THREAD_MODE_FLAG_RX_ON_WHEN_IDLE     = (1 << 3)
 
+OT_BUILDDIR = os.getenv('top_builddir', '../..')
+
 #-----------------------------------------------------------------------------------------------------------------------
 
 def _log(text, new_line=True, flush=True):
@@ -216,12 +218,12 @@ class Node(object):
     _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-ncp-radio`
-    _WPANTUND = '/usr/local/sbin/wpantund'
-    _WPANCTL  = '/usr/local/bin/wpanctl'
-    _OT_NCP_FTD = '../../examples/apps/ncp/ot-ncp-ftd'
+    _WPANTUND = 'wpantund'
+    _WPANCTL  = 'wpanctl'
 
-    _OT_NCP_FTD_POSIX_APP = '../../src/posix/ot-ncp'
-    _OT_NCP_RADIO = '../../examples/apps/ncp/ot-ncp-radio'
+    _OT_NCP_FTD = '%s/examples/apps/ncp/ot-ncp-ftd' % OT_BUILDDIR
+    _OT_NCP_FTD_POSIX_APP = '%s/src/posix/ot-ncp' % OT_BUILDDIR
+    _OT_NCP_RADIO = '%s/examples/apps/ncp/ot-ncp-radio' % OT_BUILDDIR
 
     # Environment variable used to determine how to run OpenThread
     # If set to 1, then posix-app (`ot-ncp`) is used along with a posix RCP `ot-ncp-radio`.
