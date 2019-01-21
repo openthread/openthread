@@ -209,7 +209,7 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
-    otLogDebgMac(GetInstance(), "MeshForwarder::ScheduleTransmissionTask called");
+    otLogDebgMac("MeshForwarder::ScheduleTransmissionTask called");
 
     // Queue any pending indirects into free sender slots
 #if OPENTHREAD_FTD
@@ -1125,7 +1125,7 @@ void MeshSender::HandleSentFrame(Mac::Sender &aSender, otError aError)
     uint16_t     sentOffset   = aSender.GetMessageEndOffset();
     bool         sendFinished = false;
 
-    otLogDebgMac(GetInstance(), "MeshSender::HandleSentFrame Called (Sender %d)", this);
+    otLogDebgMac("MeshSender::HandleSentFrame Called (Sender %d)", this);
 
     mIdleMessageSent = false;
 
@@ -1272,7 +1272,7 @@ void MeshSender::HandleSentFrame(Mac::Sender &aSender, otError aError)
 
     if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
     {
-        otLogDebgMac(GetInstance(), "Message fully sent, freeing.");
+        otLogDebgMac("Message fully sent, freeing.");
         mParent->mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
         sendFinished = true;
@@ -1382,14 +1382,14 @@ void MeshForwarder::HandleReceivedFrame(otDataIndication &aDataIndication)
     {
         VerifyOrExit(payloadLength == 0, error = OT_ERROR_NOT_LOWPAN_DATA_FRAME);
 
-        otLogInfoMac(GetInstance(), "Received empty payload frame");
+        otLogInfoMac("Received empty payload frame");
     }
 
 exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoMac(GetInstance(), "Dropping rx frame, error:%s", otThreadErrorToString(error));
+        otLogInfoMac("Dropping rx frame, error:%s", otThreadErrorToString(error));
     }
 }
 
@@ -1562,8 +1562,7 @@ exit:
     }
     else
     {
-        otLogInfoMac(GetInstance(),
-                     "Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
+        otLogInfoMac("Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
                      otThreadErrorToString(error), aFrameLength, aMacSource.ToString().AsCString(),
                      aMacDest.ToString().AsCString(), fragmentHeader.GetDatagramTag(),
                      fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize(),
@@ -1666,7 +1665,7 @@ exit:
     }
     else
     {
-        otLogInfoMac(GetInstance(), "Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s",
+        otLogInfoMac("Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s",
                      otThreadErrorToString(error), aFrameLength, aMacSource.ToString().AsCString(),
                      aMacDest.ToString().AsCString(), aLinkInfo.mLinkSecurity ? "yes" : "no");
 
@@ -1705,7 +1704,7 @@ Mac::Sender *MeshForwarder::GetFreeFloatingSender(MeshSender *aSender)
         if (mFloatingMacSenders[i].GetMeshSender() != NULL)
             continue;
 
-        otLogDebgMac(GetInstance, "Claiming floating sender %d for MeshSender %d", i, aSender);
+        otLogDebgMac("Claiming floating sender %d for MeshSender %d", i, aSender);
         sender = &mFloatingMacSenders[i];
         sender->SetMeshSender(aSender);
         break;
@@ -1741,7 +1740,7 @@ void MeshForwarder::ReleaseFloatingSenders(MeshSender *aSender)
         if (sender.GetMeshSender() != aSender)
             continue;
 
-        otLogDebgMac(GetInstance, "Releasing floating sender %d from MeshSender %d", i, aSender);
+        otLogDebgMac("Releasing floating sender %d from MeshSender %d", i, aSender);
 
         if (sender.IsInUse())
             GetNetif().GetMac().PurgeFrameRequest(sender);
@@ -1850,23 +1849,23 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
         priorityText = "high";
         break;
 
-    case Message::kPriorityMedium:
-        priorityText = "medium";
+    case Message::kPriorityNormal:
+        priorityText = "normal";
         break;
 
     case Message::kPriorityLow:
         priorityText = "low";
         break;
 
-    case Message::kPriorityVeryLow:
-        priorityText = "verylow";
+    case Message::kPriorityNet:
+        priorityText = "network";
         break;
 
     default:
         priorityText = "unknown";
         break;
     }
-    otLogInfoMac(GetInstance(), "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s", actionText,
+    otLogInfoMac("%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s", actionText,
                  Ip6::Ip6::IpProtoToString(protocol), aMessage.GetLength(), checksum,
                  (aMacAddress == NULL) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
                  (aMacAddress == NULL) ? "" : aMacAddress->ToString().AsCString(),
@@ -1876,8 +1875,8 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 
     if (shouldLogSrcDstAddresses)
     {
-        otLogInfoMac(GetInstance(), "src: %s", ip6Header.GetSource().ToString().AsCString());
-        otLogInfoMac(GetInstance(), "dst: %s", ip6Header.GetDestination().ToString().AsCString());
+        otLogInfoMac("src: %s", ip6Header.GetSource().ToString().AsCString());
+        otLogInfoMac("dst: %s", ip6Header.GetDestination().ToString().AsCString());
     }
 
 exit:
