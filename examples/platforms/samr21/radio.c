@@ -46,8 +46,12 @@
 
 enum
 {
-    IEEE802154_ACK_LENGTH = 5,
-    IEEE802154_FCS_SIZE   = 2
+    IEEE802154_FRAME_TYPE_ACK = 0x2,
+    IEEE802154_DSN_OFFSET     = 2,
+    IEEE802154_FRAME_PENDING  = 1 << 4,
+    IEEE802154_ACK_REQUEST    = 1 << 5,
+    IEEE802154_ACK_LENGTH     = 5,
+    IEEE802154_FCS_SIZE       = 2
 };
 
 enum
@@ -64,7 +68,7 @@ static bool         sSleep       = false;
 static bool         sRxEnable    = false;
 static bool         sTxDone      = false;
 static bool         sRxDone      = false;
-static otError      sTxStatus    = OT_ERROR_NONE;
+static uint8_t      sTxStatus    = PHY_STATUS_SUCCESS;
 static int8_t       sPower       = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static otRadioState sState       = OT_RADIO_STATE_DISABLED;
 static bool         sPromiscuous = false;
@@ -244,22 +248,69 @@ static void handleRx(void)
 
 static void handleTx(void)
 {
+    otError      otStatus;
+    otRadioFrame ackFrame;
+    uint8_t      psdu[IEEE802154_ACK_LENGTH];
+
     if (sTxDone)
     {
         sTxDone = false;
-        sState  = OT_RADIO_STATE_RECEIVE;
+
+        // SAMR21 RF doesn't provide ACK frame, generate it manually
+        ackFrame.mPsdu    = psdu;
+        ackFrame.mLength  = IEEE802154_ACK_LENGTH;
+        ackFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+        ackFrame.mPsdu[1] = 0;
+        ackFrame.mPsdu[2] = sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET];
+
+        switch (sTxStatus)
+        {
+        // This is WA to handle pending bit in ACK.
+        // SAMR21 phy driver doesn't provide pending status and returns
+        // PHY_STATUS_ERROR. This status is returned also RF transaction not yet
+        // finished. This situation should not happens. Currently PHY_STATUS_ERROR
+        // is only way to detect pending bit.
+        case PHY_STATUS_ERROR:
+            ackFrame.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+            // fall through
+
+        case PHY_STATUS_SUCCESS:
+            otStatus = OT_ERROR_NONE;
+            break;
+
+        case PHY_STATUS_CHANNEL_ACCESS_FAILURE:
+            otStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+            break;
+
+        case PHY_STATUS_NO_ACK:
+            otStatus = OT_ERROR_NO_ACK;
+            break;
+
+        default:
+            otStatus = OT_ERROR_ABORT;
+            break;
+        }
+
+        sState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, sTxStatus);
+            otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, otStatus);
         }
         else
 #endif
         {
-            otLogDebgPlat("Radio transmit done, status: %d", sTxStatus);
+            otLogDebgPlat("Radio transmit done, status: %d", otStatus);
 
-            otPlatRadioTxDone(sInstance, &sTransmitFrame, NULL, sTxStatus);
+            otRadioFrame *ackFramePtr = &ackFrame;
+
+            if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (otStatus != OT_ERROR_NONE))
+            {
+                ackFramePtr = NULL;
+            }
+
+            otPlatRadioTxDone(sInstance, &sTransmitFrame, ackFramePtr, otStatus);
         }
     }
 }
@@ -279,26 +330,8 @@ void PHY_DataInd(PHY_DataInd_t *ind)
 
 void PHY_DataConf(uint8_t status)
 {
-    switch (status)
-    {
-    case PHY_STATUS_SUCCESS:
-        sTxStatus = OT_ERROR_NONE;
-        break;
-
-    case PHY_STATUS_CHANNEL_ACCESS_FAILURE:
-        sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        break;
-
-    case PHY_STATUS_NO_ACK:
-        sTxStatus = OT_ERROR_NO_ACK;
-        break;
-
-    default:
-        sTxStatus = OT_ERROR_ABORT;
-        break;
-    }
-
-    sTxDone = true;
+    sTxStatus = status;
+    sTxDone   = true;
 }
 
 /*******************************************************************************
