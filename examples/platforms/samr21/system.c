@@ -34,6 +34,7 @@
 
 #include "asf.h"
 
+#include <openthread-core-config.h>
 #include <openthread/platform/radio.h>
 
 #include "openthread-system.h"
@@ -173,6 +174,10 @@ void otSysInit(int argc, char *argv[])
     getKitData();
 #endif
 
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+    samr21LogInit();
+#endif
     samr21AlarmInit();
     samr21RadioInit();
 }
