@@ -106,20 +106,12 @@ void Slaac::UpdateAddresses(otInstance *    aInstance,
             continue;
         }
 
-        for (size_t i = 0; i < aNumAddresses; i++)
+        for (const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance); address != NULL;
+             address                       = address->mNext)
         {
-            otNetifAddress *address = &aAddresses[i];
-
-            if (!address->mValid)
-            {
-                continue;
-            }
-
             if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
                 config.mPrefix.mLength == address->mPrefixLength)
             {
-                static_cast<Instance *>(aInstance)->GetThreadNetif().AddUnicastAddress(
-                    *static_cast<Ip6::NetifUnicastAddress *>(address));
                 found = true;
                 break;
             }
