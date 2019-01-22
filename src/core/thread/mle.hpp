@@ -495,7 +495,6 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aEnableReattach True if reattach using stored dataset, or False if not.
      * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
      *                             or False if not.
      *
@@ -503,7 +502,7 @@ public:
      * @retval OT_ERROR_ALREADY  The protocol operation was already started.
      *
      */
-    otError Start(bool aEnableReattach, bool aAnnounceAttach);
+    otError Start(bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
