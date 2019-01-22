@@ -31,7 +31,7 @@
  *   This file implements a simple CLI for the CoAP service.
  */
 
-#include "cli_udp_example.hpp"
+#include "cli_udp.hpp"
 
 #include <openthread/message.h>
 #include <openthread/udp.h>

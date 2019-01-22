@@ -148,7 +148,7 @@ SOURCES_COMMON =                      \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
-    cli_udp_example.cpp               \
+    cli_udp.cpp                       \
     $(NULL)
 
 libopenthread_cli_ftd_a_SOURCES =     \
@@ -167,7 +167,7 @@ noinst_HEADERS                      = \
     cli_dataset.hpp                   \
     cli_server.hpp                    \
     cli_uart.hpp                      \
-    cli_udp_example.hpp               \
+    cli_udp.hpp                       \
     x509_cert_key.hpp                 \
     $(NULL)
 
