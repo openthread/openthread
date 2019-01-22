@@ -16,7 +16,7 @@
     <ClCompile Include="..\..\src\cli\cli_uart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\cli\cli_udp_example.cpp">
+    <ClCompile Include="..\..\src\cli\cli_udp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
  </ItemGroup>
