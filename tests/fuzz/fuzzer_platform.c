@@ -78,6 +78,19 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     (void)aInstance;
 }
 
+bool otDiagIsEnabled(void)
+{
+    return false;
+}
+
+void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+{
+    (void)aArgCount;
+    (void)aArgVector;
+    (void)aOutput;
+    (void)aOutputMaxLen;
+}
+
 void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     (void)aString;
