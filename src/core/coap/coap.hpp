@@ -442,7 +442,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
      *
      */
-    typedef otError (*Sender)(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
@@ -659,18 +659,6 @@ protected:
     explicit CoapBase(Instance &aInstance, Sender aSender);
 
     /**
-     * This method sends a CoAP message.
-     *
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     *
-     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
-     *
-     */
-    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    /**
      * This method receives a CoAP message.
      *
      * @param[in]  aMessage      A reference to the received message.
@@ -699,6 +687,21 @@ private:
 
     otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This method sends a message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
+     *
+     */
+    otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    {
+        return mSender(*this, aMessage, aMessageInfo);
+    }
 
     MessageQueue      mPendingRequests;
     uint16_t          mMessageId;
@@ -752,11 +755,11 @@ public:
     otError Stop(void);
 
 private:
-    static otError Send(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
         return static_cast<Coap &>(aCoapBase).Send(aMessage, aMessageInfo);
     }
-    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

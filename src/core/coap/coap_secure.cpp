@@ -236,14 +236,16 @@ otError CoapSecure::SendMessage(Message &               aMessage,
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
-otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+    otError error;
 
-    static_cast<Message &>(aMessage).Finish();
-    mTransmitQueue.Enqueue(aMessage);
+    SuccessOrExit(error = mTransmitQueue.Enqueue(aMessage));
     mTransmitTask.Post();
-    return OT_ERROR_NONE;
+
+exit:
+    return error;
 }
 
 void CoapSecure::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
