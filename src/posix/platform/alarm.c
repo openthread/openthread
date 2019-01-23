@@ -38,6 +38,7 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
 
 #include "code_utils.h"
 
@@ -206,4 +207,9 @@ void platformAlarmProcess(otInstance *aInstance)
     }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+}
+
+uint64_t otPlatTimeGet(void)
+{
+    return platformGetTime();
 }

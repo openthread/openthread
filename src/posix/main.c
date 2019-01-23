@@ -46,6 +46,7 @@
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
 #include <openthread/diag.h>
+#include <openthread/logging.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
@@ -65,7 +66,9 @@ static jmp_buf gResetJump;
 
 void __gcov_flush();
 
-static const struct option kOptions[] = {{"dry-run", no_argument, NULL, 'n'},
+static const struct option kOptions[] = {{"backbone-link", required_argument, NULL, 'B'},
+                                         {"debug-level", required_argument, NULL, 'd'},
+                                         {"dry-run", no_argument, NULL, 'n'},
                                          {"help", no_argument, NULL, 'h'},
                                          {"interface-name", required_argument, NULL, 'I'},
                                          {"no-reset", no_argument, NULL, 0},
@@ -80,11 +83,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
+            "    -B  --backbone-link  addr   The backbone link address.\n"
             "    -I  --interface-name name   Thread network interface name.\n"
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
             "    -s  --time-speed factor     Time speed up factor.\n"
+            "    -d  --debug-level           Debug level of logging.\n"
             "    -v  --verbose               Also log to stderr.\n"
             "    -h  --help                  Display this usage information.\n",
             aProgramName);
@@ -95,6 +100,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 {
     otPlatformConfig config;
     otInstance *     instance          = NULL;
+    int              logLevel          = OT_LOG_LEVEL_INFO;
     bool             isDryRun          = false;
     bool             printRadioVersion = false;
     bool             isVerbose         = false;
@@ -109,7 +115,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "hI:ns:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:ns:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -123,6 +129,12 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
             break;
         case 'I':
             config.mInterfaceName = optarg;
+            break;
+        case 'B':
+            config.mBackboneLink = optarg;
+            break;
+        case 'd':
+            logLevel = atoi(optarg);
             break;
         case 'n':
             isDryRun = true;
@@ -191,6 +203,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         exit(OT_EXIT_SUCCESS);
     }
 
+    otLoggingSetLevel(logLevel);
     return instance;
 }
 

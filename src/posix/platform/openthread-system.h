@@ -91,9 +91,11 @@ enum
 typedef struct otPlatformConfig
 {
     uint64_t    mNodeId;        /// Unique node ID.
+    const char *mBackboneLink;  /// The backbone link descriptor.
     const char *mInterfaceName; /// Thread network interface name.
     const char *mRadioFile;     /// Radio file path.
     const char *mRadioConfig;   /// Radio configurations.
+    int         mDebugLevel;    /// The debug level.
     uint32_t    mSpeedUpFactor; /// Speed up factor.
     bool        mResetRadio;    /// Whether to reset RCP when initializing.
 } otPlatformConfig;

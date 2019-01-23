@@ -363,6 +363,15 @@ public:
     uint8_t GetType(void) const { return GetPsdu()[0] & kFcfFrameTypeMask; }
 
     /**
+     * This method checks if this is an ACK frame.
+     *
+     * @retval TRUE     This is an ACK frame.
+     * @retval FALSE    This is not an ACK frame.
+     *
+     */
+    bool IsAck(void) const { return GetType() == kFcfFrameAck; }
+
+    /**
      * This method returns the IEEE 802.15.4 Frame Version.
      *
      * @returns The IEEE 802.15.4 Frame Version.

@@ -49,6 +49,10 @@ stages:
 
 jobs:
   include:
+    - env: BUILD_TARGET="posix-backbone-link" VERBOSE=1 COVERAGE=1
+      os: linux
+      compiler: clang
+      script: script/test bblink
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc

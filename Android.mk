@@ -32,15 +32,16 @@ OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 
 OPENTHREAD_COMMON_FLAGS                                          := \
+    -DOPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1                  \
+    -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
     -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
     -DPACKAGE_STRING=\"OPENTHREAD\ $(OPENTHREAD_DEFAULT_VERSION)\"  \
-    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
     -DPACKAGE_TARNAME=\"openthread\"                                \
-    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
     -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
-    -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
+    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
+    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
     $(NULL)
 
 # Enable required features for on-device tests.
@@ -235,6 +236,8 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.c                            \
     src/posix/platform/misc.c                               \
+    src/posix/platform/radio.cpp                            \
+    src/posix/platform/radio_bblink.cpp                     \
     src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/system.c                             \

@@ -198,9 +198,10 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @param[in]  aRadioFile       A pointer to the radio file.
  * @param[in]  aRadioConfig     A pointer to the radio config.
  * @param[in]  aReset           Whether to reset RCP when initializing.
+ * @param[in]  aBackboneLink    A pointer to the backbone link descriptor.
  *
  */
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset);
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset, const char *aBackboneLink);
 
 /**
  * This function shuts down the radio service used by OpenThread.

@@ -56,11 +56,11 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
+#include "radio.h"
+
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
-
-static ot::PosixApp::RadioSpinel sRadioSpinel;
 
 namespace ot {
 namespace PosixApp {
@@ -696,7 +696,7 @@ void RadioSpinel::RadioReceive(void)
     else
 #endif
     {
-        otPlatRadioReceiveDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
+        platformOnRadioRxDone(mInstance, &mRxRadioFrame, OT_ERROR_NONE);
     }
 
 exit:
@@ -773,8 +773,8 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         else
 #endif
         {
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
-                              mTxError);
+            platformOnRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
+                                  mTxError);
         }
     }
     else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
@@ -808,7 +808,7 @@ otError RadioSpinel::SetShortAddress(uint16_t aAddress)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mShortAddress != aAddress);
-    SuccessOrExit(error = sRadioSpinel.Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
 exit:
@@ -1157,7 +1157,7 @@ spinel_tid_t RadioSpinel::GetNextTid(void)
 /**
  * This method delivers the radio frame to transceiver.
  *
- * otPlatRadioTxStarted() is triggered immediately for now, which may be earlier than real started time.
+ * platformOnRadioTxDone() is triggered immediately for now, which may be earlier than real started time.
  *
  */
 void RadioSpinel::RadioTransmit(void)
@@ -1165,7 +1165,7 @@ void RadioSpinel::RadioTransmit(void)
     otError error;
 
     assert(mTransmitFrame != NULL);
-    otPlatRadioTxStarted(mInstance, mTransmitFrame);
+    platformOnRadioTxStarted(mInstance, mTransmitFrame);
     assert(mState == kStateTransmitPending);
 
     error = Request(true, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
@@ -1196,7 +1196,7 @@ void RadioSpinel::RadioTransmit(void)
         else
 #endif
         {
-            otPlatRadioTxDone(mInstance, mTransmitFrame, NULL, error);
+            platformOnRadioTxDone(mInstance, mTransmitFrame, NULL, error);
         }
     }
 }
@@ -1390,7 +1390,7 @@ otError RadioSpinel::Sleep(void)
     switch (mState)
     {
     case kStateReceive:
-        error = sRadioSpinel.Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
+        error = Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
         VerifyOrExit(error == OT_ERROR_NONE);
 
         mState = kStateSleep;
@@ -1440,7 +1440,7 @@ otError RadioSpinel::Disable(void)
     VerifyOrExit(IsEnabled());
     VerifyOrExit(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrDie(sRadioSpinel.Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
+    SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
     mState    = kStateDisabled;
     mInstance = NULL;
 
@@ -1498,251 +1498,6 @@ exit:
 } // namespace PosixApp
 } // namespace ot
 
-void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
-{
-    SuccessOrDie(sRadioSpinel.GetIeeeEui64(aIeeeEui64));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
-{
-    SuccessOrDie(sRadioSpinel.SetPanId(panid));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
-{
-    otExtAddress addr;
-
-    for (size_t i = 0; i < sizeof(addr); i++)
-    {
-        addr.m8[i] = aAddress->m8[sizeof(addr) - 1 - i];
-    }
-
-    SuccessOrDie(sRadioSpinel.SetExtendedAddress(addr));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
-{
-    SuccessOrDie(sRadioSpinel.SetShortAddress(aAddress));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
-{
-    SuccessOrDie(sRadioSpinel.SetPromiscuous(aEnable));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset)
-{
-    sRadioSpinel.Init(aRadioFile, aRadioConfig, aReset);
-}
-
-void platformRadioDeinit(void)
-{
-    sRadioSpinel.Deinit();
-}
-
-bool otPlatRadioIsEnabled(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.IsEnabled();
-}
-
-otError otPlatRadioEnable(otInstance *aInstance)
-{
-    return sRadioSpinel.Enable(aInstance);
-}
-
-otError otPlatRadioDisable(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.Disable();
-}
-
-otError otPlatRadioSleep(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.Sleep();
-}
-
-otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.Receive(aChannel);
-}
-
-otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.Transmit(*aFrame);
-}
-
-otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return &sRadioSpinel.GetTransmitFrame();
-}
-
-int8_t otPlatRadioGetRssi(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRssi();
-}
-
-otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioCaps();
-}
-
-const char *otPlatRadioGetVersionString(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetVersion();
-}
-
-bool otPlatRadioGetPromiscuous(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.IsPromiscuous();
-}
-
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
-{
-    sRadioSpinel.UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
-}
-
-void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
-{
-    sRadioSpinel.Process(*aReadFdSet, *aWriteFdSet);
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
-{
-    SuccessOrDie(sRadioSpinel.EnableSrcMatch(aEnable));
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.AddSrcMatchShortEntry(aShortAddress);
-}
-
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    otExtAddress addr;
-
-    for (size_t i = 0; i < sizeof(addr); i++)
-    {
-        addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
-    }
-
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.AddSrcMatchExtEntry(addr);
-}
-
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.ClearSrcMatchShortEntry(aShortAddress);
-}
-
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    otExtAddress addr;
-
-    for (size_t i = 0; i < sizeof(addr); i++)
-    {
-        addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
-    }
-
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.ClearSrcMatchExtEntry(addr);
-}
-
-void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
-{
-    SuccessOrDie(sRadioSpinel.ClearSrcMatchShortEntries());
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
-{
-    SuccessOrDie(sRadioSpinel.ClearSrcMatchExtEntries());
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.EnergyScan(aScanChannel, aScanDuration);
-}
-
-otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
-{
-    assert(aPower != NULL);
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetTransmitPower(*aPower);
-}
-
-otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.SetTransmitPower(aPower);
-}
-
-otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
-{
-    assert(aThreshold != NULL);
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetCcaEnergyDetectThreshold(*aThreshold);
-}
-
-otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.SetCcaEnergyDetectThreshold(aThreshold);
-}
-
-int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetReceiveSensitivity();
-}
-
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.SetCoexEnabled(aEnabled);
-}
-
-bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.IsCoexEnabled();
-}
-
-otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
-
-    error = sRadioSpinel.GetCoexMetrics(*aCoexMetrics);
-
-exit:
-    return error;
-}
-#endif
-
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
 {
@@ -1770,8 +1525,8 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
         else
 #endif
         {
-            otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
-                              mTxError);
+            platformOnRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
+                                  mTxError);
         }
     }
 
@@ -1790,93 +1545,4 @@ void ot::PosixApp::RadioSpinel::Update(struct timeval &aTimeout)
         aTimeout.tv_usec = 0;
     }
 }
-
-void platformSimRadioSpinelUpdate(struct timeval *aTimeout)
-{
-    sRadioSpinel.Update(*aTimeout);
-}
-
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
-{
-    sRadioSpinel.Process(*aEvent);
-    OT_UNUSED_VARIABLE(aInstance);
-}
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    // deliver the platform specific diags commands to radio only ncp.
-    OT_UNUSED_VARIABLE(aInstance);
-    char  cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE] = {'\0'};
-    char *cur                                              = cmd;
-    char *end                                              = cmd + sizeof(cmd);
-
-    for (int index = 0; index < argc; index++)
-    {
-        cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", argv[index]);
-    }
-
-    sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
-}
-
-void otPlatDiagModeSet(bool aMode)
-{
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(aMode ? "start" : "stop", NULL, 0));
-    sRadioSpinel.SetDiagEnabled(aMode);
-
-exit:
-    return;
-}
-
-bool otPlatDiagModeGet(void)
-{
-    return sRadioSpinel.IsDiagEnabled();
-}
-
-void otPlatDiagTxPowerSet(int8_t aTxPower)
-{
-    char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-
-    snprintf(cmd, sizeof(cmd), "power %d", aTxPower);
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
-
-exit:
-    return;
-}
-
-void otPlatDiagChannelSet(uint8_t aChannel)
-{
-    char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-
-    snprintf(cmd, sizeof(cmd), "channel %d", aChannel);
-    SuccessOrExit(sRadioSpinel.PlatDiagProcess(cmd, NULL, 0));
-
-exit:
-    return;
-}
-
-void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aError);
-}
-
-void otPlatDiagAlarmCallback(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
-
-uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(false);
-}
-
-uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(true);
-}

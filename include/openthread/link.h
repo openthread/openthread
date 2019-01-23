@@ -59,6 +59,8 @@ extern "C" {
  */
 typedef struct otThreadLinkInfo
 {
+    otRadioInfo mRadioInfo; ///< Radio information
+
     uint16_t mPanId;        ///< Source PAN ID
     uint8_t  mChannel;      ///< 802.15.4 Channel
     int8_t   mRss;          ///< Received Signal Strength in dBm.

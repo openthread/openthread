@@ -104,6 +104,7 @@ public:
     struct ParentInfo
     {
         Mac::ExtAddress mExtAddress; ///< Extended Address
+        otRadioInfo     mRadioInfo;  ///< Radio info
     };
 
     /**

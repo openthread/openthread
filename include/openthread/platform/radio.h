@@ -169,6 +169,28 @@ typedef struct otRadioIeInfo
     uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
 } otRadioIeInfo;
 
+#define OT_RADIO_ADDRESS_SIZE 16 ///< Max radio address size.
+
+/**
+ * This structure represents the radio info.
+ *
+ *          value        | link type
+ * ----------------------|-----------------
+ *      all 0x00         | 15.4 radio link
+ *      all 0xff         | all links(for tx only)
+ * ::ffff:<IPv4 address> | IPv4 link
+ *     IPv6 address      | IPv6 link
+ *
+ */
+typedef struct otRadioInfo
+{
+    union
+    {
+        uint64_t m64[OT_RADIO_ADDRESS_SIZE / sizeof(uint64_t)];
+        uint8_t  m8[OT_RADIO_ADDRESS_SIZE];
+    } mFields;
+} otRadioInfo;
+
 /**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
@@ -178,6 +200,8 @@ typedef struct otRadioFrame
 
     uint16_t mLength;  ///< Length of the PSDU.
     uint8_t  mChannel; ///< Channel used to transmit/receive the frame.
+
+    otRadioInfo mRadioInfo; ///< Radio info for tx or rx.
 
     /**
      * The union of transmit and receive information for a radio frame.

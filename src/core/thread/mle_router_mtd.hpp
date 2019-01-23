@@ -93,6 +93,19 @@ public:
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
+
+#if OPENTHREAD_CONFIG_BACKBONE_LINK_TYPE_ENABLE
+    /**
+     * This method gets the radio information of the neighbor of address @p aAddress.
+     *
+     * @param[in]   aAddress    A reference to the neighbor's address.
+     *
+     * @returns the radio information of the neighbor.
+     *
+     */
+    const otRadioInfo &GetRadioInfo(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress)->GetRadioInfo(); }
+#endif
+
     Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
     {
         OT_UNUSED_VARIABLE(aAddress);

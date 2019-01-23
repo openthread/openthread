@@ -33,7 +33,7 @@
 set -e
 set -o pipefail
 
-readonly SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g')"
+export SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g')"
 export top_builddir="build/${SYSTEM_TRIPLET}"
 
 do_build() {
@@ -123,6 +123,12 @@ main()
             cert)
                 shift
                 do_cert "$1"
+                break
+                ;;
+            bblink)
+                shift
+                .travis/check-backbone-link "$@"
+                break
                 ;;
             help)
                 print_usage

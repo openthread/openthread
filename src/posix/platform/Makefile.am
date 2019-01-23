@@ -46,6 +46,7 @@ libopenthread_posix_a_SOURCES             = \
     logging.c                               \
     misc.c                                  \
     netif.cpp                               \
+    radio.cpp                               \
     radio_spinel.cpp                        \
     settings.cpp                            \
     sim.c                                   \
@@ -54,9 +55,21 @@ libopenthread_posix_a_SOURCES             = \
     udp.cpp                                 \
     $(NULL)
 
+if OPENTHREAD_ENABLE_FTD
+libopenthread_posix_a_CPPFLAGS           += \
+    -DOPENTHREAD_FTD=1                      \
+    $(NULL)
+
+libopenthread_posix_a_SOURCES            += \
+    radio_bblink.cpp                        \
+    $(NULL)
+endif
+
 noinst_HEADERS                            = \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
+    radio.h                                 \
+    radio_bblink.hpp                        \
     radio_spinel.hpp                        \
     $(NULL)
 

@@ -383,7 +383,28 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_LINK_TYPE_ENABLE
+    /**
+     * This method sets the radio information of this neighbor.
+     *
+     * @param[in]   aRadioInfo  A reference to the radio information of this neighbor.
+     *
+     */
+    void SetRadioInfo(const otRadioInfo &aRadioInfo) { mRadioInfo = aRadioInfo; }
+
+    /**
+     * This method gets the radio information of this neighbor.
+     *
+     * @returns the radio information of this neighbor.
+     *
+     */
+    otRadioInfo &GetRadioInfo(void) { return mRadioInfo; }
+#endif // OPENTHREAD_CONFIG_BACKBONE_LINK_TYPE_ENABLE
+
 private:
+#if OPENTHREAD_CONFIG_BACKBONE_LINK_TYPE_ENABLE
+    otRadioInfo mRadioInfo;
+#endif
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     TimeMilli       mLastHeard; ///< Time when last heard.
     union

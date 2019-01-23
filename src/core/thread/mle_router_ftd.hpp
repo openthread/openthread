@@ -392,6 +392,18 @@ public:
      */
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
 
+#if OPENTHREAD_CONFIG_BACKBONE_LINK_TYPE_ENABLE
+    /**
+     * This method gets the radio information of the neighbor of address @p aAddress.
+     *
+     * @param[in]   aAddress    A reference to the neighbor's address.
+     *
+     * @returns the radio information of the neighbor.
+     *
+     */
+    const otRadioInfo &GetRadioInfo(const Mac::Address &aAddress);
+#endif
+
     /**
      * This method returns a pointer to a Neighbor object if a one-way link is maintained
      * as in the instance of an FTD child with neighbor routers.

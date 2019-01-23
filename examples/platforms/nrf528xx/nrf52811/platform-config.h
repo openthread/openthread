@@ -447,4 +447,14 @@
 #define NRF_802154_TX_STARTED_NOTIFY_ENABLED 1
 #endif
 
+/**
+ * @def NRF_802154_RX_BUFFERS
+ *
+ * Number of buffers in receive queue.
+ *
+ */
+#ifndef NRF_802154_RX_BUFFERS
+#define NRF_802154_RX_BUFFERS 8
+#endif
+
 #endif // PLATFORM_CONFIG_H_

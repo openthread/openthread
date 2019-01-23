@@ -1,0 +1,209 @@
+#!/bin/bash
+#
+#  Copyright (c) 2019, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -e -x -o pipefail
+
+readonly LEADER_OUTPUT=/tmp/ot-leader.log
+readonly CORNER_NETNS=corner
+
+at_exit()
+{
+    EXIT_CODE=$?
+
+    sudo killall ot-cli-ftd || true
+    sudo killall ot-cli || true
+    sudo kill ${TSHARK_PID} || true
+    sudo kill ${TSHARK_PID1} || true
+    delete_netns || true
+
+    return $EXIT_CODE
+}
+
+delete_netns()
+{
+    sudo ip link del veth1 netns "${CORNER_NETNS}" || true
+    sudo ip link del veth0 || true
+    sudo ip netns del "${CORNER_NETNS}" || true
+}
+
+create_netns()
+{
+    sudo ip netns add "${CORNER_NETNS}"
+    sudo ip link add veth0 type veth peer name veth1
+    sudo ip link set veth1 netns "${CORNER_NETNS}"
+    sudo ip netns exec "${CORNER_NETNS}" ip link set veth1 multicast on
+    sudo ip netns exec "${CORNER_NETNS}" ip link set veth1 up
+    sudo ip netns exec "${CORNER_NETNS}" ip addr add 192.168.66.2/24 dev veth1
+    sudo ip link set veth0 multicast on
+    sudo ip link set veth0 up
+    sudo ip addr add 192.168.66.1/24 dev veth0
+    sudo ip netns exec "${CORNER_NETNS}" ip addr add 127.0.0.1 dev lo
+    sudo ip netns exec "${CORNER_NETNS}" sudo ip link set lo up
+    sudo ip netns exec "${CORNER_NETNS}" ip addr
+    ping -c 1 192.168.66.2
+}
+
+start_leader()
+{
+    sudo rm -rf tmp
+    expect <<EOF | tee "${LEADER_OUTPUT}"
+spawn ${OT_CLI} -B 192.168.66.1 ${OT_RCP} 1
+send "panid 0xface\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "routerselectionjitter 1\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect {
+    "leader" { send_user "Successfully attached as Leader\n" }
+    timeout { exit 1 }
+}
+expect "Done"
+wait
+EOF
+}
+
+start_child()
+{
+    if which tshark; then
+        sudo -E ip netns exec "${CORNER_NETNS}" tshark -i lo -w /tmp/corner.pcap & TSHARK_PID1=$!
+        echo 'Waiting 5s for tshark ready'
+        sleep 5
+    fi
+
+    BACKBONE_LINK=192.168.66.2 sudo -E ip netns exec "${CORNER_NETNS}" sudo -E -u ${USER} expect <<EOF
+spawn ${OT_CLI_FTD} 2
+send "mode rsn\r\n"
+expect "Done"
+send "panid 0xface\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect {
+    "child" { send_user "Successfully attached as Child\n" }
+    timeout { exit 1 }
+}
+expect "Done"
+send "reset\r\n"
+sleep 20
+send "\r\n"
+expect "> "
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect {
+    "child" { send_user "Successfully attached as Child after reset\n" }
+    timeout { exit 1 }
+}
+EOF
+}
+
+file_expect()
+{
+    times=3
+
+    while [[ ${times} -gt 0 ]]; do
+        sleep 5
+        if grep -q "$1" "$2"; then
+            return 0
+        else
+            echo "Waiting 5s for '$1'"
+        fi
+        times=$((times - 1))
+    done
+    echo "Timeout waiting for '$1'"
+    return 1
+}
+
+setup()
+{
+    sudo apt-get install expect
+    ./bootstrap
+    BBLINK=1 NODE_MODE=transceiver VIRTUAL_TIME=0 READLINE=no ./script/test build
+}
+
+check()
+{
+    readonly OT_CLI_FTD="$(ls output/*/bin/ot-cli-ftd)"
+    readonly OT_RCP="$(ls output/*/bin/ot-rcp)"
+    readonly OT_CLI="$(ls output/posix/*/bin/ot-cli)"
+
+    create_netns
+    trap at_exit INT TERM EXIT
+    echo 'Waiting 5s for network ready'
+    sleep 5
+
+    if which tshark; then
+        tshark -i veth0 -w current.pcap & TSHARK_PID=$!
+        echo 'Waiting 5s for tshark ready'
+        sleep 5
+    fi
+
+    start_leader &
+    file_expect '^leader' "${LEADER_OUTPUT}"
+    start_child
+}
+
+main()
+{
+    case "$1" in
+        create-netns)
+            create_netns
+            ;;
+        delete-netns)
+            delete_netns
+            ;;
+        divein-netns)
+            sudo ip netns exec corner su - $USER
+            ;;
+        setup)
+            setup
+            ;;
+        check)
+            check
+            ;;
+        '')
+            setup
+            check
+            ;;
+    esac
+}
+
+main "$@"
