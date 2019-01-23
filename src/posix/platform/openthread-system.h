@@ -97,7 +97,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 /**
  * This function polls OpenThread's mainloop.
  *
- * @param[in]       aInstance   The OpenThread instance structure.
  * @param[inout]    aMainloop   A pointer to the mainloop context.
  *
  */
