@@ -282,6 +282,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_coap.cpp                      \
     src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
+    src/cli/cli_server.cpp                    \
     src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     src/posix/main.c                          \

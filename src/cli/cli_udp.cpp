@@ -37,6 +37,7 @@
 #include <openthread/udp.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 #include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include "cli/cli.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -46,6 +48,12 @@ namespace Cli {
 class Server
 {
 public:
+    Server(Instance *aInstance)
+        : mInterpreter(aInstance)
+    {
+        ;
+    }
+
     /**
      * This method delivers raw characters to the client.
      *
@@ -80,6 +88,19 @@ public:
         OT_UNUSED_VARIABLE(aFormat);
         return -1;
     }
+
+    /**
+     * This method returns a reference to the interpreter object.
+     *
+     * @returns A reference to the interpreter object.
+     *
+     */
+    Interpreter &GetInterpreter(void) { return mInterpreter; }
+
+    static Server *sServer;
+
+protected:
+    Interpreter mInterpreter;
 };
 
 } // namespace Cli

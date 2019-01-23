@@ -87,47 +87,45 @@
 namespace ot {
 namespace Cli {
 
-Uart *Uart::sUartServer;
-
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    Uart::sUartServer = new (&sCliUartRaw) Uart(instance);
+    Server::sServer = new (&sCliUartRaw) Uart(instance);
 }
 
 extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
 {
-    Uart::sUartServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
+    Server::sServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
 }
 
 extern "C" void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength)
 {
-    Uart::sUartServer->GetInterpreter().OutputBytes(aBytes, aLength);
+    Server::sServer->GetInterpreter().OutputBytes(aBytes, aLength);
 }
 
 extern "C" void otCliUartOutputFormat(const char *aFmt, ...)
 {
     va_list aAp;
     va_start(aAp, aFmt);
-    Uart::sUartServer->OutputFormatV(aFmt, aAp);
+    static_cast<Uart *>(Server::sServer)->OutputFormatV(aFmt, aAp);
     va_end(aAp);
 }
 
 extern "C" void otCliUartOutput(const char *aString, uint16_t aLength)
 {
-    Uart::sUartServer->Output(aString, aLength);
+    Server::sServer->Output(aString, aLength);
 }
 
 extern "C" void otCliUartAppendResult(otError aError)
 {
-    Uart::sUartServer->GetInterpreter().AppendResult(aError);
+    Server::sServer->GetInterpreter().AppendResult(aError);
 }
 
 Uart::Uart(Instance *aInstance)
-    : mInterpreter(aInstance)
+    : Server(aInstance)
 {
     mRxLength   = 0;
     mTxHead     = 0;
@@ -139,7 +137,7 @@ Uart::Uart(Instance *aInstance)
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    Uart::sUartServer->ReceiveTask(aBuf, aBufLength);
+    static_cast<Uart *>(Server::sServer)->ReceiveTask(aBuf, aBufLength);
 }
 
 void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
@@ -339,7 +337,7 @@ exit:
 
 extern "C" void otPlatUartSendDone(void)
 {
-    Uart::sUartServer->SendDoneTask();
+    static_cast<Uart *>(Server::sServer)->SendDoneTask();
 }
 
 void Uart::SendDoneTask(void)
@@ -356,10 +354,10 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Uart::sUartServer != NULL);
+    VerifyOrExit(Server::sServer != NULL);
 
-    Uart::sUartServer->OutputFormatV(aFormat, aArgs);
-    Uart::sUartServer->OutputFormat("\r\n");
+    static_cast<Uart *>(Server::sServer)->OutputFormatV(aFormat, aArgs);
+    Server::sServer->OutputFormat("\r\n");
 
 exit:
     return;
