@@ -62,8 +62,6 @@ extern "C" {
  * @defgroup api-net IPv6 Networking
  * @{
  *
- * @defgroup api-dhcp6 DHCPv6
- * @brief This module includes functions for DHCPv6 Client and Server.
  * @defgroup api-dns   DNSv6
  * @defgroup api-icmp6 ICMPv6
  * @defgroup api-ip6   IPv6

@@ -99,7 +99,7 @@ otError otCoapSecureStop(otInstance *aInstance);
  * DTLS_PSK_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aPSK          A pointer to the PSK.
+ * @param[in]  aPsk          A pointer to the PSK.
  * @param[in]  aPskLength    The PSK length.
  * @param[in]  aPskIdentity  The Identity Name for the PSK.
  * @param[in]  aPskIdLength  The PSK Identity Length.
@@ -150,7 +150,7 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
- * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 certificate.
+ * @param[in]  aX509Cert          A pointer to the PEM formatted X509 certificate.
  * @param[in]  aX509Length        The length of certificate.
  * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLength  The length of the private key.
@@ -189,7 +189,7 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
  * @param[in]  aSockAddr               A pointer to the remote sockaddr.
- * @param[in]  aCallback               A pointer to a function that will be called when the DTLS connection
+ * @param[in]  aHandler                A pointer to a function that will be called when the DTLS connection
  *                                     state changes.
  * @param[in]  aContext                A pointer to arbitrary context information.
  *
@@ -291,8 +291,8 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
  * a Client connect to the CoAP Secure server.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMessageInfo  A pointer to a message info structure.
  * @param[in]  aHandler      A pointer to a function that will be called once DTLS connection is established.
+ * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
  *
  */
 void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
