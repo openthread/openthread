@@ -641,30 +641,10 @@ void BorderAgent::HandleConnected(bool aConnected)
     }
     else
     {
-        ThreadNetif &     netif = GetNetif();
-        Coap::CoapSecure &coaps = netif.GetCoapSecure();
-
         otLogInfoMeshCoP("Commissioner disconnected");
-        netif.GetIp6().GetUdp().RemoveReceiver(mUdpReceiver);
-        netif.RemoveUnicastAddress(mCommissionerAloc);
-        coaps.Stop();
+        GetNetif().RemoveUnicastAddress(mCommissionerAloc);
         SetState(OT_BORDER_AGENT_STATE_STARTED);
-        mTimer.Start(kRestartDelay);
     }
-}
-
-otError BorderAgent::StartCoaps(void)
-{
-    ThreadNetif &     netif = GetNetif();
-    Coap::CoapSecure &coaps = netif.GetCoapSecure();
-    otError           error;
-
-    SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
-    SuccessOrExit(error = coaps.SetPsk(netif.GetKeyManager().GetPSKc(), OT_PSKC_MAX_SIZE));
-    coaps.SetConnectedCallback(HandleConnected, this);
-
-exit:
-    return error;
 }
 
 otError BorderAgent::Start(void)
@@ -676,7 +656,9 @@ otError BorderAgent::Start(void)
 
     VerifyOrExit(mState == OT_BORDER_AGENT_STATE_STOPPED, error = OT_ERROR_ALREADY);
 
-    SuccessOrExit(error = StartCoaps());
+    SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
+    SuccessOrExit(error = coaps.SetPsk(netif.GetKeyManager().GetPSKc(), OT_PSKC_MAX_SIZE));
+    coaps.SetConnectedCallback(HandleConnected, this);
 
     coaps.AddResource(mActiveGet);
     coaps.AddResource(mActiveSet);
@@ -706,24 +688,15 @@ void BorderAgent::HandleTimeout(void)
 {
     ThreadNetif &     netif = GetNetif();
     Coap::CoapSecure &coaps = netif.GetCoapSecure();
-    otError           error;
 
     if (coaps.IsConnected())
     {
-        error = coaps.Stop();
-        otLogWarnMeshCoP("Reset commissioner session: %s", otThreadErrorToString(error));
-    }
-    else if (!coaps.IsConnectionActive())
-    {
-        error = StartCoaps();
-        otLogWarnMeshCoP("Restart border agent secure CoAP service: %s", otThreadErrorToString(error));
-    }
-    else
-    {
-        assert(false);
-    }
+        otError error;
 
-    OT_UNUSED_VARIABLE(error);
+        error = coaps.Disconnect();
+        otLogWarnMeshCoP("Reset commissioner session: %s", otThreadErrorToString(error));
+        OT_UNUSED_VARIABLE(error);
+    }
 }
 
 otError BorderAgent::Stop(void)
