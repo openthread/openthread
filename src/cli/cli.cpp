@@ -310,7 +310,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mInstance(aInstance)
 {
 #ifdef OTDLL
-    // On Windows, mInstance presents the current selected otInstance
+    // On Windows, mInstance represents the current selected otInstance
     // which should be NULL now.
     assert(aInstance = NULL);
     assert(mApiInstance);
