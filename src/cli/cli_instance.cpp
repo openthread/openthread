@@ -62,7 +62,6 @@ void Interpreter::CacheInstances()
             mInstances[i].mInterpreter = this;
             mInstances[i].mInstance = static_cast<Instance *>(otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]));
             assert(mInstances[i].mInstance);
-            otSetStateChangedCallback(mInstances[i].mInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
         }
 
         otFreeMemory(aDeviceList);

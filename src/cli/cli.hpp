@@ -347,7 +347,6 @@ private:
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext);
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
@@ -381,11 +380,6 @@ private:
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
-#ifdef OTDLL
-    void HandleNetifStateChanged(otInstance *aInstance, otChangedFlags aFlags);
-#else
-    void HandleNetifStateChanged(otChangedFlags aFlags);
-#endif
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame);
 #endif
@@ -432,8 +426,6 @@ private:
     uint16_t   mCount;
     uint32_t   mInterval;
     TimerMilli mPingTimer;
-
-    otNetifAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT
