@@ -32,10 +32,11 @@
  *
  */
 
+#include "openthread-core-config.h"
+#include "platform-posix.h"
+
 #include <assert.h>
 #include <stdio.h>
-
-#include "platform-posix.h"
 
 #include <openthread/platform/random.h>
 

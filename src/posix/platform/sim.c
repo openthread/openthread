@@ -32,6 +32,7 @@
  *   This file implements the posix simulation.
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>

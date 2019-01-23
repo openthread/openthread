@@ -32,6 +32,7 @@
  *   This file includes the platform-specific initializers.
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include <assert.h>
