@@ -332,7 +332,14 @@ public:
     void ProcessTimerTick(void);
 
 private:
-    void UpdateAllocation(void);
+    void          UpdateAllocation(void);
+    const Router *GetFirstEntry(void) const;
+    const Router *GetNextEntry(const Router *aRouter) const;
+    Router *GetFirstEntry(void) { return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetFirstEntry()); }
+    Router *GetNextEntry(Router *aRouter)
+    {
+        return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
+    }
 
     Router   mRouters[Mle::kMaxRouters];
     uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId)];
