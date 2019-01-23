@@ -39,6 +39,7 @@
 #include <openthread/ip6.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 // header for place your x509 certificate and private key
 #include "x509_cert_key.hpp"
 

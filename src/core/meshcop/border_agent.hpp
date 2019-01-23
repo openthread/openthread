@@ -88,8 +88,7 @@ private:
     {
         static_cast<BorderAgent *>(aContext)->HandleConnected(aConnected);
     }
-    void    HandleConnected(bool aConnected);
-    otError StartCoaps(void);
+    void HandleConnected(bool aConnected);
 
     template <Coap::Resource BorderAgent::*aResource>
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

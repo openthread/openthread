@@ -38,6 +38,7 @@
 #include <ctype.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 #include "coap/coap_message.hpp"
 
 namespace ot {

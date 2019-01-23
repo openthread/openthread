@@ -37,6 +37,7 @@
 #include <stdlib.h>
 
 #include "cli.hpp"
+#include "cli_server.hpp"
 
 #include "common/debug.hpp"
 #include "utils/wrap_string.h"

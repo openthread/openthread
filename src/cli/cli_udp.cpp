@@ -31,12 +31,13 @@
  *   This file implements a simple CLI for the CoAP service.
  */
 
-#include "cli_udp_example.hpp"
+#include "cli_udp.hpp"
 
 #include <openthread/message.h>
 #include <openthread/udp.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 #include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;

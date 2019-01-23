@@ -92,18 +92,8 @@ public:
      */
     int OutputFormatV(const char *aFmt, va_list aAp);
 
-    /**
-     * This method returns a reference to the interpreter object.
-     *
-     * @returns A reference to the interpreter object.
-     *
-     */
-    Interpreter &GetInterpreter(void) { return mInterpreter; }
-
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
-
-    static Uart *sUartServer;
 
 private:
     enum
@@ -124,8 +114,6 @@ private:
     uint16_t mTxLength;
 
     uint16_t mSendLength;
-
-    Interpreter mInterpreter;
 
     friend class Interpreter;
 };
