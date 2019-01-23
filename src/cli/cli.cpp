@@ -1922,15 +1922,16 @@ void Interpreter::ProcessPing(int argc, char *argv[])
         switch (index)
         {
         case 1:
-            mLength = (uint16_t)value;
+            mLength = static_cast<uint16_t>(value);
             break;
 
         case 2:
-            mCount = (uint16_t)value;
+            mCount = static_cast<uint16_t>(value);
             break;
 
         case 3:
-            mInterval = (uint32_t)value;
+            mInterval = static_cast<uint32_t>(value);
+            VerifyOrExit(mInterval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
             mInterval = mInterval * 1000;
             break;
 
