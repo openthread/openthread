@@ -29,15 +29,15 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                                             = libjlinkrtt.a
-                                                          
+
 libjlinkrtt_a_CPPFLAGS                                    = \
     -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT   \
     $(NULL)                                               
-                                                          
+
 libjlinkrtt_a_SOURCES                                     = \
     SEGGER_RTT_V640/RTT/SEGGER_RTT.c                        \
     $(NULL)                                               
-                                                          
+
 noinst_HEADERS                                            = \
     SEGGER_RTT_V640/RTT/SEGGER_RTT.h                        \
     SEGGER_RTT_V640/RTT/SEGGER_RTT_Conf.h                   \
@@ -45,10 +45,13 @@ noinst_HEADERS                                            = \
 
 if OPENTHREAD_EXAMPLES_NRF52840                                                           
 libjlinkrtt_a_CPPFLAGS                                                                                 += \
+    -DNRF52840_XXAA                                                                                       \
     -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
     -I$(top_srcdir)/include                                                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                              \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
     $(NULL)
 endif
 
