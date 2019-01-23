@@ -31,6 +31,7 @@
  *   This file implements the spinel based radio transceiver.
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include "radio_spinel.hpp"

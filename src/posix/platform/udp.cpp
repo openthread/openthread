@@ -36,6 +36,7 @@
 #define __APPLE_USE_RFC_3542
 #endif
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
