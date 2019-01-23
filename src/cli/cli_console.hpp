@@ -107,8 +107,6 @@ private:
 
     otCliConsoleOutputCallback mCallback;
     void *                     mContext;
-
-    Interpreter mInterpreter;
 };
 
 } // namespace Cli

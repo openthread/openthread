@@ -43,7 +43,6 @@
 #include <openthread/udp.h>
 
 #include "cli/cli_dataset.hpp"
-#include "cli/cli_server.hpp"
 #include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -82,6 +81,7 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
+class Server;
 
 /**
  * This structure represents a CLI command.

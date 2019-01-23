@@ -3916,7 +3916,7 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 #else
     OT_UNUSED_VARIABLE(aOwnerLocator);
 
-    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
+    Interpreter &interpreter = Server::sServer->GetInterpreter();
 #endif
     return interpreter;
 }
