@@ -245,10 +245,11 @@ otError Mle::Start(bool aAnnounceAttach)
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
+    SetStateDetached();
+
     ApplyMeshLocalPrefix();
     SetRloc16(GetRloc16());
 
-    SetStateDetached();
     mAttachCounter = 0;
 
     netif.GetKeyManager().Start();
@@ -926,6 +927,8 @@ void Mle::ApplyMeshLocalPrefix(void)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
     memcpy(mRealmLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
+
     // Add the addresses back into the table.
     netif.AddUnicastAddress(mMeshLocal64);
     netif.SubscribeMulticast(mLinkLocalAllThreadNodes);
@@ -942,6 +945,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         netif.AddUnicastAddress(mLeaderAloc);
     }
 
+exit:
     // Changing the prefix also causes the mesh local address to be different.
     GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
 }
