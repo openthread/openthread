@@ -133,15 +133,6 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
     instance.GetThreadNetif().SetMulticastPromiscuous(aEnabled);
 }
 
-void otIp6SlaacUpdate(otInstance *        aInstance,
-                      otNetifAddress *    aAddresses,
-                      uint32_t            aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate,
-                      void *              aContext)
-{
-    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
-}
-
 otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
 {
     return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);

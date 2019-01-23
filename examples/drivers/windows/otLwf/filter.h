@@ -199,7 +199,6 @@ typedef struct _MS_FILTER
     IN6_ADDR                    otCachedAddr[OT_MAX_ADDRESSES];
     ULONG                       otCachedAddrCount;
     IN6_ADDR                    otLinkLocalAddr;
-    otNetifAddress              otAutoAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 
     union
     {

@@ -542,7 +542,6 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_NETDATA", pFilter);
-        otIp6SlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otIp6CreateRandomIid, NULL);
     }
 
     if ((aFlags & OT_CHANGED_THREAD_ML_ADDR) != 0)
