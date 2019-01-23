@@ -35,7 +35,6 @@
 #include "platform-posix.h"
 
 #include <assert.h>
-#include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <stddef.h>
@@ -241,7 +240,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     }
 }
 
-void otSysMainloopPoll(otSysMainloopContext *aMainloop)
+int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 {
     int rval;
 
@@ -272,7 +271,6 @@ void otSysMainloopPoll(otSysMainloopContext *aMainloop)
 
             rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet,
                           &aMainloop->mErrorFdSet, NULL);
-            assert(rval > 0);
         }
     }
     else
@@ -282,11 +280,7 @@ void otSysMainloopPoll(otSysMainloopContext *aMainloop)
                       &aMainloop->mTimeout);
     }
 
-    if ((rval < 0) && (errno != EINTR))
-    {
-        perror("select");
-        exit(OT_EXIT_FAILURE);
-    }
+    return rval;
 }
 
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)

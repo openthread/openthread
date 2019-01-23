@@ -99,8 +99,10 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
  *
  * @param[inout]    aMainloop   A pointer to the mainloop context.
  *
+ * @returns value returned from select().
+ *
  */
-void otSysMainloopPoll(otSysMainloopContext *aMainloop);
+int otSysMainloopPoll(otSysMainloopContext *aMainloop);
 
 /**
  * This function performs all platform-specific processing for OpenThread's example applications.
