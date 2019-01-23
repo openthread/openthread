@@ -28,9 +28,13 @@
 
 #include <assert.h>
 
-#include <openthread-core-config.h>
+#include "openthread-core-config.h"
+#include "platform-posix.h"
+
+#include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <stdio.h>
 #include <unistd.h>
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -97,8 +101,28 @@ int main(int argc, char *argv[])
 
     while (true)
     {
+        otSysMainloopContext mainloop;
+
         otTaskletsProcess(instance);
-        otSysProcessDrivers(instance);
+
+        FD_ZERO(&mainloop.mReadFdSet);
+        FD_ZERO(&mainloop.mWriteFdSet);
+        FD_ZERO(&mainloop.mErrorFdSet);
+
+        mainloop.mMaxFd           = -1;
+        mainloop.mTimeout.tv_sec  = 10;
+        mainloop.mTimeout.tv_usec = 0;
+
+        otSysMainloopUpdate(instance, &mainloop);
+        if (otSysMainloopPoll(&mainloop) >= 0)
+        {
+            otSysMainloopProcess(instance, &mainloop);
+        }
+        else if (errno != EINTR)
+        {
+            perror("select");
+            exit(OT_EXIT_FAILURE);
+        }
     }
 
     otInstanceFinalize(instance);
