@@ -395,24 +395,6 @@ exit:
     return router;
 }
 
-Router *RouterTable::GetRouter(uint8_t aRouterId)
-{
-    Router * rval   = NULL;
-    uint16_t rloc16 = Mle::Mle::GetRloc16(aRouterId);
-
-    for (uint8_t i = 0; i < Mle::kMaxRouters; i++)
-    {
-        if (mRouters[i].GetRloc16() == rloc16)
-        {
-            rval = &mRouters[i];
-            ExitNow();
-        }
-    }
-
-exit:
-    return rval;
-}
-
 const Router *RouterTable::GetRouter(uint8_t aRouterId) const
 {
     const Router *rval   = NULL;

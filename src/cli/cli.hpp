@@ -43,8 +43,7 @@
 #include <openthread/udp.h>
 
 #include "cli/cli_dataset.hpp"
-#include "cli/cli_server.hpp"
-#include "cli/cli_udp_example.hpp"
+#include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_message.hpp>
@@ -82,6 +81,7 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
+class Server;
 
 /**
  * This structure represents a CLI command.
@@ -347,7 +347,6 @@ private:
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext);
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
@@ -381,11 +380,6 @@ private:
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
-#ifdef OTDLL
-    void HandleNetifStateChanged(otInstance *aInstance, otChangedFlags aFlags);
-#else
-    void HandleNetifStateChanged(otChangedFlags aFlags);
-#endif
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame);
 #endif
@@ -432,8 +426,6 @@ private:
     uint16_t   mCount;
     uint32_t   mInterval;
     TimerMilli mPingTimer;
-
-    otNetifAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT

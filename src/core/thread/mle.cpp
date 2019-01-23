@@ -236,7 +236,7 @@ exit:
     return error;
 }
 
-otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
+otError Mle::Start(bool aAnnounceAttach)
 {
     ThreadNetif &netif = GetNetif();
     otError      error = OT_ERROR_NONE;
@@ -253,7 +253,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
 
     netif.GetKeyManager().Start();
 
-    if (aEnableReattach)
+    if (!aAnnounceAttach)
     {
         mReattachState = kReattachStart;
     }
@@ -1509,6 +1509,8 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         this->UpdateServiceAlocs();
 #endif
 #endif
+
+        GetNetif().UpdateSlaac();
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
         GetNetif().GetDhcp6Server().UpdateService();
@@ -3658,7 +3660,7 @@ void Mle::ProcessAnnounce(void)
     mac.SetPanChannel(newChannel);
     mac.SetPanId(newPanId);
 
-    Start(/* aEnableReattach */ false, /* aAnnounceAttach */ true);
+    Start(/* aAnnounceAttach */ true);
 }
 
 otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

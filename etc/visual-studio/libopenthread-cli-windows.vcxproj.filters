@@ -16,6 +16,9 @@
     <ClCompile Include="..\..\src\cli\cli_instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\cli\cli_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\cli\cli_uart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
