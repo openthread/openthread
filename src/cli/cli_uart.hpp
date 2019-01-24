@@ -70,37 +70,14 @@ public:
      */
     virtual int Output(const char *aBuf, uint16_t aBufLength);
 
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int OutputFormat(const char *fmt, ...);
-
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  aAp   A variable list of arguments for format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int OutputFormatV(const char *aFmt, va_list aAp);
-
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
 
 private:
     enum
     {
-        kRxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-        kTxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
-        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+        kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
     };
 
     otError ProcessCommand(void);
