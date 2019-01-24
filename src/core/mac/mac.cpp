@@ -501,8 +501,10 @@ otError Mac::SendOutOfBandFrameRequest(otRadioFrame *aOobFrame)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aOobFrame != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mOobFrame == NULL, error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame),
+                 error = OT_ERROR_ALREADY);
 
     mOobFrame = static_cast<Frame *>(aOobFrame);
 
@@ -618,7 +620,6 @@ void Mac::PerformNextOperation(void)
         mPendingEnergyScan       = false;
         mPendingTransmitBeacon   = false;
         mPendingTransmitData     = false;
-        mOobFrame                = NULL;
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -1196,7 +1197,6 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
         break;
 
     case kOperationTransmitOutOfBandFrame:
-        mOobFrame = NULL;
         FinishOperation();
         PerformNextOperation();
         break;
