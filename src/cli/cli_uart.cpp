@@ -288,27 +288,6 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
     return aBufLength;
 }
 
-int Uart::OutputFormat(const char *fmt, ...)
-{
-    char    buf[kMaxLineLength];
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
-}
-
-int Uart::OutputFormatV(const char *aFmt, va_list aAp)
-{
-    char buf[kMaxLineLength];
-
-    vsnprintf(buf, sizeof(buf), aFmt, aAp);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
-}
-
 void Uart::Send(void)
 {
     VerifyOrExit(mSendLength == 0);
