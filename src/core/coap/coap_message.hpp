@@ -43,6 +43,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "utils/static_assert.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -572,6 +573,9 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
+        OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mInfo) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+                         "Insufficient buffer size for CoAP processing!");
+
         return *static_cast<const HelpData *>(otALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
     }
 
