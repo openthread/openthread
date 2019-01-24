@@ -40,7 +40,7 @@ from binascii import hexlify
 from command import check_child_id_response
 from command import check_child_update_response
 from command import check_data_response
-from command import check_message_address_registration_addr_set_contains
+from command import check_message_address_registration_addr_set_equals
 from command import check_network_data_tlv
 from command import check_prefix
 from command import check_prefix_and_border_router_16
@@ -167,11 +167,11 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
         check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_message_address_registration_addr_set_contains(msg, msg_chd_upd_res_to_med)
+        check_message_address_registration_addr_set_equals(msg, msg_chd_upd_res_to_med)
 
         check_child_update_response(msg_chd_upd_res_to_sed, address_registration=CheckType.CONTAIN)
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_message_address_registration_addr_set_contains(msg, msg_chd_upd_res_to_sed)
+        check_message_address_registration_addr_set_equals(msg, msg_chd_upd_res_to_sed)
 
 if __name__ == '__main__':
     unittest.main()

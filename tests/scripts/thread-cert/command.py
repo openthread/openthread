@@ -423,7 +423,7 @@ def check_child_update_response(command_msg, timeout=CheckType.OPTIONAL,
 def unhashable_items_lists_equals(list1, list2):
     return all(item in list1 for item in list2) and all(item in list2 for item in list1)
 
-def check_message_address_registration_addr_set_contains(command_msg1, command_msg2):
+def check_message_address_registration_addr_set_equals(command_msg1, command_msg2):
     """Verify that all addresses in the address set of AddressRegistration tlv in msg2
        are contained in that address set of AddressRegistration tlv in msg1
     """
