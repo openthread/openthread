@@ -88,17 +88,5 @@ int Console::Output(const char *aBuf, uint16_t aBufLength)
     return mCallback(aBuf, aBufLength, mContext);
 }
 
-int Console::OutputFormat(const char *fmt, ...)
-{
-    char    buf[kMaxLineLength];
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
-}
-
 } // namespace Cli
 } // namespace ot
