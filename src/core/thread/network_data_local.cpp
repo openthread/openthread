@@ -59,6 +59,8 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
     PrefixTlv *      prefixTlv;
     BorderRouterTlv *brTlv;
 
+    VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
+
     VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix().m8, prefixLengthBytes) <
                      Ip6::Address::kMeshLocalPrefixLength,
                  error = OT_ERROR_INVALID_ARGS);
@@ -111,14 +113,17 @@ exit:
 
 otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable)
 {
-    otError      error = OT_ERROR_NONE;
+    otError      error             = OT_ERROR_NONE;
+    uint8_t      prefixLengthBytes = BitVectorBytes(aPrefixLength);
     PrefixTlv *  prefixTlv;
     HasRouteTlv *hasRouteTlv;
     uint8_t      appendLength;
 
+    VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
+
     RemoveHasRoutePrefix(aPrefix, aPrefixLength);
 
-    appendLength = sizeof(PrefixTlv) + BitVectorBytes(aPrefixLength) + sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
+    appendLength = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
     VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
 
     prefixTlv = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
