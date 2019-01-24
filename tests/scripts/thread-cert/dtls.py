@@ -607,10 +607,8 @@ class MessageFactory(object):
             type(self).last_msg_is_change_cipher_spec = (record.content_type == ContentType.CHANGE_CIPHER_SPEC)
 
             # FINISHED message immediately follows CHANGE_CIPHER_SPEC message
+            # We skip FINISHED message as it is encrypted
             if last_msg_is_change_cipher_spec:
-
-                # Manually create a Finished handshake message, as can't decipher it.
-                messages.append(HandshakeMessage(HandshakeType.FINISHED, 0, 0, 0, 0, None))
                 continue
 
             fragment_data = io.BytesIO(record.fragment)
