@@ -37,9 +37,10 @@ import node
 
 from binascii import hexlify
 
-from command import check_address_registration_tlv
+from command import check_child_id_response
 from command import check_child_update_response
 from command import check_data_response
+from command import check_message_address_registration_addr_set_contains
 from command import check_network_data_tlv
 from command import check_prefix
 from command import check_prefix_and_border_router_16
@@ -140,34 +141,37 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
-        check_network_data_tlv(network_data_tlv, 2, check_prefix)
+        # Only check the network_data in the child id response,
+        # pass a network_data check function to check the detail
+        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
+            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=2, prefix_check_func=check_prefix))
 
         # Step 6 - DUT sends a MLE Child ID Response to SED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
-        check_network_data_tlv(network_data_tlv, 1, functools.partial(check_prefix_and_border_router_16, border_router_16 = 0xFFFE))
+        # Only check the network_data in the child id response,
+        # pass a network_data check function to check the detail
+        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
+            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=1, \
+                prefix_check_func=functools.partial(check_prefix_and_border_router_16, border_router_16 = 0xFFFE)))
         # For Step 10
         msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
 
         # Step 8 - DUT sends a MLE Child ID Response to MED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
-        check_network_data_tlv(network_data_tlv, 2, check_prefix)
+        # Only check the network_data in the child id response,
+        # pass a network_data check function to check the detail
+        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
+            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=2, prefix_check_func=check_prefix))
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
         check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
-        dut_addr_reg_tlv = msg_chd_upd_res_to_med.get_mle_message_tlv(mle.AddressRegistration)
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        med1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)
-        check_address_registration_tlv(dut_addr_reg_tlv, med1_addr_reg_tlv.addresses)
+        check_message_address_registration_addr_set_contains(msg, msg_chd_upd_res_to_med)
 
-        check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
-        dut_addr_reg_tlv = msg_chd_upd_res_to_sed.get_mle_message_tlv(mle.AddressRegistration)
+        check_child_update_response(msg_chd_upd_res_to_sed, address_registration=CheckType.CONTAIN)
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        sed1_addr_reg_tlv = msg.get_mle_message_tlv(mle.AddressRegistration)
-        check_address_registration_tlv(dut_addr_reg_tlv, sed1_addr_reg_tlv.addresses)
+        check_message_address_registration_addr_set_contains(msg, msg_chd_upd_res_to_sed)
 
 if __name__ == '__main__':
     unittest.main()

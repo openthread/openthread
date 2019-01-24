@@ -36,6 +36,7 @@ import config
 import mle
 
 from binascii import hexlify
+from collections import Counter
 from enum import IntEnum
 
 class CheckType(IntEnum):
@@ -307,7 +308,8 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
     pending_timestamp = CheckType.OPTIONAL, active_operational_dataset = CheckType.OPTIONAL, \
-    pending_operational_dataset = CheckType.OPTIONAL):
+    pending_operational_dataset = CheckType.OPTIONAL, \
+    network_data_detail_check_func = None):
     """Verify a properly formatted Child Id Response command message.
     """
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
@@ -321,6 +323,12 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, pending_timestamp, mle.PendingTimestamp)
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
+
+    # Check the detail of network_data only when the CheckType is CONTAIN
+    # and the check function is set
+    if network_data == CheckType.CONTAIN and network_data_detail_check_func != None:
+        network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
+        network_data_detail_check_func(network_data_tlv)
 
 def check_child_update_request_by_child(command_msg):
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -411,6 +419,18 @@ def check_child_update_response(command_msg, timeout=CheckType.OPTIONAL,
     check_mle_optional_tlv(command_msg, response, mle.Response)
     check_mle_optional_tlv(command_msg, link_layer_frame_counter, mle.LinkLayerFrameCounter)
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
+
+def unhashable_items_lists_equals(list1, list2):
+    return all(item in list1 for item in list2) and all(item in list2 for item in list1)
+
+def check_message_address_registration_addr_set_contains(command_msg1, command_msg2):
+    """Verify that all addresses in the address set of AddressRegistration tlv in msg2
+       are contained in that address set of AddressRegistration tlv in msg1
+    """
+    addr_reg_tlv1 = command_msg1.assertMleMessageContainsTlv(mle.AddressRegistration)
+    addr_reg_tlv2 = command_msg2.assertMleMessageContainsTlv(mle.AddressRegistration)
+    # unordered lists comparison
+    assert unhashable_items_lists_equals(addr_reg_tlv1.addresses, addr_reg_tlv2.addresses), 'Some addresses are not included in AddressRegistration TLV'
 
 def get_sub_tlv(tlvs, tlv_type):
     for sub_tlv in tlvs:
