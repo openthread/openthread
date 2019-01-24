@@ -90,7 +90,7 @@ build_cc1352() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
     arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
@@ -101,7 +101,7 @@ build_cc2538() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/cc2538/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/cc2538/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
@@ -121,7 +121,7 @@ build_cc2652() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
     arm-none-eabi-size  output/cc2652/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
@@ -132,7 +132,7 @@ build_da15000() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
@@ -145,7 +145,7 @@ build_emsk() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-emsk || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-emsk || die
     arc-elf32-size  output/emsk/bin/ot-cli-ftd || die
     arc-elf32-size  output/emsk/bin/ot-cli-mtd || die
     arc-elf32-size  output/emsk/bin/ot-ncp-ftd || die
@@ -156,7 +156,7 @@ build_kw41z() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
     arm-none-eabi-size  output/kw41z/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/kw41z/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/kw41z/bin/ot-ncp-ftd || die
@@ -193,7 +193,7 @@ build_nrf52811() {
 
 build_nrf52840() {
     # Default OpenThread switches for nRF52840 platform
-    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1"
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1"
 
     # UART transport
     git checkout -- . || die
@@ -237,7 +237,7 @@ build_qpg6095() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-qpg6095 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-qpg6095 || die
     arm-none-eabi-size  output/qpg6095/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/qpg6095/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/qpg6095/bin/ot-ncp-ftd || die
@@ -251,7 +251,7 @@ build_samr21() {
     unzip -qq asf-standalone-archive-3.45.0.85.zip || die
     mv xdk-asf-3.45.0 third_party/microchip/asf || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
     arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die

@@ -915,9 +915,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ *
+ * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SLAAC
+#define OPENTHREAD_CONFIG_ENABLE_SLAAC 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
  *
- * The number of auto-configured SLAAC addresses.
+ * The number of auto-configured SLAAC addresses. Applicable only if OPENTHREAD_CONFIG_ENABLE_SLAAC is enabled.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
