@@ -172,7 +172,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     otError     error = OT_ERROR_NONE;
     ServiceTlv *serviceTlv;
     ServerTlv * serverTlv;
-    uint8_t     serviceTlvLength =
+    size_t      serviceTlvLength =
         (sizeof(ServiceTlv) - sizeof(NetworkDataTlv)) + aServiceDataLength + sizeof(uint8_t) /*mServiceDataLength*/ +
         ServiceTlv::GetEnterpriseNumberFieldLength(aEnterpriseNumber) + aServerDataLength + sizeof(ServerTlv);
 
@@ -181,13 +181,13 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     VerifyOrExit(mLength + sizeof(NetworkDataTlv) + serviceTlvLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
 
     serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(serviceTlv), serviceTlvLength + sizeof(NetworkDataTlv));
+    Insert(reinterpret_cast<uint8_t *>(serviceTlv), static_cast<uint8_t>(serviceTlvLength) + sizeof(NetworkDataTlv));
 
     serviceTlv->Init();
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
     serviceTlv->SetServiceID(0);
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
-    serviceTlv->SetLength(serviceTlvLength);
+    serviceTlv->SetLength(static_cast<uint8_t>(serviceTlvLength));
 
     serverTlv = reinterpret_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
     serverTlv->Init();
