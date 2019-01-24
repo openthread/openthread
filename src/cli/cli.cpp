@@ -2120,6 +2120,8 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     otBorderRouterConfig config;
     int                  argcur = 0;
 
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
     char *prefixLengthStr;
@@ -2211,6 +2213,8 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&prefix, 0, sizeof(otIp6Prefix));
 
