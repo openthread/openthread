@@ -30,7 +30,6 @@
 #include "platform-posix.h"
 
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <string.h>
@@ -39,6 +38,7 @@
 #include <sys/un.h>
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,6 +56,7 @@ static int sUartLock      = -1;
 static int sSessionSocket = -1;
 #endif
 
+static bool           sEnabled     = false;
 static const uint8_t *sWriteBuffer = NULL;
 static uint16_t       sWriteLength = 0;
 
@@ -129,12 +130,15 @@ otError otPlatUartEnable(void)
         exit(OT_EXIT_FAILURE);
     }
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+
+    sEnabled = true;
     return error;
 }
 
 otError otPlatUartDisable(void)
 {
     otError error = OT_ERROR_NONE;
+    sEnabled      = false;
 
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (sSessionSocket != -1)
@@ -163,6 +167,7 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
+    assert(sEnabled);
     otEXPECT_ACTION(sWriteLength == 0, error = OT_ERROR_BUSY);
 
     sWriteBuffer = aBuf;
@@ -174,6 +179,8 @@ exit:
 
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
+    otEXPECT(sEnabled);
+
     if (aReadFdSet != NULL)
     {
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
@@ -214,6 +221,9 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
             *aMaxFd = fd;
         }
     }
+
+exit:
+    return;
 }
 
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
@@ -221,6 +231,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     ssize_t rval;
     int     fd;
 
+    otEXPECT(sEnabled);
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
