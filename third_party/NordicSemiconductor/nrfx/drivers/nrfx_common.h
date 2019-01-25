@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRFX_COMMON_H__
@@ -126,6 +117,27 @@ extern "C" {
  */
 #define NRFX_ROUNDED_DIV(a, b)  (((a) + ((b) / 2)) / (b))
 
+/**@brief Macro for performing integer division, making sure the result is rounded up.
+ *
+ * @details A typical use case for this macro is to compute the number of objects 
+ *          with size @c b required to hold @c a number of bytes.
+ *
+ * @param a  Numerator.
+ * @param b  Denominator.
+ *
+ * @return Integer result of dividing @c a by @c b, rounded up.
+ */
+#define NRFX_CEIL_DIV(a, b)  ((((a) - 1) / (b)) + 1)
+
+/**
+ * @brief Macro for getting the number of elements in an array.
+ *
+ * @param array  Name of the array.
+ *
+ * @return Array element count.
+ */
+#define NRFX_ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+
 /**@brief Macro for checking if given lengths of EasyDMA transfers do not exceed
  *        the limit of the specified peripheral.
  *
@@ -162,21 +174,31 @@ do {                                                         \
 } while(0)
 
 /**
+ * @brief Macro for getting the ID number of the specified peripheral.
+ *
+ * For peripherals in Nordic SoCs, there is a direct relationship between their
+ * ID numbers and their base addresses. See the chapter "Peripheral interface"
+ * (section "Peripheral ID") in the Product Specification.
+ *
+ * @param[in] base_addr  Peripheral base address or pointer.
+ *
+ * @return ID number associated with the specified peripheral.
+ */
+#define NRFX_PERIPHERAL_ID_GET(base_addr)  (uint8_t)((uint32_t)(base_addr) >> 12)
+
+/**
  * @brief Macro for getting the interrupt number assigned to a specific
  *        peripheral.
  *
- * In Nordic SoCs the IRQ number assigned to a peripheral is equal to the ID
- * of this peripheral, and there is a direct relationship between this ID and
- * the peripheral base address, i.e. the address of a fixed block of 0x1000
- * bytes of address space assigned to this peripheral.
- * See the chapter "Peripheral interface" (sections "Peripheral ID" and
- * "Interrupts") in the product specification of a given SoC.
+ * For peripherals in Nordic SoCs, the IRQ number assigned to a peripheral is
+ * equal to its ID number. See the chapter "Peripheral interface" (sections
+ * "Peripheral ID" and "Interrupts") in the Product Specification.
  *
  * @param[in] base_addr  Peripheral base address or pointer.
  *
  * @return Interrupt number associated with the specified peripheral.
  */
-#define NRFX_IRQ_NUMBER_GET(base_addr)  (uint8_t)((uint32_t)(base_addr) >> 12)
+#define NRFX_IRQ_NUMBER_GET(base_addr)  NRFX_PERIPHERAL_ID_GET(base_addr)
 
 /**
  * @brief IRQ handler type.
@@ -207,6 +229,22 @@ typedef enum
  * @retval false Otherwise.
  */
 __STATIC_INLINE bool nrfx_is_in_ram(void const * p_object);
+
+
+/**
+ * @brief Function for checking if an object is aligned to a 32-bit word
+ *
+ * Several peripherals (the ones using EasyDMA) require the transfer buffers
+ * to be aligned to a 32-bit word. This function can be used to check if
+ * this condition is met.
+ *
+ * @param[in] p_object  Pointer to an object whose location is to be checked.
+ *
+ * @retval true  if the pointed object is aligned to a 32-bit word.
+ * @retval false otherwise.
+ */
+__STATIC_INLINE bool nrfx_is_word_aligned(void const * p_object);
+
 
 /**
  * @brief Function for getting the interrupt number for a specific peripheral.
@@ -255,6 +293,11 @@ __STATIC_INLINE uint32_t nrfx_event_to_bitpos(uint32_t event);
 __STATIC_INLINE bool nrfx_is_in_ram(void const * p_object)
 {
     return ((((uint32_t)p_object) & 0xE0000000u) == 0x20000000u);
+}
+
+__STATIC_INLINE bool nrfx_is_word_aligned(void const * p_object)
+{
+    return ((((uint32_t)p_object) & 0x3u) == 0u);
 }
 
 __STATIC_INLINE IRQn_Type nrfx_get_irq_number(void const * p_reg)
