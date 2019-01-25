@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRF_USBD_H__
@@ -540,11 +531,11 @@ void nrf_usbd_int_disable(uint32_t int_mask)
  */
 typedef enum
 {
-    NRF_USBD_EVENTCAUSE_ISOOUTCRC_MASK    = USBD_EVENTCAUSE_ISOOUTCRC_Msk, /**< CRC error was detected on isochronous OUT endpoint 8. */
-    NRF_USBD_EVENTCAUSE_SUSPEND_MASK      = USBD_EVENTCAUSE_SUSPEND_Msk  , /**< Signals that the USB lines have been seen idle long enough for the device to enter suspend. */
-    NRF_USBD_EVENTCAUSE_RESUME_MASK       = USBD_EVENTCAUSE_RESUME_Msk   , /**< Signals that a RESUME condition (K state or activity restart) has been detected on the USB lines. */
-    NRF_USBD_EVENTCAUSE_READY_MASK        = USBD_EVENTCAUSE_READY_Msk,     /**< MAC is ready for normal operation, rised few us after USBD enabling */
-    NRF_USBD_EVENTCAUSE_WUREQ_MASK        = (1U << 10)                     /**< The USBD peripheral has exited Low Power mode */
+    NRF_USBD_EVENTCAUSE_ISOOUTCRC_MASK    = USBD_EVENTCAUSE_ISOOUTCRC_Msk,      /**< CRC error was detected on isochronous OUT endpoint 8. */
+    NRF_USBD_EVENTCAUSE_SUSPEND_MASK      = USBD_EVENTCAUSE_SUSPEND_Msk,        /**< Signals that the USB lines have been seen idle long enough for the device to enter suspend. */
+    NRF_USBD_EVENTCAUSE_RESUME_MASK       = USBD_EVENTCAUSE_RESUME_Msk,         /**< Signals that a RESUME condition (K state or activity restart) has been detected on the USB lines. */
+	NRF_USBD_EVENTCAUSE_WUREQ_MASK        = USBD_EVENTCAUSE_USBWUALLOWED_Msk,   /**< The USBD peripheral has exited Low Power mode */
+    NRF_USBD_EVENTCAUSE_READY_MASK        = USBD_EVENTCAUSE_READY_Msk,          /**< MAC is ready for normal operation, rised few us after USBD enabling */
 }nrf_usbd_eventcause_mask_t;
 
 /**
@@ -622,8 +613,8 @@ typedef enum
  */
 typedef enum
 {
-    NRF_USBD_ISOSPLIT_OneDir = USBD_ISOSPLIT_SPLIT_OneDir, /**< Full buffer dedicated to either iso IN or OUT */
-    NRF_USBD_ISOSPLIT_Half   = USBD_ISOSPLIT_SPLIT_HalfIN, /**< Buffer divided in half */
+    NRF_USBD_ISOSPLIT_ONEDIR = USBD_ISOSPLIT_SPLIT_OneDir, /**< Full buffer dedicated to either iso IN or OUT */
+    NRF_USBD_ISOSPLIT_HALF   = USBD_ISOSPLIT_SPLIT_HalfIN, /**< Buffer divided in half */
 }nrf_usbd_isosplit_t;
 
 /**
@@ -1055,12 +1046,12 @@ uint32_t nrf_usbd_haltedep(uint8_t ep)
     uint8_t epnr = NRF_USBD_EP_NR_GET(ep);
     if (NRF_USBD_EPIN_CHECK(ep))
     {
-        NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->HALTED.EPIN));
+        NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->HALTED.EPIN));
         return NRF_USBD->HALTED.EPIN[epnr];
     }
     else
     {
-        NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->HALTED.EPOUT));
+        NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->HALTED.EPOUT));
         return NRF_USBD->HALTED.EPOUT[epnr];
     }
 }
@@ -1154,7 +1145,7 @@ size_t nrf_usbd_epout_size_get(uint8_t ep)
         return size_isoout;
     }
 
-    NRFX_ASSERT(NRF_USBD_EP_NR_GET(ep) < ARRAY_SIZE(NRF_USBD->SIZE.EPOUT));
+    NRFX_ASSERT(NRF_USBD_EP_NR_GET(ep) < NRFX_ARRAY_SIZE(NRF_USBD->SIZE.EPOUT));
     return NRF_USBD->SIZE.EPOUT[NRF_USBD_EP_NR_GET(ep)];
 }
 
@@ -1178,7 +1169,7 @@ size_t nrf_usbd_episoout_size_get(uint8_t ep)
 
 void nrf_usbd_epout_clear(uint8_t ep)
 {
-    NRFX_ASSERT(NRF_USBD_EPOUT_CHECK(ep) && (NRF_USBD_EP_NR_GET(ep) < ARRAY_SIZE(NRF_USBD->SIZE.EPOUT)));
+    NRFX_ASSERT(NRF_USBD_EPOUT_CHECK(ep) && (NRF_USBD_EP_NR_GET(ep) < NRFX_ARRAY_SIZE(NRF_USBD->SIZE.EPOUT)));
     NRF_USBD->SIZE.EPOUT[NRF_USBD_EP_NR_GET(ep)] = 0;
     __ISB();
     __DSB();
@@ -1355,7 +1346,7 @@ void nrf_usbd_ep_easydma_set(uint8_t ep, uint32_t ptr, uint32_t maxcnt)
         else
         {
             uint8_t epnr = NRF_USBD_EP_NR_GET(ep);
-            NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->EPIN));
+            NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->EPIN));
             NRF_USBD->EPIN[epnr].PTR    = ptr;
             NRF_USBD->EPIN[epnr].MAXCNT = maxcnt;
         }
@@ -1370,7 +1361,7 @@ void nrf_usbd_ep_easydma_set(uint8_t ep, uint32_t ptr, uint32_t maxcnt)
         else
         {
             uint8_t epnr = NRF_USBD_EP_NR_GET(ep);
-            NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->EPOUT));
+            NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->EPOUT));
             NRF_USBD->EPOUT[epnr].PTR    = ptr;
             NRF_USBD->EPOUT[epnr].MAXCNT = maxcnt;
         }
@@ -1390,7 +1381,7 @@ uint32_t nrf_usbd_ep_amount_get(uint8_t ep)
         else
         {
             uint8_t epnr = NRF_USBD_EP_NR_GET(ep);
-            NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->EPOUT));
+            NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->EPOUT));
             ret = NRF_USBD->EPIN[epnr].AMOUNT;
         }
     }
@@ -1403,7 +1394,7 @@ uint32_t nrf_usbd_ep_amount_get(uint8_t ep)
         else
         {
             uint8_t epnr = NRF_USBD_EP_NR_GET(ep);
-            NRFX_ASSERT(epnr < ARRAY_SIZE(NRF_USBD->EPOUT));
+            NRFX_ASSERT(epnr < NRFX_ARRAY_SIZE(NRF_USBD->EPOUT));
             ret = NRF_USBD->EPOUT[epnr].AMOUNT;
         }
     }

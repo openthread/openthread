@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <nrfx.h>
@@ -164,15 +155,17 @@ static bool swi_is_available(nrfx_swi_t swi)
 
 static IRQn_Type swi_irq_number_get(nrfx_swi_t swi)
 {
-    return (IRQn_Type)((uint32_t)SWI0_IRQn + (uint32_t)swi);
+#if defined(NRF_SWI)
+    return (IRQn_Type)(nrfx_get_irq_number(NRF_SWI) + swi);
+#elif defined(NRF_SWI0)
+    return (IRQn_Type)(nrfx_get_irq_number(NRF_SWI0) + swi);
+#else
+    return (IRQn_Type)(nrfx_get_irq_number(NRF_EGU0) + swi);
+#endif
 }
 
-static void swi_handler_setup(nrfx_swi_t         swi,
-                              nrfx_swi_handler_t event_handler,
-                              uint32_t           irq_priority)
+static void swi_int_enable(nrfx_swi_t swi)
 {
-    m_swi_handlers[swi] = event_handler;
-
 #if NRFX_SWI_EGU_COUNT
     if (swi < NRFX_SWI_EGU_COUNT)
     {
@@ -180,17 +173,42 @@ static void swi_handler_setup(nrfx_swi_t         swi,
         NRFX_ASSERT(p_egu != NULL);
         nrf_egu_int_enable(p_egu, NRF_EGU_INT_ALL);
 
-        if (event_handler == NULL)
+        if (m_swi_handlers[swi] == NULL)
         {
             return;
         }
     }
 #endif
 
-    NRFX_ASSERT(event_handler != NULL);
-
-    NRFX_IRQ_PRIORITY_SET(swi_irq_number_get(swi), irq_priority);
     NRFX_IRQ_ENABLE(swi_irq_number_get(swi));
+}
+
+static void swi_int_disable(nrfx_swi_t swi)
+{
+    NRFX_IRQ_DISABLE(swi_irq_number_get(swi));
+
+#if NRFX_SWI_EGU_COUNT
+    if (swi < NRFX_SWI_EGU_COUNT)
+    {
+        nrf_egu_int_disable(nrfx_swi_egu_instance_get(swi), NRF_EGU_INT_ALL);
+    }
+#endif
+}
+
+static void swi_handler_setup(nrfx_swi_t         swi,
+                              nrfx_swi_handler_t event_handler,
+                              uint32_t           irq_priority)
+{
+    m_swi_handlers[swi] = event_handler;
+    NRFX_IRQ_PRIORITY_SET(swi_irq_number_get(swi), irq_priority);
+    swi_int_enable(swi);
+}
+
+static void swi_deallocate(nrfx_swi_t swi)
+{
+    swi_int_disable(swi);
+    m_swi_handlers[swi] = NULL;
+    swi_mark_unallocated(swi);
 }
 
 nrfx_err_t nrfx_swi_alloc(nrfx_swi_t *       p_swi,
@@ -235,16 +253,26 @@ bool nrfx_swi_is_allocated(nrfx_swi_t swi)
     return swi_is_allocated(swi);
 }
 
+void nrfx_swi_int_disable(nrfx_swi_t swi)
+{
+    NRFX_ASSERT(swi_is_allocated(swi));
+    swi_int_disable(swi);
+}
+
+void nrfx_swi_int_enable(nrfx_swi_t swi)
+{
+    NRFX_ASSERT(swi_is_allocated(swi));
+    swi_int_enable(swi);
+}
+
 void nrfx_swi_free(nrfx_swi_t * p_swi)
 {
     NRFX_ASSERT(p_swi != NULL);
     nrfx_swi_t swi = *p_swi;
 
     NRFX_ASSERT(swi_is_allocated(swi));
-    NRFX_IRQ_DISABLE(swi_irq_number_get(swi));
-    m_swi_handlers[swi] = NULL;
+    swi_deallocate(swi);
 
-    swi_mark_unallocated(swi);
     *p_swi = NRFX_SWI_UNALLOCATED;
 }
 
@@ -254,19 +282,9 @@ void nrfx_swi_all_free(void)
     {
         if (swi_is_allocated(swi))
         {
-            NRFX_IRQ_DISABLE(swi_irq_number_get(swi));
-            m_swi_handlers[swi] = NULL;
-#if NRFX_SWI_EGU_COUNT
-            if (swi < NRFX_SWI_EGU_COUNT)
-            {
-                nrf_egu_int_disable(nrfx_swi_egu_instance_get(swi),
-                                    NRF_EGU_INT_ALL);
-            }
-#endif
+            swi_deallocate(swi);
         }
     }
-
-    m_swi_allocated_mask = 0;
 }
 
 void nrfx_swi_trigger(nrfx_swi_t swi, uint8_t flag_number)
