@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2014 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2014 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRF_TIMER_H__
@@ -340,6 +331,52 @@ __STATIC_INLINE void nrf_timer_int_disable(NRF_TIMER_Type * p_reg,
 __STATIC_INLINE bool nrf_timer_int_enable_check(NRF_TIMER_Type * p_reg,
                                                 uint32_t timer_int);
 
+#if defined(DPPI_PRESENT) || defined(__NRFX_DOXYGEN__)
+/**
+ * @brief Function for setting the subscribe configuration for a given
+ *        TIMER task.
+ *
+ * @param[in] p_reg   Pointer to the structure of registers of the peripheral.
+ * @param[in] task    Task for which to set the configuration.
+ * @param[in] channel Channel through which to subscribe events.
+ */
+__STATIC_INLINE void nrf_timer_subscribe_set(NRF_TIMER_Type * p_reg,
+                                             nrf_timer_task_t task,
+                                             uint8_t          channel);
+
+/**
+ * @brief Function for clearing the subscribe configuration for a given
+ *        TIMER task.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ * @param[in] task  Task for which to clear the configuration.
+ */
+__STATIC_INLINE void nrf_timer_subscribe_clear(NRF_TIMER_Type * p_reg,
+                                               nrf_timer_task_t task);
+
+/**
+ * @brief Function for setting the publish configuration for a given
+ *        TIMER event.
+ *
+ * @param[in] p_reg   Pointer to the structure of registers of the peripheral.
+ * @param[in] event   Event for which to set the configuration.
+ * @param[in] channel Channel through which to publish the event.
+ */
+__STATIC_INLINE void nrf_timer_publish_set(NRF_TIMER_Type *  p_reg,
+                                           nrf_timer_event_t event,
+                                           uint8_t           channel);
+
+/**
+ * @brief Function for clearing the publish configuration for a given
+ *        TIMER event.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ * @param[in] event Event for which to clear the configuration.
+ */
+__STATIC_INLINE void nrf_timer_publish_clear(NRF_TIMER_Type *  p_reg,
+                                             nrf_timer_event_t event);
+#endif // defined(DPPI_PRESENT) || defined(__NRFX_DOXYGEN__)
+
 /**
  * @brief Function for setting the timer mode.
  *
@@ -534,6 +571,36 @@ __STATIC_INLINE bool nrf_timer_int_enable_check(NRF_TIMER_Type * p_reg,
     return (bool)(p_reg->INTENSET & timer_int);
 }
 
+#if defined(DPPI_PRESENT)
+__STATIC_INLINE void nrf_timer_subscribe_set(NRF_TIMER_Type * p_reg,
+                                             nrf_timer_task_t task,
+                                             uint8_t          channel)
+{
+    *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) task + 0x80uL)) =
+            ((uint32_t)channel | TIMER_SUBSCRIBE_START_EN_Msk);
+}
+
+__STATIC_INLINE void nrf_timer_subscribe_clear(NRF_TIMER_Type * p_reg,
+                                               nrf_timer_task_t task)
+{
+    *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) task + 0x80uL)) = 0;
+}
+
+__STATIC_INLINE void nrf_timer_publish_set(NRF_TIMER_Type *  p_reg,
+                                           nrf_timer_event_t event,
+                                           uint8_t           channel)
+{
+    *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) event + 0x80uL)) =
+            ((uint32_t)channel | TIMER_PUBLISH_COMPARE_EN_Msk);
+}
+
+__STATIC_INLINE void nrf_timer_publish_clear(NRF_TIMER_Type *  p_reg,
+                                             nrf_timer_event_t event)
+{
+    *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) event + 0x80uL)) = 0;
+}
+#endif // defined(DPPI_PRESENT)
+
 __STATIC_INLINE void nrf_timer_mode_set(NRF_TIMER_Type * p_reg,
                                         nrf_timer_mode_t mode)
 {
@@ -603,24 +670,26 @@ __STATIC_INLINE nrf_timer_int_mask_t nrf_timer_compare_int_get(uint32_t channel)
         ((uint32_t)NRF_TIMER_INT_COMPARE0_MASK << channel);
 }
 
-__STATIC_INLINE uint32_t nrf_timer_us_to_ticks(uint32_t time_us,
+__STATIC_INLINE uint32_t nrf_timer_us_to_ticks(uint32_t              time_us,
                                                nrf_timer_frequency_t frequency)
 {
     // The "frequency" parameter here is actually the prescaler value, and the
     // timer runs at the following frequency: f = 16 MHz / 2^prescaler.
     uint32_t prescaler = (uint32_t)frequency;
-    NRFX_ASSERT(time_us <= (UINT32_MAX / 16UL));
-    return ((time_us * 16UL) >> prescaler);
+    uint64_t ticks = ((time_us * 16ULL) >> prescaler);
+    NRFX_ASSERT(ticks <= UINT32_MAX);
+    return (uint32_t)ticks;
 }
 
-__STATIC_INLINE uint32_t nrf_timer_ms_to_ticks(uint32_t time_ms,
+__STATIC_INLINE uint32_t nrf_timer_ms_to_ticks(uint32_t              time_ms,
                                                nrf_timer_frequency_t frequency)
 {
     // The "frequency" parameter here is actually the prescaler value, and the
     // timer runs at the following frequency: f = 16000 kHz / 2^prescaler.
     uint32_t prescaler = (uint32_t)frequency;
-    NRFX_ASSERT(time_ms <= (UINT32_MAX / 16000UL));
-    return ((time_ms * 16000UL) >> prescaler);
+    uint64_t ticks = ((time_ms * 16000ULL) >> prescaler);
+    NRFX_ASSERT(ticks <= UINT32_MAX);
+    return (uint32_t)ticks;
 }
 
 #endif // SUPPRESS_INLINE_IMPLEMENTATION

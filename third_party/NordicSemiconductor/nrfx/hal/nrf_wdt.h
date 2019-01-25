@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRF_WDT_H__
@@ -124,37 +115,21 @@ typedef enum
  *
  * @param behaviour Watchdog behavior when CPU is in SLEEP or HALT mode.
  */
-__STATIC_INLINE void nrf_wdt_behaviour_set(nrf_wdt_behaviour_t behaviour)
-{
-    NRF_WDT->CONFIG = behaviour;
-}
-
+__STATIC_INLINE void nrf_wdt_behaviour_set(nrf_wdt_behaviour_t behaviour);
 
 /**
- * @brief Function for starting the watchdog.
+ * @brief Function for starting the WDT task.
  *
- * @param[in]  task             Task.
+ * @param[in]  task       Task.
  */
-__STATIC_INLINE void nrf_wdt_task_trigger(nrf_wdt_task_t task)
-{
-    *((volatile uint32_t *)((uint8_t *)NRF_WDT + task)) = NRF_WDT_TASK_SET;
-}
-
+__STATIC_INLINE void nrf_wdt_task_trigger(nrf_wdt_task_t task);
 
 /**
  * @brief Function for clearing the WDT event.
  *
  * @param[in]  event       Event.
  */
-__STATIC_INLINE void nrf_wdt_event_clear(nrf_wdt_event_t event)
-{
-    *((volatile uint32_t *)((uint8_t *)NRF_WDT + (uint32_t)event)) = NRF_WDT_EVENT_CLEAR;
-#if __CORTEX_M == 0x04
-    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_WDT + (uint32_t)event));
-    (void)dummy;
-#endif
-}
-
+__STATIC_INLINE void nrf_wdt_event_clear(nrf_wdt_event_t event);
 
 /**
  * @brief Function for retrieving the state of the WDT event.
@@ -164,22 +139,14 @@ __STATIC_INLINE void nrf_wdt_event_clear(nrf_wdt_event_t event)
  * @retval     true              If the event is set.
  * @retval     false             If the event is not set.
  */
-__STATIC_INLINE bool nrf_wdt_event_check(nrf_wdt_event_t event)
-{
-    return (bool)*((volatile uint32_t *)((uint8_t *)NRF_WDT + event));
-}
-
+__STATIC_INLINE bool nrf_wdt_event_check(nrf_wdt_event_t event);
 
 /**
  * @brief Function for enabling a specific interrupt.
  *
  * @param[in]  int_mask         Interrupt.
  */
-__STATIC_INLINE void nrf_wdt_int_enable(uint32_t int_mask)
-{
-    NRF_WDT->INTENSET = int_mask;
-}
-
+__STATIC_INLINE void nrf_wdt_int_enable(uint32_t int_mask);
 
 /**
  * @brief Function for retrieving the state of given interrupt.
@@ -189,33 +156,59 @@ __STATIC_INLINE void nrf_wdt_int_enable(uint32_t int_mask)
  * @retval     true                   Interrupt is enabled.
  * @retval     false                  Interrupt is not enabled.
  */
-__STATIC_INLINE bool nrf_wdt_int_enable_check(uint32_t int_mask)
-{
-    return (bool)(NRF_WDT->INTENSET & int_mask);
-}
-
+__STATIC_INLINE bool nrf_wdt_int_enable_check(uint32_t int_mask);
 
 /**
  * @brief Function for disabling a specific interrupt.
  *
  * @param[in]  int_mask         Interrupt.
  */
-__STATIC_INLINE void nrf_wdt_int_disable(uint32_t int_mask)
-{
-    NRF_WDT->INTENCLR = int_mask;
-}
+__STATIC_INLINE void nrf_wdt_int_disable(uint32_t int_mask);
 
+#if defined(DPPI_PRESENT) || defined(__NRFX_DOXYGEN__)
+/**
+ * @brief Function for setting the subscribe configuration for a given
+ *        WDT task.
+ *
+ * @param[in] task    Task for which to set the configuration.
+ * @param[in] channel Channel through which to subscribe events.
+ */
+__STATIC_INLINE void nrf_wdt_subscribe_set(nrf_wdt_task_t task,
+                                           uint8_t        channel);
+
+/**
+ * @brief Function for clearing the subscribe configuration for a given
+ *        WDT task.
+ *
+ * @param[in] task Task for which to clear the configuration.
+ */
+__STATIC_INLINE void nrf_wdt_subscribe_clear(nrf_wdt_task_t task);
+
+/**
+ * @brief Function for setting the publish configuration for a given
+ *        WDT event.
+ *
+ * @param[in] event   Event for which to set the configuration.
+ * @param[in] channel Channel through which to publish the event.
+ */
+__STATIC_INLINE void nrf_wdt_publish_set(nrf_wdt_event_t event,
+                                         uint8_t         channel);
+
+/**
+ * @brief Function for clearing the publish configuration for a given
+ *        WDT event.
+ *
+ * @param[in] event Event for which to clear the configuration.
+ */
+__STATIC_INLINE void nrf_wdt_publish_clear(nrf_wdt_event_t event);
+#endif // defined(DPPI_PRESENT) || defined(__NRFX_DOXYGEN__)
 
 /**
  * @brief Function for returning the address of a specific WDT task register.
  *
  * @param[in]  task             Task.
  */
-__STATIC_INLINE uint32_t nrf_wdt_task_address_get(nrf_wdt_task_t task)
-{
-    return ((uint32_t)NRF_WDT + task);
-}
-
+__STATIC_INLINE uint32_t nrf_wdt_task_address_get(nrf_wdt_task_t task);
 
 /**
  * @brief Function for returning the address of a specific WDT event register.
@@ -224,11 +217,7 @@ __STATIC_INLINE uint32_t nrf_wdt_task_address_get(nrf_wdt_task_t task)
  *
  * @retval     address of requested event register
  */
-__STATIC_INLINE uint32_t nrf_wdt_event_address_get(nrf_wdt_event_t event)
-{
-    return ((uint32_t)NRF_WDT + event);
-}
-
+__STATIC_INLINE uint32_t nrf_wdt_event_address_get(nrf_wdt_event_t event);
 
 /**
  * @brief Function for retrieving the watchdog status.
@@ -236,11 +225,7 @@ __STATIC_INLINE uint32_t nrf_wdt_event_address_get(nrf_wdt_event_t event)
  * @retval     true             If the watchdog is started.
  * @retval     false            If the watchdog is not started.
  */
-__STATIC_INLINE bool nrf_wdt_started(void)
-{
-    return (bool)(NRF_WDT->RUNSTATUS);
-}
-
+__STATIC_INLINE bool nrf_wdt_started(void);
 
 /**
  * @brief Function for retrieving the watchdog reload request status.
@@ -250,55 +235,35 @@ __STATIC_INLINE bool nrf_wdt_started(void)
  * @retval     true             If a reload request is running.
  * @retval     false            If no reload request is running.
  */
-__STATIC_INLINE bool nrf_wdt_request_status(nrf_wdt_rr_register_t rr_register)
-{
-    return (bool)(((NRF_WDT->REQSTATUS) >> rr_register) & 0x1UL);
-}
-
+__STATIC_INLINE bool nrf_wdt_request_status(nrf_wdt_rr_register_t rr_register);
 
 /**
  * @brief Function for setting the watchdog reload value.
  *
  * @param[in]  reload_value     Watchdog counter initial value.
  */
-__STATIC_INLINE void nrf_wdt_reload_value_set(uint32_t reload_value)
-{
-    NRF_WDT->CRV = reload_value;
-}
-
+__STATIC_INLINE void nrf_wdt_reload_value_set(uint32_t reload_value);
 
 /**
  * @brief Function for retrieving the watchdog reload value.
  *
  * @retval                      Reload value.
  */
-__STATIC_INLINE uint32_t nrf_wdt_reload_value_get(void)
-{
-    return (uint32_t)NRF_WDT->CRV;
-}
-
+__STATIC_INLINE uint32_t nrf_wdt_reload_value_get(void);
 
 /**
  * @brief Function for enabling a specific reload request register.
  *
  * @param[in]  rr_register       Reload request register to enable.
  */
-__STATIC_INLINE void nrf_wdt_reload_request_enable(nrf_wdt_rr_register_t rr_register)
-{
-    NRF_WDT->RREN |= 0x1UL << rr_register;
-}
-
+__STATIC_INLINE void nrf_wdt_reload_request_enable(nrf_wdt_rr_register_t rr_register);
 
 /**
  * @brief Function for disabling a specific reload request register.
  *
  * @param[in]  rr_register       Reload request register to disable.
  */
-__STATIC_INLINE void nrf_wdt_reload_request_disable(nrf_wdt_rr_register_t rr_register)
-{
-    NRF_WDT->RREN &= ~(0x1UL << rr_register);
-}
-
+__STATIC_INLINE void nrf_wdt_reload_request_disable(nrf_wdt_rr_register_t rr_register);
 
 /**
  * @brief Function for retrieving the status of a specific reload request register.
@@ -308,21 +273,133 @@ __STATIC_INLINE void nrf_wdt_reload_request_disable(nrf_wdt_rr_register_t rr_reg
  * @retval     true              If the reload request register is enabled.
  * @retval     false             If the reload request register is not enabled.
  */
-__STATIC_INLINE bool nrf_wdt_reload_request_is_enabled(nrf_wdt_rr_register_t rr_register)
-{
-    return (bool)(NRF_WDT->RREN & (0x1UL << rr_register));
-}
-
+__STATIC_INLINE bool nrf_wdt_reload_request_is_enabled(nrf_wdt_rr_register_t rr_register);
 
 /**
  * @brief Function for setting a specific reload request register.
  *
  * @param[in]  rr_register       Reload request register to set.
  */
+__STATIC_INLINE void nrf_wdt_reload_request_set(nrf_wdt_rr_register_t rr_register);
+
+#ifndef SUPPRESS_INLINE_IMPLEMENTATION
+
+__STATIC_INLINE void nrf_wdt_behaviour_set(nrf_wdt_behaviour_t behaviour)
+{
+    NRF_WDT->CONFIG = behaviour;
+}
+
+__STATIC_INLINE void nrf_wdt_task_trigger(nrf_wdt_task_t task)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_WDT + task)) = NRF_WDT_TASK_SET;
+}
+
+__STATIC_INLINE void nrf_wdt_event_clear(nrf_wdt_event_t event)
+{
+    *((volatile uint32_t *)((uint8_t *)NRF_WDT + (uint32_t)event)) = NRF_WDT_EVENT_CLEAR;
+#if __CORTEX_M == 0x04
+    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)NRF_WDT + (uint32_t)event));
+    (void)dummy;
+#endif
+}
+
+__STATIC_INLINE bool nrf_wdt_event_check(nrf_wdt_event_t event)
+{
+    return (bool)*((volatile uint32_t *)((uint8_t *)NRF_WDT + event));
+}
+
+__STATIC_INLINE void nrf_wdt_int_enable(uint32_t int_mask)
+{
+    NRF_WDT->INTENSET = int_mask;
+}
+
+__STATIC_INLINE bool nrf_wdt_int_enable_check(uint32_t int_mask)
+{
+    return (bool)(NRF_WDT->INTENSET & int_mask);
+}
+
+__STATIC_INLINE void nrf_wdt_int_disable(uint32_t int_mask)
+{
+    NRF_WDT->INTENCLR = int_mask;
+}
+
+#if defined(DPPI_PRESENT)
+__STATIC_INLINE void nrf_wdt_subscribe_set(nrf_wdt_task_t task,
+                                           uint8_t        channel)
+{
+    *((volatile uint32_t *) ((uint8_t *) NRF_WDT + (uint32_t) task + 0x80uL)) =
+            ((uint32_t)channel | WDT_SUBSCRIBE_START_EN_Msk);
+}
+
+__STATIC_INLINE void nrf_wdt_subscribe_clear(nrf_wdt_task_t task)
+{
+    *((volatile uint32_t *) ((uint8_t *) NRF_WDT + (uint32_t) task + 0x80uL)) = 0;
+}
+
+__STATIC_INLINE void nrf_wdt_publish_set(nrf_wdt_event_t event,
+                                         uint8_t         channel)
+{
+    *((volatile uint32_t *) ((uint8_t *) NRF_WDT + (uint32_t) event + 0x80uL)) =
+            ((uint32_t)channel | WDT_PUBLISH_TIMEOUT_EN_Msk);
+}
+
+__STATIC_INLINE void nrf_wdt_publish_clear(nrf_wdt_event_t event)
+{
+    *((volatile uint32_t *) ((uint8_t *) NRF_WDT + (uint32_t) event + 0x80uL)) = 0;
+}
+#endif // defined(DPPI_PRESENT)
+
+__STATIC_INLINE uint32_t nrf_wdt_task_address_get(nrf_wdt_task_t task)
+{
+    return ((uint32_t)NRF_WDT + task);
+}
+
+__STATIC_INLINE uint32_t nrf_wdt_event_address_get(nrf_wdt_event_t event)
+{
+    return ((uint32_t)NRF_WDT + event);
+}
+
+__STATIC_INLINE bool nrf_wdt_started(void)
+{
+    return (bool)(NRF_WDT->RUNSTATUS);
+}
+
+__STATIC_INLINE bool nrf_wdt_request_status(nrf_wdt_rr_register_t rr_register)
+{
+    return (bool)(((NRF_WDT->REQSTATUS) >> rr_register) & 0x1UL);
+}
+
+__STATIC_INLINE void nrf_wdt_reload_value_set(uint32_t reload_value)
+{
+    NRF_WDT->CRV = reload_value;
+}
+
+__STATIC_INLINE uint32_t nrf_wdt_reload_value_get(void)
+{
+    return (uint32_t)NRF_WDT->CRV;
+}
+
+__STATIC_INLINE void nrf_wdt_reload_request_enable(nrf_wdt_rr_register_t rr_register)
+{
+    NRF_WDT->RREN |= 0x1UL << rr_register;
+}
+
+__STATIC_INLINE void nrf_wdt_reload_request_disable(nrf_wdt_rr_register_t rr_register)
+{
+    NRF_WDT->RREN &= ~(0x1UL << rr_register);
+}
+
+__STATIC_INLINE bool nrf_wdt_reload_request_is_enabled(nrf_wdt_rr_register_t rr_register)
+{
+    return (bool)(NRF_WDT->RREN & (0x1UL << rr_register));
+}
+
 __STATIC_INLINE void nrf_wdt_reload_request_set(nrf_wdt_rr_register_t rr_register)
 {
     NRF_WDT->RR[rr_register] = NRF_WDT_RR_VALUE;
 }
+
+#endif // SUPPRESS_INLINE_IMPLEMENTATION
 
 /** @} */
 
@@ -330,4 +407,4 @@ __STATIC_INLINE void nrf_wdt_reload_request_set(nrf_wdt_rr_register_t rr_registe
 }
 #endif
 
-#endif
+#endif // NRF_WDT_H__

@@ -33,7 +33,7 @@ PROJECT_NAME = "nrfx"
 # This could be handy for archiving the generated documentation or
 # if some version control system is used.
 
-PROJECT_NUMBER = "1.1"
+PROJECT_NUMBER = "1.6"
 ### EDIT THIS ###
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
@@ -554,7 +554,7 @@ GENERATE_DEPRECATEDLIST = YES
 # documentation sections, marked by \if section-label ... \endif
 # and \cond section-label ... \endcond blocks.
 
-ENABLED_SECTIONS = NRF52 NRF52840
+ENABLED_SECTIONS =
 
 # The MAX_INITIALIZER_LINES tag determines the maximum number of lines
 # the initial value of a variable or macro consists of for it to appear in

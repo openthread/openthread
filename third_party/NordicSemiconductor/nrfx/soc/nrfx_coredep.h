@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2018 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRFX_COREDEP_H__
@@ -52,19 +43,22 @@
 
 /** @brief Core frequency (in MHz). */
 #define NRFX_DELAY_CPU_FREQ_MHZ
-/** @brief Availability of DWT unit in the given SoC. */
+/** @brief Availability of Data Watchpoint and Trace (DWT) unit in the given SoC. */
 #define NRFX_DELAY_DWT_PRESENT
 
 #elif defined(NRF51)
     #define NRFX_DELAY_CPU_FREQ_MHZ 16
     #define NRFX_DELAY_DWT_PRESENT  0
-#elif defined(NRF52810_XXAA)
+#elif defined(NRF52810_XXAA) || defined(NRF52811_XXAA)
     #define NRFX_DELAY_CPU_FREQ_MHZ 64
     #define NRFX_DELAY_DWT_PRESENT  0
 #elif defined(NRF52832_XXAA) || defined (NRF52832_XXAB)
     #define NRFX_DELAY_CPU_FREQ_MHZ 64
     #define NRFX_DELAY_DWT_PRESENT  1
 #elif defined(NRF52840_XXAA)
+    #define NRFX_DELAY_CPU_FREQ_MHZ 64
+    #define NRFX_DELAY_DWT_PRESENT  1
+#elif defined(NRF9160_XXAA)
     #define NRFX_DELAY_CPU_FREQ_MHZ 64
     #define NRFX_DELAY_DWT_PRESENT  1
 #else
@@ -102,16 +96,16 @@ __STATIC_INLINE void nrfx_coredep_delay_us(uint32_t time_us)
     uint32_t time_cycles = time_us * NRFX_DELAY_CPU_FREQ_MHZ;
 
     // Save the current state of the DEMCR register to be able to restore it before exiting
-    // this function. Enable the trace and debug blocks (DWT is one of them).
+    // this function. Enable the trace and debug blocks (including DWT).
     uint32_t core_debug = CoreDebug->DEMCR;
     CoreDebug->DEMCR = core_debug | CoreDebug_DEMCR_TRCENA_Msk;
 
-    // Save the current state of the CTRL register in DWT block. Make sure
-    // that cycle counter is enabled.
+    // Save the current state of the CTRL register in the DWT block. Make sure
+    // that the cycle counter is enabled.
     uint32_t dwt_ctrl = DWT->CTRL;
     DWT->CTRL = dwt_ctrl | DWT_CTRL_CYCCNTENA_Msk;
 
-    // Store start value of cycle counter.
+    // Store start value of the cycle counter.
     uint32_t cyccnt_initial = DWT->CYCCNT;
 
     // Delay required time.
@@ -133,22 +127,25 @@ __STATIC_INLINE void nrfx_coredep_delay_us(uint32_t time_us)
     }
 
     #if defined(NRF51)
-    // The loop takes 4 cycles: 1 for SUBS and 3 for BHI.
+    // The loop takes 4 cycles: 1 for SUBS, 3 for BHI.
     static const uint16_t delay_bytecode[] = {
         0x3804, // SUBS r0, #4
         0xd8fd, // BHI .-2
         0x4770  // BX LR
         };
-    #elif defined(NRF52810_XXAA)
-    // The loop takes 7 cycles: 1 for SUBS and 2 for BHI and 2 for flash wait states.
+    #elif defined(NRF52810_XXAA) || defined(NRF52811_XXAA)
+    // The loop takes 7 cycles: 1 for SUBS, 2 for BHI, 2 flash wait states for each instruction.
     static const uint16_t delay_bytecode[] = {
         0x3807, // SUBS r0, #7
         0xd8fd, // BHI .-2
         0x4770  // BX LR
         };
-    #elif  defined(NRF52832_XXAA) || defined (NRF52832_XXAB) ||  defined(NRF52840_XXAA)
-    // The loop takes 3 cycles: 1 for SUBS and 2 for BHI.
-    // Make sure that code will be cached properly, so that no extra wait states appear.
+    #elif  (defined(NRF52832_XXAA) || \
+           defined (NRF52832_XXAB) || \
+           defined(NRF52840_XXAA)  || \
+           defined(NRF9160_XXAA))
+    // The loop takes 3 cycles: 1 for SUBS, 2 for BHI.
+    // Make sure that code is cached properly, so that no extra wait states appear.
     __ALIGN(16)
     static const uint16_t delay_bytecode[] = {
         0x3803, // SUBS r0, #3
