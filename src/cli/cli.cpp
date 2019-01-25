@@ -64,7 +64,6 @@
 #endif
 
 #ifndef OTDLL
-#include <openthread/dhcp6_server.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/platform/uart.h>
@@ -301,20 +300,22 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
     , mUdp(*this)
 #endif
-    , mInstance(aInstance)
+    , mDataset(*this)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     , mCoapSecure(*this)
 #endif
+    , mInstance(aInstance)
 {
 #ifdef OTDLL
+    // On Windows, mInstance represents the current selected otInstance
+    // which should be NULL now.
+    assert(aInstance = NULL);
     assert(mApiInstance);
     CacheInstances();
 #else
-    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
-    otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 #endif
@@ -852,13 +853,6 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     }
 }
 
-void Interpreter::ProcessDataset(int argc, char *argv[])
-{
-    otError error;
-    error = Dataset::Process(mInstance, argc, argv, *mServer);
-    AppendResult(error);
-}
-
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 {
@@ -893,6 +887,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(value <= static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
     }
 
@@ -2125,6 +2120,8 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     otBorderRouterConfig config;
     int                  argcur = 0;
 
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
     char *prefixLengthStr;
@@ -2216,6 +2213,8 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&prefix, 0, sizeof(otIp6Prefix));
 
@@ -2735,6 +2734,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         else
         {
             SuccessOrExit(error = ParseLong(argv[0], value));
+            VerifyOrExit(value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << value;
         }
     }
@@ -2996,6 +2996,13 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessDataset(int argc, char *argv[])
+{
+    otError error;
+    error = mDataset.Process(argc, argv);
     AppendResult(error);
 }
 
@@ -3742,7 +3749,7 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
     // all diagnostics related features are processed within diagnostics module
     output[sizeof(output) - 1] = '\0';
     otDiagProcessCmd(argc, argv, output, sizeof(output) - 1);
-    mServer->OutputFormat("%s\n", output);
+    mServer->Output(output, static_cast<uint16_t>(strlen(output)));
 }
 #endif
 
@@ -3795,36 +3802,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
             AppendResult(OT_ERROR_PARSE);
         }
     }
-
-exit:
-    return;
-}
-
-void OTCALL Interpreter::s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext)
-{
-#ifdef OTDLL
-    otCliContext *cliContext = static_cast<otCliContext *>(aContext);
-    cliContext->mInterpreter->HandleNetifStateChanged(cliContext->mInstance, aFlags);
-#else
-    static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
-#endif
-}
-
-#ifdef OTDLL
-void Interpreter::HandleNetifStateChanged(otInstance *mInstance, otChangedFlags aFlags)
-#else
-void Interpreter::HandleNetifStateChanged(otChangedFlags aFlags)
-#endif
-{
-    VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
-
-#ifndef OTDLL
-    otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-    otDhcp6ServerUpdate(mInstance);
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-#endif
 
 exit:
     return;
@@ -3920,7 +3897,7 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 #else
     OT_UNUSED_VARIABLE(aOwnerLocator);
 
-    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
+    Interpreter &interpreter = Server::sServer->GetInterpreter();
 #endif
     return interpreter;
 }

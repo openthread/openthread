@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,84 +28,69 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on a UDP socket.
+ *   This file contains definitions for a simple CLI CoAP server and client.
  */
 
-#ifndef CLI_UDP_HPP_
-#define CLI_UDP_HPP_
+#ifndef CLI_UDP_EXAMPLE_HPP_
+#define CLI_UDP_EXAMPLE_HPP_
 
 #include "openthread-core-config.h"
 
-#include <openthread/instance.h>
-
-#include "cli/cli.hpp"
-#include "cli/cli_server.hpp"
+#include <openthread/udp.h>
 
 namespace ot {
 namespace Cli {
 
+class Interpreter;
+
 /**
- * This class implements the CLI server on top of a UDP socket.
+ * This class implements a CLI-based UDP example.
  *
  */
-class Udp: public Server
+class UdpExample
 {
 public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance     The OpenThread instance structure.
-     * @param[in]  aInterpreter  The Interpreter structure.
+     * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    Udp(otInstance *aInstance, Interpreter *aInterpreter);
+    UdpExample(Interpreter &aInterpreter);
 
     /**
-     * This method starts the CLI server.
+     * This method interprets a list of CLI arguments.
      *
-     * @retval OT_ERROR_NONE  Successfully started the server.
-     *
-     */
-    otError Start(void);
-
-    /**
-     * This method delivers raw characters to the client.
-     *
-     * @param[in]  aBuf        A pointer to a buffer.
-     * @param[in]  aBufLength  Number of bytes in the buffer.
-     *
-     * @returns The number of bytes placed in the output queue.
+     * @param[in]  argc  The number of elements in argv.
+     * @param[in]  argv  A pointer to an array of command line arguments.
      *
      */
-    virtual int Output(const char *aBuf, uint16_t aBufLength);
-
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int OutputFormat(const char *fmt, ...);
+    otError Process(int argc, char *argv[]);
 
 private:
-    enum
+    struct Command
     {
-        kMaxLineLength = 128,
+        const char *mName;
+        otError (UdpExample::*mCommand)(int argc, char *argv[]);
     };
 
+    otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessBind(int argc, char *argv[]);
+    otError ProcessClose(int argc, char *argv[]);
+    otError ProcessConnect(int argc, char *argv[]);
+    otError ProcessOpen(int argc, char *argv[]);
+    otError ProcessSend(int argc, char *argv[]);
+
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    static const Command sCommands[];
+    Interpreter &        mInterpreter;
 
     otUdpSocket mSocket;
-    otMessageInfo mPeer;
-    otInstance *mInstance;
-    Interpreter *mInterpreter;
 };
 
-}  // namespace Cli
-}  // namespace ot
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_UDP_HPP_
+#endif // CLI_UDP_EXAMPLE_HPP_

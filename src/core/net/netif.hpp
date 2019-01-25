@@ -367,10 +367,11 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully subscribed to @p aAddress.
-     * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal multicast address.
-     * @retval OT_ERROR_NO_BUFS       The maximum number of allowed external multicast addresses are already added.
+     * @retval OT_ERROR_NONE           Successfully subscribed to @p aAddress.
+     * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
+     * @retval OT_ERROR_INVALID_ARGS   The address indicated by @p aAddress is an internal multicast address.
+     * @retval OT_ERROR_INVALID_STATE  The Network Interface is not up.
+     * @retval OT_ERROR_NO_BUFS        The maximum number of allowed external multicast addresses are already added.
      *
      */
     otError SubscribeExternalMulticast(const Address &aAddress);

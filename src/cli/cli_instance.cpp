@@ -37,6 +37,7 @@
 #include <stdlib.h>
 
 #include "cli.hpp"
+#include "cli_server.hpp"
 
 #include "common/debug.hpp"
 #include "utils/wrap_string.h"
@@ -61,7 +62,6 @@ void Interpreter::CacheInstances()
             mInstances[i].mInterpreter = this;
             mInstances[i].mInstance = static_cast<Instance *>(otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]));
             assert(mInstances[i].mInstance);
-            otSetStateChangedCallback(mInstances[i].mInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
         }
 
         otFreeMemory(aDeviceList);

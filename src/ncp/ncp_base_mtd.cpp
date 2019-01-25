@@ -43,9 +43,6 @@
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 #include <openthread/child_supervision.h>
 #endif
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-#include <openthread/dhcp6_server.h>
-#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -1171,7 +1168,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                 {
                     SuccessOrExit(error = mDecoder.ReadUint8(channel));
                     VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                    aDataset.mChannelMaskPage0 |= (1U << channel);
+                    aDataset.mChannelMaskPage0 |= (1UL << channel);
                 }
             }
 
@@ -3428,10 +3425,6 @@ void NcpBase::ProcessThreadChangedFlags(void)
             {
                 mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_ON_MESH_NETS);
                 mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_OFF_MESH_ROUTES);
-
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-                otDhcp6ServerUpdate(mInstance);
-#endif
             }
 
             mThreadChangedFlags &= ~threadFlag;

@@ -89,7 +89,7 @@ typedef struct otBufferInfo
 } otBufferInfo;
 
 /**
- * This enumeration defines the Openthread message priority levels.
+ * This enumeration defines the OpenThread message priority levels.
  *
  */
 typedef enum otMessagePriority
@@ -142,7 +142,7 @@ void otMessageFree(otMessage *aMessage);
  * @sa otMessageSetLength
  *
  */
-uint16_t otMessageGetLength(otMessage *aMessage);
+uint16_t otMessageGetLength(const otMessage *aMessage);
 
 /**
  * Set the message length in bytes.
@@ -180,7 +180,7 @@ otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
  * @sa otMessageWrite
  *
  */
-uint16_t otMessageGetOffset(otMessage *aMessage);
+uint16_t otMessageGetOffset(const otMessage *aMessage);
 
 /**
  * Set the message offset in bytes.
@@ -211,7 +211,7 @@ otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
  * @retval FALSE  If link security is not enabled.
  *
  */
-bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
+bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage);
 
 /**
  * This function sets/forces the message to be forwarded using direct transmission.
@@ -230,7 +230,7 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
  * @returns The average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average RSS is available.
  *
  */
-int8_t otMessageGetRss(otMessage *aMessage);
+int8_t otMessageGetRss(const otMessage *aMessage);
 
 /**
  * Append bytes to a message.
@@ -272,7 +272,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
  * @sa otMessageWrite
  *
  */
-int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
+int otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
 /**
  * Write bytes to a message.

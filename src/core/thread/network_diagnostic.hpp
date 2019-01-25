@@ -104,39 +104,23 @@ private:
     void    FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
     otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetRequest(void *               aContext,
-                                           otCoapHeader *       aHeader,
-                                           otMessage *          aMessage,
-                                           const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetQuery(void *               aContext,
-                                         otCoapHeader *       aHeader,
-                                         otMessage *          aMessage,
-                                         const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDiagnosticGetResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aResult);
-    void        HandleDiagnosticGetResponse(Coap::Header &          aHeader,
-                                            Message &               aMessage,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            otError                 aResult);
+    void HandleDiagnosticGetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, otError aResult);
 
-    static void HandleDiagnosticGetAnswer(void *               aContext,
-                                          otCoapHeader *       aHeader,
-                                          otMessage *          aMessage,
-                                          const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *               aContext,
-                                      otCoapHeader *       aHeader,
-                                      otMessage *          aMessage,
-                                      const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Coap::Resource mDiagnosticGetRequest;
     Coap::Resource mDiagnosticGetQuery;

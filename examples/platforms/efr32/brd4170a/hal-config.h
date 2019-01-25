@@ -196,7 +196,6 @@
 
 // $[SERIAL]
 #define HAL_SERIAL_USART0_ENABLE              (0)
-#define BSP_SERIAL_APP_PORT                   (HAL_SERIAL_PORT_USART0)
 #define HAL_SERIAL_LEUART0_ENABLE             (0)
 #define HAL_SERIAL_USART1_ENABLE              (0)
 #define HAL_SERIAL_USART2_ENABLE              (0)

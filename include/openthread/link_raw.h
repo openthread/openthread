@@ -245,10 +245,10 @@ otError otLinkRawEnergyScan(otInstance *            aInstance,
                             otLinkRawEnergyScanDone aCallback);
 
 /**
- * Enable/Disable source match for AutoPend.
+ * Enable/Disable source match for frame pending.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aEnable      Enable/disable source match for automatical pending.
+ * @param[in]  aEnable      Enable/disable source match for frame pending.
  *
  * @retval OT_ERROR_NONE             If successful.
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.

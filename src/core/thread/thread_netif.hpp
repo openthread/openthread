@@ -439,8 +439,14 @@ public:
      */
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
 
+    /**
+     * This method updates addresses that shall be automatically created using SLAAC.
+     *
+     */
+    void UpdateSlaac(void);
+
 private:
-    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static otError TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -449,6 +455,7 @@ private:
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     Dhcp6::Dhcp6Server mDhcp6Server;
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
+    Ip6::NetifUnicastAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     Dns::Client mDnsClient;
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
@@ -503,6 +510,7 @@ private:
     AnnounceBeginServer        mAnnounceBegin;
     PanIdQueryServer           mPanIdQuery;
     EnergyScanServer           mEnergyScan;
+
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     TimeSync mTimeSync;
 #endif

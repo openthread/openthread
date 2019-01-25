@@ -113,22 +113,22 @@ void RouterTable::UpdateAllocation(void)
     mActiveRouterCount = 0;
 
     // build index map
-    for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        if (IsAllocated(i) && mActiveRouterCount < Mle::kMaxRouters)
+        if (IsAllocated(routerId) && mActiveRouterCount < Mle::kMaxRouters)
         {
-            indexMap[i] = mActiveRouterCount++;
+            indexMap[routerId] = mActiveRouterCount++;
         }
         else
         {
-            indexMap[i] = Mle::kInvalidRouterId;
+            indexMap[routerId] = Mle::kInvalidRouterId;
         }
     }
 
     // shift entries forward
-    for (int i = Mle::kMaxRouters - 2; i >= 0; i--)
+    for (int index = Mle::kMaxRouters - 2; index >= 0; index--)
     {
-        uint8_t routerId = mRouters[i].GetRouterId();
+        uint8_t routerId = mRouters[index].GetRouterId();
         uint8_t newIndex;
 
         if (routerId > Mle::kMaxRouterId || indexMap[routerId] == Mle::kInvalidRouterId)
@@ -138,16 +138,16 @@ void RouterTable::UpdateAllocation(void)
 
         newIndex = indexMap[routerId];
 
-        if (newIndex > i)
+        if (newIndex > index)
         {
-            mRouters[newIndex] = mRouters[i];
+            mRouters[newIndex] = mRouters[index];
         }
     }
 
     // shift entries backward
-    for (uint8_t i = 1; i < Mle::kMaxRouters; i++)
+    for (uint8_t index = 1; index < Mle::kMaxRouters; index++)
     {
-        uint8_t routerId = mRouters[i].GetRouterId();
+        uint8_t routerId = mRouters[index].GetRouterId();
         uint8_t newIndex;
 
         if (routerId > Mle::kMaxRouterId || indexMap[routerId] == Mle::kInvalidRouterId)
@@ -157,34 +157,34 @@ void RouterTable::UpdateAllocation(void)
 
         newIndex = indexMap[routerId];
 
-        if (newIndex < i)
+        if (newIndex < index)
         {
-            mRouters[newIndex] = mRouters[i];
+            mRouters[newIndex] = mRouters[index];
         }
     }
 
     // fix replaced entries
-    for (uint8_t i = 0; i <= Mle::kMaxRouterId; i++)
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        uint8_t index = indexMap[i];
+        uint8_t index = indexMap[routerId];
 
         if (index != Mle::kInvalidRouterId)
         {
             Router &router = mRouters[index];
 
-            if (router.GetRouterId() != i)
+            if (router.GetRouterId() != routerId)
             {
                 memset(&router, 0, sizeof(router));
-                router.SetRloc16(Mle::Mle::GetRloc16(i));
+                router.SetRloc16(Mle::Mle::GetRloc16(routerId));
                 router.SetNextHop(Mle::kInvalidRouterId);
             }
         }
     }
 
     // clear unused entries
-    for (uint8_t i = mActiveRouterCount; i < Mle::kMaxRouters; i++)
+    for (uint8_t index = mActiveRouterCount; index < Mle::kMaxRouters; index++)
     {
-        Router &router = mRouters[i];
+        Router &router = mRouters[index];
         memset(&router, 0, sizeof(router));
         router.SetRloc16(0xffff);
     }
@@ -330,7 +330,7 @@ void RouterTable::RemoveNeighbor(Router &aRouter)
     {
         netif.GetMle().ResetAdvertiseInterval();
 
-        // Clear all EID-to-RLOC entries assossiated with the router.
+        // Clear all EID-to-RLOC entries associated with the router.
         netif.GetAddressResolver().Remove(aRouter.GetRouterId());
     }
 }
@@ -393,24 +393,6 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 
 exit:
     return router;
-}
-
-Router *RouterTable::GetRouter(uint8_t aRouterId)
-{
-    Router * rval   = NULL;
-    uint16_t rloc16 = Mle::Mle::GetRloc16(aRouterId);
-
-    for (uint8_t i = 0; i < Mle::kMaxRouters; i++)
-    {
-        if (mRouters[i].GetRloc16() == rloc16)
-        {
-            rval = &mRouters[i];
-            ExitNow();
-        }
-    }
-
-exit:
-    return rval;
 }
 
 const Router *RouterTable::GetRouter(uint8_t aRouterId) const

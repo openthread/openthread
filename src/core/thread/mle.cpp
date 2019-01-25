@@ -236,7 +236,7 @@ exit:
     return error;
 }
 
-otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
+otError Mle::Start(bool aAnnounceAttach)
 {
     ThreadNetif &netif = GetNetif();
     otError      error = OT_ERROR_NONE;
@@ -245,15 +245,16 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
+    SetStateDetached();
+
     ApplyMeshLocalPrefix();
     SetRloc16(GetRloc16());
 
-    SetStateDetached();
     mAttachCounter = 0;
 
     netif.GetKeyManager().Start();
 
-    if (aEnableReattach)
+    if (!aAnnounceAttach)
     {
         mReattachState = kReattachStart;
     }
@@ -669,7 +670,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         uint16_t       counter = mAttachCounter - 1;
         const uint32_t ratio   = kAttachBackoffMaxInterval / kAttachBackoffMinInterval;
 
-        if ((counter <= sizeof(ratio) * CHAR_BIT) && ((1U << counter) <= ratio))
+        if ((counter < sizeof(ratio) * CHAR_BIT) && ((1UL << counter) <= ratio))
         {
             delay = kAttachBackoffMinInterval;
             delay <<= counter;
@@ -926,6 +927,8 @@ void Mle::ApplyMeshLocalPrefix(void)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
     memcpy(mRealmLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
+
     // Add the addresses back into the table.
     netif.AddUnicastAddress(mMeshLocal64);
     netif.SubscribeMulticast(mLinkLocalAllThreadNodes);
@@ -942,6 +945,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         netif.AddUnicastAddress(mLeaderAloc);
     }
 
+exit:
     // Changing the prefix also causes the mesh local address to be different.
     GetNotifier().Signal(OT_CHANGED_THREAD_ML_ADDR);
 }
@@ -976,7 +980,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     {
         GetNetif().GetMle().HandlePartitionChange();
         GetNotifier().Signal(OT_CHANGED_THREAD_PARTITION_ID);
-        mCounters.mParitionIdChanges++;
+        mCounters.mPartitionIdChanges++;
     }
     else
     {
@@ -1509,6 +1513,12 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         this->UpdateServiceAlocs();
 #endif
 #endif
+
+        GetNetif().UpdateSlaac();
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+        GetNetif().GetDhcp6Server().UpdateService();
+#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
         GetNetif().GetDhcp6Client().UpdateAddresses();
@@ -3654,7 +3664,7 @@ void Mle::ProcessAnnounce(void)
     mac.SetPanChannel(newChannel);
     mac.SetPanId(newPanId);
 
-    Start(/* aEnableReattach */ false, /* aAnnounceAttach */ true);
+    Start(/* aAnnounceAttach */ true);
 }
 
 otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

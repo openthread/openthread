@@ -50,12 +50,12 @@
 
 #if NRF_802154_CSMA_CA_ENABLED
 
-static uint8_t m_nb;  ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
-static uint8_t m_be;  ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
+static uint8_t m_nb;                    ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
+static uint8_t m_be;                    ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
 
-static const uint8_t    * mp_psdu;       ///< Pointer to PSDU of the frame being transmitted.
-static nrf_802154_timer_t m_timer;       ///< Timer used to back off during CSMA-CA procedure.
-static bool               m_is_running;  ///< Indicates if CSMA-CA procedure is running.
+static const uint8_t    * mp_psdu;      ///< Pointer to PSDU of the frame being transmitted.
+static nrf_802154_timer_t m_timer;      ///< Timer used to back off during CSMA-CA procedure.
+static bool               m_is_running; ///< Indicates if CSMA-CA procedure is running.
 
 /**
  * @brief Perform appropriate actions for busy channel conditions.

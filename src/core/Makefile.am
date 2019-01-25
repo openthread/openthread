@@ -112,7 +112,6 @@ SOURCES_COMMON                      = \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
-    api/dhcp6_api.cpp                 \
     api/dns_api.cpp                   \
     api/icmp6_api.cpp                 \
     api/instance_api.cpp              \
@@ -132,7 +131,7 @@ SOURCES_COMMON                      = \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
     coap/coap.cpp                     \
-    coap/coap_header.cpp              \
+    coap/coap_message.cpp             \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/instance.cpp               \
@@ -289,7 +288,7 @@ HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     coap/coap.hpp                     \
-    coap/coap_header.hpp              \
+    coap/coap_message.hpp             \
     coap/coap_secure.hpp              \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
@@ -393,6 +392,7 @@ HEADERS_COMMON                      = \
     utils/jam_detector.hpp            \
     utils/parse_cmdline.hpp           \
     utils/slaac_address.hpp           \
+    utils/static_assert.hpp           \
     utils/wrap_stdbool.h              \
     utils/wrap_stdint.h               \
     utils/wrap_string.h               \

@@ -56,6 +56,14 @@ extern "C" {
 otInstance *otSysInit(int argc, char *argv[]);
 
 /**
+ * This function performs platform network interface initialization.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ *
+ */
+void otSysInitNetif(otInstance *aInstance);
+
+/**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
@@ -65,15 +73,48 @@ otInstance *otSysInit(int argc, char *argv[]);
 void otSysDeinit(void);
 
 /**
+ * This structure represents a context for a select() based mainloop.
+ *
+ */
+typedef struct otSysMainloopContext
+{
+    fd_set         mReadFdSet;  ///< The read file descriptors.
+    fd_set         mWriteFdSet; ///< The write file descriptors.
+    fd_set         mErrorFdSet; ///< The error file descriptors.
+    int            mMaxFd;      ///< The max file descriptor.
+    struct timeval mTimeout;    ///< The timeout.
+} otSysMainloopContext;
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by OpenThread drivers.
+ *
+ * @param[in]       aInstance   The OpenThread instance structure.
+ * @param[inout]    aMainloop   A pointer to the mainloop context.
+ *
+ */
+void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop);
+
+/**
+ * This function polls OpenThread's mainloop.
+ *
+ * @param[inout]    aMainloop   A pointer to the mainloop context.
+ *
+ * @returns value returned from select().
+ *
+ */
+int otSysMainloopPoll(otSysMainloopContext *aMainloop);
+
+/**
  * This function performs all platform-specific processing for OpenThread's example applications.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       in the main loop when processing OpenThread's drivers is most appropriate.
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]   aInstance   The OpenThread instance structure.
+ * @param[in]   aMainloop   A pointer to the mainloop context.
  *
  */
-void otSysProcessDrivers(otInstance *aInstance);
+void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
 
 /**
  * This function is called whenever platform drivers needs processing.

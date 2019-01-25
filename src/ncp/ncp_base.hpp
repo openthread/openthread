@@ -174,19 +174,26 @@ protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     /**
-     * This struct represents a spinel response entry.
+     * This enumeration represents the `ResponseEntry` type.
      *
-     * It can be either a `VALUE_IS` property update for a specific property, or a `VALUE_IS(LAST_STATUS)` with a given
-     * spinel status error.
+     */
+    enum ResponseType
+    {
+        kResponseTypeGet = 0,    ///< Response entry is for a `VALUE_GET` command.
+        kResponseTypeSet,        ///< Response entry is for a `VALUE_SET` command.
+        kResponseTypeLastStatus, ///< Response entry is a `VALUE_IS(LAST_STATUS)`.
+    };
+
+    /**
+     * This struct represents a spinel response entry.
      *
      */
     struct ResponseEntry
     {
-        uint8_t  mTid : 4;              ///< Spinel transaction id.
-        bool     mIsInUse : 1;          ///< `true` if this entry is in use, `false` otherwise.
-        bool     mIsLastStatus : 1;     ///< `true` if entry is a `LAST_STATUS`, otherwise it is a property update.
-        bool     mIsGetResponse : 1;    ///< `true` if response is for `VALUE_GET`, 'false` otherwise.
-        uint32_t mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
+        uint8_t      mTid : 4;              ///< Spinel transaction id.
+        bool         mIsInUse : 1;          ///< `true` if this entry is in use, `false` otherwise.
+        ResponseType mType : 2;             ///< Response type.
+        uint32_t     mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
@@ -212,19 +219,21 @@ protected:
 
     otError SendQueuedResponses(void);
     bool    IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
-    otError PrepareResponse(uint8_t aHeader, bool aIsLastStatus, bool aIsGetResponse, unsigned int aPropKeyOrStatus);
+    otError EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus);
+
     otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
     {
-        return PrepareResponse(aHeader, false /* aIsLastStatus */, true /* aIsGetResponse*/, aPropKey);
+        return EnqueueResponse(aHeader, kResponseTypeGet, aPropKey);
     }
     otError PrepareSetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
     {
-        return PrepareResponse(aHeader, false /* aIsLastStatus */, false /* aIsGetResponse*/, aPropKey);
+        return EnqueueResponse(aHeader, kResponseTypeSet, aPropKey);
     }
     otError PrepareLastStatusResponse(uint8_t aHeader, spinel_status_t aStatus)
     {
-        return PrepareResponse(aHeader, true /*aIsLastStatus */, false, aStatus);
+        return EnqueueResponse(aHeader, kResponseTypeLastStatus, aStatus);
     }
+
     static uint8_t GetWrappedResponseQueueIndex(uint8_t aPosition);
 
     static void UpdateChangedProps(Tasklet &aTasklet);

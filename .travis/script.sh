@@ -396,6 +396,101 @@ python --version || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 
+    # SAMR21 build failure (#2967):
+    #
+    # third_party/microchip/asf/sam0/utils/compiler.h:140:0: \
+    #   error: "__always_inline" redefined [-Werror] \
+    #   #  define __always_inline             __attribute__((__always_inline__))
+    #
+    # git checkout -- . || die
+    # git clean -xfd || die
+    # wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
+    # unzip -qq asf-standalone-archive-3.36.0.58.zip || die
+    # mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    # ./bootstrap || die
+    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    # arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    # arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
+}
+
+[ $BUILD_TARGET != arm-gcc-8 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-8-2018-q4-major/bin:$PATH || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/cc2538/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc2538/bin/ot-ncp-mtd || die
+
+    # DA15000 build failure:
+    #
+    # third_party/dialog/DialogSDK/bsp/peripherals/src/hw_aes_hash.c:399:99: \
+    #    error: bitwise comparison always evaluates to false [-Werror=tautological-compare]
+    #
+    # git checkout -- . || die
+    # git clean -xfd || die
+    # ./bootstrap || die
+    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
+    # arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
+    # arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 FULL_LOGS=1 JOINER=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1 make -f examples/Makefile-nrf52840 || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-cc2650 || die
+    arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2652 || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
+
+    # SAMR21 build failure (#2967):
+    #
+    # third_party/microchip/asf/sam0/utils/compiler.h:140:0: \
+    #   error: "__always_inline" redefined [-Werror] \
+    #   #  define __always_inline             __attribute__((__always_inline__))
+    #
     # git checkout -- . || die
     # git clean -xfd || die
     # wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die

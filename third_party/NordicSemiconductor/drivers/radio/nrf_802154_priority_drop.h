@@ -49,20 +49,21 @@ extern "C" {
 void nrf_802154_priority_drop_init(void);
 
 /**
- * @brief Request discarding of the timeslot.
+ * @brief Request stop of the high frequency clock.
  *
- * @note This function should be called through this module to prevent calling it from arbiter context.
+ * @note This function should be called through this module to prevent calling it from the arbiter
+ *       context.
  */
-void nrf_802154_priority_drop_timeslot_exit(void);
+void nrf_802154_priority_drop_hfclk_stop(void);
 
 /**
- * @brief Terminate requesting of timeslot discarding.
+ * @brief Terminate requesting of high frequency clock stop.
  *
- * Function used to to terminate timeslot exit procedure requested by previous call to
- * @rev nrf_802154_priority_drop_timeslot_exit. Timeslot discarding is terminated only if it has
+ * Function used to to terminate HFClk stop procedure requested by previous call to
+ * @rev nrf_802154_priority_drop_hfclk_stop. The HFClk stop procedure is terminated only if it has
  * not been started.
  */
-void nrf_802154_priority_drop_timeslot_exit_terminate(void);
+void nrf_802154_priority_drop_hfclk_stop_terminate(void);
 
 /**
  *@}
@@ -73,4 +74,3 @@ void nrf_802154_priority_drop_timeslot_exit_terminate(void);
 #endif
 
 #endif // NRF_802154_PRIORITY_DROP_H__
-

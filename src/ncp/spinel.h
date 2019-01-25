@@ -578,7 +578,7 @@ enum
      *   `D` : Value (encoding depends on the property)
      *
      * This command can be sent by the NCP in response to the
-     `CMD_PROP_VALUE_REMOVE` command, or it  can be sent by the NCP in an
+     * `CMD_PROP_VALUE_REMOVE` command, or it can be sent by the NCP in an
      * unsolicited fashion to notify the host of various state changes
      * asynchronously.
      *
@@ -818,20 +818,207 @@ enum
  */
 typedef enum
 {
-    SPINEL_PROP_LAST_STATUS      = 0,  ///< status [i]
-    SPINEL_PROP_PROTOCOL_VERSION = 1,  ///< major, minor [i,i]
-    SPINEL_PROP_NCP_VERSION      = 2,  ///< version string [U]
-    SPINEL_PROP_INTERFACE_TYPE   = 3,  ///< [i]
-    SPINEL_PROP_VENDOR_ID        = 4,  ///< [i]
-    SPINEL_PROP_CAPS             = 5,  ///< capability list [A(i)]
-    SPINEL_PROP_INTERFACE_COUNT  = 6,  ///< Interface count [C]
-    SPINEL_PROP_POWER_STATE      = 7,  ///< PowerState [C] (deprecated, use `MCU_POWER_STATE` instead).
-    SPINEL_PROP_HWADDR           = 8,  ///< PermEUI64 [E]
-    SPINEL_PROP_LOCK             = 9,  ///< PropLock [b]
-    SPINEL_PROP_HBO_MEM_MAX      = 10, ///< Max offload mem [S]
-    SPINEL_PROP_HBO_BLOCK_MAX    = 11, ///< Max offload block [S]
-    SPINEL_PROP_HOST_POWER_STATE = 12, ///< Host MCU power state [C]
-    SPINEL_PROP_MCU_POWER_STATE  = 13, ///< NCP's MCU power state [c]
+    /// Last Operation Status
+    /** Format: `i` - Read-only
+     *
+     * Describes the status of the last operation. Encoded as a packed
+     * unsigned integer (see `SPINEL_STATUS_*` for list of values).
+     *
+     * This property is emitted often to indicate the result status of
+     * pretty much any Host-to-NCP operation.
+     *
+     * It is emitted automatically at NCP startup with a value indicating
+     * the reset reason. It is also emitted asynchronously on an error (
+     * e.g., NCP running out of buffer).
+     *
+     */
+    SPINEL_PROP_LAST_STATUS = 0,
+
+    /// Protocol Version
+    /** Format: `ii` - Read-only
+     *
+     * Describes the protocol version information. This property contains
+     * two fields, each encoded as a packed unsigned integer:
+     *   `i`: Major Version Number
+     *   `i`: Minor Version Number
+     *
+     * The version number is defined by `SPINEL_PROTOCOL_VERSION_THREAD_MAJOR`
+     * and `SPINEL_PROTOCOL_VERSION_THREAD_MINOR`.
+     *
+     * This specification describes major version 4, minor version 3.
+     *
+     */
+    SPINEL_PROP_PROTOCOL_VERSION = 1,
+
+    /// NCP Version
+    /** Format: `U` - Read-only
+     *
+     * Contains a string which describes the firmware currently running on
+     * the NCP. Encoded as a zero-terminated UTF-8 string.
+     *
+     */
+    SPINEL_PROP_NCP_VERSION = 2,
+
+    /// NCP Network Protocol Type
+    /** Format: 'i' - Read-only
+     *
+     * This value identifies what the network protocol for this NCP.
+     * The valid protocol type values are defined by enumeration
+     * `SPINEL_PROTOCOL_TYPE_*`:
+     *
+     *   `SPINEL_PROTOCOL_TYPE_BOOTLOADER` = 0
+     *   `SPINEL_PROTOCOL_TYPE_ZIGBEE_IP`  = 2,
+     *   `SPINEL_PROTOCOL_TYPE_THREAD`     = 3,
+     *
+     * OpenThread NCP supports only `SPINEL_PROTOCOL_TYPE_THREAD`
+     *
+     */
+    SPINEL_PROP_INTERFACE_TYPE = 3,
+
+    /// NCP Vendor ID
+    /** Format: 'i` - Read-only
+     *
+     * Vendor ID. Zero for unknown.
+     *
+     */
+    SPINEL_PROP_VENDOR_ID = 4,
+
+    /// NCP Capability List
+    /** Format: 'A(i)` - Read-only
+     *
+     * Describes the supported capabilities of this NCP. Encoded as a list of
+     * packed unsigned integers.
+     *
+     * The capability values are specified by SPINEL_CAP_* enumeration.
+     *
+     */
+    SPINEL_PROP_CAPS = 5,
+
+    /// NCP Interface Count
+    /** Format: 'C` - Read-only
+     *
+     * Provides number of interfaces.
+     *
+     * Currently always reads as 1.
+     *
+     */
+    SPINEL_PROP_INTERFACE_COUNT = 6,
+
+    SPINEL_PROP_POWER_STATE = 7, ///< PowerState [C] (deprecated, use `MCU_POWER_STATE` instead).
+
+    /// NCP Hardware Address
+    /** Format: 'E` - Read-only
+     *
+     * The static EUI64 address of the device, used as a serial number.
+     *
+     */
+    SPINEL_PROP_HWADDR = 8,
+
+    SPINEL_PROP_LOCK          = 9,  ///< PropLock [b] (not supported)
+    SPINEL_PROP_HBO_MEM_MAX   = 10, ///< Max offload mem [S] (not supported)
+    SPINEL_PROP_HBO_BLOCK_MAX = 11, ///< Max offload block [S] (not supported)
+
+    /// Host Power State
+    /** Format: 'C`
+     *
+     * Describes the current power state of the host. This property is used
+     * by the host to inform the NCP when it has changed power states. The
+     * NCP can then use this state to determine which properties need
+     * asynchronous updates. Enumeration `spinel_host_power_state_t` defines
+     * the valid values (`SPINEL_HOST_POWER_STATE_*`):
+     *
+     *   `HOST_POWER_STATE_OFFLINE`: Host is physically powered off and
+     *   cannot be woken by the NCP. All asynchronous commands are
+     *   squelched.
+     *
+     *   `HOST_POWER_STATE_DEEP_SLEEP`: The host is in a low power state
+     *   where it can be woken by the NCP but will potentially require more
+     *   than two seconds to become fully responsive. The NCP MUST
+     *   avoid sending unnecessary property updates, such as child table
+     *   updates or non-critical messages on the debug stream. If the NCP
+     *   needs to wake the host for traffic, the NCP MUST first take
+     *   action to wake the host. Once the NCP signals to the host that it
+     *   should wake up, the NCP MUST wait for some activity from the
+     *   host (indicating that it is fully awake) before sending frames.
+     *
+     *   `HOST_POWER_STATE_RESERVED`:  This value MUST NOT be set by the host. If
+     *   received by the NCP, the NCP SHOULD consider this as a synonym
+     *   of `HOST_POWER_STATE_DEEP_SLEEP`.
+     *
+     *   `HOST_POWER_STATE_LOW_POWER`: The host is in a low power state
+     *   where it can be immediately woken by the NCP. The NCP SHOULD
+     *   avoid sending unnecessary property updates, such as child table
+     *   updates or non-critical messages on the debug stream.
+     *
+     *   `HOST_POWER_STATE_ONLINE`: The host is awake and responsive. No
+     *   special filtering is performed by the NCP on asynchronous updates.
+     *
+     *   All other values are RESERVED. They MUST NOT be set by the
+     *   host. If received by the NCP, the NCP SHOULD consider the value as
+     *   a synonym of `HOST_POWER_STATE_LOW_POWER`.
+     *
+     * After setting this power state, any further commands from the host to
+     * the NCP will cause `HOST_POWER_STATE` to automatically revert to
+     * `HOST_POWER_STATE_ONLINE`.
+     *
+     * When the host is entering a low-power state, it should wait for the
+     * response from the NCP acknowledging the command (with `CMD_VALUE_IS`).
+     * Once that acknowledgment is received the host may enter the low-power
+     * state.
+     *
+     * If the NCP has the `CAP_UNSOL_UPDATE_FILTER` capability, any unsolicited
+     * property updates masked by `PROP_UNSOL_UPDATE_FILTER` should be honored
+     * while the host indicates it is in a low-power state. After resuming to the
+     * `HOST_POWER_STATE_ONLINE` state, the value of `PROP_UNSOL_UPDATE_FILTER`
+     * MUST be unchanged from the value assigned prior to the host indicating
+     * it was entering a low-power state.
+     *
+     */
+    SPINEL_PROP_HOST_POWER_STATE = 12,
+
+    /// NCP's MCU Power State
+    /** Format: 'C`
+     *  Required capability: CAP_MCU_POWER_SAVE
+     *
+     * This property specifies the desired power state of NCP's micro-controller
+     * (MCU) when the underlying platform's operating system enters idle mode (i.e.,
+     * all active tasks/events are processed and the MCU can potentially enter a
+     * energy-saving power state).
+     *
+     * The power state primarily determines how the host should interact with the NCP
+     * and whether the host needs an external trigger (a "poke") to NCP before it can
+     * communicate with the NCP or not. After a reset, the MCU power state MUST be
+     * SPINEL_MCU_POWER_STATE_ON.
+     *
+     * Enumeration `spinel_mcu_power_state_t` defines the valid values
+     * (`SPINEL_MCU_POWER_STATE_*` constants):
+     *
+     *   `SPINEL_MCU_POWER_STATE_ON`: NCP's MCU stays on and active all the time.
+     *   When the NCP's desired power state is set to this value, host can send
+     *   messages to NCP without requiring any "poke" or external triggers. MCU is
+     *   expected to stay on and active. Note that the `ON` power state only
+     *   determines the MCU's power mode and is not related to radio's state.
+     *
+     *   `SPINEL_MCU_POWER_STATE_LOW_POWER`: NCP's MCU can enter low-power
+     *   (energy-saving) state. When the NCP's desired power state is set to
+     *   `LOW_POWER`, host is expected to "poke" the NCP (e.g., an external trigger
+     *   like an interrupt) before it can communicate with the NCP (send a message
+     *   to the NCP). The "poke" mechanism is determined by the platform code (based
+     *   on NCP's interface to the host).
+     *   While power state is set to `LOW_POWER`, NCP can still (at any time) send
+     *   messages to host. Note that receiving a message from the NCP does NOT
+     *   indicate that the NCP's power state has changed, i.e., host is expected to
+     *   continue to "poke" NCP when it wants to talk to the NCP until the power
+     *   state is explicitly changed (by setting this property to `ON`).
+     *   Note that the `LOW_POWER` power state only determines the MCU's power mode
+     *   and is not related to radio's state.
+     *
+     *   `SPINEL_MCU_POWER_STATE_OFF`: NCP is fully powered off.
+     *   An NCP hardware reset (via a RESET pin) is required to bring the NCP back
+     *   to `SPINEL_MCU_POWER_STATE_ON`. RAM is not retained after reset.
+     *
+     */
+    SPINEL_PROP_MCU_POWER_STATE = 13,
 
     SPINEL_PROP_BASE_EXT__BEGIN = 0x1000,
 
@@ -966,6 +1153,7 @@ typedef enum
      * Hosts SHOULD NOT add properties to this list which are not
      * present in `PROP_UNSOL_UPDATE_LIST`. If such properties are added,
      * the NCP ignores the unsupported properties.
+     *
      */
     SPINEL_PROP_UNSOL_UPDATE_FILTER = SPINEL_PROP_BASE_EXT__BEGIN + 8,
 
@@ -1151,33 +1339,181 @@ typedef enum
 
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
-    SPINEL_PROP_MAC__BEGIN             = 0x30,
-    SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0,  ///< [C]
-    SPINEL_PROP_MAC_SCAN_MASK          = SPINEL_PROP_MAC__BEGIN + 1,  ///< [A(C)]
-    SPINEL_PROP_MAC_SCAN_PERIOD        = SPINEL_PROP_MAC__BEGIN + 2,  ///< ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON        = SPINEL_PROP_MAC__BEGIN + 3,  ///< chan,rssi,mac_data,net_data [CcdD]
-    SPINEL_PROP_MAC_15_4_LADDR         = SPINEL_PROP_MAC__BEGIN + 4,  ///< [E]
-    SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5,  ///< [S]
-    SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6,  ///< [S]
-    SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7,  ///< [b]
-    SPINEL_PROP_MAC_PROMISCUOUS_MODE   = SPINEL_PROP_MAC__BEGIN + 8,  ///< [C]
-    SPINEL_PROP_MAC_ENERGY_SCAN_RESULT = SPINEL_PROP_MAC__BEGIN + 9,  ///< chan,maxRssi [Cc]
-    SPINEL_PROP_MAC_DATA_POLL_PERIOD   = SPINEL_PROP_MAC__BEGIN + 10, ///< pollPeriod (in ms) [L]
-    SPINEL_PROP_MAC__END               = 0x40,
+    SPINEL_PROP_MAC__BEGIN = 0x30,
+
+    /// MAC Scan State
+    /** Format: `C`
+     *
+     * Possible values are from enumeration `spinel_scan_state_t`.
+     *
+     *   SCAN_STATE_IDLE
+     *   SCAN_STATE_BEACON
+     *   SCAN_STATE_ENERGY
+     *   SCAN_STATE_DISCOVER
+     *
+     * Set to `SCAN_STATE_BEACON` to start an active scan.
+     * Beacons will be emitted from `PROP_MAC_SCAN_BEACON`.
+     *
+     * Set to `SCAN_STATE_ENERGY` to start an energy scan.
+     * Channel energy result will be reported by emissions
+     * of `PROP_MAC_ENERGY_SCAN_RESULT` (per channel).
+     *
+     * Set to `SCAN_STATE_DISOVER` to start a Thread MLE discovery
+     * scan operation. Discovery scan result will be emitted from
+     * `PROP_MAC_SCAN_BEACON`.
+     *
+     * Value switches to `SCAN_STATE_IDLE` when scan is complete.
+     *
+     */
+    SPINEL_PROP_MAC_SCAN_STATE = SPINEL_PROP_MAC__BEGIN + 0,
+
+    /// MAC Scan Channel Mask
+    /** Format: `A(C)`
+     *
+     * List of channels to scan.
+     *
+     */
+    SPINEL_PROP_MAC_SCAN_MASK = SPINEL_PROP_MAC__BEGIN + 1,
+
+    /// MAC Scan Channel Period
+    /** Format: `S`
+     *  Unit: milliseconds per channel
+     *
+     */
+    SPINEL_PROP_MAC_SCAN_PERIOD = SPINEL_PROP_MAC__BEGIN + 2,
+
+    /// MAC Scan Beacon
+    /** Format `Cct(ESSc)t(iCUdd)` - Asynchronous event only
+     *
+     * Scan beacons have two embedded structures which contain
+     * information about the MAC layer and the NET layer. Their
+     * format depends on the MAC and NET layer currently in use.
+     * The format below is for an 802.15.4 MAC with Thread:
+     *
+     *  `C`: Channel
+     *  `c`: RSSI of the beacon
+     *  `t`: MAC layer properties (802.15.4 layer)
+     *    `E`: Long address
+     *    `S`: Short address
+     *    `S`: PAN-ID
+     *    `c`: LQI
+     *  NET layer properties
+     *    `i`: Protocol Number (SPINEL_PROTOCOL_TYPE_* values)
+     *    `C`: Flags (SPINEL_BEACON_THREAD_FLAG_* values)
+     *    `U`: Network Name
+     *    `d`: XPANID
+     *    `d`: Steering data
+     *
+     * Extra parameters may be added to each of the structures
+     * in the future, so care should be taken to read the length
+     * that prepends each structure.
+     *
+     */
+    SPINEL_PROP_MAC_SCAN_BEACON = SPINEL_PROP_MAC__BEGIN + 3,
+
+    /// MAC Long Address
+    /** Format: `E`
+     *
+     * The 802.15.4 long address of this node.
+     *
+     */
+    SPINEL_PROP_MAC_15_4_LADDR = SPINEL_PROP_MAC__BEGIN + 4,
+
+    /// MAC Short Address
+    /** Format: `S`
+     *
+     * The 802.15.4 short address of this node.
+     *
+     */
+    SPINEL_PROP_MAC_15_4_SADDR = SPINEL_PROP_MAC__BEGIN + 5,
+
+    /// MAC PAN ID
+    /** Format: `S`
+     *
+     * The 802.15.4 PANID this node is associated with.
+     *
+     */
+    SPINEL_PROP_MAC_15_4_PANID = SPINEL_PROP_MAC__BEGIN + 6,
+
+    /// MAC Stream Raw Enabled
+    /** Format: `b`
+     *
+     * Set to true to enable raw MAC frames to be emitted from
+     * `PROP_STREAM_RAW`.
+     *
+     */
+    SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7,
+
+    /// MAC Promiscuous Mode
+    /** Format: `C`
+     *
+     * Possible values are from enumeration
+     * `SPINEL_MAC_PROMISCUOUS_MODE_*`:
+     *
+     *   `SPINEL_MAC_PROMISCUOUS_MODE_OFF`
+     *        Normal MAC filtering is in place.
+     *
+     *   `SPINEL_MAC_PROMISCUOUS_MODE_NETWORK`
+     *        All MAC packets matching network are passed up
+     *        the stack.
+     *
+     *   `SPINEL_MAC_PROMISCUOUS_MODE_FULL`
+     *        All decoded MAC packets are passed up the stack.
+     *
+     */
+    SPINEL_PROP_MAC_PROMISCUOUS_MODE = SPINEL_PROP_MAC__BEGIN + 8,
+
+    /// MAC Energy Scan Result
+    /** Format: `Cc` - Asynchronous event only
+     *
+     * This property is emitted during energy scan operation
+     * per scanned channel with following format:
+     *
+     *   `C`: Channel
+     *   `c`: RSSI (in dBm)
+     *
+     */
+    SPINEL_PROP_MAC_ENERGY_SCAN_RESULT = SPINEL_PROP_MAC__BEGIN + 9,
+
+    /// MAC Data Poll Period
+    /** Format: `L`
+     *  Unit: millisecond
+     * The (user-specified) data poll (802.15.4 MAC Data Request) period
+     * in milliseconds. Value zero means there is no user-specified
+     * poll period, and the network stack determines the maximum period
+     * based on the MLE Child Timeout.
+     *
+     * If the value is non-zero, it specifies the maximum period between
+     * data poll transmissions. Note that the network stack may send data
+     * request transmissions more frequently when expecting a control-message
+     * (e.g., when waiting for an MLE Child ID Response).
+     *
+     */
+    SPINEL_PROP_MAC_DATA_POLL_PERIOD = SPINEL_PROP_MAC__BEGIN + 10,
+
+    SPINEL_PROP_MAC__END = 0x40,
 
     SPINEL_PROP_MAC_EXT__BEGIN = 0x1300,
+
     /// MAC Whitelist
     /** Format: `A(t(Ec))`
+     * Required capability: `CAP_MAC_WHITELIST`
      *
      * Structure Parameters:
      *
-     * * `E`: EUI64 address of node
-     * * `c`: Optional fixed RSSI. 127 means not set.
+     *  `E`: EUI64 address of node
+     *  `c`: Optional RSSI-override value. The value 127 indicates
+     *       that the RSSI-override feature is not enabled for this
+     *       address. If this value is omitted when setting or
+     *       inserting, it is assumed to be 127. This parameter is
+     *       ignored when removing.
      */
     SPINEL_PROP_MAC_WHITELIST = SPINEL_PROP_MAC_EXT__BEGIN + 0,
 
     /// MAC Whitelist Enabled Flag
     /** Format: `b`
+     * Required capability: `CAP_MAC_WHITELIST`
+     *
      */
     SPINEL_PROP_MAC_WHITELIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 1,
 
@@ -1190,40 +1526,55 @@ typedef enum
 
     /// MAC Source Match Enabled Flag
     /** Format: `b`
+     * Required Capability: SPINEL_CAP_MAC_RAW or SPINEL_CAP_CONFIG_RADIO
+     *
+     * Set to true to enable radio source matching or false to disable it.
+     * The source match functionality is used by radios when generating
+     * ACKs. The short and extended address lists are used for setting
+     * the Frame Pending bit in the ACKs.
+     *
      */
     SPINEL_PROP_MAC_SRC_MATCH_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 3,
 
     /// MAC Source Match Short Address List
     /** Format: `A(S)`
+     * Required Capability: SPINEL_CAP_MAC_RAW or SPINEL_CAP_CONFIG_RADIO
+     *
      */
     SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES = SPINEL_PROP_MAC_EXT__BEGIN + 4,
 
     /// MAC Source Match Extended Address List
     /** Format: `A(E)`
+     *  Required Capability: SPINEL_CAP_MAC_RAW or SPINEL_CAP_CONFIG_RADIO
+     *
      */
     SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES = SPINEL_PROP_MAC_EXT__BEGIN + 5,
 
     /// MAC Blacklist
     /** Format: `A(t(E))`
+     * Required capability: `CAP_MAC_WHITELIST`
      *
      * Structure Parameters:
      *
-     * * `E`: EUI64 address of node
+     *  `E`: EUI64 address of node
+     *
      */
     SPINEL_PROP_MAC_BLACKLIST = SPINEL_PROP_MAC_EXT__BEGIN + 6,
 
     /// MAC Blacklist Enabled Flag
     /** Format: `b`
+     *  Required capability: `CAP_MAC_WHITELIST`
      */
     SPINEL_PROP_MAC_BLACKLIST_ENABLED = SPINEL_PROP_MAC_EXT__BEGIN + 7,
 
     /// MAC Received Signal Strength Filter
     /** Format: `A(t(Ec))`
+     * Required capability: `CAP_MAC_WHITELIST`
      *
      * Structure Parameters:
      *
      * * `E`: Optional EUI64 address of node. Set default RSS if not included.
-     * * `c`: Fixed RSS. OT_MAC_FILTER_FIXED_RSS_OVERRIDE_DISABLED(127) means not set.
+     * * `c`: Fixed RSS. 127 means not set.
      */
     SPINEL_PROP_MAC_FIXED_RSS = SPINEL_PROP_MAC_EXT__BEGIN + 8,
 
@@ -1239,16 +1590,79 @@ typedef enum
 
     SPINEL_PROP_MAC_EXT__END = 0x1400,
 
-    SPINEL_PROP_NET__BEGIN               = 0x40,
-    SPINEL_PROP_NET_SAVED                = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
-    SPINEL_PROP_NET_IF_UP                = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
-    SPINEL_PROP_NET_STACK_UP             = SPINEL_PROP_NET__BEGIN + 2, ///< [b]
-    SPINEL_PROP_NET_ROLE                 = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
-    SPINEL_PROP_NET_NETWORK_NAME         = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
-    SPINEL_PROP_NET_XPANID               = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
-    SPINEL_PROP_NET_MASTER_KEY           = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
-    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
-    SPINEL_PROP_NET_PARTITION_ID         = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
+    SPINEL_PROP_NET__BEGIN = 0x40,
+
+    /// Network Is Saved (Is Commissioned)
+    /** Format: `b` - Read only
+     *
+     * Returns true if there is a network state stored/saved.
+     *
+     */
+    SPINEL_PROP_NET_SAVED = SPINEL_PROP_NET__BEGIN + 0,
+
+    /// Network Interface Status
+    /** Format `b` - Read-write
+     *
+     * Network interface up/down status. Write true to bring
+     * interface up and false to bring interface down.
+     *
+     */
+    SPINEL_PROP_NET_IF_UP = SPINEL_PROP_NET__BEGIN + 1,
+
+    /// Thread Stack Operational Status
+    /** Format `b` - Read-write
+     *
+     * Thread stack operational status. Write true to start
+     * Thread stack and false to stop it.
+     *
+     */
+    SPINEL_PROP_NET_STACK_UP = SPINEL_PROP_NET__BEGIN + 2,
+
+    /// Thread Device Role
+    /** Format `C` - Read-write
+     *
+     * Possible values are from enumeration `spinel_net_role_t`
+     *
+     *  SPINEL_NET_ROLE_DETACHED = 0,
+     *  SPINEL_NET_ROLE_CHILD    = 1,
+     *  SPINEL_NET_ROLE_ROUTER   = 2,
+     *  SPINEL_NET_ROLE_LEADER   = 3,
+     *
+     */
+    SPINEL_PROP_NET_ROLE = SPINEL_PROP_NET__BEGIN + 3,
+
+    /// Thread Network Name
+    /** Format `U` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_NETWORK_NAME = SPINEL_PROP_NET__BEGIN + 4,
+
+    /// Thread Network Extended PAN ID
+    /** Format `D` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_XPANID = SPINEL_PROP_NET__BEGIN + 5,
+
+    /// Thread Network Master Key
+    /** Format `D` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_MASTER_KEY = SPINEL_PROP_NET__BEGIN + 6,
+
+    /// Thread Network Key Sequence Counter
+    /** Format `L` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER = SPINEL_PROP_NET__BEGIN + 7,
+
+    /// Thread Network Partition Id
+    /** Format `L` - Read-write
+     *
+     * The partition ID of the partition that this node is a
+     * member of.
+     *
+     */
+    SPINEL_PROP_NET_PARTITION_ID = SPINEL_PROP_NET__BEGIN + 8,
 
     /// Require Join Existing
     /** Format: `b`
@@ -1267,20 +1681,34 @@ typedef enum
      *
      * The behavior of this property being set to `true` when
      * `PROP_NET_STACK_UP` is already set to `true` is undefined.
+     *
      */
     SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING = SPINEL_PROP_NET__BEGIN + 9,
 
-    SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
+    /// Thread Network Key Switch Guard Time
+    /** Format `L` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME = SPINEL_PROP_NET__BEGIN + 10,
 
-    SPINEL_PROP_NET_PSKC = SPINEL_PROP_NET__BEGIN + 11, ///< [D]
+    /// Thread Network PSKc
+    /** Format `D` - Read-write
+     *
+     */
+    SPINEL_PROP_NET_PSKC = SPINEL_PROP_NET__BEGIN + 11,
 
     SPINEL_PROP_NET__END = 0x50,
 
     SPINEL_PROP_NET_EXT__BEGIN = 0x1400,
     SPINEL_PROP_NET_EXT__END   = 0x1500,
 
-    SPINEL_PROP_THREAD__BEGIN      = 0x50,
-    SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
+    SPINEL_PROP_THREAD__BEGIN = 0x50,
+
+    /// Thread Leader IPv6 Address
+    /** Format `6` - Read only
+     *
+     */
+    SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0,
 
     /// Thread Parent Info
     /** Format: `ESLccCC` - Read only
@@ -1312,14 +1740,55 @@ typedef enum
      *  `c`: Last RSSI (in dBm)
      *
      */
-    SPINEL_PROP_THREAD_CHILD_TABLE                 = SPINEL_PROP_THREAD__BEGIN + 2,
-    SPINEL_PROP_THREAD_LEADER_RID                  = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
-    SPINEL_PROP_THREAD_LEADER_WEIGHT               = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
-    SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT         = SPINEL_PROP_THREAD__BEGIN + 5, ///< [C]
-    SPINEL_PROP_THREAD_NETWORK_DATA                = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
-    SPINEL_PROP_THREAD_NETWORK_DATA_VERSION        = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
-    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA         = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
-    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION = SPINEL_PROP_THREAD__BEGIN + 9, ///< [S]
+    SPINEL_PROP_THREAD_CHILD_TABLE = SPINEL_PROP_THREAD__BEGIN + 2,
+
+    /// Thread Leader Router Id
+    /** Format `C` - Read only
+     *
+     * The router-id of the current leader.
+     *
+     */
+    SPINEL_PROP_THREAD_LEADER_RID = SPINEL_PROP_THREAD__BEGIN + 3,
+
+    /// Thread Leader Weight
+    /** Format `C` - Read only
+     *
+     * The leader weight of the current leader.
+     *
+     */
+    SPINEL_PROP_THREAD_LEADER_WEIGHT = SPINEL_PROP_THREAD__BEGIN + 4,
+
+    /// Thread Local Leader Weight
+    /** Format `C` - Read only
+     *
+     * The leader weight of this node.
+     *
+     */
+    SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT = SPINEL_PROP_THREAD__BEGIN + 5,
+
+    /// Thread Local Network Data
+    /** Format `D` - Read only
+     *
+     */
+    SPINEL_PROP_THREAD_NETWORK_DATA = SPINEL_PROP_THREAD__BEGIN + 6,
+
+    /// Thread Local Network Data Version
+    /** Format `C` - Read only
+     *
+     */
+    SPINEL_PROP_THREAD_NETWORK_DATA_VERSION = SPINEL_PROP_THREAD__BEGIN + 7,
+
+    /// Thread Local Stable Network Data
+    /** Format `D` - Read only
+     *
+     */
+    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA = SPINEL_PROP_THREAD__BEGIN + 8,
+
+    /// Thread Local Stable Network Data Version
+    /** Format `C` - Read only
+     *
+     */
+    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION = SPINEL_PROP_THREAD__BEGIN + 9,
 
     /// On-Mesh Prefixes
     /** Format: `A(t(6CbCbS))`
@@ -1362,18 +1831,35 @@ typedef enum
      */
     SPINEL_PROP_THREAD_OFF_MESH_ROUTES = SPINEL_PROP_THREAD__BEGIN + 11,
 
-    SPINEL_PROP_THREAD_ASSISTING_PORTS             = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
-    SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
+    /// Thread Assisting Ports
+    /** Format `A(S)`
+     *
+     * Array of port numbers.
+     */
+    SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12,
+
+    /// Thread Allow Local Network Data Change
+    /** Format `b` - Read-write
+     *
+     * Set to true before changing local net data. Set to false when finished.
+     * This allows changes to be aggregated into a single event.
+     *
+     */
+    SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE = SPINEL_PROP_THREAD__BEGIN + 13,
 
     /// Thread Mode
     /** Format: `C`
      *
      *  This property contains the value of the mode
      *  TLV for this node. The meaning of the bits in this
-     *  bitfield are defined by section 4.5.2 of the Thread
+     *  bit-field are defined by section 4.5.2 of the Thread
      *  specification.
+     *
+     * The values `SPINEL_THREAD_MODE_*` defines the bit-fields
+     *
      */
     SPINEL_PROP_THREAD_MODE = SPINEL_PROP_THREAD__BEGIN + 14,
+
     SPINEL_PROP_THREAD__END = 0x60,
 
     SPINEL_PROP_THREAD_EXT__BEGIN = 0x1500,
@@ -1388,21 +1874,25 @@ typedef enum
 
     /// Thread RLOC16
     /** Format: `S`
+     *
      */
     SPINEL_PROP_THREAD_RLOC16 = SPINEL_PROP_THREAD_EXT__BEGIN + 1,
 
     /// Thread Router Upgrade Threshold
     /** Format: `C`
+     *
      */
     SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 2,
 
     /// Thread Context Reuse Delay
     /** Format: `L`
+     *
      */
     SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY = SPINEL_PROP_THREAD_EXT__BEGIN + 3,
 
     /// Thread Network ID Timeout
     /** Format: `C`
+     *
      */
     SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT = SPINEL_PROP_THREAD_EXT__BEGIN + 4,
 
@@ -1410,33 +1900,54 @@ typedef enum
     /** Format: `A(C)`
      *
      * Note that some implementations may not support CMD_GET_VALUE
-     * routerids, but may support CMD_REMOVE_VALUE when the node is
+     * router ids, but may support CMD_REMOVE_VALUE when the node is
      * a leader.
+     *
      */
     SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS = SPINEL_PROP_THREAD_EXT__BEGIN + 5,
 
     /// Forward IPv6 packets that use RLOC16 addresses to HOST.
     /** Format: `b`
+     *
+     * Allow host to directly observe all IPv6 packets received by the NCP,
+     * including ones sent to the RLOC16 address.
+     *
+     * Default is false.
+     *
      */
     SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU = SPINEL_PROP_THREAD_EXT__BEGIN + 6,
 
-    /// This property indicates whether or not the `Router Role` is enabled.
+    /// Router Role Enabled
     /** Format `b`
+     *
+     * Allows host to indicate whether or not the router role is enabled.
+     * If current role is a router, setting this property to `false` starts
+     * a re-attach process as an end-device.
+     *
      */
     SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
 
     /// Thread Router Downgrade Threshold
     /** Format: `C`
+     *
      */
     SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 8,
 
     /// Thread Router Selection Jitter
     /** Format: `C`
+     *
      */
     SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
 
     /// Thread Preferred Router Id
     /** Format: `C` - Write only
+     *
+     * Specifies the preferred Router Id. Upon becoming a router/leader the node
+     * attempts to use this Router Id. If the preferred Router Id is not set or
+     * if it can not be used, a randomly generated router id is picked. This
+     * property can be set only when the device role is either detached or
+     * disabled.
+     *
      */
     SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
@@ -1461,20 +1972,27 @@ typedef enum
 
     /// Thread Max Child Count
     /** Format: `C`
+     *
+     * Specifies the maximum number of children currently allowed.
+     * This parameter can only be set when Thread protocol operation
+     * has been stopped.
+     *
      */
     SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
-    /// Leader network data
+    /// Leader Network Data
     /** Format: `D` - Read only
+     *
      */
     SPINEL_PROP_THREAD_LEADER_NETWORK_DATA = SPINEL_PROP_THREAD_EXT__BEGIN + 13,
 
-    /// Stable leader network data
+    /// Stable Leader Network Data
     /** Format: `D` - Read only
+     *
      */
     SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA = SPINEL_PROP_THREAD_EXT__BEGIN + 14,
 
-    /// Thread joiner data
+    /// Thread Joiner Data
     /** Format `A(T(ULE))`
      *  PSKd, joiner timeout, eui64 (optional)
      *
@@ -1483,7 +2001,7 @@ typedef enum
      */
     SPINEL_PROP_THREAD_JOINERS = SPINEL_PROP_THREAD_EXT__BEGIN + 15,
 
-    /// Thread commissioner enable
+    /// Thread Commissioner Enable
     /** Format `b`
      *
      * Default value is `false`.
@@ -1517,6 +2035,7 @@ typedef enum
      * This property defines the Joiner Flag value in the Discovery Request TLV.
      *
      * Default value is `false`.
+     *
      */
     SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG = SPINEL_PROP_THREAD_EXT__BEGIN + 19,
 
@@ -1524,6 +2043,7 @@ typedef enum
     /** Format `b`
      *
      * Default value is `false`
+     *
      */
     SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING = SPINEL_PROP_THREAD_EXT__BEGIN + 20,
 
@@ -1540,11 +2060,15 @@ typedef enum
      *
      * Required capability: SPINEL_CAP_OOB_STEERING_DATA.
      *
-     * Writing to this property allows to set/update the MLE Discovery Response steering data out of band.
+     * Writing to this property allows to set/update the MLE
+     * Discovery Response steering data out of band.
      *
-     *  - All zeros to clear the steering data (indicating that there is no steering data).
-     *  - All 0xFFs to set steering data/bloom filter to accept/allow all.
-     *  - A specific EUI64 which is then added to current steering data/bloom filter.
+     *  - All zeros to clear the steering data (indicating that
+     *    there is no steering data).
+     *  - All 0xFFs to set steering data/bloom filter to
+     *    accept/allow all.
+     *  - A specific EUI64 which is then added to current steering
+     *    data/bloom filter.
      *
      */
     SPINEL_PROP_THREAD_STEERING_DATA = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
@@ -1835,12 +2359,32 @@ typedef enum
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
-    SPINEL_PROP_IPV6__BEGIN    = 0x60,
-    SPINEL_PROP_IPV6_LL_ADDR   = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
-    SPINEL_PROP_IPV6_ML_ADDR   = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
-    SPINEL_PROP_IPV6_ML_PREFIX = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
+    SPINEL_PROP_IPV6__BEGIN = 0x60,
 
-    /// IPv6 Address Table
+    /// Link-Local IPv6 Address
+    /** Format: `6` - Read only
+     *
+     */
+    SPINEL_PROP_IPV6_LL_ADDR = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
+
+    /// Mesh Local IPv6 Address
+    /** Format: `6` - Read only
+     *
+     */
+    SPINEL_PROP_IPV6_ML_ADDR = SPINEL_PROP_IPV6__BEGIN + 1,
+
+    /// Mesh Local Prefix
+    /** Format: `6C` - Read-write
+     *
+     * Provides Mesh Local Prefix
+     *
+     *   `6`: Mesh local prefix
+     *   `C` : Prefix length (64 bit for Thread).
+     *
+     */
+    SPINEL_PROP_IPV6_ML_PREFIX = SPINEL_PROP_IPV6__BEGIN + 2,
+
+    /// IPv6 (Unicast) Address Table
     /** Format: `A(t(6CLLC))`
      *
      * This property provides all unicast addresses.
@@ -1851,13 +2395,12 @@ typedef enum
      *  `C`: Network Prefix Length
      *  `L`: Valid Lifetime
      *  `L`: Preferred Lifetime
-     *  `C`: Flags
      *
      */
     SPINEL_PROP_IPV6_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 3,
 
-    SPINEL_PROP_IPV6_ROUTE_TABLE =
-        SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(t(6CCC))]
+    /// IPv6 Route Table - Deprecated
+    SPINEL_PROP_IPV6_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 4,
 
     /// IPv6 ICMP Ping Offload
     /** Format: `b`
@@ -1867,9 +2410,15 @@ typedef enum
      *
      * Default value is `false`.
      */
-    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5, ///< [b]
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5,
 
-    SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 6, ///< [A(t(6))]
+    /// IPv6 Multicast Address Table
+    /** Format: `A(t(6))`
+     *
+     * This property provides all multicast addresses.
+     *
+     */
+    SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE = SPINEL_PROP_IPV6__BEGIN + 6,
 
     /// IPv6 ICMP Ping Offload
     /** Format: `C`
@@ -1878,9 +2427,16 @@ typedef enum
      * turned on, ping request ICMP packets will not be passed to the host.
      *
      * This property allows enabling responses sent to unicast only, multicast
-     * only, or both.
+     * only, or both. The valid value are defined by enumeration
+     * `spinel_ipv6_icmp_ping_offload_mode_t`.
+     *
+     *   SPINEL_IPV6_ICMP_PING_OFFLOAD_DISABLED       = 0
+     *   SPINEL_IPV6_ICMP_PING_OFFLOAD_UNICAST_ONLY   = 1
+     *   SPINEL_IPV6_ICMP_PING_OFFLOAD_MULTICAST_ONLY = 2
+     *   SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL            = 3
      *
      * Default value is `NET_IPV6_ICMP_PING_OFFLOAD_DISABLED`.
+     *
      */
     SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE = SPINEL_PROP_IPV6__BEGIN + 7, ///< [b]
 
@@ -1889,11 +2445,141 @@ typedef enum
     SPINEL_PROP_IPV6_EXT__BEGIN = 0x1600,
     SPINEL_PROP_IPV6_EXT__END   = 0x1700,
 
-    SPINEL_PROP_STREAM__BEGIN       = 0x70,
-    SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0, ///< [U]
-    SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, ///< [dD]
-    SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
-    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
+    SPINEL_PROP_STREAM__BEGIN = 0x70,
+
+    /// Debug Stream
+    /** Format: `U` (stream, read only)
+     *
+     * This property is a streaming property, meaning that you cannot explicitly
+     * fetch the value of this property. The stream provides human-readable debugging
+     * output which may be displayed in the host logs.
+     *
+     * The location of newline characters is not assumed by the host: it is
+     * the NCP's responsibility to insert newline characters where needed,
+     * just like with any other text stream.
+     *
+     * To receive the debugging stream, you wait for `CMD_PROP_VALUE_IS`
+     * commands for this property from the NCP.
+     *
+     */
+    SPINEL_PROP_STREAM_DEBUG = SPINEL_PROP_STREAM__BEGIN + 0,
+
+    /// Raw Stream
+    /** Format: `dD` (stream, read only)
+     *  Required Capability: SPINEL_CAP_MAC_RAW or SPINEL_CAP_CONFIG_RADIO
+     *
+     * This stream provides the capability of sending and receiving raw 15.4 frames
+     * to and from the radio. The exact format of the frame metadata and data is
+     * dependent on the MAC and PHY being used.
+     *
+     * This property is a streaming property, meaning that you cannot explicitly
+     * fetch the value of this property. To receive traffic, you wait for
+     * `CMD_PROP_VALUE_IS` commands with this property id from the NCP.
+     *
+     * The general format of this property is:
+     *
+     *    `d` : frame data
+     *    `D` : frame meta data
+     *
+     * The frame meta data is optional. Frame metadata MAY be empty or partially
+     * specified. Partially specified metadata MUST be accepted. Default values
+     * are used for all unspecified fields.
+     *
+     * The frame metadata field consists of the following fields:
+     *
+     *   `c` : Received Signal Strength (RSSI) in dBm - default is -128
+     *   `c` : Noise floor in dBm - default is -128
+     *   `S` : Flags (see below).
+     *   `d` : PHY-specific data/struct
+     *   `d` : Vendor-specific data/struct
+     *
+     * Flags fields are defined by the following enumeration bitfields:
+     *
+     *   SPINEL_MD_FLAG_TX       = 0x0001 :  Packet was transmitted, not received.
+     *   SPINEL_MD_FLAG_BAD_FCS  = 0x0004 :  Packet was received with bad FCS
+     *   SPINEL_MD_FLAG_DUPE     = 0x0008 :  Packet seems to be a duplicate
+     *   SPINEL_MD_FLAG_RESERVED = 0xFFF2 :  Flags reserved for future use.
+     *
+     * The format of PHY-specific data for a Thread device contains the following
+     * optional fields:
+
+     *   `C` : 802.15.4 channel (Receive channel)
+     *   `C` : IEEE 802.15.4 LQI
+     *   `L` : The timestamp milliseconds
+     *   `S` : The timestamp microseconds, offset to mMsec
+     *
+     * Frames written to this stream with `CMD_PROP_VALUE_SET` will be sent out
+     * over the radio. This allows the caller to use the radio directly.
+     *
+     * The frame meta data for the `CMD_PROP_VALUE_SET` contains the following
+     * optional fields.  Default values are used for all unspecified fields.
+     *
+     *  `C` : Channel (for frame tx)
+     *  `C` : Maximum number of backoffs attempts before declaring CCA failure
+     *        (use Thread stack default if not specified)
+     *  `C` : Maximum number of retries allowed after a transmission failure
+     *        (use Thread stack default if not specified)
+     *  `b` : Set to true to enable CSMA-CA for this packet, false otherwise.
+     *        (default true).
+     *
+     */
+    SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
+
+    /// (IPv6) Network Stream
+    /** Format: `dD` (stream, read only)
+     *
+     * This stream provides the capability of sending and receiving (IPv6)
+     * data packets to and from the currently attached network. The packets
+     * are sent or received securely (encryption and authentication).
+     *
+     * This property is a streaming property, meaning that you cannot explicitly
+     * fetch the value of this property. To receive traffic, you wait for
+     * `CMD_PROP_VALUE_IS` commands with this property id from the NCP.
+     *
+     * To send network packets, you call `CMD_PROP_VALUE_SET` on this property with
+     * the value of the packet.
+     *
+     * The general format of this property is:
+     *
+     *    `d` : packet data
+     *    `D` : packet meta data
+     *
+     * The packet metadata is optional. Packet meta data MAY be empty or partially
+     * specified. Partially specified metadata MUST be accepted. Default values
+     * are used for all unspecified fields.
+     *
+     * For OpenThread the meta data is currently empty.
+     *
+     */
+    SPINEL_PROP_STREAM_NET = SPINEL_PROP_STREAM__BEGIN + 2,
+
+    /// (IPv6) Network Stream Insecure
+    /** Format: `dD` (stream, read only)
+     *
+     * This stream provides the capability of sending and receiving unencrypted
+     * and unauthenticated data packets to and from nearby devices for the
+     * purposes of device commissioning.
+     *
+     * This property is a streaming property, meaning that you cannot explicitly
+     * fetch the value of this property. To receive traffic, you wait for
+     * `CMD_PROP_VALUE_IS` commands with this property id from the NCP.
+     *
+     * To send network packets, you call `CMD_PROP_VALUE_SET` on this property with
+     * the value of the packet.
+     *
+     * The general format of this property is:
+     *
+     *    `d` : packet data
+     *    `D` : packet meta data
+     *
+     * The packet metadata is optional. Packet meta data MAY be empty or partially
+     * specified. Partially specified metadata MUST be accepted. Default values
+     * are used for all unspecified fields.
+     *
+     * For OpenThread the meta data is currently empty.
+     *
+     */
+    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3,
 
     /// Log Stream
     /** Format: `UD` (stream, read only)
@@ -1917,7 +2603,8 @@ typedef enum
      *         `SPINEL_NCP_LOG_REGION_<region>).
      *
      */
-    SPINEL_PROP_STREAM_LOG  = SPINEL_PROP_STREAM__BEGIN + 4,
+    SPINEL_PROP_STREAM_LOG = SPINEL_PROP_STREAM__BEGIN + 4,
+
     SPINEL_PROP_STREAM__END = 0x80,
 
     SPINEL_PROP_STREAM_EXT__BEGIN = 0x1700,

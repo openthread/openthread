@@ -31,10 +31,10 @@
  *   This file includes the implementation for the HDLC interface to radio (RCP).
  */
 
-#include "hdlc_interface.hpp"
-
+#include "openthread-core-config.h"
 #include "platform-posix.h"
-#include "radio_spinel.hpp"
+
+#include "hdlc_interface.hpp"
 
 #include <assert.h>
 #include <errno.h>

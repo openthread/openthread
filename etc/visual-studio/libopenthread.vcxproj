@@ -60,7 +60,6 @@
     <ClCompile Include="..\..\src\core\api\border_router_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp" />
-    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\icmp6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\ip6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\instance_api.cpp" />
@@ -75,7 +74,7 @@
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />
     <ClCompile Include="..\..\src\core\api\udp_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap.cpp" />
-    <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
+    <ClCompile Include="..\..\src\core\coap\coap_message.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\instance.cpp" />
@@ -163,7 +162,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\openthread\link_raw.h" />
     <ClInclude Include="..\..\src\core\coap\coap.hpp" />
-    <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
+    <ClInclude Include="..\..\src\core\coap\coap_message.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_secure.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />

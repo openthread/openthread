@@ -146,9 +146,8 @@ typedef enum otCoapOptionType
  */
 typedef struct otCoapOption
 {
-    uint16_t       mNumber; ///< Option Number
-    uint16_t       mLength; ///< Option Length
-    const uint8_t *mValue;  ///< A pointer to the Option Value
+    uint16_t mNumber; ///< Option Number
+    uint16_t mLength; ///< Option Length
 } otCoapOption;
 
 /**
@@ -294,47 +293,20 @@ typedef enum otCoapOptionContentFormat
     OT_COAP_OPTION_CONTENT_FORMAT_SENSML_XML = 311
 } otCoapOptionContentFormat;
 
-#define OT_COAP_HEADER_MAX_LENGTH 512 ///< Max CoAP header length (bytes)
-
-/**
- * This structure represents a CoAP header.
- *
- */
-typedef struct otCoapHeader
-{
-    union
-    {
-        struct
-        {
-            uint8_t  mVersionTypeToken;            ///< The CoAP Version, Type, and Token Length
-            uint8_t  mCode;                        ///< The CoAP Code
-            uint16_t mMessageId;                   ///< The CoAP Message ID
-        } mFields;                                 ///< Structure representing a CoAP base header
-        uint8_t mBytes[OT_COAP_HEADER_MAX_LENGTH]; ///< The raw byte encoding for the CoAP header
-    } mHeader;                                     ///< The CoAP header encoding
-    uint16_t     mHeaderLength;                    ///< The CoAP header length (bytes)
-    uint16_t     mOptionLast;                      ///< The last CoAP Option Number value
-    uint16_t     mFirstOptionOffset;               ///< The byte offset for the first CoAP Option
-    uint16_t     mNextOptionOffset;                ///< The byte offset for the next CoAP Option
-    otCoapOption mOption;                          ///< A structure representing the current CoAP Option
-} otCoapHeader;
-
 /**
  * This function pointer is called when a CoAP response is received or on the request timeout.
  *
  * @param[in]  aContext      A pointer to application-specific context.
- * @param[in]  aHeader       A pointer to the received CoAP header. NULL if no response was received.
  * @param[in]  aMessage      A pointer to the message buffer containing the response. NULL if no response was received.
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage. NULL if no response was received.
  * @param[in]  aResult       A result of the CoAP transaction.
  *
  * @retval  OT_ERROR_NONE              A response was received successfully.
- * @retval  OT_ERROR_ABORT             A CoAP transaction was reseted by peer.
+ * @retval  OT_ERROR_ABORT             A CoAP transaction was reset by peer.
  * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
  *
  */
 typedef void (*otCoapResponseHandler)(void *               aContext,
-                                      otCoapHeader *       aHeader,
                                       otMessage *          aMessage,
                                       const otMessageInfo *aMessageInfo,
                                       otError              aResult);
@@ -343,15 +315,11 @@ typedef void (*otCoapResponseHandler)(void *               aContext,
  * This function pointer is called when a CoAP request with a given Uri-Path is received.
  *
  * @param[in]  aContext      A pointer to arbitrary context information.
- * @param[in]  aHeader       A pointer to the CoAP header.
  * @param[in]  aMessage      A pointer to the message.
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
  *
  */
-typedef void (*otCoapRequestHandler)(void *               aContext,
-                                     otCoapHeader *       aHeader,
-                                     otMessage *          aMessage,
-                                     const otMessageInfo *aMessageInfo);
+typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * This structure represents a CoAP resource.
@@ -368,43 +336,43 @@ typedef struct otCoapResource
 /**
  * This function initializes the CoAP header.
  *
- * @param[inout] aHeader  A pointer to the CoAP header to initialize.
- * @param[in]    aType    CoAP message type.
- * @param[in]    aCode    CoAP message code.
+ * @param[inout] aMessage   A pointer to the CoAP message to initialize.
+ * @param[in]    aType      CoAP message type.
+ * @param[in]    aCode      CoAP message code.
  *
  */
-void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode);
+void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
 
 /**
  * This function sets the Token value and length in a header.
  *
- * @param[inout]  aHeader       A pointer to the CoAP header.
- * @param[in]     aToken        A pointer to the Token value.
- * @param[in]     aTokenLength  The Length of @p aToken.
+ * @param[inout]  aMessage          A pointer to the CoAP message.
+ * @param[in]     aToken            A pointer to the Token value.
+ * @param[in]     aTokenLength      The Length of @p aToken.
  *
  */
-void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t aTokenLength);
+void otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength);
 
 /**
  * This function sets the Token length and randomizes its value.
  *
- * @param[inout]  aHeader       A pointer to the CoAP header.
+ * @param[inout]  aMessage      A pointer to the CoAP message.
  * @param[in]     aTokenLength  The Length of a Token to set.
  *
  */
-void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
+void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength);
 
 /**
  * This function appends the Content Format CoAP option as specified in
  * https://tools.ietf.org/html/rfc7252#page-92.  This *must* be called before
- * setting otCoapHeaderSetPayloadMarker if a payload is to be included in the
+ * setting otCoapMessageSetPayloadMarker if a payload is to be included in the
  * message.
  *
- * The function is a convenience wrapper around otCoapHeaderAppendUintOption,
+ * The function is a convenience wrapper around otCoapMessageAppendUintOption,
  * and if the desired format type code isn't listed in otCoapOptionContentFormat,
  * this base function should be used instead.
  *
- * @param[inout]  aHeader           A pointer to the CoAP header.
+ * @param[inout]  aMessage          A pointer to the CoAP message.
  * @param[in]     aContentFormat    One of the content formats listed in
  *                                  otCoapOptionContentFormat above.
  *
@@ -413,26 +381,28 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendContentFormatOption(otCoapHeader *aHeader, otCoapOptionContentFormat aContentFormat);
+otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat);
 
 /**
  * This function appends a CoAP option in a header.
  *
- * @param[inout]  aHeader  A pointer to the CoAP header.
- * @param[in]     aOption  A pointer to the CoAP option.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in]     aNumber   The CoAP Option number.
+ * @param[in]     aLength   The CoAP Option length.
+ * @param[in]     aValue    A pointer to the CoAP value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
+otError otCoapMessageAppendOption(otMessage *aMessage, uint16_t aNumber, uint16_t aLength, const void *aValue);
 
 /**
  * This function appends an unsigned integer CoAP option as specified in
  * https://tools.ietf.org/html/rfc7252#section-3.2
  *
- * @param[inout]  aHeader  A pointer to the CoAP header.
+ * @param[inout]  aMessage A pointer to the CoAP message.
  * @param[in]     aNumber  The CoAP Option number.
  * @param[in]     aValue   The CoAP Option unsigned integer value.
  *
@@ -441,12 +411,12 @@ otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOpt
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue);
+otError otCoapMessageAppendUintOption(otMessage *aMessage, uint16_t aNumber, uint32_t aValue);
 
 /**
  * This function appends an Observe option.
  *
- * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aObserve  Observe field value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
@@ -454,12 +424,12 @@ otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, ui
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve);
+otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve);
 
 /**
  * This function appends a Uri-Path option.
  *
- * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aUriPath  A pointer to a NULL-terminated string.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
@@ -467,12 +437,12 @@ otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath);
+otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath);
 
 /**
  * This function appends a Proxy-Uri option.
  *
- * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aUriPath  A pointer to a NULL-terminated string.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
@@ -480,12 +450,12 @@ otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUri
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendProxyUriOption(otCoapHeader *aHeader, const char *aUriPath);
+otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath);
 
 /**
  * This function appends a Max-Age option.
  *
- * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aMaxAge   The Max-Age value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
@@ -493,134 +463,145 @@ otError otCoapHeaderAppendProxyUriOption(otCoapHeader *aHeader, const char *aUri
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge);
+otError otCoapMessageAppendMaxAgeOption(otMessage *aMessage, uint32_t aMaxAge);
 
 /**
  * This function appends a single Uri-Query option.
  *
- * @param[inout]  aHeader   A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aUriQuery A pointer to NULL-terminated string, which should contain a single key=value pair.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  */
-otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery);
+otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQuery);
 
 /**
  * This function adds Payload Marker indicating beginning of the payload to the CoAP header.
  *
- * @param[inout]  aHeader  A pointer to the CoAP header.
+ * @param[inout]  aMessage  A pointer to the CoAP message.
  *
  * @retval OT_ERROR_NONE     Payload Marker successfully added.
  * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
  *
  */
-otError otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader);
+otError otCoapMessageSetPayloadMarker(otMessage *aMessage);
 
 /**
  * This function sets the Message ID value.
  *
- * @param[in]  aHeader     A pointer to the CoAP header.
- * @param[in]  aMessageId  The Message ID value.
+ * @param[in]  aMessage     A pointer to the CoAP message.
+ * @param[in]  aMessageId   The Message ID value.
  *
  */
-void otCoapHeaderSetMessageId(otCoapHeader *aHeader, uint16_t aMessageId);
+void otCoapMessageSetMessageId(otMessage *aMessage, uint16_t aMessageId);
 
 /**
  * This function returns the Type value.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns The Type value.
  *
  */
-otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader);
+otCoapType otCoapMessageGetType(const otMessage *aMessage);
 
 /**
  * This function returns the Code value.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns The Code value.
  *
  */
-otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader);
+otCoapCode otCoapMessageGetCode(const otMessage *aMessage);
 
 /**
  * This method returns the CoAP Code as human readable string.
  *
- * @param[in]  aHeader    A pointer to the CoAP header.
+ * @param[in]   aMessage    A pointer to the CoAP message.
  *
  * @ returns The CoAP Code as string.
  *
  */
-const char *otCoapHeaderCodeToString(const otCoapHeader *aHeader);
+const char *otCoapMessageCodeToString(const otMessage *aMessage);
 
 /**
  * This function returns the Message ID value.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns The Message ID value.
  *
  */
-uint16_t otCoapHeaderGetMessageId(const otCoapHeader *aHeader);
+uint16_t otCoapMessageGetMessageId(const otMessage *aMessage);
 
 /**
  * This function returns the Token length.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns The Token length.
  *
  */
-uint8_t otCoapHeaderGetTokenLength(const otCoapHeader *aHeader);
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage);
 
 /**
  * This function returns a pointer to the Token value.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns A pointer to the Token value.
  *
  */
-const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader);
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 
 /**
  * This function returns a pointer to the first option.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns A pointer to the first option. If no option is present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader);
+const otCoapOption *otCoapMessageGetFirstOption(otMessage *aMessage);
 
 /**
  * This function returns a pointer to the next option.
  *
- * @param[in]  aHeader  A pointer to the CoAP header.
+ * @param[in]  aMessage  A pointer to the CoAP message.
  *
  * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
+const otCoapOption *otCoapMessageGetNextOption(otMessage *aMessage);
 
 /**
- * This function creates a new message with a CoAP header.
+ * This function fills current option value into @p aValue.
+ *
+ * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[out] aValue    A pointer to a buffer to receive the option value.
+ *
+ * @retval  OT_ERROR_NONE       Successfully filled value.
+ * @retval  OT_ERROR_NOT_FOUND  No current option.
+ *
+ */
+otError otCoapMessageGetOptionValue(otMessage *aMessage, void *aValue);
+
+/**
+ * This function creates a new CoAP message.
  *
  * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aHeader    A pointer to a CoAP header that is used to create the message.
  * @param[in]  aSettings  A pointer to the message settings or NULL to set default settings.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
  */
-otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader, const otMessageSettings *aSettings);
+otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
  * This function sends a CoAP request.

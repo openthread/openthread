@@ -541,6 +541,17 @@ RxTotal: 2
     RxErrOther: 0
 ```
 
+### dataset
+Print changes in operational dataset buffer.
+
+```bash
+> dataset activetimestamp 1234
+Done
+> dataset
+Active Timestamp: 1234
+Done
+```
+
 ### dataset help
 
 Print meshcop dataset help menu.

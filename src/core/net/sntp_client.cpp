@@ -347,10 +347,10 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // Check the Kiss-o'-death packet.
     if (!responseHeader.GetStratum())
     {
-        char kissCode[Header::GetKissCodeLength() + 1];
+        char kissCode[Header::kKissCodeLength + 1];
 
-        memcpy(kissCode, responseHeader.GetKissCode(), Header::GetKissCodeLength());
-        kissCode[Header::GetKissCodeLength()] = 0;
+        memcpy(kissCode, responseHeader.GetKissCode(), Header::kKissCodeLength);
+        kissCode[Header::kKissCodeLength] = 0;
 
         otLogInfoIp6("SNTP response contains the Kiss-o'-death packet with %s code", kissCode);
         ExitNow(error = OT_ERROR_BUSY);
@@ -365,7 +365,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     // Due to NTP protocol limitation, this module stops working correctly after around year 2106, if
     // unix era is not updated. This seems to be a reasonable limitation for now. Era number cannot be
     // obtained using NTP protocol, and client of this module is responsible to set it properly.
-    unixTime = GetUnixEra() * (UINT32_MAX + 1);
+    unixTime = GetUnixEra() * (UINT32_MAX + 1ULL);
 
     if (responseHeader.GetTransmitTimestampSeconds() > kTimeAt1970)
     {
@@ -374,7 +374,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     else
     {
         unixTime +=
-            static_cast<uint64_t>(responseHeader.GetTransmitTimestampSeconds()) + (UINT32_MAX + 1) - kTimeAt1970;
+            static_cast<uint64_t>(responseHeader.GetTransmitTimestampSeconds()) + (UINT32_MAX + 1ULL) - kTimeAt1970;
     }
 
     // Return the time since 1970.

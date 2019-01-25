@@ -495,7 +495,6 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aEnableReattach True if reattach using stored dataset, or False if not.
      * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
      *                             or False if not.
      *
@@ -503,7 +502,7 @@ public:
      * @retval OT_ERROR_ALREADY  The protocol operation was already started.
      *
      */
-    otError Start(bool aEnableReattach, bool aAnnounceAttach);
+    otError Start(bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
@@ -1724,7 +1723,7 @@ private:
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
 #if OPENTHREAD_ENABLE_SERVICE
     /**
-     * This method scans for network data from the leader and updates ip addresses assigned to this
+     * This method scans for network data from the leader and updates IP addresses assigned to this
      * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
      */
     void UpdateServiceAlocs(void);

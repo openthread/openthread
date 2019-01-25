@@ -44,9 +44,9 @@ void otMessageFree(otMessage *aMessage)
     static_cast<Message *>(aMessage)->Free();
 }
 
-uint16_t otMessageGetLength(otMessage *aMessage)
+uint16_t otMessageGetLength(const otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
+    const Message &message = *static_cast<const Message *>(aMessage);
     return message.GetLength();
 }
 
@@ -56,9 +56,9 @@ otError otMessageSetLength(otMessage *aMessage, uint16_t aLength)
     return message.SetLength(aLength);
 }
 
-uint16_t otMessageGetOffset(otMessage *aMessage)
+uint16_t otMessageGetOffset(const otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
+    const Message &message = *static_cast<const Message *>(aMessage);
     return message.GetOffset();
 }
 
@@ -68,9 +68,9 @@ otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
     return message.SetOffset(aOffset);
 }
 
-bool otMessageIsLinkSecurityEnabled(otMessage *aMessage)
+bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
+    const Message &message = *static_cast<const Message *>(aMessage);
     return message.IsLinkSecurityEnabled();
 }
 
@@ -88,9 +88,9 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
     }
 }
 
-int8_t otMessageGetRss(otMessage *aMessage)
+int8_t otMessageGetRss(const otMessage *aMessage)
 {
-    Message &message = *static_cast<Message *>(aMessage);
+    const Message &message = *static_cast<const Message *>(aMessage);
     return message.GetAverageRss();
 }
 
@@ -100,9 +100,9 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
     return message.Append(aBuf, aLength);
 }
 
-int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
+int otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
-    Message &message = *static_cast<Message *>(aMessage);
+    const Message &message = *static_cast<const Message *>(aMessage);
     return message.Read(aOffset, aLength, aBuf);
 }
 

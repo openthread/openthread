@@ -40,28 +40,23 @@
 
 #include <openthread/dataset.h>
 
-#include "cli/cli_server.hpp"
-
 namespace ot {
 namespace Cli {
 
-/**
- * This structure represents a CLI command.
- *
- */
-struct DatasetCommand
-{
-    const char *mName;                                                  ///< A pointer to the command string.
-    otError (*mCommand)(otInstance *aInstance, int argc, char *argv[]); ///< A function pointer to process the command.
-};
+class Interpreter;
 
 /**
- * This class implements the CLI interpreter.
+ * This class implements the Dataset CLI interpreter.
  *
  */
 class Dataset
 {
 public:
+    Dataset(Interpreter &aInterpreter)
+        : mInterpreter(aInterpreter)
+    {
+    }
+
     /**
      * This method interprets a list of CLI arguments.
      *
@@ -69,35 +64,42 @@ public:
      * @param[in]  argv  A pointer to an array of command line arguments.
      *
      */
-    static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
+    otError Process(int argc, char *argv[]);
 
 private:
-    static void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
-    static otError Print(otOperationalDataset &aDataset);
+    struct Command
+    {
+        const char *mName;
+        otError (Dataset::*mCommand)(int argc, char *argv[]);
+    };
 
-    static otError ProcessHelp(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessExtPanId(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessMasterKey(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessNetworkName(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessPanId(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessPending(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessPSKc(otInstance *aInstance, int argc, char *argv[]);
-    static otError ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[]);
+    void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+    otError Print(otOperationalDataset &aDataset);
 
-    static const DatasetCommand sCommands[];
+    otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessActive(int argc, char *argv[]);
+    otError ProcessActiveTimestamp(int argc, char *argv[]);
+    otError ProcessChannel(int argc, char *argv[]);
+    otError ProcessChannelMask(int argc, char *argv[]);
+    otError ProcessClear(int argc, char *argv[]);
+    otError ProcessCommit(int argc, char *argv[]);
+    otError ProcessDelay(int argc, char *argv[]);
+    otError ProcessExtPanId(int argc, char *argv[]);
+    otError ProcessMasterKey(int argc, char *argv[]);
+    otError ProcessMeshLocalPrefix(int argc, char *argv[]);
+    otError ProcessNetworkName(int argc, char *argv[]);
+    otError ProcessPanId(int argc, char *argv[]);
+    otError ProcessPending(int argc, char *argv[]);
+    otError ProcessPendingTimestamp(int argc, char *argv[]);
+    otError ProcessMgmtSetCommand(int argc, char *argv[]);
+    otError ProcessMgmtGetCommand(int argc, char *argv[]);
+    otError ProcessPSKc(int argc, char *argv[]);
+    otError ProcessSecurityPolicy(int argc, char *argv[]);
+
+    Interpreter &mInterpreter;
+
+    static const Command        sCommands[];
     static otOperationalDataset sDataset;
-    static Server *             sServer;
 };
 
 } // namespace Cli

@@ -142,7 +142,7 @@ public:
      * Set the time sync callback to be notified of a network time update.
      *
      * @param[in] aCallback The callback to be called when time sync is handled.
-     * @param[im] aCallbackContext The context to be passed to callback.
+     * @param[in] aCallbackContext The context to be passed to callback.
      *
      */
     void SetTimeSyncCallback(otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)

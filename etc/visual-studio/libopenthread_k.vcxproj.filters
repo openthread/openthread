@@ -84,9 +84,6 @@
     <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
-      <Filter>Source Files\api</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\api\icmp6_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -123,7 +120,7 @@
     <ClCompile Include="..\..\src\core\coap\coap.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\coap_header.cpp">
+    <ClCompile Include="..\..\src\core\coap\coap_message.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp">
@@ -333,7 +330,7 @@
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
-   <ClCompile Include="..\..\src\core\utils\child_supervision.cpp">
+    <ClCompile Include="..\..\src\core\utils\child_supervision.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\utils\parse_cmdline.cpp">
@@ -374,7 +371,7 @@
     <ClInclude Include="..\..\src\core\coap\coap.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\coap\coap_header.hpp">
+    <ClInclude Include="..\..\src\core\coap\coap_message.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_secure.hpp">
@@ -654,12 +651,6 @@
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\dataset_ftd.h">
-      <Filter>Header Files\openthread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\openthread\dhcp6_client.h">
-      <Filter>Header Files\openthread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\openthread\dhcp6_server.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\error.h">

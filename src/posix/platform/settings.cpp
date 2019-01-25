@@ -32,6 +32,7 @@
  *
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include <assert.h>

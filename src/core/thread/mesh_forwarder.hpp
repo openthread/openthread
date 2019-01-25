@@ -65,7 +65,7 @@ enum
  */
 
 /**
- * This class reprents an IPv6 fragment priority entry
+ * This class represents an IPv6 fragment priority entry
  *
  */
 class FragmentPriorityEntry
@@ -112,7 +112,7 @@ public:
     uint8_t GetPriority(void) const { return mPriority; }
 
     /**
-     * This method sets the fragment priotity value.
+     * This method sets the fragment priority value.
      *
      * @param[in]  aPriority  The fragment priority value.
      *
@@ -467,7 +467,7 @@ private:
                                     uint8_t &           aPriority);
 
     FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
-    FragmentPriorityEntry *GetUnusedFragementPriorityEntry(void);
+    FragmentPriorityEntry *GetUnusedFragmentPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
