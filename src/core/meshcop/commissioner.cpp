@@ -933,6 +933,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     message->SetDefaultResponseHeader(aRequest);
     message->SetPayloadMarker();
+    message->SetOffset(message->GetLength());
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
     stateTlv.Init();
