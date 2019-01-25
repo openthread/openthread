@@ -113,7 +113,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
 }
 
-otError ThreadNetif::Up(void)
+void ThreadNetif::Up(void)
 {
     VerifyOrExit(!mIsUp);
 
@@ -139,10 +139,10 @@ otError ThreadNetif::Up(void)
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
-otError ThreadNetif::Down(void)
+void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
@@ -171,7 +171,7 @@ otError ThreadNetif::Down(void)
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
