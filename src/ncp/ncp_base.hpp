@@ -268,8 +268,8 @@ protected:
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
     void        ProcessThreadChangedFlags(void);
 
-    static void HandlePcapFrame(const otRadioFrame *aFrame, void *aContext);
-    void        HandlePcapFrame(const otRadioFrame *aFrame);
+    static void HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
+    void        HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx);
 
     static void HandleTimeSyncUpdate(void *aContext);
     void        HandleTimeSyncUpdate(void);
