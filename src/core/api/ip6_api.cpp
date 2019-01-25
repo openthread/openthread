@@ -48,24 +48,22 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+#endif
+
     if (aEnabled)
     {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-        error = instance.GetThreadNetif().Up();
+        instance.GetThreadNetif().Up();
     }
     else
     {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-        error = instance.GetThreadNetif().Down();
+        instance.GetThreadNetif().Down();
     }
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif
     return error;
 }
 

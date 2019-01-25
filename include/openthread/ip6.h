@@ -183,15 +183,16 @@ typedef struct otMessageInfo
 } otMessageInfo;
 
 /**
- * This function brings up the IPv6 interface.
+ * This function brings up/down the IPv6 interface.
  *
  * Call this function to enable/disable IPv6 communication.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE to enable IPv6, FALSE otherwise.
  *
- * @retval OT_ERROR_NONE          Successfully enabled the IPv6 interface,
- *                                or the interface was already enabled.
+ * @retval OT_ERROR_NONE            Successfully brought the IPv6 interface up/down.
+ * @retval OT_ERROR_INVALID_STATE   IPv6 interface is not available since device is operating in raw-link mode
+ *                                  (applicable only when `OPENTHREAD_ENABLE_RAW_LINK_API` feature is enabled).
  *
  */
 OTAPI otError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);

@@ -109,13 +109,13 @@ public:
      * This method enables the Thread network interface.
      *
      */
-    otError Up(void);
+    void Up(void);
 
     /**
      * This method disables the Thread network interface.
      *
      */
-    otError Down(void);
+    void Down(void);
 
     /**
      * This method indicates whether or not the Thread network interface is enabled.
