@@ -73,7 +73,6 @@
 #endif
 
 #include "cli_dataset.hpp"
-#include "cli_uart.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include "cli_coap.hpp"
@@ -95,6 +94,7 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
+#include "cli_server.hpp"
 #include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -3900,6 +3900,48 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
     Interpreter &interpreter = Server::sServer->GetInterpreter();
 #endif
     return interpreter;
+}
+
+extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
+{
+    Server::sServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
+}
+
+extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    Server::sServer->GetInterpreter().OutputBytes(aBytes, aLength);
+}
+
+extern "C" void otCliOutputFormat(const char *aFmt, ...)
+{
+    va_list aAp;
+    va_start(aAp, aFmt);
+    Server::sServer->OutputFormatV(aFmt, aAp);
+    va_end(aAp);
+}
+
+extern "C" void otCliOutput(const char *aString, uint16_t aLength)
+{
+    Server::sServer->Output(aString, aLength);
+}
+
+extern "C" void otCliAppendResult(otError aError)
+{
+    Server::sServer->GetInterpreter().AppendResult(aError);
+}
+
+extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    VerifyOrExit(Server::sServer != NULL);
+
+    Server::sServer->OutputFormatV(aFormat, aArgs);
+    Server::sServer->OutputFormat("\r\n");
+
+exit:
+    return;
 }
 
 } // namespace Cli
