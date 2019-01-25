@@ -128,14 +128,6 @@ public:
     void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
-     * This method returns the total size including Type, Length, and Value fields.
-     *
-     * @returns The total size include Type, Length, and Value fields.
-     *
-     */
-    uint16_t GetSize(void) const { return static_cast<Type>(ot::Tlv::GetSize()); }
-
-    /**
      * This method returns a pointer to the next TLV.
      *
      * @returns A pointer to the next TLV.
