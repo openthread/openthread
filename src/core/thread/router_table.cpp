@@ -261,6 +261,8 @@ otError RouterTable::Release(uint8_t aRouterId)
     ThreadNetif &netif  = GetNetif();
     uint16_t     rloc16 = Mle::Mle::GetRloc16(aRouterId);
 
+    assert(aRouterId <= Mle::kMaxRouterId);
+
     VerifyOrExit(netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
 
