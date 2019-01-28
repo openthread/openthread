@@ -115,6 +115,10 @@ ifeq ($(MTD_NETDIAG),1)
 configure_OPTIONS              += --enable-mtd-network-diagnostic
 endif
 
+ifeq ($(PLATFORM_UDP), 1)
+configure_OPTIONS              += --enable-platform-udp
+endif
+
 ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
