@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRF_TWI_H__
@@ -195,7 +186,7 @@ __STATIC_INLINE uint32_t * nrf_twi_event_address_get(NRF_TWI_Type  * p_reg,
  * @param[in] shorts_mask Shortcuts to enable.
  */
 __STATIC_INLINE void nrf_twi_shorts_enable(NRF_TWI_Type * p_reg,
-                                           uint32_t shorts_mask);
+                                           uint32_t       shorts_mask);
 
 /**
  * @brief Function for disabling specified shortcuts.
@@ -204,7 +195,7 @@ __STATIC_INLINE void nrf_twi_shorts_enable(NRF_TWI_Type * p_reg,
  * @param[in] shorts_mask Shortcuts to disable.
  */
 __STATIC_INLINE void nrf_twi_shorts_disable(NRF_TWI_Type * p_reg,
-                                            uint32_t shorts_mask);
+                                            uint32_t       shorts_mask);
 
 /**
  * @brief Function for enabling specified interrupts.
@@ -213,7 +204,7 @@ __STATIC_INLINE void nrf_twi_shorts_disable(NRF_TWI_Type * p_reg,
  * @param[in] int_mask Interrupts to enable.
  */
 __STATIC_INLINE void nrf_twi_int_enable(NRF_TWI_Type * p_reg,
-                                        uint32_t int_mask);
+                                        uint32_t       int_mask);
 
 /**
  * @brief Function for disabling specified interrupts.
@@ -222,7 +213,7 @@ __STATIC_INLINE void nrf_twi_int_enable(NRF_TWI_Type * p_reg,
  * @param[in] int_mask Interrupts to disable.
  */
 __STATIC_INLINE void nrf_twi_int_disable(NRF_TWI_Type * p_reg,
-                                         uint32_t int_mask);
+                                         uint32_t       int_mask);
 
 /**
  * @brief Function for retrieving the state of a given interrupt.
@@ -233,7 +224,7 @@ __STATIC_INLINE void nrf_twi_int_disable(NRF_TWI_Type * p_reg,
  * @retval true  If the interrupt is enabled.
  * @retval false If the interrupt is not enabled.
  */
-__STATIC_INLINE bool nrf_twi_int_enable_check(NRF_TWI_Type * p_reg,
+__STATIC_INLINE bool nrf_twi_int_enable_check(NRF_TWI_Type *     p_reg,
                                               nrf_twi_int_mask_t int_mask);
 
 /**
@@ -253,14 +244,31 @@ __STATIC_INLINE void nrf_twi_disable(NRF_TWI_Type * p_reg);
 /**
  * @brief Function for configuring TWI pins.
  *
- *
  * @param[in] p_reg   Pointer to the peripheral registers structure.
  * @param[in] scl_pin SCL pin number.
  * @param[in] sda_pin SDA pin number.
  */
 __STATIC_INLINE void nrf_twi_pins_set(NRF_TWI_Type * p_reg,
-                                      uint32_t scl_pin,
-                                      uint32_t sda_pin);
+                                      uint32_t       scl_pin,
+                                      uint32_t       sda_pin);
+
+/**
+ * @brief Function for retrieving the SCL pin number.
+ *
+ * @param[in] p_reg Pointer to the peripheral registers structure
+ *
+ * @retval pin SCL pin number.
+ */
+__STATIC_INLINE uint32_t nrf_twi_scl_pin_get(NRF_TWI_Type * p_reg);
+
+/**
+ * @brief Function for retrieving the SDA pin number.
+ *
+ * @param[in] p_reg Pointer to the peripheral registers structure
+ *
+ * @retval pin SDA pin number.
+ */
+__STATIC_INLINE uint32_t nrf_twi_sda_pin_get(NRF_TWI_Type * p_reg);
 
 /**
  * @brief Function for setting the TWI master clock frequency.
@@ -268,7 +276,7 @@ __STATIC_INLINE void nrf_twi_pins_set(NRF_TWI_Type * p_reg,
  * @param[in] p_reg     Pointer to the peripheral registers structure.
  * @param[in] frequency TWI frequency.
  */
-__STATIC_INLINE void nrf_twi_frequency_set(NRF_TWI_Type * p_reg,
+__STATIC_INLINE void nrf_twi_frequency_set(NRF_TWI_Type *      p_reg,
                                            nrf_twi_frequency_t frequency);
 
 /**
@@ -308,7 +316,7 @@ __STATIC_INLINE uint8_t nrf_twi_rxd_get(NRF_TWI_Type * p_reg);
 __STATIC_INLINE void nrf_twi_txd_set(NRF_TWI_Type * p_reg, uint8_t data);
 
 __STATIC_INLINE void nrf_twi_shorts_set(NRF_TWI_Type * p_reg,
-                                        uint32_t shorts_mask);
+                                        uint32_t       shorts_mask);
 
 #ifndef SUPPRESS_INLINE_IMPLEMENTATION
 
@@ -347,30 +355,30 @@ __STATIC_INLINE uint32_t * nrf_twi_event_address_get(NRF_TWI_Type  * p_reg,
 }
 
 __STATIC_INLINE void nrf_twi_shorts_enable(NRF_TWI_Type * p_reg,
-                                           uint32_t shorts_mask)
+                                           uint32_t       shorts_mask)
 {
     p_reg->SHORTS |= shorts_mask;
 }
 
 __STATIC_INLINE void nrf_twi_shorts_disable(NRF_TWI_Type * p_reg,
-                                            uint32_t shorts_mask)
+                                            uint32_t       shorts_mask)
 {
     p_reg->SHORTS &= ~(shorts_mask);
 }
 
 __STATIC_INLINE void nrf_twi_int_enable(NRF_TWI_Type * p_reg,
-                                        uint32_t int_mask)
+                                        uint32_t       int_mask)
 {
     p_reg->INTENSET = int_mask;
 }
 
 __STATIC_INLINE void nrf_twi_int_disable(NRF_TWI_Type * p_reg,
-                                         uint32_t int_mask)
+                                         uint32_t       int_mask)
 {
     p_reg->INTENCLR = int_mask;
 }
 
-__STATIC_INLINE bool nrf_twi_int_enable_check(NRF_TWI_Type * p_reg,
+__STATIC_INLINE bool nrf_twi_int_enable_check(NRF_TWI_Type *     p_reg,
                                               nrf_twi_int_mask_t int_mask)
 {
     return (bool)(p_reg->INTENSET & int_mask);
@@ -387,8 +395,8 @@ __STATIC_INLINE void nrf_twi_disable(NRF_TWI_Type * p_reg)
 }
 
 __STATIC_INLINE void nrf_twi_pins_set(NRF_TWI_Type * p_reg,
-                                      uint32_t scl_pin,
-                                      uint32_t sda_pin)
+                                      uint32_t       scl_pin,
+                                      uint32_t       sda_pin)
 {
 #if defined(TWI_PSEL_SCL_CONNECT_Pos)
     p_reg->PSEL.SCL = scl_pin;
@@ -403,7 +411,25 @@ __STATIC_INLINE void nrf_twi_pins_set(NRF_TWI_Type * p_reg,
 #endif
 }
 
-__STATIC_INLINE void nrf_twi_frequency_set(NRF_TWI_Type * p_reg,
+__STATIC_INLINE uint32_t nrf_twi_scl_pin_get(NRF_TWI_Type * p_reg)
+{
+#if defined(TWI_PSEL_SCL_CONNECT_Pos)
+    return p_reg->PSEL.SCL;
+#else
+    return p_reg->PSELSCL;
+#endif
+}
+
+__STATIC_INLINE uint32_t nrf_twi_sda_pin_get(NRF_TWI_Type * p_reg)
+{
+#if defined(TWI_PSEL_SDA_CONNECT_Pos)
+    return p_reg->PSEL.SDA;
+#else
+    return p_reg->PSELSDA;
+#endif
+}
+
+__STATIC_INLINE void nrf_twi_frequency_set(NRF_TWI_Type *      p_reg,
                                            nrf_twi_frequency_t frequency)
 {
     p_reg->FREQUENCY = frequency;
@@ -435,7 +461,7 @@ __STATIC_INLINE void nrf_twi_txd_set(NRF_TWI_Type * p_reg, uint8_t data)
 }
 
 __STATIC_INLINE void nrf_twi_shorts_set(NRF_TWI_Type * p_reg,
-                                        uint32_t shorts_mask)
+                                        uint32_t       shorts_mask)
 {
     p_reg->SHORTS = shorts_mask;
 }

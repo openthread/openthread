@@ -183,15 +183,16 @@ typedef struct otMessageInfo
 } otMessageInfo;
 
 /**
- * This function brings up the IPv6 interface.
+ * This function brings up/down the IPv6 interface.
  *
  * Call this function to enable/disable IPv6 communication.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE to enable IPv6, FALSE otherwise.
  *
- * @retval OT_ERROR_NONE          Successfully enabled the IPv6 interface,
- *                                or the interface was already enabled.
+ * @retval OT_ERROR_NONE            Successfully brought the IPv6 interface up/down.
+ * @retval OT_ERROR_INVALID_STATE   IPv6 interface is not available since device is operating in raw-link mode
+ *                                  (applicable only when `OPENTHREAD_ENABLE_RAW_LINK_API` feature is enabled).
  *
  */
 OTAPI otError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
@@ -252,11 +253,12 @@ OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstanc
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval OT_ERROR_NONE          Successfully subscribed to the Network Interface Multicast Address.
- * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
- * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is invalid address.
- * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast
- *                                addresses.
+ * @retval OT_ERROR_NONE           Successfully subscribed to the Network Interface Multicast Address.
+ * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
+ * @retval OT_ERROR_INVALID_ARGS   The IP Address indicated by @p aAddress is invalid address.
+ * @retval OT_ERROR_INVALID_STATE  The Network Interface is not up.
+ * @retval OT_ERROR_NO_BUFS        The Network Interface is already storing the maximum allowed external multicast
+ *                                 addresses.
  *
  */
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
@@ -593,6 +595,7 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
 /**
  * This function perform OpenThread source address selection.
  *
+ * @param[in]     aInstance     A pointer to an OpenThread instance.
  * @param[inout]  aMessageInfo  A pointer to the message information.
  *
  * @retval  OT_ERROR_NONE       Found a source address and is filled into mSockAddr of @p aMessageInfo.

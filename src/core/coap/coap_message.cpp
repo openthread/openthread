@@ -271,6 +271,8 @@ const otCoapOption *Message::GetNextOption(void)
         ExitNow();
     }
 
+    VerifyOrExit(optionLength <= GetLength() - GetHelpData().mNextOptionOffset, error = OT_ERROR_PARSE);
+
     rval = &GetHelpData().mOption;
     rval->mNumber += optionDelta;
     rval->mLength = optionLength;

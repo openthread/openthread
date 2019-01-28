@@ -1126,7 +1126,7 @@ public:
      * @returns A pointer to the PSDU.
      *
      */
-    uint8_t *GetPsdu(void) const { return mPsdu; }
+    const uint8_t *GetPsdu(void) const { return mPsdu; }
 
     /**
      * This method returns a pointer to the MAC Header.
@@ -1150,7 +1150,7 @@ public:
      * @returns A pointer to the MAC Payload.
      *
      */
-    uint8_t *GetPayload(void);
+    uint8_t *GetPayload(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetPayload()); }
 
     /**
      * This const method returns a pointer to the MAC Payload.
@@ -1158,7 +1158,7 @@ public:
      * @returns A pointer to the MAC Payload.
      *
      */
-    uint8_t *GetPayload(void) const;
+    const uint8_t *GetPayload(void) const;
 
     /**
      * This method returns a pointer to the MAC Footer.
@@ -1166,7 +1166,7 @@ public:
      * @returns A pointer to the MAC Footer.
      *
      */
-    uint8_t *GetFooter(void);
+    uint8_t *GetFooter(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetFooter()); }
 
     /**
      * This const method returns a pointer to the MAC Footer.
@@ -1174,7 +1174,7 @@ public:
      * @returns A pointer to the MAC Footer.
      *
      */
-    uint8_t *GetFooter(void) const;
+    const uint8_t *GetFooter(void) const;
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     /**
@@ -1231,7 +1231,15 @@ public:
      * @returns A pointer to the Time IE, NULL if not found.
      *
      */
-    uint8_t *GetTimeIe(void) const;
+    uint8_t *GetTimeIe(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetTimeIe()); }
+
+    /**
+     * This method returns a pointer to the vendor specific Time IE.
+     *
+     * @returns A pointer to the Time IE, NULL if not found.
+     *
+     */
+    const uint8_t *GetTimeIe(void) const;
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
@@ -1255,7 +1263,20 @@ public:
      * @returns A pointer to the Header IE, NULL if not found.
      *
      */
-    uint8_t *GetHeaderIe(uint8_t aIeId) const;
+    uint8_t *GetHeaderIe(uint8_t aIeId)
+    {
+        return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetHeaderIe(aIeId));
+    }
+
+    /**
+     * This method returns a pointer to the Header IE.
+     *
+     * @param[in] aIeId  The Element Id of the Header IE.
+     *
+     * @returns A pointer to the Header IE, NULL if not found.
+     *
+     */
+    const uint8_t *GetHeaderIe(uint8_t aIeId) const;
 #endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     /**

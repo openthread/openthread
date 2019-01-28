@@ -87,9 +87,9 @@ __vector_table
         ; External Interrupts
         DCD     POWER_CLOCK_IRQHandler
         DCD     RADIO_IRQHandler
-        DCD     UARTE0_IRQHandler
-        DCD     TWIM0_TWIS0_IRQHandler
-        DCD     SPIM0_SPIS0_IRQHandler
+        DCD     UARTE0_UART0_IRQHandler
+        DCD     TWIM0_TWIS0_TWI0_IRQHandler
+        DCD     SPIM0_SPIS0_SPI0_IRQHandler
         DCD     0                         ; Reserved
         DCD     GPIOTE_IRQHandler
         DCD     SAADC_IRQHandler
@@ -276,19 +276,19 @@ POWER_CLOCK_IRQHandler
 RADIO_IRQHandler
         B .
 
-        PUBWEAK  UARTE0_IRQHandler
+        PUBWEAK  UARTE0_UART0_IRQHandler
         SECTION .text:CODE:REORDER:NOROOT(1)
-UARTE0_IRQHandler
+UARTE0_UART0_IRQHandler
         B .
 
-        PUBWEAK  TWIM0_TWIS0_IRQHandler
+        PUBWEAK  TWIM0_TWIS0_TWI0_IRQHandler
         SECTION .text:CODE:REORDER:NOROOT(1)
-TWIM0_TWIS0_IRQHandler
+TWIM0_TWIS0_TWI0_IRQHandler
         B .
 
-        PUBWEAK  SPIM0_SPIS0_IRQHandler
+        PUBWEAK  SPIM0_SPIS0_SPI0_IRQHandler
         SECTION .text:CODE:REORDER:NOROOT(1)
-SPIM0_SPIS0_IRQHandler
+SPIM0_SPIS0_SPI0_IRQHandler
         B .
 
         PUBWEAK  GPIOTE_IRQHandler

@@ -334,6 +334,8 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     NetifMulticastAddress *entry;
     size_t                 num = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
+    VerifyOrExit(mMulticastAddresses != NULL, error = OT_ERROR_INVALID_STATE);
+
     if (IsMulticastSubscribed(aAddress))
     {
         ExitNow(error = OT_ERROR_ALREADY);

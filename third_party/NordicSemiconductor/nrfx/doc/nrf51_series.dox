@@ -16,6 +16,8 @@
 
 @ref nrf_lpcomp
 
+@ref nrf_mpu
+
 @ref nrf_nvmc
 
 @ref nrf_power

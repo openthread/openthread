@@ -96,34 +96,6 @@ extern "C" void otCliUartInit(otInstance *aInstance)
     Server::sServer = new (&sCliUartRaw) Uart(instance);
 }
 
-extern "C" void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
-{
-    Server::sServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
-}
-
-extern "C" void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength)
-{
-    Server::sServer->GetInterpreter().OutputBytes(aBytes, aLength);
-}
-
-extern "C" void otCliUartOutputFormat(const char *aFmt, ...)
-{
-    va_list aAp;
-    va_start(aAp, aFmt);
-    static_cast<Uart *>(Server::sServer)->OutputFormatV(aFmt, aAp);
-    va_end(aAp);
-}
-
-extern "C" void otCliUartOutput(const char *aString, uint16_t aLength)
-{
-    Server::sServer->Output(aString, aLength);
-}
-
-extern "C" void otCliUartAppendResult(otError aError)
-{
-    Server::sServer->GetInterpreter().AppendResult(aError);
-}
-
 Uart::Uart(Instance *aInstance)
     : Server(aInstance)
 {
@@ -200,7 +172,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
             break;
 
         default:
-            if (mRxLength < kRxBufferSize)
+            if (mRxLength < kRxBufferSize - 1)
             {
                 Output(reinterpret_cast<const char *>(aBuf), 1);
                 mRxBuffer[mRxLength++] = static_cast<char>(*aBuf);
@@ -288,27 +260,6 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
     return aBufLength;
 }
 
-int Uart::OutputFormat(const char *fmt, ...)
-{
-    char    buf[kMaxLineLength];
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
-}
-
-int Uart::OutputFormatV(const char *aFmt, va_list aAp)
-{
-    char buf[kMaxLineLength];
-
-    vsnprintf(buf, sizeof(buf), aFmt, aAp);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
-}
-
 void Uart::Send(void)
 {
     VerifyOrExit(mSendLength == 0);
@@ -347,20 +298,6 @@ void Uart::SendDoneTask(void)
     mSendLength = 0;
 
     Send();
-}
-
-extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
-    VerifyOrExit(Server::sServer != NULL);
-
-    static_cast<Uart *>(Server::sServer)->OutputFormatV(aFormat, aArgs);
-    Server::sServer->OutputFormat("\r\n");
-
-exit:
-    return;
 }
 
 } // namespace Cli

@@ -901,8 +901,8 @@ uint8_t Frame::FindPayloadIndex(void) const
 {
     uint8_t index = SkipSecurityHeaderIndex();
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    uint8_t *cur    = NULL;
-    uint8_t *footer = GetFooter();
+    const uint8_t *cur    = NULL;
+    const uint8_t *footer = GetFooter();
 #endif
 
     VerifyOrExit(index != kInvalidIndex);
@@ -914,8 +914,8 @@ uint8_t Frame::FindPayloadIndex(void) const
     {
         while (cur + sizeof(HeaderIe) <= footer)
         {
-            HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
-            uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+            const HeaderIe *ie  = reinterpret_cast<const HeaderIe *>(cur);
+            uint8_t         len = static_cast<uint8_t>(ie->GetLength());
 
             cur += sizeof(HeaderIe);
             index += sizeof(HeaderIe);
@@ -945,10 +945,10 @@ exit:
     return index;
 }
 
-uint8_t *Frame::GetPayload(void)
+const uint8_t *Frame::GetPayload(void) const
 {
-    uint8_t  index   = FindPayloadIndex();
-    uint8_t *payload = GetPsdu() + index;
+    uint8_t        index   = FindPayloadIndex();
+    const uint8_t *payload = GetPsdu() + index;
 
     VerifyOrExit(index != kInvalidIndex, payload = NULL);
 
@@ -956,23 +956,7 @@ exit:
     return payload;
 }
 
-uint8_t *Frame::GetPayload(void) const
-{
-    uint8_t  index   = FindPayloadIndex();
-    uint8_t *payload = GetPsdu() + index;
-
-    VerifyOrExit(index != kInvalidIndex, payload = NULL);
-
-exit:
-    return payload;
-}
-
-uint8_t *Frame::GetFooter(void)
-{
-    return GetPsdu() + GetPsduLength() - GetFooterLength();
-}
-
-uint8_t *Frame::GetFooter(void) const
+const uint8_t *Frame::GetFooter(void) const
 {
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
@@ -1014,11 +998,11 @@ exit:
     return error;
 }
 
-uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
+const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
-    uint8_t  index   = FindHeaderIeIndex();
-    uint8_t *cur     = NULL;
-    uint8_t *payload = GetPayload();
+    uint8_t        index   = FindHeaderIeIndex();
+    const uint8_t *cur     = NULL;
+    const uint8_t *payload = GetPayload();
 
     VerifyOrExit(index != kInvalidIndex);
 
@@ -1026,8 +1010,8 @@ uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 
     while (cur + sizeof(HeaderIe) <= payload)
     {
-        HeaderIe *ie  = reinterpret_cast<HeaderIe *>(cur);
-        uint8_t   len = static_cast<uint8_t>(ie->GetLength());
+        const HeaderIe *ie  = reinterpret_cast<const HeaderIe *>(cur);
+        uint8_t         len = static_cast<uint8_t>(ie->GetLength());
 
         if (ie->GetId() == aIeId)
         {
@@ -1052,18 +1036,18 @@ exit:
 #endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-uint8_t *Frame::GetTimeIe(void) const
+const uint8_t *Frame::GetTimeIe(void) const
 {
-    TimeIe * timeIe              = NULL;
-    uint8_t *cur                 = NULL;
-    uint8_t  oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+    const TimeIe * timeIe       = NULL;
+    const uint8_t *cur          = NULL;
+    uint8_t oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
     VerifyOrExit(cur != NULL);
 
     cur += sizeof(HeaderIe);
 
-    timeIe = reinterpret_cast<TimeIe *>(cur);
+    timeIe = reinterpret_cast<const TimeIe *>(cur);
     VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
     VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
 

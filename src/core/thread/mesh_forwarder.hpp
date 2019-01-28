@@ -181,18 +181,14 @@ public:
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval OT_ERROR_NONE          Successfully enabled the mesh forwarder.
-     *
      */
-    otError Start(void);
+    void Start(void);
 
     /**
      * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval OT_ERROR_NONE          Successfully disabled the mesh forwarder.
-     *
      */
-    otError Stop(void);
+    void Stop(void);
 
     /**
      * This method submits a message to the mesh forwarder for forwarding.
