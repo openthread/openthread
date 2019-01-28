@@ -102,7 +102,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
         flags |= SPINEL_NET_FLAG_ON_MESH;
     }
 
-    flags |= (aConfig.mPreference << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+    flags |= (static_cast<uint8_t>(aConfig.mPreference) << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
 
     return flags;
 }
