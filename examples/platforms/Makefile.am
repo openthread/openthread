@@ -42,6 +42,7 @@ DIST_SUBDIRS                            = \
     kw41z                                 \
     nrf52840                              \
     posix                                 \
+    qpg6095                               \
     samr21                                \
     utils                                 \
     $(NULL)
@@ -96,6 +97,10 @@ if OPENTHREAD_EXAMPLES_POSIX
 SUBDIRS                                += posix
 endif
 
+if OPENTHREAD_EXAMPLES_QPG6095
+SUBDIRS                                += qpg6095
+endif
+
 if OPENTHREAD_EXAMPLES_SAMR21
 SUBDIRS                                += samr21
 endif
@@ -118,6 +123,7 @@ PRETTY_SUBDIRS                          = \
     kw41z                                 \
     nrf52840                              \
     posix                                 \
+    qpg6095                               \
     samr21                                \
     utils                                 \
     $(NULL)
