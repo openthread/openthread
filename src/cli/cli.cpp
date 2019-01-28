@@ -887,7 +887,8 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(value <= static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                     error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
     }
 
@@ -2742,7 +2743,8 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         else
         {
             SuccessOrExit(error = ParseLong(argv[0], value));
-            VerifyOrExit(value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                         error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << value;
         }
     }
