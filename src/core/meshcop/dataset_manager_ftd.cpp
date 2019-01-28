@@ -40,7 +40,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -67,7 +67,7 @@ otError DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
     return dataset.AppendMleDatasetTlv(aMessage);
 }
 
-otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError DatasetManager::Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &   netif = GetNetif();
     Tlv             tlv;
@@ -284,26 +284,25 @@ exit:
 
     if (netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
-        SendSetResponse(aHeader, aMessageInfo, state);
+        SendSetResponse(aMessage, aMessageInfo, state);
     }
 
     return state == StateTlv::kAccept ? OT_ERROR_NONE : OT_ERROR_DROP;
 }
 
-void DatasetManager::SendSetResponse(const Coap::Header &    aRequestHeader,
+void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State         aState)
 {
-    ThreadNetif &netif = GetNetif();
-    otError      error = OT_ERROR_NONE;
-    Coap::Header responseHeader;
-    Message *    message;
-    StateTlv     state;
+    ThreadNetif &  netif = GetNetif();
+    otError        error = OT_ERROR_NONE;
+    Coap::Message *message;
+    StateTlv       state;
 
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-    responseHeader.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetDefaultResponseHeader(aRequest);
+    message->SetPayloadMarker();
 
     state.Init();
     state.SetState(aState);
@@ -445,19 +444,15 @@ void ActiveDataset::StopLeader(void)
     GetNetif().GetCoap().RemoveResource(mResourceSet);
 }
 
-void ActiveDataset::HandleSet(void *               aContext,
-                              otCoapHeader *       aHeader,
-                              otMessage *          aMessage,
-                              const otMessageInfo *aMessageInfo)
+void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleSet(*static_cast<Coap::Header *>(aHeader),
-                                                      *static_cast<Message *>(aMessage),
+    static_cast<ActiveDataset *>(aContext)->HandleSet(*static_cast<Coap::Message *>(aMessage),
                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void ActiveDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void ActiveDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    SuccessOrExit(DatasetManager::Set(aHeader, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::Set(aMessage, aMessageInfo));
     ApplyConfiguration();
 
 exit:
@@ -475,26 +470,22 @@ void PendingDataset::StopLeader(void)
     GetNetif().GetCoap().RemoveResource(mResourceSet);
 }
 
-void PendingDataset::HandleSet(void *               aContext,
-                               otCoapHeader *       aHeader,
-                               otMessage *          aMessage,
-                               const otMessageInfo *aMessageInfo)
+void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleSet(*static_cast<Coap::Header *>(aHeader),
-                                                       *static_cast<Message *>(aMessage),
+    static_cast<PendingDataset *>(aContext)->HandleSet(*static_cast<Coap::Message *>(aMessage),
                                                        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void PendingDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void PendingDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    SuccessOrExit(DatasetManager::Set(aHeader, aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::Set(aMessage, aMessageInfo));
     StartDelayTimer();
 
 exit:
     return;
 }
 
-void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage)
+void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
 {
     ThreadNetif & netif  = GetNetif();
     uint16_t      offset = aMessage.GetOffset();

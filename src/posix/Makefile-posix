@@ -84,6 +84,10 @@ ifeq ($(DISABLE_EXECUTABLE), 1)
 configure_OPTIONS              += --enable-executable=no
 endif
 
+ifeq ($(PLATFORM_NETIF),1)
+configure_OPTIONS              += --enable-platform-netif
+endif
+
 ifeq (${SNTP_CLIENT}, 1)
 configure_OPTIONS              += --enable-sntp-client
 endif

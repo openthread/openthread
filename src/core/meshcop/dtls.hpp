@@ -316,6 +316,8 @@ public:
     ProvisioningUrlTlv mProvisioningUrl;
 
 private:
+    void FreeMbedtls(void);
+
     static otError MapError(int rval);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE

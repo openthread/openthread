@@ -56,7 +56,7 @@ void nrf_802154_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
     nrf_802154_received_raw(p_data, power, lqi);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_received(p_data + RAW_PAYLOAD_OFFSET, p_data[RAW_LENGTH_OFFSET], power, lqi);
-#endif // NRF_802154_USE_RAW_API
+#endif  // NRF_802154_USE_RAW_API
 }
 
 void nrf_802154_notify_receive_failed(nrf_802154_rx_error_t error)
@@ -86,7 +86,7 @@ void nrf_802154_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_er
     nrf_802154_transmit_failed(p_frame, error);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_transmit_failed(p_frame + RAW_PAYLOAD_OFFSET, error);
-#endif // NRF_802154_USE_RAW_API
+#endif  // NRF_802154_USE_RAW_API
 }
 
 void nrf_802154_notify_energy_detected(uint8_t result)

@@ -326,11 +326,15 @@ otError Dhcp6Client::AppendElapsedTime(Message &aMessage)
 otError Dhcp6Client::AppendClientIdentifier(Message &aMessage)
 {
     ClientIdentifier option;
+    Mac::ExtAddress  eui64;
+
+    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
 
     option.Init();
     option.SetDuidType(kDuidLL);
     option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(GetNetif().GetMac().GetExtAddress());
+    option.SetDuidLinkLayerAddress(eui64);
+
     return aMessage.Append(&option, sizeof(option));
 }
 
@@ -493,13 +497,15 @@ otError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset
 {
     otError          error = OT_ERROR_NONE;
     ClientIdentifier option;
+    Mac::ExtAddress  eui64;
 
-    VerifyOrExit(
-        (((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-          (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) && (option.GetDuidType() == kDuidLL) &&
-          (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-         (!memcmp(option.GetDuidLinkLayerAddress(), &GetNetif().GetMac().GetExtAddress(), sizeof(Mac::ExtAddress)))),
-        error = OT_ERROR_PARSE);
+    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+
+    VerifyOrExit((((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
+                   (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
+                   (option.GetDuidType() == kDuidLL) && (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
+                  (!memcmp(option.GetDuidLinkLayerAddress(), eui64.m8, sizeof(Mac::ExtAddress)))),
+                 error = OT_ERROR_PARSE);
 exit:
     return error;
 }

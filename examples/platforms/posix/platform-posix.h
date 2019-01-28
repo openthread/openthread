@@ -49,7 +49,7 @@
 #include <WinSock2.h>
 #include <windows.h>
 #define POLL WSAPoll
-#define ssize_t int
+#define ssize_t long
 #include <time.h>
 #define localtime _localtime32
 // In user mode, define some Linux functions

@@ -97,23 +97,18 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #endif
 }
 
-otError MeshForwarder::Start(void)
+void MeshForwarder::Start(void)
 {
-    otError error = OT_ERROR_NONE;
-
     if (mEnabled == false)
     {
         GetNetif().GetMac().SetRxOnWhenIdle(true);
         mEnabled = true;
     }
-
-    return error;
 }
 
-otError MeshForwarder::Stop(void)
+void MeshForwarder::Stop(void)
 {
     ThreadNetif &netif = GetNetif();
-    otError      error = OT_ERROR_NONE;
     Message *    message;
 
     VerifyOrExit(mEnabled == true);
@@ -147,7 +142,7 @@ otError MeshForwarder::Stop(void)
     netif.GetMac().SetRxOnWhenIdle(false);
 
 exit:
-    return error;
+    return;
 }
 
 void MeshForwarder::RemoveMessage(Message &aMessage)

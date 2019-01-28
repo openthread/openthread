@@ -37,7 +37,7 @@
 
 #include <openthread/platform/random.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -58,7 +58,7 @@ namespace ot {
 namespace NetworkData {
 
 LeaderBase::LeaderBase(Instance &aInstance)
-    : NetworkData(aInstance, false)
+    : NetworkData(aInstance, kTypeLeader)
 {
     Reset();
 }

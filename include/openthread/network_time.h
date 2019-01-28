@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * This enum represents OpenThread time synchronization status.
+ * This enumeration represents OpenThread time synchronization status.
  *
  */
 typedef enum otNetworkTimeStatus
@@ -63,6 +63,10 @@ typedef enum otNetworkTimeStatus
     OT_NETWORK_TIME_SYNCHRONIZED   = 1,  ///< The device network time is synchronized.
 } otNetworkTimeStatus;
 
+/**
+ * This function pointer is called when a network time sync or status change occurs.
+ *
+ */
 typedef void (*otNetworkTimeSyncCallbackFn)(void *aCallbackContext);
 
 /**

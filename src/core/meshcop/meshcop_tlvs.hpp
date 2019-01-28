@@ -73,7 +73,7 @@ public:
         kChannel                 = OT_MESHCOP_TLV_CHANNEL,                  ///< Channel TLV
         kPanId                   = OT_MESHCOP_TLV_PANID,                    ///< PAN ID TLV
         kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,                 ///< Extended PAN ID TLV
-        kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,              ///< Newtork Name TLV
+        kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,              ///< Network Name TLV
         kPSKc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
         kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                ///< Network Master Key TLV
         kNetworkKeySequence      = OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE,     ///< Network Key Sequence TLV

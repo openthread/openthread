@@ -318,18 +318,22 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     mRxOnWhenIdle = aRxOnWhenIdle;
 
     // If the new value for `mRxOnWhenIdle` is `true` (i.e., radio should
-    // remain in Rx while idle) we stop any ongoing or pending `WaitinForData`
+    // remain in Rx while idle) we stop any ongoing or pending `WaitingForData`
     // operation (since this operation only applies to sleepy devices).
 
     if (mRxOnWhenIdle)
     {
-        mPendingWaitingForData = false;
+        if (mPendingWaitingForData)
+        {
+            mTimer.Stop();
+            mPendingWaitingForData = false;
+        }
 
         if (mOperation == kOperationWaitingForData)
         {
             mTimer.Stop();
             FinishOperation();
-            PerformNextOperation();
+            mOperationTask.Post();
         }
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -355,7 +359,6 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(mPanChannel != aChannel, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
@@ -379,7 +382,6 @@ otError Mac::SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(OT_RADIO_CHANNEL_MIN <= aChannel && aChannel <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(mRadioChannelAcquisitionId && aAcquisitionId == mRadioChannelAcquisitionId,
@@ -499,8 +501,10 @@ otError Mac::SendOutOfBandFrameRequest(otRadioFrame *aOobFrame)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aOobFrame != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mOobFrame == NULL, error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame),
+                 error = OT_ERROR_ALREADY);
 
     mOobFrame = static_cast<Frame *>(aOobFrame);
 
@@ -616,7 +620,6 @@ void Mac::PerformNextOperation(void)
         mPendingEnergyScan       = false;
         mPendingTransmitBeacon   = false;
         mPendingTransmitData     = false;
-        mOobFrame                = NULL;
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -793,7 +796,7 @@ bool Mac::ShouldSendBeacon(void) const
         // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
         // the device should transmit IEEE 802.15.4 Beacons in response
         // to IEEE 802.15.4 Beacon Requests even while the device is not
-        // router capable and detached (i.e., `IsBeaconeEnabled()` is
+        // router capable and detached (i.e., `IsBeaconEnabled()` is
         // false) but only if it is in joinable state (unsecure port
         // list is not empty).
 
@@ -1168,14 +1171,8 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
     case kOperationTransmitData:
         if (aFrame.IsDataRequestCommand())
         {
-            bool framePending = false;
-
-            if ((aError == OT_ERROR_NONE) && aFrame.GetAckRequest() && (aAckFrame != NULL))
-            {
-                framePending = aAckFrame->GetFramePending();
-            }
-
-            if (mEnabled && framePending)
+            if (mEnabled && (aError == OT_ERROR_NONE) && aFrame.GetAckRequest() && (aAckFrame != NULL) &&
+                aAckFrame->GetFramePending())
             {
                 mTimer.Start(kDataPollTimeout);
                 StartOperation(kOperationWaitingForData);
@@ -1200,7 +1197,6 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
         break;
 
     case kOperationTransmitOutOfBandFrame:
-        mOobFrame = NULL;
         FinishOperation();
         PerformNextOperation();
         break;
@@ -1234,14 +1230,20 @@ void Mac::HandleTimer(void)
         PerformNextOperation();
         break;
 
-    default:
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-        otLogDebgMac("Sleep delay timeout expired");
-        mDelayingSleep = false;
-        UpdateIdleMode();
-#else
-        assert(false);
+    case kOperationIdle:
+        if (mDelayingSleep)
+        {
+            otLogDebgMac("Sleep delay timeout expired");
+            mDelayingSleep = false;
+            UpdateIdleMode();
+        }
+
+        break;
 #endif
+
+    default:
+        assert(false);
         break;
     }
 }

@@ -45,13 +45,13 @@
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
-#define RETRY_DELAY     500      ///< Procedure is delayed by this time if it cannot be performed at the moment [us].
-#define MAX_RETRY_DELAY 1000000  ///< Maximum allowed delay of procedure retry [us].
+#define RETRY_DELAY     500     ///< Procedure is delayed by this time if it cannot be performed at the moment [us].
+#define MAX_RETRY_DELAY 1000000 ///< Maximum allowed delay of procedure retry [us].
 
 static void timeout_timer_retry(void);
 
-static uint32_t           m_timeout = NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT;  ///< ACK timeout in us.
-static nrf_802154_timer_t m_timer;                                                     ///< Timer used to notify when the ACK frama is not received for too long.
+static uint32_t           m_timeout = NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT; ///< ACK timeout in us.
+static nrf_802154_timer_t m_timer;                                                    ///< Timer used to notify when the ACK frama is not received for too long.
 static volatile bool      m_procedure_is_active;
 static const uint8_t    * mp_frame;
 

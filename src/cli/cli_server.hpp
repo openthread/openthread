@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include "cli/cli.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -46,6 +48,11 @@ namespace Cli {
 class Server
 {
 public:
+    Server(Instance *aInstance)
+        : mInterpreter(aInstance)
+    {
+    }
+
     /**
      * This method delivers raw characters to the client.
      *
@@ -75,11 +82,36 @@ public:
      * @retval  -1  Driver is broken.
      *
      */
-    virtual int OutputFormat(const char *aFormat, ...)
+    int OutputFormat(const char *aFormat, ...);
+
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFormat      A pointer to the format string.
+     * @param[in]  aArguments   A variable list of arguments for format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int OutputFormatV(const char *aFormat, va_list aArguments);
+
+    /**
+     * This method returns a reference to the interpreter object.
+     *
+     * @returns A reference to the interpreter object.
+     *
+     */
+    Interpreter &GetInterpreter(void) { return mInterpreter; }
+
+    static Server *sServer;
+
+protected:
+    enum
     {
-        OT_UNUSED_VARIABLE(aFormat);
-        return -1;
-    }
+        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+    };
+
+    Interpreter mInterpreter;
 };
 
 } // namespace Cli

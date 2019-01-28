@@ -31,6 +31,7 @@
  *   This file implements the spinel based radio transceiver.
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include "radio_spinel.hpp"
@@ -1455,7 +1456,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     sRadioSpinel.UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
 }
 
-void platformRadioProcess(otInstance *aInstance, fd_set *aReadFdSet, fd_set *aWriteFdSet)
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
     sRadioSpinel.Process(*aReadFdSet, *aWriteFdSet);
     OT_UNUSED_VARIABLE(aInstance);
@@ -1467,7 +1468,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.AddSrcMatchShortEntry(aShortAddress);
@@ -1486,7 +1487,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     return sRadioSpinel.AddSrcMatchExtEntry(addr);
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.ClearSrcMatchShortEntry(aShortAddress);

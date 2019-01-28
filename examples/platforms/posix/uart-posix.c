@@ -309,7 +309,7 @@ void otPlatDebugUart_putchar_raw(int c)
      * in some/many cases duplicate cr because in
      * some cases the log function {ie: Mbed} already
      * includes the CR or LF... but other log functions
-     * do not include cr/lf and expect it appened
+     * do not include cr/lf and expect it appended
      */
     fp = posix_logfile;
 

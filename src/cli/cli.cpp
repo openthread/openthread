@@ -64,7 +64,6 @@
 #endif
 
 #ifndef OTDLL
-#include <openthread/dhcp6_server.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/platform/uart.h>
@@ -74,7 +73,6 @@
 #endif
 
 #include "cli_dataset.hpp"
-#include "cli_uart.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include "cli_coap.hpp"
@@ -96,6 +94,7 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
+#include "cli_server.hpp"
 #include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -301,20 +300,22 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
     , mUdp(*this)
 #endif
-    , mInstance(aInstance)
+    , mDataset(*this)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     , mCoapSecure(*this)
 #endif
+    , mInstance(aInstance)
 {
 #ifdef OTDLL
+    // On Windows, mInstance represents the current selected otInstance
+    // which should be NULL now.
+    assert(aInstance = NULL);
     assert(mApiInstance);
     CacheInstances();
 #else
-    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
-    otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 #endif
@@ -852,13 +853,6 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     }
 }
 
-void Interpreter::ProcessDataset(int argc, char *argv[])
-{
-    otError error;
-    error = Dataset::Process(mInstance, argc, argv, *mServer);
-    AppendResult(error);
-}
-
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 {
@@ -893,6 +887,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(value <= static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
     }
 
@@ -1635,18 +1630,25 @@ void Interpreter::ProcessService(int argc, char *argv[])
     if (strcmp(argv[0], "add") == 0)
     {
         otServiceConfig cfg;
-        long            enterpriseNumber = 0;
+        long            enterpriseNumber;
+        size_t          length;
 
         VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
 
         SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
 
-        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[2]));
+        length = strlen(argv[2]);
+        VerifyOrExit(length <= sizeof(cfg.mServiceData), error = OT_ERROR_NO_BUFS);
+        cfg.mServiceDataLength = static_cast<uint8_t>(length);
         memcpy(cfg.mServiceData, argv[2], cfg.mServiceDataLength);
-        cfg.mEnterpriseNumber               = static_cast<uint32_t>(enterpriseNumber);
-        cfg.mServerConfig.mStable           = true;
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[3]));
+
+        length = strlen(argv[3]);
+        VerifyOrExit(length <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_NO_BUFS);
+        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
         memcpy(cfg.mServerConfig.mServerData, argv[3], cfg.mServerConfig.mServerDataLength);
+
+        cfg.mServerConfig.mStable = true;
 
         SuccessOrExit(error = otServerAddService(mInstance, &cfg));
     }
@@ -1928,15 +1930,16 @@ void Interpreter::ProcessPing(int argc, char *argv[])
         switch (index)
         {
         case 1:
-            mLength = (uint16_t)value;
+            mLength = static_cast<uint16_t>(value);
             break;
 
         case 2:
-            mCount = (uint16_t)value;
+            mCount = static_cast<uint16_t>(value);
             break;
 
         case 3:
-            mInterval = (uint32_t)value;
+            mInterval = static_cast<uint32_t>(value);
+            VerifyOrExit(mInterval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
             mInterval = mInterval * 1000;
             break;
 
@@ -2125,6 +2128,8 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     otBorderRouterConfig config;
     int                  argcur = 0;
 
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
     memset(&config, 0, sizeof(otBorderRouterConfig));
 
     char *prefixLengthStr;
@@ -2216,6 +2221,8 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&prefix, 0, sizeof(otIp6Prefix));
 
@@ -2735,6 +2742,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         else
         {
             SuccessOrExit(error = ParseLong(argv[0], value));
+            VerifyOrExit(value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << value;
         }
     }
@@ -2996,6 +3004,13 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessDataset(int argc, char *argv[])
+{
+    otError error;
+    error = mDataset.Process(argc, argv);
     AppendResult(error);
 }
 
@@ -3742,7 +3757,7 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
     // all diagnostics related features are processed within diagnostics module
     output[sizeof(output) - 1] = '\0';
     otDiagProcessCmd(argc, argv, output, sizeof(output) - 1);
-    mServer->OutputFormat("%s\n", output);
+    mServer->Output(output, static_cast<uint16_t>(strlen(output)));
 }
 #endif
 
@@ -3795,36 +3810,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
             AppendResult(OT_ERROR_PARSE);
         }
     }
-
-exit:
-    return;
-}
-
-void OTCALL Interpreter::s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext)
-{
-#ifdef OTDLL
-    otCliContext *cliContext = static_cast<otCliContext *>(aContext);
-    cliContext->mInterpreter->HandleNetifStateChanged(cliContext->mInstance, aFlags);
-#else
-    static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
-#endif
-}
-
-#ifdef OTDLL
-void Interpreter::HandleNetifStateChanged(otInstance *mInstance, otChangedFlags aFlags)
-#else
-void Interpreter::HandleNetifStateChanged(otChangedFlags aFlags)
-#endif
-{
-    VerifyOrExit((aFlags & OT_CHANGED_THREAD_NETDATA) != 0);
-
-#ifndef OTDLL
-    otIp6SlaacUpdate(mInstance, mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses), otIp6CreateRandomIid, NULL);
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-    otDhcp6ServerUpdate(mInstance);
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-#endif
 
 exit:
     return;
@@ -3920,9 +3905,51 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 #else
     OT_UNUSED_VARIABLE(aOwnerLocator);
 
-    Interpreter &interpreter = Uart::sUartServer->GetInterpreter();
+    Interpreter &interpreter = Server::sServer->GetInterpreter();
 #endif
     return interpreter;
+}
+
+extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)
+{
+    Server::sServer->GetInterpreter().SetUserCommands(aUserCommands, aLength);
+}
+
+extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    Server::sServer->GetInterpreter().OutputBytes(aBytes, aLength);
+}
+
+extern "C" void otCliOutputFormat(const char *aFmt, ...)
+{
+    va_list aAp;
+    va_start(aAp, aFmt);
+    Server::sServer->OutputFormatV(aFmt, aAp);
+    va_end(aAp);
+}
+
+extern "C" void otCliOutput(const char *aString, uint16_t aLength)
+{
+    Server::sServer->Output(aString, aLength);
+}
+
+extern "C" void otCliAppendResult(otError aError)
+{
+    Server::sServer->GetInterpreter().AppendResult(aError);
+}
+
+extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    VerifyOrExit(Server::sServer != NULL);
+
+    Server::sServer->OutputFormatV(aFormat, aArgs);
+    Server::sServer->OutputFormat("\r\n");
+
+exit:
+    return;
 }
 
 } // namespace Cli

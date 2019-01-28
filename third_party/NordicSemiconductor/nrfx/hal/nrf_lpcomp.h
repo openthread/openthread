@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2014 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2014 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRF_LPCOMP_H_
@@ -188,6 +179,132 @@ typedef struct
  *
  * @param[in] p_config Configuration.
  */
+__STATIC_INLINE void nrf_lpcomp_configure(const nrf_lpcomp_config_t * p_config);
+
+/**
+ * @brief Function for selecting the LPCOMP input.
+ *
+ * This function selects the active input of LPCOMP.
+ *
+ * @param[in] input Input to be selected.
+ */
+__STATIC_INLINE void nrf_lpcomp_input_select(nrf_lpcomp_input_t input);
+
+/**
+ * @brief Function for enabling the Low Power Comparator.
+ *
+ * This function enables LPCOMP.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_enable(void);
+
+/**
+ * @brief Function for disabling the Low Power Comparator.
+ *
+ * This function disables LPCOMP.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_disable(void);
+
+/**
+ * @brief Function for getting the last LPCOMP compare result.
+ *
+ * @return The last compare result. If 0 then VIN+ < VIN-, if 1 then the opposite.
+ */
+__STATIC_INLINE uint32_t nrf_lpcomp_result_get(void);
+
+/**
+ * @brief Function for enabling interrupts from LPCOMP.
+ *
+ * @param[in] lpcomp_int_mask Mask of interrupts to be enabled.
+ *
+ * @sa nrf_lpcomp_int_disable()
+ * @sa nrf_lpcomp_int_enable_check()
+ */
+__STATIC_INLINE void nrf_lpcomp_int_enable(uint32_t lpcomp_int_mask);
+
+/**
+ * @brief Function for disabling interrupts from LPCOMP.
+ *
+ * @param[in] lpcomp_int_mask Mask of interrupts to be disabled.
+ *
+ * @sa nrf_lpcomp_int_enable()
+ * @sa nrf_lpcomp_int_enable_check()
+ */
+__STATIC_INLINE void nrf_lpcomp_int_disable(uint32_t lpcomp_int_mask);
+
+/**
+ * @brief Function for getting the enabled interrupts of LPCOMP.
+ *
+ * @param[in] lpcomp_int_mask Mask of interrupts to be checked.
+ *
+ * @retval true If any of interrupts of the specified mask are enabled.
+ *
+ * @sa nrf_lpcomp_int_enable()
+ * @sa nrf_lpcomp_int_disable()
+ */
+__STATIC_INLINE bool nrf_lpcomp_int_enable_check(uint32_t lpcomp_int_mask);
+
+/**
+ * @brief Function for getting the address of a specific LPCOMP task register.
+ *
+ * @param[in] lpcomp_task LPCOMP task.
+ *
+ * @return The address of the specified LPCOMP task.
+ */
+__STATIC_INLINE uint32_t * nrf_lpcomp_task_address_get(nrf_lpcomp_task_t lpcomp_task);
+
+/**
+ * @brief Function for getting the address of a specific LPCOMP event register.
+ *
+ * @param[in] lpcomp_event LPCOMP event.
+ *
+ * @return The address of the specified LPCOMP event.
+ */
+__STATIC_INLINE uint32_t * nrf_lpcomp_event_address_get(nrf_lpcomp_event_t lpcomp_event);
+
+/**
+ * @brief  Function for setting LPCOMP shorts.
+ *
+ * @param[in] lpcomp_short_mask LPCOMP shorts by mask.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_shorts_enable(uint32_t lpcomp_short_mask);
+
+/**
+ * @brief Function for clearing LPCOMP shorts by mask.
+ *
+ * @param[in] lpcomp_short_mask LPCOMP shorts to be cleared.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_shorts_disable(uint32_t lpcomp_short_mask);
+
+/**
+ * @brief Function for setting a specific LPCOMP task.
+ *
+ * @param[in] lpcomp_task LPCOMP task to be set.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_task_trigger(nrf_lpcomp_task_t lpcomp_task);
+
+/**
+ * @brief Function for clearing a specific LPCOMP event.
+ *
+ * @param[in] lpcomp_event LPCOMP event to be cleared.
+ *
+ */
+__STATIC_INLINE void nrf_lpcomp_event_clear(nrf_lpcomp_event_t lpcomp_event);
+
+/**
+ * @brief Function for getting the state of a specific LPCOMP event.
+ *
+ * @retval true If the specified LPCOMP event is active.
+ *
+ */
+__STATIC_INLINE bool nrf_lpcomp_event_check(nrf_lpcomp_event_t lpcomp_event);
+
+#ifndef SUPPRESS_INLINE_IMPLEMENTATION
+
 __STATIC_INLINE void nrf_lpcomp_configure(const nrf_lpcomp_config_t * p_config)
 {
     NRF_LPCOMP->TASKS_STOP = 1;
@@ -209,17 +326,9 @@ __STATIC_INLINE void nrf_lpcomp_configure(const nrf_lpcomp_config_t * p_config)
 #endif //LPCOMP_FEATURE_HYST_PRESENT
     NRF_LPCOMP->SHORTS      = 0;
     NRF_LPCOMP->INTENCLR    = LPCOMP_INTENCLR_CROSS_Msk | LPCOMP_INTENCLR_UP_Msk |
-                               LPCOMP_INTENCLR_DOWN_Msk | LPCOMP_INTENCLR_READY_Msk;
+                              LPCOMP_INTENCLR_DOWN_Msk | LPCOMP_INTENCLR_READY_Msk;
 }
 
-
-/**
- * @brief Function for selecting the LPCOMP input.
- *
- * This function selects the active input of LPCOMP.
- *
- * @param[in] input Input to be selected.
- */
 __STATIC_INLINE void nrf_lpcomp_input_select(nrf_lpcomp_input_t input)
 {
     uint32_t lpcomp_enable_state = NRF_LPCOMP->ENABLE;
@@ -230,13 +339,6 @@ __STATIC_INLINE void nrf_lpcomp_input_select(nrf_lpcomp_input_t input)
     NRF_LPCOMP->ENABLE = lpcomp_enable_state;
 }
 
-
-/**
- * @brief Function for enabling the Low Power Comparator.
- *
- * This function enables LPCOMP.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_enable(void)
 {
     NRF_LPCOMP->ENABLE = LPCOMP_ENABLE_ENABLE_Enabled << LPCOMP_ENABLE_ENABLE_Pos;
@@ -246,142 +348,56 @@ __STATIC_INLINE void nrf_lpcomp_enable(void)
     NRF_LPCOMP->EVENTS_CROSS = 0;
 }
 
-
-/**
- * @brief Function for disabling the Low Power Comparator.
- *
- * This function disables LPCOMP.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_disable(void)
 {
-    NRF_LPCOMP->ENABLE     = LPCOMP_ENABLE_ENABLE_Disabled << LPCOMP_ENABLE_ENABLE_Pos;
+    NRF_LPCOMP->ENABLE = LPCOMP_ENABLE_ENABLE_Disabled << LPCOMP_ENABLE_ENABLE_Pos;
 }
 
-
-/**
- * @brief Function for getting the last LPCOMP compare result.
- *
- * @return The last compare result. If 0 then VIN+ < VIN-, if 1 then the opposite.
- */
 __STATIC_INLINE uint32_t nrf_lpcomp_result_get(void)
 {
     return (uint32_t)NRF_LPCOMP->RESULT;
 }
 
-
-/**
- * @brief Function for enabling interrupts from LPCOMP.
- *
- * @param[in] lpcomp_int_mask Mask of interrupts to be enabled.
- *
- * @sa nrf_lpcomp_int_disable()
- * @sa nrf_lpcomp_int_enable_check()
- */
 __STATIC_INLINE void nrf_lpcomp_int_enable(uint32_t lpcomp_int_mask)
 {
     NRF_LPCOMP->INTENSET = lpcomp_int_mask;
 }
 
-
-/**
- * @brief Function for disabling interrupts from LPCOMP.
- *
- * @param[in] lpcomp_int_mask Mask of interrupts to be disabled.
- *
- * @sa nrf_lpcomp_int_enable()
- * @sa nrf_lpcomp_int_enable_check()
- */
 __STATIC_INLINE void nrf_lpcomp_int_disable(uint32_t lpcomp_int_mask)
 {
     NRF_LPCOMP->INTENCLR = lpcomp_int_mask;
 }
 
-
-/**
- * @brief Function for getting the enabled interrupts of LPCOMP.
- *
- * @param[in] lpcomp_int_mask Mask of interrupts to be checked.
- *
- * @retval true If any of interrupts of the specified mask are enabled.
- *
- * @sa nrf_lpcomp_int_enable()
- * @sa nrf_lpcomp_int_disable()
- */
 __STATIC_INLINE bool nrf_lpcomp_int_enable_check(uint32_t lpcomp_int_mask)
 {
     return (NRF_LPCOMP->INTENSET & lpcomp_int_mask); // when read this register will return the value of INTEN.
 }
 
-
-/**
- * @brief Function for getting the address of a specific LPCOMP task register.
- *
- * @param[in] lpcomp_task LPCOMP task.
- *
- * @return The address of the specified LPCOMP task.
- */
 __STATIC_INLINE uint32_t * nrf_lpcomp_task_address_get(nrf_lpcomp_task_t lpcomp_task)
 {
     return (uint32_t *)((uint8_t *)NRF_LPCOMP + lpcomp_task);
 }
 
-
-/**
- * @brief Function for getting the address of a specific LPCOMP event register.
- *
- * @param[in] lpcomp_event LPCOMP event.
- *
- * @return The address of the specified LPCOMP event.
- */
 __STATIC_INLINE uint32_t * nrf_lpcomp_event_address_get(nrf_lpcomp_event_t lpcomp_event)
 {
     return (uint32_t *)((uint8_t *)NRF_LPCOMP + lpcomp_event);
 }
 
-
-/**
- * @brief  Function for setting LPCOMP shorts.
- *
- * @param[in] lpcomp_short_mask LPCOMP shorts by mask.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_shorts_enable(uint32_t lpcomp_short_mask)
 {
     NRF_LPCOMP->SHORTS |= lpcomp_short_mask;
 }
 
-
-/**
- * @brief Function for clearing LPCOMP shorts by mask.
- *
- * @param[in] lpcomp_short_mask LPCOMP shorts to be cleared.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_shorts_disable(uint32_t lpcomp_short_mask)
 {
     NRF_LPCOMP->SHORTS &= ~lpcomp_short_mask;
 }
 
-
-/**
- * @brief Function for setting a specific LPCOMP task.
- *
- * @param[in] lpcomp_task LPCOMP task to be set.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_task_trigger(nrf_lpcomp_task_t lpcomp_task)
 {
     *( (volatile uint32_t *)( (uint8_t *)NRF_LPCOMP + lpcomp_task) ) = 1;
 }
 
-
-/**
- * @brief Function for clearing a specific LPCOMP event.
- *
- * @param[in] lpcomp_event LPCOMP event to be cleared.
- *
- */
 __STATIC_INLINE void nrf_lpcomp_event_clear(nrf_lpcomp_event_t lpcomp_event)
 {
     *( (volatile uint32_t *)( (uint8_t *)NRF_LPCOMP + lpcomp_event) ) = 0;
@@ -391,17 +407,12 @@ __STATIC_INLINE void nrf_lpcomp_event_clear(nrf_lpcomp_event_t lpcomp_event)
 #endif
 }
 
-
-/**
- * @brief Function for getting the state of a specific LPCOMP event.
- *
- * @retval true If the specified LPCOMP event is active.
- *
- */
 __STATIC_INLINE bool nrf_lpcomp_event_check(nrf_lpcomp_event_t lpcomp_event)
 {
     return (bool) (*(volatile uint32_t *)( (uint8_t *)NRF_LPCOMP + lpcomp_event));
 }
+
+#endif // SUPPRESS_INLINE_IMPLEMENTATION
 
 /** @} */
 
@@ -409,4 +420,4 @@ __STATIC_INLINE bool nrf_lpcomp_event_check(nrf_lpcomp_event_t lpcomp_event)
 }
 #endif
 
-#endif /* NRF_LPCOMP_H_ */
+#endif // NRF_LPCOMP_H_

@@ -77,6 +77,15 @@ public:
     };
 
     /**
+     * Kiss code length.
+     *
+     */
+    enum
+    {
+        kKissCodeLength = 4, ///< Length of the kiss code in ASCII format
+    };
+
+    /**
      * This method returns the flags field value.
      *
      * @returns Value of the flags field (LI, VN and Mode).
@@ -203,14 +212,6 @@ public:
      *
      */
     char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
-
-    /**
-     * This method returns the length of the kiss code in ASCII format.
-     *
-     * @returns The length of the kiss code in ASCII format.
-     *
-     */
-    static uint16_t GetKissCodeLength(void) { return sizeof(uint32_t); };
 
     /**
      * This method returns the reference timestamp seconds field.
@@ -513,7 +514,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Sntp client.
+ * This class implements SNTP client.
  *
  */
 class Client

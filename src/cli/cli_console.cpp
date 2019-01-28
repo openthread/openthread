@@ -45,28 +45,26 @@
 namespace ot {
 namespace Cli {
 
-static Console *sServer;
-
 static otDEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
 extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
 
-    sServer = new (&sCliConsoleRaw) Console(instance);
-    sServer->SetOutputCallback(aCallback);
-    sServer->SetContext(aContext);
+    Server::sServer = new (&sCliConsoleRaw) Console(instance);
+    static_cast<Console *>(Server::sServer)->SetOutputCallback(aCallback);
+    static_cast<Console *>(Server::sServer)->SetContext(aContext);
 }
 
 extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
 {
-    sServer->ReceiveTask(aBuf, aBufLength);
+    static_cast<Console *>(Server::sServer)->ReceiveTask(aBuf, aBufLength);
 }
 
 Console::Console(Instance *aInstance)
-    : mCallback(NULL)
+    : Server(aInstance)
+    , mCallback(NULL)
     , mContext(NULL)
-    , mInterpreter(aInstance)
 {
 }
 
@@ -88,18 +86,6 @@ void Console::ReceiveTask(char *aBuf, uint16_t aBufLength)
 int Console::Output(const char *aBuf, uint16_t aBufLength)
 {
     return mCallback(aBuf, aBufLength, mContext);
-}
-
-int Console::OutputFormat(const char *fmt, ...)
-{
-    char    buf[kMaxLineLength];
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
 } // namespace Cli

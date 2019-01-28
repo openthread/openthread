@@ -76,11 +76,11 @@ typedef struct nrf_802154_timer_s nrf_802154_timer_t;
  */
 struct nrf_802154_timer_s
 {
-    uint32_t                       t0;         ///< Base time of the timer [us]
-    uint32_t                       dt;         ///< Timer expiration delta from @p t0 [us]
-    nrf_802154_timer_callback_t    callback;   ///< Callback function called when timer expires
-    void                         * p_context;  ///< User-defined context passed to callback function
-    nrf_802154_timer_t           * p_next;     ///< A pointer to the next running timer
+    uint32_t                    t0;        ///< Base time of the timer [us]
+    uint32_t                    dt;        ///< Timer expiration delta from @p t0 [us]
+    nrf_802154_timer_callback_t callback;  ///< Callback function called when timer expires
+    void                      * p_context; ///< User-defined context passed to callback function
+    nrf_802154_timer_t        * p_next;    ///< A pointer to the next running timer
 };
 
 /**
@@ -120,6 +120,15 @@ uint32_t nrf_802154_timer_sched_granularity_get(void);
  * @retval false  Given time @p t0 @p dt is not in future (compared to given @p now).
  */
 bool nrf_802154_timer_sched_time_is_in_future(uint32_t now, uint32_t t0, uint32_t dt);
+
+/**
+ * @brief Get timer time remaining to expiration.
+ *
+ * @param[in]  p_timer   Pointer to the timer to check remaining time.
+ *
+ * @retval remaining time [us] or 0 if timer has already expired.
+ */
+uint32_t nrf_802154_timer_sched_remaining_time_get(const nrf_802154_timer_t * p_timer);
 
 /**
  * @brief Start given timer and add it to the scheduler.

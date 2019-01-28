@@ -42,16 +42,16 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
-#include "cli/cli_server.hpp"
-#include "cli/cli_udp_example.hpp"
+#include "cli/cli_dataset.hpp"
+#include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-#include <coap/coap_header.hpp>
+#include <coap/coap_message.hpp>
 #include "cli/cli_coap.hpp"
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <coap/coap_header.hpp>
+#include <coap/coap_message.hpp>
 #include "cli/cli_coap_secure.hpp"
 #endif
 
@@ -81,6 +81,7 @@ namespace ot {
 namespace Cli {
 
 class Interpreter;
+class Server;
 
 /**
  * This structure represents a CLI command.
@@ -100,6 +101,7 @@ class Interpreter
 {
     friend class Coap;
     friend class CoapSecure;
+    friend class Dataset;
     friend class UdpExample;
 
 public:
@@ -208,7 +210,6 @@ private:
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
     void ProcessCounters(int argc, char *argv[]);
-    void ProcessDataset(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
@@ -317,6 +318,7 @@ private:
 #endif
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
+    void ProcessDataset(int argc, char *argv[]);
 #ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
@@ -345,7 +347,6 @@ private:
 #endif
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleNetifStateChanged(otChangedFlags aFlags, void *aContext);
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
 #endif
@@ -379,11 +380,6 @@ private:
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
-#ifdef OTDLL
-    void HandleNetifStateChanged(otInstance *aInstance, otChangedFlags aFlags);
-#else
-    void HandleNetifStateChanged(otChangedFlags aFlags);
-#endif
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame);
 #endif
@@ -431,8 +427,6 @@ private:
     uint32_t   mInterval;
     TimerMilli mPingTimer;
 
-    otNetifAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
-
     otIcmp6Handler mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     bool           mResolvingInProgress;
@@ -447,7 +441,7 @@ private:
 
 #endif
 
-    Instance *mInstance;
+    Dataset mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -459,6 +453,7 @@ private:
     CoapSecure mCoapSecure;
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+    Instance *mInstance;
 };
 
 } // namespace Cli

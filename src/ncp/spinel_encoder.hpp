@@ -129,7 +129,7 @@ public:
      * behavior is undefined.
      *
      * This method moves the write position back to saved position by `BeginFrame()` and replaces the property key
-     * `SPINEL_PORP_LAST_STATUS` and writes the given spinel status error.
+     * `SPINEL_PROP_LAST_STATUS` and writes the given spinel status error.
      *
      * @param[in] aStatus               Spinel error status
      *

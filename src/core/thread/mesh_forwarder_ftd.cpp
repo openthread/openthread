@@ -846,7 +846,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 #endif
         else
         {
-            // TODO: support ALOC for Commissioner, Neighbor Discovery Agent
+            // TODO: support for Neighbor Discovery Agent ALOC
             ExitNow(error = OT_ERROR_DROP);
         }
     }
@@ -1055,7 +1055,7 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
 
     if (aFragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((entry = GetUnusedFragementPriorityEntry()) != NULL);
+        VerifyOrExit((entry = GetUnusedFragmentPriorityEntry()) != NULL);
 
         entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
         entry->SetSrcRloc16(aSrcRloc16);
@@ -1099,7 +1099,7 @@ FragmentPriorityEntry *MeshForwarder::FindFragmentPriorityEntry(uint16_t aTag, u
     return (i >= OT_ARRAY_LENGTH(mFragmentEntries)) ? NULL : &mFragmentEntries[i];
 }
 
-FragmentPriorityEntry *MeshForwarder::GetUnusedFragementPriorityEntry(void)
+FragmentPriorityEntry *MeshForwarder::GetUnusedFragmentPriorityEntry(void)
 {
     size_t i;
 
@@ -1157,7 +1157,7 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
         }
     }
 
-    // Get priority from Ipv6 header or UDP destination port directly
+    // Get priority from IPv6 header or UDP destination port directly
     error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, aPriority);
 
 exit:

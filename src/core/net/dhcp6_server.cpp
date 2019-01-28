@@ -142,7 +142,7 @@ otError Dhcp6Server::UpdateService(void)
             }
         }
 
-        // alreay added
+        // already added
         if (found)
         {
             continue;
@@ -460,11 +460,14 @@ otError Dhcp6Server::AppendServerIdentifier(Message &aMessage)
 {
     otError          error = OT_ERROR_NONE;
     ServerIdentifier option;
+    Mac::ExtAddress  eui64;
+
+    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
 
     option.Init();
     option.SetDuidType(kDuidLL);
     option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(GetNetif().GetMac().GetExtAddress());
+    option.SetDuidLinkLayerAddress(eui64);
     SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));
 
 exit:

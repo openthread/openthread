@@ -233,17 +233,20 @@ public:
     /**
      * This method returns the router for a given router id.
      *
-     * @parma[in]  aRouterId  The router id.
+     * @param[in]  aRouterId  The router id.
      *
      * @returns A pointer to the router or NULL if the router could not be found.
      *
      */
-    Router *GetRouter(uint8_t aRouterId);
+    Router *GetRouter(uint8_t aRouterId)
+    {
+        return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetRouter(aRouterId));
+    }
 
     /**
      * This method returns the router for a given router id.
      *
-     * @parma[in]  aRouterId  The router id.
+     * @param[in]  aRouterId  The router id.
      *
      * @returns A pointer to the router or NULL if the router could not be found.
      *

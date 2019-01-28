@@ -37,6 +37,7 @@
 
 #include "common/instance.hpp"
 #include "common/new.hpp"
+#include "net/udp6.hpp"
 
 using namespace ot;
 
@@ -136,3 +137,17 @@ otUdpSocket *otUdpGetSockets(otInstance *aInstance)
     return instance.Get<Ip6::Ip6>().GetUdp().GetUdpSockets();
 }
 #endif
+
+otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetIp6().GetUdp().AddReceiver(*static_cast<Ip6::UdpReceiver *>(aUdpReceiver));
+}
+
+otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.GetIp6().GetUdp().RemoveReceiver(*static_cast<Ip6::UdpReceiver *>(aUdpReceiver));
+}

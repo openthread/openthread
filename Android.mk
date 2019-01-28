@@ -78,7 +78,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX_APP=1                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_SRC_FILES                                          := \
@@ -91,7 +91,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
     src/core/api/dataset_ftd_api.cpp                        \
-    src/core/api/dhcp6_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
@@ -109,7 +108,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
     src/core/coap/coap.cpp                                  \
-    src/core/coap/coap_header.cpp                           \
+    src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
     src/core/common/crc16.cpp                               \
     src/core/common/instance.cpp                            \
@@ -266,12 +265,13 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
+    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1                                         \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP=2                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
@@ -282,8 +282,9 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_coap.cpp                      \
     src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
+    src/cli/cli_server.cpp                    \
     src/cli/cli_uart.cpp                      \
-    src/cli/cli_udp_example.cpp               \
+    src/cli/cli_udp.cpp                       \
     src/posix/main.c                          \
     $(NULL)
 
@@ -318,7 +319,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX_APP=1                                                   \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
-    -Wno-error=non-virtual-dtor                                                \
+    -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
 LOCAL_LDLIBS                               := \

@@ -209,11 +209,13 @@ Udp::Udp(Instance &aInstance)
 
 otError Udp::AddReceiver(UdpReceiver &aReceiver)
 {
+    otError error = OT_ERROR_NONE;
+
     for (UdpReceiver *cur = mReceivers; cur; cur = cur->GetNext())
     {
         if (cur == &aReceiver)
         {
-            ExitNow();
+            ExitNow(error = OT_ERROR_ALREADY);
         }
     }
 
@@ -221,14 +223,18 @@ otError Udp::AddReceiver(UdpReceiver &aReceiver)
     mReceivers = &aReceiver;
 
 exit:
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Udp::RemoveReceiver(UdpReceiver &aReceiver)
 {
+    otError error = OT_ERROR_NOT_FOUND;
+
     if (mReceivers == &aReceiver)
     {
         mReceivers = mReceivers->GetNext();
+        aReceiver.SetNext(NULL);
+        error = OT_ERROR_NONE;
     }
     else
     {
@@ -237,14 +243,14 @@ otError Udp::RemoveReceiver(UdpReceiver &aReceiver)
             if (handler->GetNext() == &aReceiver)
             {
                 handler->SetNext(aReceiver.GetNext());
+                aReceiver.SetNext(NULL);
+                error = OT_ERROR_NONE;
                 break;
             }
         }
     }
 
-    aReceiver.SetNext(NULL);
-
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Udp::AddSocket(UdpSocket &aSocket)
@@ -418,6 +424,8 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
             }
         }
 
+        aMessage.RemoveHeader(aMessage.GetOffset());
+        assert(aMessage.GetOffset() == 0);
         socket->HandleUdpReceive(aMessage, aMessageInfo);
         break;
     }

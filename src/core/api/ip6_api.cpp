@@ -48,24 +48,22 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+#endif
+
     if (aEnabled)
     {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-        error = instance.GetThreadNetif().Up();
+        instance.GetThreadNetif().Up();
     }
     else
     {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-        error = instance.GetThreadNetif().Down();
+        instance.GetThreadNetif().Down();
     }
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+#endif
     return error;
 }
 
@@ -131,15 +129,6 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     instance.GetThreadNetif().SetMulticastPromiscuous(aEnabled);
-}
-
-void otIp6SlaacUpdate(otInstance *        aInstance,
-                      otNetifAddress *    aAddresses,
-                      uint32_t            aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate,
-                      void *              aContext)
-{
-    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
 }
 
 otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)

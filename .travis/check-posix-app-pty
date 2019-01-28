@@ -37,22 +37,25 @@ die() {
 
 at_exit() {
     EXIT_CODE=$?
-    sudo killall wpantund || true
+
+    sudo killall expect || true
     killall socat || true
+
     exit $EXIT_CODE
 }
 
 build() {
     ./bootstrap
     COVERAGE=1 make -f examples/Makefile-posix
-    COVERAGE=1 make -f src/posix/Makefile-posix PLATFORM_UDP=1
+    COVERAGE=1 make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1
 }
 
 check() {
     trap at_exit INT TERM EXIT
 
     SOCAT_OUTPUT=/tmp/ot-socat
-    socat -d -d pty,raw,b115200,echo=0 pty,raw,b115200,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
+    OT_OUTPUT=/tmp/ot-output
+    socat -d -d pty,raw,echo=0 pty,raw,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
     while true; do
         if test $(head -n2 $SOCAT_OUTPUT | wc -l) = 2; then
             RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
@@ -67,37 +70,48 @@ check() {
 
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
-    OT_NCP_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-ncp)"
-    PLATFORM_NETIF=wpan0 sudo -E wpantund -I wpan0 -o Thread:Config:FilterRLOCAddresses 0 -s "system:${OT_NCP_PATH} ${CORE_PTY}" &
+    OT_CLI_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
+    sudo expect <<EOF > $OT_OUTPUT &
+spawn $OT_CLI_PATH ${OT_NCP_PATH} ${CORE_PTY}
+send "panid 0xface\r\n"
+expect "Done"
+send "ifconfig up\r\n"
+expect "Done"
+send "thread start\r\n"
+expect "Done"
+sleep 5
+send "state\r\n"
+expect "leader"
+expect "Done"
+send "extaddr\r\n"
+expect "Done"
+send "ipaddr\r\n"
+expect "Done"
+wait
+EOF
 
+    # wait until the node becomes leader
     while true; do
         sleep 5
-        if sudo wpanctl status; then
+        if grep -q leader $OT_OUTPUT; then
             break
         else
-            echo 'Still waiting for wpantund'
+            echo 'Still waiting for leader'
         fi
     done
 
-    sudo wpanctl leave || true
-    sudo wpanctl form -c 18 OpenThreadTest
-
-    mleid=$(sudo wpanctl status | grep MeshLocalAddress | cut -d'"' -f4)
-    echo "ML-EID is: ${mleid}"
-
     netstat -an | grep -q 61631 || die 'TMF port is not available!'
-    xaddress=$(sudo wpanctl get 'NCP:ExtendedAddress' | cut -d= -f2 | tr -d ' []')
-    echo "Extended address is: ${xaddress}"
 
+    extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
+    echo "Extended address is: ${extaddr}"
+
+    LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
     # Retrievie extended address through network diagnostic get
-    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${mleid}]:61631/d/dg -f- | xxd -p -u | grep 0008)
+    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f- | xxd -p | grep 0008)
     echo "CoAP response is: ${coap_response}"
 
     # Verify CoAP response contains the extended address
-    [[ "${coap_response}" = *${xaddress}* ]] || die 'failed to get extended address'
-
-    # Leave so that code coverage will be flushed
-    sudo wpanctl leave || true
+    [[ "${coap_response}" = *${extaddr}* ]] && echo 'Success' || die 'failed to get extended address'
 }
 
 main() {

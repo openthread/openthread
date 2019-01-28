@@ -577,7 +577,7 @@ void cc2538RadioProcess(otInstance *aInstance)
         else
 #endif
         {
-            // signal MAC layer for each received frame if promiscous is enabled
+            // signal MAC layer for each received frame if promiscuous is enabled
             // otherwise only signal MAC layer for non-ACK frame
             if (((HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0) ||
                 (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))

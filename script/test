@@ -1,0 +1,135 @@
+#!/bin/bash
+#
+#  Copyright (c) 2018, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#    Description:
+#      This file runs various tests of OpenThread.
+#
+
+set -e
+set -o pipefail
+
+readonly SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g')"
+export top_builddir="build/${SYSTEM_TRIPLET}"
+
+do_build() {
+    if [[ -n "${RADIO_DEVICE}" && "${VIRTUAL_TIME}" = 1 ]]; then
+        VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix
+    else
+        make -f examples/Makefile-posix
+    fi
+
+    if [[ -n "${RADIO_DEVICE}" ]]; then
+        make -f src/posix/Makefile-posix
+    fi
+}
+
+do_clean() {
+    rm -rfv "build/${SYSTEM_TRIPLET}" "build/posix/${SYSTEM_TRIPLET}"
+}
+
+do_cert() {
+    [[ ! -d tmp ]] || rm -rvf tmp
+    PYTHONUNBUFFERED=1 python "$1"
+}
+
+print_usage() {
+    echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
+
+ENVIRONMENTS:
+    NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
+    NODE_MODE       'transceiver' for transceiver mode, otherwise for standalone mode. The default is standalone mode.
+    VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1
+
+COMMANDS:
+    clean           Clean built files to prepare for new build.
+    build           Build project for running tests. This can be used to rebuild the project for changes.
+    cert            Run a single thread-cert test. ENVIRONMENTS should be the same as those given to build or update.
+    help            Print this help.
+
+EXAMPLES:
+    # Test CLI with default settings
+    $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+
+    # Test NCP with default settings
+    NODE_TYPE=ncp-sim $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    NODE_TYPE=ncp-sim $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+
+    # Test CLI with radio only
+    NODE_MODE=transceiver $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    NODE_MODE=transceiver $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+
+    # Test CLI with real time
+    VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+"
+
+    exit $1
+}
+
+main()
+{
+    export NODE_TYPE="${NODE_TYPE:-sim}"
+    export VERBOSE="${VERBOSE:-1}"
+    export VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
+
+    if [[ "${NODE_MODE}" = 'transceiver' ]] ; then
+        export RADIO_DEVICE="build/${SYSTEM_TRIPLET}/examples/apps/ncp/ot-ncp-radio"
+        export OT_CLI_PATH="build/posix/${SYSTEM_TRIPLET}/src/posix/ot-cli"
+        export OT_NCP_PATH="build/posix/${SYSTEM_TRIPLET}/src/posix/ot-ncp"
+    fi
+
+    if [[ -z "$1" ]]; then
+        print_usage 1
+    fi
+
+    [[ -n "${RADIO_DEVICE}" ]] && echo "Using transceiver mode" || echo "Using standalone mode"
+    [[ "${NODE_TYPE}" = "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
+    [[ "${VIRTUAL_TIME}" = 1 ]] && echo "Using virtual time" || echo "Using real time"
+
+    while [[ -n "$1" ]]; do
+        case "$1" in
+            clean)
+                do_clean
+                ;;
+            build)
+                do_build
+                ;;
+            cert)
+                shift
+                do_cert "$1"
+                ;;
+            help)
+                print_usage
+                ;;
+        esac
+        shift
+    done
+}
+
+main "$@"

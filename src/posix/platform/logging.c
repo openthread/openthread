@@ -26,13 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
 #include "platform-posix.h"
-#include <openthread-core-config.h>
 
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <syslog.h>
 

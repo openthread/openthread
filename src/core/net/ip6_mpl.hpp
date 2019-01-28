@@ -287,7 +287,7 @@ public:
     };
 
     /**
-     * This method removes MPL Buffered Messsage metadata from the message.
+     * This method removes MPL Buffered Message metadata from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -297,7 +297,7 @@ public:
     otError RemoveFrom(Message &aMessage) { return aMessage.SetLength(aMessage.GetLength() - sizeof(*this)); };
 
     /**
-     * This method updates MPL Buffered Messsage metadata in the message.
+     * This method updates MPL Buffered Message metadata in the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *

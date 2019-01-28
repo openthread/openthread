@@ -65,7 +65,7 @@ enum
  */
 
 /**
- * This class reprents an IPv6 fragment priority entry
+ * This class represents an IPv6 fragment priority entry
  *
  */
 class FragmentPriorityEntry
@@ -112,7 +112,7 @@ public:
     uint8_t GetPriority(void) const { return mPriority; }
 
     /**
-     * This method sets the fragment priotity value.
+     * This method sets the fragment priority value.
      *
      * @param[in]  aPriority  The fragment priority value.
      *
@@ -181,18 +181,14 @@ public:
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval OT_ERROR_NONE          Successfully enabled the mesh forwarder.
-     *
      */
-    otError Start(void);
+    void Start(void);
 
     /**
      * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval OT_ERROR_NONE          Successfully disabled the mesh forwarder.
-     *
      */
-    otError Stop(void);
+    void Stop(void);
 
     /**
      * This method submits a message to the mesh forwarder for forwarding.
@@ -467,7 +463,7 @@ private:
                                     uint8_t &           aPriority);
 
     FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
-    FragmentPriorityEntry *GetUnusedFragementPriorityEntry(void);
+    FragmentPriorityEntry *GetUnusedFragmentPriorityEntry(void);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 

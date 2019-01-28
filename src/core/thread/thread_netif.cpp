@@ -43,6 +43,7 @@
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
+#include "utils/slaac_address.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -93,7 +94,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     , mJamDetector(aInstance)
-#endif // OPENTHREAD_ENABLE_JAM_DETECTTION
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 #if OPENTHREAD_FTD
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)
@@ -109,9 +110,10 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
 {
     mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
+    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
 }
 
-otError ThreadNetif::Up(void)
+void ThreadNetif::Up(void)
 {
     VerifyOrExit(!mIsUp);
 
@@ -137,10 +139,10 @@ otError ThreadNetif::Up(void)
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
-otError ThreadNetif::Down(void)
+void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
@@ -169,7 +171,7 @@ otError ThreadNetif::Down(void)
     GetNotifier().Signal(OT_CHANGED_THREAD_NETIF_STATE);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
@@ -196,7 +198,7 @@ exit:
     return error;
 }
 
-otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+otError ThreadNetif::TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
@@ -220,6 +222,12 @@ bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
         rval = false);
 exit:
     return rval;
+}
+
+void ThreadNetif::UpdateSlaac(void)
+{
+    Utils::Slaac::UpdateAddresses(&GetInstance(), mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses),
+                                  otIp6CreateRandomIid, NULL);
 }
 
 } // namespace ot

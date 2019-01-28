@@ -55,7 +55,7 @@ extern "C" {
  *
  * @param[in]  result  If called request succeeded.
  */
-typedef void (*nrf_802154_notification_func_t)(bool result);
+typedef void (* nrf_802154_notification_func_t)(bool result);
 
 /**
  * @brief Initialize notification module.

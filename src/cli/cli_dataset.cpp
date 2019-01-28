@@ -40,40 +40,40 @@
 #include <openthread/dataset.h>
 
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 
 namespace ot {
 namespace Cli {
 
-const DatasetCommand Dataset::sCommands[] = {
-    {"help", &ProcessHelp},
-    {"active", &ProcessActive},
-    {"activetimestamp", &ProcessActiveTimestamp},
-    {"channel", &ProcessChannel},
-    {"channelmask", &ProcessChannelMask},
-    {"clear", &ProcessClear},
-    {"commit", &ProcessCommit},
-    {"delay", &ProcessDelay},
-    {"extpanid", &ProcessExtPanId},
-    {"masterkey", &ProcessMasterKey},
-    {"meshlocalprefix", &ProcessMeshLocalPrefix},
-    {"mgmtgetcommand", &ProcessMgmtGetCommand},
-    {"mgmtsetcommand", &ProcessMgmtSetCommand},
-    {"networkname", &ProcessNetworkName},
-    {"panid", &ProcessPanId},
-    {"pending", &ProcessPending},
-    {"pendingtimestamp", &ProcessPendingTimestamp},
-    {"pskc", &ProcessPSKc},
-    {"securitypolicy", &ProcessSecurityPolicy},
+const Dataset::Command Dataset::sCommands[] = {
+    {"help", &Dataset::ProcessHelp},
+    {"active", &Dataset::ProcessActive},
+    {"activetimestamp", &Dataset::ProcessActiveTimestamp},
+    {"channel", &Dataset::ProcessChannel},
+    {"channelmask", &Dataset::ProcessChannelMask},
+    {"clear", &Dataset::ProcessClear},
+    {"commit", &Dataset::ProcessCommit},
+    {"delay", &Dataset::ProcessDelay},
+    {"extpanid", &Dataset::ProcessExtPanId},
+    {"masterkey", &Dataset::ProcessMasterKey},
+    {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
+    {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
+    {"mgmtsetcommand", &Dataset::ProcessMgmtSetCommand},
+    {"networkname", &Dataset::ProcessNetworkName},
+    {"panid", &Dataset::ProcessPanId},
+    {"pending", &Dataset::ProcessPending},
+    {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
+    {"pskc", &Dataset::ProcessPSKc},
+    {"securitypolicy", &Dataset::ProcessSecurityPolicy},
 };
 
-Server *             Dataset::sServer;
 otOperationalDataset Dataset::sDataset;
 
 void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
 {
     for (int i = 0; i < aLength; i++)
     {
-        sServer->OutputFormat("%02x", aBytes[i]);
+        mInterpreter.mServer->OutputFormat("%02x", aBytes[i]);
     }
 }
 
@@ -81,40 +81,40 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        sServer->OutputFormat("Pending Timestamp: %d\r\n", aDataset.mPendingTimestamp);
+        mInterpreter.mServer->OutputFormat("Pending Timestamp: %d\r\n", aDataset.mPendingTimestamp);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        sServer->OutputFormat("Active Timestamp: %d\r\n", aDataset.mActiveTimestamp);
+        mInterpreter.mServer->OutputFormat("Active Timestamp: %d\r\n", aDataset.mActiveTimestamp);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
-        sServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
+        mInterpreter.mServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
     }
 
     if (aDataset.mComponents.mIsChannelMaskPage0Present)
     {
-        sServer->OutputFormat("Channel Mask Page 0: %08x\r\n", aDataset.mChannelMaskPage0);
+        mInterpreter.mServer->OutputFormat("Channel Mask Page 0: %08x\r\n", aDataset.mChannelMaskPage0);
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        sServer->OutputFormat("Delay: %d\r\n", aDataset.mDelay);
+        mInterpreter.mServer->OutputFormat("Delay: %d\r\n", aDataset.mDelay);
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        sServer->OutputFormat("Ext PAN ID: ");
+        mInterpreter.mServer->OutputFormat("Ext PAN ID: ");
         OutputBytes(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId));
-        sServer->OutputFormat("\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n");
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
         const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
-        sServer->OutputFormat(
+        mInterpreter.mServer->OutputFormat(
             "Mesh Local Prefix: %x:%x:%x:%x/64\r\n", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
             (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3], (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
             (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
@@ -122,69 +122,67 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
-        sServer->OutputFormat("Master Key: ");
+        mInterpreter.mServer->OutputFormat("Master Key: ");
         OutputBytes(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey));
-        sServer->OutputFormat("\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n");
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
-        sServer->OutputFormat("Network Name: ");
-        sServer->OutputFormat("%.*s\r\n", sizeof(aDataset.mNetworkName), aDataset.mNetworkName.m8);
+        mInterpreter.mServer->OutputFormat("Network Name: ");
+        mInterpreter.mServer->OutputFormat("%.*s\r\n", sizeof(aDataset.mNetworkName), aDataset.mNetworkName.m8);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        sServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
+        mInterpreter.mServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
     }
 
     if (aDataset.mComponents.mIsPSKcPresent)
     {
-        sServer->OutputFormat("PSKc: ");
+        mInterpreter.mServer->OutputFormat("PSKc: ");
         OutputBytes(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc.m8));
-        sServer->OutputFormat("\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n");
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        sServer->OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
+        mInterpreter.mServer->OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
 
         if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY)
         {
-            sServer->OutputFormat("o");
+            mInterpreter.mServer->OutputFormat("o");
         }
 
         if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
         {
-            sServer->OutputFormat("n");
+            mInterpreter.mServer->OutputFormat("n");
         }
 
         if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_ROUTERS)
         {
-            sServer->OutputFormat("r");
+            mInterpreter.mServer->OutputFormat("r");
         }
 
         if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER)
         {
-            sServer->OutputFormat("c");
+            mInterpreter.mServer->OutputFormat("c");
         }
 
         if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_BEACONS)
         {
-            sServer->OutputFormat("b");
+            mInterpreter.mServer->OutputFormat("b");
         }
 
-        sServer->OutputFormat("\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n");
     }
 
     return OT_ERROR_NONE;
 }
 
-otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &aServer)
+otError Dataset::Process(int argc, char *argv[])
 {
     otError error = OT_ERROR_PARSE;
-
-    sServer = &aServer;
 
     if (argc == 0)
     {
@@ -195,7 +193,7 @@ otError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
-            error = sCommands[i].mCommand(aInstance, argc - 1, argv + 1);
+            error = (this->*sCommands[i].mCommand)(argc - 1, argv + 1);
             break;
         }
     }
@@ -204,21 +202,20 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessHelp(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
-        sServer->OutputFormat("%s\r\n", sCommands[i].mName);
+        mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
 
     return OT_ERROR_NONE;
 }
 
-otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessActive(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
@@ -226,14 +223,14 @@ otError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
     otOperationalDataset dataset;
     otError              error;
 
-    SuccessOrExit(error = otDatasetGetActive(aInstance, &dataset));
+    SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
     error = Print(dataset);
 
 exit:
     return error;
 }
 
-otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessPending(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
@@ -241,17 +238,15 @@ otError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
     otOperationalDataset dataset;
     otError              error;
 
-    SuccessOrExit(error = otDatasetGetPending(aInstance, &dataset));
+    SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
     error = Print(dataset);
 
 exit:
     return error;
 }
 
-otError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessActiveTimestamp(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -264,10 +259,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessChannel(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -280,10 +273,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessChannelMask(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -296,9 +287,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessClear(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessClear(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
@@ -306,21 +296,19 @@ otError Dataset::ProcessClear(otInstance *aInstance, int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessCommit(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otDatasetSetActive(aInstance, &sDataset));
+        SuccessOrExit(error = otDatasetSetActive(mInterpreter.mInstance, &sDataset));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otDatasetSetPending(aInstance, &sDataset));
+        SuccessOrExit(error = otDatasetSetPending(mInterpreter.mInstance, &sDataset));
     }
     else
     {
@@ -331,10 +319,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessDelay(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -347,10 +333,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessExtPanId(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessExtPanId(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
@@ -364,10 +348,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessMasterKey(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     uint8_t key[OT_MASTER_KEY_SIZE];
 
@@ -381,10 +363,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessMeshLocalPrefix(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError      error = OT_ERROR_NONE;
     otIp6Address prefix;
 
@@ -398,10 +378,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessNetworkName(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     size_t  length;
 
@@ -416,10 +394,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessPanId(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -432,10 +408,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 
@@ -448,10 +422,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
     uint8_t              tlvs[128];
@@ -557,11 +529,13 @@ otError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *ar
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otDatasetSendMgmtActiveSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(
+            error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otDatasetSendMgmtPendingSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(
+            error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else
     {
@@ -572,10 +546,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError                        error = OT_ERROR_NONE;
     otOperationalDatasetComponents datasetComponents;
     uint8_t                        tlvs[32];
@@ -652,15 +624,15 @@ otError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *ar
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error =
-                          otDatasetSendMgmtActiveGet(aInstance, &datasetComponents, tlvs, static_cast<uint8_t>(length),
-                                                     destAddrSpecified ? &address : NULL));
+        SuccessOrExit(error = otDatasetSendMgmtActiveGet(mInterpreter.mInstance, &datasetComponents, tlvs,
+                                                         static_cast<uint8_t>(length),
+                                                         destAddrSpecified ? &address : NULL));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error =
-                          otDatasetSendMgmtPendingGet(aInstance, &datasetComponents, tlvs, static_cast<uint8_t>(length),
-                                                      destAddrSpecified ? &address : NULL));
+        SuccessOrExit(error = otDatasetSendMgmtPendingGet(mInterpreter.mInstance, &datasetComponents, tlvs,
+                                                          static_cast<uint8_t>(length),
+                                                          destAddrSpecified ? &address : NULL));
     }
     else
     {
@@ -671,10 +643,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessPSKc(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError  error = OT_ERROR_NONE;
     uint16_t length;
 
@@ -690,10 +660,8 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[])
+otError Dataset::ProcessSecurityPolicy(int argc, char *argv[])
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
     long    value;
 

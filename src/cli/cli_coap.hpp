@@ -38,7 +38,7 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 
 namespace ot {
 namespace Cli {
@@ -76,30 +76,31 @@ private:
         kMaxBufferSize = 16
     };
 
+    struct Command
+    {
+        const char *mName;
+        otError (Coap::*mCommand)(int argc, char *argv[]);
+    };
+
     void PrintPayload(otMessage *aMessage) const;
 
+    otError ProcessHelp(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
+    otError ProcessResource(int argc, char *argv[]);
+    otError ProcessStart(int argc, char *argv[]);
+    otError ProcessStop(int argc, char *argv[]);
 
-    static void OTCALL HandleServerResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo);
-    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void OTCALL HandleClientResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
-    void               HandleClientResponse(otCoapHeader *       aHeader,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
+    static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+
+    static const Command sCommands[];
+    Interpreter &        mInterpreter;
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli
