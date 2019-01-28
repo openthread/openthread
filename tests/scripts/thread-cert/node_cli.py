@@ -155,7 +155,7 @@ class otCli:
             self.pexpect = None
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
-        """Match certification message log.
+        """Get the log of the traffic after DTLS handshake.
         """
         # return None, None, None
         format_str = br"=+?\[\[THCI\].*?type=%s.*?\].*?=+?[\s\S]+?-{40,}"
