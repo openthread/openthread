@@ -60,8 +60,6 @@ SNTP_CLIENT                          ?= 1
 UDP_FORWARD                          ?= 1
 
 COMMONCFLAGS                         := \
-    -O2                                 \
-    -g                                  \
     -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
     $(NULL)
 
@@ -77,6 +75,13 @@ configure_OPTIONS                   = \
     $(NULL)
 
 # Platform specific switches
+
+ifneq ($(DEBUG),1)
+COMMONCFLAGS                   += \
+    -O2                           \
+    -g                            \
+    $(NULL)
+endif
 
 ifeq ($(PLATFORM_NETIF),1)
 configure_OPTIONS              += --enable-platform-netif

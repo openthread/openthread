@@ -68,7 +68,7 @@ configure_OPTIONS              += --enable-child-supervision
 endif
 
 ifeq ($(DEBUG),1)
-configure_OPTIONS              += --enable-debug --enable-optimization=no
+configure_OPTIONS              += --enable-debug --disable-optimization
 endif
 
 ifeq ($(DHCP6_CLIENT),1)

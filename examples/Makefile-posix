@@ -60,8 +60,6 @@ SNTP_CLIENT                    ?= 1
 UDP_FORWARD                    ?= 1
 
 COMMONCFLAGS                   := \
-    -O1                           \
-    -g                            \
     $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
@@ -78,6 +76,13 @@ configure_OPTIONS               = \
     $(NULL)
 
 # Platform specific switches
+
+ifneq ($(DEBUG),1)
+COMMONCFLAGS                   += \
+    -O2                           \
+    -g                            \
+    $(NULL)
+endif
 
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
