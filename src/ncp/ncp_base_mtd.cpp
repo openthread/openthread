@@ -3247,19 +3247,19 @@ exit:
 // MARK: Pcap frame handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, void *aContext)
+void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandlePcapFrame(aFrame);
+    static_cast<NcpBase *>(aContext)->HandlePcapFrame(aFrame, aIsTx);
 }
 
-void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame)
+void NcpBase::HandlePcapFrame(const otRadioFrame *aFrame, bool aIsTx)
 {
     uint16_t flags  = 0;
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
     VerifyOrExit(mPcapEnabled);
 
-    if (aFrame->mDidTx)
+    if (aIsTx)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }

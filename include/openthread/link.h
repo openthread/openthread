@@ -722,10 +722,11 @@ OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
  * @note This callback is called before IEEE 802.15.4 security processing.
  *
  * @param[in]  aFrame    A pointer to the received IEEE 802.15.4 frame.
+ * @param[in]  aIsTx     Whether this frame is transmitted, not received.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, void *aContext);
+typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 /**
  * This function registers a callback to provide received raw IEEE 802.15.4 frames.
