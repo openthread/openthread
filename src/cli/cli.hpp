@@ -348,7 +348,7 @@ private:
     static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
 #ifndef OTDLL
-    static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext);
+    static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 #endif
     static void OTCALL s_HandleEnergyReport(uint32_t       aChannelMask,
                                             const uint8_t *aEnergyList,
@@ -381,7 +381,7 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
 #ifndef OTDLL
-    void HandleLinkPcapReceive(const otRadioFrame *aFrame);
+    void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
 #endif
     void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
     void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);

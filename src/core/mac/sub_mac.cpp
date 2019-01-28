@@ -191,8 +191,7 @@ void SubMac::HandleReceiveDone(Frame *aFrame, otError aError)
 {
     if (mPcapCallback && (aFrame != NULL) && (aError == OT_ERROR_NONE))
     {
-        aFrame->SetDidTx(false);
-        mPcapCallback(aFrame, mPcapCallbackContext);
+        mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
 
     mCallbacks.ReceiveDone(aFrame, aError);
@@ -295,8 +294,7 @@ void SubMac::BeginTransmit(void)
 
     if (mPcapCallback)
     {
-        mTransmitFrame.SetDidTx(true);
-        mPcapCallback(&mTransmitFrame, mPcapCallbackContext);
+        mPcapCallback(&mTransmitFrame, true, mPcapCallbackContext);
     }
 
 exit:
