@@ -245,7 +245,7 @@ PRETTY_FILES                                                        = \
     $(test_pskc_SOURCES)                                              \
     $(test_spinel_decoder_SOURCES)                                    \
     $(test_spinel_encoder_SOURCES)                                    \
-    $(test_string)                                                    \
+    $(test_string_SOURCES)                                            \
     $(test_strlcat_SOURCES)                                           \
     $(test_strlcpy_SOURCES)                                           \
     $(test_strnlen_SOURCES)                                           \
