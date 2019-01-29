@@ -41,15 +41,14 @@ enum
     kStringSize = 10,
 };
 
-template <uint16_t kSize>
-void PrintString(const char *aName, const String<kSize> aString)
+template <uint16_t kSize> void PrintString(const char *aName, const String<kSize> aString)
 {
     printf("\t%s = [%d] \"%s\"\n", aName, aString.GetLength(), aString.AsCString());
 }
 
 void TestString(void)
 {
-    otError error;
+    otError             error;
     String<kStringSize> str1;
     String<kStringSize> str2("abc");
     String<kStringSize> str3("%d", 12);
