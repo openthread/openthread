@@ -68,7 +68,7 @@ configure_OPTIONS              += --enable-child-supervision
 endif
 
 ifeq ($(DEBUG),1)
-configure_OPTIONS              += --enable-debug --enable-optimization=no
+configure_OPTIONS              += --enable-debug --disable-optimization
 endif
 
 ifeq ($(DHCP6_CLIENT),1)
@@ -77,6 +77,10 @@ endif
 
 ifeq ($(DHCP6_SERVER),1)
 configure_OPTIONS              += --enable-dhcp6-server
+endif
+
+ifeq ($(DIAGNOSTIC),1)
+configure_OPTIONS              += --enable-diag
 endif
 
 ifeq ($(DISABLE_DOC),1)
@@ -115,7 +119,7 @@ ifeq ($(MTD_NETDIAG),1)
 configure_OPTIONS              += --enable-mtd-network-diagnostic
 endif
 
-ifeq ($(PLATFORM_UDP), 1)
+ifeq ($(PLATFORM_UDP),1)
 configure_OPTIONS              += --enable-platform-udp
 endif
 
@@ -131,11 +135,11 @@ ifeq ($(UDP_FORWARD),1)
 configure_OPTIONS              += --enable-udp-forward
 endif
 
-ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
 configure_OPTIONS              += --disable-builtin-mbedtls
 endif
 
-ifeq ($(DISABLE_EXECUTABLE), 1)
+ifeq ($(DISABLE_EXECUTABLE),1)
 configure_OPTIONS              += --enable-executable=no
 endif
 
