@@ -1,6 +1,89 @@
 # Changelog
 All notable changes to this project are documented in this file.
 
+## [1.6.0] - 2019-01-18
+### Added
+- Added support for nRF52811.
+- Added support for the legacy peripherals SPI, TWI, and UART in nRF52810.
+- Added support for SAMPLERATE in nrf_saadc.h.
+- Added clearing of the STOPPED event in the nrfx_saadc_init() function to prevent driver deadlock in some cases.
+- Added HALs: BPROT, MPU, MWU.
+- Added function for reading the pin input buffer configuration in the GPIO HAL.
+- Implemented workaround for nRF9160 anomaly 1 in the I2S driver.
+
+### Changed
+- Improved handling of hardware anomalies in the USBD driver.
+- Updated MDK to version 8.23.1.
+
+### Fixed
+- Fixed the condition in NRFX_WAIT_FOR in the nrfx_saadc_abort() function. The macro now correctly waits for a stop of the driver.
+- Fixed the pending interrupt clearing in NVIC in the nrfx_usbd_stop() function. The driver now correctly handles power management.
+- Fixed the case when nrfx_uarte_tx_in_progress() function would return an incorrect value. The driver now correctly updates the tx_buffer_length variable internally.
+
+## [1.5.0] - 2018-12-12
+### Added
+- Added support for nRF9160.
+- Added allocator for DPPI.
+- Added HALs: DPPI, KMU, REGULATORS, SPU, VMC.
+- Added support for DPPI subscription and publishing in HALs related to nRF9160.
+- Added support for instances 2 and 3 in SPIS, TWIM, TWIS, and UARTE drivers.
+
+### Changed
+- Updated MDK to version 8.21.1.
+
+### Fixed
+- Corrected NRFX_I2S_CONFIG_RATIO value in nrfx_config.h. It now correctly uses supported value.
+
+## [1.4.0] - 2018-11-30
+### Added
+- Added the nrfx_is_word_aligned() function for checking whether an address is word-aligned.
+- Added HAL for ACL.
+- Added functions for disabling and re-enabling interrupts in the SWI driver.
+- Added possibility to completely remove interrupt handling from the WDT driver.
+
+### Changed
+- Updated the documentation for the nrfx_uarte_rx() function. It now correctly reflects the actual behavior of the function.
+
+### Fixed
+- Corrected the type of the nrfx_uarte_xfer_evt_t structure field that holds the amount of transferred bytes.
+- Corrected the way of disabling interrupts in the NFCT driver when moving the peripheral to the disabled state.
+- Fixed a typo in the name of the bmRequest field in the nrfx_usbd_setup_t structure. The new correct name is bRequest.
+- Fixed the nrfx_ppi_channel_fork_assign() function. It now accepts also pre-programmed channels.
+- Fixed handling of long custom instruction responses in the QSPI driver.
+- Fixed a bug affecting the conversion of time to ticks in the TIMER HAL.
+
+## [1.3.1] - 2018-09-28
+### Fixed
+- Corrected the type of nrfx_usbd_ep_status_get() return value.
+- Corrected calls to undefined macros in NFCT and USBD drivers.
+
+## [1.3.0] - 2018-09-21
+### Added
+- Added HAL and driver for NFCT.
+- Added driver for USBD.
+- Added function for setting the burst mode in the SAADC HAL.
+- Added the NRFX_ARRAY_SIZE macro.
+
+### Changed
+- Moved the implementation of nrfx_power_clock_irq_handler() to nrfx_power.c, removed nrfx_power_clock.c.
+
+### Fixed
+- Replaced ARRAY_SIZE macro calls with NRFX_ARRAY_SIZE ones.
+
+## [1.2.0] - 2018-09-06
+### Added
+- Added function for checking if a specific channel is enabled in the GPIOTE HAL.
+- Added support for using the QDEC driver without LED.
+- Added functions for modifying only the event endpoint or only the task endpoint in the PPI HAL.
+- Added function for reading the pin pull configuration in the GPIO HAL.
+
+### Changed
+- Corrected ISOSPLIT enumerator names in the USBD HAL.
+
+### Fixed
+- Fixed a double buffering bug that occurred in the UARTE driver after the RX abort.
+- Fixed the TXRX transfers in the TWIM driver. They can now be started after transfers that are not ended with the stop condition.
+
 ## [1.1.0] - 2018-06-15
 ### Added
 - Implemented workaround for nRF52832 and nRF52840 anomaly 194 in the I2S driver.
@@ -37,7 +120,7 @@ All notable changes to this project are documented in this file.
 - Changed the RNG bias correction configuration option to be enabled by default.
 - Refactored the ADC driver and HAL.
 - Corrected assertions in the TIMER driver to make it usable in debug version with PPI.
-- Improved buffer handling in the I2S driver. The API of the driver has been sligthly modified.
+- Improved buffer handling in the I2S driver. The API of the driver has been slightly modified.
 - Enhanced SPIS driver API: added the "p_context" parameter, allowed NULL pointers for zero-length buffers.
 
 ### Fixed

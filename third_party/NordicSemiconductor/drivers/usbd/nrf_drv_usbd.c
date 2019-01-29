@@ -1384,7 +1384,7 @@ static inline size_t usbd_ep_iso_capacity(nrf_drv_usbd_ep_t ep)
 {
     UNUSED_PARAMETER(ep);
     nrf_usbd_isosplit_t split = nrf_usbd_isosplit_get();
-    if (NRF_USBD_ISOSPLIT_Half == split)
+    if (NRF_USBD_ISOSPLIT_HALF == split)
     {
         return NRF_DRV_USBD_ISOSIZE / 2;
     }
@@ -1846,7 +1846,7 @@ void nrf_drv_usbd_enable(void)
         __DSB();
     }
 
-    nrf_usbd_isosplit_set(NRF_USBD_ISOSPLIT_Half);
+    nrf_usbd_isosplit_set(NRF_USBD_ISOSPLIT_HALF);
 
     if (USBD_CONFIG_ISO_IN_ZLP)
     {

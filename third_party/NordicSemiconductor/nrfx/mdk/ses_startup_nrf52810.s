@@ -121,14 +121,14 @@ Dummy_Handler:
 .weak RADIO_IRQHandler
 .thumb_set RADIO_IRQHandler, Dummy_Handler
 
-.weak UARTE0_IRQHandler
-.thumb_set UARTE0_IRQHandler, Dummy_Handler
+.weak UARTE0_UART0_IRQHandler
+.thumb_set UARTE0_UART0_IRQHandler, Dummy_Handler
 
-.weak TWIM0_TWIS0_IRQHandler
-.thumb_set TWIM0_TWIS0_IRQHandler, Dummy_Handler
+.weak TWIM0_TWIS0_TWI0_IRQHandler
+.thumb_set TWIM0_TWIS0_TWI0_IRQHandler, Dummy_Handler
 
-.weak SPIM0_SPIS0_IRQHandler
-.thumb_set SPIM0_SPIS0_IRQHandler, Dummy_Handler
+.weak SPIM0_SPIS0_SPI0_IRQHandler
+.thumb_set SPIM0_SPIS0_SPI0_IRQHandler, Dummy_Handler
 
 .weak GPIOTE_IRQHandler
 .thumb_set GPIOTE_IRQHandler, Dummy_Handler
@@ -238,9 +238,9 @@ _vectors:
 /* External Interrupts */
   .word   POWER_CLOCK_IRQHandler
   .word   RADIO_IRQHandler
-  .word   UARTE0_IRQHandler
-  .word   TWIM0_TWIS0_IRQHandler
-  .word   SPIM0_SPIS0_IRQHandler
+  .word   UARTE0_UART0_IRQHandler
+  .word   TWIM0_TWIS0_TWI0_IRQHandler
+  .word   SPIM0_SPIS0_SPI0_IRQHandler
   .word   0                           /*Reserved */
   .word   GPIOTE_IRQHandler
   .word   SAADC_IRQHandler

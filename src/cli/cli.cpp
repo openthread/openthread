@@ -887,7 +887,8 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(value <= static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                     error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
     }
 
@@ -1630,18 +1631,25 @@ void Interpreter::ProcessService(int argc, char *argv[])
     if (strcmp(argv[0], "add") == 0)
     {
         otServiceConfig cfg;
-        long            enterpriseNumber = 0;
+        long            enterpriseNumber;
+        size_t          length;
 
         VerifyOrExit(argc > 3, error = OT_ERROR_INVALID_ARGS);
 
         SuccessOrExit(error = ParseLong(argv[1], enterpriseNumber));
+        cfg.mEnterpriseNumber = static_cast<uint32_t>(enterpriseNumber);
 
-        cfg.mServiceDataLength = static_cast<uint8_t>(strlen(argv[2]));
+        length = strlen(argv[2]);
+        VerifyOrExit(length <= sizeof(cfg.mServiceData), error = OT_ERROR_NO_BUFS);
+        cfg.mServiceDataLength = static_cast<uint8_t>(length);
         memcpy(cfg.mServiceData, argv[2], cfg.mServiceDataLength);
-        cfg.mEnterpriseNumber               = static_cast<uint32_t>(enterpriseNumber);
-        cfg.mServerConfig.mStable           = true;
-        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(strlen(argv[3]));
+
+        length = strlen(argv[3]);
+        VerifyOrExit(length <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_NO_BUFS);
+        cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(length);
         memcpy(cfg.mServerConfig.mServerData, argv[3], cfg.mServerConfig.mServerDataLength);
+
+        cfg.mServerConfig.mStable = true;
 
         SuccessOrExit(error = otServerAddService(mInstance, &cfg));
     }
@@ -1923,15 +1931,16 @@ void Interpreter::ProcessPing(int argc, char *argv[])
         switch (index)
         {
         case 1:
-            mLength = (uint16_t)value;
+            mLength = static_cast<uint16_t>(value);
             break;
 
         case 2:
-            mCount = (uint16_t)value;
+            mCount = static_cast<uint16_t>(value);
             break;
 
         case 3:
-            mInterval = (uint32_t)value;
+            mInterval = static_cast<uint32_t>(value);
+            VerifyOrExit(mInterval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
             mInterval = mInterval * 1000;
             break;
 
@@ -2041,13 +2050,15 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext)
+void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
+    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
+    OT_UNUSED_VARIABLE(aIsTx);
+
     mServer->OutputFormat("\r\n");
 
     for (size_t i = 0; i < 44; i++)
@@ -2734,7 +2745,8 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         else
         {
             SuccessOrExit(error = ParseLong(argv[0], value));
-            VerifyOrExit(value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                         error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << value;
         }
     }

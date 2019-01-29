@@ -319,11 +319,11 @@ public:
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
 private:
-    static otError Send(CoapBase &aCoapBase, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
         return static_cast<CoapSecure &>(aCoapBase).Send(aMessage, aMessageInfo);
     }
-    otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void        HandleDtlsConnected(bool aConnected);

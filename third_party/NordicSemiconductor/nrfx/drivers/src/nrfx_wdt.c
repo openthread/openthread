@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <nrfx.h>
@@ -46,35 +37,41 @@
 #define NRFX_LOG_MODULE WDT
 #include <nrfx_log.h>
 
-
-/**@brief WDT event handler. */
-static nrfx_wdt_event_handler_t m_wdt_event_handler;
-
 /**@brief WDT state. */
 static nrfx_drv_state_t m_state;
 
 /**@brief WDT alloc table. */
-static uint32_t m_alloc_index;
+static uint8_t m_alloc_index;
+
+#if !NRFX_CHECK(NRFX_WDT_CONFIG_NO_IRQ)
+/**@brief WDT event handler. */
+static nrfx_wdt_event_handler_t m_wdt_event_handler;
 
 /**@brief WDT interrupt handler. */
 void nrfx_wdt_irq_handler(void)
 {
-    if (nrf_wdt_int_enable_check(NRF_WDT_INT_TIMEOUT_MASK) == true)
+    if (nrf_wdt_event_check(NRF_WDT_EVENT_TIMEOUT))
     {
         m_wdt_event_handler();
         nrf_wdt_event_clear(NRF_WDT_EVENT_TIMEOUT);
     }
 }
+#endif
 
 
 nrfx_err_t nrfx_wdt_init(nrfx_wdt_config_t const * p_config,
                          nrfx_wdt_event_handler_t  wdt_event_handler)
 {
     NRFX_ASSERT(p_config);
-    NRFX_ASSERT(wdt_event_handler != NULL);
     nrfx_err_t err_code;
-    m_wdt_event_handler = wdt_event_handler;
 
+#if !NRFX_CHECK(NRFX_WDT_CONFIG_NO_IRQ)
+    NRFX_ASSERT(wdt_event_handler != NULL);
+    m_wdt_event_handler = wdt_event_handler;
+#else
+    NRFX_ASSERT(wdt_event_handler == NULL);
+    (void)wdt_event_handler;
+#endif
     if (m_state == NRFX_DRV_STATE_UNINITIALIZED)
     {
         m_state = NRFX_DRV_STATE_INITIALIZED;
@@ -92,8 +89,10 @@ nrfx_err_t nrfx_wdt_init(nrfx_wdt_config_t const * p_config,
 
     nrf_wdt_reload_value_set((p_config->reload_value * 32768) / 1000);
 
+#if !NRFX_CHECK(NRFX_WDT_CONFIG_NO_IRQ)
     NRFX_IRQ_PRIORITY_SET(WDT_IRQn, p_config->interrupt_priority);
     NRFX_IRQ_ENABLE(WDT_IRQn);
+#endif
 
     err_code = NRFX_SUCCESS;
     NRFX_LOG_INFO("Function: %s, error code: %s.", __func__, NRFX_LOG_ERROR_STRING_GET(err_code));
@@ -105,7 +104,9 @@ void nrfx_wdt_enable(void)
 {
     NRFX_ASSERT(m_alloc_index != 0);
     NRFX_ASSERT(m_state == NRFX_DRV_STATE_INITIALIZED);
+#if !NRFX_CHECK(NRFX_WDT_CONFIG_NO_IRQ)
     nrf_wdt_int_enable(NRF_WDT_INT_TIMEOUT_MASK);
+#endif
     nrf_wdt_task_trigger(NRF_WDT_TASK_START);
     m_state = NRFX_DRV_STATE_POWERED_ON;
     NRFX_LOG_INFO("Enabled.");
@@ -115,7 +116,7 @@ void nrfx_wdt_enable(void)
 void nrfx_wdt_feed(void)
 {
     NRFX_ASSERT(m_state == NRFX_DRV_STATE_POWERED_ON);
-    for (uint32_t i = 0; i < m_alloc_index; i++)
+    for (uint8_t i = 0; i < m_alloc_index; i++)
     {
         nrf_wdt_reload_request_set((nrf_wdt_rr_register_t)(NRF_WDT_RR0 + i));
     }

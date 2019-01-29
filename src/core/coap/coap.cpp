@@ -191,12 +191,6 @@ exit:
     return error;
 }
 
-otError CoapBase::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    static_cast<Message &>(aMessage).Finish();
-    return mSender(*this, aMessage, aMessageInfo);
-}
-
 otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error   = OT_ERROR_NONE;
@@ -209,6 +203,7 @@ otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest,
     message->Init(aType, OT_COAP_CODE_EMPTY);
     message->SetMessageId(aRequest.GetMessageId());
 
+    message->Finish();
     SuccessOrExit(error = Send(*message, aMessageInfo));
 
 exit:
@@ -369,7 +364,6 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &     aMessage,
 {
     otError  error       = OT_ERROR_NONE;
     Message *messageCopy = NULL;
-    uint32_t alarmFireTime;
 
     // Create a message copy of requested size.
     VerifyOrExit((messageCopy = aMessage.Clone(aCopyLength)) != NULL, error = OT_ERROR_NO_BUFS);
@@ -380,6 +374,8 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &     aMessage,
     // Setup the timer.
     if (mRetransmissionTimer.IsRunning())
     {
+        uint32_t alarmFireTime;
+
         // If timer is already running, check if it should be restarted with earlier fire time.
         alarmFireTime = mRetransmissionTimer.GetFireTime();
 
@@ -883,7 +879,7 @@ void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessage
                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-otError Coap::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Coap::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSocket.SendTo(aMessage, aMessageInfo);
 }

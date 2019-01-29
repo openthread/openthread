@@ -61,6 +61,10 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
 
     VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
 
+    VerifyOrExit((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
+                     (aPrf == OT_ROUTE_PREFERENCE_HIGH),
+                 error = OT_ERROR_INVALID_ARGS);
+
     VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix().m8, prefixLengthBytes) <
                      Ip6::Address::kMeshLocalPrefixLength,
                  error = OT_ERROR_INVALID_ARGS);
@@ -120,6 +124,10 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
     uint8_t      appendLength;
 
     VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
+
+    VerifyOrExit((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
+                     (aPrf == OT_ROUTE_PREFERENCE_HIGH),
+                 error = OT_ERROR_INVALID_ARGS);
 
     RemoveHasRoutePrefix(aPrefix, aPrefixLength);
 

@@ -1056,14 +1056,6 @@ public:
     void SetIsARetransmission(bool aIsARetx) { mInfo.mTxInfo.mIsARetx = aIsARetx; }
 
     /**
-     * This method sets the did Tx attribute.
-     *
-     * @param[in]  aDidTx  TRUE if frame is sent from the radio, FALSE otherwise.
-     *
-     */
-    void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
-
-    /**
      * This method indicates whether or not CSMA-CA is enabled.
      *
      * @retval TRUE  CSMA-CA is enabled.

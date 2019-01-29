@@ -1,41 +1,32 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
- *
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
  *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef NRFX_UART_H__
@@ -259,25 +250,36 @@ void nrfx_uart_tx_abort(nrfx_uart_t const * p_instance);
  *
  * If an event handler was provided in the nrfx_uart_init() call, this function
  * returns immediately and the handler is called when the transfer is done.
- * Otherwise, the transfer is performed in blocking mode, i.e. this function
+ * Otherwise, the transfer is performed in blocking mode, meaning that this function
  * returns when the transfer is finished. Blocking mode is not using interrupt so
  * there is no context switching inside the function.
+ *
  * The receive buffer pointer is double buffered in non-blocking mode. The secondary
  * buffer can be set immediately after starting the transfer and will be filled
  * when the primary buffer is full. The double buffering feature allows
  * receiving data continuously.
  *
+ * If this function is used without a previous call to @ref nrfx_uart_rx_enable, the reception
+ * will be stopped on error or when the supplied buffer fills up. In both cases,
+ * RX FIFO gets disabled. This means that, in case of error, the bytes that follow are lost.
+ * If this nrfx_uart_rx() function is used with the previous call to @ref nrfx_uart_rx_enable,
+ * the reception is stopped in case of error, but FIFO is still ongoing. The receiver is still
+ * working, so after handling the error, an immediate repeated call to this nrfx_uart_rx()
+ * function with fresh data buffer will re-establish reception. To disable the receiver,
+ * you must call @ref nrfx_uart_rx_disable explicitly.
+ *
  * @param[in] p_instance Pointer to the driver instance structure.
  * @param[in] p_data     Pointer to data.
  * @param[in] length     Number of bytes to receive.
  *
- * @retval    NRFX_SUCCESS If initialization was successful.
- * @retval    NRFX_ERROR_BUSY If the driver is already receiving
- *                            (and the secondary buffer has already been set
- *                            in non-blocking mode).
+ * @retval    NRFX_SUCCESS         If reception is complete (in case of blocking mode) or it is
+ *                                 successfully started (in case of non-blocking mode).
+ * @retval    NRFX_ERROR_BUSY      If the driver is already receiving
+ *                                 (and the secondary buffer has already been set
+ *                                 in non-blocking mode).
  * @retval    NRFX_ERROR_FORBIDDEN If the transfer was aborted from a different context
- *                                (blocking mode only, also see @ref nrfx_uart_rx_disable).
- * @retval    NRFX_ERROR_INTERNAL If UART peripheral reported an error.
+ *                                 (blocking mode only, also see @ref nrfx_uart_rx_disable).
+ * @retval    NRFX_ERROR_INTERNAL  If UART peripheral reported an error.
  */
 nrfx_err_t nrfx_uart_rx(nrfx_uart_t const * p_instance,
                         uint8_t *           p_data,

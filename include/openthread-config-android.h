@@ -96,6 +96,9 @@
 /* Define to 1 if using NCP vendor hook */
 #define OPENTHREAD_ENABLE_NCP_VENDOR_HOOK 0
 
+/* Define to 1 to build posix application. */
+#define OPENTHREAD_ENABLE_POSIX_APP 1
+
 /* Define to 1 if you want to enable raw link-layer API */
 #define OPENTHREAD_ENABLE_RAW_LINK_API 0
 
