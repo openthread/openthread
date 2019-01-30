@@ -238,6 +238,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_SECURITYPOLICY           = 12,  ///< meshcop Security Policy TLV
     OT_MESHCOP_TLV_GET                      = 13,  ///< meshcop Get TLV
     OT_MESHCOP_TLV_ACTIVETIMESTAMP          = 14,  ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_COMMISSIONER_UDP_PORT    = 15,  ///< meshcop Commissioner UDP Port TLV
     OT_MESHCOP_TLV_STATE                    = 16,  ///< meshcop State TLV
     OT_MESHCOP_TLV_JOINER_DTLS              = 17,  ///< meshcop Joiner DTLS Encapsulation TLV
     OT_MESHCOP_TLV_JOINER_UDP_PORT          = 18,  ///< meshcop Joiner UDP Port TLV

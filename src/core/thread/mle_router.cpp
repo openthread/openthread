@@ -2742,6 +2742,12 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
     if (netif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
     {
+        MeshCoP::CommissionerUdpPortTlv commissionerUdpPort;
+
+        commissionerUdpPort.Init();
+        commissionerUdpPort.SetUdpPort(MeshCoP::kBorderAgentUdpPort);
+        SuccessOrExit(error = message->Append(&commissionerUdpPort, sizeof(commissionerUdpPort)));
+
         discoveryResponse.SetNativeCommissioner(true);
     }
     else

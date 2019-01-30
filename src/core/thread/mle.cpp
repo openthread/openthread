@@ -1530,6 +1530,12 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         Store();
     }
 
+    if (aFlags & OT_CHANGED_SECURITY_POLICY)
+    {
+        GetNetif().GetIp6Filter().AllowNativeCommissioner(GetNetif().GetKeyManager().GetSecurityPolicyFlags() &
+                                                          OT_SECURITY_POLICY_NATIVE_COMMISSIONING);
+    }
+
 exit:
     return;
 }
