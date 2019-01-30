@@ -35,8 +35,6 @@ import config
 import mle
 import node
 
-from binascii import hexlify
-
 from command import check_child_id_response
 from command import check_child_update_response
 from command import check_data_response
