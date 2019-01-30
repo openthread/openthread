@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import binascii
 import sys
 
 import ipv6
@@ -35,7 +36,6 @@ import network_layer
 import config
 import mle
 
-from binascii import hexlify
 from collections import Counter
 from enum import IntEnum
 
@@ -384,7 +384,7 @@ def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefixes=[
         for prefix in prefix_tlvs:
             assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter)
             assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId)
-            assert hexlify(prefix.prefix) == prefixes[idx]
+            assert binascii.hexlify(prefix.prefix) == prefixes[idx]
             idx = idx + 1
 
 def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OPTIONAL,

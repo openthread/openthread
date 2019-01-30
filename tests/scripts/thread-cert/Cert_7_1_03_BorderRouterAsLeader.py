@@ -35,8 +35,6 @@ import command
 import mle
 import node
 
-from binascii import hexlify
-
 from command import CheckType
 
 LEADER = 1
