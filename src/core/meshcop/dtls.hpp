@@ -79,6 +79,14 @@ public:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     };
 
+    enum State
+    {
+        kStateStopped = 0,
+        kStateConnecting,
+        kStateConnected,
+        kStateCloseNotify,
+    };
+
     /**
      * This constructor initializes the DTLS object.
      *
@@ -148,12 +156,15 @@ public:
     otError Stop(void);
 
     /**
-     * This method indicates whether or not the DTLS service is active.
+     * This method returns the DTLS connection state.
      *
-     * @returns true if the DTLS service is active, false otherwise.
+     * @retval kStateStopped      If the DTLS service has not been started.
+     * @retval kStateConnecting   If the DTLS service is establishing a connection.
+     * @retval kStateConnected    If the DTLS service has a connection established.
+     * @retval kStateCloseNotify  If the DTLS service is closing a connection.
      *
      */
-    bool IsStarted(void);
+    State GetState(void) const { return mState; }
 
     /**
      * This method sets the PSK.
@@ -268,15 +279,6 @@ public:
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
 
     /**
-     * This method indicates whether or not the DTLS session is connected.
-     *
-     * @retval TRUE   The DTLS session is connected.
-     * @retval FALSE  The DTLS session is not connected.
-     *
-     */
-    bool IsConnected(void);
-
-    /**
      * This method sends data within the DTLS session.
      *
      * @param[in]  aMessage  A message to send via DTLS.
@@ -364,6 +366,8 @@ private:
     void Close(void);
     void Process(void);
 
+    State mState;
+
     int     mCipherSuites[2];
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
@@ -401,8 +405,6 @@ private:
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
 
-    bool mStarted;
-
     TimerMilli mTimer;
     uint32_t   mTimerIntermediate;
     bool       mTimerSet;
@@ -415,7 +417,6 @@ private:
     ReceiveHandler   mReceiveHandler;
     SendHandler      mSendHandler;
     void *           mContext;
-    bool             mGuardTimerSet;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;
