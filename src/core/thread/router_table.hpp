@@ -342,7 +342,7 @@ private:
     }
 
     Router   mRouters[Mle::kMaxRouters];
-    uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId)];
+    uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId + 1)];
     uint8_t  mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
     uint32_t mRouterIdSequenceLastUpdated;
     uint8_t  mRouterIdSequence;
