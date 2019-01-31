@@ -365,7 +365,7 @@ def check_secure_mle_key_id_mode(command_msg, key_id_mode):
     assert isinstance(command_msg.mle, mle.MleMessageSecured)
     assert command_msg.mle.aux_sec_hdr.key_id_mode == key_id_mode
 
-def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefixes=[],
+def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL, prefixes=[],
     active_timestamp=CheckType.OPTIONAL):
     """Verify a properly formatted Data Response command message.
     """
@@ -373,12 +373,12 @@ def check_data_response(command_msg, network_data=CheckType.OPTIONAL, prefixes=[
 
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
-    check_mle_optional_tlv(command_msg, network_data, mle.NetworkData)
+    check_mle_optional_tlv(command_msg, network_data_opt, mle.NetworkData)
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
 
-    if network_data == CheckType.CONTAIN and len(prefixes) > 0:
+    if network_data_opt == CheckType.CONTAIN and len(prefixes) > 0:
         network_data_tlv = command_msg.get_mle_message_tlv(mle.NetworkData)
-        prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, Prefix)]
+        prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
         assert len(prefix_tlvs) >= len(prefixes)
         idx = 0
         for prefix in prefix_tlvs:
