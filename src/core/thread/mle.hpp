@@ -1521,18 +1521,14 @@ protected:
     /**
      * This method sets the Device State to Detached.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Device State to Detached.
-     *
      */
-    otError SetStateDetached(void);
+    void SetStateDetached(void);
 
     /**
      * This method sets the Device State to Child.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Device State to Child.
-     *
      */
-    otError SetStateChild(uint16_t aRloc16);
+    void SetStateChild(uint16_t aRloc16);
 
     /**
      * This method sets the Leader's Partition ID, Weighting, and Router ID values.
