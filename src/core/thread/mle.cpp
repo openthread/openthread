@@ -701,7 +701,7 @@ bool Mle::IsAttached(void) const
     return (mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
 }
 
-otError Mle::SetStateDetached(void)
+void Mle::SetStateDetached(void)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -723,11 +723,9 @@ otError Mle::SetStateDetached(void)
     netif.GetMle().HandleDetachStart();
     netif.GetIp6().SetForwardingEnabled(false);
     netif.GetIp6().GetMpl().SetTimerExpirations(0);
-
-    return OT_ERROR_NONE;
 }
 
-otError Mle::SetStateChild(uint16_t aRloc16)
+void Mle::SetStateChild(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -768,8 +766,6 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     InformPreviousParent();
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::InformPreviousChannel(void)
@@ -3385,7 +3381,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 
     netif.GetActiveDataset().ApplyConfiguration();
 
-    SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
+    SetStateChild(shortAddress.GetRloc16());
 
 exit:
 
