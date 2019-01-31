@@ -49,6 +49,7 @@ namespace MeshCoP {
 enum
 {
     kMeshCoPMessagePriority = Message::kPriorityNet, ///< The priority for MeshCoP message
+    kBorderAgentUdpPort     = 49191,                 ///< UDP port of border agent service.
 };
 
 /**

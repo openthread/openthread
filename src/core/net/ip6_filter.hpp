@@ -115,12 +115,21 @@ public:
      */
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
 
+    /**
+     * This method sets whether to allow native commissioner traffic.
+     *
+     * @param[in]   aAllow  Whether to allow native commissioner traffic.
+     *
+     */
+    void AllowNativeCommissioner(bool aAllow) { mAllowNativeCommissioner = aAllow; }
+
 private:
     enum
     {
         kMaxUnsecurePorts = 2,
     };
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
+    bool     mAllowNativeCommissioner;
 };
 
 } // namespace Ip6
