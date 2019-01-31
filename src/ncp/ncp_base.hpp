@@ -52,6 +52,7 @@
 #include "ncp/ncp_buffer.hpp"
 #include "ncp/spinel_decoder.hpp"
 #include "ncp/spinel_encoder.hpp"
+#include "utils/static_assert.hpp"
 
 #include "spinel.h"
 
@@ -397,6 +398,9 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
 #if OPENTHREAD_ENABLE_DIAG
+    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,
+                     "diag output buffer should be smaller than NCP UART tx buffer");
+
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 

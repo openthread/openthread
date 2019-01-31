@@ -36,17 +36,19 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
 
 #include <openthread/cli.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
+
 #include "cli/cli.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
+#include "utils/static_assert.hpp"
+#include "utils/wrap_string.h"
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
@@ -83,6 +85,16 @@
 #endif
 
 #endif // OT_CLI_UART_LOCK_HDR_FILE
+
+#if OPENTHREAD_ENABLE_DIAG
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
+                 "diag output buffer should be smaller than CLI UART tx buffer");
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+                 "diag command line should be smaller than CLI UART rx buffer");
+#endif
+
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH <= OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+                 "command line should be should be smaller than CLI rx buffer");
 
 namespace ot {
 namespace Cli {
