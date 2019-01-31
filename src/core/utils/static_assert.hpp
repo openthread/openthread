@@ -46,6 +46,9 @@ template <> struct StaticAssertError<true>
 
 } // namespace ot
 
+#define __OT_STATIC_ASSERT_ERROR(aError, aLine) aError##aLine
+#define _OT_STATIC_ASSERT_ERROR(aLine) __OT_STATIC_ASSERT_ERROR(StaticAssertError, aLine)
+
 /**
  * This macro does static assert.
  *
@@ -53,10 +56,10 @@ template <> struct StaticAssertError<true>
  * @param[in]   aMessage    A message to describe what is wrong when @p aExpression is false.
  *
  */
-#define OT_STATIC_ASSERT(aExpression, aMessage)                                                    \
-    enum                                                                                           \
-    {                                                                                              \
-        StaticAssertError##__LINE__ = sizeof(ot::StaticAssertError<(aExpression) != 0>(aMessage)), \
+#define OT_STATIC_ASSERT(aExpression, aMessage)                                                             \
+    enum                                                                                                    \
+    {                                                                                                       \
+        _OT_STATIC_ASSERT_ERROR(__COUNTER__) = sizeof(ot::StaticAssertError<(aExpression) != 0>(aMessage)), \
     }
 
 #endif // __cplusplus
