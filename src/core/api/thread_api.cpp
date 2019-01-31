@@ -451,7 +451,7 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     }
     else
     {
-        error = instance.GetThreadNetif().GetMle().Stop(true);
+        instance.GetThreadNetif().GetMle().Stop(true);
     }
 
 exit:

@@ -90,10 +90,8 @@ public:
     /**
      * This method stops the Joiner service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the Joiner service.
-     *
      */
-    otError Stop(void);
+    void Stop(void);
 
     /**
      * This function returns the Joiner State.

@@ -75,10 +75,8 @@ public:
      *
      * @param[in]  The Joiner UDP Port number.
      *
-     * @retval OT_ERROR_NONE    Successfully set the Joiner UDP Port.
-     *
      */
-    otError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
+    void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
     enum

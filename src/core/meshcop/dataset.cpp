@@ -240,7 +240,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
     }
 }
 
-otError Dataset::Set(const Dataset &aDataset)
+void Dataset::Set(const Dataset &aDataset)
 {
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
     mLength = aDataset.mLength;
@@ -252,8 +252,6 @@ otError Dataset::Set(const Dataset &aDataset)
     }
 
     mUpdateTime = aDataset.GetUpdateTime();
-
-    return OT_ERROR_NONE;
 }
 
 otError Dataset::Set(const otOperationalDataset &aDataset)
@@ -620,12 +618,11 @@ exit:
     return error;
 }
 
-otError Dataset::ConvertToActive(void)
+void Dataset::ConvertToActive(void)
 {
     Remove(Tlv::kPendingTimestamp);
     Remove(Tlv::kDelayTimer);
     mType = Tlv::kActiveTimestamp;
-    return OT_ERROR_NONE;
 }
 
 } // namespace MeshCoP

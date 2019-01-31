@@ -979,20 +979,18 @@ exit:
 }
 #endif
 
-otError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
+void NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
 {
     assert(aLength + mLength <= sizeof(mTlvs) && mTlvs <= aStart && aStart <= mTlvs + mLength);
     memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
     mLength += aLength;
-    return OT_ERROR_NONE;
 }
 
-otError NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
+void NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
 {
     assert(aLength <= mLength && mTlvs <= aStart && (aStart - mTlvs) + aLength <= mLength);
     memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
     mLength -= aLength;
-    return OT_ERROR_NONE;
 }
 
 otError NetworkData::SendServerDataNotification(uint16_t aRloc16)

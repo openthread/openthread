@@ -40,7 +40,8 @@ namespace Ncp {
 otError SpinelEncoder::BeginFrame(NcpFrameBuffer::Priority aPriority)
 {
     mNumOpenStructs = 0;
-    return mNcpBuffer.InFrameBegin(aPriority);
+    mNcpBuffer.InFrameBegin(aPriority);
+    return OT_ERROR_NONE;
 }
 
 otError SpinelEncoder::BeginFrame(uint8_t aHeader, unsigned int aCommand)

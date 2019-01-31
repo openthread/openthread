@@ -269,10 +269,8 @@ public:
      *
      * @param[in]  aShortAddress  The IEEE 802.15.4 Short Address.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Short Address.
-     *
      */
-    otError SetShortAddress(ShortAddress aShortAddress);
+    void SetShortAddress(ShortAddress aShortAddress);
 
     /**
      * This method returns the IEEE 802.15.4 PAN Channel.
@@ -395,10 +393,8 @@ public:
      *
      * @param[in]  aPanId  The IEEE 802.15.4 PAN ID.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 PAN ID.
-     *
      */
-    otError SetPanId(PanId aPanId);
+    void SetPanId(PanId aPanId);
 
     /**
      * This method returns the IEEE 802.15.4 Extended PAN ID.
@@ -413,10 +409,8 @@ public:
      *
      * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN ID.
      *
-     * @retval OT_ERROR_NONE  Successfully set the IEEE 802.15.4 Extended PAN ID.
-     *
      */
-    otError SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
+    void SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
 
 #if OPENTHREAD_ENABLE_MAC_FILTER
     /**
@@ -572,10 +566,8 @@ public:
      *
      * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
      *
-     * @retval OT_ERROR_NONE   The operation succeeded or the new State equals the current State.
-     *
      */
-    otError SetEnabled(bool aEnable);
+    void SetEnabled(bool aEnable);
 
     /**
      * This method indicates whether or not the link layer is enabled.

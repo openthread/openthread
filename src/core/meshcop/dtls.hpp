@@ -150,10 +150,8 @@ public:
     /**
      * This method stops the DTLS service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the DTLS service.
-     *
      */
-    otError Stop(void);
+    void Stop(void);
 
     /**
      * This method returns the DTLS connection state.
@@ -297,10 +295,8 @@ public:
      * @param[in]  aOffset   The offset within @p aMessage where the DTLS message starts.
      * @param[in]  aLength   The size of the DTLS message (bytes).
      *
-     * @retval OT_ERROR_NONE  Successfully processed the received DTLS message.
-     *
      */
-    otError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    void Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method sets the default message sub-type that will be used for all messages without defined

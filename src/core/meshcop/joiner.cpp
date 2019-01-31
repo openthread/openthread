@@ -142,11 +142,9 @@ exit:
     return error;
 }
 
-otError Joiner::Stop(void)
+void Joiner::Stop(void)
 {
     Close();
-
-    return OT_ERROR_NONE;
 }
 
 otJoinerState Joiner::GetState(void) const

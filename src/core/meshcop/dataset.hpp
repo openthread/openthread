@@ -187,17 +187,16 @@ public:
      *
      * @param[in]  aDataset  The input Dataset.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Dataset.
-     *
      */
-    otError Set(const Dataset &aDataset);
+    void Set(const Dataset &aDataset);
 
     /**
      * This method sets the Dataset.
      *
      * @param[in]  aDataset  The input Dataset.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Dataset.
+     * @retval OT_ERROR_NONE          Successfully set the Dataset.
+     * @retval OT_ERROR_INVALID_ARGS  Dataset is missing Active and/or Pending Timestamp.
      *
      */
     otError Set(const otOperationalDataset &aDataset);
@@ -236,10 +235,8 @@ public:
      *
      * This method removes the Delay Timer and Pending Timestamp TLVs
      *
-     * @retval OT_ERROR_NONE  Successfully converted to Active Dataset.
-     *
      */
-    otError ConvertToActive(void);
+    void ConvertToActive(void);
 
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);

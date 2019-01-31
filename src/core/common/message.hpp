@@ -387,10 +387,8 @@ public:
      *
      * @param[in]  aLength  Number of header bytes to remove.
      *
-     * @retval OT_ERROR_NONE  Successfully removed header bytes from the message.
-     *
      */
-    otError RemoveHeader(uint16_t aLength);
+    void RemoveHeader(uint16_t aLength);
 
     /**
      * This method appends bytes to the end of the message.

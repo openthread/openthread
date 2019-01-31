@@ -113,8 +113,8 @@ public:
     otError UpdateService();
 
 private:
-    otError Start(void);
-    otError Stop(void);
+    void Start(void);
+    void Stop(void);
 
     otError AddPrefixAgent(otIp6Prefix &aIp6Prefix);
     otError RemovePrefixAgent(const uint8_t *aIp6Address);

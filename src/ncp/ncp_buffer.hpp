@@ -161,11 +161,8 @@ public:
      *
      * @param[in] aPriority             Priority level of the new input frame.
      *
-     * @retval OT_ERROR_NONE            Successfully started a new frame.
-     * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
-     *
      */
-    otError InFrameBegin(Priority aPriority);
+    void InFrameBegin(Priority aPriority);
 
     /**
      * This method adds a single byte to current input frame.

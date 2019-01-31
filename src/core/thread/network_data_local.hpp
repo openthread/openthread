@@ -166,13 +166,13 @@ public:
     otError SendServerDataNotification(void);
 
 private:
-    otError UpdateRloc(void);
-    otError UpdateRloc(PrefixTlv &aPrefix);
-    otError UpdateRloc(HasRouteTlv &aHasRoute);
-    otError UpdateRloc(BorderRouterTlv &aBorderRouter);
+    void UpdateRloc(void);
+    void UpdateRloc(PrefixTlv &aPrefix);
+    void UpdateRloc(HasRouteTlv &aHasRoute);
+    void UpdateRloc(BorderRouterTlv &aBorderRouter);
 #if OPENTHREAD_ENABLE_SERVICE
-    otError UpdateRloc(ServiceTlv &aService);
-    otError UpdateRloc(ServerTlv &aService);
+    void UpdateRloc(ServiceTlv &aService);
+    void UpdateRloc(ServerTlv &aService);
 #endif
 
     bool IsOnMeshPrefixConsistent(void);

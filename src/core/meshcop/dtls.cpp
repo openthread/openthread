@@ -330,7 +330,7 @@ void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-otError Dtls::Stop(void)
+void Dtls::Stop(void)
 {
     VerifyOrExit((mState == kStateConnecting) || (mState == kStateConnected));
 
@@ -338,7 +338,7 @@ otError Dtls::Stop(void)
     Close();
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 void Dtls::Close(void)
@@ -489,15 +489,13 @@ exit:
     return error;
 }
 
-otError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
+void Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     mReceiveMessage = &aMessage;
     mReceiveOffset  = aOffset;
     mReceiveLength  = aLength;
 
     Process();
-
-    return OT_ERROR_NONE;
 }
 
 int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength)
