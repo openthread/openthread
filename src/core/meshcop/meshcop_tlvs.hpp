@@ -85,6 +85,7 @@ public:
         kSecurityPolicy          = OT_MESHCOP_TLV_SECURITYPOLICY,           ///< Security Policy TLV
         kGet                     = OT_MESHCOP_TLV_GET,                      ///< Get TLV
         kActiveTimestamp         = OT_MESHCOP_TLV_ACTIVETIMESTAMP,          ///< Active Timestamp TLV
+        kCommissionerUdpPort     = OT_MESHCOP_TLV_COMMISSIONER_UDP_PORT,    ///< Commissioner UDP Port TLV
         kState                   = OT_MESHCOP_TLV_STATE,                    ///< State TLV
         kJoinerDtlsEncapsulation = OT_MESHCOP_TLV_JOINER_DTLS,              ///< Joiner DTLS Encapsulation TLV
         kJoinerUdpPort           = OT_MESHCOP_TLV_JOINER_UDP_PORT,          ///< Joiner UDP Port TLV
@@ -975,6 +976,53 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Commissioner UDP Port TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CommissionerUdpPortTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCommissionerUdpPort);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the UDP Port value.
+     *
+     * @returns The UDP Port value.
+     *
+     */
+    uint16_t GetUdpPort(void) const { return HostSwap16(mUdpPort); }
+
+    /**
+     * This method sets the UDP Port value.
+     *
+     * @param[in]  aUdpPort  The UDP Port value.
+     *
+     */
+    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = HostSwap16(aUdpPort); }
+
+private:
+    uint16_t mUdpPort;
 } OT_TOOL_PACKED_END;
 
 /**
