@@ -737,6 +737,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     SetRloc16(aRloc16);
     SetRole(OT_DEVICE_ROLE_CHILD);
     SetAttachState(kAttachStateIdle);
+    mAttachTimer.Stop();
     mAttachCounter       = 0;
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
