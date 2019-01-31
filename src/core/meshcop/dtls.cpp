@@ -55,9 +55,9 @@ namespace MeshCoP {
 
 Dtls::Dtls(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mState(kStateStopped)
     , mPskLength(0)
     , mVerifyPeerCertificate(true)
-    , mStarted(false)
     , mTimer(aInstance, &Dtls::HandleTimer, this)
     , mTimerIntermediate(0)
     , mTimerSet(false)
@@ -68,7 +68,6 @@ Dtls::Dtls(Instance &aInstance)
     , mReceiveHandler(NULL)
     , mSendHandler(NULL)
     , mContext(NULL)
-    , mGuardTimerSet(false)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -159,7 +158,7 @@ otError Dtls::Start(bool             aClient,
     int rval;
 
     // do not handle new connection before guard time expired
-    VerifyOrExit(mGuardTimerSet == false, rval = MBEDTLS_ERR_SSL_TIMEOUT);
+    VerifyOrExit(mState == kStateStopped, rval = MBEDTLS_ERR_SSL_TIMEOUT);
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -250,7 +249,7 @@ otError Dtls::Start(bool             aClient,
     mContext          = aContext;
     mReceiveMessage   = NULL;
     mMessageSubType   = Message::kSubTypeNone;
-    mStarted          = true;
+    mState            = kStateConnecting;
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
@@ -333,33 +332,28 @@ void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 
 otError Dtls::Stop(void)
 {
+    VerifyOrExit((mState == kStateConnecting) || (mState == kStateConnected));
+
     mbedtls_ssl_close_notify(&mSsl);
     Close();
 
+exit:
     return OT_ERROR_NONE;
 }
 
 void Dtls::Close(void)
 {
-    // guard time, that the possible close notify
-    // not open an invalid (new) connection
-    mGuardTimerSet = true;
+    assert((mState == kStateConnecting) || (mState == kStateConnected));
+
+    mState = kStateCloseNotify;
     mTimer.Start(kGuardTimeNewConnectionMilli);
-    VerifyOrExit(mStarted);
-    mStarted = false;
+
     FreeMbedtls();
+
     if (mConnectedHandler != NULL)
     {
         mConnectedHandler(mContext, false);
     }
-
-exit:
-    return;
-}
-
-bool Dtls::IsStarted(void)
-{
-    return mStarted;
 }
 
 otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
@@ -451,7 +445,7 @@ otError Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLe
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsConnected() == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState == kStateConnected, error = OT_ERROR_INVALID_STATE);
 
     VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength, mSsl.session->peer_cert->raw.p,
                                        mSsl.session->peer_cert->raw.len) == 0,
@@ -471,11 +465,6 @@ otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
     return MapError(rval);
 }
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
-
-bool Dtls::IsConnected(void)
-{
-    return mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER;
-}
 
 otError Dtls::Send(Message &aMessage, uint16_t aLength)
 {
@@ -710,14 +699,21 @@ void Dtls::HandleTimer(Timer &aTimer)
 
 void Dtls::HandleTimer(void)
 {
-    if (!mGuardTimerSet)
+    switch (mState)
     {
+    case kStateConnecting:
+    case kStateConnected:
         Process();
-    }
-    else
-    {
-        mGuardTimerSet = false;
+        break;
+
+    case kStateCloseNotify:
+        mState = kStateStopped;
         mTimer.Stop();
+        break;
+
+    default:
+        assert(false);
+        break;
     }
 }
 
@@ -727,15 +723,20 @@ void Dtls::Process(void)
     bool    shouldClose = false;
     int     rval;
 
-    while (mStarted)
+    while ((mState == kStateConnecting) || (mState == kStateConnected))
     {
-        if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
+        if (mState == kStateConnecting)
         {
             rval = mbedtls_ssl_handshake(&mSsl);
 
-            if ((mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER) && (mConnectedHandler != NULL))
+            if (mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
-                mConnectedHandler(mContext, true);
+                mState = kStateConnected;
+
+                if (mConnectedHandler != NULL)
+                {
+                    mConnectedHandler(mContext, true);
+                }
             }
         }
         else

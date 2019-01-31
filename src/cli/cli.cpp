@@ -887,7 +887,8 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(value <= static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                     error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
     }
 
@@ -1938,9 +1939,8 @@ void Interpreter::ProcessPing(int argc, char *argv[])
             break;
 
         case 3:
-            mInterval = static_cast<uint32_t>(value);
-            VerifyOrExit(mInterval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
-            mInterval = mInterval * 1000;
+            VerifyOrExit(value <= Timer::kMaxDt / 1000, error = OT_ERROR_INVALID_ARGS);
+            mInterval = static_cast<uint32_t>(value) * 1000;
             break;
 
         default:
@@ -2049,13 +2049,15 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext)
+void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
+    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
+    OT_UNUSED_VARIABLE(aIsTx);
+
     mServer->OutputFormat("\r\n");
 
     for (size_t i = 0; i < 44; i++)
@@ -2742,7 +2744,8 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         else
         {
             SuccessOrExit(error = ParseLong(argv[0], value));
-            VerifyOrExit(value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT), error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
+                         error = OT_ERROR_INVALID_ARGS);
             scanChannels = 1 << value;
         }
     }

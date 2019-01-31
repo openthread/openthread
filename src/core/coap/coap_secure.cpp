@@ -138,12 +138,12 @@ otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aC
 
 bool CoapSecure::IsConnectionActive(void)
 {
-    return GetNetif().GetDtls().IsStarted();
+    return GetNetif().GetDtls().GetState() != MeshCoP::Dtls::kStateStopped;
 }
 
 bool CoapSecure::IsConnected(void)
 {
-    return GetNetif().GetDtls().IsConnected();
+    return GetNetif().GetDtls().GetState() == MeshCoP::Dtls::kStateConnected;
 }
 
 otError CoapSecure::Disconnect(void)
@@ -236,14 +236,16 @@ otError CoapSecure::SendMessage(Message &               aMessage,
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 
-otError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+    otError error;
 
-    static_cast<Message &>(aMessage).Finish();
-    mTransmitQueue.Enqueue(aMessage);
+    SuccessOrExit(error = mTransmitQueue.Enqueue(aMessage));
     mTransmitTask.Post();
-    return OT_ERROR_NONE;
+
+exit:
+    return error;
 }
 
 void CoapSecure::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -256,7 +258,7 @@ void CoapSecure::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo 
 {
     ThreadNetif &netif = GetNetif();
 
-    if (!netif.GetDtls().IsStarted())
+    if (netif.GetDtls().GetState() == MeshCoP::Dtls::kStateStopped)
     {
         Ip6::SockAddr sockAddr;
         sockAddr.mAddress = aMessageInfo.GetPeerAddr();
@@ -285,7 +287,10 @@ void CoapSecure::HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo 
     }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
-    netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields));
+    if (netif.GetDtls().GetState() == MeshCoP::Dtls::kStateConnecting)
+    {
+        netif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields));
+    }
 #endif
 
     netif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
