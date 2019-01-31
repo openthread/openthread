@@ -45,8 +45,14 @@
 #include "common/instance.hpp"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
+#include "utils/static_assert.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_UART
+
+#if OPENTHREAD_ENABLE_DIAG
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,
+                 "diag command line should be smaller than NCP UART rx buffer");
+#endif
 
 namespace ot {
 namespace Ncp {

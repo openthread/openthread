@@ -42,8 +42,16 @@
 #include "common/instance.hpp"
 #include "common/new.hpp"
 #include "net/ip6.hpp"
+#include "utils/static_assert.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_SPI
+
+#if OPENTHREAD_ENABLE_DIAG
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+                 "diag output should be smaller than NCP SPI tx buffer");
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+                 "diag command line should be smaller than NCP SPI rx buffer");
+#endif
 
 namespace ot {
 namespace Ncp {
