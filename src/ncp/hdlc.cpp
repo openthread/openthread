@@ -242,7 +242,11 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                 {
                     otError error = OT_ERROR_PARSE;
 
-                    if ((mDecodedLength >= kFcsSize) && (mFcs == kGoodFcs))
+                    if ((mDecodedLength >= kFcsSize)
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+                        && (mFcs == kGoodFcs)
+#endif
+                    )
                     {
                         // Remove the FCS from the frame.
                         mWritePointer.UndoLastWrites(kFcsSize);
