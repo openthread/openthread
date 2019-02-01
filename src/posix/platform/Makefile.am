@@ -36,6 +36,7 @@ libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/src/ncp                 \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
+    -DOPENTHREAD_PLATFORM_POSIX_APP=1       \
     $(OPENTHREAD_TARGET_DEFINES)            \
     $(NULL)
 
