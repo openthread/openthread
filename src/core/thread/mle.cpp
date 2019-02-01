@@ -272,7 +272,6 @@ otError Mle::Start(bool aAnnounceAttach)
     }
     else
     {
-        SetAttachState(kAttachStateSynchronize);
         mChildUpdateAttempts = 0;
         SendChildUpdateRequest();
     }
@@ -1633,10 +1632,6 @@ void Mle::HandleAttachTimer(void)
     {
     case kAttachStateIdle:
         assert(false);
-        break;
-
-    case kAttachStateSynchronize:
-        SendChildUpdateRequest();
         break;
 
     case kAttachStateProcessAnnounce:
@@ -4151,10 +4146,6 @@ const char *Mle::AttachStateToString(AttachState aState)
     {
     case kAttachStateIdle:
         str = "Idle";
-        break;
-
-    case kAttachStateSynchronize:
-        str = "Sync";
         break;
 
     case kAttachStateProcessAnnounce:

@@ -1082,7 +1082,6 @@ protected:
     enum AttachState
     {
         kAttachStateIdle,                ///< Not currently searching for a parent.
-        kAttachStateSynchronize,         ///< Looking to synchronize with a parent (after reset).
         kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
         kAttachStateStart,               ///< Starting to look for a parent.
         kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
