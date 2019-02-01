@@ -43,10 +43,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-void platformUartInit(void);
-void platformUartProcess(void);
-
-otInstance *localInstance = NULL;
+static otInstance *localInstance = NULL;
 
 bool qorvoPlatGotoSleepCheck(void)
 {
@@ -62,10 +59,9 @@ bool qorvoPlatGotoSleepCheck(void)
 
 void otSysInit(int argc, char *argv[])
 {
-    (void)argc;
-    (void)argv;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
     qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
-    platformUartInit();
     qorvoAlarmInit();
     qorvoRandomInit();
     qorvoRadioInit();
@@ -85,8 +81,4 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 
     qorvoPlatMainLoop(!otTaskletsArePending(aInstance));
-    platformUartProcess();
-
-    // qorvoRadioProcess();
-    // qorvoAlarmProcess();
 }

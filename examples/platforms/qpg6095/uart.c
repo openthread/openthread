@@ -74,10 +74,3 @@ void cbQorvoUartTxDone(void)
     otPlatUartSendDone();
 }
 
-void platformUartInit(void)
-{
-}
-
-void platformUartProcess(void)
-{
-}

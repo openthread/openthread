@@ -40,12 +40,6 @@
 #include <openthread/platform/logging.h>
 
 /**
- * This function initializes the UART driver.
- *
- */
-void qorvoUartInit(void);
-
-/**
  * This function performs UART driver processing.
  *
  */

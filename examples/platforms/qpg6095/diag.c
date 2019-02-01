@@ -46,8 +46,8 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
 {
     // Add more plarform specific diagnostics features here.
     snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void) argc;
-    (void) aInstance;
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -62,22 +62,22 @@ bool otPlatDiagModeGet()
 
 void otPlatDiagChannelSet(uint8_t aChannel)
 {
-    (void) aChannel;
+    OT_UNUSED_VARIABLE(aChannel);
 }
 
 void otPlatDiagTxPowerSet(int8_t aTxPower)
 {
-    (void) aTxPower;
+    OT_UNUSED_VARIABLE(aTxPower);
 }
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void) aInstance;
-    (void) aFrame;
-    (void) aError;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
 }
 
 void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
-    (void) aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }

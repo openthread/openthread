@@ -74,16 +74,10 @@ COMMONCFLAGS                     := \
     -W                              \
     -Wall                           \
     $(NULL)
-#    -Os                           \
-#    -g                            \
 
-ifeq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-else
+ifneq ($(CERT_LOG),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
-#COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=1
-#COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_MAC=0
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 

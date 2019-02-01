@@ -38,25 +38,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void    (*qorvoPlatPollFunction_t)(uint8_t);
 typedef uint8_t (*qorvoPlatGotoSleepCheckCallback_t) ( void );
-
-/**
- * This function registers a callback to a file descriptor.
- *
- * @param[in]  fd            The file descriptor.
- * @param[in]  pollFunction  The callback which should be called when data is ready or needed for the file descriptor.
- *
- */
-void qorvoPlatRegisterPollFunction(int fd, qorvoPlatPollFunction_t pollFunction);
-
-/**
- * This function unregisters a callback for a file descriptor.
- *
- * @param[in]  fd            The file descriptor.
- *
- */
-void qorvoPlatUnRegisterPollFunction(int fd);
 
 /**
  * This function initializes the platform.

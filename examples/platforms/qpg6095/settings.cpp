@@ -49,32 +49,32 @@
 // settings API
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     qorvoSettingsInit();
 }
 
 otError otPlatSettingsBeginChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsCommitChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsAbandonChange(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     /* we only support multiple entries for the ChildInfo */
     /* Note: removed the assert, since the settings types are protected now */
@@ -100,7 +100,7 @@ static otError PlatformSettingsAdd(otInstance *   aInstance,
                                    uint16_t       aValueLength)
 {
     otError error = OT_ERROR_NONE;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     error = qorvoSettingsAdd(aKey, aIndex0, aValue, aValueLength);
 
@@ -120,7 +120,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
     otError error = OT_ERROR_NOT_FOUND;
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (otPlatSettingsGet(aInstance, aKey, 0, NULL, NULL) == OT_ERROR_NONE)
     {
