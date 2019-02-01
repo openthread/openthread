@@ -37,7 +37,9 @@
 #include <openthread/platform/settings.h>
 #include <openthread/platform/uart.h>
 
-static uint32_t sRandomState = 1;
+static uint32_t     sRandomState = 1;
+static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
 
 void FuzzerPlatformInit(void)
 {
@@ -198,7 +200,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
-    return NULL;
+    return &sRadioTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
