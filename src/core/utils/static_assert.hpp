@@ -36,6 +36,13 @@
 
 #ifdef __cplusplus
 
+/**
+ * Some compilers such as Keil MDK-ARM does not support __COUNTER__ macro.
+ */
+#ifndef __COUNTER__
+#define __COUNTER__ __LINE__
+#endif
+
 namespace ot {
 
 template <int> struct StaticAssertError;
