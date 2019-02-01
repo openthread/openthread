@@ -75,7 +75,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
-    -DOPENTHREAD_POSIX_APP=1                                                   \
+    -DOPENTHREAD_PLATFORM_POSIX_APP=1                                          \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     -Wno-non-virtual-dtor                                                      \
