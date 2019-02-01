@@ -64,7 +64,7 @@ exit:
     return error;
 }
 
-otError Routes::Remove(Route &aRoute)
+void Routes::Remove(Route &aRoute)
 {
     if (&aRoute == mRoutes)
     {
@@ -83,8 +83,6 @@ otError Routes::Remove(Route &aRoute)
     }
 
     aRoute.mNext = NULL;
-
-    return OT_ERROR_NONE;
 }
 
 int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)

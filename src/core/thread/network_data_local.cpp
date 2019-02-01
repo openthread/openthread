@@ -241,7 +241,7 @@ exit:
 }
 #endif
 
-otError Local::UpdateRloc(void)
+void Local::UpdateRloc(void)
 {
     for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
          cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
@@ -266,11 +266,9 @@ otError Local::UpdateRloc(void)
     }
 
     ClearResubmitDelayTimer();
-
-    return OT_ERROR_NONE;
 }
 
-otError Local::UpdateRloc(PrefixTlv &aPrefix)
+void Local::UpdateRloc(PrefixTlv &aPrefix)
 {
     for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
     {
@@ -289,26 +287,22 @@ otError Local::UpdateRloc(PrefixTlv &aPrefix)
             break;
         }
     }
-
-    return OT_ERROR_NONE;
 }
 
-otError Local::UpdateRloc(HasRouteTlv &aHasRoute)
+void Local::UpdateRloc(HasRouteTlv &aHasRoute)
 {
     HasRouteEntry *entry = aHasRoute.GetEntry(0);
     entry->SetRloc(GetNetif().GetMle().GetRloc16());
-    return OT_ERROR_NONE;
 }
 
-otError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
+void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
 {
     BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
     entry->SetRloc(GetNetif().GetMle().GetRloc16());
-    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
-otError Local::UpdateRloc(ServiceTlv &aService)
+void Local::UpdateRloc(ServiceTlv &aService)
 {
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
     {
@@ -323,14 +317,11 @@ otError Local::UpdateRloc(ServiceTlv &aService)
             break;
         }
     }
-
-    return OT_ERROR_NONE;
 }
 
-otError Local::UpdateRloc(ServerTlv &aServer)
+void Local::UpdateRloc(ServerTlv &aServer)
 {
     aServer.SetServer16(GetNetif().GetMle().GetRloc16());
-    return OT_ERROR_NONE;
 }
 #endif
 

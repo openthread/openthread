@@ -121,13 +121,11 @@ exit:
     return rval;
 }
 
-otError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
+void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
     mJoinerUdpPort          = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
     HandleStateChanged(OT_CHANGED_THREAD_NETDATA);
-
-    return OT_ERROR_NONE;
 }
 
 void JoinerRouter::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

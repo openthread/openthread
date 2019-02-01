@@ -107,10 +107,8 @@ public:
      *
      * @param[in]  aRssiThreshold  The RSSI threshold.
      *
-     * @retval OT_ERROR_NONE       Successfully set the threshold.
-     *
      */
-    otError SetRssiThreshold(int8_t aThreshold);
+    void SetRssiThreshold(int8_t aThreshold);
 
     /**
      * Get the Jam Detection RSSI Threshold (in dBm).

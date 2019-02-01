@@ -72,14 +72,16 @@ otError otJoinerStart(otInstance *     aInstance,
 
 otError otJoinerStop(otInstance *aInstance)
 {
-    otError error = OT_ERROR_DISABLED_FEATURE;
+    otError error;
 
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetJoiner().Stop();
+    instance.GetThreadNetif().GetJoiner().Stop();
+    error = OT_ERROR_NONE;
 #else
     OT_UNUSED_VARIABLE(aInstance);
+    error = OT_ERROR_DISABLED_FEATURE;
 #endif
 
     return error;

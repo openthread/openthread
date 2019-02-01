@@ -487,11 +487,11 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     switch (aIpProto)
     {
     case kProtoUdp:
-        SuccessOrExit(error = mUdp.UpdateChecksum(aMessage, checksum));
+        mUdp.UpdateChecksum(aMessage, checksum);
         break;
 
     case kProtoIcmp6:
-        SuccessOrExit(error = mIcmp.UpdateChecksum(aMessage, checksum));
+        mIcmp.UpdateChecksum(aMessage, checksum);
         break;
 
     default:

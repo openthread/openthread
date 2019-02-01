@@ -159,7 +159,7 @@ exit:
     return error;
 }
 
-otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
+void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[4];
@@ -174,8 +174,6 @@ otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     hmac.Update(kThreadString, sizeof(kThreadString));
 
     hmac.Finish(aKey);
-
-    return OT_ERROR_NONE;
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)

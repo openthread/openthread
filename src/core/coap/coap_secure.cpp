@@ -151,7 +151,8 @@ otError CoapSecure::Disconnect(void)
     Ip6::SockAddr sockAddr;
     otError       error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = GetNetif().GetDtls().Stop());
+    GetNetif().GetDtls().Stop();
+
     // Disconnect from previous peer by connecting to any address
     SuccessOrExit(error = mSocket.Connect(sockAddr));
 

@@ -391,8 +391,8 @@ private:
                           const Mac::Address &aMacSource,
                           const Mac::Address &aMacDest,
                           Ip6::Header &       aIp6Header);
-    otError  GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    otError  GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
     otError  GetIndirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
@@ -419,10 +419,10 @@ private:
                                      uint8_t                 aFrameLength,
                                      Lowpan::FragmentHeader &aFragmentHeader);
 
-    otError SendPoll(Message &aMessage, Mac::Frame &aFrame);
-    otError SendMesh(Message &aMessage, Mac::Frame &aFrame);
+    void    SendPoll(Message &aMessage, Mac::Frame &aFrame);
+    void    SendMesh(Message &aMessage, Mac::Frame &aFrame);
     otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    otError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
+    void    SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);

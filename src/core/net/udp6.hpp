@@ -248,20 +248,16 @@ public:
      *
      * @param[in]  aSocket  A reference to the UDP socket.
      *
-     * @retval OT_ERROR_NONE  Successfully added the UDP socket.
-     *
      */
-    otError AddSocket(UdpSocket &aSocket);
+    void AddSocket(UdpSocket &aSocket);
 
     /**
      * This method removes a UDP socket.
      *
      * @param[in]  aSocket  A reference to the UDP socket.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the UDP socket.
-     *
      */
-    otError RemoveSocket(UdpSocket &aSocket);
+    void RemoveSocket(UdpSocket &aSocket);
 
     /**
      * This method returns a new ephemeral port.
@@ -322,11 +318,8 @@ public:
      * @param[in]  aMessage               A reference to the UDP message.
      * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
      *
-     * @retval OT_ERROR_NONE          Successfully updated the UDP checksum.
-     * @retval OT_ERROR_INVALID_ARGS  The message was invalid.
-     *
      */
-    otError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    void UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     otUdpSocket *GetUdpSockets(void) { return mSockets; }

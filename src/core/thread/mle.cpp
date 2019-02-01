@@ -228,7 +228,7 @@ otError Mle::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = Stop(false));
+    Stop(false);
     SuccessOrExit(error = mSocket.Close());
     SuccessOrExit(error = GetNetif().RemoveUnicastAddress(mLinkLocal64));
 
@@ -280,7 +280,7 @@ exit:
     return error;
 }
 
-otError Mle::Stop(bool aClearNetworkDatasets)
+void Mle::Stop(bool aClearNetworkDatasets)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -302,7 +302,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     SetRole(OT_DEVICE_ROLE_DISABLED);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 void Mle::SetRole(otDeviceRole aRole)
@@ -784,7 +784,7 @@ exit:
     return;
 }
 
-otError Mle::SetTimeout(uint32_t aTimeout)
+void Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout);
 
@@ -803,7 +803,7 @@ otError Mle::SetTimeout(uint32_t aTimeout)
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 otError Mle::SetDeviceMode(uint8_t aDeviceMode)
@@ -853,7 +853,7 @@ exit:
     return error;
 }
 
-otError Mle::UpdateLinkLocalAddress(void)
+void Mle::UpdateLinkLocalAddress(void)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -862,8 +862,6 @@ otError Mle::UpdateLinkLocalAddress(void)
     netif.AddUnicastAddress(mLinkLocal64);
 
     GetNotifier().Signal(OT_CHANGED_THREAD_LL_ADDR);
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
@@ -951,7 +949,7 @@ uint16_t Mle::GetRloc16(void) const
     return GetNetif().GetMac().GetShortAddress();
 }
 
-otError Mle::SetRloc16(uint16_t aRloc16)
+void Mle::SetRloc16(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -966,8 +964,6 @@ otError Mle::SetRloc16(uint16_t aRloc16)
 
     netif.GetMac().SetShortAddress(aRloc16);
     netif.GetIp6().GetMpl().SetSeedId(aRloc16);
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId)

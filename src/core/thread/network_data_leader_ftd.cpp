@@ -120,10 +120,9 @@ uint32_t Leader::GetContextIdReuseDelay(void) const
     return mContextIdReuseDelay;
 }
 
-otError Leader::SetContextIdReuseDelay(uint32_t aDelay)
+void Leader::SetContextIdReuseDelay(uint32_t aDelay)
 {
     mContextIdReuseDelay = aDelay;
-    return OT_ERROR_NONE;
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
@@ -772,7 +771,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
         // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID
         SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
 
-        SuccessOrExit(error = RemoveRloc(aRloc16, kMatchModeRloc16));
+        RemoveRloc(aRloc16, kMatchModeRloc16);
         SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
 
         mVersion++;
@@ -1197,7 +1196,7 @@ exit:
     return rval;
 }
 
-otError Leader::FreeContext(uint8_t aContextId)
+void Leader::FreeContext(uint8_t aContextId)
 {
     otLogInfoNetData("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
@@ -1205,7 +1204,6 @@ otError Leader::FreeContext(uint8_t aContextId)
     mVersion++;
     mStableVersion++;
     GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
-    return OT_ERROR_NONE;
 }
 
 void Leader::StartContextReuseTimer(uint8_t aContextId)
@@ -1241,7 +1239,7 @@ exit:
     return error;
 }
 
-otError Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
@@ -1304,11 +1302,9 @@ otError Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
     }
 
     otDumpDebgNetData("remove done", mTlvs, mLength);
-
-    return OT_ERROR_NONE;
 }
 
-otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = prefix.GetSubTlvs();
     NetworkDataTlv *end;
@@ -1371,12 +1367,10 @@ otError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatch
             StopContextReuseTimer(context->GetContextId());
         }
     }
-
-    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
-otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = service.GetSubTlvs();
     NetworkDataTlv *end;
@@ -1413,12 +1407,10 @@ otError Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMat
 
         cur = cur->GetNext();
     }
-
-    return OT_ERROR_NONE;
 }
 #endif
 
-otError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode)
 {
     HasRouteEntry *entry = aHasRoute.GetFirstEntry();
 
@@ -1434,11 +1426,9 @@ otError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t 
 
         entry = entry->GetNext();
     }
-
-    return OT_ERROR_NONE;
 }
 
-otError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode)
 {
     BorderRouterEntry *entry = aBorderRouter.GetFirstEntry();
 
@@ -1454,11 +1444,9 @@ otError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, u
 
         entry = entry->GetNext();
     }
-
-    return OT_ERROR_NONE;
 }
 
-otError Leader::RemoveContext(uint8_t aContextId)
+void Leader::RemoveContext(uint8_t aContextId)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
     NetworkDataTlv *end;
@@ -1498,11 +1486,9 @@ otError Leader::RemoveContext(uint8_t aContextId)
     }
 
     otDumpDebgNetData("remove done", mTlvs, mLength);
-
-    return OT_ERROR_NONE;
 }
 
-otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
+void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end;
@@ -1542,8 +1528,6 @@ otError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
         cur = cur->GetNext();
     }
-
-    return OT_ERROR_NONE;
 }
 
 void Leader::UpdateContextsAfterReset(void)
