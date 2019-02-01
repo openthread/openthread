@@ -327,8 +327,6 @@ class NetworkLayerTlvsFactory(object):
             _type = ord(data.read(1))
             length = ord(data.read(1))
 
-            #if _type not in self._tlvs_factories:
-            #    continue
             factory = self._tlvs_factories[_type]
             tlv = factory.parse(io.BytesIO(data.read(length)), message_info)
 
