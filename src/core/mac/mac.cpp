@@ -349,10 +349,9 @@ exit:
     return;
 }
 
-otError Mac::SetShortAddress(ShortAddress aShortAddress)
+void Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     mSubMac.SetShortAddress(aShortAddress);
-    return OT_ERROR_NONE;
 }
 
 otError Mac::SetPanChannel(uint8_t aChannel)
@@ -461,7 +460,7 @@ exit:
     return error;
 }
 
-otError Mac::SetPanId(PanId aPanId)
+void Mac::SetPanId(PanId aPanId)
 {
     VerifyOrExit(mPanId != aPanId, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_PANID));
     mPanId = aPanId;
@@ -469,10 +468,10 @@ otError Mac::SetPanId(PanId aPanId)
     GetNotifier().Signal(OT_CHANGED_THREAD_PANID);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
-otError Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
+void Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
 {
     VerifyOrExit(memcmp(mExtendedPanId.m8, aExtendedPanId.m8, sizeof(mExtendedPanId)) != 0,
                  GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
@@ -481,7 +480,7 @@ otError Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
     GetNotifier().Signal(OT_CHANGED_THREAD_EXT_PANID);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 otError Mac::SendFrameRequest(void)
@@ -1756,11 +1755,9 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     UpdateIdleMode();
 }
 
-otError Mac::SetEnabled(bool aEnable)
+void Mac::SetEnabled(bool aEnable)
 {
     mEnabled = aEnable;
-
-    return OT_ERROR_NONE;
 }
 
 void Mac::ResetCounters(void)

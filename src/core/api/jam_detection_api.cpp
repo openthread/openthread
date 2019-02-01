@@ -45,7 +45,9 @@ otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThresh
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetJamDetector().SetRssiThreshold(aRssiThreshold);
+    instance.GetThreadNetif().GetJamDetector().SetRssiThreshold(aRssiThreshold);
+
+    return OT_ERROR_NONE;
 }
 
 int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance)

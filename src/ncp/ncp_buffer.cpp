@@ -327,7 +327,7 @@ bool NcpFrameBuffer::InFrameIsWriting(Priority aPriority) const
     return (mWriteDirection == static_cast<Direction>(aPriority));
 }
 
-otError NcpFrameBuffer::InFrameBegin(Priority aPriority)
+void NcpFrameBuffer::InFrameBegin(Priority aPriority)
 {
     // Discard any previous unfinished frame.
     InFrameDiscard();
@@ -345,8 +345,6 @@ otError NcpFrameBuffer::InFrameBegin(Priority aPriority)
 
     // Set up the segment head and tail
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
-
-    return OT_ERROR_NONE;
 }
 
 otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)

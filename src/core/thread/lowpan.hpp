@@ -234,7 +234,7 @@ private:
     int     DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
     otError DispatchToNextHeader(uint8_t aDispatch, Ip6::IpProto &aNextHeader);
 
-    static otError CopyContext(const Context &aContext, Ip6::Address &aAddress);
+    static void    CopyContext(const Context &aContext, Ip6::Address &aAddress);
     static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
 };
 

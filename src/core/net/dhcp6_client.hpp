@@ -117,8 +117,8 @@ public:
     void UpdateAddresses(void);
 
 private:
-    otError Start(void);
-    otError Stop(void);
+    void Start(void);
+    void Stop(void);
 
     static bool MatchNetifAddressWithPrefix(const otNetifAddress &aNetifAddress, const otIp6Prefix &aIp6Prefix);
 

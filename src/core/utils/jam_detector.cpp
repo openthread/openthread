@@ -127,12 +127,10 @@ exit:
     return;
 }
 
-otError JamDetector::SetRssiThreshold(int8_t aThreshold)
+void JamDetector::SetRssiThreshold(int8_t aThreshold)
 {
     mRssiThreshold = aThreshold;
     otLogInfoUtil("JamDetector - RSSI threshold set to %d", mRssiThreshold);
-
-    return OT_ERROR_NONE;
 }
 
 otError JamDetector::SetWindow(uint8_t aWindow)

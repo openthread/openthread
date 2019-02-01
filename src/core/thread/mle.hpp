@@ -509,10 +509,8 @@ public:
      *
      * @param[in]  aClearNetworkDatasets  True to clear network datasets, False not.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the protocol operation.
-     *
      */
-    otError Stop(bool aClearNetworkDatasets);
+    void Stop(bool aClearNetworkDatasets);
 
     /**
      * This method restores network information from non-volatile memory.
@@ -730,10 +728,8 @@ public:
      *
      * Call this method when the IEEE 802.15.4 Extended Address has changed.
      *
-     * @retval OT_ERROR_NONE  Successfully updated the link local address.
-     *
      */
-    otError UpdateLinkLocalAddress(void);
+    void UpdateLinkLocalAddress(void);
 
     /**
      * This method returns a reference to the link-local all Thread nodes multicast address.
@@ -814,7 +810,7 @@ public:
      * @param[in]  aTimeout  The Timeout value in seconds.
      *
      */
-    otError SetTimeout(uint32_t aTimeout);
+    void SetTimeout(uint32_t aTimeout);
 
     /**
      * This method returns the RLOC16 assigned to the Thread interface.
@@ -1512,10 +1508,8 @@ protected:
      *
      * @param[in]  aRloc16  The RLOC16 to set.
      *
-     * @retval OT_ERROR_NONE  Successfully set the RLOC16.
-     *
      */
-    otError SetRloc16(uint16_t aRloc16);
+    void SetRloc16(uint16_t aRloc16);
 
     /**
      * This method sets the Device State to Detached.

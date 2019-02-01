@@ -399,11 +399,8 @@ protected:
      * @param[in]  aStart   A pointer to the beginning of the insertion.
      * @param[in]  aLength  The number of bytes to insert.
      *
-     * @retval OT_ERROR_NONE          Successfully inserted bytes.
-     * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to insert bytes.
-     *
      */
-    otError Insert(uint8_t *aStart, uint8_t aLength);
+    void Insert(uint8_t *aStart, uint8_t aLength);
 
     /**
      * This method removes bytes from the Network Data.
@@ -411,10 +408,8 @@ protected:
      * @param[in]  aStart   A pointer to the beginning of the removal.
      * @param[in]  aLength  The number of bytes to remove.
      *
-     * @retval OT_ERROR_NONE    Successfully removed bytes.
-     *
      */
-    otError Remove(uint8_t *aStart, uint8_t aLength);
+    void Remove(uint8_t *aStart, uint8_t aLength);
 
     /**
      * This method strips non-stable data from the Thread Network Data.

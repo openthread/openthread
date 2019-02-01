@@ -194,7 +194,7 @@ otError MleRouter::BecomeLeader(void)
     netif.GetNetworkDataLeader().Reset();
     netif.GetLeader().SetEmptyCommissionerData();
 
-    SuccessOrExit(error = SetStateLeader(GetRloc16(leaderId)));
+    SetStateLeader(GetRloc16(leaderId));
 
 exit:
     return error;
@@ -213,13 +213,11 @@ void MleRouter::StopLeader(void)
     netif.UnsubscribeAllRoutersMulticast();
 }
 
-otError MleRouter::HandleDetachStart(void)
+void MleRouter::HandleDetachStart(void)
 {
     mRouterTable.ClearNeighbors();
     StopLeader();
     mStateUpdateTimer.Stop();
-
-    return OT_ERROR_NONE;
 }
 
 otError MleRouter::HandleChildStart(AttachMode aMode)
@@ -301,7 +299,7 @@ exit:
     return error;
 }
 
-otError MleRouter::SetStateRouter(uint16_t aRloc16)
+void MleRouter::SetStateRouter(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -330,11 +328,9 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
             RemoveNeighbor(*iter.GetChild());
         }
     }
-
-    return OT_ERROR_NONE;
 }
 
-otError MleRouter::SetStateLeader(uint16_t aRloc16)
+void MleRouter::SetStateLeader(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -373,8 +369,6 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
     }
 
     otLogNoteMle("Leader partition id 0x%x", mLeaderData.GetPartitionId());
-
-    return OT_ERROR_NONE;
 }
 
 bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
@@ -1675,7 +1669,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         child->SetTimeout(TimerMilli::MsecToSec(kMaxChildIdRequestTimeout));
     }
 
-    SuccessOrExit(error = SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet()));
+    SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet());
 
 exit:
     return error;
@@ -1897,7 +1891,7 @@ exit:
     return;
 }
 
-otError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest)
+void MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest)
 {
     otError      error = OT_ERROR_NONE;
     Ip6::Address destination;
@@ -1952,8 +1946,6 @@ exit:
     {
         message->Free();
     }
-
-    return OT_ERROR_NONE;
 }
 
 otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
@@ -2540,7 +2532,7 @@ exit:
     return error;
 }
 
-otError MleRouter::HandleNetworkDataUpdateRouter(void)
+void MleRouter::HandleNetworkDataUpdateRouter(void)
 {
     static const uint8_t tlvs[] = {Tlv::kNetworkData};
     Ip6::Address         destination;
@@ -2558,7 +2550,7 @@ otError MleRouter::HandleNetworkDataUpdateRouter(void)
     SynchronizeChildNetworkData();
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 void MleRouter::SynchronizeChildNetworkData(void)
@@ -2979,11 +2971,11 @@ exit:
     return error;
 }
 
-otError MleRouter::SendChildUpdateResponse(Child *                 aChild,
-                                           const Ip6::MessageInfo &aMessageInfo,
-                                           const uint8_t *         aTlvs,
-                                           uint8_t                 aTlvslength,
-                                           const ChallengeTlv *    aChallenge)
+void MleRouter::SendChildUpdateResponse(Child *                 aChild,
+                                        const Ip6::MessageInfo &aMessageInfo,
+                                        const uint8_t *         aTlvs,
+                                        uint8_t                 aTlvslength,
+                                        const ChallengeTlv *    aChallenge)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -3056,8 +3048,6 @@ exit:
     {
         message->Free();
     }
-
-    return OT_ERROR_NONE;
 }
 
 otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
@@ -3154,13 +3144,13 @@ otError MleRouter::RemoveNeighbor(const Mac::Address &aAddress)
     Neighbor *neighbor;
 
     VerifyOrExit((neighbor = GetNeighbor(aAddress)) != NULL, error = OT_ERROR_NOT_FOUND);
-    SuccessOrExit(error = RemoveNeighbor(*neighbor));
+    RemoveNeighbor(*neighbor);
 
 exit:
     return error;
 }
 
-otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
+void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -3210,8 +3200,6 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
-
-    return OT_ERROR_NONE;
 }
 
 Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
@@ -3980,7 +3968,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     // assign short address
     SetRouterId(routerId);
 
-    SuccessOrExit(SetStateRouter(GetRloc16(mRouterId)));
+    SetStateRouter(GetRloc16(mRouterId));
     mRouterTable.Clear();
     mRouterTable.ProcessTlv(routerMaskTlv);
 
@@ -4706,13 +4694,11 @@ bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aCh
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-otError MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     LogMleMessage("Receive Time Sync", aMessageInfo.GetPeerAddr());
 
     GetNetif().GetTimeSync().HandleTimeSyncMessage(aMessage);
-
-    return OT_ERROR_NONE;
 }
 
 otError MleRouter::SendTimeSync(void)

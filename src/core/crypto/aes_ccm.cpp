@@ -39,10 +39,9 @@
 namespace ot {
 namespace Crypto {
 
-otError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
+void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
     mEcb.SetKey(aKey, 8 * aKeyLength);
-    return OT_ERROR_NONE;
 }
 
 otError AesCcm::Init(uint32_t    aHeaderLength,

@@ -119,7 +119,9 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+    instance.GetThreadNetif().GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+
+    return OT_ERROR_NONE;
 }
 
 uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance)

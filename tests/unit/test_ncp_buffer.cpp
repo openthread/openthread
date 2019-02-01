@@ -222,7 +222,7 @@ void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     message->Write(0, sizeof(sMottoText), sMottoText);
 
     oldContext = sContext;
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameBegin() failed.");
+    aNcpBuffer.InFrameBegin(aPriority);
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
@@ -270,7 +270,7 @@ void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
     message2->Write(0, sizeof(sHelloText), sHelloText);
 
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
+    aNcpBuffer.InFrameBegin(aPriority);
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message2), "InFrameFeedMessage() failed.");
@@ -311,7 +311,7 @@ void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     // An empty message with no content.
     SuccessOrQuit(message1->SetLength(0), "Could not set the length of message.");
 
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
+    aNcpBuffer.InFrameBegin(aPriority);
     SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
@@ -342,7 +342,7 @@ void WriteTestFrame4(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
 {
     CallbackContext oldContext = sContext;
 
-    SuccessOrQuit(aNcpBuffer.InFrameBegin(aPriority), "InFrameFeedBegin() failed.");
+    aNcpBuffer.InFrameBegin(aPriority);
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 
@@ -732,7 +732,7 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\n Test 11: Read and remove in middle of an active input frame write");
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
@@ -740,7 +740,7 @@ void TestNcpFrameBuffer(void)
     VerifyAndRemoveFrame4(ncpBuffer);
     // Repeat the test reversing priorities
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow), "InFrameFeedBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
@@ -748,7 +748,7 @@ void TestNcpFrameBuffer(void)
     VerifyAndRemoveFrame4(ncpBuffer);
     // Repeat the test with same priorities
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
@@ -759,7 +759,7 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\n Test 12: Check returned error status");
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameFeedBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
     VerifyOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer)) == OT_ERROR_NO_BUFS, "Incorrect error status");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
@@ -791,7 +791,7 @@ void TestNcpFrameBuffer(void)
     printf("\n Test 13: Ensure we can utilize the full buffer size when frames removed during write");
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
     WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh), "InFrameBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
@@ -800,7 +800,7 @@ void TestNcpFrameBuffer(void)
     // Repeat the test with a low priority buffer write
     WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
     WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    SuccessOrQuit(ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow), "InFrameBegin() failed.");
+    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
@@ -821,7 +821,7 @@ void TestNcpFrameBuffer(void)
         printf("*");
         priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
         index    = static_cast<uint16_t>(j % sizeof(sHexText));
-        SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
+        ncpBuffer.InFrameBegin(priority);
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
@@ -867,7 +867,7 @@ void TestNcpFrameBuffer(void)
         printf("*");
         priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
         index    = static_cast<uint16_t>(j % sizeof(sHexText));
-        SuccessOrQuit(ncpBuffer.InFrameBegin(priority), "InFrameBegin() failed");
+        ncpBuffer.InFrameBegin(priority);
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
         SuccessOrQuit(ncpBuffer.InFrameGetPosition(pos1), "InFrameGetPosition() failed");
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sMysteryText, sizeof(sHexText) - index), "InFrameFeedData() failed.");
@@ -951,7 +951,7 @@ otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, NcpFrameB
     CallbackContext oldContext = sContext;
     uint32_t        tail       = sFrameBufferTailIndex[priority];
 
-    SuccessOrExit(error = aNcpBuffer.InFrameBegin(aPriority));
+    aNcpBuffer.InFrameBegin(aPriority);
 
     while (aLength--)
     {

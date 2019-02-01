@@ -104,7 +104,7 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
 
     instance.GetThreadNetif().GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 
-    SuccessOrExit(error = instance.GetThreadNetif().GetMle().UpdateLinkLocalAddress());
+    instance.GetThreadNetif().GetMle().UpdateLinkLocalAddress();
 
 exit:
     return error;
@@ -130,7 +130,7 @@ otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    error = instance.GetThreadNetif().GetMac().SetPanId(aPanId);
+    instance.GetThreadNetif().GetMac().SetPanId(aPanId);
     instance.GetThreadNetif().GetActiveDataset().Clear();
     instance.GetThreadNetif().GetPendingDataset().Clear();
 
@@ -318,7 +318,7 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
     // cannot disable the link layer if the Thread interface is enabled
     VerifyOrExit(instance.GetThreadNetif().IsUp() == false, error = OT_ERROR_INVALID_STATE);
 
-    error = instance.GetThreadNetif().GetMac().SetEnabled(aEnable);
+    instance.GetThreadNetif().GetMac().SetEnabled(aEnable);
 
 exit:
     return error;

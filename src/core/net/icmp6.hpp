@@ -312,11 +312,8 @@ public:
      * @param[in]  aMessage               A reference to the ICMPv6 message.
      * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
      *
-     * @retval OT_ERROR_NONE          Successfully updated the ICMPv6 checksum.
-     * @retval OT_ERROR_INVALID_ARGS  The message was invalid.
-     *
      */
-    otError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    void UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.

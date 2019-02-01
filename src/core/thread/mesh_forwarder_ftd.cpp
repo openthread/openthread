@@ -529,7 +529,7 @@ void MeshForwarder::PrepareIndirectTransmission(Message &aMessage, const Child &
     }
 }
 
-otError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
+void MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
 {
     ThreadNetif &netif = GetNetif();
     uint16_t     fcf;
@@ -550,8 +550,6 @@ otError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
     aFrame.SetPayloadLength(static_cast<uint8_t>(aMessage.GetLength()));
 
     mMessageNextOffset = aMessage.GetLength();
-
-    return OT_ERROR_NONE;
 }
 
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo)
