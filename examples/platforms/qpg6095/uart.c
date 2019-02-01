@@ -73,4 +73,3 @@ void cbQorvoUartTxDone(void)
 {
     otPlatUartSendDone();
 }
-
