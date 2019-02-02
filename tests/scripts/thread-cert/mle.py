@@ -58,6 +58,7 @@ class CommandType(IntEnum):
     ANNOUNCE = 15
     DISCOVERY_REQUEST = 16
     DISCOVERY_RESPONSE = 17
+    TIME_SYNC = 99
 
 
 class TlvType(IntEnum):
@@ -86,6 +87,8 @@ class TlvType(IntEnum):
     ACTIVE_OPERATIONAL_DATASET = 24
     PENDING_OPERATIONAL_DATASET = 25
     THREAD_DISCOVERY = 26
+    TIME_REQUEST = 252
+    TIME_PARAMETER = 253
 
 
 class SourceAddress(object):
@@ -1018,6 +1021,28 @@ class ThreadDiscoveryFactory:
     def parse(self, data, message_info):
         return ThreadDiscovery()
 
+class TimeRequest:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("TimeRequest is not implemented yet.")
+
+class TimeRequestFactory:
+
+    def parse(self, data, message_info):
+        return TimeRequest()
+
+class TimeParameter:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("TimeParameter is not implemented yet.")
+
+
+class TimeParameterFactory:
+
+    def parse(self, data, message_info):
+        return TimeParameter()
 
 class MleCommand(object):
 

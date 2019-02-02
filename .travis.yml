@@ -73,6 +73,10 @@ matrix:
       os: linux
       compiler: gcc
       python: "2.7"
+    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1 TIME_SYNC=1
+      os: linux
+      compiler: gcc
+      python: "2.7"
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc

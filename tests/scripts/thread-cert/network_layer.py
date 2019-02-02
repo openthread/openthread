@@ -48,6 +48,7 @@ class TlvType(IntEnum):
     ND_DATA = 9
     THREAD_NETWORK_DATA = 10
     MLE_ROUTING = 11
+    XTAL_ACCURACY = 254
 
 
 class StatusValues(IntEnum):
@@ -273,6 +274,18 @@ class NdDataFactory(object):
 
     def parse(self, data, message_info):
         raise NotImplementedError("TODO: Not implemented yet")
+
+class XtalAccuracy:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("XtalAccuracy is not implemented yet.")
+
+
+class XtalAccuracyFactory:
+
+    def parse(self, data, message_info):
+        return XtalAccuracy()
 
 
 class ThreadNetworkData(object):
