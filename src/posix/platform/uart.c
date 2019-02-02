@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif
@@ -46,8 +47,11 @@
 
 #include "code_utils.h"
 
+#define OPENTHREAD_POSIX_APP_SOCKET_LOCK OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".lock"
+
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 static int sUartSocket    = -1;
+static int sUartLock      = -1;
 static int sSessionSocket = -1;
 #endif
 
@@ -72,13 +76,26 @@ otError otPlatUartEnable(void)
         exit(OT_EXIT_FAILURE);
     }
 
+    sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY, 0600);
+
+    if (sUartLock == -1)
+    {
+        perror("open");
+        exit(OT_EXIT_FAILURE);
+    }
+
+    if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
+    {
+        perror("flock");
+        exit(OT_EXIT_FAILURE);
+    }
+
     memset(&sockname, 0, sizeof(struct sockaddr_un));
 
-    // TODO lock before unlink or use abstract socket addresses when possible
     (void)unlink(OPENTHREAD_POSIX_APP_SOCKET_NAME);
 
     sockname.sun_family = AF_UNIX;
-    // TODO add static assert OPENTHREAD_POSIX_APP_SOCKET_NAME is not longer than sizeof(sockname.sun_path)
+    assert(sizeof(OPENTHREAD_POSIX_APP_SOCKET_NAME) < sizeof(sockname.sun_path), "socket name too long");
     strncpy(sockname.sun_path, OPENTHREAD_POSIX_APP_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
     ret = bind(sUartSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
@@ -117,6 +134,12 @@ otError otPlatUartDisable(void)
     {
         close(sUartSocket);
         sUartSocket = -1;
+    }
+
+    if (sUartLock != -1)
+    {
+        close(sUartLock);
+        sUartLock = -1;
     }
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
