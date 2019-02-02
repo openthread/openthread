@@ -131,6 +131,10 @@ ifeq ($(SNTP_CLIENT),1)
 configure_OPTIONS              += --enable-sntp-client
 endif
 
+ifeq ($(TIME_SYNC),1)
+COMMONCFLAGS                   += -DPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1
+endif
+
 ifeq ($(UDP_FORWARD),1)
 configure_OPTIONS              += --enable-udp-forward
 endif

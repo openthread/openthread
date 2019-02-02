@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the time service.
  */
 
-#ifndef TIME_H_
-#define TIME_H_
+#ifndef OPENTHREAD_PLATFORM_TIME_H_
+#define OPENTHREAD_PLATFORM_TIME_H_
 
 #include <stdint.h>
 
@@ -76,4 +76,4 @@ uint16_t otPlatTimeGetXtalAccuracy(void);
 } // extern "C"
 #endif
 
-#endif // TIME_H_
+#endif // OPENTHREAD_PLATFORM_TIME_H_
