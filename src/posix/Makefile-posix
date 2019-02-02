@@ -44,6 +44,7 @@ COMMISSIONER                         ?= 1
 CHANNEL_MANAGER                      ?= 1
 CHANNEL_MONITOR                      ?= 1
 CHILD_SUPERVISION                    ?= 1
+DAEMON                               ?= 0
 DHCP6_CLIENT                         ?= 1
 DHCP6_SERVER                         ?= 1
 DIAGNOSTIC                           ?= 1
@@ -75,6 +76,10 @@ configure_OPTIONS                   = \
     $(NULL)
 
 # Platform specific switches
+
+ifeq (${DAEMON},1)
+configure_OPTIONS              += --enable-posix-app-daemon
+endif
 
 ifneq ($(DEBUG),1)
 COMMONCFLAGS                   += \

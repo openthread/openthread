@@ -29,6 +29,16 @@
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+#include <assert.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/file.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,9 +47,16 @@
 
 #include "code_utils.h"
 
-static uint8_t        sReceiveBuffer[128];
-static const uint8_t *sWriteBuffer;
-static uint16_t       sWriteLength;
+#define OPENTHREAD_POSIX_APP_SOCKET_LOCK OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".lock"
+
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+static int sUartSocket    = -1;
+static int sUartLock      = -1;
+static int sSessionSocket = -1;
+#endif
+
+static const uint8_t *sWriteBuffer = NULL;
+static uint16_t       sWriteLength = 0;
 
 void platformUartRestore(void)
 {
@@ -47,12 +64,86 @@ void platformUartRestore(void)
 
 otError otPlatUartEnable(void)
 {
-    return OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+    struct sockaddr_un sockname;
+    int                ret;
+
+    sUartSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sUartSocket == -1)
+    {
+        perror("socket");
+        exit(OT_EXIT_FAILURE);
+    }
+
+    sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY, 0600);
+
+    if (sUartLock == -1)
+    {
+        perror("open");
+        exit(OT_EXIT_FAILURE);
+    }
+
+    if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
+    {
+        perror("flock");
+        exit(OT_EXIT_FAILURE);
+    }
+
+    memset(&sockname, 0, sizeof(struct sockaddr_un));
+
+    (void)unlink(OPENTHREAD_POSIX_APP_SOCKET_NAME);
+
+    sockname.sun_family = AF_UNIX;
+    assert(sizeof(OPENTHREAD_POSIX_APP_SOCKET_NAME) < sizeof(sockname.sun_path), "socket name too long");
+    strncpy(sockname.sun_path, OPENTHREAD_POSIX_APP_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+
+    ret = bind(sUartSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
+
+    if (ret == -1)
+    {
+        perror("bind");
+        exit(OT_EXIT_FAILURE);
+    }
+
+    //
+    // only accept 1 connection.
+    //
+    ret = listen(sUartSocket, 1);
+    if (ret == -1)
+    {
+        perror("listen");
+        exit(OT_EXIT_FAILURE);
+    }
+#endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+    return error;
 }
 
 otError otPlatUartDisable(void)
 {
-    return OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+    if (sSessionSocket != -1)
+    {
+        close(sSessionSocket);
+        sSessionSocket = -1;
+    }
+
+    if (sUartSocket != -1)
+    {
+        close(sUartSocket);
+        sUartSocket = -1;
+    }
+
+    if (sUartLock != -1)
+    {
+        close(sUartLock);
+        sUartLock = -1;
+    }
+#endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+
+    return error;
 }
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
@@ -72,31 +163,42 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 {
     if (aReadFdSet != NULL)
     {
-        FD_SET(STDIN_FILENO, aReadFdSet);
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+        int fd = (sSessionSocket == -1 ? sUartSocket : sSessionSocket);
+#else
+        int fd = STDIN_FILENO;
+#endif
+
+        FD_SET(fd, aReadFdSet);
 
         if (aErrorFdSet != NULL)
         {
-            FD_SET(STDIN_FILENO, aErrorFdSet);
+            FD_SET(fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < STDIN_FILENO)
+        if (aMaxFd != NULL && *aMaxFd < fd)
         {
-            *aMaxFd = STDIN_FILENO;
+            *aMaxFd = fd;
         }
     }
-
     if ((aWriteFdSet != NULL) && (sWriteLength > 0))
     {
-        FD_SET(STDOUT_FILENO, aWriteFdSet);
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+        int fd = (sSessionSocket == -1 ? sUartSocket : sSessionSocket);
+#else
+        int fd = STDOUT_FILENO;
+#endif
+
+        FD_SET(fd, aWriteFdSet);
 
         if (aErrorFdSet != NULL)
         {
-            FD_SET(STDOUT_FILENO, aErrorFdSet);
+            FD_SET(fd, aErrorFdSet);
         }
 
-        if (aMaxFd != NULL && *aMaxFd < STDOUT_FILENO)
+        if (aMaxFd != NULL && *aMaxFd < fd)
         {
-            *aMaxFd = STDOUT_FILENO;
+            *aMaxFd = fd;
         }
     }
 }
@@ -104,7 +206,31 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
     ssize_t rval;
+    int     fd;
 
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+    if (FD_ISSET(sUartSocket, aErrorFdSet))
+    {
+        perror("socket error");
+        exit(OT_EXIT_FAILURE);
+    }
+    else if (FD_ISSET(sUartSocket, aReadFdSet))
+    {
+        sSessionSocket = accept(sUartSocket, NULL, NULL);
+    }
+
+    otEXPECT(sSessionSocket != -1);
+
+    if (FD_ISSET(sSessionSocket, aErrorFdSet))
+    {
+        close(sSessionSocket);
+        sSessionSocket = -1;
+    }
+
+    otEXPECT(sSessionSocket != -1);
+
+    fd = sSessionSocket;
+#else  // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(STDIN_FILENO, aErrorFdSet))
     {
         perror("stdin");
@@ -117,35 +243,53 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         exit(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(STDIN_FILENO, aReadFdSet))
+    fd = STDIN_FILENO;
+#endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+
+    if (FD_ISSET(fd, aReadFdSet))
     {
-        rval = read(STDIN_FILENO, sReceiveBuffer, sizeof(sReceiveBuffer));
+        uint8_t buffer[256];
+
+        rval = read(fd, buffer, sizeof(buffer));
 
         if (rval > 0)
         {
-            otPlatUartReceived(sReceiveBuffer, (uint16_t)rval);
+            otPlatUartReceived(buffer, (uint16_t)rval);
         }
-        else if (rval < 0)
+        else if (rval <= 0)
         {
             perror("UART read");
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+            close(sSessionSocket);
+            sSessionSocket = -1;
+            otEXIT_NOW();
+#else
             exit(OT_EXIT_FAILURE);
-        }
-        else
-        {
-            fprintf(stderr, "UART ended\r\n");
-            exit(OT_EXIT_SUCCESS);
+#endif
         }
     }
 
-    if ((sWriteLength > 0) && (FD_ISSET(STDOUT_FILENO, aWriteFdSet)))
-    {
-        rval = write(STDOUT_FILENO, sWriteBuffer, sWriteLength);
+#if !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+    fd = STDOUT_FILENO;
+#endif
 
-        if (rval <= 0)
+    if ((sWriteLength > 0) && (FD_ISSET(fd, aWriteFdSet)))
+    {
+        rval = write(fd, sWriteBuffer, sWriteLength);
+
+        if (rval < 0)
         {
             perror("UART write");
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+            close(sSessionSocket);
+            sSessionSocket = -1;
+            otEXIT_NOW();
+#else
             exit(OT_EXIT_FAILURE);
+#endif
         }
+
+        otEXPECT(rval > 0);
 
         sWriteBuffer += (uint16_t)rval;
         sWriteLength -= (uint16_t)rval;
@@ -155,4 +299,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
             otPlatUartSendDone();
         }
     }
+
+exit:
+    return;
 }
