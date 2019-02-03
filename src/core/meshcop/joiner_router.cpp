@@ -61,13 +61,12 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
     , mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this)
     , mTimer(aInstance, &JoinerRouter::HandleTimer, this)
-    , mNotifierCallback(&JoinerRouter::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &JoinerRouter::HandleStateChanged, this)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
     , mExpectJoinEntRsp(false)
 {
     GetNetif().GetCoap().AddResource(mRelayTransmit);
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)

@@ -36,16 +36,19 @@
 #include "notifier.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 
 namespace ot {
 
-Notifier::Callback::Callback(Handler aHandler, void *aOwner)
+Notifier::Callback::Callback(Instance &aInstance, Handler aHandler, void *aOwner)
     : OwnerLocator(aOwner)
     , mHandler(aHandler)
-    , mNext(this)
+    , mNext(NULL)
 {
+    assert(aHandler != NULL);
+    aInstance.GetNotifier().RegisterCallback(*this);
 }
 
 Notifier::Notifier(Instance &aInstance)
@@ -62,40 +65,10 @@ Notifier::Notifier(Instance &aInstance)
     }
 }
 
-otError Notifier::RegisterCallback(Callback &aCallback)
+void Notifier::RegisterCallback(Callback &aCallback)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aCallback.mNext == &aCallback, error = OT_ERROR_ALREADY);
-
     aCallback.mNext = mCallbacks;
     mCallbacks      = &aCallback;
-
-exit:
-    return error;
-}
-
-void Notifier::RemoveCallback(Callback &aCallback)
-{
-    VerifyOrExit(mCallbacks != NULL);
-
-    if (mCallbacks == &aCallback)
-    {
-        mCallbacks = mCallbacks->mNext;
-        ExitNow();
-    }
-
-    for (Callback *callback = mCallbacks; callback->mNext != NULL; callback = callback->mNext)
-    {
-        if (callback->mNext == &aCallback)
-        {
-            callback->mNext = aCallback.mNext;
-            ExitNow();
-        }
-    }
-
-exit:
-    aCallback.mNext = &aCallback;
 }
 
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
@@ -182,10 +155,7 @@ void Notifier::HandleStateChanged(void)
 
     for (Callback *callback = mCallbacks; callback != NULL; callback = callback->mNext)
     {
-        if (callback->mHandler != NULL)
-        {
-            callback->mHandler(*callback, flags);
-        }
+        callback->Invoke(flags);
     }
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
