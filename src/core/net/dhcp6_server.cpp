@@ -188,20 +188,18 @@ exit:
     return error;
 }
 
-otError Dhcp6Server::Start(void)
+void Dhcp6Server::Start(void)
 {
     Ip6::SockAddr sockaddr;
+
     sockaddr.mPort = kDhcpServerPort;
     mSocket.Open(&Dhcp6Server::HandleUdpReceive, this);
     mSocket.Bind(sockaddr);
-
-    return OT_ERROR_NONE;
 }
 
-otError Dhcp6Server::Stop(void)
+void Dhcp6Server::Stop(void)
 {
     mSocket.Close();
-    return OT_ERROR_NONE;
 }
 
 otError Dhcp6Server::AddPrefixAgent(otIp6Prefix &aIp6Prefix)

@@ -32,6 +32,7 @@
 """
 
 import io
+import binascii
 import struct
 
 import config
@@ -115,6 +116,13 @@ class MacFrame:
 
     """Class representing 802.15.4 MAC frame."""
 
+    IEEE802154_HEADER_IE_TYPE_MASK = 0x8000
+    IEEE802154_HEADER_IE_ID_MASK = 0x7f80
+    IEEE802154_HEADER_IE_LENGTH_MASK = 0x007f
+
+    IEEE802154_HEADER_IE_HT1 = 0x7e
+    IEEE802154_HEADER_IE_HT2 = 0x7f
+
     def parse(self, data):
         mhr_start = data.tell()
 
@@ -128,6 +136,7 @@ class MacFrame:
         dest_addr_mode = (fc & 0x0c00) >> 10
         frame_version = (fc & 0x3000) >> 12
         source_addr_mode = (fc & 0xc000) >> 14
+        ie_present = bool(fc & 0x0200)
 
         if frame_type == MacHeader.FrameType.ACK:
             fcs = self._parse_fcs(data, data.tell())
@@ -140,7 +149,21 @@ class MacFrame:
 
         dest_address = self._parse_address(data, dest_addr_mode)
 
-        if not panid_compression:
+        src_pan_present = not panid_compression
+        while src_pan_present:
+            if frame_version < 2:
+                break
+            if frame_version == 3:
+                assert(false)
+            if dest_addr_mode == 0:
+                break
+            if dest_addr_mode == 2:
+                break
+            if dest_addr_mode == 3 and source_addr_mode == 2:
+                break
+            src_pan_present = False
+
+        if src_pan_present:
             src_pan_id = struct.unpack("<H", data.read(2))[0]
         else:
             src_pan_id = dest_pan_id
@@ -154,6 +177,19 @@ class MacFrame:
             aux_sec_header_end = data.tell()
         else:
             aux_sec_header = None
+
+        # skip header ie
+        header_ie_start = data.tell()
+        while ie_present:
+            header_ie = struct.unpack("<H", data.read(2))[0]
+            header_ie_id = ((header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK) >> 7)
+            header_ie_length = (header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK)
+            if header_ie_length:
+                data.read(header_ie_length)
+
+            if header_ie_id in [MacFrame.IEEE802154_HEADER_IE_HT1, MacFrame.IEEE802154_HEADER_IE_HT2]:
+                break
+        header_ie_end = data.tell()
 
         # Check end of MAC frame
         if frame_type == MacHeader.FrameType.COMMAND:
@@ -196,6 +232,9 @@ class MacFrame:
 
             non_payload_fields = bytearray([])
 
+            if ie_present:
+                data.seek(header_ie_start)
+                non_payload_fields += data.read(header_ie_end - header_ie_start)
             if command_type is not None:
                 non_payload_fields.append(command_type)
 

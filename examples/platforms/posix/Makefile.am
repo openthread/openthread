@@ -54,7 +54,7 @@ PLATFORM_SOURCES                          = \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
-     $(PLATFORM_SOURCES)                    \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 noinst_HEADERS                            = \

@@ -30,91 +30,73 @@
 
 .NOTPARALLEL:
 
-COVERAGE                       ?= 0
-DEBUG                          ?= 0
-DISABLE_BUILTIN_MBEDTLS        ?= 0
-DISABLE_EXECUTABLE             ?= 0
-SNTP_CLIENT                    ?= 0
+COVERAGE                             ?= 0
+DEBUG                                ?= 0
 
-ECHO                           := @echo
-MAKE                           := make
-MKDIR_P                        := mkdir -p
-LN_S                           := ln -s
-RM_F                           := rm -f
+# Enable most features by default to cover most code
 
-BuildJobs                      ?= 10
+BORDER_AGENT                         ?= 1
+BORDER_ROUTER                        ?= 1
+CERT_LOG                             ?= 1
+COAP                                 ?= 1
+COAPS                                ?= 1
+COMMISSIONER                         ?= 1
+CHANNEL_MANAGER                      ?= 1
+CHANNEL_MONITOR                      ?= 1
+CHILD_SUPERVISION                    ?= 1
+DAEMON                               ?= 0
+DHCP6_CLIENT                         ?= 1
+DHCP6_SERVER                         ?= 1
+DIAGNOSTIC                           ?= 1
+DNS_CLIENT                           ?= 1
+ECDSA                                ?= 1
+JAM_DETECTION                        ?= 1
+JOINER                               ?= 1
+LEGACY                               ?= 1
+LINK_RAW                             ?= 0
+MAC_FILTER                           ?= 1
+MTD_NETDIAG                          ?= 1
+SERVICE                              ?= 1
+SNTP_CLIENT                          ?= 1
+UDP_FORWARD                          ?= 1
+
+COMMONCFLAGS                         := \
+    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
+    $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
 # accordingly.
 
 configure_OPTIONS                   = \
-    --enable-application-coap         \
-    --enable-application-coap-secure  \
-    --enable-border-agent             \
-    --enable-border-router            \
-    --enable-cert-log                 \
-    --enable-child-supervision        \
     --enable-cli                      \
-    --enable-commissioner             \
-    --enable-dhcp6-client             \
-    --enable-dhcp6-server             \
-    --enable-diag                     \
-    --enable-dns-client               \
     --enable-ftd                      \
-    --enable-jam-detection            \
-    --enable-joiner                   \
     --enable-ncp                      \
-    --enable-legacy                   \
-    --enable-mac-filter               \
     --enable-posix-app                \
-    --enable-service                  \
-    --enable-udp-forward              \
     --with-ncp-bus=uart               \
     $(NULL)
 
-ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage
+# Platform specific switches
+
+ifeq (${DAEMON},1)
+configure_OPTIONS              += --enable-posix-app-daemon
 endif
 
-ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += --disable-builtin-mbedtls
-endif
-
-ifeq ($(DISABLE_EXECUTABLE), 1)
-configure_OPTIONS              += --enable-executable=no
+ifneq ($(DEBUG),1)
+COMMONCFLAGS                   += \
+    -O2                           \
+    -g                            \
+    $(NULL)
 endif
 
 ifeq ($(PLATFORM_NETIF),1)
 configure_OPTIONS              += --enable-platform-netif
 endif
 
-ifeq (${SNTP_CLIENT}, 1)
-configure_OPTIONS              += --enable-sntp-client
-endif
-
-TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..
-AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../..
-
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-posix-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/src/posix/platform
-
-COMMONCFLAGS                         := \
-    -O2                                 \
-    -g                                  \
-    -D$(CONFIG_FILE)                    \
-    -I$(CONFIG_FILE_PATH)               \
-    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
-    $(NULL)
-
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
 endif
 
-ifeq ($(PLATFORM_UDP),1)
-configure_OPTIONS              += \
-    --enable-platform-udp         \
-    $(NULL)
-endif
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../../examples/common-switches.mk
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
@@ -132,9 +114,24 @@ LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
-INSTALL                         := /usr/bin/install
-INSTALLFLAGS                    := -p
+TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..
+AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))../..
 
+CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-posix-config.h\"'
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/src/posix/platform
+COMMONCFLAGS                   += \
+    -D$(CONFIG_FILE)              \
+    -I$(CONFIG_FILE_PATH)         \
+
+ECHO                           := @echo
+INSTALL                        := /usr/bin/install
+INSTALLFLAGS                   := -p
+LN_S                           := ln -s
+MAKE                           := make
+MKDIR_P                        := mkdir -p
+RM_F                           := rm -f
+
+BuildJobs                      ?= 10
 BuildPath                       = build/posix
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)

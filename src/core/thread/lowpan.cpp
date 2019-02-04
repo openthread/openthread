@@ -53,7 +53,7 @@ Lowpan::Lowpan(Instance &aInstance)
 {
 }
 
-otError Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
+void Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
 {
     memcpy(&aAddress, aContext.mPrefix, aContext.mPrefixLength / CHAR_BIT);
 
@@ -62,8 +62,6 @@ otError Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
         aAddress.mFields.m8[i / CHAR_BIT] &= ~(0x80 >> (i % CHAR_BIT));
         aAddress.mFields.m8[i / CHAR_BIT] |= aContext.mPrefix[i / CHAR_BIT] & (0x80 >> (i % CHAR_BIT));
     }
-
-    return OT_ERROR_NONE;
 }
 
 otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress)

@@ -335,7 +335,7 @@ private:
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
-    otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+    void ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);

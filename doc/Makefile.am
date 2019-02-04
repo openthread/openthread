@@ -34,12 +34,12 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/Open-Thread-Logo-200x42.png  \
     $(srcdir)/images/openthread_logo.png          \
     $(srcdir)/images/ot-contrib-arm.png           \
-    $(srcdir)/images/ot-contrib-at.png            \
     $(srcdir)/images/ot-contrib-dialog.png        \
     $(srcdir)/images/ot-contrib-ms.png            \
     $(srcdir)/images/ot-contrib-nest.png          \
     $(srcdir)/images/ot-contrib-nordic.png        \
     $(srcdir)/images/ot-contrib-nxp.png           \
+    $(srcdir)/images/ot-contrib-particle.png      \
     $(srcdir)/images/ot-contrib-qc.png            \
     $(srcdir)/images/ot-contrib-qorvo.png         \
     $(srcdir)/images/ot-contrib-synopsys.png      \

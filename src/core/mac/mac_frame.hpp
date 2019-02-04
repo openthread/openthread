@@ -552,11 +552,8 @@ public:
      * @param[in]  aFcf     The Frame Control field.
      * @param[in]  aSecCtl  The Security Control field.
      *
-     * @retval OT_ERROR_NONE          Successfully initialized the MAC header.
-     * @retval OT_ERROR_INVALID_ARGS  Invalid values for @p aFcf and/or @p aSecCtl.
-     *
      */
-    otError InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
+    void InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
 
     /**
      * This method validates the frame.
@@ -666,10 +663,8 @@ public:
      *
      * @param[in]  aPanId  The Destination PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully set the Destination PAN Identifier.
-     *
      */
-    otError SetDstPanId(PanId aPanId);
+    void SetDstPanId(PanId aPanId);
 
     /**
      * This method gets the Destination Address.
@@ -686,30 +681,24 @@ public:
      *
      * @param[in]  aShortAddress  The Destination Address.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Destination Address.
-     *
      */
-    otError SetDstAddr(ShortAddress aShortAddress);
+    void SetDstAddr(ShortAddress aShortAddress);
 
     /**
      * This method sets the Destination Address.
      *
      * @param[in]  aExtAddress  The Destination Address.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Destination Address.
-     *
      */
-    otError SetDstAddr(const ExtAddress &aExtAddress);
+    void SetDstAddr(const ExtAddress &aExtAddress);
 
     /**
      * This method sets the Destination Address.
      *
      * @param[in]  aAddress  The Destination Address.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Destination Address.
-     *
      */
-    otError SetDstAddr(const Address &aAddress);
+    void SetDstAddr(const Address &aAddress);
 
     /**
      * This method indicates whether or not the Src PanId is present.
@@ -754,30 +743,24 @@ public:
      *
      * @param[in]  aShortAddress  The Source Address.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Source Address.
-     *
      */
-    otError SetSrcAddr(ShortAddress aShortAddress);
+    void SetSrcAddr(ShortAddress aShortAddress);
 
     /**
      * This method sets the Source Address.
      *
      * @param[in]  aExtAddress  The Source Address.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Source Address.
-     *
      */
-    otError SetSrcAddr(const ExtAddress &aExtAddress);
+    void SetSrcAddr(const ExtAddress &aExtAddress);
 
     /**
      * This method sets the Source Address.
      *
      * @param[in]  aAddress  The Source Address.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Source Address.
-     *
      */
-    otError SetSrcAddr(const Address &aAddress);
+    void SetSrcAddr(const Address &aAddress);
 
     /**
      * This method gets the Security Level Identifier.
@@ -814,10 +797,8 @@ public:
      *
      * @param[in]  aFrameCounter  The Frame Counter.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Frame Counter.
-     *
      */
-    otError SetFrameCounter(uint32_t aFrameCounter);
+    void SetFrameCounter(uint32_t aFrameCounter);
 
     /**
      * This method returns a pointer to the Key Source.
@@ -850,10 +831,8 @@ public:
      *
      * @param[in]  aKeyId  The Key Identifier.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Key Identifier.
-     *
      */
-    otError SetKeyId(uint8_t aKeyId);
+    void SetKeyId(uint8_t aKeyId);
 
     /**
      * This method gets the Command ID.
@@ -896,14 +875,8 @@ public:
      *
      * @param[in]  aLength  The MAC Frame Length.
      *
-     * @retval OT_ERROR_NONE          Successfully set the MAC Frame Length.
-     *
      */
-    otError SetLength(uint8_t aLength)
-    {
-        SetPsduLength(aLength);
-        return OT_ERROR_NONE;
-    }
+    void SetLength(uint8_t aLength) { SetPsduLength(aLength); }
 
     /**
      * This method returns the MAC header size.
@@ -940,11 +913,8 @@ public:
     /**
      * This method sets the MAC Payload length.
      *
-     * @retval OT_ERROR_NONE          Successfully set the MAC Payload length.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aLength value was invalid.
-     *
      */
-    otError SetPayloadLength(uint8_t aLength);
+    void SetPayloadLength(uint8_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 channel used for transmission or reception.
@@ -1054,14 +1024,6 @@ public:
      *
      */
     void SetIsARetransmission(bool aIsARetx) { mInfo.mTxInfo.mIsARetx = aIsARetx; }
-
-    /**
-     * This method sets the did Tx attribute.
-     *
-     * @param[in]  aDidTx  TRUE if frame is sent from the radio, FALSE otherwise.
-     *
-     */
-    void SetDidTx(bool aDidTx) { mDidTx = aDidTx; }
 
     /**
      * This method indicates whether or not CSMA-CA is enabled.

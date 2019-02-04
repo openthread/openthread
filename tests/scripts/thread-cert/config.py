@@ -177,7 +177,9 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.PENDING_TIMESTAMP: mle.PendingTimestampFactory(),
         mle.TlvType.ACTIVE_OPERATIONAL_DATASET: mle.ActiveOperationalDatasetFactory(),
         mle.TlvType.PENDING_OPERATIONAL_DATASET: mle.PendingOperationalDatasetFactory(),
-        mle.TlvType.THREAD_DISCOVERY: mle.ThreadDiscoveryFactory()
+        mle.TlvType.THREAD_DISCOVERY: mle.ThreadDiscoveryFactory(),
+        mle.TlvType.TIME_REQUEST: mle.TimeRequestFactory(),
+        mle.TlvType.TIME_PARAMETER: mle.TimeParameterFactory(),
     }
 
 
@@ -205,6 +207,7 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.ND_OPTION: network_layer.NdOptionFactory(),
         network_layer.TlvType.ND_DATA: network_layer.NdDataFactory(),
         network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory()),
+        network_layer.TlvType.XTAL_ACCURACY: network_layer.XtalAccuracyFactory(),
 
         # Routing information are distributed in a Thread network by MLE Routing TLV
         # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20

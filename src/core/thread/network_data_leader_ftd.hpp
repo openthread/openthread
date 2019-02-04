@@ -129,7 +129,7 @@ public:
      * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    otError SetContextIdReuseDelay(uint32_t aDelay);
+    void SetContextIdReuseDelay(uint32_t aDelay);
 
     /**
      * This method removes Network Data entries matching with a given RLOC16.
@@ -188,23 +188,23 @@ private:
     otError AddService(ServiceTlv &aTlv, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
 #endif
 
-    int     AllocateContext(void);
-    otError FreeContext(uint8_t aContextId);
-    void    StartContextReuseTimer(uint8_t aContextId);
-    void    StopContextReuseTimer(uint8_t aContextId);
+    int  AllocateContext(void);
+    void FreeContext(uint8_t aContextId);
+    void StartContextReuseTimer(uint8_t aContextId);
+    void StopContextReuseTimer(uint8_t aContextId);
 
-    otError RemoveContext(uint8_t aContextId);
-    otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
+    void RemoveContext(uint8_t aContextId);
+    void RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
-    otError RemoveCommissioningData(void);
+    void RemoveCommissioningData(void);
 
-    otError RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode);
-    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode);
 #if OPENTHREAD_ENABLE_SERVICE
-    otError RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode);
 #endif
-    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode);
-    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode);
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 

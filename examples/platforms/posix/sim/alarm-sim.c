@@ -181,4 +181,16 @@ void platformAlarmProcess(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+uint64_t otPlatTimeGet(void)
+{
+    return platformAlarmGetNow();
+}
+
+uint16_t otPlatTimeGetXtalAccuracy(void)
+{
+    return 0;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME

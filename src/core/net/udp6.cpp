@@ -76,7 +76,7 @@ Message *UdpSocket::NewMessage(uint16_t aReserved, const otMessageSettings *aSet
 
 otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
 
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
@@ -86,9 +86,12 @@ otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     SuccessOrExit(error = otPlatUdpSocket(this));
 #endif
-    SuccessOrExit(error = GetUdp().AddSocket(*this));
 
+    GetUdp().AddSocket(*this);
+
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
 exit:
+#endif
     return error;
 }
 
@@ -140,11 +143,14 @@ otError UdpSocket::Close(void)
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     SuccessOrExit(error = otPlatUdpClose(this));
 #endif
-    SuccessOrExit(error = GetUdp().RemoveSocket(*this));
+
+    GetUdp().RemoveSocket(*this);
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
 
+#if OPENTHREAD_ENABLE_PLATFORM_UDP
 exit:
+#endif
     return error;
 }
 
@@ -253,7 +259,7 @@ otError Udp::RemoveReceiver(UdpReceiver &aReceiver)
     return error;
 }
 
-otError Udp::AddSocket(UdpSocket &aSocket)
+void Udp::AddSocket(UdpSocket &aSocket)
 {
     for (UdpSocket *cur = mSockets; cur; cur = cur->GetNext())
     {
@@ -267,10 +273,10 @@ otError Udp::AddSocket(UdpSocket &aSocket)
     mSockets = &aSocket;
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
-otError Udp::RemoveSocket(UdpSocket &aSocket)
+void Udp::RemoveSocket(UdpSocket &aSocket)
 {
     if (mSockets == &aSocket)
     {
@@ -289,8 +295,6 @@ otError Udp::RemoveSocket(UdpSocket &aSocket)
     }
 
     aSocket.SetNext(NULL);
-
-    return OT_ERROR_NONE;
 }
 
 uint16_t Udp::GetEphemeralPort(void)
@@ -431,7 +435,7 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     }
 }
 
-otError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
+void Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 {
     aChecksum = aMessage.UpdateChecksum(aChecksum, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
@@ -442,7 +446,6 @@ otError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 
     aChecksum = HostSwap16(aChecksum);
     aMessage.Write(aMessage.GetOffset() + UdpHeader::GetChecksumOffset(), sizeof(aChecksum), &aChecksum);
-    return OT_ERROR_NONE;
 }
 
 } // namespace Ip6

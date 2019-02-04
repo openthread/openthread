@@ -333,6 +333,7 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
  * @retval OT_ERROR_NONE           Successfully released the router id.
+ * @retval OT_ERROR_INVALID_ARGS   @p aRouterId is not in the range [0, 62].
  * @retval OT_ERROR_INVALID_STATE  The device is not currently operating as a leader.
  * @retval OT_ERROR_NOT_FOUND      The router id is not currently allocated.
  *

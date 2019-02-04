@@ -471,6 +471,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP], [test "${enable_posix_app}" = "yes
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_POSIX_APP], [${OPENTHREAD_ENABLE_POSIX_APP}], [Define to 1 to build posix application.])
 
 #
+# POSIX Daemon
+#
+
+AC_MSG_CHECKING([whether to build POSIX applicaton in daemon mode])
+AC_ARG_ENABLE(posix-app-daemon,
+    [AS_HELP_STRING([--enable-posix-app-daemon], [Build POSIX application in daemon mode@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_posix_app_daemon=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_posix_app} for --enable-posix-app-daemon])
+            ;;
+        esac
+    ],
+    [enable_posix_app_daemon=no])
+
+if test "$enable_posix_app_daemon" = "yes"; then
+    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=1
+else
+    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=0
+fi
+
+AC_MSG_RESULT(${enable_posix_app_daemon})
+AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP_DAEMON)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [test "${enable_posix_app_daemon}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [${OPENTHREAD_ENABLE_POSIX_APP_DAEMON}], [Define to 1 to build posix application in daemon mode.])
+
+#
 # FTD Library
 #
 

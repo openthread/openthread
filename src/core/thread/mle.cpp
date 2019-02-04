@@ -228,7 +228,7 @@ otError Mle::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = Stop(false));
+    Stop(false);
     SuccessOrExit(error = mSocket.Close());
     SuccessOrExit(error = GetNetif().RemoveUnicastAddress(mLinkLocal64));
 
@@ -272,7 +272,6 @@ otError Mle::Start(bool aAnnounceAttach)
     }
     else
     {
-        SetAttachState(kAttachStateSynchronize);
         mChildUpdateAttempts = 0;
         SendChildUpdateRequest();
     }
@@ -281,7 +280,7 @@ exit:
     return error;
 }
 
-otError Mle::Stop(bool aClearNetworkDatasets)
+void Mle::Stop(bool aClearNetworkDatasets)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -303,7 +302,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     SetRole(OT_DEVICE_ROLE_DISABLED);
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 void Mle::SetRole(otDeviceRole aRole)
@@ -701,7 +700,7 @@ bool Mle::IsAttached(void) const
     return (mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
 }
 
-otError Mle::SetStateDetached(void)
+void Mle::SetStateDetached(void)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -723,11 +722,9 @@ otError Mle::SetStateDetached(void)
     netif.GetMle().HandleDetachStart();
     netif.GetIp6().SetForwardingEnabled(false);
     netif.GetIp6().GetMpl().SetTimerExpirations(0);
-
-    return OT_ERROR_NONE;
 }
 
-otError Mle::SetStateChild(uint16_t aRloc16)
+void Mle::SetStateChild(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -739,6 +736,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     SetRloc16(aRloc16);
     SetRole(OT_DEVICE_ROLE_CHILD);
     SetAttachState(kAttachStateIdle);
+    mAttachTimer.Stop();
     mAttachCounter       = 0;
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
@@ -768,8 +766,6 @@ otError Mle::SetStateChild(uint16_t aRloc16)
     InformPreviousParent();
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::InformPreviousChannel(void)
@@ -788,7 +784,7 @@ exit:
     return;
 }
 
-otError Mle::SetTimeout(uint32_t aTimeout)
+void Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout);
 
@@ -807,7 +803,7 @@ otError Mle::SetTimeout(uint32_t aTimeout)
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return;
 }
 
 otError Mle::SetDeviceMode(uint8_t aDeviceMode)
@@ -857,7 +853,7 @@ exit:
     return error;
 }
 
-otError Mle::UpdateLinkLocalAddress(void)
+void Mle::UpdateLinkLocalAddress(void)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -866,8 +862,6 @@ otError Mle::UpdateLinkLocalAddress(void)
     netif.AddUnicastAddress(mLinkLocal64);
 
     GetNotifier().Signal(OT_CHANGED_THREAD_LL_ADDR);
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
@@ -955,7 +949,7 @@ uint16_t Mle::GetRloc16(void) const
     return GetNetif().GetMac().GetShortAddress();
 }
 
-otError Mle::SetRloc16(uint16_t aRloc16)
+void Mle::SetRloc16(uint16_t aRloc16)
 {
     ThreadNetif &netif = GetNetif();
 
@@ -970,8 +964,6 @@ otError Mle::SetRloc16(uint16_t aRloc16)
 
     netif.GetMac().SetShortAddress(aRloc16);
     netif.GetIp6().GetMpl().SetSeedId(aRloc16);
-
-    return OT_ERROR_NONE;
 }
 
 void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId)
@@ -1530,6 +1522,12 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         Store();
     }
 
+    if (aFlags & OT_CHANGED_SECURITY_POLICY)
+    {
+        GetNetif().GetIp6Filter().AllowNativeCommissioner(
+            (GetNetif().GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0);
+    }
+
 exit:
     return;
 }
@@ -1630,10 +1628,6 @@ void Mle::HandleAttachTimer(void)
     {
     case kAttachStateIdle:
         assert(false);
-        break;
-
-    case kAttachStateSynchronize:
-        SendChildUpdateRequest();
         break;
 
     case kAttachStateProcessAnnounce:
@@ -3354,7 +3348,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 #endif
 
     // Parent Attach Success
-    mAttachTimer.Stop();
+
     SetStateDetached();
 
     SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
@@ -3385,7 +3379,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 
     netif.GetActiveDataset().ApplyConfiguration();
 
-    SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
+    SetStateChild(shortAddress.GetRloc16());
 
 exit:
 
@@ -4148,10 +4142,6 @@ const char *Mle::AttachStateToString(AttachState aState)
     {
     case kAttachStateIdle:
         str = "Idle";
-        break;
-
-    case kAttachStateSynchronize:
-        str = "Sync";
         break;
 
     case kAttachStateProcessAnnounce:

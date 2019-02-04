@@ -170,7 +170,7 @@ void Dhcp6Client::UpdateAddresses(void)
     }
 }
 
-otError Dhcp6Client::Start(void)
+void Dhcp6Client::Start(void)
 {
     Ip6::SockAddr sockaddr;
 
@@ -179,14 +179,11 @@ otError Dhcp6Client::Start(void)
     mSocket.Bind(sockaddr);
 
     ProcessNextIdentityAssociation();
-
-    return OT_ERROR_NONE;
 }
 
-otError Dhcp6Client::Stop(void)
+void Dhcp6Client::Stop(void)
 {
     mSocket.Close();
-    return OT_ERROR_NONE;
 }
 
 bool Dhcp6Client::ProcessNextIdentityAssociation()

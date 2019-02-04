@@ -119,7 +119,9 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+    instance.GetThreadNetif().GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+
+    return OT_ERROR_NONE;
 }
 
 uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance)
@@ -166,9 +168,15 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
 
 otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetRouterTable().Release(aRouterId);
+    VerifyOrExit(aRouterId <= Mle::kMaxRouterId, error = OT_ERROR_INVALID_ARGS);
+
+    error = instance.GetThreadNetif().GetMle().GetRouterTable().Release(aRouterId);
+
+exit:
+    return error;
 }
 
 otError otThreadBecomeRouter(otInstance *aInstance)

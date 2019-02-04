@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,63 +28,26 @@
 
 /**
  * @file
- *   This file includes definitions for MeshCoP.
- *
+ * @brief
+ *   This file includes the POSIX platform-specific configurations.
  */
-
-#ifndef MESHCOP_HPP_
-#define MESHCOP_HPP_
-
-#include "openthread-core-config.h"
-
-#include <openthread/instance.h>
-
-#include "coap/coap.hpp"
-#include "common/message.hpp"
-#include "mac/mac_frame.hpp"
-
-namespace ot {
-namespace MeshCoP {
-
-enum
-{
-    kMeshCoPMessagePriority = Message::kPriorityNet, ///< The priority for MeshCoP message
-    kBorderAgentUdpPort     = 49191,                 ///< UDP port of border agent service.
-};
 
 /**
- * This function create Message for MeshCoP
+ * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+ *
+ * Define as 1 to enable PTY device support in POSIX app.
  *
  */
-inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
-{
-    otMessageSettings settings = {true, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
-    return aCoap.NewMessage(&settings);
-}
+#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
+#endif
 
 /**
- * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
+ * @def OPENTHREAD_POSIX_APP_SOCKET_BASENAME
  *
- * @param[in]   aEui64     The factory-assigned IEEE EUI-64.
- * @param[out]  aJoinerId  The Joiner ID.
- *
- */
-void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
-
-/**
- * This function gets the border agent RLOC.
- *
- * @param[in]   aNetif  A reference to the thread interface.
- * @param[out]  aRloc   Border agent RLOC.
- *
- * @retval OT_ERROR_NONE        Successfully got the Border Agent Rloc.
- * @retval OT_ERROR_NOT_FOUND   Border agent is not available.
+ * Define socket basename used by POSIX app daemon.
  *
  */
-otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
-
-} // namespace MeshCoP
-
-} // namespace ot
-
-#endif // MESHCOP_HPP_
+#ifndef OPENTHREAD_POSIX_APP_SOCKET_BASENAME
+#define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
+#endif

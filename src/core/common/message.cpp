@@ -493,7 +493,7 @@ exit:
     return error;
 }
 
-otError Message::RemoveHeader(uint16_t aLength)
+void Message::RemoveHeader(uint16_t aLength)
 {
     assert(aLength <= mBuffer.mHead.mInfo.mLength);
 
@@ -508,8 +508,6 @@ otError Message::RemoveHeader(uint16_t aLength)
     {
         mBuffer.mHead.mInfo.mOffset = 0;
     }
-
-    return OT_ERROR_NONE;
 }
 
 uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
