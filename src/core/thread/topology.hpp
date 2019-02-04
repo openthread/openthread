@@ -853,6 +853,8 @@ private:
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
     uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
 #endif                                 // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
 
 /**
