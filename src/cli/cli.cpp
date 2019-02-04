@@ -1939,7 +1939,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
             break;
 
         case 3:
-            VerifyOrExit(value <= Timer::kMaxDt / 1000, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(0 < value && value <= Timer::kMaxDt / 1000, error = OT_ERROR_INVALID_ARGS);
             mInterval = static_cast<uint32_t>(value) * 1000;
             break;
 
