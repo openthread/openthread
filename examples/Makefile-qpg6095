@@ -28,33 +28,31 @@
 
 .NOTPARALLEL:
 
-TARGET        = arm-none-eabi
-PREFIX        = qpg6095
-CROSS_COMPILE = $(TARGET)-
+AR                              = arm-none-eabi-ar
+CCAS                            = $(CCPREFIX) arm-none-eabi-gcc
+CPP                             = arm-none-eabi-cpp
+CC                              = $(CCPREFIX) arm-none-eabi-gcc
+CXX                             = $(CCPREFIX) arm-none-eabi-g++
+LD                              = arm-none-eabi-ld
+STRIP                           = arm-none-eabi-strip
+NM                              = arm-none-eabi-nm
+RANLIB                          = arm-none-eabi-ranlib
+OBJCOPY                         = arm-none-eabi-objcopy
 
-AR                              = $(CROSS_COMPILE)ar
-CC                              = $(CROSS_COMPILE)gcc
-CXX                             = $(CROSS_COMPILE)g++
-LINK                            = $(CROSS_COMPILE)ld
-OBJCOPY                         = $(CROSS_COMPILE)objcopy
-OBJDUMP                         = $(CROSS_COMPILE)objdump
-SIZE                            = $(CROSS_COMPILE)size -A
-NM                              = $(CROSS_COMPILE)nm
+BuildJobs                      ?= 10
+GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
-BuildJobs                      ?= 9
-
-configure_OPTIONS                                = \
-    --enable-cli                                   \
-    --enable-diag                                  \
-    --enable-ftd                                   \
-    --enable-mtd                                   \
-    --with-examples=$(PREFIX)                      \
-    MBEDTLS_CPPFLAGS="$(QPG6095_MBEDTLS_CPPFLAGS)" \
+configure_OPTIONS                                 = \
+    --enable-cli                                    \
+    --enable-diag                                   \
+    --enable-ftd                                    \
+    --enable-mtd                                    \
+    --with-examples=qpg6095                         \
+    MBEDTLS_CPPFLAGS="$(QPG6095_MBEDTLS_CPPFLAGS)"  \
     $(NULL)
 
-ifeq ($(CLI_LOGGING),1)
-configure_OPTIONS              += --enable-cli-logging
-endif
+TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
+AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 QPG6095_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
 QPG6095_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/qpg6095/
@@ -65,19 +63,17 @@ QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls
 QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include
 QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include/mbedtls
 
+CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/qpg6095/
 
-COMMONCFLAGS                     := \
-    -fdata-sections                 \
-    -ffunction-sections             \
-    -O2                             \
-    $(QPG6095_CONFIG_FILE_CPPFLAGS) \
-    -W                              \
-    -Wall                           \
+COMMONCFLAGS                   := \
+    -fdata-sections               \
+    -ffunction-sections           \
+    -Os                           \
+    -g                            \
+    -D$(CONFIG_FILE)              \
+    -I$(CONFIG_FILE_PATH)         \
     $(NULL)
-
-ifneq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-endif
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
@@ -101,9 +97,9 @@ CXXFLAGS                       += \
 LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(target_LDFLAGS)             \
-    -nostdlib                     \
+    -specs=nano.specs             \
+    -specs=nosys.specs            \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map,--cref       \
     $(NULL)
 
 ECHO                            := @echo
@@ -111,13 +107,9 @@ MAKE                            := make
 MKDIR_P                         := mkdir -p
 LN_S                            := ln -s
 RM_F                            := rm -f
-LS                              := ls
 
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
-
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)
@@ -127,10 +119,11 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = $(PREFIX)
+TargetTuple                     = qpg6095
+
 ARCHS                           = cortex-m4
 
-TopTargetLibDir                 = $(TopResultDir)/$(if $(1),$(1)-,)$(TargetTuple)/lib
+TopTargetLibDir                 = $(TopResultDir)/$(TargetTuple)/lib
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
@@ -148,12 +141,10 @@ define configure-arch
 $(ECHO) "  CONFIG   $(TargetTuple)..."
 (cd $(BuildPath)/$(TargetTuple) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
-CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
---prefix=/$(PREFIX) \
---host=$(TARGET) \
---target=$(TARGET) \
---exec-prefix=/$(PREFIX) \
---program-prefix=$(PREFIX)- \
+CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" CCAS="$(CCAS)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CCASFLAGS="$(CCASFLAGS)" LDFLAGS="$(LDFLAGS)" \
+--host=arm-none-eabi \
+--prefix=/ \
+--exec-prefix=/$(TargetTuple) \
 $(configure_OPTIONS))
 endef # configure-arch
 
@@ -167,7 +158,7 @@ endef # configure-arch
 #
 define build-arch
 $(ECHO) "  BUILD    $(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) -w \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 all
 endef # build-arch
 
@@ -181,7 +172,7 @@ endef # build-arch
 #
 define stage-arch
 $(ECHO) "  STAGE    $(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) -w \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 DESTDIR=$(AbsTopResultDir) \
 install
 endef # stage-arch
@@ -189,8 +180,8 @@ endef # stage-arch
 # @FIXME: get the filenames of the targets of OBJCOPY (now they are hardcoded)
 define hex-arch
 $(ECHO) "  HEX       $(TargetTuple)"
-$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(PREFIX)/bin/$(PREFIX)-ot-cli-mtd $(AbsTopResultDir)/$(PREFIX)/bin/$(PREFIX)-ot-cli-mtd.hex
-$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(PREFIX)/bin/$(PREFIX)-ot-cli-ftd $(AbsTopResultDir)/$(PREFIX)/bin/$(PREFIX)-ot-cli-ftd.hex
+$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-mtd $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-mtd.hex
+$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-ftd $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-ftd.hex
 endef # hex-arch
 
 #
@@ -204,8 +195,8 @@ endef # hex-arch
 define ARCH_template
 CONFIGURE_TARGETS += configure-$(1)
 BUILD_TARGETS     += do-build-$(1)
-STAGE_TARGETS     += stage-$(1)
 HEX_TARGETS       += hex-$(1)
+STAGE_TARGETS     += stage-$(1)
 BUILD_DIRS        += $(BuildPath)/$(TargetTuple)
 DIRECTORIES       += $(BuildPath)/$(TargetTuple)
 
@@ -213,6 +204,7 @@ configure-$(1): target_CPPFLAGS=$($(1)_target_CPPFLAGS)
 configure-$(1): target_CFLAGS=$($(1)_target_CFLAGS)
 configure-$(1): target_CXXFLAGS=$($(1)_target_CXXFLAGS)
 configure-$(1): target_LDFLAGS=$($(1)_target_LDFLAGS)
+configure-$(1): target_CCASFLAGS=$($(1)_target_CCASFLAGS)
 
 configure-$(1): $(BuildPath)/$(TargetTuple)/config.status
 
@@ -224,17 +216,17 @@ do-build-$(1): configure-$(1)
 do-build-$(1):
 	+$$(call build-arch,$(1))
 
-stage-$(1): do-build-$(1)
-
-stage-$(1): | $(TopResultDir)
-	$$(call stage-arch,$(1))
-
 hex-$(1): stage-$(1)
 
 hex-$(1):
 	$$(call hex-arch,$(1))
 
 $(1): hex-$(1)
+
+stage-$(1): do-build-$(1)
+
+stage-$(1): | $(TopResultDir)
+	$$(call stage-arch,$(1))
 endef # ARCH_template
 
 .DEFAULT_GOAL := all
