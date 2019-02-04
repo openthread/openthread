@@ -2083,7 +2083,9 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(void)
 {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     assert(false);
+#endif
 
     // We only get to this point if `assert(false)`
     // does not cause an NCP reset on the platform.
@@ -2095,8 +2097,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(vo
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>(void)
 {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     while (true)
         ;
+#endif
 
     OT_UNREACHABLE_CODE(return OT_ERROR_NONE;)
 }
