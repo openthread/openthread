@@ -70,11 +70,13 @@ void efr32RandomInit(void)
 
 uint32_t otPlatRandomGet(void)
 {
-    uint8_t  tmp    = 0;
+    uint8_t  tmp;
     uint32_t random = 0;
 
     for (int i = 0; i < 4; i++)
     {
+        tmp = 0;
+
         for (int j = 0; j < 3; j++)
         {
             ADC_Start(ADC0, adcStartSingle);
