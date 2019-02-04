@@ -10,4 +10,6 @@
 
 ## Description
 
-This library contains the glue code to interface with the kernel drivers for linux based platforms containing the gp712.
+The gp712 folder contains library with the glue code to interface with the kernel drivers for linux based platforms containing the GP712.
+
+The qpg6095 folder contains library with the hal code for the QPG6095.
