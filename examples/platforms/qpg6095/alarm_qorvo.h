@@ -49,20 +49,6 @@ typedef void (*qorvoAlarmCallback_t)( void* );
 void qorvoAlarmInit(void);
 
 /**
- * This function retrieves the time remaining until the alarm fires.
- *
- * @param[out]  aTimeval  A pointer to the timeval struct.
- *
- */
-void qorvoAlarmUpdateTimeout(struct timeval *aTimeout);
-
-/**
- * This function performs alarm driver processing.
- *
- */
-void qorvoAlarmProcess(void);
-
-/**
  * This function retrieves the current time.
  *
  * @param[out]  The current time in ms.

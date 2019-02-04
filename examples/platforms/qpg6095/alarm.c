@@ -60,12 +60,3 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     qorvoAlarmUnScheduleEventArg((qorvoAlarmCallback_t)qorvoAlarmFired, aInstance);
 }
-
-void qorvoAlarmUpdateTimeout(struct timeval *aTimeout)
-{
-    OT_UNUSED_VARIABLE(aTimeout);
-}
-
-void qorvoAlarmProcess(void)
-{
-}
