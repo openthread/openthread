@@ -69,8 +69,15 @@ extern uint32_t __d_nv_mem_end;
  *
  * The page number of settings.
  *
+ * This value should not exceeds:
+ *     (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / SETTINGS_CONFIG_PAGE_SIZE)
+ * 
+ * __d_nv_mem_start and __d_nv_mem_end is defined in linker script.
+ * The size of NVRAM region is 4k. Page size is 256 bytes. Maximum SETTINGS_CONFIG_PAGE_NUM
+ * should be equal or less than 16.
+ *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                                (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / SETTINGS_CONFIG_PAGE_SIZE)
+#define SETTINGS_CONFIG_PAGE_NUM                                16
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM
