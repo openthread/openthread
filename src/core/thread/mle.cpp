@@ -1522,7 +1522,13 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))
     {
-        Store();
+        // Store the settings on a key seq change, or when role changes and device
+        // is attached (i.e., skip `Store()` on role change to detached).
+
+        if ((aFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER) || IsAttached())
+        {
+            Store();
+        }
     }
 
     if (aFlags & OT_CHANGED_SECURITY_POLICY)
