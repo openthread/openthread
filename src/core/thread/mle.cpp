@@ -108,7 +108,7 @@ Mle::Mle(Instance &aInstance)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
-    , mNotifierCallback(&Mle::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &Mle::HandleStateChanged, this)
     , mParentResponseCb(NULL)
     , mParentResponseCbContext(NULL)
 {
@@ -202,8 +202,6 @@ Mle::Mle(Instance &aInstance)
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
-
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
     StartParentSearchTimer();
