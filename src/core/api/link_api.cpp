@@ -45,14 +45,34 @@ static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 uint8_t otLinkGetChannel(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
+    uint8_t   channel;
 
-    return instance.GetThreadNetif().GetMac().GetPanChannel();
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    if (instance.GetLinkRaw().IsEnabled())
+    {
+        channel = instance.GetLinkRaw().GetChannel();
+    }
+    else
+#endif
+    {
+        channel = instance.GetThreadNetif().GetMac().GetPanChannel();
+    }
+
+    return channel;
 }
 
 otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    if (instance.GetLinkRaw().IsEnabled())
+    {
+        error = instance.GetLinkRaw().SetChannel(aChannel);
+        ExitNow();
+    }
+#endif
 
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
