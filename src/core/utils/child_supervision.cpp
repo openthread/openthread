@@ -51,9 +51,8 @@ ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
-    , mNotifierCallback(&ChildSupervisor::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &ChildSupervisor::HandleStateChanged, this)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)

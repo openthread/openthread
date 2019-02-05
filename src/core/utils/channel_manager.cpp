@@ -52,7 +52,7 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
     , mActiveTimestamp(0)
-    , mNotifierCallback(&ChannelManager::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &ChannelManager::HandleStateChanged, this)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
@@ -60,7 +60,6 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void ChannelManager::RequestChannelChange(uint8_t aChannel)

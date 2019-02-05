@@ -62,12 +62,10 @@ TimeSync::TimeSync(Instance &aInstance)
     , mNetworkTimeOffset(0)
     , mTimeSyncCallback(NULL)
     , mTimeSyncCallbackContext(NULL)
-    , mNotifierCallback(&TimeSync::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &TimeSync::HandleStateChanged, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
-
     CheckAndHandleChanges(false);
 }
 

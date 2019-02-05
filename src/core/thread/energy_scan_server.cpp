@@ -60,10 +60,9 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mActive(false)
     , mScanResultsLength(0)
     , mTimer(aInstance, &EnergyScanServer::HandleTimer, this)
-    , mNotifierCallback(&EnergyScanServer::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
     GetNetif().GetCoap().AddResource(mEnergyScan);
 }
 

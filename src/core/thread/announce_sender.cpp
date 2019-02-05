@@ -112,9 +112,8 @@ exit:
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
-    , mNotifierCallback(HandleStateChanged, this)
+    , mNotifierCallback(aInstance, HandleStateChanged, this)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
