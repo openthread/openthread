@@ -37,6 +37,8 @@
 
 #include <openthread/platform/settings.h>
 
+#include "utils/wrap_string.h"
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -142,7 +144,15 @@ exit:
 
 otError Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
 {
-    otError error;
+    otError     error = OT_ERROR_NONE;
+    NetworkInfo prevNetworkInfo;
+
+    if ((ReadFixedSize(kKeyNetworkInfo, &prevNetworkInfo, sizeof(NetworkInfo)) == OT_ERROR_NONE) &&
+        (memcmp(&prevNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)) == 0))
+    {
+        LogNetworkInfo("Re-saved", aNetworkInfo);
+        ExitNow();
+    }
 
     SuccessOrExit(error = Save(kKeyNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)));
     LogNetworkInfo("Saved", aNetworkInfo);
@@ -177,7 +187,15 @@ exit:
 
 otError Settings::SaveParentInfo(const ParentInfo &aParentInfo)
 {
-    otError error;
+    otError    error = OT_ERROR_NONE;
+    ParentInfo prevParentInfo;
+
+    if ((ReadFixedSize(kKeyParentInfo, &prevParentInfo, sizeof(ParentInfo)) == OT_ERROR_NONE) &&
+        (memcmp(&prevParentInfo, &aParentInfo, sizeof(ParentInfo)) == 0))
+    {
+        LogParentInfo("Re-saved", aParentInfo);
+        ExitNow();
+    }
 
     SuccessOrExit(error = Save(kKeyParentInfo, &aParentInfo, sizeof(ParentInfo)));
     LogParentInfo("Saved", aParentInfo);
