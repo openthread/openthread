@@ -242,7 +242,7 @@ otError Mle::Start(bool aAnnounceAttach)
     otError      error = OT_ERROR_NONE;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous(&netif.GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(otPlatRadioGetPromiscuous(&GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(netif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
     SetStateDetached();
@@ -361,9 +361,11 @@ exit:
 
 otError Mle::Restore(void)
 {
-    ThreadNetif &         netif    = GetNetif();
-    Settings &            settings = GetInstance().GetSettings();
-    otError               error    = OT_ERROR_NONE;
+    ThreadNetif &         netif      = GetNetif();
+    KeyManager &          keyManager = netif.GetKeyManager();
+    Mac::Mac &            mac        = netif.GetMac();
+    Settings &            settings   = GetInstance().GetSettings();
+    otError               error      = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
 
@@ -372,9 +374,9 @@ otError Mle::Restore(void)
 
     SuccessOrExit(error = settings.ReadNetworkInfo(networkInfo));
 
-    netif.GetKeyManager().SetCurrentKeySequence(networkInfo.mKeySequence);
-    netif.GetKeyManager().SetMleFrameCounter(networkInfo.mMleFrameCounter);
-    netif.GetKeyManager().SetMacFrameCounter(networkInfo.mMacFrameCounter);
+    keyManager.SetCurrentKeySequence(networkInfo.mKeySequence);
+    keyManager.SetMleFrameCounter(networkInfo.mMleFrameCounter);
+    keyManager.SetMacFrameCounter(networkInfo.mMacFrameCounter);
 
     switch (networkInfo.mRole)
     {
@@ -388,8 +390,8 @@ otError Mle::Restore(void)
     }
 
     mDeviceMode = networkInfo.mDeviceMode;
-    netif.GetMac().SetShortAddress(networkInfo.mRloc16);
-    netif.GetMac().SetExtAddress(networkInfo.mExtAddress);
+    mac.SetShortAddress(networkInfo.mRloc16);
+    mac.SetExtAddress(networkInfo.mExtAddress);
 
     memcpy(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], networkInfo.mMlIid,
            OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
@@ -429,9 +431,11 @@ otError Mle::Restore(void)
     }
     else
     {
-        netif.GetMle().SetRouterId(GetRouterId(GetRloc16()));
-        netif.GetMle().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
-        netif.GetMle().RestoreChildren();
+        MleRouter &mle = netif.GetMle();
+
+        mle.SetRouterId(GetRouterId(GetRloc16()));
+        mle.SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
+        mle.RestoreChildren();
     }
 
 exit:
@@ -440,9 +444,10 @@ exit:
 
 otError Mle::Store(void)
 {
-    ThreadNetif &         netif    = GetNetif();
-    Settings &            settings = GetInstance().GetSettings();
-    otError               error    = OT_ERROR_NONE;
+    ThreadNetif &         netif      = GetNetif();
+    KeyManager &          keyManager = netif.GetKeyManager();
+    Settings &            settings   = GetInstance().GetSettings();
+    otError               error      = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
 
     memset(&networkInfo, 0, sizeof(networkInfo));
@@ -475,16 +480,14 @@ otError Mle::Store(void)
     }
 
     // update MAC and MLE Frame Counters even when we are not attached MLE messages are sent before a device attached
-    networkInfo.mKeySequence = netif.GetKeyManager().GetCurrentKeySequence();
-    networkInfo.mMleFrameCounter =
-        netif.GetKeyManager().GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
-    networkInfo.mMacFrameCounter =
-        netif.GetKeyManager().GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    networkInfo.mKeySequence     = keyManager.GetCurrentKeySequence();
+    networkInfo.mMleFrameCounter = keyManager.GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    networkInfo.mMacFrameCounter = keyManager.GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
 
     SuccessOrExit(error = settings.SaveNetworkInfo(networkInfo));
 
-    netif.GetKeyManager().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
-    netif.GetKeyManager().SetStoredMacFrameCounter(networkInfo.mMacFrameCounter);
+    keyManager.SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
+    keyManager.SetStoredMacFrameCounter(networkInfo.mMacFrameCounter);
 
     otLogDebgMle("Store Network Information");
 
@@ -1047,10 +1050,10 @@ exit:
 
 const LeaderDataTlv &Mle::GetLeaderDataTlv(void)
 {
-    ThreadNetif &netif = GetNetif();
+    NetworkData::Leader &leaderData = GetNetif().GetNetworkDataLeader();
 
-    mLeaderData.SetDataVersion(netif.GetNetworkDataLeader().GetVersion());
-    mLeaderData.SetStableDataVersion(netif.GetNetworkDataLeader().GetStableVersion());
+    mLeaderData.SetDataVersion(leaderData.GetVersion());
+    mLeaderData.SetStableDataVersion(leaderData.GetStableVersion());
     return mLeaderData;
 }
 
@@ -2386,8 +2389,9 @@ exit:
 
 otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
-    ThreadNetif &    netif = GetNetif();
-    otError          error = OT_ERROR_NONE;
+    ThreadNetif &    netif      = GetNetif();
+    KeyManager &     keyManager = netif.GetKeyManager();
+    otError          error      = OT_ERROR_NONE;
     Header           header;
     uint32_t         keySequence;
     uint8_t          nonce[13];
@@ -2402,17 +2406,16 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 
     if (header.GetSecuritySuite() == Header::k154Security)
     {
-        header.SetFrameCounter(netif.GetKeyManager().GetMleFrameCounter());
+        header.SetFrameCounter(keyManager.GetMleFrameCounter());
 
-        keySequence = netif.GetKeyManager().GetCurrentKeySequence();
+        keySequence = keyManager.GetCurrentKeySequence();
         header.SetKeyId(keySequence);
 
         aMessage.Write(0, header.GetLength(), &header);
 
-        GenerateNonce(netif.GetMac().GetExtAddress(), netif.GetKeyManager().GetMleFrameCounter(),
-                      Mac::Frame::kSecEncMic32, nonce);
+        GenerateNonce(netif.GetMac().GetExtAddress(), keyManager.GetMleFrameCounter(), Mac::Frame::kSecEncMic32, nonce);
 
-        aesCcm.SetKey(netif.GetKeyManager().GetCurrentMleKey(), 16);
+        aesCcm.SetKey(keyManager.GetCurrentMleKey(), 16);
         error = aesCcm.Init(16 + 16 + header.GetHeaderLength(), aMessage.GetLength() - (header.GetLength() - 1),
                             sizeof(tag), nonce, sizeof(nonce));
         assert(error == OT_ERROR_NONE);
@@ -2435,7 +2438,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
         aesCcm.Finalize(tag, &tagLength);
         SuccessOrExit(error = aMessage.Append(tag, tagLength));
 
-        netif.GetKeyManager().IncrementMleFrameCounter();
+        keyManager.IncrementMleFrameCounter();
     }
 
     messageInfo.SetPeerAddr(aDestination);
@@ -2489,8 +2492,9 @@ void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &   netif = GetNetif();
-    MleRouter &     mle   = netif.GetMle();
+    ThreadNetif &   netif      = GetNetif();
+    KeyManager &    keyManager = netif.GetKeyManager();
+    MleRouter &     mle        = netif.GetMle();
     Header          header;
     uint32_t        keySequence;
     const uint8_t * mleKey;
@@ -2538,13 +2542,13 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     keySequence = header.GetKeyId();
 
-    if (keySequence == netif.GetKeyManager().GetCurrentKeySequence())
+    if (keySequence == keyManager.GetCurrentKeySequence())
     {
-        mleKey = netif.GetKeyManager().GetCurrentMleKey();
+        mleKey = keyManager.GetCurrentMleKey();
     }
     else
     {
-        mleKey = netif.GetKeyManager().GetTemporaryMleKey(keySequence);
+        mleKey = keyManager.GetTemporaryMleKey(keySequence);
     }
 
     VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength());
@@ -2584,9 +2588,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0);
 #endif
 
-    if (keySequence > netif.GetKeyManager().GetCurrentKeySequence())
+    if (keySequence > keyManager.GetCurrentKeySequence())
     {
-        netif.GetKeyManager().SetCurrentKeySequence(keySequence);
+        keyManager.SetCurrentKeySequence(keySequence);
     }
 
     aMessage.SetOffset(mleOffset);
