@@ -153,9 +153,9 @@ python --version || die
 
     git checkout -- . || die
     git clean -xfd || die
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
     arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
@@ -231,9 +231,9 @@ python --version || die
 
     git checkout -- . || die
     git clean -xfd || die
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
     arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
@@ -309,9 +309,9 @@ python --version || die
 
     git checkout -- . || die
     git clean -xfd || die
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    mv xdk-asf-3.36.0 third_party/microchip/asf || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
     arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
@@ -396,23 +396,17 @@ python --version || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 
-    # SAMR21 build failure (#2967):
-    #
-    # third_party/microchip/asf/sam0/utils/compiler.h:140:0: \
-    #   error: "__always_inline" redefined [-Werror] \
-    #   #  define __always_inline             __attribute__((__always_inline__))
-    #
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    # unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    # mv xdk-asf-3.36.0 third_party/microchip/asf || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
-    # arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != arm-gcc-8 ] || {
@@ -485,23 +479,17 @@ python --version || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 
-    # SAMR21 build failure (#2967):
-    #
-    # third_party/microchip/asf/sam0/utils/compiler.h:140:0: \
-    #   error: "__always_inline" redefined [-Werror] \
-    #   #  define __always_inline             __attribute__((__always_inline__))
-    #
-    # git checkout -- . || die
-    # git clean -xfd || die
-    # wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.36.0.58.zip || die
-    # unzip -qq asf-standalone-archive-3.36.0.58.zip || die
-    # mv xdk-asf-3.36.0 third_party/microchip/asf || die
-    # ./bootstrap || die
-    # COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
-    # arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
-    # arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
+    git checkout -- . || die
+    git clean -xfd || die
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-samr21 || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/samr21/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != posix ] || {
