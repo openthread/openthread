@@ -452,6 +452,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CNTR_ALL_MAC_COUNTERS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS>;
         break;
+    case SPINEL_PROP_CNTR_MLE_COUNTERS:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>;
+        break;
         // NCP counters
     case SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL>;

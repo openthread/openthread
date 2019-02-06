@@ -2259,6 +2259,31 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>(void)
+{
+    otError              error    = OT_ERROR_NONE;
+    const otMleCounters *counters = otThreadGetMleCounters(mInstance);
+
+    if (counters == NULL)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mDisabledRole));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mDetachedRole));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mChildRole));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mRouterRole));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mLeaderRole));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mAttachAttempts));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mPartitionIdChanges));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mBetterPartitionAttachAttempts));
+    SuccessOrExit(error = mEncoder.WriteUint16(counters->mParentChanges));
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_ENABLE_MAC_FILTER
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_WHITELIST>(void)
