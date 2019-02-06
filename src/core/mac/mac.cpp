@@ -364,14 +364,13 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mPanChannel = aChannel;
     mCcaSuccessRateTracker.Reset();
+    GetNotifier().Signal(OT_CHANGED_THREAD_CHANNEL);
 
     VerifyOrExit(!mRadioChannelAcquisitionId);
 
     mRadioChannel = mPanChannel;
 
     UpdateIdleMode();
-
-    GetNotifier().Signal(OT_CHANGED_THREAD_CHANNEL);
 
 exit:
     return error;
