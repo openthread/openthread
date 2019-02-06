@@ -3327,6 +3327,22 @@ typedef enum
      */
     SPINEL_PROP_CNTR_ALL_MAC_COUNTERS = SPINEL_PROP_CNTR__BEGIN + 401,
 
+    /// Thread MLE counters.
+    /** Format: `SSSSSSSSS`  (Read-only)
+     *
+     *   'S': DisabledRole                  (The number of times device entered OT_DEVICE_ROLE_DISABLED role).
+     *   'S': DetachedRole                  (The number of times device entered OT_DEVICE_ROLE_DETACHED role).
+     *   'S': ChildRole                     (The number of times device entered OT_DEVICE_ROLE_CHILD role).
+     *   'S': RouterRole                    (The number of times device entered OT_DEVICE_ROLE_ROUTER role).
+     *   'S': LeaderRole                    (The number of times device entered OT_DEVICE_ROLE_LEADER role).
+     *   'S': AttachAttempts                (The number of attach attempts while device was detached).
+     *   'S': PartitionIdChanges            (The number of changes to partition ID).
+     *   'S': BetterPartitionAttachAttempts (The number of attempts to attach to a better partition).
+     *   'S': ParentChanges                 (The number of times device changed its parents).
+     *
+     */
+    SPINEL_PROP_CNTR_MLE_COUNTERS = SPINEL_PROP_CNTR__BEGIN + 402,
+
     SPINEL_PROP_CNTR__END = 0x800,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
