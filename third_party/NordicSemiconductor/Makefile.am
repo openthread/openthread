@@ -112,10 +112,11 @@ NORDICSEMI_COMMON_SOURCES                                                       
     nrfx/drivers/src/nrfx_power.c                                                                                         \
     nrfx/drivers/src/nrfx_systick.c                                                                                       \
     nrfx/hal/nrf_nvmc.c                                                                                                   \
+    nrfx/soc/nrfx_atomic.c                                                                                                \
     $(NULL)
 
 NORDICSEMI_USB_SOURCES                                                                                                  = \
-    drivers/usbd/nrf_drv_usbd.c                                                                                           \
+    nrfx/drivers/src/nrfx_usbd.c                                                                                          \
     libraries/atfifo/nrf_atfifo.c                                                                                         \
     libraries/atomic/nrf_atomic.c                                                                                         \
     libraries/usb/app_usbd.c                                                                                              \
@@ -361,6 +362,8 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power_clock.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power.h                                       \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_systick.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_usbd.h                                        \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_usbd_errata.h                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_clock.h                                                    \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpio.h                                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/hal/nrf_gpiote.h                                                   \
