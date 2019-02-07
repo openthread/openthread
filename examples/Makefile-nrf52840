@@ -43,12 +43,8 @@ BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
 configure_OPTIONS                                 = \
-    --enable-cli                                    \
-    --enable-diag                                   \
     --enable-ftd                                    \
     --enable-mtd                                    \
-    --enable-ncp                                    \
-    --enable-radio-only                             \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
     $(NULL)
@@ -59,12 +55,6 @@ endif
 
 ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
-endif
-
-ifeq ($(NCP_SPI),1)
-configure_OPTIONS              += --with-ncp-bus=spi
-else
-configure_OPTIONS              += --with-ncp-bus=uart
 endif
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
@@ -99,21 +89,39 @@ ifneq ($(CERT_LOG),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
 
-ifeq ($(USB),1)
-COMMONCFLAGS += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
-endif
-
 ifeq ($(BOOTLOADER),1)
 configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
 COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
 endif
 
+#
+# Select transport which CLI, NCP and NCP-Radio examples will use to communicate.
+# To disable all transports use the DISABLE_TRANSPORTS switch. This will disable
+# the build of all above examples.
+# If NCP_SPI switch is set, only NCP and NCP-Radio examples will be built.
+# Otherwise the user can select USB transport. If no transports were selected,
+# the default serial transport is UART.
+#
+ifndef DISABLE_TRANSPORTS
+configure_OPTIONS              += --enable-ncp
+configure_OPTIONS              += --enable-radio-only
+ifeq ($(NCP_SPI),1)
+COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1
+configure_OPTIONS              += --with-ncp-bus=spi
+else
+configure_OPTIONS              += --with-ncp-bus=uart
+configure_OPTIONS              += --enable-diag
+configure_OPTIONS              += --enable-cli
+ifeq ($(USB),1)
+COMMONCFLAGS                   += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
+else
+COMMONCFLAGS                   += -DUART_AS_SERIAL_TRANSPORT=1
+endif # USB     == 1
+endif # NCP_SPI == 1
+endif # DISABLE_TRANSPORTS
+
 ifeq ($(DISABLE_CC310), 1)
 NRF52840_MBEDTLS_CPPFLAGS += -DDISABLE_CC310=1
-endif
-
-ifeq ($(DISABLE_SPI),1)
-COMMONCFLAGS += -DSPIS_TRANSPORT_DISABLE=1
 endif
 
 ifeq ($(shell expr $(GCCVersion) \>= 7), 1)
