@@ -112,14 +112,14 @@ void ChannelMonitor::HandleTimer(Timer &aTimer)
 void ChannelMonitor::HandleTimer(void)
 {
     GetInstance().Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
-                                             &ChannelMonitor::HandleEnergyScanResult, this);
+                                             &ChannelMonitor::HandleEnergyScanResult);
 
     mTimer.StartAt(mTimer.GetFireTime(), Random::AddJitter(kTimerInterval, kMaxJitterInterval));
 }
 
-void ChannelMonitor::HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult)
+void ChannelMonitor::HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult)
 {
-    static_cast<ChannelMonitor *>(aContext)->HandleEnergyScanResult(aResult);
+    aInstance.Get<ChannelMonitor>().HandleEnergyScanResult(aResult);
 }
 
 void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)

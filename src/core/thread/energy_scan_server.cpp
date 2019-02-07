@@ -128,7 +128,7 @@ void EnergyScanServer::HandleTimer(void)
     {
         // grab the lowest channel to scan
         uint32_t channelMask = mChannelMaskCurrent & ~(mChannelMaskCurrent - 1);
-        GetNetif().GetMac().EnergyScan(channelMask, mScanDuration, HandleScanResult, this);
+        GetNetif().GetMac().EnergyScan(channelMask, mScanDuration, HandleScanResult);
     }
     else
     {
@@ -139,9 +139,9 @@ exit:
     return;
 }
 
-void EnergyScanServer::HandleScanResult(void *aContext, otEnergyScanResult *aResult)
+void EnergyScanServer::HandleScanResult(Instance &aInstance, otEnergyScanResult *aResult)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleScanResult(aResult);
+    aInstance.Get<EnergyScanServer>().HandleScanResult(aResult);
 }
 
 void EnergyScanServer::HandleScanResult(otEnergyScanResult *aResult)
