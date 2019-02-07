@@ -43,7 +43,7 @@ noinst_HEADERS                                            = \
     SEGGER_RTT_V640/RTT/SEGGER_RTT_Conf.h                   \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_NRF52840                                                           
+if OPENTHREAD_EXAMPLES_NRF52840
 libjlinkrtt_a_CPPFLAGS                                                                                 += \
     -DNRF52840_XXAA                                                                                       \
     -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
@@ -52,6 +52,16 @@ libjlinkrtt_a_CPPFLAGS                                                          
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                              \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
+    $(NULL)
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52811
+libjlinkrtt_a_CPPFLAGS                                                                                 += \
+    -DNRF52811_XXAA                                                                                       \
+    -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
+    -I$(top_srcdir)/include                                                                               \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                          \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
     $(NULL)
 endif
 
