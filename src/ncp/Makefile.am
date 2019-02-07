@@ -45,7 +45,7 @@ lib_LIBRARIES                                    += libopenthread-ncp-mtd.a
 endif
 
 if OPENTHREAD_ENABLE_RADIO_ONLY
-lib_LIBRARIES                                    += libopenthread-ncp-radio.a
+lib_LIBRARIES                                    += libopenthread-rcp.a
 endif
 
 COMMON_CPPFLAGS                                   = \
@@ -68,7 +68,7 @@ libopenthread_ncp_ftd_a_CPPFLAGS                  = \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
-libopenthread_ncp_radio_a_CPPFLAGS                = \
+libopenthread_rcp_a_CPPFLAGS                      = \
     -DOPENTHREAD_RADIO=1                            \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
@@ -125,7 +125,7 @@ libopenthread_ncp_ftd_a_SOURCES                   = \
    $(COMMON_SOURCES)                                \
    $(NULL)
 
-libopenthread_ncp_radio_a_SOURCES                 = \
+libopenthread_rcp_a_SOURCES                       = \
    $(COMMON_SOURCES)                                \
    $(NULL)
 

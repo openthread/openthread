@@ -170,14 +170,14 @@ build_nrf52811() {
     BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 make -f examples/Makefile-nrf52811 || die
     arm-none-eabi-size  output/nrf52811/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-rcp || die
 
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
     BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 NCP_SPI=1 make -f examples/Makefile-nrf52811 || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-rcp || die
 }
 
 build_nrf52840() {
@@ -189,7 +189,7 @@ build_nrf52840() {
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 }
 
 build_qpg6095() {
@@ -388,7 +388,7 @@ build_samr21() {
     # enable code coverage for OpenThread transceiver only
     COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     COVERAGE=1 make -f src/posix/Makefile-posix || die
-    COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" make -f src/posix/Makefile-posix check || die
+    COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
@@ -410,7 +410,7 @@ build_samr21() {
     COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # enable code coverage for OpenThread posix radio
     COVERAGE=1 make -f src/posix/Makefile-posix || die
-    COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
+    COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {

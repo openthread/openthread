@@ -68,7 +68,7 @@ check() {
     echo 'RADIO_PTY' $DEVICE_PTY
     echo 'CORE_PTY' $CORE_PTY
 
-    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
+    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
     OT_CLI_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
     sudo expect <<EOF > $OT_OUTPUT &
