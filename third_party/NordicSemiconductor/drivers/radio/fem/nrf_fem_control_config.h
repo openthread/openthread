@@ -53,6 +53,14 @@ extern "C" {
 /** Radio ramp-up time in RX mode, in us. */
 #define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
 
+#elif defined NRF52811_XXAA
+
+/** Radio ramp-up time in TX mode, in us. */
+#define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 40
+
+/** Radio ramp-up time in RX mode, in us. */
+#define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
+
 #else
 
 #error "Device not supported."
