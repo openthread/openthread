@@ -192,6 +192,17 @@ build_nrf52840() {
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
 }
 
+build_qpg6095() {
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-qpg6095 || die
+    arm-none-eabi-size  output/qpg6095/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/qpg6095/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/qpg6095/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/qpg6095/bin/ot-ncp-mtd || die
+}
+
 build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
@@ -217,6 +228,7 @@ build_samr21() {
     build_kw41z
     build_nrf52811
     build_nrf52840
+    build_qpg6095
     build_samr21
 }
 
@@ -231,6 +243,7 @@ build_samr21() {
     build_kw41z
     build_nrf52811
     build_nrf52840
+    build_qpg6095
     build_samr21
 }
 
@@ -245,6 +258,7 @@ build_samr21() {
     build_kw41z
     build_nrf52811
     build_nrf52840
+    build_qpg6095
     build_samr21
 
     build_emsk
@@ -261,6 +275,7 @@ build_samr21() {
     build_kw41z
     build_nrf52811
     build_nrf52840
+    build_qpg6095
     build_samr21
 }
 
@@ -274,6 +289,7 @@ build_samr21() {
     build_kw41z
     build_nrf52811
     build_nrf52840
+    build_qpg6095
     build_samr21
 
     # DA15000 build failure:
