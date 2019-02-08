@@ -163,6 +163,23 @@ build_kw41z() {
     arm-none-eabi-size  output/kw41z/bin/ot-ncp-mtd || die
 }
 
+build_nrf52811() {
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 make -f examples/Makefile-nrf52811 || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 NCP_SPI=1 make -f examples/Makefile-nrf52811 || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+}
+
 build_nrf52840() {
     git checkout -- . || die
     git clean -xfd || die
@@ -198,6 +215,7 @@ build_samr21() {
     build_cc2652
     build_da15000
     build_kw41z
+    build_nrf52811
     build_nrf52840
     build_samr21
 }
@@ -211,6 +229,7 @@ build_samr21() {
     build_cc2652
     build_da15000
     build_kw41z
+    build_nrf52811
     build_nrf52840
     build_samr21
 }
@@ -224,6 +243,7 @@ build_samr21() {
     build_cc2652
     build_da15000
     build_kw41z
+    build_nrf52811
     build_nrf52840
     build_samr21
 
@@ -239,6 +259,7 @@ build_samr21() {
     build_cc2652
     build_da15000
     build_kw41z
+    build_nrf52811
     build_nrf52840
     build_samr21
 }
@@ -251,6 +272,7 @@ build_samr21() {
     build_cc2650
     build_cc2652
     build_kw41z
+    build_nrf52811
     build_nrf52840
     build_samr21
 

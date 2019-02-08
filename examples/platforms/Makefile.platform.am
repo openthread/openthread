@@ -77,6 +77,10 @@ if OPENTHREAD_EXAMPLES_KW41Z
 include $(top_srcdir)/examples/platforms/kw41z/Makefile.platform.am
 endif
 
+if OPENTHREAD_EXAMPLES_NRF52811
+include $(top_srcdir)/examples/platforms/nrf52811/Makefile.platform.am
+endif
+
 if OPENTHREAD_EXAMPLES_NRF52840
 include $(top_srcdir)/examples/platforms/nrf52840/Makefile.platform.am
 endif
