@@ -195,7 +195,7 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
+    static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
     void        HandleEnergyScanResult(otEnergyScanResult *aResult);
     void        LogResults(void);
 

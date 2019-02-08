@@ -96,7 +96,6 @@ Mac::Mac(Instance &aInstance)
     , mScanChannel(OT_RADIO_CHANNEL_MIN)
     , mScanDuration(0)
     , mScanChannelMask()
-    , mScanContext(NULL)
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
     , mSubMac(aInstance, *this)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
@@ -126,7 +125,7 @@ Mac::Mac(Instance &aInstance)
     SetShortAddress(GetShortAddress());
 }
 
-otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler)
 {
     otError error = OT_ERROR_NONE;
 
@@ -140,13 +139,13 @@ otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveSc
         aScanDuration = kScanDurationDefault;
     }
 
-    Scan(kOperationActiveScan, aScanChannels, aScanDuration, aContext);
+    Scan(kOperationActiveScan, aScanChannels, aScanDuration);
 
 exit:
     return error;
 }
 
-otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
+otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler)
 {
     otError error = OT_ERROR_NONE;
 
@@ -154,15 +153,15 @@ otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergySc
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
     mEnergyScanHandler = aHandler;
-    Scan(kOperationEnergyScan, aScanChannels, aScanDuration, aContext);
+
+    Scan(kOperationEnergyScan, aScanChannels, aScanDuration);
 
 exit:
     return error;
 }
 
-void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
+void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration)
 {
-    mScanContext  = aContext;
     mScanDuration = aScanDuration;
     mScanChannel  = ChannelMask::kChannelIteratorFirst;
 
@@ -257,7 +256,7 @@ void Mac::PerformActiveScan(void)
     {
         mSubMac.SetPanId(mPanId);
         FinishOperation();
-        mActiveScanHandler(mScanContext, NULL);
+        mActiveScanHandler(GetInstance(), NULL);
         PerformNextOperation();
     }
 }
@@ -287,7 +286,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         FinishOperation();
-        mEnergyScanHandler(mScanContext, NULL);
+        mEnergyScanHandler(GetInstance(), NULL);
         PerformNextOperation();
     }
 }
@@ -301,7 +300,7 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
         result.mChannel = mScanChannel;
         result.mMaxRssi = aRssi;
 
-        mEnergyScanHandler(mScanContext, &result);
+        mEnergyScanHandler(GetInstance(), &result);
     }
 }
 
@@ -1583,7 +1582,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
             mCounters.mRxBeacon++;
-            mActiveScanHandler(mScanContext, aFrame);
+            mActiveScanHandler(GetInstance(), aFrame);
             ExitNow();
         }
 

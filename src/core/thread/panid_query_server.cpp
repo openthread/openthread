@@ -95,9 +95,9 @@ exit:
     return;
 }
 
-void PanIdQueryServer::HandleScanResult(void *aContext, Mac::Frame *aFrame)
+void PanIdQueryServer::HandleScanResult(Instance &aInstance, Mac::Frame *aFrame)
 {
-    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aFrame);
+    aInstance.Get<PanIdQueryServer>().HandleScanResult(aFrame);
 }
 
 void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
@@ -168,7 +168,7 @@ void PanIdQueryServer::HandleTimer(Timer &aTimer)
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    GetNetif().GetMac().ActiveScan(mChannelMask, 0, HandleScanResult, this);
+    GetNetif().GetMac().ActiveScan(mChannelMask, 0, HandleScanResult);
     mChannelMask = 0;
 }
 
