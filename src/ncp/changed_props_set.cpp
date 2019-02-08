@@ -27,6 +27,8 @@
 
 #include "changed_props_set.hpp"
 
+#include <limits.h>
+
 #include "common/code_utils.hpp"
 
 namespace ot {
@@ -96,6 +98,9 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
+    OT_STATIC_ASSERT(OT_ARRAY_LENGTH(mSupportedProps) <= sizeof(mChangedSet) * CHAR_BIT,
+                     "Changed set size is smaller than number of entries in `mSupportedProps[]` array");
+
     return OT_ARRAY_LENGTH(mSupportedProps);
 }
 
