@@ -401,9 +401,10 @@ public:
      * Note that any `Type` for which the `Get<Type>` is defined MUST be uniquely accessible from the OpenThread
      * `Instance` through the member variable property hierarchy.
      *
-     * Specializations of the `Get<Type>()` method are defined in the `instance.cpp`. The specializations are defined
-     * for any class (type) which can use `GetOwner<Type>` method, i.e., any class that is an owner of a callback
-     * providing object such as a `Timer`,`Tasklet`, or any sub-class of `OwnerLocator`.
+     * Specializations of the `Get<Type>()` method are defined in this file after the `Instance` class definition.
+     * The specializations should be defined for any `Type` that can use `GetOwner<Type>` method, i.e., any
+     * `Type` that is an owner of a callback providing object such as a `Timer`,`Tasklet`, or any sub-class of
+     *`OwnerLocator`.
      *
      * @returns A reference to the `Type` object of the instance.
      *
