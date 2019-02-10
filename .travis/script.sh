@@ -596,6 +596,7 @@ python --version || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
+    ./bootstrap
     .travis/check-posix-app-pty || die
 }
 

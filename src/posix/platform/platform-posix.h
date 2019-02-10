@@ -264,12 +264,6 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
- * This function restores the Uart.
- *
- */
-void platformUartRestore(void);
-
-/**
  * This function initialize simulation.
  *
  */
