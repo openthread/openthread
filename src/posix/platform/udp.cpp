@@ -114,11 +114,13 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     cmsg = CMSG_FIRSTHDR(&msg);
 
     {
+        int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
+
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
 
-        *reinterpret_cast<int *>(CMSG_DATA(cmsg)) = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : -1);
+        memcpy(CMSG_DATA(cmsg), &hopLimit, sizeof(int));
 
         cmsg = CMSG_NXTHDR(&msg, cmsg);
         controlLength += CMSG_SPACE(sizeof(int));
@@ -127,7 +129,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     if (!IsMulticast(reinterpret_cast<const struct in6_addr &>(aMessageInfo.mSockAddr)) &&
         memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
     {
-        struct in6_pktinfo &pktinfo = *reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
+        struct in6_pktinfo pktinfo;
 
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_PKTINFO;
@@ -136,6 +138,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         pktinfo.ipi6_ifindex = (aMessageInfo.mInterfaceId == OT_NETIF_INTERFACE_ID_THREAD ? sPlatNetifIndex : 0);
 
         memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
+        memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
 
         controlLength += CMSG_SPACE(sizeof(pktinfo));
         cmsg = CMSG_NXTHDR(&msg, cmsg);
