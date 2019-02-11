@@ -57,6 +57,9 @@ matrix:
     - env: BUILD_TARGET="posix-app-pty" VERBOSE=1
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1 DAEMON=1
+      os: linux
+      compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
       python: "2.7"
