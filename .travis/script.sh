@@ -433,6 +433,7 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
+    ./bootstrap
     .travis/check-posix-app-pty || die
 }
 

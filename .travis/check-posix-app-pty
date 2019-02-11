@@ -39,13 +39,14 @@ at_exit() {
     EXIT_CODE=$?
 
     sudo killall expect || true
+    killall ot-ctl || true
+    killall ot-daemon || true
     killall socat || true
 
     exit $EXIT_CODE
 }
 
 build() {
-    ./bootstrap
     COVERAGE=1 make -f examples/Makefile-posix
     COVERAGE=1 make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1
 }
@@ -70,9 +71,17 @@ check() {
 
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
-    OT_CLI_PATH="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)"
-    sudo expect <<EOF > $OT_OUTPUT &
-spawn $OT_CLI_PATH ${OT_NCP_PATH} ${CORE_PTY}
+
+    if [[ "${DAEMON}" = 1 ]]; then
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" ${OT_NCP_PATH} ${CORE_PTY} &
+        sleep 1
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
+    else
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${OT_NCP_PATH} ${CORE_PTY}"
+    fi
+
+    sudo expect <<EOF > "${OT_OUTPUT}" &
+spawn ${OT_CLI_CMD}
 send "panid 0xface\r\n"
 expect "Done"
 send "ifconfig up\r\n"
