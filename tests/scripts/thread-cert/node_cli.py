@@ -157,7 +157,6 @@ class otCli:
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
         """
-        # return None, None, None
         format_str = br"=+?\[\[THCI\].*?type=%s.*?\].*?=+?[\s\S]+?-{40,}"
         join_fin_req = format_str % br"JOIN_FIN\.req"
         join_fin_rsp = format_str % br"JOIN_FIN\.rsp"
@@ -167,7 +166,7 @@ class otCli:
         pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|("+ join_ent_ntf + b")|(" + join_ent_rsp + b")")
 
         messages = []
-        # There are 4 cert messages both for joiner and commissioner
+        # There are at most 4 cert messages both for joiner and commissioner
         for _ in range(0, 4):
             try:
                 self._expect(pattern, timeout=timeout)
