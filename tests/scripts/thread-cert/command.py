@@ -546,8 +546,9 @@ def check_joiner_commissioning_messages(commissioning_messages):
 def check_commissioner_commissioning_messages(commissioning_messages):
     """Verify COAP messages sent by commissioner while commissioning process.
     """
-    assert len(commissioning_messages) >= 2
-    join_fin_rsp = commissioning_messages[0]
-    assert join_fin_rsp.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP
-    join_ent_ntf = commissioning_messages[1]
-    assert join_ent_ntf.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF
+    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP for msg in commissioning_messages)
+
+def check_joiner_router_commissioning_messages(commissioning_messages):
+    """Verify COAP messages sent by joiner router while commissioning process.
+    """
+    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF for msg in commissioning_messages)
