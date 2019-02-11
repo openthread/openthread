@@ -164,32 +164,73 @@ build_kw41z() {
 }
 
 build_nrf52811() {
+    # Default OpenThread switches for nRF52811 platform
+    OPENTHREAD_FLAGS="BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1"
+
+    # UART transport
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 make -f examples/Makefile-nrf52811 || die
+    make -f examples/Makefile-nrf52811 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52811/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
 
+    # SPI transport for NCP
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 DNS_CLIENT=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 NCP_SPI=1 make -f examples/Makefile-nrf52811 || die
+    NCP_SPI=1 make -f examples/Makefile-nrf52811 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+
+    # Build without transport (no CLI or NCP applications)
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52811 || die
 }
 
 build_nrf52840() {
+    # Default OpenThread switches for nRF52840 platform
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1"
+
+    # UART transport
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BORDER_ROUTER=1 COAP=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1 make -f examples/Makefile-nrf52840 || die
+    make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    # USB transport with bootloader e.g. to support PCA10059 dongle
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    USB=1 BOOTLOADER=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    # SPI transport for NCP
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    NCP_SPI=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+
+    # Build without transport (no CLI or NCP applications)
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
 }
 
 build_qpg6095() {
