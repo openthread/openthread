@@ -37,12 +37,11 @@
 
 #include "common/instance.hpp"
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES && !OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
 
 namespace ot {
 namespace Crypto {
 
-#ifdef MBEDTLS_MEMORY_BUFFER_ALLOC_C
 static void *CAlloc(size_t aCount, size_t aSize)
 {
     return Instance::Get().GetHeap().CAlloc(aCount, aSize);
@@ -52,16 +51,13 @@ static void Free(void *aPointer)
 {
     Instance::Get().GetHeap().Free(aPointer);
 }
-#endif // MBEDTLS_MEMORY_BUFFER_ALLOC_C
 
 MbedTls::MbedTls(void)
 {
-#ifdef MBEDTLS_MEMORY_BUFFER_ALLOC_C
     mbedtls_platform_set_calloc_free(CAlloc, Free);
-#endif
 }
 
 } // namespace Crypto
 } // namespace ot
 
-#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES && !OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR

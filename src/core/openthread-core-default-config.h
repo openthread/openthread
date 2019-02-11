@@ -340,6 +340,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
+ *
+ * Whether to disable the OpenThread's memory allocator for mbedTLS.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
+#define OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
