@@ -51,6 +51,12 @@
 
 #include "openthread-system.h"
 
+static const struct option kOptions[] = {{"dry-run", no_argument, NULL, 'n'},
+                                         {"radio-version", no_argument, NULL, 0},
+                                         {"help", no_argument, NULL, 'h'},
+                                         {"time-speed", required_argument, NULL, 's'},
+                                         {0, 0, 0, 0}};
+
 uint64_t gNodeId = 0;
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -76,17 +82,12 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     bool        isDryRun          = false;
     bool        printRadioVersion = false;
 
+    optind = 1;
+
     while (true)
     {
-        int                 index = 0;
-        int                 option;
-        const struct option options[] = {{"dry-run", no_argument, NULL, 'n'},
-                                         {"radio-version", no_argument, NULL, 0},
-                                         {"help", no_argument, NULL, 'h'},
-                                         {"time-speed", required_argument, NULL, 's'},
-                                         {0, 0, 0, 0}};
-
-        option = getopt_long(aArgCount, aArgVector, "hns:", options, &index);
+        int index  = 0;
+        int option = getopt_long(aArgCount, aArgVector, "hns:", kOptions, &index);
 
         if (option == -1)
         {
@@ -114,7 +115,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
             break;
         }
         case 0:
-            if (!strcmp(options[index].name, "radio-version"))
+            if (!strcmp(kOptions[index].name, "radio-version"))
             {
                 printRadioVersion = true;
             }
