@@ -1686,6 +1686,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
 #
+# Support for Thread Over BLE
+#
+
+AC_MSG_CHECKING([whether to build with ToBLE support])
+AC_ARG_ENABLE(toble,
+    [AS_HELP_STRING([--enable-toble], [Enable ToBLE support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_toble=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_toble} for --enable-toble])
+            ;;
+        esac
+    ],
+    [enable_toble=no])
+
+if test "$enable_toble" = "yes"; then
+    OPENTHREAD_ENABLE_TOBLE=1
+else
+    OPENTHREAD_ENABLE_TOBLE=0
+fi
+
+AC_MSG_RESULT(${enable_toble})
+AC_SUBST(OPENTHREAD_ENABLE_TOBLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_TOBLE], [test "${enable_toble}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_TOBLE], [${OPENTHREAD_ENABLE_TOBLE}], [Define to 1 if you want to enable ToBLE support])
+
+#
 # Examples
 #
 
@@ -1963,6 +1995,7 @@ src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
 third_party/jlink/Makefile
+third_party/mbedble/Makefile
 third_party/mbedtls/Makefile
 third_party/NordicSemiconductor/Makefile
 examples/Makefile
@@ -1970,6 +2003,7 @@ examples/apps/Makefile
 examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
+examples/platforms/ble/Makefile
 examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
@@ -2092,6 +2126,7 @@ AC_MSG_NOTICE([
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
+  OpenThread ToBLE support                  : ${enable_toble}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

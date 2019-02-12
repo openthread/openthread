@@ -39,6 +39,7 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
+	ble-hci-uart.c                          \
     diag.c                                  \
     entropy.c                               \
     misc.c                                  \
@@ -68,7 +69,8 @@ PRETTY_FILES                              = \
 
 Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o") \
+    $(shell find $(top_builddir)/examples/platforms/ble $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
 libopenthread_posix_a_CPPFLAGS           += \

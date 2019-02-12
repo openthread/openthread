@@ -252,4 +252,8 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
+void platformBleHciInit(void);
+void platformBleHciDeinit(void);
+void platformBleHciUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void platformBleHciProcess(otInstance *aInstance);
 #endif // PLATFORM_POSIX_H_

@@ -241,6 +241,9 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
+#if OPENTHREAD_ENABLE_TOBLE
+    {"ble", &Interpreter::ProcessToBle},
+#endif
 #ifndef OTDLL
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
@@ -300,6 +303,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mUdp(*this)
 #endif
     , mDataset(*this)
+#if OPENTHREAD_ENABLE_TOBLE
+    , mBle(*this)
+#endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
 #endif
@@ -877,6 +883,18 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 }
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+
+#if OPENTHREAD_ENABLE_TOBLE
+
+void Interpreter::ProcessToBle(int argc, char *argv[])
+{
+    otError error;
+
+    error = mBle.Process(argc, argv);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_TOBLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

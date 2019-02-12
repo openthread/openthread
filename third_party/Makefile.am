@@ -47,6 +47,7 @@ endif
 DIST_SUBDIRS                            = \
     jlink                                 \
     mbedtls                               \
+    mbedble                               \
     $(NULL)
 
 SUBDIRS =
@@ -76,5 +77,9 @@ SUBDIRS                                += \
     mbedtls                               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+
+SUBDIRS                                += \
+    mbedble                               \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -55,6 +55,10 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_TOBLE
+#include "cli/cli_ble.hpp"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
@@ -103,6 +107,7 @@ class Interpreter
     friend class CoapSecure;
     friend class Dataset;
     friend class UdpExample;
+    friend class Ble;
 
 public:
     /**
@@ -205,6 +210,9 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_ENABLE_TOBLE
+    void ProcessToBle(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_TOBLE
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -444,6 +452,10 @@ private:
 #endif
 
     Dataset mDataset;
+
+#if OPENTHREAD_ENABLE_TOBLE
+    Ble mBle;
+#endif // OPENTHREAD_ENABLE_TOBLE
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

@@ -63,6 +63,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_DIAG
 
+if OPENTHREAD_ENABLE_TOBLE
+LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/mbedble/libmbedble.a                     \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_TOBLE
+
 if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-cli-ftd                                                           \

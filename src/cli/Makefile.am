@@ -143,6 +143,7 @@ libopenthread_cli_ftd_a_CPPFLAGS =    \
 
 SOURCES_COMMON =                      \
     cli.cpp                           \
+    cli_ble.cpp                       \
     cli_coap.cpp                      \
     cli_coap_secure.cpp               \
     cli_console.cpp                   \
@@ -162,6 +163,7 @@ libopenthread_cli_mtd_a_SOURCES =     \
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_ble.hpp                       \
     cli_coap.hpp                      \
     cli_coap_secure.hpp               \
     cli_console.hpp                   \

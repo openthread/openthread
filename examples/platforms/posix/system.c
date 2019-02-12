@@ -142,6 +142,10 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
+#if OPENTHREAD_ENABLE_TOBLE
+    platformBleHciUpdateFdSet(&read_fds, &write_fds, &max_fd);
+#endif
+
     if (!otTaskletsArePending(aInstance))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
@@ -161,6 +165,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartProcess();
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
+#if OPENTHREAD_ENABLE_TOBLE
+    platformBleHciProcess(aInstance);
+#endif
 }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
