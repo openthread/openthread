@@ -415,7 +415,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
- *                       freed (by the receiver of the callback) after it is processed (@sa otMessageFree).
+ *                       freed by the receiver of the callback after it is processed (@sa otMessageFree).
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
