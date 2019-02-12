@@ -413,7 +413,9 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
 /**
  * This function pointer is called when an IPv6 datagram is received.
  *
- * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
+ * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
+ *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
+ *                       freed by the receiver of the callback after it is processed (@sa otMessageFree).
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
