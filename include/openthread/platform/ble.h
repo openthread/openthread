@@ -417,15 +417,15 @@ typedef struct otBleRadioPacket
 
 /**
  * The enum indicates the outcome of the L2CAP connection request procedure.
- *
+ * @see Bluetooth v5.0 | Vol 3, Part A, 4.23, Table 4.20.
  */
-typedef enum otPlatBleL2capConnetionResult
+typedef enum otPlatBleL2capError
 {
-    kBleL2capResultSuccess               = 0x00, ///< Connection successful.
-    kBleL2capResultLePsmNotSupported     = 0x02, ///< Connection refused – LE_PSM not supported.
-    kBleL2capResultNoResourceAvailable   = 0x04, ///< Connection refused – no resources available.
-    kBleL2capResultUnexcpectedParameters = 0x0b, ///< Connection refused – unacceptable parameters.
-} otPlatBleL2capConnetionResult;
+    OT_BLE_L2C_ERROR_NONE           = 0x00, ///< Connection successful.
+    OT_BLE_L2C_ERROR_INVALID_PSM    = 0x02, ///< Connection refused – LE_PSM not supported.
+    OT_BLE_L2C_ERROR_NO_MEM         = 0x04, ///< Connection refused – no resources available.
+    OT_BLE_L2C_ERROR_INVALID_PARAMS = 0x0b, ///< Connection refused – unacceptable parameters.
+} otPlatBleL2capError;
 
 /*******************************************************************************
  * @section Bluetooth Low Energy management.
@@ -460,12 +460,12 @@ otError otPlatBleEnable(otInstance *aInstance);
 otError otPlatBleDisable(otInstance *aInstance);
 
 /**
- * Reset the Bluetooth Low Energy radio.
+ * Reset the Bluetooth Low Energy subsystem.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval ::OT_ERROR_NONE        Successfully transitioned to disabled.
- * @retval ::OT_ERROR_FAILED      The BLE radio could not be disabled.
+ * @retval ::OT_ERROR_NONE        Successfully reset.
+ * @retval ::OT_ERROR_FAILED      The BLE stack could not be reset.
  */
 otError otPlatBleReset(otInstance *aInstance);
 
@@ -1068,8 +1068,8 @@ extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aH
  *
  * @note This function shall be used only for GATT Server.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aHandle     The handle of the attribute to be read.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aHandle    The handle of the attribute to be read.
  * @param[out] aPacket    A pointer to the packet to be filled with pointers to attribute data to be read.
  *
  */
@@ -1132,12 +1132,12 @@ extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aP
  * @note Platform layer is responsible for credits management and segmentation (MPS).
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aResult    The result value indicates the outcome of the connection request.
+ * @param[in]  aError     The error value indicates the outcome of the connection request.
  * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
  *                        layer entity sending the LE Credit Based Connection Response can receive
  *                        on this channel.
  * @param[out] aCid       The source CID represents a channel endpoint on the device. If @p aResult
- *                        value is different from @p kBleL2capResultSuccess, this variable is
+ *                        value is different from @p OT_BLE_L2C_ERROR_NONE, this variable is
  *                        unused and should be set to NULL.
  *
  * @retval ::OT_ERROR_NONE           LE Credit Based Connection Response has been sent.
@@ -1146,27 +1146,27 @@ extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aP
  * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
  *
  */
-otError otPlatBleL2capConnectionResponse(otInstance *                  aInstance,
-                                         otPlatBleL2capConnetionResult aResult,
-                                         uint16_t                      aMtu,
-                                         uint16_t *                    aCid);
+otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
+                                         otPlatBleL2capError aError,
+                                         uint16_t            aMtu,
+                                         uint16_t *          aCid);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an LE Credit Based Connection
  * Response packet has been received.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aResult    The result value indicates the outcome of the connection request.
+ * @param[in]  aError     The error value indicates the outcome of the connection request.
  * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
  *                        layer entity sending the LE Credit Based Connection Response can receive
  *                        on this channel.
  * @param[out] aPeerCid   The CID represents a channel endpoint on the peer device.
  *
  */
-extern void otPlatBleL2capOnConnectionResponse(otInstance *                  aInstance,
-                                               otPlatBleL2capConnetionResult aResult,
-                                               uint16_t                      aMtu,
-                                               uint16_t                      aPeerCid);
+extern void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                               otPlatBleL2capError aError,
+                                               uint16_t            aMtu,
+                                               uint16_t            aPeerCid);
 
 /**
  * Sends an SDU on an L2CAP channel.
