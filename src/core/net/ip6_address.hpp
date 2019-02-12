@@ -244,6 +244,15 @@ public:
     bool IsAnycastRoutingLocator(void) const;
 
     /**
+     * This method indicates whether or not the IPv6 address is an Anycast Service Locator.
+     *
+     * @retval TRUE   If the IPv6 address is an Anycast Service Locator.
+     * @retval FALSE  If the IPv6 address is not an Anycast Service Locator.
+     *
+     */
+    bool IsAnycastServiceLocator(void) const;
+
+    /**
      * This method indicates whether or not the IPv6 address is Subnet-Router Anycast (RFC 4291),
      *
      * @retval TRUE   If the IPv6 address is a Subnet-Router Anycast address.
