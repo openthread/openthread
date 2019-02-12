@@ -85,79 +85,146 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     }
 }
 
+/*
+ * mSeedSet stores recently received (Seed ID, Sequence) values.
+ * - (Seed ID, Sequence) values are grouped by Seed ID.
+ * - (Seed ID, Sequence) groups are not sorted by Seed ID relative to other groups.
+ * - (Seed ID, Sequence) values within a group are sorted by Sequence.
+ * - All unused entries (marked by 0 lifetime) are grouped at the end.
+ *
+ * Update process:
+ *
+ * - Eviction selection:
+ *   - If there are unused entries, mark the first unused entry for "eviction"
+ *   - Otherwise, pick the first entry of the group that has the most entries.
+ *
+ * - Insert selection:
+ *   - If there exists a group matching the Seed ID, select insert entry based on Sequence ordering.
+ *   - Otherwise, set insert entry equal to evict entry.
+ *
+ * - If evicting a valid entry (lifetime non-zero):
+ *   - Require group size to have >=2 entries.
+ *   - If inserting into existing group, require Sequence to be larger than oldest stored Sequence in group.
+ */
 otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    otError       error = OT_ERROR_NONE;
-    MplSeedEntry *entry = NULL;
-    int8_t        diff;
+    otError       error    = OT_ERROR_NONE;
+    MplSeedEntry *insert   = NULL;
+    MplSeedEntry *group    = mSeedSet;
+    MplSeedEntry *evict    = mSeedSet;
+    uint8_t       curCount = 0;
+    uint8_t       maxCount = 0;
 
-    for (uint32_t i = 0; i < kNumSeedEntries; i++)
+    for (uint32_t i = 0; i < kNumSeedEntries; i++, curCount++)
     {
         if (mSeedSet[i].GetLifetime() == 0)
         {
-            // Start allocating from the first possible entry to speed up process of searching.
-            if (entry == NULL)
+            // unused entries exist
+
+            if (insert == NULL)
             {
-                entry = &mSeedSet[i];
+                // no existing group, set insert and evict entry to be the same
+                insert = &mSeedSet[i];
             }
-        }
-        else if (mSeedSet[i].GetSeedId() == aSeedId)
-        {
-            entry = &mSeedSet[i];
-            diff  = static_cast<int8_t>(aSequence - entry->GetSequence());
 
-            VerifyOrExit(diff > 0, error = OT_ERROR_DROP);
-
+            // mark first unused entry for eviction
+            evict = &mSeedSet[i];
             break;
+        }
+
+        if (mSeedSet[i].GetSeedId() != group->GetSeedId())
+        {
+            // processing new group
+
+            if (aSeedId == group->GetSeedId() && insert == NULL)
+            {
+                // insert at end of existing group
+                insert = &mSeedSet[i];
+                curCount++;
+            }
+
+            if (maxCount < curCount)
+            {
+                // look to evict an entry from the seed with the most entries
+                evict    = group;
+                maxCount = curCount;
+            }
+
+            group    = &mSeedSet[i];
+            curCount = 0;
+        }
+
+        if (aSeedId == mSeedSet[i].GetSeedId())
+        {
+            // have existing entries for aSeedId
+
+            if (aSequence == mSeedSet[i].GetSequence())
+            {
+                // already received, drop message
+                ExitNow(error = OT_ERROR_DROP);
+            }
+            else if (insert == NULL && aSequence < mSeedSet[i].GetSequence())
+            {
+                // insert in order of sequence
+                insert = &mSeedSet[i];
+                curCount++;
+            }
         }
     }
 
-    VerifyOrExit(entry != NULL, error = OT_ERROR_DROP);
+    if (evict->GetLifetime() != 0)
+    {
+        // no free entries available, look to evict an existing entry
+        assert(curCount != 0);
 
-    entry->SetSeedId(aSeedId);
-    entry->SetSequence(aSequence);
-    entry->SetLifetime(kSeedEntryLifetime);
+        if (aSeedId == group->GetSeedId() && insert == NULL)
+        {
+            // insert at end of existing group
+            insert = &mSeedSet[kNumSeedEntries];
+            curCount++;
+        }
+
+        if (maxCount < curCount)
+        {
+            // look to evict an entry from the seed with the most entries
+            evict    = group;
+            maxCount = curCount;
+        }
+
+        // require evict group size to have >= 2 entries
+        VerifyOrExit(maxCount > 1, error = OT_ERROR_DROP);
+
+        if (insert == NULL)
+        {
+            // no existing entries for aSeedId
+            insert = evict;
+        }
+        else
+        {
+            // require Sequence to be larger than oldest stored Sequence in group
+            VerifyOrExit(insert > mSeedSet && aSeedId == (insert - 1)->GetSeedId(), error = OT_ERROR_DROP);
+        }
+    }
+
+    if (evict > insert)
+    {
+        assert(insert >= mSeedSet);
+        memmove(insert, insert + 1, static_cast<size_t>(evict - insert) * sizeof(MplSeedEntry));
+    }
+    else if (evict < insert)
+    {
+        assert(evict >= mSeedSet);
+        memmove(evict, evict + 1, static_cast<size_t>(insert - 1 - evict) * sizeof(MplSeedEntry));
+        insert--;
+    }
+
+    insert->SetSeedId(aSeedId);
+    insert->SetSequence(aSequence);
+    insert->SetLifetime(kSeedEntryLifetime);
     mSeedSetTimer.Start(kSeedEntryLifetimeDt);
 
 exit:
     return error;
-}
-
-void Mpl::UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence)
-{
-    int8_t                     diff;
-    MplBufferedMessageMetadata messageMetadata;
-
-    Message *message     = mBufferedMessageSet.GetHead();
-    Message *nextMessage = NULL;
-
-    // Check if multicast forwarding is enabled.
-    VerifyOrExit(GetTimerExpirations() > 0);
-
-    while (message != NULL)
-    {
-        nextMessage = message->GetNext();
-        messageMetadata.ReadFrom(*message);
-
-        if (messageMetadata.GetSeedId() == aSeedId)
-        {
-            diff = static_cast<int8_t>(aSequence - messageMetadata.GetSequence());
-
-            if (diff > 0)
-            {
-                // Stop retransmitting MPL Data Message that is consider to be old.
-                mBufferedMessageSet.Dequeue(*message);
-                message->Free();
-            }
-
-            break;
-        }
-
-        message = nextMessage;
-    }
-
-exit:
-    return;
 }
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
@@ -235,9 +302,6 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
         // Retrieve MPL Seed Id from the IPv6 Source Address.
         option.SetSeedId(HostSwap16(aAddress.mFields.m16[7]));
     }
-
-    // Check MPL Data Messages in the MPL Buffered Set against sequence number.
-    UpdateBufferedSet(option.GetSeedId(), option.GetSequence());
 
     // Check if the MPL Data Message is new.
     error = UpdateSeedSet(option.GetSeedId(), option.GetSequence());
@@ -352,14 +416,22 @@ void Mpl::HandleSeedSetTimer(Timer &aTimer)
 void Mpl::HandleSeedSetTimer(void)
 {
     bool startTimer = false;
+    int  j          = 0;
 
-    for (int i = 0; i < kNumSeedEntries; i++)
+    for (int i = 0; i < kNumSeedEntries && mSeedSet[i].GetLifetime(); i++)
     {
+        mSeedSet[i].SetLifetime(mSeedSet[i].GetLifetime() - 1);
+
         if (mSeedSet[i].GetLifetime() > 0)
         {
-            mSeedSet[i].SetLifetime(mSeedSet[i].GetLifetime() - 1);
-            startTimer = true;
+            mSeedSet[j++] = mSeedSet[i];
+            startTimer    = true;
         }
+    }
+
+    for (; j < kNumSeedEntries && mSeedSet[j].GetLifetime(); j++)
+    {
+        mSeedSet[j].SetLifetime(0);
     }
 
     if (startTimer)
