@@ -417,7 +417,7 @@ typedef struct otBleRadioPacket
 
 /**
  * The enum indicates the outcome of the L2CAP connection request procedure.
- * @see Bluetooth v5.0 | Vol 3, Part A, 4.23, Table 4.20.
+ * See Bluetooth v5.0 | Vol 3, Part A, 4.23, Table 4.20.
  */
 typedef enum otPlatBleL2capError
 {
@@ -1121,7 +1121,7 @@ otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint16_t aPsm, ui
  * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
  *                        layer entity sending the LE Credit Based Connection Request can receive
  *                        on this channel.
- * @param[out] aPeerCid   The CID represents a channel endpoint on the peer device.
+ * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
  *
  */
 extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t aPeerCid);
@@ -1160,7 +1160,7 @@ otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
  * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
  *                        layer entity sending the LE Credit Based Connection Response can receive
  *                        on this channel.
- * @param[out] aPeerCid   The CID represents a channel endpoint on the peer device.
+ * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
  *
  */
 extern void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
