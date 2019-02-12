@@ -224,7 +224,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     // Embed content into message if given
     if (payloadLength > 0)
     {
-        SuccessOrExit(error = otMessageAppend(message, argv[4], payloadLength));
+        SuccessOrExit(error = otMessageAppend(message, argv[5], payloadLength));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));

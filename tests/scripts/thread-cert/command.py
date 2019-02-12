@@ -551,3 +551,13 @@ def check_joiner_router_commissioning_messages(commissioning_messages):
     """Verify COAP messages sent by joiner router while commissioning process.
     """
     assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF for msg in commissioning_messages)
+    return None
+
+def check_payload_same(tp1, tp2):
+    """Verfiy two payloads are totally the same.
+       A payload is a tuple of tlvs.
+    """
+    assert len(tp1) == len(tp2)
+    for tlv in tp2:
+        peer_tlv = get_sub_tlv(tp1, type(tlv))
+        assert peer_tlv is not None and peer_tlv == tlv

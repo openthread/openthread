@@ -296,5 +296,20 @@ class Node:
     def coaps_get(self):
         self.interface.coaps_get()
 
+    def coap_post_with_payload(self, ipaddr, coap_uri, coap_type, payload):
+        self.interface.coap_post_with_payload(ipaddr, coap_uri, coap_type, payload)
+
+    def coap_post_with_tlvs_payload(self, ipaddr, coap_uri, coap_type, tlvs):
+        self.interface.coap_post_with_tlvs_payload(ipaddr, coap_uri, coap_type, tlvs)
+
+    def commissioner_mgmtset(self, tlvs_binary):
+        self.interface.commissioner_mgmtset(tlvs_binary)
+
+    def commissioner_mgmtset_with_tlvs(self, tlvs):
+        self.interface.commissioner_mgmtset_with_tlvs(tlvs)
+
+    def get_commissioner_session_id(self):
+        self.interface.get_commissioner_session_id()
+
 if __name__ == '__main__':
     unittest.main()

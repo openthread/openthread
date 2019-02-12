@@ -376,7 +376,7 @@ class MessagesSet(object):
 
             if m.type != MessageType.COAP:
                 continue
-
+            # print('coap message:{} coap:{}'.format(m, m.coap))
             if uri_path is not None and m.coap.uri_path != uri_path:
                 continue
 
