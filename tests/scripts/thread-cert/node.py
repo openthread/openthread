@@ -205,6 +205,12 @@ class Node:
     def get_addr(self, prefix):
         return self.interface.get_addr(prefix)
 
+    def get_addr_rloc(self):
+        return self.interface.get_addr_rloc()
+
+    def get_addr_aloc(self):
+        return self.interface.get_addr_aloc()
+
     def get_eidcaches(self):
         return self.interface.get_eidcaches()
 
