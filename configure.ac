@@ -434,8 +434,16 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
+
+if test "$enable_builtin_mbedtls" = "yes"; then
+    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1
+else
+    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0
+fi
+
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
+AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS], [${OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS}], [Define to 1 if you want to enable support for bultin-mbedtls.])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
