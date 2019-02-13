@@ -300,15 +300,15 @@ class CoapMessageProxy(object):
 
     @property
     def payload(self):
-        # try:
+        try:
             binded_uri_path = self._mid_to_uri_path_binder.get_uri_path_for(self.message_id, self.token)
 
             factory = self._uri_path_based_payload_factories[binded_uri_path]
 
             return factory.parse(io.BytesIO(self._coap_message.payload), self._message_info)
 
-        # except RuntimeError:
-            # return self._coap_message.payload
+        except RuntimeError:
+            return self._coap_message.payload
 
     @property
     def uri_path(self):

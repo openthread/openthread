@@ -918,21 +918,6 @@ class otCli:
 
         self._expect('Received coap secure response', timeout=timeout)
 
-    def coap_post_with_payload(self, ipaddr, coap_uri, coap_type, payload):
-        cmd = 'coap post ' + ipaddr + ' ' + coap_uri + ' ' + coap_type + ' hex ' + payload
-        self.send_command(cmd)
-
-        if isinstance(self.simulator, simulator.VirtualTime):
-            self.simulator.go(5)
-            timeout = 1
-        else:
-            timeout = 5
-
-        self._expect('Done', timeout=timeout)
-
-    def coap_post_with_tlvs_payload(self, ipaddr, coap_uri, coap_type, tlvs):
-        self.coaps_post_with_payload(ipaddr, coap_uri, coap_type, '')
-
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset binary ' + tlvs_binary
         self.send_command(cmd)
@@ -946,12 +931,4 @@ class otCli:
         for tlv in tlvs:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
-
-    def get_commissioner_session_id(self):
-        self.send_command('commissioner sessionid')
-        i = self._expect('([0-9a-fA-F]{32})')
-        if i == 0:
-            sessionid = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return sessionid
 
