@@ -130,6 +130,12 @@ bool Address::IsAnycastRoutingLocator(void) const
             mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
 }
 
+bool Address::IsAnycastServiceLocator(void) const
+{
+    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
+           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+}
+
 bool Address::IsSubnetRouterAnycast(void) const
 {
     return (mFields.m32[2] == 0 && mFields.m32[3] == 0);

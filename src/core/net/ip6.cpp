@@ -701,10 +701,11 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
     if (mIsReceiveIp6FilterEnabled)
     {
-        // do not pass messages sent to an RLOC/ALOC
-        VerifyOrExit(!aMessageInfo.GetSockAddr().IsRoutingLocator() &&
-                         !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator(),
-                     error = OT_ERROR_NO_ROUTE);
+        // do not pass messages sent to an RLOC/ALOC, except Service Locator
+        VerifyOrExit(
+            (!aMessageInfo.GetSockAddr().IsRoutingLocator() && !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator()) ||
+                aMessageInfo.GetSockAddr().IsAnycastServiceLocator(),
+            error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
         {
