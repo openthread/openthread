@@ -430,7 +430,7 @@ private:
     Settings mSettings;
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#if !OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
+#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
     Crypto::MbedTls mMbedTls;
 #endif
     Utils::Heap mHeap;

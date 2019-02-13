@@ -340,16 +340,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
- *
- * Whether to disable the OpenThread's memory allocator for mbedTLS.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR
-#define OPENTHREAD_CONFIG_DISABLE_MBEDTLS_MEMORY_ALLOCATOR 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
@@ -687,6 +677,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL
 #define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_CRIT
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+ *
+ * Define as 1 to enable bultin-mbedtls.
+ *
+ * Note that the OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS determines whether to use bultin-mbedtls as well as
+ * whether to manage mbedTLS internally, such as memory allocation and debug.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+#define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS 1
 #endif
 
 /**
