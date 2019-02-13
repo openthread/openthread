@@ -291,6 +291,7 @@ XFAIL_NCP_TESTS                                                    = \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
     Cert_8_2_02_JoinerRouter.py                                      \
+	Cert_9_2_02_MGMTCommissionerSet.py                               \
     Cert_9_2_04_ActiveDataset.py                                     \
     Cert_9_2_07_DelayTimer.py                                        \
     Cert_9_2_08_PersistentDatasets.py                                \
