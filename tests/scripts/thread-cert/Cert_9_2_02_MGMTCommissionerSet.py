@@ -111,7 +111,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
 
         # Step 6 - DUT sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        print('data response:{}'.format(msg))
+        print('data response:{}'.format(msg.mle))
 
         # Step 7 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         border_agent_locator_tlv = mesh_cop.BorderAgentLocator(0x0400)
