@@ -680,6 +680,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+ *
+ * Define as 1 to enable bultin-mbedtls.
+ *
+ * Note that the OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS determines whether to use bultin-mbedtls as well as
+ * whether to manage mbedTLS internally, such as memory allocation and debug.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+#define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
  *
  * Define as 1 to enable dynamic log level control.

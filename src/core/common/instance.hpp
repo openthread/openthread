@@ -431,8 +431,10 @@ private:
     Settings mSettings;
 
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
     Crypto::MbedTls mMbedTls;
-    Utils::Heap     mHeap;
+#endif
+    Utils::Heap mHeap;
 #endif
 
     Ip6::Ip6    mIp6;
