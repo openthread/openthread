@@ -406,6 +406,14 @@ def contains_tlv(sub_tlvs, tlv_type):
     """
     return any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs)
 
+def contains_tlvs(sub_tlvs, tlv_types):
+    """Verify if all types of tlv in a list are included in a sub-tlv list.
+    """
+    for tlv_type in tlv_types:
+        if not any(isinstance(sub_tlv, tlv_type) for sub_tlv in sub_tlvs):
+            return False
+    return True
+
 def check_secure_mle_key_id_mode(command_msg, key_id_mode):
     """Verify if the mle command message sets the right key id mode.
     """

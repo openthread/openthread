@@ -31,8 +31,9 @@ import binascii
 import time
 import unittest
 
-from command import check_payload_same
-from command import get_sub_tlv
+from mle import NetworkData
+from network_data import CommissioningData
+import command
 import config
 import mesh_cop
 import mle
@@ -88,7 +89,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04', assert_enabled=False)
-        commissioner_session_id_tlv = get_sub_tlv(msg.coap.payload, mesh_cop.CommissionerSessionId)
+        commissioner_session_id_tlv = command.get_sub_tlv(msg.coap.payload, mesh_cop.CommissionerSessionId)
 
         # Step 2 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         steering_data_tlv = mesh_cop.SteeringData(bytes([0xFF]))
@@ -98,7 +99,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 3 - DUT responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),)) # (mesh_cop.State(0xFF),) <- this a tuple, don't delete the comma
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),)) # (mesh_cop.State(0xFF),) <- this a tuple, don't delete the comma
 
         # Step 4 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs([steering_data_tlv, commissioner_session_id_tlv])
@@ -107,11 +108,16 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 5 - DUT sends MGMT_COMMISSIONER_SET.rsp to commissioner
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
 
         # Step 6 - DUT sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        print('data response:{}'.format(msg.mle))
+        network_data = msg.assertMleMessageContainsTlv(NetworkData)
+        commissioning_data = command.get_sub_tlv(network_data.tlvs, CommissioningData)
+        assert commissioning_data is not None
+        assert commissioning_data.stable == 0
+        assert command.contains_tlvs(commissioning_data.sub_tlvs,
+                [mesh_cop.CommissionerSessionId, mesh_cop.SteeringData, mesh_cop.BorderAgentLocator])
 
         # Step 7 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         border_agent_locator_tlv = mesh_cop.BorderAgentLocator(0x0400)
@@ -122,7 +128,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 8 - DUT responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
 
         # Step 9 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -132,7 +138,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 10 - DUT responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
 
         # Step 11 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -142,7 +148,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 12 - DUT responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
 
         # Step 13 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to DUT
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -152,7 +158,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         # Step 14 - DUT responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
 
         # Step 15 - Send ICMPv6 Echo Request to DUT
         ipaddrs = self.nodes[LEADER].get_addrs()
