@@ -158,12 +158,14 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         {
             // have existing entries for aSeedId
 
-            if (aSequence == mSeedSet[i].GetSequence())
+            int8_t diff = static_cast<int8_t>(aSequence - mSeedSet[i].GetSequence());
+
+            if (diff == 0)
             {
                 // already received, drop message
                 ExitNow(error = OT_ERROR_DROP);
             }
-            else if (insert == NULL && aSequence < mSeedSet[i].GetSequence())
+            else if (insert == NULL && diff < 0)
             {
                 // insert in order of sequence
                 insert = &mSeedSet[i];
