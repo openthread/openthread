@@ -186,18 +186,20 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
         {
             if (cmsg->cmsg_type == IPV6_HOPLIMIT)
             {
-                int hoplimit           = *reinterpret_cast<int *>(CMSG_DATA(cmsg));
+                int hoplimit;
+
+                memcpy(&hoplimit, CMSG_DATA(cmsg), sizeof(hoplimit));
                 aMessageInfo.mHopLimit = static_cast<uint8_t>(hoplimit);
             }
             else if (cmsg->cmsg_type == IPV6_PKTINFO)
             {
-                struct in6_pktinfo *pktinfo;
+                struct in6_pktinfo pktinfo;
 
-                pktinfo = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsg));
+                memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
 
                 aMessageInfo.mInterfaceId =
-                    (pktinfo->ipi6_ifindex == sPlatNetifIndex ? static_cast<int8_t>(OT_NETIF_INTERFACE_ID_THREAD) : 0);
-                memcpy(&aMessageInfo.mSockAddr, &pktinfo->ipi6_addr, sizeof(aMessageInfo.mSockAddr));
+                    (pktinfo.ipi6_ifindex == sPlatNetifIndex ? static_cast<int8_t>(OT_NETIF_INTERFACE_ID_THREAD) : 0);
+                memcpy(&aMessageInfo.mSockAddr, &pktinfo.ipi6_addr, sizeof(aMessageInfo.mSockAddr));
             }
         }
     }
