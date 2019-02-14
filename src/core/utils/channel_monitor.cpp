@@ -37,7 +37,6 @@
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
-#include "common/string.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
@@ -190,14 +189,16 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 void ChannelMonitor::LogResults(void)
 {
-    String<kStringSize> logString;
+    char  buf[kStringSize];
+    char *start = buf;
+    char *end   = buf + sizeof(buf) - 1;
 
     for (size_t i = 0; i < kNumChannels; i++)
     {
-        logString.Append("%02x ", mChannelOccupancy[i] >> 8);
+        start += snprintf(start, end - start, "%02x ", mChannelOccupancy[i] >> 8);
     }
 
-    otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());
+    otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, buf);
 }
 
 Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask, uint16_t &aOccupancy)

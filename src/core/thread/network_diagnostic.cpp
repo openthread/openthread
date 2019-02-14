@@ -435,7 +435,6 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
                 if (pageMask & (1 << page))
                 {
                     tlv.GetChannelPages()[length++] = page;
-                    VerifyOrExit(length <= tlv.GetLength(), error = OT_ERROR_NO_BUFS);
                 }
             }
 

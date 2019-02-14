@@ -200,8 +200,10 @@ otError ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 
         length += sizeof(MeshCoP::ChannelMaskEntry);
 
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
         VerifyOrExit((entry = static_cast<MeshCoP::ChannelMaskEntry *>(entry->GetNext(this))) != NULL,
                      error = OT_ERROR_NO_BUFS);
+#endif
     }
 #endif
 
