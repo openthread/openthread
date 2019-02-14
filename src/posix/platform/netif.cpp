@@ -52,6 +52,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <openthread/icmp6.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/message.h>
@@ -391,6 +392,8 @@ void platformNetifInit(otInstance *aInstance)
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
     VerifyOrExit(sNetlinkFd > 0);
+
+    otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
     {
         struct sockaddr_nl sa;
