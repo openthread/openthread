@@ -190,12 +190,11 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 void ChannelMonitor::LogResults(void)
 {
     char  buf[kStringSize];
-    char *start = buf;
-    char *end   = buf + sizeof(buf) - 1;
+    char *cur = buf;
 
     for (size_t i = 0; i < kNumChannels; i++)
     {
-        start += snprintf(start, end - start, "%02x ", mChannelOccupancy[i] >> 8);
+        cur += snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "%02x ", mChannelOccupancy[i] >> 8);
     }
 
     otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, buf);
