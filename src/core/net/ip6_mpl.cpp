@@ -209,7 +209,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     if (evict > insert)
     {
         assert(insert >= mSeedSet);
-        memmove(insert, insert + 1, static_cast<size_t>(evict - insert) * sizeof(MplSeedEntry));
+        memmove(insert + 1, insert, static_cast<size_t>(evict - insert) * sizeof(MplSeedEntry));
     }
     else if (evict < insert)
     {
@@ -221,7 +221,11 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     insert->SetSeedId(aSeedId);
     insert->SetSequence(aSequence);
     insert->SetLifetime(kSeedEntryLifetime);
-    mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+
+    if (!mSeedSetTimer.IsRunning())
+    {
+        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+    }
 
 exit:
     return error;
