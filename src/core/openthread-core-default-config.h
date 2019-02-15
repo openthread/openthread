@@ -118,7 +118,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
  *
- * The default IEEE 802.15.4 transmit power (dBm)
+ * The default IEEE 802.15.4 transmit power (dBm).
  *
  */
 #ifndef OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
@@ -279,7 +279,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
- *  The maximum size of the CLI line in bytes
+ * The maximum size of the CLI line in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
@@ -289,7 +289,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
  *
- *  The size of CLI UART RX buffer in bytes
+ * The size of CLI UART RX buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
@@ -299,7 +299,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
  *
- *  The size of CLI message buffer in bytes
+ * The size of CLI message buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
@@ -598,7 +598,7 @@
 /**
  * @def OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
  *
- *  The value ahead of the current frame counter for persistent storage
+ * The value ahead of the current frame counter for persistent storage.
  *
  */
 #ifndef OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
@@ -647,7 +647,7 @@
  * Note:
  *
  * 1) Because the default is: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
- *    The platform is expected to provide at least a stub for `otPlatLog()`
+ *    The platform is expected to provide at least a stub for `otPlatLog()`.
  *
  * 2) This is effectively an ENUM so it can be if/else/endif at compile time.
  *
@@ -869,7 +869,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
- * Define to prepend the log level to all log messages
+ * Define to prepend the log level to all log messages.
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
@@ -879,7 +879,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
  *
- * Define to prepend the log region to all log messages
+ * Define to prepend the log region to all log messages.
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
@@ -950,7 +950,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
  *
- *  The size of NCP message buffer in bytes
+ * The size of NCP message buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
@@ -960,7 +960,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE
  *
- *  The size of NCP UART TX chunk in bytes
+ * The size of NCP UART TX chunk in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE
@@ -970,7 +970,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
  *
- *  The size of NCP UART RX buffer in bytes
+ * The size of NCP UART RX buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
@@ -984,7 +984,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
  *
- *  The size of NCP SPI (RX/TX) buffer in bytes
+ * The size of NCP SPI (RX/TX) buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
@@ -998,8 +998,8 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
  *
- *  The size of extra data to be allocated in UART buffer,
- *  needed by NCP Spinel Encrypter.
+ * The size of extra data to be allocated in UART buffer,
+ * needed by NCP Spinel Encrypter.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
@@ -1177,7 +1177,7 @@
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
  *
- * Define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages)
+ * Define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages).
  *
  * When enabled, OpenThread will track average error rate of MAC frame transmissions and IPv6 message error rate for
  * every neighbor.
@@ -1426,7 +1426,7 @@
  *
  * Since the parent search process can be power consuming (child needs to stays in RX mode to collect parent response)
  * and to limit its impact on battery-powered devices, after a parent search is triggered, the child will not trigger
- * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`
+ * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`.
  *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
@@ -1733,7 +1733,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
- * Define as 1 to disable CSMA-CA on the last transmit attempt
+ * Define as 1 to disable CSMA-CA on the last transmit attempt.
  *
  */
 #ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
@@ -1799,7 +1799,7 @@
  *
  * Specifies the default period of time synchronization, in seconds.
  *
- * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
  *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
