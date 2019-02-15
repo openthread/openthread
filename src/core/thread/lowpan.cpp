@@ -265,7 +265,8 @@ otError Lowpan::Compress(Message &           aMessage,
     uint8_t              ecn  = 0;
     uint8_t              dscp = 0;
 
-    aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header),
+                 error = OT_ERROR_PARSE);
 
     if (networkData.GetContext(ip6Header.GetSource(), srcContext) != OT_ERROR_NONE || srcContext.mCompressFlag == false)
     {
@@ -455,7 +456,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
     uint16_t             offset;
     uint8_t              tmpByte;
 
-    aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
+                 error = OT_ERROR_PARSE);
     aMessage.MoveOffset(sizeof(extHeader));
 
     tmpByte = kExtHdrDispatch | kExtHdrEidHbh;
@@ -487,7 +489,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
         while (offset < len + aMessage.GetOffset())
         {
-            aMessage.Read(offset, sizeof(optionHeader), &optionHeader);
+            VerifyOrExit(aMessage.Read(offset, sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
+                         error = OT_ERROR_PARSE);
 
             if (optionHeader.GetType() == Ip6::OptionPad1::kType)
             {
@@ -511,6 +514,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
         len -= padLength;
     }
+
+    VerifyOrExit(aMessage.GetOffset() + len + padLength <= aMessage.GetLength(), error = OT_ERROR_PARSE);
 
     aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 
@@ -540,7 +545,9 @@ otError Lowpan::CompressUdp(Message &aMessage, BufferWriter &aBuf)
     uint16_t       source;
     uint16_t       destination;
 
-    aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
+                 error = OT_ERROR_PARSE);
+
     source      = udpHeader.GetSourcePort();
     destination = udpHeader.GetDestinationPort();
 
