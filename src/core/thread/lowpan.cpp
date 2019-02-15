@@ -254,34 +254,42 @@ otError Lowpan::Compress(Message &           aMessage,
 {
     otError              error       = OT_ERROR_NONE;
     NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
-    BufferWriter         buf         = aBuf;
     uint16_t             startOffset = aMessage.GetOffset();
-    uint16_t             hcCtl       = 0;
+    BufferWriter         buf         = aBuf;
+    uint16_t             hcCtl;
     Ip6::Header          ip6Header;
     uint8_t *            ip6HeaderBytes = reinterpret_cast<uint8_t *>(&ip6Header);
     Context              srcContext, dstContext;
-    bool                 srcContextValid = true, dstContextValid = true;
+    bool                 srcContextValid, dstContextValid;
     uint8_t              nextHeader;
-    uint8_t              ecn  = 0;
-    uint8_t              dscp = 0;
+    uint8_t              ecn;
+    uint8_t              dscp;
+    uint8_t              headerDepth;
+    uint8_t              headerMaxDepth = 0xff;
+
+compress:
+
+    headerDepth = 0;
+    hcCtl       = kHcDispatch;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header),
                  error = OT_ERROR_PARSE);
 
-    if (networkData.GetContext(ip6Header.GetSource(), srcContext) != OT_ERROR_NONE || srcContext.mCompressFlag == false)
+    srcContextValid =
+        (networkData.GetContext(ip6Header.GetSource(), srcContext) == OT_ERROR_NONE && srcContext.mCompressFlag);
+
+    if (!srcContextValid)
     {
         networkData.GetContext(0, srcContext);
-        srcContextValid = false;
     }
 
-    if (networkData.GetContext(ip6Header.GetDestination(), dstContext) != OT_ERROR_NONE ||
-        dstContext.mCompressFlag == false)
+    dstContextValid =
+        (networkData.GetContext(ip6Header.GetDestination(), dstContext) == OT_ERROR_NONE && dstContext.mCompressFlag);
+
+    if (!dstContextValid)
     {
         networkData.GetContext(0, dstContext);
-        dstContextValid = false;
     }
-
-    hcCtl = kHcDispatch;
 
     // Lowpan HC Control Bits
     SuccessOrExit(error = buf.Advance(sizeof(hcCtl)));
@@ -334,8 +342,12 @@ otError Lowpan::Compress(Message &           aMessage,
     case Ip6::kProtoHopOpts:
     case Ip6::kProtoUdp:
     case Ip6::kProtoIp6:
-        hcCtl |= kHcNextHeader;
-        break;
+        if (headerDepth + 1 < headerMaxDepth)
+        {
+            hcCtl |= kHcNextHeader;
+            break;
+        }
+        // fall through
 
     default:
         SuccessOrExit(error = buf.Write(static_cast<uint8_t>(ip6Header.GetNextHeader())));
@@ -400,11 +412,13 @@ otError Lowpan::Compress(Message &           aMessage,
         SuccessOrExit(error = buf.Write(&ip6Header.GetDestination(), sizeof(ip6Header.GetDestination())));
     }
 
+    headerDepth++;
+
     aMessage.MoveOffset(sizeof(ip6Header));
 
     nextHeader = static_cast<uint8_t>(ip6Header.GetNextHeader());
 
-    while (1)
+    while (headerDepth < headerMaxDepth)
     {
         switch (nextHeader)
         {
@@ -427,6 +441,8 @@ otError Lowpan::Compress(Message &           aMessage,
         default:
             ExitNow();
         }
+
+        headerDepth++;
     }
 
 exit:
@@ -439,6 +455,13 @@ exit:
     else
     {
         aMessage.SetOffset(startOffset);
+
+        if (headerDepth > 0)
+        {
+            buf            = aBuf;
+            headerMaxDepth = headerDepth;
+            goto compress;
+        }
     }
 
     return error;
