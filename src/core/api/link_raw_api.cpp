@@ -39,7 +39,6 @@
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
@@ -75,9 +74,6 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-
-    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
-
     otPlatRadioSetPromiscuous(aInstance, aEnable);
 
 exit:
@@ -90,8 +86,6 @@ otError otLinkRawSleep(otInstance *aInstance)
 
     VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat("LinkRaw Sleep");
-
     error = otPlatRadioSleep(aInstance);
 
 exit:
@@ -100,7 +94,6 @@ exit:
 
 otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
-    otLogInfoPlat("LinkRaw Recv");
     return static_cast<Instance *>(aInstance)->GetLinkRaw().Receive(aCallback);
 }
 
@@ -111,7 +104,6 @@ otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 
 otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback)
 {
-    otLogInfoPlat("LinkRaw Transmit");
     return static_cast<Instance *>(aInstance)->GetLinkRaw().Transmit(aCallback);
 }
 
