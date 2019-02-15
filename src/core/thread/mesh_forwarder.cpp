@@ -684,7 +684,6 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     uint8_t *               payload;
     uint8_t                 headerLength;
     uint16_t                payloadLength;
-    int                     hcLength;
     uint16_t                fragmentLength;
     uint16_t                dstpan;
     uint8_t                 secCtl = Mac::Frame::kSecNone;
@@ -870,12 +869,16 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     // copy IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        hcLength = netif.GetLowpan().Compress(aMessage, meshSource, meshDest, payload);
-        assert(hcLength > 0);
-        headerLength += static_cast<uint8_t>(hcLength);
+        Lowpan::BufferWriter buffer(payload, aFrame.GetMaxPayloadLength() - headerLength -
+                                                 Lowpan::FragmentHeader::kInitialHeaderSize);
+        uint8_t              hcLength;
 
-        payloadLength = aMessage.GetLength() - aMessage.GetOffset();
+        error = netif.GetLowpan().Compress(aMessage, meshSource, meshDest, buffer);
+        assert(error == OT_ERROR_NONE);
 
+        hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
+        headerLength += hcLength;
+        payloadLength  = aMessage.GetLength() - aMessage.GetOffset();
         fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
 
         if (payloadLength > fragmentLength)
@@ -898,9 +901,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
                 aMessage.SetDatagramTag(mFragTag++);
             }
 
-            memmove(payload + 4, payload, headerLength);
-
-            payloadLength = (aFrame.GetMaxPayloadLength() - headerLength - 4) & ~0x7;
+            memmove(payload + Lowpan::FragmentHeader::kInitialHeaderSize, payload, hcLength);
 
             fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
             fragmentHeader->Init();
@@ -910,6 +911,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
             payload += fragmentHeader->GetHeaderLength();
             headerLength += fragmentHeader->GetHeaderLength();
+            payloadLength = (aFrame.GetMaxPayloadLength() - headerLength) & ~0x7;
         }
 
         payload += hcLength;
