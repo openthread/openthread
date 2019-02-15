@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/debug.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
@@ -72,6 +73,147 @@ struct Context
     uint8_t        mPrefixLength; ///< The prefix length.
     uint8_t        mContextId;    ///< The Context ID.
     bool           mCompressFlag; ///< The Context compression flag.
+};
+
+/**
+ * This class defines a buffer writer used by the 6LoWPAN compressor.
+ *
+ */
+class BufferWriter
+{
+public:
+    /**
+     * This constructor initializes the buffer writer.
+     *
+     * @param[in]  aBuf     A pointer to the write buffer.
+     * @param[in]  aLength  The size of the write buffer.
+     *
+     */
+    BufferWriter(uint8_t *aBuf, uint8_t aLength)
+    {
+        mWritePointer    = aBuf;
+        mRemainingLength = aLength;
+    }
+
+    /**
+     * This method indicates whether there is buffer space available to write @p aLength bytes.
+     *
+     * @param[in]  aLength  Number of bytes to write.
+     *
+     * @retval  TRUE   Enough buffer space is available to write the requested number of bytes.
+     * @retval  FALSE  Insufficient buffer space to write the requested number of bytes.
+     *
+     */
+    bool CanWrite(uint8_t aLength) const { return mRemainingLength >= aLength; }
+
+    /**
+     * This method returns the current write pointer value.
+     *
+     * @returns the current write pointer value.
+     *
+     */
+    uint8_t *GetWritePointer(void) { return mWritePointer; }
+
+    /**
+     * This method advances the write pointer.
+     *
+     * @param[in]  aLength  Number of bytes to advance.
+     *
+     * @retval  TRUE   Enough buffer space is available to advance the requested number of bytes.
+     * @retval  FALSE  Insufficient buffer space to advance the requested number of bytes.
+     *
+     */
+    otError Advance(uint8_t aLength)
+    {
+        otError error = OT_ERROR_NONE;
+
+        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+
+        mWritePointer += aLength;
+        mRemainingLength -= aLength;
+
+    exit:
+        return error;
+    }
+
+    /**
+     * This method writes a byte into the buffer and updates the write pointer, if space is available.
+     *
+     * @param[in]  aByte  Byte to write.
+     *
+     * @retval  OT_ERROR_NONE     Successfully wrote the byte and updated the pointer.
+     * @retval  OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte.
+     *
+     */
+    otError Write(uint8_t aByte)
+    {
+        otError error = OT_ERROR_NONE;
+
+        VerifyOrExit(CanWrite(sizeof(aByte)), error = OT_ERROR_NO_BUFS);
+
+        *mWritePointer++ = aByte;
+        mRemainingLength--;
+
+    exit:
+        return error;
+    }
+
+    /**
+     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
+     *
+     * @param[in]  aBuf     A pointer to the byte sequence.
+     * @param[in]  aLength  Number of bytes to write.
+     *
+     * @retval OT_ERROR_NONE     Successfully wrote the byte sequence and updated the pointer.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte sequence.
+     *
+     */
+    otError Write(const void *aBuf, uint8_t aLength)
+    {
+        otError error = OT_ERROR_NONE;
+
+        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+
+        memcpy(mWritePointer, aBuf, aLength);
+        mWritePointer += aLength;
+        mRemainingLength -= aLength;
+
+    exit:
+        return error;
+    }
+
+    /**
+     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
+     *
+     * The byte sequence is taken from a message buffer at the current message buffer's offset.
+     *
+     * @param[in]  aMessage  A message buffer.
+     * @param[in]  aLength   Number of bytes to write.
+     *
+     * @retval OT_ERROR_NONE     Successfully wrote the byte sequence and updated the pointer.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte sequence.
+     *
+     */
+    otError Write(const Message &aMessage, uint8_t aLength)
+    {
+        otError error = OT_ERROR_NONE;
+        int     rval;
+
+        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+
+        rval = aMessage.Read(aMessage.GetOffset(), aLength, mWritePointer);
+        assert(rval == aLength);
+
+        mWritePointer += aLength;
+        mRemainingLength -= aLength;
+
+    exit:
+        return error;
+    }
+
+private:
+    uint8_t *mWritePointer;
+    uint8_t  mRemainingLength;
 };
 
 /**
@@ -113,7 +255,10 @@ public:
      * @returns The size of the compressed header in bytes.
      *
      */
-    int Compress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest, uint8_t *aBuf);
+    otError Compress(Message &           aMessage,
+                     const Mac::Address &aMacSource,
+                     const Mac::Address &aMacDest,
+                     BufferWriter &      aBuf);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
@@ -216,19 +361,19 @@ private:
         kUdpPortMask     = 3 << 0,
     };
 
-    int CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &aNextHeader);
-    int CompressSourceIid(const Mac::Address &aMacAddr,
-                          const Ip6::Address &aIpAddr,
-                          const Context &     aContext,
-                          uint16_t &          aHcCtl,
-                          uint8_t *           aBuf);
-    int CompressDestinationIid(const Mac::Address &aMacAddr,
-                               const Ip6::Address &aIpAddr,
-                               const Context &     aContext,
-                               uint16_t &          aHcCtl,
-                               uint8_t *           aBuf);
-    int CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uint8_t *aBuf);
-    int CompressUdp(Message &aMessage, uint8_t *aBuf);
+    otError CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
+    otError CompressSourceIid(const Mac::Address &aMacAddr,
+                              const Ip6::Address &aIpAddr,
+                              const Context &     aContext,
+                              uint16_t &          aHcCtl,
+                              BufferWriter &      aBuf);
+    otError CompressDestinationIid(const Mac::Address &aMacAddr,
+                                   const Ip6::Address &aIpAddr,
+                                   const Context &     aContext,
+                                   uint16_t &          aHcCtl,
+                                   BufferWriter &      aBuf);
+    otError CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
+    otError CompressUdp(Message &aMessage, BufferWriter &aBuf);
 
     int     DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
     int     DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
@@ -429,6 +574,12 @@ OT_TOOL_PACKED_BEGIN
 class FragmentHeader
 {
 public:
+    enum
+    {
+        kInitialHeaderSize    = 4, ///< Initial fragment header size in octets.
+        kSubsequentHeaderSize = 5, ///< Subsequent fragment header size in octets.
+    };
+
     /**
      * This constructor initializes the Fragment Header.
      *
