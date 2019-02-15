@@ -178,15 +178,20 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
+        Lowpan::BufferWriter buffer(result, 127);
+
         VerifyOrQuit((message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
 
-        int compressBytes = sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, result);
+        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, buffer) == aVector.mError,
+                     "6lo: Lowpan:Compress failed");
 
         if (aVector.mError == OT_ERROR_NONE)
         {
+            uint8_t compressBytes = buffer.GetWritePointer() - result;
+
             // Append payload to the LOWPAN_IPHC.
             message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), result + compressBytes);
 
@@ -197,10 +202,6 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             VerifyOrQuit(compressBytes == aVector.mIphcHeader.mLength, "6lo: Lowpan::Compress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "6lo: Lowpan::Compress failed");
             VerifyOrQuit(memcmp(iphc, result, iphcLength) == 0, "6lo: Lowpan::Compress failed");
-        }
-        else
-        {
-            VerifyOrQuit(compressBytes < 0, "6lo: Lowpan::Compress failed");
         }
 
         message->Free();
