@@ -35,13 +35,11 @@ import config
 import mle
 import node
 
-from command import check_child_id_response
+from command import check_child_id_response_full_data
+from command import check_child_id_response_stable_data
 from command import check_child_update_response
 from command import check_data_response
 from command import check_message_address_registration_addr_set_equals
-from command import check_network_data_tlv
-from command import check_prefix
-from command import check_prefix_and_border_router_16
 from command import CheckType
 from network_data import Prefix, BorderRouter, LowpanId
 
@@ -139,27 +137,17 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        # Only check the network_data in the child id response,
-        # pass a network_data check function to check the detail
-        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
-            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=2, prefix_check_func=check_prefix))
+        check_child_id_response_full_data(msg)
 
         # Step 6 - DUT sends a MLE Child ID Response to SED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        # Only check the network_data in the child id response,
-        # pass a network_data check function to check the detail
-        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
-            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=1, \
-                prefix_check_func=functools.partial(check_prefix_and_border_router_16, border_router_16 = 0xFFFE)))
+        check_child_id_response_stable_data(msg)
         # For Step 10
         msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
 
         # Step 8 - DUT sends a MLE Child ID Response to MED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        # Only check the network_data in the child id response,
-        # pass a network_data check function to check the detail
-        check_child_id_response(msg, network_data=CheckType.CONTAIN, \
-            network_data_detail_check_func=functools.partial(check_network_data_tlv, min_prefix_count=2, prefix_check_func=check_prefix))
+        check_child_id_response_full_data(msg)
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
