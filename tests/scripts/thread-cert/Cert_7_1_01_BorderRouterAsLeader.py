@@ -35,12 +35,12 @@ import config
 import mle
 import node
 
-from command import check_child_id_response_full_data
-from command import check_child_id_response_stable_data
+from command import check_child_id_response
 from command import check_child_update_response
 from command import check_data_response
 from command import check_message_address_registration_addr_set_equals
 from command import CheckType
+from command import NetworkDataCheckType
 from network_data import Prefix, BorderRouter, LowpanId
 
 LEADER = 1
@@ -132,22 +132,22 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 2 - DUT creates network data
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        check_data_response(msg, network_data_opt=CheckType.CONTAIN,
-            prefixes=[ b'2001000200000001', b'2001000200000002' ])
+        check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
+            [{'prefix':b'2001000200000001'}, {'prefix':b'2001000200000002'}]))
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response_full_data(msg)
+        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CNT, 2))
 
         # Step 6 - DUT sends a MLE Child ID Response to SED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response_stable_data(msg)
+        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT, [{'br16':0xFFFE}]))
         # For Step 10
         msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
 
         # Step 8 - DUT sends a MLE Child ID Response to MED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response_full_data(msg)
+        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CNT, 2))
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)

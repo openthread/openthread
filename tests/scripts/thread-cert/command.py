@@ -44,6 +44,10 @@ class CheckType(IntEnum):
     NOT_CONTAIN = 1
     OPTIONAL = 2
 
+class NetworkDataCheckType:
+    PREFIX_CNT = 1
+    PREFIX_CONTENT = 2
+
 def check_address_query(command_msg, source_node, destination_address):
     """Verify source_node sent a properly formatted Address Query Request message to the destination_address.
     """
@@ -305,10 +309,45 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
     check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
+def find_prefix_tlv(tlvs, cond_map):
+    """Find a prefix tlv in tlvs which matchs some conditions specified by cond_map
+    """
+    for tlv in tlvs:
+        if 'prefix' in cond_map:
+            if binascii.hexlify(tlv.prefix) != cond_map['prefix']:
+                continue
+        if 'br16' in cond_map:
+            border_router_tlv = get_sub_tlv(tlv.sub_tlvs, network_data.BorderRouter)
+            if border_router_tlv.border_router_16 != cond_map['br16']:
+                continue
+        return tlv
+    return None
+
+def check_network_data(data, check_detail):
+    check_type = check_detail[0]
+    prefixes = [tlv for tlv in data.tlvs if isinstance(tlv, network_data.Prefix)]
+    if check_type == NetworkDataCheckType.PREFIX_CNT:
+        # check_detail[1] should be a integer number representing the minimum cnt of prefixes should be
+        mn_cnt = check_detail[1]
+        assert len(prefixes) >= mn_cnt, 'Network data should contain at least {} prefixes'.format(mn_cnt)
+        for prefix in prefixes:
+            check_prefix(prefix)
+    elif check_type == NetworkDataCheckType.PREFIX_CONTENT:
+        # check_detail[1] should be a list of dictionary(like [{'prefix'='...', 'rloc16'='...'}])
+        # each entry of the map represents one thing to check of the prefix tlv
+        assert len(prefixes) >= len(check_detail[1]), 'Network data seems to have less prefixes than expected'
+        # basic check of prefixes
+        for prefix in prefixes:
+            check_prefix(prefix)
+        for cond_map in check_detail[1]:
+            tlv = find_prefix_tlv(prefixes, cond_map)
+            assert tlv is not None, 'Some prefix is not found:{}'.format(cond_map)
+
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
     pending_timestamp = CheckType.OPTIONAL, active_operational_dataset = CheckType.OPTIONAL, \
-    pending_operational_dataset = CheckType.OPTIONAL):
+    pending_operational_dataset = CheckType.OPTIONAL,
+    network_data_check = None):
     """Verify a properly formatted Child Id Response command message.
     """
     command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
@@ -323,22 +362,15 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
 
-def check_child_id_response_stable_data(msg):
-    """Verify a properly formatted Child Id Response to request of stable network data
-    """
-    check_child_id_response(msg)
-    network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
-    prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
-    assert len(prefixes) == 1, 'Network data should only contain one prefix tlv here.'
-    check_prefix_and_border_router_16(prefixes[0], 0xFFFE)
+    if network_data_check != None:
+        network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
+        check_network_data(network_data_tlv, network_data_check)
 
-def check_child_id_response_full_data(msg):
-    check_child_id_response(msg)
-    network_data_tlv = msg.assertMleMessageContainsTlv(mle.NetworkData)
-    prefixes = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
-    assert len(prefixes) >= 2, 'Network data should have at least two prefixes here.'
-    for prefix in prefixes:
-        check_prefix(prefix)
+def check_prefix(prefix):
+    """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV
+    """
+    assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter), 'Prefix doesn\'t contain a border router sub-TLV!'
+    assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId), 'Prefix doesn\'t contain a LowpanId sub-TLV!'
 
 def check_child_update_request_by_child(command_msg):
     command_msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -375,8 +407,9 @@ def check_secure_mle_key_id_mode(command_msg, key_id_mode):
     assert isinstance(command_msg.mle, mle.MleMessageSecured)
     assert command_msg.mle.aux_sec_hdr.key_id_mode == key_id_mode
 
-def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL, prefixes=[],
-    active_timestamp=CheckType.OPTIONAL):
+def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL,
+    active_timestamp=CheckType.OPTIONAL,
+    network_data_check=None):
     """Verify a properly formatted Data Response command message.
     """
     check_secure_mle_key_id_mode(command_msg, 0x02)
@@ -386,16 +419,9 @@ def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL, prefix
     check_mle_optional_tlv(command_msg, network_data_opt, mle.NetworkData)
     check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
 
-    if network_data_opt == CheckType.CONTAIN and len(prefixes) > 0:
-        network_data_tlv = command_msg.get_mle_message_tlv(mle.NetworkData)
-        prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
-        assert len(prefix_tlvs) >= len(prefixes)
-        idx = 0
-        for prefix in prefix_tlvs:
-            assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter)
-            assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId)
-            assert binascii.hexlify(prefix.prefix) == prefixes[idx]
-            idx = idx + 1
+    if network_data_check != None:
+        network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
+        check_network_data(network_data_tlv, network_data_check)
 
 def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OPTIONAL,
     network_data=CheckType.OPTIONAL, challenge=CheckType.OPTIONAL,
@@ -447,22 +473,7 @@ def get_sub_tlv(tlvs, tlv_type):
         if isinstance(sub_tlv, tlv_type):
             return sub_tlv
 
-def check_prefix(prefix):
-    """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV
-    """
-    assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter), 'Prefix doesn\'t contain a border router sub-TLV!'
-    assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId), 'Prefix doesn\'t contain a LowpanId sub-TLV!'
-
-def check_prefix_and_border_router_16(prefix, border_router_16):
-    """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV.
-       Besides, check the p_border_router_16 value contained in border router sub-TLV.
-    """
-    check_prefix(prefix)
-    border_router_tlv = get_sub_tlv(prefix.sub_tlvs, network_data.BorderRouter)
-    assert border_router_tlv.border_router_16 == border_router_16, 'border_router_16 value is not correct, expect:{}'.format(border_router_16)
-
 def check_address_registration_tlv(addr_reg_tlv, address_set):
     """Verify all addresses contained in address_set are contained in add_reg_tlv
     """
     assert all(addr in addr_reg_tlv.addresses for addr in address_set), 'Some addresses are not included in AddressRegistration TLV'
-
