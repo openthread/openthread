@@ -37,7 +37,6 @@ import common
 import config
 import mesh_cop
 import mle
-import thread_discovery
 
 from collections import Counter
 from enum import IntEnum
@@ -504,7 +503,7 @@ def check_discovery_request(command_msg):
     """
     assert not isinstance(command_msg.mle, mle.MleMessageSecured)
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
-    request = assert_contains_tlv(tlvs, CheckType.CONTAIN, thread_discovery.DiscoveryRequest)
+    request = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryRequest)
     assert request.version == 2
 
 def check_discovery_response(command_msg, request_src_addr, steering_data=CheckType.OPTIONAL):
@@ -515,12 +514,12 @@ def check_discovery_response(command_msg, request_src_addr, steering_data=CheckT
     assert command_msg.mac_header.dest_address == request_src_addr
 
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
-    response = assert_contains_tlv(tlvs, CheckType.CONTAIN, thread_discovery.DiscoveryResponse)
+    response = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryResponse)
     assert response.version == 2
-    assert_contains_tlv(tlvs, CheckType.CONTAIN, thread_discovery.ExtendedPanid)
-    assert_contains_tlv(tlvs, CheckType.CONTAIN, thread_discovery.NetworkName)
+    assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.ExtendedPanid)
+    assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.NetworkName)
     assert_contains_tlv(tlvs, steering_data, network_data.SteeringData)
-    assert_contains_tlv(tlvs, steering_data, thread_discovery.JoinerUdpPort)
+    assert_contains_tlv(tlvs, steering_data, mesh_cop.JoinerUdpPort)
 
     check_type = CheckType.CONTAIN if response.native_flag else CheckType.OPTIONAL
     assert_contains_tlv(tlvs, check_type, network_data.CommissionerUdpPort)
@@ -529,7 +528,7 @@ def get_udp_port_in_discovery_response(command_msg):
     """Get the udp port specified in a DISCOVERY RESPONSE message
     """
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
-    udp_port_tlv = assert_contains_tlv(tlvs, CheckType.CONTAIN, thread_discovery.JoinerUdpPort)
+    udp_port_tlv = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.JoinerUdpPort)
     return udp_port_tlv.udp_port
 
 def check_joiner_commissioning_messages(commissioning_messages):

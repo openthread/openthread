@@ -33,6 +33,7 @@ import coap
 import dtls
 import ipv6
 import lowpan
+import mesh_cop
 import message
 import mle
 import net_crypto
@@ -40,7 +41,6 @@ import network_data
 import network_layer
 import simulator
 import sniffer
-import thread_discovery
 
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
@@ -157,18 +157,18 @@ def create_default_mle_tlv_thread_discovery_factory():
         thread_discovery_tvls_factory=create_default_thread_discovery_tlvs_factory())
 
 def create_default_thread_discovery_tlvs_factory():
-    return thread_discovery.ThreadDiscoveryTlvsFactory(
+    return mesh_cop.ThreadDiscoveryTlvsFactory(
         sub_tlvs_factories=create_default_thread_discovery_sub_tlvs_factories())
 
 def create_default_thread_discovery_sub_tlvs_factories():
     return {
-        thread_discovery.TlvType.REQUEST: thread_discovery.DiscoveryRequestFactory(),
-        thread_discovery.TlvType.RESPONSE: thread_discovery.DiscoveryResponseFactory(),
-        thread_discovery.TlvType.EXTENDED_PANID: thread_discovery.ExtendedPanidFactory(),
-        thread_discovery.TlvType.NETWORK_NAME: thread_discovery.NetworkNameFactory(),
-        thread_discovery.TlvType.STEERING_DATA: network_data.SteeringDataFactory(),
-        thread_discovery.TlvType.JOINER_UDP_PORT: thread_discovery.JoinerUdpPortFactory(),
-        thread_discovery.TlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory()
+        mesh_cop.TlvType.DISCOVERY_REQUEST: mesh_cop.DiscoveryRequestFactory(),
+        mesh_cop.TlvType.DISCOVERY_RESPONSE: mesh_cop.DiscoveryResponseFactory(),
+        mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
+        mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
+        mesh_cop.TlvType.STEERING_DATA: network_data.SteeringDataFactory(),
+        mesh_cop.TlvType.JOINER_UDP_PORT: mesh_cop.JoinerUdpPortFactory(),
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory()
     }
 
 def create_default_mle_tlvs_factories():
