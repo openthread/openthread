@@ -153,7 +153,6 @@ EXTRA_DIST                                                         = \
     test_service.py                                                  \
     test_network_data.py                                             \
     test_network_layer.py                                            \
-    thread_discovery.py                                              \
     $(NULL)
 
 check_PROGRAMS                                                     = \

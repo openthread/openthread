@@ -41,7 +41,6 @@ import network_data
 import network_layer
 import simulator
 import sniffer
-import thread_discovery
 
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
