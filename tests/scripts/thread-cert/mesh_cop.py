@@ -27,10 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+from enum import IntEnum
 import io
 import struct
 
-from enum import IntEnum
 from network_data import SubTlvsFactory
 
 class TlvType(IntEnum):
