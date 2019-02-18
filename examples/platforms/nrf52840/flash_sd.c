@@ -78,7 +78,7 @@ void nrf5SdSocFlashProcess(uint32_t aEvtId)
     }
 }
 
-static otError sdFlashSingleWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+static otError sdFlashSingleWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
     uint32_t retval;
     uint32_t startTime = otPlatAlarmMilliGetNow();
@@ -149,7 +149,7 @@ bool nrf5FlashIsBusy(void)
     return sFlashStatus != FLASH_STATUS_IDLE;
 }
 
-uint32_t nrf5FlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t result = 0;
