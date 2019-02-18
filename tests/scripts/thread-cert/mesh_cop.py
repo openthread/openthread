@@ -190,7 +190,6 @@ class VendorStackVersion(object):
         return "VendorStackVersion(vendor_stack_version={}, build={}, rev={}, minor={}, major={})".format(self.stack_vendor_oui, self.build, self.rev, self.minor, self.major)
 
 
-
 class VendorStackVersionFactory:
 
     def parse(self, data):
@@ -201,7 +200,6 @@ class VendorStackVersionFactory:
         minor = rest[3] & 0xf0
         major = rest[3] & 0xf
         return VendorStackVersion(stack_vendor_oui, build, rev, minor, major)
-
 
 
 class ProvisioningUrl(object):
@@ -228,10 +226,6 @@ class VendorData(object):
 
     def __init__(self, data):
         self._vendor_data = data
-<<<<<<< HEAD
-=======
-
->>>>>>> [tests] merge thread_discovery.py into mesh_cop.py
     @property
     def vendor_data(self):
         return self._vendor_data
