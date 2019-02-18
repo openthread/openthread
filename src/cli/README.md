@@ -1399,6 +1399,10 @@ Done
 
 Send an ICMPv6 Echo Request.
 
+* size: The number of data bytes to be sent.
+* count: The number of ICMPv6 Echo Requests to be sent.
+* interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
+
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
