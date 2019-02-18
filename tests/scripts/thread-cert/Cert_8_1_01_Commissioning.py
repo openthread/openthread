@@ -91,7 +91,7 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
         # 4 - Commissioner
         msg = commissioner_messages.next_mle_message(mle.CommandType.DISCOVERY_RESPONSE)
         command.check_discovery_response(msg, request_src_addr, steering_data=CheckType.CONTAIN)
-        udp_port_set_by_commissioner = command.get_udp_port_in_discovery_response(msg)
+        udp_port_set_by_commissioner = command.get_joiner_udp_port_in_discovery_response(msg)
 
         # 5.2 - Joiner_1
         msg = joiner_messages.next_dtls_message(dtls.ContentType.HANDSHAKE, dtls.HandshakeType.CLIENT_HELLO)
