@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -35,9 +35,17 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
+
 #include "app_error.h"
+
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "app_util_platform.h"
+
+#if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
+#include "nrf_sdm.h"
+#endif
 
 /*lint -save -e14 */
 /**
@@ -46,13 +54,56 @@
  */
 __WEAK void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
-    (void)id;
-    (void)pc;
-    (void)info;
+    __disable_irq();
+    NRF_LOG_FINAL_FLUSH();
+
 #ifndef DEBUG
+    NRF_LOG_ERROR("Fatal error");
+#else
+    switch (id)
+    {
+#if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
+        case NRF_FAULT_ID_SD_ASSERT:
+            NRF_LOG_ERROR("SOFTDEVICE: ASSERTION FAILED");
+            break;
+        case NRF_FAULT_ID_APP_MEMACC:
+            NRF_LOG_ERROR("SOFTDEVICE: INVALID MEMORY ACCESS");
+            break;
+#endif
+        case NRF_FAULT_ID_SDK_ASSERT:
+        {
+            assert_info_t * p_info = (assert_info_t *)info;
+            NRF_LOG_ERROR("ASSERTION FAILED at %s:%u",
+                          p_info->p_file_name,
+                          p_info->line_num);
+            break;
+        }
+        case NRF_FAULT_ID_SDK_ERROR:
+        {
+            error_info_t * p_info = (error_info_t *)info;
+            NRF_LOG_ERROR("ERROR %u [%s] at %s:%u\r\nPC at: 0x%08x",
+                          p_info->err_code,
+                          nrf_strerror_get(p_info->err_code),
+                          p_info->p_file_name,
+                          p_info->line_num,
+                          pc);
+             NRF_LOG_ERROR("End of error report");
+            break;
+        }
+        default:
+            NRF_LOG_ERROR("UNKNOWN FAULT at 0x%08X", pc);
+            break;
+    }
+#endif
+
+    NRF_BREAKPOINT_COND;
+    // On assert, the system can only recover with a reset.
+
+#ifndef DEBUG
+    NRF_LOG_WARNING("System reset");
     NVIC_SystemReset();
 #else
-    assert(false);
+    app_error_save_and_stop(id, pc, info);
 #endif // DEBUG
 }
 /*lint -restore */
