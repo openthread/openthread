@@ -92,11 +92,6 @@ ifeq ($(PLATFORM_NETIF),1)
 configure_OPTIONS              += --enable-platform-netif
 endif
 
-ifeq ($(CERT_LOG),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-configure_OPTIONS              += --enable-cert-log
-endif
-
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
 endif
