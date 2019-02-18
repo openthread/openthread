@@ -1026,8 +1026,8 @@ class ThreadDiscovery(object):
 
 class ThreadDiscoveryFactory:
 
-    def __init__(self, thread_discovery_tvls_factory):
-        self._tlvs_factory = thread_discovery_tvls_factory
+    def __init__(self, thread_discovery_tlvs_factory):
+        self._tlvs_factory = thread_discovery_tlvs_factory
 
     def parse(self, data, message_info):
         tlvs = self._tlvs_factory.parse(data, message_info)
