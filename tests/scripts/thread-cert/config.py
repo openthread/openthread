@@ -77,6 +77,8 @@ VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', 0))
 
 LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
+PROTOCOL_VERSION = 2
+
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
         network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(

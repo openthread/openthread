@@ -504,7 +504,7 @@ def check_discovery_request(command_msg):
     assert not isinstance(command_msg.mle, mle.MleMessageSecured)
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
     request = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryRequest)
-    assert request.version == 2
+    assert request.version == config.PROTOCOL_VERSION
 
 def check_discovery_response(command_msg, request_src_addr, steering_data=CheckType.OPTIONAL):
     """Verify a properly formatted Thread Discovery Response command message.
@@ -515,7 +515,7 @@ def check_discovery_response(command_msg, request_src_addr, steering_data=CheckT
 
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
     response = assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.DiscoveryResponse)
-    assert response.version == 2
+    assert response.version == config.PROTOCOL_VERSION
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.ExtendedPanid)
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.NetworkName)
     assert_contains_tlv(tlvs, steering_data, network_data.SteeringData)
