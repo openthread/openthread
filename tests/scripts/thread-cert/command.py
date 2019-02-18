@@ -524,7 +524,7 @@ def check_discovery_response(command_msg, request_src_addr, steering_data=CheckT
     check_type = CheckType.CONTAIN if response.native_flag else CheckType.OPTIONAL
     assert_contains_tlv(tlvs, check_type, network_data.CommissionerUdpPort)
 
-def get_udp_port_in_discovery_response(command_msg):
+def get_joiner_udp_port_in_discovery_response(command_msg):
     """Get the udp port specified in a DISCOVERY RESPONSE message
     """
     tlvs = command_msg.assertMleMessageContainsTlv(mle.ThreadDiscovery).tlvs
