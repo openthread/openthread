@@ -123,6 +123,12 @@ extern "C" {
 #define FUNCTION_TSCH_ADD                      0x0600UL
 #define FUNCTION_TSCH_FIRED                    0x0601UL
 
+#define FUNCTION_TCOOR_START                   0x0700UL
+#define FUNCTION_TCOOR_STOP                    0x0701UL
+#define FUNCTION_TCOOR_TIMESTAMP_PREPARE       0x0702UL
+#define FUNCTION_TCOOR_TIMESTAMP_GET           0x0703UL
+#define FUNCTION_TCOOR_SYNCHRONIZED            0x0704UL
+
 #define PIN_DBG_RADIO_EVT_END                  11
 #define PIN_DBG_RADIO_EVT_DISABLED             12
 #define PIN_DBG_RADIO_EVT_READY                13

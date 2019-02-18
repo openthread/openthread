@@ -67,6 +67,7 @@
 #include "mac_features/nrf_802154_ack_timeout.h"
 #include "mac_features/nrf_802154_csma_ca.h"
 #include "mac_features/nrf_802154_delayed_trx.h"
+#include "mac_features/ack_generator/nrf_802154_ack_data.h"
 
 #if ENABLE_FEM
 #include "fem/nrf_fem_control_api.h"
@@ -539,6 +540,15 @@ void nrf_802154_pan_coord_set(bool enabled)
     nrf_802154_pib_pan_coord_set(enabled);
 }
 
+bool nrf_802154_ack_data_set(const uint8_t * p_addr,
+                             bool            extended,
+                             const void    * p_data,
+                             uint16_t        length,
+                             uint8_t         data_type)
+{
+    return nrf_802154_ack_data_for_addr_set(p_addr, extended, p_data, length, data_type);
+}
+
 void nrf_802154_auto_pending_bit_set(bool enabled)
 {
     nrf_802154_ack_pending_bit_set(enabled);
@@ -608,9 +618,9 @@ void nrf_802154_ack_timeout_set(uint32_t time)
 
 #endif // NRF_802154_ACK_TIMEOUT_ENABLED
 
-__WEAK void nrf_802154_tx_ack_started(void)
+__WEAK void nrf_802154_tx_ack_started(const uint8_t * p_data)
 {
-    // Intentionally empty
+    (void)p_data;
 }
 
 #if NRF_802154_USE_RAW_API
