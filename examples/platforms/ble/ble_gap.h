@@ -26,22 +26,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-//---------------------------GAP---------------------------//
+/**
+ * @file
+ * @brief
+ *   This file defines the Cordio BLE stack GAP interfaces.
+ */
 
-otError otPlatBleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddress);
-otError otPlatBleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress);
-otError otPlatBleGapServiceSet(otInstance *aInstance, const char *aDeviceName, uint16_t aAppearance);
-otError otPlatBleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t aAdvDataLength);
-otError otPlatBleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanResponse, uint8_t aScanResponseLength);
-otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType);
-otError otPlatBleGapAdvStop(otInstance *aInstance);
-otError otPlatBleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow);
-otError otPlatBleGapScanStop(otInstance *aInstance);
+#ifndef BLE_GAP_H
+#define BLE_GAP_H
 
-otError otPlatBleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams *aConnParams)
-{
+#include "wsf_types.h"
 
-}
+#include "wsf_os.h"
 
-otError otPlatBleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint16_t aInterval, uint16_t aWindow);
-otError otPlatBleGapDisconnect(otInstance *aInstance);
+#include <stdint.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
+#include <openthread/platform/ble.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress);
+otError bleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddress);
+otError bleGapServiceSet(otInstance *aInstance, const char *aDeviceName, uint16_t aAppearance);
+otError bleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t aAdvDataLength);
+otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType);
+otError bleGapAdvStop(otInstance *aInstance);
+otError bleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanResponse, uint8_t aScanResponseLength);
+otError bleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow);
+otError bleGapScanStop(otInstance *aInstance);
+otError bleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams *aConnParams);
+otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint16_t aInterval, uint16_t aWindow);
+otError bleGapDisconnect(otInstance *aInstance);
+
+void bleGapEventHandler(const wsfMsgHdr_t *aMsg);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif // __cplusplus
+#endif // BLE_GAP_H

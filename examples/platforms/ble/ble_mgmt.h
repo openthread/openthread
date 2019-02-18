@@ -28,64 +28,29 @@
 
 /**
  * @file
- *   This file includes definitions for cli BLE.
+ * @brief
+ *   This file defines the Cordio BLE stack management interfaces.
  */
 
-#ifndef CLI_BLE_HPP_
-#define CLI_BLE_HPP_
+#ifndef BLE_MGMT_H
+#define BLE_MGMT_H
 
 #include <stdint.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 
-#include "openthread-core-config.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace ot {
-namespace Cli {
+otError     bleMgmtEnable(otInstance *aInstance);
+otError     bleMgmtDisable(otInstance *aInstance);
+bool        bleMgmtIsEnabled(otInstance *aInstance);
+void        bleMgmtTaskletsProcess(otInstance *aInstance);
+otInstance *bleMgmtGetThreadInstance(void);
 
-class Interpreter;
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-class Ble
-{
-    friend class Interpreter;
-
-public:
-    /**
-     * Constructor
-     *
-     * @param[in]  aInterpreter  The CLI interpreter.
-     *
-     */
-    Ble(Interpreter &aInterpreter);
-
-    /**
-     * This method interprets a list of CLI arguments.
-     *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     *
-     */
-    otError Process(int argc, char *argv[]);
-
-private:
-    struct Command
-    {
-        const char *mName;
-        otError (Ble::*mCommand)(int argc, char *argv[]);
-    };
-
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessAdvertise(int argc, char *argv[]);
-    otError ProcessAddr(int argc, char *argv[]);
-    otError ProcessDisable(int argc, char *argv[]);
-    otError ProcessEnable(int argc, char *argv[]);
-    otError ProcessScan(int argc, char *argv[]);
-
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
-
-    static const Command sCommands[];
-
-    Interpreter &mInterpreter;
-};
-} // namespace Cli
-} // namespace ot
-
-#endif // CLI_BLE_HPP_
+#endif // BLE_MGMT_H

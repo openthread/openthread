@@ -34,24 +34,28 @@ MBEDBLE_SRCDIR                       = $(top_srcdir)/third_party/mbedble/cordio/
 
 libopenthread_platform_ble_a_CPPFLAGS                             = \
     -I$(top_srcdir)/include                                         \
-    -I$(top_srcdir)/examples/platforms                    \
-    -I$(top_srcdir)/src/core                              \
+    -I$(top_srcdir)/examples/platforms                              \
+    -I$(top_srcdir)/src/core                                        \
     -I$(MBEDBLE_SRCDIR)/cordio_stack/ble-host/include               \
-    -I$(MBEDBLE_SRCDIR)/cordio_stack/platform/common/include        \
-    -I$(MBEDBLE_SRCDIR)/cordio_stack/wsf/common/include/util        \
-    -I$(MBEDBLE_SRCDIR)/cordio_stack/wsf/common/include             \
-    -I$(MBEDBLE_SRCDIR)/mbed_os_adaptation                          \
     -I$(MBEDBLE_SRCDIR)/cordio_stack/ble-host/sources/hci/dual_chip \
     -I$(MBEDBLE_SRCDIR)/cordio_stack/ble-host/sources/stack/cfg     \
+    -I$(MBEDBLE_SRCDIR)/cordio_stack/platform/common/include        \
+    -I$(MBEDBLE_SRCDIR)/cordio_stack/wsf/common/include             \
+    -I$(MBEDBLE_SRCDIR)/cordio_stack/wsf/common/include/util        \
+    -I$(MBEDBLE_SRCDIR)/mbed_os_adaptation                          \
     $(NULL)
 
 libopenthread_platform_ble_a_SOURCES  = \
+    ble_api.c                           \
+    ble_gap.c                           \
     ble_hci_driver.c                    \
-    ble_host.c                          \
+    ble_mgmt.c                          \
     $(NULL)
 
 noinst_HEADERS                        = \
+    ble_gap.h                           \
     ble_hci_driver.h                    \
+    ble_mgmt.h                          \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

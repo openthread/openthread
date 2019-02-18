@@ -26,6 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file implements the BLE HCI interfaces for Cordio BLE stack.
+ *
+ */
+
 #include "wsf_types.h"
 
 #include "hci_api.h"
@@ -45,8 +51,16 @@
 
 #if OPENTHREAD_ENABLE_TOBLE
 
-#define BYTES_TO_UINT16(n, p) {n = (uint16_t)((uint16_t)(p)[0] + ((uint16_t)(p)[1] << 8)); p += 2;}
-#define BYTES_TO_UINT8(n, p)  {n = (uint8_t)(*(p)++);}
+#define BYTES_TO_UINT16(n, p)                                       \
+    {                                                               \
+        n = (uint16_t)((uint16_t)(p)[0] + ((uint16_t)(p)[1] << 8)); \
+        p += 2;                                                     \
+    }
+
+#define BYTES_TO_UINT8(n, p)   \
+    {                          \
+        n = (uint8_t)(*(p)++); \
+    }
 
 enum
 {
@@ -61,20 +75,19 @@ enum
     kStateRxData,
 };
 
-
 static uint8_t  sTxBuffer[kTxBufferSize];
 static uint16_t sTxHead     = 0;
 static uint16_t sTxLength   = 0;
 static uint16_t sSendLength = 0;
 
-static uint16_t utilsBleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
-static void     utilsBleHciHandleSendDone(void);
-static void     utilsBleHciHandleResetSequence(uint8_t *pMsg);
-static void     utilsBleHciResetSequenceDone();
+static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
+static void     bleHciHandleSendDone(void);
+static void     bleHciHandleResetSequence(uint8_t *pMsg);
+static void     bleHciResetSequenceDone();
 
 uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
 {
-    return utilsBleHciOutput(type, pData, len);
+    return bleHciOutput(type, pData, len);
 }
 
 void hci_mbed_os_start_reset_sequence(void)
@@ -84,7 +97,7 @@ void hci_mbed_os_start_reset_sequence(void)
 
 void hci_mbed_os_handle_reset_sequence(uint8_t *msg)
 {
-    utilsBleHciHandleResetSequence(msg);
+    bleHciHandleResetSequence(msg);
 }
 
 // ----------------------------------
@@ -95,21 +108,21 @@ void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 
 void otPlatBleHciSendDone(void)
 {
-    utilsBleHciHandleSendDone();
+    bleHciHandleSendDone();
 }
 
 //-----------------------------------
-void utilsBleHciInit(void)
+void bleHciEnable(void)
 {
     otPlatBleHciEnable();
 }
 
-void utilsBleHciDeInit(void)
+void bleHciDisable(void)
 {
     otPlatBleHciDisable();
 }
 
-static void utilsBleHciSend(void)
+static void bleHciSend(void)
 {
     otEXPECT(sSendLength == 0);
 
@@ -131,7 +144,7 @@ exit:
     return;
 }
 
-static uint16_t utilsBleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength)
+static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength)
 {
     uint16_t tail;
 
@@ -144,7 +157,7 @@ static uint16_t utilsBleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t a
         sTxLength++;
     }
 
-    utilsBleHciSend();
+    bleHciSend();
 
 exit:
     if (aBufLength == 0)
@@ -155,16 +168,16 @@ exit:
     return aBufLength;
 }
 
-static void utilsBleHciHandleSendDone(void)
+static void bleHciHandleSendDone(void)
 {
     sTxHead = (sTxHead + sSendLength) % sizeof(sTxBuffer);
     sTxLength -= sSendLength;
     sSendLength = 0;
 
-    utilsBleHciSend();
+    bleHciSend();
 }
 
-static void utilsBleHciCoreReadMaxDataLen(void)
+static void bleHciCoreReadMaxDataLen(void)
 {
     // if LE Data Packet Length Extensions is supported by Controller and included
     if ((hciCoreCb.leSupFeat & HCI_LE_SUP_FEAT_DATA_LEN_EXT) && (hciLeSupFeatCfg & HCI_LE_SUP_FEAT_DATA_LEN_EXT))
@@ -177,7 +190,7 @@ static void utilsBleHciCoreReadMaxDataLen(void)
     }
 }
 
-static void utilsBleHciCoreReadResolvingListSize(void)
+static void bleHciCoreReadResolvingListSize(void)
 {
     // if LL Privacy is supported by Controller and included
     if ((hciCoreCb.leSupFeat & HCI_LE_SUP_FEAT_PRIVACY) && (hciLeSupFeatCfg & HCI_LE_SUP_FEAT_PRIVACY))
@@ -187,32 +200,26 @@ static void utilsBleHciCoreReadResolvingListSize(void)
     else
     {
         hciCoreCb.resListSize = 0;
-        utilsBleHciCoreReadMaxDataLen();
+        bleHciCoreReadMaxDataLen();
     }
 }
 
-static bool utilsBleHciGetRandomStaticAddress(uint8_t *aEui48)
-{
-    OT_UNUSED_VARIABLE(aEui48);
-    return false;
-}
-
-static void utilsBleHciResetSequenceDone()
+static void bleHciResetSequenceDone()
 {
     hci_mbed_os_signal_reset_sequence_done();
 }
 
-static void utilsBleHciHandleResetSequence(uint8_t *pMsg)
+static void bleHciHandleResetSequence(uint8_t *pMsg)
 {
     uint16_t       opcode;
     static uint8_t randCnt;
 
     if (*pMsg == HCI_CMD_CMPL_EVT)
     {
-        pMsg += HCI_EVT_HDR_LEN;         // skip HCI event header
-        pMsg++;                          // skip Num_HCI_Command_Packets
+        pMsg += HCI_EVT_HDR_LEN;       // skip HCI event header
+        pMsg++;                        // skip Num_HCI_Command_Packets
         BYTES_TO_UINT16(opcode, pMsg); // skip Command_Opcode
-        pMsg++;                          // skip Status
+        pMsg++;                        // skip Status
 
         switch (opcode)
         {
@@ -235,18 +242,9 @@ static void utilsBleHciHandleResetSequence(uint8_t *pMsg)
 
         case HCI_OPCODE_READ_BD_ADDR:
         {
-            uint8_t eui48[6];
             BdaCpy(hciCoreCb.bdAddr, pMsg);
 
-            if (utilsBleHciGetRandomStaticAddress(eui48))
-            {
-                // note: will send the HCI command to send the random address
-                // getGap().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, eui48);
-            }
-            else
-            {
-                HciLeReadBufSizeCmd();
-            }
+            HciLeReadBufSizeCmd();
             break;
         }
 
@@ -279,13 +277,13 @@ static void utilsBleHciHandleResetSequence(uint8_t *pMsg)
         case HCI_OPCODE_LE_READ_LOCAL_SUP_FEAT:
             BYTES_TO_UINT16(hciCoreCb.leSupFeat, pMsg);
 
-            utilsBleHciCoreReadResolvingListSize();
+            bleHciCoreReadResolvingListSize();
             break;
 
         case HCI_OPCODE_LE_READ_RES_LIST_SIZE:
             BYTES_TO_UINT8(hciCoreCb.resListSize, pMsg);
 
-            utilsBleHciCoreReadMaxDataLen();
+            bleHciCoreReadMaxDataLen();
             break;
 
         case HCI_OPCODE_LE_READ_MAX_DATA_LEN:
@@ -337,7 +335,7 @@ static void utilsBleHciHandleResetSequence(uint8_t *pMsg)
             else
             {
                 // last command in sequence; set resetting state and call callback
-                utilsBleHciResetSequenceDone();
+                bleHciResetSequenceDone();
             }
             break;
 

@@ -26,6 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file implements the BLE management interfaces for Cordio BLE stack.
+ *
+ */
+
 #include "wsf_types.h"
 
 #include "att_api.h"
@@ -43,14 +49,16 @@
 #include "wsf_os.h"
 #include "wsf_timer.h"
 
+#include "ble/ble_gap.h"
 #include "ble/ble_hci_driver.h"
+#include "ble/ble_mgmt.h"
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
 #include <assert.h>
 #include <openthread/error.h>
 #include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/ble-host.h>
+#include <openthread/platform/ble.h>
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_ENABLE_TOBLE
@@ -73,9 +81,10 @@ static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 
 __attribute__((aligned(4))) static uint8_t sBuffer[kBleCordioBufferSize];
 
 static uint32_t sLastUpdateMs;
-static uint8_t  sState = kStateIdle;
+static uint8_t  sState    = kStateIdle;
+otInstance *    sInstance = NULL;
 
-static void utilsBleHostSetup(void);
+static void bleSetup(void);
 
 /*
  * This function will signal to the user code by calling signalEventsToProcess.
@@ -97,47 +106,66 @@ void wsf_mbed_os_critical_section_exit(void)
 }
 
 //-------------------------------
-otError otBleHostInit(void)
+otError bleMgmtEnable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
+    otEXPECT_ACTION((sInstance == NULL) && (aInstance != NULL), error = OT_ERROR_FAILED);
     otEXPECT_ACTION(sState == kStateIdle, error = OT_ERROR_FAILED);
 
-    utilsBleHostSetup();
-    utilsBleHciInit();
+    sInstance = aInstance;
+    sState    = kStateInitializing;
+
+    bleSetup();
+    bleHciEnable();
 
     DmDevReset();
-    sState = kStateInitializing;
 
 exit:
     return error;
 }
 
-otError otBleHostDeinit(void)
+otError bleMgmtDisable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sState == kStateInitialized, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION((sInstance != NULL) && (aInstance = sInstance), error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(sState == kStateInitialized, error = OT_ERROR_FAILED);
 
-    sState = kStateIdle;
-
-    utilsBleHciDeInit();
+    sInstance = NULL;
+    sState    = kStateIdle;
 
     // gattServer().reset();
     // getGattClient().reset();
     // getGap().reset();
 
+    bleHciDisable();
+
 exit:
     return error;
 }
 
-void otBleHostTaskletsProcess(otInstance *aInstance)
+bool bleMgmtIsEnabled(otInstance *aInstance)
+{
+    bool ret = false;
+
+    otEXPECT_ACTION((sInstance == NULL) && (aInstance != NULL), ret = false);
+    ret = (sState == kStateInitialized) ? true : false;
+
+exit:
+    return ret;
+}
+
+otInstance *bleMgmtGetThreadInstance(void)
+{
+    return sInstance;
+}
+
+void bleMgmtTaskletsProcess(otInstance *aInstance)
 {
     uint32_t        now = otPlatAlarmMilliGetNow();
     uint32_t        delta;
     wsfTimerTicks_t ticks;
-
-    otEXPECT(sState == kStateInitialized);
 
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
@@ -151,14 +179,13 @@ void otBleHostTaskletsProcess(otInstance *aInstance)
     wsfOsDispatcher();
 
     OT_UNUSED_VARIABLE(aInstance);
-
-exit:
-    return;
 }
 
-void utilsBleHostInitDone(otError error)
+static void bleHostInitDone(otError error)
 {
     OT_UNUSED_VARIABLE(error);
+    otPlatBleEnabledDone(sInstance, error);
+
     // ble.gap().onDisconnection(disconnectionCallback);
     // ble.gap().onConnection(connectionCallback);
 
@@ -173,7 +200,7 @@ void utilsBleHostInitDone(otError error)
     // ble.gap().startScan(advertisementCallback);
 }
 
-static void BleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
+static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
 {
     otEXPECT(aMsg != NULL);
 
@@ -204,11 +231,12 @@ static void BleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
         // deviceInstance().initialization_status = INITIALIZED;
         // _init_callback.call(&context);
         sState = kStateInitialized;
-        utilsBleHostInitDone(OT_ERROR_NONE);
+        bleHostInitDone(OT_ERROR_NONE);
         break;
     }
     default:
         // ble::pal::vendor::cordio::Gap::gap_handler(msg);
+        bleGapEventHandler(aMsg);
         break;
     }
 
@@ -218,9 +246,9 @@ exit:
     return;
 }
 
-static void BleDeviceManagerHandler(dmEvt_t *aDmEvent)
+static void bleDeviceManagerHandler(dmEvt_t *aDmEvent)
 {
-    BleStackHandler(0, &aDmEvent->hdr);
+    bleStackHandler(0, &aDmEvent->hdr);
 }
 
 /*
@@ -228,7 +256,7 @@ static void BleDeviceManagerHandler(dmEvt_t *aDmEvent)
  * the CCC Table of the ATT Server when a remote peer requests to Open
  * or Close the connection.
  */
-static void BleConnectionHandler(dmEvt_t *aDmEvent)
+static void bleConnectionHandler(dmEvt_t *aDmEvent)
 {
     dmConnId_t connId = (dmConnId_t)aDmEvent->hdr.param;
 
@@ -249,7 +277,7 @@ static void BleConnectionHandler(dmEvt_t *aDmEvent)
     }
 }
 
-static uint8_t BleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit, uint16_t aHandle)
+static uint8_t bleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit, uint16_t aHandle)
 {
     OT_UNUSED_VARIABLE(aConnId);
     OT_UNUSED_VARIABLE(aPermit);
@@ -258,12 +286,12 @@ static uint8_t BleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit,
     return 0;
 }
 
-static void BleAttClientHandler(attEvt_t* aEvent)
+static void bleAttClientHandler(attEvt_t *aEvent)
 {
     OT_UNUSED_VARIABLE(aEvent);
 }
 
-static void utilsBleHostSetup(void)
+static void bleSetup(void)
 {
     uint32_t       bytesUsed;
     wsfHandlerId_t handlerId;
@@ -314,7 +342,7 @@ static void utilsBleHostSetup(void)
     AttsInit();
     AttsIndInit();
     AttsSignInit();
-    AttsAuthorRegister(BleGattServerAttsAuthHandler);
+    AttsAuthorRegister(bleGattServerAttsAuthHandler);
     AttcInit();
     AttcSignInit();
 
@@ -325,14 +353,21 @@ static void utilsBleHostSetup(void)
     SmpiInit();
     SmpiScInit();
 
-    WsfOsSetNextHandler(BleStackHandler);
+    WsfOsSetNextHandler(bleStackHandler);
 
     HciSetMaxRxAclLen(kBleCordioMaxRxAclLen);
 
-    DmRegister(BleDeviceManagerHandler);
-    DmConnRegister(DM_CLIENT_ID_APP, BleDeviceManagerHandler);
-    AttConnRegister(BleConnectionHandler);
-    AttRegister(BleAttClientHandler);
+    DmRegister(bleDeviceManagerHandler);
+    DmConnRegister(DM_CLIENT_ID_APP, bleDeviceManagerHandler);
+    AttConnRegister(bleConnectionHandler);
+    AttRegister(bleAttClientHandler);
+}
+
+// extern
+void otPlatBleEnabledDone(otInstance *aInstance, otError error)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    printf("BLE Stack Init Done: error = %s\r\n", error == OT_ERROR_NONE ? "SUCCESS" : "FAILED");
 }
 
 #endif // OPENTHREAD_ENABLE_TOBLE

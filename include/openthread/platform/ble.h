@@ -189,6 +189,11 @@ enum
     OT_BLE_ATT_MTU_MAX = 511,
 
     /**
+     * Length of 16-bit BLE UUID in bytes.
+     */
+    OT_BLE_16BIT_UUID_LENGTH = 2,
+
+    /**
      * Length of full BLE UUID in bytes.
      */
     OT_BLE_UUID_LENGTH = 16,
@@ -485,6 +490,14 @@ bool otPlatBleIsEnabled(otInstance *aInstance);
  * @param[in] aInstance  The OpenThread instance structure.
  */
 extern void otPlatBleOnEnabled(otInstance *aInstance);
+
+/**
+ * Run all queued BLE stack tasklets at the time this is called.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ */
+void otPlatBleTaskletsProcess(otInstance *aInstance);
 
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.

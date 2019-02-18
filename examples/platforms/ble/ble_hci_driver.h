@@ -29,24 +29,21 @@
 /**
  * @file
  * @brief
- *   This file defines the logging rtt interfaces and default constants used by logging_rtt.c.
+ *   This file defines the Cordio BLE stack HCI interfaces.
  */
 
-#ifndef UTILS_BLE_HCI_DRIVER_H
-#define UTILS_BLE_HCI_DRIVER_H
+#ifndef BLE_HCI_DRIVER_H
+#define BLE_HCI_DRIVER_H
 
 #include <stdint.h>
-
-//#include "openthread-core-config.h"
-#include <openthread/config.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void utilsBleHciInit(void);
+void bleHciEnable(void);
 
-void utilsBleHciDeInit(void);
+void bleHciDisable(void);
 
 extern void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
 
@@ -54,4 +51,4 @@ extern void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
 } // extern "C"
 #endif
 
-#endif // UTILS_BLE_HCI_DRIVER_H
+#endif // BLE_HCI_DRIVER_H

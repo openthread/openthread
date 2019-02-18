@@ -35,7 +35,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/logging.h>
 #if OPENTHREAD_ENABLE_TOBLE
-#include <openthread/platform/ble-host.h>
+#include <openthread/platform/ble.h>
 #endif
 
 #include "openthread-system.h"
@@ -116,7 +116,7 @@ pseudo_reset:
         otTaskletsProcess(instance);
         otSysProcessDrivers(instance);
 #if OPENTHREAD_ENABLE_TOBLE
-        otBleHostTaskletsProcess(instance);
+        otPlatBleTaskletsProcess(instance);
 #endif
     }
 
