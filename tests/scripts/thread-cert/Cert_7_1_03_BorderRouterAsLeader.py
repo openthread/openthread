@@ -30,12 +30,13 @@
 import time
 import unittest
 
+from command import CheckType
+from command import NetworkDataCheckType
 import config
 import command
 import mle
+import network_data
 import node
-
-from command import CheckType
 
 LEADER = 1
 ROUTER = 2
@@ -131,8 +132,8 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        command.check_data_response(msg, network_data_opt=CheckType.CONTAIN,
-            prefixes=[ b'2001000200000001', b'2001000200000002' ])
+        command.check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
+            [{network_data.TlvType.PREFIX:b'2001000200000001'}, {network_data.TlvType.PREFIX:b'2001000200000002'}]))
 
         # 4 - N/A
         # Get addresses registered by MED1

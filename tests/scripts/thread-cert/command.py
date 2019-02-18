@@ -313,12 +313,12 @@ def find_prefix_tlv(tlvs, cond_map):
     """Find a prefix tlv in tlvs which matchs some conditions specified by cond_map
     """
     for tlv in tlvs:
-        if 'prefix' in cond_map:
-            if binascii.hexlify(tlv.prefix) != cond_map['prefix']:
+        if network_data.TlvType.PREFIX in cond_map:
+            if binascii.hexlify(tlv.prefix) != cond_map[network_data.TlvType.PREFIX]:
                 continue
-        if 'br16' in cond_map:
+        if network_data.TlvType.BORDER_ROUTER in cond_map:
             border_router_tlv = get_sub_tlv(tlv.sub_tlvs, network_data.BorderRouter)
-            if border_router_tlv.border_router_16 != cond_map['br16']:
+            if border_router_tlv.border_router_16 != cond_map[network_data.TlvType.BORDER_ROUTER]:
                 continue
         return tlv
     return None
@@ -327,21 +327,22 @@ def check_network_data(data, check_detail):
     check_type = check_detail[0]
     prefixes = [tlv for tlv in data.tlvs if isinstance(tlv, network_data.Prefix)]
     if check_type == NetworkDataCheckType.PREFIX_CNT:
-        # check_detail[1] should be a integer number representing the minimum cnt of prefixes should be
-        mn_cnt = check_detail[1]
-        assert len(prefixes) >= mn_cnt, 'Network data should contain at least {} prefixes'.format(mn_cnt)
+        # check_detail[1] should be a integer number representing the minimum count of prefixes should be
+        min_cnt = check_detail[1]
+        assert len(prefixes) >= min_cnt, 'Network data should contain at least {} prefixes'.format(mn_cnt)
         for prefix in prefixes:
             check_prefix(prefix)
     elif check_type == NetworkDataCheckType.PREFIX_CONTENT:
-        # check_detail[1] should be a list of dictionary(like [{'prefix'='...', 'rloc16'='...'}])
-        # each entry of the map represents one thing to check of the prefix tlv
+        # check_detail[1] should be a list of dictionary(like
+        # [{network_data.TlvType.PREFIX='...', network_data.TlvType.BORDER_ROUTER='...'}])
+        # each entry of the dictionary represents one thing to check of the prefix tlv
         assert len(prefixes) >= len(check_detail[1]), 'Network data seems to have less prefixes than expected'
         # basic check of prefixes
         for prefix in prefixes:
             check_prefix(prefix)
         for cond_map in check_detail[1]:
             tlv = find_prefix_tlv(prefixes, cond_map)
-            assert tlv is not None, 'Some prefix is not found:{}'.format(cond_map)
+            assert tlv is not None, 'Some prefix sub-tlv is not found:{}'.format(cond_map)
 
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
