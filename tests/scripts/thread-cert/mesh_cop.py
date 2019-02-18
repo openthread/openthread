@@ -155,25 +155,51 @@ class VendorSWVersionFactory:
         return VendorSWVersion(vendor_sw_version)
 
 
+# VendorStackVersion TLV (37)
 class VendorStackVersion(object):
 
-    def __init__(self, stack_vendor_oui):
+    def __init__(self, stack_vendor_oui, build, rev, minor, major):
         self._stack_vendor_oui = stack_vendor_oui
+        self._build = build
+        self._rev = rev
+        self._minor = minor
+        self._major = major
         return
 
     @property
     def stack_vendor_oui(self):
         return self._stack_vendor_oui
 
+    @property
+    def build(self):
+        return self._build
+
+    @property
+    def rev(self):
+        return self._rev
+
+    @property
+    def minor(self):
+        return self._minor
+
+    @property
+    def major(self):
+        return self._major
+
     def __repr__(self):
-        return "VendorStackVersion(vendor_stack_version={})".format(self._stack_vendor_oui)
+        return "VendorStackVersion(vendor_stack_version={}, build={}, rev={}, minor={}, major={})".format(self.stack_vendor_oui, self.build, self.rev, self.minor, self.major)
 
 
 class VendorStackVersionFactory:
 
     def parse(self, data):
         stack_vendor_oui = struct.unpack(">H", data.read(2))[0]
-        return VendorStackVersion(stack_vendor_oui)
+        rest = data.read(4)
+        build = rest[1] << 4 | (0xf0 & rest[2])
+        rev = 0xf & rest[2]
+        minor = rest[3] & 0xf0
+        major = rest[3] & 0xf
+        return VendorStackVersion(stack_vendor_oui, build, rev, minor, major)
 
 
 class ProvisioningUrl(object):
