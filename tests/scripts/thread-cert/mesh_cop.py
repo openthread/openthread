@@ -30,6 +30,7 @@
 from enum import IntEnum
 import io
 import struct
+import sys
 
 from network_data import SubTlvsFactory
 
@@ -194,7 +195,8 @@ class VendorStackVersionFactory:
 
     def parse(self, data):
         stack_vendor_oui = struct.unpack(">H", data.read(2))[0]
-        rest = data.read(4)
+        rest_str = data.read(4)
+        rest = bytes(rest_str) if sys.version_info < (3, 0) else bytes(rest_str, 'utf-8')
         build = rest[1] << 4 | (0xf0 & rest[2])
         rev = 0xf & rest[2]
         minor = rest[3] & 0xf0
