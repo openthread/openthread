@@ -27,14 +27,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-from binascii import hexlify
 import time
 import unittest
 
+from command import CheckType
+from command import NetworkDataCheckType
 import config
 import command
-from command import CheckType
 import mle
+import network_data
 import node
 
 LEADER = 1
@@ -131,8 +132,8 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        command.check_data_response(msg, network_data=CheckType.CONTAIN,
-            prefixes=[('2001:2:0:1::/64', 'paros'), ('2001:2:0:2::/64', 'paro')])
+        command.check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
+            [{network_data.TlvType.PREFIX:b'2001000200000001'}, {network_data.TlvType.PREFIX:b'2001000200000002'}]))
 
         # 4 - N/A
         # Get addresses registered by MED1
@@ -143,7 +144,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         # Make a copy of leader's messages to ensure that we don't miss messages to SED1
         leader_messages_copy = leader_messages.clone()
         msg = leader_messages_copy.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[MED1])
-        command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
+        command.check_child_update_response(msg, address_registration=CheckType.CONTAIN)
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in med1_addresses))
 
@@ -163,7 +164,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 8 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[SED1])
-        command.check_child_update_response_from_parent(msg, address_registration=CheckType.CONTAIN)
+        command.check_child_update_response(msg, address_registration=CheckType.CONTAIN)
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in sed1_addresses))
 
