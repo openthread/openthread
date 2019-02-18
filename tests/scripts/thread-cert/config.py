@@ -154,7 +154,7 @@ def create_default_mle_tlv_address_registration_factory():
 
 def create_default_mle_tlv_thread_discovery_factory():
     return mle.ThreadDiscoveryFactory(
-        thread_discovery_tvls_factory=create_default_thread_discovery_tlvs_factory())
+        thread_discovery_tlvs_factory=create_default_thread_discovery_tlvs_factory())
 
 def create_default_thread_discovery_tlvs_factory():
     return mesh_cop.ThreadDiscoveryTlvsFactory(

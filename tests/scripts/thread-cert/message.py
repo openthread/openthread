@@ -74,7 +74,7 @@ class Message(object):
             self._type = MessageType.COAP
             self._coap = udp_datagram.payload
 
-        # DTSL message factory returns a list of messages
+        # DTLS message factory returns a list of messages
         elif isinstance(udp_datagram.payload, list):
             self._type = MessageType.DTLS
             self._dtls = udp_datagram.payload
