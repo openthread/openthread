@@ -109,7 +109,7 @@ enum
 // All values in dBm
 enum
 {
-    CC2538_RECEIVE_SENSITIVITY = OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY,
+    CC2538_RECEIVE_SENSITIVITY     = OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY,
     CC2592_RECEIVE_SENSITIVITY_LGM = -81,
     CC2592_RECEIVE_SENSITIVITY_HGM = -85,
 };
@@ -125,17 +125,17 @@ static const TxPowerTable sTxPowerTable[] = {
 #if OPENTHREAD_CONFIG_CC2538_WITH_CC2592
     // CC2538 using CC2592 PA
     // Values are from AN130 table 6 (page 4)
-    {22, 0xFF},  // 22.0dBm =~ 158.5mW
-    {21, 0xD5},  // 20.9dBm =~ 123.0mW
-    {20, 0xC5},  // 20.1dBm =~ 102.3mW
-    {19, 0xB0},  // 19.0dBm =~  79.4mW
-    {18, 0xA1},  // 17.8dBm =~  60.3mW
-    {16, 0x91},  // 16.4dBm =~  43.7mW
-    {15, 0x88},  // 14.9dBm =~  30.9mW
-    {13, 0x72},  // 13.0dBm =~  20.0mW
-    {11, 0x62},  // 11.0dBm =~  12.6mW
-    {10, 0x58},  //  9.5dBm =~   8.9mW
-    {8, 0x42},   //  7.5dBm =~   5.6mW
+    {22, 0xFF}, // 22.0dBm =~ 158.5mW
+    {21, 0xD5}, // 20.9dBm =~ 123.0mW
+    {20, 0xC5}, // 20.1dBm =~ 102.3mW
+    {19, 0xB0}, // 19.0dBm =~  79.4mW
+    {18, 0xA1}, // 17.8dBm =~  60.3mW
+    {16, 0x91}, // 16.4dBm =~  43.7mW
+    {15, 0x88}, // 14.9dBm =~  30.9mW
+    {13, 0x72}, // 13.0dBm =~  20.0mW
+    {11, 0x62}, // 11.0dBm =~  12.6mW
+    {10, 0x58}, //  9.5dBm =~   8.9mW
+    {8, 0x42},  //  7.5dBm =~   5.6mW
 #else
     // CC2538 operating "bare foot"
     // Values are from SmartRF Studio 2.4.0
@@ -391,9 +391,8 @@ void cc2538RadioSetHgm(bool aState)
 
 bool cc2538RadioGetHgm()
 {
-    if (HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT,
-                GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN))
-            & GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN))
+    if (HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT, GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN)) &
+        GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN))
     {
         return true;
     }
@@ -1091,7 +1090,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     {
         return CC2592_RECEIVE_SENSITIVITY_LGM;
     }
-#else // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+#else  // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
     return CC2538_RECEIVE_SENSITIVITY;
 #endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 }
