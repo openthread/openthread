@@ -47,6 +47,7 @@
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>
 #include <openthread/link.h>
+#include <openthread/thread.h>
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
 #endif
@@ -126,7 +127,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
 #endif
-    {"counter", &Interpreter::ProcessCounters},
+    {"counters", &Interpreter::ProcessCounters},
     {"dataset", &Interpreter::ProcessDataset},
 #if OPENTHREAD_FTD
     {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
@@ -279,6 +280,7 @@ public:
 };
 
 typedef otPtr<const otMacCounters>  otMacCountersPtr;
+typedef otPtr<const otMleCounters>  otMleCountersPtr;
 typedef otPtr<const otNetifAddress> otNetifAddressPtr;
 typedef otPtr<const uint8_t>        otBufferPtr;
 typedef otPtr<const char>           otStringPtr;
@@ -808,49 +810,78 @@ exit:
 
 void Interpreter::ProcessCounters(int argc, char *argv[])
 {
+    otError error = OT_ERROR_NONE;
+
     if (argc == 0)
     {
         mServer->OutputFormat("mac\r\n");
-        mServer->OutputFormat("Done\r\n");
+        mServer->OutputFormat("mle\r\n");
     }
-    else
+    else if (argc == 1)
     {
         if (strcmp(argv[0], "mac") == 0)
         {
-            otMacCountersPtr counters(otLinkGetCounters(mInstance));
-            mServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
-            mServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
-            mServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
-            mServer->OutputFormat("    TxAckRequested: %d\r\n", counters->mTxAckRequested);
-            mServer->OutputFormat("    TxAcked: %d\r\n", counters->mTxAcked);
-            mServer->OutputFormat("    TxNoAckRequested: %d\r\n", counters->mTxNoAckRequested);
-            mServer->OutputFormat("    TxData: %d\r\n", counters->mTxData);
-            mServer->OutputFormat("    TxDataPoll: %d\r\n", counters->mTxDataPoll);
-            mServer->OutputFormat("    TxBeacon: %d\r\n", counters->mTxBeacon);
-            mServer->OutputFormat("    TxBeaconRequest: %d\r\n", counters->mTxBeaconRequest);
-            mServer->OutputFormat("    TxOther: %d\r\n", counters->mTxOther);
-            mServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
-            mServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
-            mServer->OutputFormat("    TxErrBusyChannel: %d\r\n", counters->mTxErrBusyChannel);
-            mServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
-            mServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
-            mServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
-            mServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
-            mServer->OutputFormat("    RxDataPoll: %d\r\n", counters->mRxDataPoll);
-            mServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);
-            mServer->OutputFormat("    RxBeaconRequest: %d\r\n", counters->mRxBeaconRequest);
-            mServer->OutputFormat("    RxOther: %d\r\n", counters->mRxOther);
-            mServer->OutputFormat("    RxAddressFiltered: %d\r\n", counters->mRxAddressFiltered);
-            mServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", counters->mRxDestAddrFiltered);
-            mServer->OutputFormat("    RxDuplicated: %d\r\n", counters->mRxDuplicated);
-            mServer->OutputFormat("    RxErrNoFrame: %d\r\n", counters->mRxErrNoFrame);
-            mServer->OutputFormat("    RxErrNoUnknownNeighbor: %d\r\n", counters->mRxErrUnknownNeighbor);
-            mServer->OutputFormat("    RxErrInvalidSrcAddr: %d\r\n", counters->mRxErrInvalidSrcAddr);
-            mServer->OutputFormat("    RxErrSec: %d\r\n", counters->mRxErrSec);
-            mServer->OutputFormat("    RxErrFcs: %d\r\n", counters->mRxErrFcs);
-            mServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
+            otMacCountersPtr macCounters(otLinkGetCounters(mInstance));
+
+            mServer->OutputFormat("TxTotal: %d\r\n", macCounters->mTxTotal);
+            mServer->OutputFormat("    TxUnicast: %d\r\n", macCounters->mTxUnicast);
+            mServer->OutputFormat("    TxBroadcast: %d\r\n", macCounters->mTxBroadcast);
+            mServer->OutputFormat("    TxAckRequested: %d\r\n", macCounters->mTxAckRequested);
+            mServer->OutputFormat("    TxAcked: %d\r\n", macCounters->mTxAcked);
+            mServer->OutputFormat("    TxNoAckRequested: %d\r\n", macCounters->mTxNoAckRequested);
+            mServer->OutputFormat("    TxData: %d\r\n", macCounters->mTxData);
+            mServer->OutputFormat("    TxDataPoll: %d\r\n", macCounters->mTxDataPoll);
+            mServer->OutputFormat("    TxBeacon: %d\r\n", macCounters->mTxBeacon);
+            mServer->OutputFormat("    TxBeaconRequest: %d\r\n", macCounters->mTxBeaconRequest);
+            mServer->OutputFormat("    TxOther: %d\r\n", macCounters->mTxOther);
+            mServer->OutputFormat("    TxRetry: %d\r\n", macCounters->mTxRetry);
+            mServer->OutputFormat("    TxErrCca: %d\r\n", macCounters->mTxErrCca);
+            mServer->OutputFormat("    TxErrBusyChannel: %d\r\n", macCounters->mTxErrBusyChannel);
+            mServer->OutputFormat("RxTotal: %d\r\n", macCounters->mRxTotal);
+            mServer->OutputFormat("    RxUnicast: %d\r\n", macCounters->mRxUnicast);
+            mServer->OutputFormat("    RxBroadcast: %d\r\n", macCounters->mRxBroadcast);
+            mServer->OutputFormat("    RxData: %d\r\n", macCounters->mRxData);
+            mServer->OutputFormat("    RxDataPoll: %d\r\n", macCounters->mRxDataPoll);
+            mServer->OutputFormat("    RxBeacon: %d\r\n", macCounters->mRxBeacon);
+            mServer->OutputFormat("    RxBeaconRequest: %d\r\n", macCounters->mRxBeaconRequest);
+            mServer->OutputFormat("    RxOther: %d\r\n", macCounters->mRxOther);
+            mServer->OutputFormat("    RxAddressFiltered: %d\r\n", macCounters->mRxAddressFiltered);
+            mServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", macCounters->mRxDestAddrFiltered);
+            mServer->OutputFormat("    RxDuplicated: %d\r\n", macCounters->mRxDuplicated);
+            mServer->OutputFormat("    RxErrNoFrame: %d\r\n", macCounters->mRxErrNoFrame);
+            mServer->OutputFormat("    RxErrNoUnknownNeighbor: %d\r\n", macCounters->mRxErrUnknownNeighbor);
+            mServer->OutputFormat("    RxErrInvalidSrcAddr: %d\r\n", macCounters->mRxErrInvalidSrcAddr);
+            mServer->OutputFormat("    RxErrSec: %d\r\n", macCounters->mRxErrSec);
+            mServer->OutputFormat("    RxErrFcs: %d\r\n", macCounters->mRxErrFcs);
+            mServer->OutputFormat("    RxErrOther: %d\r\n", macCounters->mRxErrOther);
+        }
+        else if (strcmp(argv[0], "mle") == 0)
+        {
+            otMleCountersPtr mleCounters(otThreadGetMleCounters(mInstance));
+
+            mServer->OutputFormat("Role Disabled: %d\r\n", mleCounters->mDisabledRole);
+            mServer->OutputFormat("Role Detached: %d\r\n", mleCounters->mDetachedRole);
+            mServer->OutputFormat("Role Child: %d\r\n", mleCounters->mChildRole);
+            mServer->OutputFormat("Role Router: %d\r\n", mleCounters->mRouterRole);
+            mServer->OutputFormat("Role Leader: %d\r\n", mleCounters->mLeaderRole);
+            mServer->OutputFormat("Attach Attempts: %d\r\n", mleCounters->mAttachAttempts);
+            mServer->OutputFormat("Partition Id Changes: %d\r\n", mleCounters->mPartitionIdChanges);
+            mServer->OutputFormat("Better Partition Attach Attempts: %d\r\n",
+                                  mleCounters->mBetterPartitionAttachAttempts);
+            mServer->OutputFormat("Parent Changes: %d\r\n", mleCounters->mParentChanges);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
 }
 
 #if OPENTHREAD_FTD

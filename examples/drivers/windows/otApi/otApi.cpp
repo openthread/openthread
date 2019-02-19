@@ -3977,3 +3977,24 @@ otThreadSetParentPriority(
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PARENT_PRIORITY, aParentPriority));
 }
+
+OTAPI
+const otMleCounters*
+OTCALL
+otThreadGetMleCounters(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return nullptr;
+
+    otMleCounters* aCounters = (otMleCounters*)malloc(sizeof(otMleCounters));
+    if (aCounters)
+    {
+        if (ERROR_SUCCESS != QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MLE_COUNTERS, aCounters))
+        {
+            free(aCounters);
+            aCounters = nullptr;
+        }
+    }
+    return aCounters;
+}
