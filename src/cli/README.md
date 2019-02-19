@@ -677,7 +677,7 @@ Done
 Send MGMT_ACTIVE_GET.
 
 ```bash
-> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp 123 binary 0001
+> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp binary 0c030001ff
 Done
 ```
 
@@ -686,7 +686,7 @@ Done
 Send MGMT_ACTIVE_SET.
 
 ```bash
-> dataset mgmtsetcommand active activetimestamp binary 820155
+> dataset mgmtsetcommand active activetimestamp 123 binary 0c030001ff
 Done
 ```
 
@@ -695,7 +695,7 @@ Done
 Send MGMT_PENDING_GET.
 
 ```bash
-> dataset mgmtgetcommand pending address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp binary 0001
+> dataset mgmtgetcommand pending address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp binary 0c030001ff
 Done
 ```
 
@@ -704,7 +704,7 @@ Done
 Send MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtsetcommand pending activetimestamp binary 820155
+> dataset mgmtsetcommand pending activetimestamp 123 binary 0c030001ff
 Done
 ```
 
