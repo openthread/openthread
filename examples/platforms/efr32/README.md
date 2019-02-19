@@ -37,8 +37,8 @@ $ ./script/bootstrap
 
 2. Install Flex (Gecko) SDK including RAIL Library from Simplicity Studio.
    - Connect EFR32MG12P Wireless Starter Kit to Simplicity Studio.
-   - Find Flex SDK v2.3 in the Software Update page and click Install.
-   - Flex SDK v2.3 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
+   - Find Flex SDK v2.5 in the Software Update page and click Install.
+   - Flex SDK v2.5 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
 
 For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32)
 portfolio using RAIL, see [Getting Started with RAIL Library quick start guide][QSG121]. For more information
@@ -53,6 +53,13 @@ $ cd <path-to-openthread>/third_party
 $ mkdir silabs
 $ cd <path-to-Simplicity-Studio>/developer/sdks
 $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
+```
+
+Alternatively create a symbolic link to the Flex SDK source code.
+```bash
+$ cd <path-to-openthread>/third_party
+$ mkdir silabs
+$ ln -s <path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite silabs/gecko_sdk_suite
 ```
 
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.
@@ -93,9 +100,8 @@ $ (gdb) c
 
 Note: Support for the "EFR32MG12PxxxF1024" device was added to JLinkGDBServer V6.14d.
 
-Or
-
-Compiled binaries also may be flashed onto the specified EFR32 dev borad using [J-Link Commander][j-link-commander].
+Or 
+Compiled binaries also may be flashed onto the specified EFR32 dev board using [J-Link Commander][j-link-commander].
 
 [j-link-commander]: https://www.segger.com/products/debug-probes/j-link/tools/j-link-commander/
 
@@ -113,6 +119,20 @@ Note: SerialNo is J-Link serial number. Use the following command to get the ser
 ```bash
 $ JLinkExe
 ```
+
+Alternatively Simplicity Commander provides a graphical interface for J-Link Commander.
+
+```bash
+$ cd <path-to-openthread>/output/efr32/bin
+$ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.ihex
+$ <path-to-simplicity-studio>/developer/adapter_packs/commander/commander
+```
+
+In the J-Link Device drop-down list select the serial number of the device to flash.  Click the Adapter Connect button.
+Esnure the Debug Interface drop-down list is set to SWD and click the Target Connect button.
+Click on the Flash icon on the left side of the window to switch to the flash page.
+In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button.
+Click the Flash button located under the Browse... button.
 
 ## Run the example with EFR32 boards
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).
@@ -220,8 +240,7 @@ For a list of all available commands, visit [OpenThread CLI Reference README.md]
 ## Verification
 
 The following toolchain has been used for testing and verification:
-   - gcc version 4.9.3
-   - gcc version 5.4.1
+   - gcc version 7.3.1
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
-   - Flex SDK version 2.0.0.0
+   - Flex SDK version 2.5.1.0
