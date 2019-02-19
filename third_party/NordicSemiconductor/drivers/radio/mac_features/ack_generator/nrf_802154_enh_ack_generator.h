@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,26 @@
  *
  */
 
-#ifndef NRF_FEM_CONTROL_CONFIG_H_
-#define NRF_FEM_CONTROL_CONFIG_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * @section Timings.
+ * @brief This module contains an enhanced acknowledgement (Enh-Ack) generator for 802.15.4 radio driver.
+ *
  */
 
-/** Time in us when PA GPIO is activated before radio is ready for transmission. */
-#define NRF_FEM_PA_TIME_IN_ADVANCE  23
+#ifndef NRF_802154_ENH_ACK_GENERATOR_H
+#define NRF_802154_ENH_ACK_GENERATOR_H
 
-/** Time in us when LNA GPIO is activated before radio is ready for reception. */
-#define NRF_FEM_LNA_TIME_IN_ADVANCE 5
+#include <stdbool.h>
+#include <stdint.h>
 
-#if defined(NRF52840_XXAA) || \
-    defined(NRF52840_AAAA) || \
-    defined(NRF52840_AABA) || \
-    defined(NRF52840_AACX) || \
-    defined(NRF52811_XXAA)
+/** Initialize the Enhanced ACK generator module. */
+void nrf_802154_enh_ack_generator_init(void);
 
-/** Radio ramp-up time in TX mode, in us. */
-#define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 40
+/** Create an Enhanced ACK in response to provided frame and insert it into an appropriate radio buffer.
+ *
+ * @param [in]  p_frame  Pointer to a frame to respond to.
+ *
+ * @returns  Pointer to constant buffer containing created Enhanced ACK frame.
+ */
+const uint8_t * nrf_802154_enh_ack_generator_create(const uint8_t * p_frame);
 
-/** Radio ramp-up time in RX mode, in us. */
-#define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
-
-#else
-
-#error "Device not supported."
-
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* NRF_FEM_CONTROL_CONFIG_H_ */
+#endif // NRF_802154_ENH_ACK_GENERATOR_H
