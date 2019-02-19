@@ -733,7 +733,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  * @returns A pointer to the Thread MLE counters.
  *
  */
-const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
+OTAPI const otMleCounters *OTCALL otThreadGetMleCounters(otInstance *aInstance);
 
 /**
  * Reset the Thread MLE counters.
