@@ -30,7 +30,6 @@
 from enum import IntEnum
 import io
 import struct
-import sys
 
 from network_data import SubTlvsFactory
 
