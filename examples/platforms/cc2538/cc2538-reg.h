@@ -41,6 +41,14 @@
 
 #define HWREG(x)                                (*((volatile uint32_t *)(x)))
 
+/*!
+ * For registers that are arrays of 32-bit integers.
+ *
+ * @param       reg     Register address
+ * @param       idx     Register array index
+ */
+#define HWREG_ARR(reg, idx)                     HWREG((reg) + ((idx) << 2))
+
 #define NVIC_ST_CTRL                            0xE000E010  // SysTick Control and Status
 #define NVIC_ST_RELOAD                          0xE000E014  // SysTick Reload Value Register
 #define NVIC_EN0                                0xE000E100  // Interrupt 0-31 Set Enable
@@ -89,12 +97,14 @@
 #define RFCORE_XREG_CCACTRL0                    0x40088658  // CCA threshold
 #define RFCORE_XREG_RSSISTAT                    0x40088664  // RSSI valid status register
 #define RFCORE_XREG_AGCCTRL1                    0x400886C8  // AGC reference level
+#define RFCORE_XREG_RFC_OBS_CTRL                0x400887AC  // RF Core observable output
 #define RFCORE_XREG_TXFILTCFG                   0x400887E8  // TX filter configuration
 #define RFCORE_XREG_RFRND                       0x4008869C  // Random data
 #define RFCORE_SFR_RFDATA                       0x40088828  // The TX FIFO and RX FIFO
 #define RFCORE_SFR_RFERRF                       0x4008882C  // RF error interrupt flags
 #define RFCORE_SFR_RFIRQF0                      0x40088834  // RF interrupt flags
 #define RFCORE_SFR_RFST                         0x40088838  // RF CSMA-CA/strobe processor
+#define CCTEST_OBSSEL                           0x44010014  // CCTEST observable output route
 
 #define RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN    0x00000001  // Enables frame filtering
 
@@ -157,6 +167,27 @@
 
 #define RFCORE_XREG_RSSISTAT_RSSI_VALID         0x00000001  // RSSI value is valid.
 
+#define RFCORE_XREG_RFC_OBS_POL_INV             0x00000040  // Invert polarity of OBS signal
+#define RFCORE_XREG_RFC_OBS_MUX_ZERO            0x00000000  // Observable = constant zero
+#define RFCORE_XREG_RFC_OBS_MUX_ONE             0x00000001  // Observable = constant one
+#define RFCORE_XREG_RFC_OBS_MUX_SNIFF_DATA      0x00000008  // RFC sniff data
+#define RFCORE_XREG_RFC_OBS_MUX_SNIFF_CLK       0x00000009  // RFC sniff clock
+#define RFCORE_XREG_RFC_OBS_MUX_RSSI_VALID      0x0000000c  // RSSI valid
+#define RFCORE_XREG_RFC_OBS_MUX_DEMOD_CCA       0x0000000d  // Clear channel assessment
+#define RFCORE_XREG_RFC_OBS_MUX_SAMPLED_CCA     0x0000000e  // Sampled CCA signal
+#define RFCORE_XREG_RFC_OBS_MUX_SFD_SYNC        0x0000000f  // SFD received or transmitted
+#define RFCORE_XREG_RFC_OBS_MUX_TX_ACTIVE       0x00000010  // Transmitter is active
+#define RFCORE_XREG_RFC_OBS_MUX_RX_ACTIVE       0x00000011  // Receiver is active
+#define RFCORE_XREG_RFC_OBS_MUX_FFCTRL_FIFO     0x00000012  // One or more bytes in FIFO
+#define RFCORE_XREG_RFC_OBS_MUX_FFCTRL_FIFOP    0x00000013  // One or more frames in FIFO
+#define RFCORE_XREG_RFC_OBS_MUX_PACKET_DONE     0x00000014  // Packet received
+#define RFCORE_XREG_RFC_OBS_MUX_RFC_XOR_RAND_IQ 0x00000016  // RAND I ^ RAND Q
+#define RFCORE_XREG_RFC_OBS_MUX_RFC_RAND_Q      0x00000017  // Random data from Q channel
+#define RFCORE_XREG_RFC_OBS_MUX_RFC_RAND_I      0x00000018  // Random data from I channel
+#define RFCORE_XREG_RFC_OBS_MUX_LOCK_STATUS     0x00000019  // PLL is in lock
+#define RFCORE_XREG_RFC_OBS_MUX_PA_PD           0x00000028  // Power amp power down
+#define RFCORE_XREG_RFC_OBS_MUX_LNA_PD          0x0000002a  // LNA power down
+
 #define RFCORE_SFR_RFERRF_NLOCK                 0x00000001  // Failed to achieve PLL lock.
 #define RFCORE_SFR_RFERRF_RXABO                 0x00000002  // RX Aborted.
 #define RFCORE_SFR_RFERRF_RXOVERF               0x00000004  // RX FIFO overflowed.
@@ -170,6 +201,11 @@
 #define RFCORE_SFR_RFST_INSTR_RFOFF             0xEF        // Instruction set RF off
 #define RFCORE_SFR_RFST_INSTR_FLUSHRX           0xED        // Instruction set flush rx buffer
 #define RFCORE_SFR_RFST_INSTR_FLUSHTX           0xEE        // Instruction set flush tx buffer
+
+#define CCTEST_OBSSEL_EN                        0x00000080  // Enable the OBS output on this pin
+#define CCTEST_OBSSEL_SEL_OBS0                  0x00000000  // Route OBS0 to pin
+#define CCTEST_OBSSEL_SEL_OBS1                  0x00000001  // Route OBS1 to pin
+#define CCTEST_OBSSEL_SEL_OBS2                  0x00000002  // Route OBS2 to pin
 
 #define ANA_REGS_BASE                           0x400D6000  // ANA_REGS
 #define ANA_REGS_O_IVCTRL                       0x00000004  // Analog control register
@@ -229,15 +265,23 @@
 
 #define UART0_BASE                              0x4000C000
 #define UART1_BASE                              0x4000D000
-#define GPIO_A_BASE                             0x400D9000  // GPIO
+#define GPIO_A_BASE                             0x400D9000  // GPIO A
+#define GPIO_B_BASE                             0x400DA000  // GPIO B
+#define GPIO_C_BASE                             0x400DB000  // GPIO C
+#define GPIO_D_BASE                             0x400DC000  // GPIO D
 
 #define GPIO_O_DIR                              0x00000400
 #define GPIO_O_AFSEL                            0x00000420
 
+#define GPIO_PIN(x)                             (1UL << x)  // Arbitrary GPIO pin
 #define GPIO_PIN_0                              0x00000001  // GPIO pin 0
 #define GPIO_PIN_1                              0x00000002  // GPIO pin 1
 #define GPIO_PIN_2                              0x00000004  // GPIO pin 2
 #define GPIO_PIN_3                              0x00000008  // GPIO pin 3
+#define GPIO_PIN_4                              0x00000010  // GPIO pin 4
+#define GPIO_PIN_5                              0x00000020  // GPIO pin 5
+#define GPIO_PIN_6                              0x00000040  // GPIO pin 6
+#define GPIO_PIN_7                              0x00000080  // GPIO pin 7
 
 #define UART_O_DR                               0x00000000  // UART data
 #define UART_O_FR                               0x00000018  // UART flag
