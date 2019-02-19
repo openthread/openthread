@@ -418,6 +418,52 @@ otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
+otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
+{
+    otError        error    = OT_ERROR_NONE;
+    const uint32_t msFactor = 1000;
+    uint32_t       factor   = msFactor;
+
+    aInterval = 0;
+
+    while (*aString)
+    {
+        if ('0' <= *aString && *aString <= '9')
+        {
+            // In the case of seconds, change the base of already calculated value.
+            if (factor == msFactor)
+            {
+                aInterval *= 10;
+            }
+
+            aInterval += static_cast<uint32_t>(*aString - '0') * factor;
+
+            // In the case of milliseconds, change the multiplier factor.
+            if (factor != msFactor)
+            {
+                factor /= 10;
+            }
+        }
+        else if (*aString == '.')
+        {
+            // Accept only one dot character.
+            VerifyOrExit(factor == msFactor, error = OT_ERROR_PARSE);
+
+            // Start analyzing hundreds of milliseconds.
+            factor /= 10;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_PARSE);
+        }
+
+        aString++;
+    }
+
+exit:
+    return error;
+}
+
 void Interpreter::ProcessHelp(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
@@ -1926,9 +1972,10 @@ exit:
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t index = 1;
-    long    value;
+    otError  error = OT_ERROR_NONE;
+    uint8_t  index = 1;
+    long     value;
+    uint32_t interval;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -1957,21 +2004,22 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     while (index < argc)
     {
-        SuccessOrExit(error = ParseLong(argv[index], value));
-
         switch (index)
         {
         case 1:
+            SuccessOrExit(error = ParseLong(argv[index], value));
             mLength = static_cast<uint16_t>(value);
             break;
 
         case 2:
+            SuccessOrExit(error = ParseLong(argv[index], value));
             mCount = static_cast<uint16_t>(value);
             break;
 
         case 3:
-            VerifyOrExit(0 < value && value <= Timer::kMaxDt / 1000, error = OT_ERROR_INVALID_ARGS);
-            mInterval = static_cast<uint32_t>(value) * 1000;
+            SuccessOrExit(error = ParsePingInterval(argv[index], interval));
+            VerifyOrExit(0 < interval && interval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
+            mInterval = interval;
             break;
 
         default:

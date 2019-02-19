@@ -188,10 +188,11 @@ private:
         kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
     };
 
-    void ProcessHelp(int argc, char *argv[]);
-    void ProcessAutoStart(int argc, char *argv[]);
-    void ProcessBufferInfo(int argc, char *argv[]);
-    void ProcessChannel(int argc, char *argv[]);
+    otError ParsePingInterval(const char *aString, uint32_t &aInterval);
+    void    ProcessHelp(int argc, char *argv[]);
+    void    ProcessAutoStart(int argc, char *argv[]);
+    void    ProcessBufferInfo(int argc, char *argv[]);
+    void    ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildMax(int argc, char *argv[]);
