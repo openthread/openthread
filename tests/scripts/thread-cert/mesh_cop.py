@@ -195,9 +195,7 @@ class VendorStackVersionFactory:
 
     def parse(self, data):
         stack_vendor_oui = struct.unpack(">H", data.read(2))[0]
-        rest = data.read(4)
-        if sys.version_info < (3, 0):
-            rest = bytes(rest)
+        rest = bytes(data.read(4))
         build = rest[1] << 4 | (0xf0 & rest[2])
         rev = 0xf & rest[2]
         minor = rest[3] & 0xf0
