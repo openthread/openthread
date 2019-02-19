@@ -233,5 +233,6 @@ DECL_IOCTL_FUNC_WITH_TUN(otRemoveMacFixedRss);
 DECL_IOCTL_FUNC(otNextMacFixedRss);
 DECL_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss);
 DECL_IOCTL_FUNC(otNextRoute);
+DECL_IOCTL_FUNC(otMleCounters);
 
 #endif // _IOCONTROL_H

@@ -728,8 +728,13 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // uint8_t - aMaxRouterId
 
+#define IOCTL_OTLWF_OT_MLE_COUNTERS \
+    OTLWF_CTL_CODE(203, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+    // otMleCounters - aCounters
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 202
+#define MAX_OTLWF_IOCTL_FUNC_CODE 203
 
 #endif //__OTLWFIOCTL_H__
