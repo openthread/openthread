@@ -423,6 +423,22 @@ extern "C" {
 #endif
 
 /**
+ * @def NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT
+ *
+ * Indicates whether the CSMA-CA algorithm waits for an available timeslot before it performs the CCA procedure.
+ *
+ * @note When this option is enabled, the CSMA-CA procedure may be synchronized with timeslots of
+ *       other protocols. It decreases robustness of the CSMA-CA procedure and is not recommended.
+ *       This option may be used as a workaround to problems with higher layers that do not correctly handle
+ *       multiple CHANNEL_BUSY errors in a row. This potentially problematic situation may
+ *       happen during activity of other protocols.
+ *
+ */
+#ifndef NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT
+#define NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT 0
+#endif
+
+/**
  * @}
  * @defgroup nrf_802154_config_timeout ACK timeout feature configuration
  * @{
@@ -456,6 +472,16 @@ extern "C" {
  */
 #ifndef NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT
 #define NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT 210
+#endif
+
+/**
+ * @def NRF_802154_MAX_ACK_IE_SIZE
+ *
+ * Maximum supported size of 802.15.4-2015 IE header and content fields in an Enh-Ack.
+ *
+ */
+#ifndef NRF_802154_MAX_ACK_IE_SIZE
+#define NRF_802154_MAX_ACK_IE_SIZE 8
 #endif
 
 /**

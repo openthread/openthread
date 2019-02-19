@@ -41,17 +41,16 @@
 #include <stdint.h>
 
 #include "nrf_802154_notification.h"
-#include "nrf_802154_procedures_duration.h"
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
-#define RETRY_DELAY     500     ///< Procedure is delayed by this time if it cannot be performed at the moment [us].
-#define MAX_RETRY_DELAY 1000000 ///< Maximum allowed delay of procedure retry [us].
+#define RETRY_DELAY     500     ///< Procedure is delayed by this time if cannot be performed at the moment.
+#define MAX_RETRY_DELAY 1000000 ///< Maximal allowed delay of procedure retry.
 
 static void timeout_timer_retry(void);
 
-static uint32_t           m_timeout = NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT; ///< ACK timeout in us.
-static nrf_802154_timer_t m_timer;                                                    ///< Timer used to notify when the ACK frama is not received for too long.
+static uint32_t           m_timeout = NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT; ///< ACK timeout in us.
+static nrf_802154_timer_t m_timer;                                            ///< Timer used to notify when we are waiting too long for ACK.
 static volatile bool      m_procedure_is_active;
 static const uint8_t    * mp_frame;
 
@@ -96,9 +95,7 @@ static void timeout_timer_start(void)
     m_timer.callback  = timeout_timer_fired;
     m_timer.p_context = NULL;
     m_timer.t0        = nrf_802154_timer_sched_time_get();
-    m_timer.dt        = m_timeout +
-                        IMM_ACK_DURATION +
-                        nrf_802154_frame_duration_get(mp_frame[0], false, true);
+    m_timer.dt        = m_timeout;
 
     m_procedure_is_active = true;
 
@@ -156,13 +153,6 @@ bool nrf_802154_ack_timeout_abort(nrf_802154_term_t term_lvl, req_originator_t r
 void nrf_802154_ack_timeout_transmitted_hook(const uint8_t * p_frame)
 {
     assert((p_frame == mp_frame) || (!m_procedure_is_active));
-
-    timeout_timer_stop();
-}
-
-void nrf_802154_ack_timeout_rx_ack_started_hook(void)
-{
-    assert(m_procedure_is_active);
 
     timeout_timer_stop();
 }

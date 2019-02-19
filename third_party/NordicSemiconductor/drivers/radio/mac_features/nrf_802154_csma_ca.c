@@ -122,7 +122,7 @@ static void frame_transmit(void * p_context)
                                          REQ_ORIG_CSMA_CA,
                                          mp_psdu,
                                          true,
-                                         true,
+                                         NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT ? false : true,
                                          notify_busy_channel))
         {
             (void)channel_busy();

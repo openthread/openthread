@@ -41,6 +41,7 @@
 #include <stdint.h>
 
 #include "nrf_802154_config.h"
+#include "nrf_802154_debug.h"
 #include "hal/nrf_ppi.h"
 #include "platform/hp_timer/nrf_802154_hp_timer.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
@@ -110,20 +111,30 @@ void nrf_802154_timer_coord_uninit(void)
 
 void nrf_802154_timer_coord_start(void)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TCOOR_START);
+
     m_synchronized = false;
     nrf_802154_hp_timer_start();
     nrf_802154_hp_timer_sync_prepare();
     nrf_802154_lp_timer_sync_start_now();
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TCOOR_START);
 }
 
 void nrf_802154_timer_coord_stop(void)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TCOOR_STOP);
+
     nrf_802154_hp_timer_stop();
     nrf_802154_lp_timer_sync_stop();
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TCOOR_STOP);
 }
 
 void nrf_802154_timer_coord_timestamp_prepare(uint32_t event_addr)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TCOOR_TIMESTAMP_PREPARE);
+
     nrf_ppi_channel_and_fork_endpoint_setup(PPI_TIMESTAMP,
                                             event_addr,
                                             nrf_802154_hp_timer_timestamp_task_get(),
@@ -131,6 +142,8 @@ void nrf_802154_timer_coord_timestamp_prepare(uint32_t event_addr)
                                                 PPI_TIMESTAMP_GROUP));
 
     nrf_ppi_group_enable(PPI_TIMESTAMP_GROUP);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TCOOR_TIMESTAMP_PREPARE);
 }
 
 bool nrf_802154_timer_coord_timestamp_get(uint32_t * p_timestamp)
@@ -138,21 +151,24 @@ bool nrf_802154_timer_coord_timestamp_get(uint32_t * p_timestamp)
     uint32_t hp_timestamp;
     uint32_t hp_delta;
     int32_t  drift;
+    bool     result = false;
 
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TCOOR_TIMESTAMP_GET);
     assert(p_timestamp != NULL);
 
-    if (!m_synchronized)
+    if (m_synchronized)
     {
-        return false;
+        hp_timestamp = nrf_802154_hp_timer_timestamp_get();
+        hp_delta     = hp_timestamp - m_last_sync.hp_timer_time;
+        drift        = m_drift_known ?
+                       (DIV_ROUND(((int64_t)m_drift * hp_delta), ((int64_t)TIME_BASE + m_drift))) :
+                       0;
+        *p_timestamp = m_last_sync.lp_timer_time + hp_delta - drift;
+        result       = true;
     }
 
-    hp_timestamp = nrf_802154_hp_timer_timestamp_get();
-    hp_delta     = hp_timestamp - m_last_sync.hp_timer_time;
-    drift        = m_drift_known ?
-                   (DIV_ROUND(((int64_t)m_drift * hp_delta), ((int64_t)TIME_BASE + m_drift))) : 0;
-    *p_timestamp = m_last_sync.lp_timer_time + hp_delta - drift;
-
-    return true;
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TCOOR_TIMESTAMP_GET);
+    return result;
 }
 
 void nrf_802154_lp_timer_synchronized(void)
@@ -163,6 +179,8 @@ void nrf_802154_lp_timer_synchronized(void)
     int32_t            timers_diff;
     int32_t            drift;
     int32_t            tb_fraction_of_lp_delta;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TCOOR_SYNCHRONIZED);
 
     if (nrf_802154_hp_timer_sync_time_get(&sync_time.hp_timer_time))
     {
@@ -209,6 +227,8 @@ void nrf_802154_lp_timer_synchronized(void)
         nrf_802154_hp_timer_sync_prepare();
         nrf_802154_lp_timer_sync_start_now();
     }
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TCOOR_SYNCHRONIZED);
 }
 
 #else // NRF_802154_FRAME_TIMESTAMP_ENABLED
