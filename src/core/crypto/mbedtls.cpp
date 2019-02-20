@@ -33,6 +33,7 @@
 
 #include "mbedtls.hpp"
 
+#include <mbedtls/debug.h>
 #include <mbedtls/platform.h>
 
 #include "common/instance.hpp"
