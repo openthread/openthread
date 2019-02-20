@@ -280,16 +280,11 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
 #endif
 
-        case OT_ERROR_DROP:
-        case OT_ERROR_NO_BUFS:
+        default:
             mSendQueue.Dequeue(*curMessage);
             LogMessage(kMessageDrop, *curMessage, NULL, error);
             curMessage->Free();
             continue;
-
-        default:
-            assert(false);
-            break;
         }
     }
 
