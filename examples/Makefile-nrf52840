@@ -294,6 +294,18 @@ cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=f
 $(foreach arch,$(ARCHS),$(eval $(call ARCH_template,$(arch))))
 
 #
+# Flashing / Debugging
+#
+
+TARGET_APP ?= ot-cli-ftd
+APP_FILE_NAME = $(TopResultDir)/$(TargetTuple)/bin/$(TARGET_APP)
+APP_FILE_HEX = $(TopResultDir)/$(TargetTuple)/bin/$(TARGET_APP).hex
+
+nrfjprog: $(APP_FILE_NAME)
+	arm-none-eabi-objcopy -O ihex $(<) $(APP_FILE_HEX)
+	nrfjprog -f NRF52 --sectorerase  --reset --program $(APP_FILE_HEX)
+
+#
 # Common / Finalization
 #
 
