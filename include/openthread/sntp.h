@@ -69,7 +69,7 @@ typedef struct otSntpQuery
  * This function pointer is called when a SNTP response is received.
  *
  * @param[in]  aContext   A pointer to application-specific context.
- * @param[in]  aTime      Specifies the at the server when the response left for the client, in NTP timestamp format.
+ * @param[in]  aTime      Specifies the time at the server when the response left for the client, in UNIX time.
  * @param[in]  aResult    A result of the SNTP transaction.
  *
  * @retval  OT_ERROR_NONE              A response was received successfully and time is provided
