@@ -190,7 +190,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
         if (aVector.mError == OT_ERROR_NONE)
         {
-            uint8_t compressBytes = buffer.GetWritePointer() - result;
+            uint8_t compressBytes = static_cast<uint8_t>(buffer.GetWritePointer() - result);
 
             // Append payload to the LOWPAN_IPHC.
             message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), result + compressBytes);
