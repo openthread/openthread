@@ -51,7 +51,8 @@ static uint8_t        sRxBuffer[BLE_HCI_BUF_SIZE];
 static const uint8_t *sTxBuffer;
 static uint16_t       sTxLength = 0;
 
-static int sBleSerialFd = -1;
+static int  sBleSerialFd      = -1;
+static bool sBleSerialEnabled = false;
 
 static inline uint32_t ttyGetSpeed(uint32_t aSpeed)
 {
@@ -177,6 +178,7 @@ exit:
         if (fd >= 0)
         {
             close(fd);
+            fd = -1;
         }
 
         perror(errStr);
@@ -186,33 +188,32 @@ exit:
     return fd;
 }
 
-void platformBleHciInit(void)
+void platformBleHciInit(char *aDeviceFile)
 {
-    // Intentionally empty.
+    // sBleSerialFd = bleHciOpenSerial("/dev/ttyACM0", 1000000, true);
+    sBleSerialFd = bleHciOpenSerial(aDeviceFile, 1000000, true);
 }
 
 void platformBleHciDeinit(void)
 {
-    // Intentionally empty.
+    close(sBleSerialFd);
+    sBleSerialFd = -1;
 }
 
 bool otPlatBleHciIsEnabled(void)
 {
-    return (sBleSerialFd < 0) ? false : true;
+    return sBleSerialEnabled;
 }
 
 otError otPlatBleHciEnable(void)
 {
-    sBleSerialFd = bleHciOpenSerial("/dev/ttyACM0", 1000000, true);
-    return (sBleSerialFd < 0) ? OT_ERROR_FAILED : OT_ERROR_NONE;
+    sBleSerialEnabled = true;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleHciDisable(void)
 {
-    close(sBleSerialFd);
-
-    sBleSerialFd = -1;
-
+    sBleSerialEnabled = true;
     return OT_ERROR_NONE;
 }
 
@@ -220,6 +221,7 @@ otError otPlatBleHciSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
+    otEXPECT_ACTION(sBleSerialEnabled, error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(sTxLength == 0, error = OT_ERROR_BUSY);
 
     sTxBuffer = aBuf;
@@ -284,20 +286,23 @@ void platformBleHciProcess(otInstance *aInstance)
     if (pollfd.revents & POLLIN)
     {
         otEXPECT_ACTION((rval = read(sBleSerialFd, sRxBuffer, sizeof(sRxBuffer))) > 0, errStr = "read");
-        OutputBytes("HCI RX: ", sRxBuffer, (uint16_t)rval);
-        otPlatBleHciReceived(sRxBuffer, (uint8_t)rval);
+        if (sBleSerialEnabled)
+        {
+            // OutputBytes("HCI RX: ", sRxBuffer, (uint16_t)rval);
+            otPlatBleHciReceived(sRxBuffer, (uint8_t)rval);
+        }
     }
 
     if ((sTxLength != 0) && (pollfd.revents & POLLOUT))
     {
         otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, sTxLength)) > 0, errStr = "write");
-        OutputBytes("HCI TX: ", sTxBuffer, sTxLength);
 
         sTxBuffer += (uint16_t)rval;
         sTxLength -= (uint16_t)rval;
 
-        if (sTxLength == 0)
+        if (sTxLength == 0 && sBleSerialEnabled)
         {
+            // OutputBytes("HCI TX: ", sTxBuffer, sTxLength);
             otPlatBleHciSendDone();
         }
     }

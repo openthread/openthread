@@ -36,6 +36,7 @@
 
 #include "cli_ble.hpp"
 #include "cli_server.hpp"
+#include "cli/adv_data.hpp"
 #include "cli/cli.hpp"
 
 #include "common/code_utils.hpp"
@@ -48,270 +49,10 @@
 namespace ot {
 namespace Cli {
 
-class AdvDataHeader
-{
-public:
-    enum
-    {
-        kAdTypeFlags                       = 0x01,
-        kAdTypeIncompleteList16BitService  = 0x02,
-        kAdTypeCompleteList16BitService    = 0x03,
-        kAdTypeIncompleteList32BitService  = 0x04,
-        kAdTypeCompleteList32BitService    = 0x05,
-        kAdTypeIncompleteList128BitService = 0x06,
-        kAdTypeCompleteList128BitService   = 0x07,
-        kAdTypeShortenedLocalName          = 0x08,
-        kAdTypeCompleteLocalName           = 0x09,
-        kAdTypeAppearance                  = 0x19,
-    };
-
-    explicit AdvDataHeader(uint8_t aType)
-        : mLength(0)
-        , mType(aType)
-    {
-    }
-
-    void    SetType(uint8_t aType) { mType = aType; }
-    uint8_t GetType(void) const { return mType; }
-
-    void    SetLength(uint8_t aLength) { mLength = aLength; }
-    uint8_t GetLength(void) const { return mLength; }
-
-private:
-    uint8_t mLength;
-    uint8_t mType;
-};
-
-class AdvDataEntry : public AdvDataHeader
-{
-public:
-    explicit AdvDataEntry(uint8_t aType)
-        : AdvDataHeader(aType)
-    {
-    }
-
-    uint8_t GetSize(void) const { return static_cast<uint8_t>(sizeof(*this) + GetLength()); }
-
-    void SetData(const uint8_t *aAdData, uint8_t aAdDataLength) { memcpy(GetData(), aAdData, aAdDataLength); }
-
-    uint8_t *      GetData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
-    const uint8_t *GetData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-
-    uint8_t *      GetDataEnd(void) { return reinterpret_cast<uint8_t *>(this) + GetSize(); }
-    const uint8_t *GetDataEnd(void) const { return reinterpret_cast<const uint8_t *>(this) + GetSize(); }
-
-    AdvDataEntry *GetNext(const uint8_t *aAdvDataEnd)
-    {
-        return (GetDataEnd() < aAdvDataEnd) ? reinterpret_cast<AdvDataEntry *>(GetDataEnd()) : NULL;
-    }
-};
-
-enum
-{
-    kFlagsLeLimitedDiscoverable         = 0x01, ///< Discoverable for a limited period of time
-    kFlagsLeGeneralDiscoverable         = 0x02, ///< Discoverable at any moment
-    kFlagsBrEdrNotSupported             = 0x04, ///< LE only and does not support Bluetooth Enhanced DataRate
-    kFlagsSimultaneousLeBrEdrController = 0x08, ///< Not relevant - dual mode only
-    kFlagsSimultaneousLeBrEdrHost       = 0x10, ///< Not relevant - dual mode only
-
-    kFlagsDefault = kFlagsLeGeneralDiscoverable | kFlagsBrEdrNotSupported, ///< Defalut flags configuration
-};
-
-class AdvData
-{
-public:
-    AdvData(void)
-        : mBufLength(0)
-    {
-    }
-
-    const uint8_t *GetBuf(void) const { return reinterpret_cast<const uint8_t *>(mBuf); }
-    uint8_t        GetLength(void) const { return mBufLength; }
-
-    otError SetFlags(uint16_t aFlags = kFlagsDefault)
-    {
-        return SetAdvDataEntry(AdvDataHeader::kAdTypeFlags, reinterpret_cast<const uint8_t *>(&aFlags), sizeof(aFlags));
-    }
-
-    otError SetLocalServiceList(const otPlatBleUuid *aUuid, uint8_t aNumUuid, bool aComplete = true)
-    {
-        uint8_t shortType;
-        uint8_t longType;
-
-        if (aComplete)
-        {
-            shortType = AdvDataHeader::kAdTypeCompleteList16BitService;
-            longType  = AdvDataHeader::kAdTypeCompleteList128BitService;
-        }
-        else
-        {
-            shortType = AdvDataHeader::kAdTypeIncompleteList16BitService;
-            longType  = AdvDataHeader::kAdTypeIncompleteList128BitService;
-        }
-
-        return SetUuidData(aUuid, aNumUuid, shortType, longType);
-    }
-
-    otError SetDeviceName(const char *aDeviceName, bool aComplete = true)
-    {
-        uint8_t type = aComplete ? AdvDataHeader::kAdTypeCompleteLocalName : AdvDataHeader::kAdTypeShortenedLocalName;
-        return SetAdvDataEntry(type, reinterpret_cast<const uint8_t *>(aDeviceName),
-                               static_cast<uint8_t>(strlen(aDeviceName)));
-    }
-
-private:
-    enum
-    {
-        kAdvDataBufSize = 128,
-    };
-
-    uint8_t *      GetBufEnd(void) { return reinterpret_cast<uint8_t *>(mBuf + mBufLength); }
-    const uint8_t *GetBufEnd(void) const { return reinterpret_cast<const uint8_t *>(mBuf + mBufLength); }
-
-    otError SetAdvDataEntry(uint8_t aType, const uint8_t *aAdData, uint8_t aAdDataLength)
-    {
-        otError       error = OT_ERROR_NONE;
-        AdvDataEntry *entry = reinterpret_cast<AdvDataEntry *>(GetBufEnd());
-
-        VerifyOrExit(mBufLength + sizeof(AdvDataHeader) + aAdDataLength < sizeof(mBuf), error = OT_ERROR_NO_BUFS);
-
-        entry->SetType(aType);
-        memcpy(entry->GetData(), aAdData, aAdDataLength);
-        entry->SetLength(aAdDataLength);
-        mBufLength += entry->GetSize();
-
-    exit:
-        return error;
-    }
-
-    otError AppendAdvDataEntry(uint8_t aType, const uint8_t *aAdData, uint8_t aAdDataLength)
-    {
-        otError       error = OT_ERROR_NONE;
-        AdvDataEntry *entry = FindAdvDataEntry(aType);
-        uint8_t *     entryEnd;
-
-        VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
-        VerifyOrExit(mBufLength + aAdDataLength < sizeof(mBuf), error = OT_ERROR_NO_BUFS);
-
-        entryEnd = entry->GetDataEnd();
-        memmove(entryEnd + aAdDataLength, entryEnd, static_cast<size_t>(GetBufEnd() - entryEnd));
-        memcpy(entry->GetData(), aAdData, aAdDataLength);
-        entry->SetLength(entry->GetLength() + aAdDataLength);
-        mBufLength += aAdDataLength;
-
-    exit:
-        return error;
-    }
-
-    otError RemoveAdvDataEntry(uint8_t aType)
-    {
-        otError       error = OT_ERROR_NONE;
-        AdvDataEntry *entry = FindAdvDataEntry(aType);
-        uint8_t       len;
-
-        VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
-
-        len = static_cast<uint8_t>(GetBufEnd() - entry->GetDataEnd());
-
-        memmove(entry, entry->GetDataEnd(), len);
-        mBufLength -= len;
-
-    exit:
-        return error;
-    }
-
-    AdvDataEntry *FindAdvDataEntry(uint8_t aType)
-    {
-        AdvDataEntry *entry = reinterpret_cast<AdvDataEntry *>(mBuf);
-
-        VerifyOrExit(mBufLength > 0, entry = NULL);
-
-        while (entry != NULL)
-        {
-            if (entry->GetType() == aType)
-            {
-                ExitNow();
-            }
-
-            entry = entry->GetNext(GetBufEnd());
-        }
-
-    exit:
-        return entry;
-    }
-
-    otError SetUuidData(const otPlatBleUuid *aUuid, uint8_t aNumUuid, uint8_t aShortType, uint8_t aLongType)
-    {
-        otError error            = OT_ERROR_NONE;
-        uint8_t shortUuidDataLen = 0;
-        uint8_t longUuidDataLen  = 0;
-        uint8_t headerSize;
-        uint8_t i;
-
-        for (i = 0; i < aNumUuid; i++)
-        {
-            if (aUuid[i].mType == OT_BLE_UUID_TYPE_16)
-            {
-                shortUuidDataLen += OT_BLE_16BIT_UUID_LENGTH;
-            }
-            else if (aUuid[i].mType == OT_BLE_UUID_TYPE_128)
-            {
-                longUuidDataLen += OT_BLE_UUID_LENGTH;
-            }
-            else
-            {
-                ExitNow(error = OT_ERROR_INVALID_ARGS);
-            }
-        }
-
-        headerSize = (shortUuidDataLen ? sizeof(AdvDataHeader) : 0) + (longUuidDataLen ? sizeof(AdvDataHeader) : 0);
-        VerifyOrExit(headerSize + shortUuidDataLen + longUuidDataLen <= static_cast<uint8_t>(sizeof(mBuf) - mBufLength),
-                     error = OT_ERROR_NO_BUFS);
-
-        RemoveAdvDataEntry(aShortType);
-        RemoveAdvDataEntry(aLongType);
-
-        for (i = 0; i < aNumUuid; i++)
-        {
-            AdvDataEntry * entry;
-            uint8_t        type;
-            const uint8_t *uuid;
-            uint8_t        uuidLen;
-
-            if (aUuid[i].mType == OT_BLE_UUID_TYPE_16)
-            {
-                type    = aShortType;
-                uuid    = reinterpret_cast<const uint8_t *>(&aUuid[i].mValue.mUuid16);
-                uuidLen = OT_BLE_16BIT_UUID_LENGTH;
-            }
-            else
-            {
-                type    = aLongType;
-                uuid    = reinterpret_cast<const uint8_t *>(aUuid[i].mValue.mUuid128);
-                uuidLen = OT_BLE_UUID_LENGTH;
-            }
-
-            if ((entry = FindAdvDataEntry(type)) == NULL)
-            {
-                SetAdvDataEntry(type, uuid, uuidLen);
-            }
-            else
-            {
-                AppendAdvDataEntry(type, uuid, uuidLen);
-            }
-        }
-
-    exit:
-        return error;
-    }
-
-    uint8_t mBuf[kAdvDataBufSize];
-    uint8_t mBufLength;
-};
-
 const struct Ble::Command Ble::sCommands[] = {{"help", &Ble::ProcessHelp},       {"enable", &Ble::ProcessEnable},
-                                              {"disable", &Ble::ProcessDisable}, {"advertise", &Ble::ProcessAdvertise},
-                                              {"scan", &Ble::ProcessScan},       {"addr", &Ble::ProcessAddr}};
+                                              {"disable", &Ble::ProcessDisable}, {"adv", &Ble::ProcessAdvertise},
+                                              {"scan", &Ble::ProcessScan},       {"bdaddr", &Ble::ProcessAddr},
+                                              {"conn", &Ble::ProcessConnection}, {"test", &Ble::ProcessTest}};
 
 Ble::Ble(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -346,6 +87,91 @@ otError Ble::ProcessHelp(int argc, char *argv[])
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
+    }
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    return OT_ERROR_NONE;
+}
+
+otError Ble::ProcessTest(int argc, char *argv[])
+{
+    AdvData            advData;
+    otPlatBleUuid      uuids[2];
+    char               devName[] = "TOBLE";
+    FlagsAdvData       flagsAdvData;
+    DeviceNameAdvData  devNameAdvData;
+    Uuid16AdvData      uuid16AdvData;
+    ServiceDataAdvData serviceDataAdvData;
+    FlagsAdvData       flagsAdvData2;
+    DeviceNameAdvData  devNameAdvData2;
+    Uuid16AdvData      uuid16AdvData2;
+    ServiceDataAdvData serviceDataAdvData2;
+
+    uuids[0].mType          = OT_BLE_UUID_TYPE_16;
+    uuids[0].mValue.mUuid16 = 0xA000;
+    uuids[1].mType          = OT_BLE_UUID_TYPE_16;
+    uuids[1].mValue.mUuid16 = 0xB000;
+
+    flagsAdvData.SetFlags(FlagsAdvData::kLeGeneralDiscoverable | FlagsAdvData::kBrEdrNotSupported);
+    devNameAdvData.SetDeviceName(devName);
+    uuid16AdvData.AddUuid(uuids[0]);
+    uuid16AdvData.AddUuid(uuids[1]);
+    serviceDataAdvData.SetUuid16(0xCC00);
+    serviceDataAdvData.SetServiceData(reinterpret_cast<const uint8_t *>(devName), strlen(devName));
+
+    advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&flagsAdvData));
+    advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&devNameAdvData));
+    advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&uuid16AdvData));
+    advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&serviceDataAdvData));
+
+    printf("\r\nAdvData: ");
+    OutputBytes(advData.GetBuf(), advData.GetLength());
+    printf("\r\n");
+
+    if (advData.GetAdvDataEntry(AdvDataHeader::kFlags, &flagsAdvData2) == OT_ERROR_NONE)
+    {
+        printf("Flags: %04x\r\n", flagsAdvData2.GetFlags());
+    }
+    else
+    {
+        printf("Get Flags error\r\n");
+    }
+
+    if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteLocalName, &devNameAdvData2) == OT_ERROR_NONE)
+    {
+        printf("DevName: %s\r\n", devNameAdvData2.GetDeviceName());
+    }
+    else
+    {
+        printf("Get DevName error\r\n");
+    }
+
+    if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteList16BitService, &uuid16AdvData2) == OT_ERROR_NONE)
+    {
+        uint8_t       iterator = 0;
+        otPlatBleUuid uuid;
+
+        while (uuid16AdvData2.GetNextUuid(iterator, uuid) == OT_ERROR_NONE)
+        {
+            printf("Uuid16: %04x\r\n", uuid.mValue.mUuid16);
+        }
+    }
+    else
+    {
+        printf("Get Uuid error\r\n");
+    }
+
+    if (advData.GetAdvDataEntry(AdvDataHeader::kServiceData, &serviceDataAdvData2) == OT_ERROR_NONE)
+    {
+        printf("ServiceData: uuid16 = %04x, data = ", serviceDataAdvData2.GetUuid16());
+        OutputBytes(serviceDataAdvData2.GetServiceData(), serviceDataAdvData2.GetServiceDataLength());
+        printf("\r\n\r\n");
+    }
+    else
+    {
+        printf("Get ServiceData error\r\n");
     }
 
     OT_UNUSED_VARIABLE(argc);
@@ -389,17 +215,32 @@ otError Ble::ProcessAdvertise(int argc, char *argv[])
     if (strcmp(argv[0], "start") == 0)
     {
         AdvData       advData;
-        otPlatBleUuid uuid      = {.mType = OT_BLE_UUID_TYPE_16, {.mUuid16 = 0xA000}};
-        char          devName[] = "OT_TOBLE";
+        otPlatBleUuid uuid      = {.mType = OT_BLE_UUID_TYPE_16, {.mUuid16 = 0xA111}};
+        char          devName[] = "TOBLE";
 
-        advData.SetFlags();
-        advData.SetDeviceName(devName);
-        advData.SetLocalServiceList(&uuid, 1);
+        FlagsAdvData       flagsAdvData;
+        DeviceNameAdvData  devNameAdvData;
+        Uuid16AdvData      uuid16AdvData;
+        ServiceDataAdvData serviceDataAdvData;
+
+        flagsAdvData.SetFlags(FlagsAdvData::kLeGeneralDiscoverable | FlagsAdvData::kBrEdrNotSupported);
+        devNameAdvData.SetDeviceName(devName);
+        uuid16AdvData.AddUuid(uuid);
+        serviceDataAdvData.SetUuid16(0xCC00);
+
+        advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&flagsAdvData));
+        advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&devNameAdvData));
+        advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&uuid16AdvData));
+        advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&serviceDataAdvData));
+
+        printf("\r\nAdvData: ");
+        OutputBytes(advData.GetBuf(), advData.GetLength());
+        printf("\r\n\r\n");
 
         error = otPlatBleGapAdvDataSet(mInterpreter.mInstance, advData.GetBuf(), advData.GetLength());
         error = otPlatBleGapScanResponseSet(mInterpreter.mInstance, advData.GetBuf(), advData.GetLength());
-        error =
-            otPlatBleGapAdvStart(mInterpreter.mInstance, 0xA0, OT_BLE_ADV_MODE_CONNECTABLE | OT_BLE_ADV_MODE_SCANNABLE);
+        error = otPlatBleGapAdvStart(mInterpreter.mInstance, kAdvInterval,
+                                     OT_BLE_ADV_MODE_CONNECTABLE | OT_BLE_ADV_MODE_SCANNABLE);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -424,7 +265,7 @@ otError Ble::ProcessScan(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        error = otPlatBleGapScanStart(mInterpreter.mInstance, 0xA0, 0x50);
+        error = otPlatBleGapScanStart(mInterpreter.mInstance, kScanInterval, kScanWindow);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -441,18 +282,65 @@ exit:
 
 otError Ble::ProcessAddr(int argc, char *argv[])
 {
+    otError             error = OT_ERROR_NONE;
     otPlatBleDeviceAddr addr;
-    otError             error;
 
     VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
 
     if ((error = otPlatBleGapAddressGet(mInterpreter.mInstance, &addr)) == OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("%02x ", addr.mAddr[0], addr.mAddr[1], addr.mAddr[2], addr.mAddr[3],
-                                           addr.mAddr[4], addr.mAddr[5]);
+        mInterpreter.mServer->OutputFormat("%02x%02x%02x%02x%02x%02x\r\n", addr.mAddr[5], addr.mAddr[4], addr.mAddr[3],
+                                           addr.mAddr[2], addr.mAddr[1], addr.mAddr[0]);
     }
 
     OT_UNUSED_VARIABLE(argv);
+exit:
+    return error;
+}
+
+otError Ble::ProcessConnection(int argc, char *argv[])
+{
+    otError error;
+    long    value;
+
+    VerifyOrExit(argc >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if ((argc == 3) && (strcmp(argv[0], "start") == 0))
+    {
+        otPlatBleDeviceAddr    devAddr;
+        uint8_t                addr[OT_BLE_ADDRESS_LENGTH];
+        otPlatBleGapConnParams connParams;
+
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        devAddr.mAddrType = static_cast<uint8_t>(value);
+        VerifyOrExit(devAddr.mAddrType <= OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE,
+                     error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(Interpreter::Hex2Bin(argv[2], addr, OT_BLE_ADDRESS_LENGTH) == OT_BLE_ADDRESS_LENGTH,
+                     error = OT_ERROR_INVALID_ARGS);
+
+        devAddr.mAddr[0] = addr[5];
+        devAddr.mAddr[1] = addr[4];
+        devAddr.mAddr[2] = addr[3];
+        devAddr.mAddr[3] = addr[2];
+        devAddr.mAddr[4] = addr[1];
+        devAddr.mAddr[5] = addr[0];
+
+        connParams.mConnMinInterval        = kConnInterval;
+        connParams.mConnMaxInterval        = kConnInterval;
+        connParams.mConnSlaveLatency       = 0;
+        connParams.mConnSupervisionTimeout = kConnSupTimeout;
+
+        SuccessOrExit(error = otPlatBleGapConnParamsSet(mInterpreter.mInstance, &connParams));
+        error = otPlatBleGapConnect(mInterpreter.mInstance, &devAddr, kScanInterval, kScanWindow);
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        error = otPlatBleGapDisconnect(mInterpreter.mInstance);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
 
 exit:
     return error;
@@ -462,9 +350,80 @@ void Ble::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
 {
     for (int i = 0; i < aLength; i++)
     {
-        mInterpreter.mServer->OutputFormat("%02x ", aBytes[i]);
+        printf("%02x ", aBytes[i]);
     }
 }
 
+void StdOutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    for (int i = 0; i < aLength; i++)
+    {
+        printf("%02x ", aBytes[i]);
+    }
+}
+
+extern "C" void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    printf("BleConnected   : connectionId = %d\r\n", aConnectionId);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    printf("BleDisconnected: connectionId = %d\r\n", aConnectionId);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
+                                          otPlatBleDeviceAddr *aAddress,
+                                          otBleRadioPacket *   aPacket)
+{
+    AdvData           advData;
+    DeviceNameAdvData devNameAdvData;
+
+    if (advData.Init(aPacket->mValue, aPacket->mLength) == OT_ERROR_NONE)
+    {
+        if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteLocalName, &devNameAdvData) == OT_ERROR_NONE)
+        {
+            printf("AdvReceived    : ");
+            printf("peerAddrType = %d, ", aAddress->mAddrType);
+            printf("peerAddr = %02x%02x%02x%02x%02x%02x, ", aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
+                   aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0]);
+            printf("rssi = %d, ", aPacket->mPower);
+            printf("DevName = %s\r\n", devNameAdvData.GetDeviceName());
+
+            /*
+            if (aPacket->mLength != 0)
+            {
+                printf("AdvData    : ");
+                StdOutputBytes(aPacket->mValue, aPacket->mLength);
+                printf("\r\n");
+            }
+            */
+        }
+    }
+
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
+                                               otPlatBleDeviceAddr *aAddress,
+                                               otBleRadioPacket *   aPacket)
+{
+    if (aPacket->mPower > -40)
+    {
+        printf("ScanRspReceived: ");
+        printf("peerAddrType = %d, ", aAddress->mAddrType);
+        printf("peerAddr = %02x%02x%02x%02x%02x%02x, ", aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
+               aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0]);
+        printf("rssi = %d\r\n", aPacket->mPower);
+
+        // printf("    AdvData: ");
+        // StdOutputBytes(aPacket->mValue, aPacket->mLength);
+        // printf("\r\n");
+    }
+
+    OT_UNUSED_VARIABLE(aInstance);
+}
 } // namespace Cli
 } // namespace ot

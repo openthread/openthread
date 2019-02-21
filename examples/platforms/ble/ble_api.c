@@ -31,11 +31,16 @@
  *   This file implements the OpenThread BLE APIs for Cordio BLE stack.
  *
  */
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include "ble/ble_gap.h"
 #include "ble/ble_mgmt.h"
 
 #include <openthread/platform/ble.h>
+#include <openthread/platform/toolchain.h>
+
+#if OPENTHREAD_ENABLE_TOBLE
 
 /*******************************************************************************
  * @section Bluetooth Low Energy management.
@@ -128,6 +133,36 @@ otError otPlatBleGapDisconnect(otInstance *aInstance)
     return bleGapDisconnect(aInstance);
 }
 
+OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
+                                            otPlatBleDeviceAddr *aAddress,
+                                            otBleRadioPacket *   aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
+                                                 otPlatBleDeviceAddr *aAddress,
+                                                 otBleRadioPacket *   aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
 /*******************************************************************************
  * @section Bluetooth Low Energy GATT Client.
  ******************************************************************************/
@@ -138,8 +173,7 @@ otError otPlatBleGattClientRead(otInstance *aInstance, uint16_t aHandle)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnReadResponse(otInstance *aInstance, otBleRadioPacket *aPacket)
+OT_TOOL_WEAK void otPlatBleGattClientOnReadResponse(otInstance *aInstance, otBleRadioPacket *aPacket)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPacket);
@@ -153,8 +187,7 @@ otError otPlatBleGattClientWrite(otInstance *aInstance, uint16_t aHandle, otBleR
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle)
+OT_TOOL_WEAK void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
@@ -168,15 +201,13 @@ otError otPlatBleGattClientSubscribeRequest(otInstance *aInstance, uint16_t aHan
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16_t aHandle)
+OT_TOOL_WEAK void otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16_t aHandle)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
 }
 
-// extern
-void otPlatBleGattClientOnIndication(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket)
+OT_TOOL_WEAK void otPlatBleGattClientOnIndication(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
@@ -196,12 +227,11 @@ otError otPlatBleGattClientServiceDiscover(otInstance *aInstance, const otPlatBl
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnServiceDiscovered(otInstance *aInstance,
-                                            uint16_t    aStartHandle,
-                                            uint16_t    aEndHandle,
-                                            uint16_t    aServiceUuid,
-                                            otError     aError)
+OT_TOOL_WEAK void otPlatBleGattClientOnServiceDiscovered(otInstance *aInstance,
+                                                         uint16_t    aStartHandle,
+                                                         uint16_t    aEndHandle,
+                                                         uint16_t    aServiceUuid,
+                                                         otError     aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aStartHandle);
@@ -218,11 +248,10 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnCharacteristicsDiscoverDone(otInstance *                 aInstance,
-                                                      otPlatBleGattCharacteristic *aChars,
-                                                      uint16_t                     aCount,
-                                                      otError                      aError)
+OT_TOOL_WEAK void otPlatBleGattClientOnCharacteristicsDiscoverDone(otInstance *                 aInstance,
+                                                                   otPlatBleGattCharacteristic *aChars,
+                                                                   uint16_t                     aCount,
+                                                                   otError                      aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChars);
@@ -238,11 +267,10 @@ otError otPlatBleGattClientDescriptorsDiscover(otInstance *aInstance, uint16_t a
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnDescriptorsDiscoverDone(otInstance *             aInstance,
-                                                  otPlatBleGattDescriptor *aDescs,
-                                                  uint16_t                 aCount,
-                                                  otError                  aError)
+OT_TOOL_WEAK void otPlatBleGattClientOnDescriptorsDiscoverDone(otInstance *             aInstance,
+                                                               otPlatBleGattDescriptor *aDescs,
+                                                               uint16_t                 aCount,
+                                                               otError                  aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aDescs);
@@ -257,8 +285,7 @@ otError otPlatBleGattClientMtuExchangeRequest(otInstance *aInstance, uint16_t aM
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint16_t aMtu, otError aError)
+OT_TOOL_WEAK void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint16_t aMtu, otError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMtu);
@@ -296,25 +323,98 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, otB
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-// extern
-void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, uint16_t aHandle)
+OT_TOOL_WEAK void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, uint16_t aHandle)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
 }
 
-// extern
-void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket)
+OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
 }
 
-// extern
-void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing)
+OT_TOOL_WEAK void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aSubscribing);
 }
+
+otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t *aCid)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPsm);
+    OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aCid);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
+                                         otPlatBleL2capError aError,
+                                         uint16_t            aMtu,
+                                         uint16_t *          aCid)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aError);
+    OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aCid);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capSduSend(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid, otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLocalCid);
+    OT_UNUSED_VARIABLE(aPeerCid);
+    OT_UNUSED_VARIABLE(aPacket);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionRequest(otInstance *aInstance,
+                                                    uint16_t    aPsm,
+                                                    uint16_t    aMtu,
+                                                    uint16_t    aPeerCid)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPsm);
+    OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aPeerCid);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
+                                              uint16_t          aLocalCid,
+                                              uint16_t          aPeerCid,
+                                              otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLocalCid);
+    OT_UNUSED_VARIABLE(aPeerCid);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnSduSent(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLocalCid);
+    OT_UNUSED_VARIABLE(aPeerCid);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                                     otPlatBleL2capError aError,
+                                                     uint16_t            aMtu,
+                                                     uint16_t            aPeerCid)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aError);
+    OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aPeerCid);
+}
+#endif // OPENTHREAD_ENABLE_TOBLE

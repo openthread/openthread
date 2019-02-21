@@ -101,13 +101,21 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     if (aArgCount > 2)
     {
-        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
+        /*
+            speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
 
-        if (*endptr != '\0' || speedUpFactor == 0)
-        {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
-            exit(EXIT_FAILURE);
-        }
+            if (*endptr != '\0' || speedUpFactor == 0)
+            {
+                fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
+                exit(EXIT_FAILURE);
+            }
+        */
+        platformBleHciInit(aArgVector[2]);
+    }
+    else
+    {
+        fprintf(stderr, "Please specify the BLE HCI device file name\n");
+        exit(EXIT_FAILURE);
     }
 
     platformAlarmInit(speedUpFactor);

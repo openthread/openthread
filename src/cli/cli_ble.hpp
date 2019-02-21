@@ -66,6 +66,15 @@ public:
     otError Process(int argc, char *argv[]);
 
 private:
+    enum
+    {
+        kAdvInterval    = 320, ///< 200 ms (unit: 0.625ms)
+        kScanInterval   = 320, ///< 200 ms (unit: 0.625ms)
+        kScanWindow     = 80,  ///< 50  ms (unit: 0.625ms)
+        kConnInterval   = 160, ///< 100 ms (unit: 0.625ms)
+        kConnSupTimeout = 60,  ///< 600 ms (unit: 10ms)
+    };
+
     struct Command
     {
         const char *mName;
@@ -78,6 +87,8 @@ private:
     otError ProcessDisable(int argc, char *argv[]);
     otError ProcessEnable(int argc, char *argv[]);
     otError ProcessScan(int argc, char *argv[]);
+    otError ProcessConnection(int argc, char *argv[]);
+    otError ProcessTest(int argc, char *argv[]);
 
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
 

@@ -31,17 +31,22 @@
  *   This file implements the BLE GAP interfaces for Cordio BLE stack.
  *
  */
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include "dm_api.h"
 
 #include <stdio.h>
 #include <string.h>
 
+#include "ble/ble_gap.h"
 #include "ble/ble_hci_driver.h"
 #include "ble/ble_mgmt.h"
 #include "utils/code_utils.h"
 
 #include <openthread/platform/ble.h>
+
+#if OPENTHREAD_ENABLE_TOBLE
 
 enum
 {
@@ -110,6 +115,7 @@ enum
 };
 
 static otPlatBleGapConnParams sBleGapConnParams;
+static dmConnId_t             sConnectionId = DM_CONN_ID_NONE;
 
 static inline bool isInRange(uint16_t aValue, uint16_t aMin, uint16_t aMax)
 {
@@ -257,10 +263,13 @@ exit:
 otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress)
 {
     // The public address cannot be set
+    uint8_t buf[OT_BLE_ADDRESS_LENGTH];
 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAddress);
 
+    memcpy(buf, aAddress->mAddr, OT_BLE_ADDRESS_LENGTH);
+    HciLeSetRandAddrCmd(buf);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -299,7 +308,7 @@ otError bleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t
     otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION((aAdvData != NULL) && (aAdvDataLength != 0), error = OT_ERROR_INVALID_ARGS);
 
-    // avoid convert "const uint8_t*" to "uint8_t *"
+    // avoid converting "const uint8_t*" to "uint8_t *"
     memcpy(buf, aAdvData, aAdvDataLength);
     DmAdvSetData(DM_ADV_HANDLE_DEFAULT, HCI_ADV_DATA_OP_COMP_FRAG, DM_DATA_LOC_ADV, aAdvDataLength, buf);
 
@@ -309,11 +318,12 @@ exit:
 
 otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
 {
-    otError  error             = OT_ERROR_NONE;
-    uint8_t  advHandles[]      = {DM_ADV_HANDLE_DEFAULT};
-    uint16_t advDurations[]    = {0 /* infinite */};
-    uint8_t  maxExtAdvEvents[] = {0};
-    uint8_t  advType           = 0;
+    otError             error             = OT_ERROR_NONE;
+    uint8_t             advHandles[]      = {DM_ADV_HANDLE_DEFAULT};
+    uint16_t            advDurations[]    = {0 /* infinite */};
+    uint8_t             maxExtAdvEvents[] = {0};
+    uint8_t             advType           = 0;
+    otPlatBleDeviceAddr peerAddr;
 
     otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(isInRange(aInterval, OT_BLE_ADV_INTERVAL_MIN, OT_BLE_ADV_INTERVAL_MAX),
@@ -336,11 +346,13 @@ otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
         otEXPECT(0); // exit
     }
 
+    memset(&peerAddr, 0, sizeof(peerAddr));
+
     DmAdvSetAddrType(kAdvScanOwnAddrTypePublic);
     DmAdvSetChannelMap(DM_ADV_HANDLE_DEFAULT, kAdvChannelAll);
     DmDevSetFilterPolicy(DM_FILT_POLICY_MODE_ADV, kAdvScanFilterNone);
     DmAdvSetInterval(DM_ADV_HANDLE_DEFAULT, aInterval, aInterval);
-    DmAdvConfig(DM_ADV_HANDLE_DEFAULT, advType, kAdvPeerAddrTypePublic, NULL);
+    DmAdvConfig(DM_ADV_HANDLE_DEFAULT, advType, kAdvPeerAddrTypePublic, peerAddr.mAddr);
 
     DmAdvStart(1, advHandles, advDurations, maxExtAdvEvents);
 
@@ -368,7 +380,7 @@ otError bleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanRespons
     otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION((aScanResponse != NULL) && (aScanResponseLength != 0), error = OT_ERROR_INVALID_ARGS);
 
-    // avoid convert "const uint8_t*" to "uint8_t *"
+    // avoid converting "const uint8_t*" to "uint8_t *"
     memcpy(buf, aScanResponse, aScanResponseLength);
     DmAdvSetData(DM_ADV_HANDLE_DEFAULT, HCI_ADV_DATA_OP_COMP_FRAG, DM_DATA_LOC_SCAN, aScanResponseLength, buf);
 
@@ -432,13 +444,16 @@ otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint
 {
     otError       error = OT_ERROR_INVALID_ARGS;
     hciConnSpec_t connSpec;
-    dmConnId_t    connId;
 
     otEXPECT(aInstance == bleMgmtGetThreadInstance());
+    otEXPECT_ACTION(sConnectionId == DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
     otEXPECT(aAddress != NULL);
     otEXPECT(aWindow <= aInterval);
     otEXPECT(isInRange(aInterval, OT_BLE_SCAN_INTERVAL_MIN, OT_BLE_SCAN_INTERVAL_MAX));
     otEXPECT(isInRange(aWindow, OT_BLE_SCAN_WINDOW_MIN, OT_BLE_SCAN_WINDOW_MAX));
+
+    // Force scan stop before initiating the scan used for connection
+    bleGapScanStop(aInstance);
 
     DmConnSetScanInterval(aInterval, aWindow);
     DmDevSetFilterPolicy(DM_FILT_POLICY_MODE_INIT, kConnFilterPolicyNone);
@@ -453,8 +468,8 @@ otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint
 
     DmConnSetConnSpec(&connSpec);
 
-    connId = DmConnOpen(DM_CLIENT_ID_APP, HCI_INIT_PHY_LE_1M_BIT, aAddress->mAddrType, aAddress->mAddr);
-    error  = (connId == DM_CONN_ID_NONE) ? OT_ERROR_FAILED : OT_ERROR_NONE;
+    sConnectionId = DmConnOpen(DM_CLIENT_ID_APP, HCI_INIT_PHY_LE_1M_BIT, aAddress->mAddrType, aAddress->mAddr);
+    error         = (sConnectionId == DM_CONN_ID_NONE) ? OT_ERROR_FAILED : OT_ERROR_NONE;
 
 exit:
     return error;
@@ -465,44 +480,13 @@ otError bleGapDisconnect(otInstance *aInstance)
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
-    DmConnClose(DM_CLIENT_ID_APP, DM_CONN_ID_NONE, 0);
+    otEXPECT_ACTION(sConnectionId != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
+
+    DmConnClose(DM_CLIENT_ID_APP, sConnectionId, 0);
+    sConnectionId = DM_CONN_ID_NONE;
 
 exit:
     return error;
 }
 
-// extern
-void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
-{
-    printf("BleConnected: connId=%d\r\n", aConnectionId);
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-// extern
-void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
-{
-    printf("BleDisconnected: connId=%d\r\n", aConnectionId);
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-// extern
-void otPlatBleGapOnAdvReceived(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, otBleRadioPacket *aPacket)
-{
-    printf("AdvReceived: ");
-    printf("addr=%02x%02x:%02x%02x:%02x%02x ", aAddress->mAddr[0], aAddress->mAddr[1], aAddress->mAddr[2],
-           aAddress->mAddr[3], aAddress->mAddr[4], aAddress->mAddr[5]);
-    printf("rssi: %d\r\n", aPacket->mPower);
-
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-// extern
-void otPlatBleGapOnScanRespReceived(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, otBleRadioPacket *aPacket)
-{
-    printf("ScanRspReceived: ");
-    printf("addr=%02x%02x:%02x%02x:%02x%02x ", aAddress->mAddr[0], aAddress->mAddr[1], aAddress->mAddr[2],
-           aAddress->mAddr[3], aAddress->mAddr[4], aAddress->mAddr[5]);
-    printf("rssi: %d\r\n", aPacket->mPower);
-
-    OT_UNUSED_VARIABLE(aInstance);
-}
+#endif // OPENTHREAD_ENABLE_TOBLE

@@ -31,6 +31,8 @@
  *   This file implements the BLE management interfaces for Cordio BLE stack.
  *
  */
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include "wsf_types.h"
 
@@ -149,7 +151,7 @@ bool bleMgmtIsEnabled(otInstance *aInstance)
 {
     bool ret = false;
 
-    otEXPECT_ACTION((sInstance == NULL) && (aInstance != NULL), ret = false);
+    otEXPECT_ACTION((sInstance != NULL) && (aInstance = sInstance), ret = false);
     ret = (sState == kStateInitialized) ? true : false;
 
 exit:
@@ -181,10 +183,9 @@ void bleMgmtTaskletsProcess(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-static void bleHostInitDone(otError error)
+static void bleHostInitDone(void)
 {
-    OT_UNUSED_VARIABLE(error);
-    otPlatBleEnabledDone(sInstance, error);
+    otPlatBleOnEnabled(sInstance);
 
     // ble.gap().onDisconnection(disconnectionCallback);
     // ble.gap().onConnection(connectionCallback);
@@ -231,7 +232,7 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
         // deviceInstance().initialization_status = INITIALIZED;
         // _init_callback.call(&context);
         sState = kStateInitialized;
-        bleHostInitDone(OT_ERROR_NONE);
+        bleHostInitDone();
         break;
     }
     default:
@@ -364,10 +365,10 @@ static void bleSetup(void)
 }
 
 // extern
-void otPlatBleEnabledDone(otInstance *aInstance, otError error)
+void otPlatBleOnEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    printf("BLE Stack Init Done: error = %s\r\n", error == OT_ERROR_NONE ? "SUCCESS" : "FAILED");
+    printf("BLE Stack Init Done\r\n");
 }
 
 #endif // OPENTHREAD_ENABLE_TOBLE
