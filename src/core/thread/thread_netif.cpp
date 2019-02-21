@@ -43,9 +43,6 @@
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-#include "utils/slaac_address.hpp"
-#endif
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -60,6 +57,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     , mDhcp6Server(aInstance)
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    , mSlaac(aInstance)
+#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mDnsClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
@@ -112,9 +112,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
 {
     mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
-#endif
 }
 
 void ThreadNetif::Up(void)
@@ -227,13 +224,5 @@ bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
 exit:
     return rval;
 }
-
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-void ThreadNetif::UpdateSlaac(void)
-{
-    Utils::Slaac::UpdateAddresses(&GetInstance(), mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses),
-                                  otIp6CreateRandomIid, NULL);
-}
-#endif
 
 } // namespace ot

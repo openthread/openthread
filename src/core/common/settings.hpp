@@ -39,6 +39,9 @@
 #include "common/locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mle.hpp"
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#include "utils/slaac_address.hpp"
+#endif
 
 namespace ot {
 
@@ -122,12 +125,13 @@ protected:
      */
     enum Key
     {
-        kKeyActiveDataset   = 0x0001, ///< Active Operational Dataset
-        kKeyPendingDataset  = 0x0002, ///< Pending Operational Dataset
-        kKeyNetworkInfo     = 0x0003, ///< Thread network information
-        kKeyParentInfo      = 0x0004, ///< Parent information
-        kKeyChildInfo       = 0x0005, ///< Child information
-        kKeyThreadAutoStart = 0x0006, ///< Auto-start information
+        kKeyActiveDataset     = 0x0001, ///< Active Operational Dataset
+        kKeyPendingDataset    = 0x0002, ///< Pending Operational Dataset
+        kKeyNetworkInfo       = 0x0003, ///< Thread network information
+        kKeyParentInfo        = 0x0004, ///< Parent information
+        kKeyChildInfo         = 0x0005, ///< Child information
+        kKeyThreadAutoStart   = 0x0006, ///< Auto-start information
+        kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
     };
 
     explicit SettingsBase(Instance &aInstance)
@@ -318,6 +322,48 @@ public:
      *
      */
     otError DeleteThreadAutoStart(void) { return Delete(kKeyThreadAutoStart); }
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+
+    /**
+     * This method saves the SLAAC IID secret key.
+     *
+     * @param[in]   aKey                  The SLAAC IID secret key.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved the value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
+    {
+        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+    }
+
+    /**
+     * This method reads the SLAAC IID secret key.
+     *
+     * @param[out]   aKey          A reference to a SLAAC IID secret key to output the read value.
+     *
+     * @retval OT_ERROR_NONE              Successfully read the value.
+     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
+    {
+        return ReadFixedSize(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+    }
+
+    /**
+     * This method deletes the SLAAC IID secret key value from settings.
+     *
+     * @retval OT_ERROR_NONE             Successfully deleted the value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+
+#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
 
     /**
      * This method adds a Child Info entry to settings.
