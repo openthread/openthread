@@ -389,7 +389,7 @@ void cc2538RadioSetHgm(bool aState)
     }
 }
 
-bool cc2538RadioGetHgm()
+bool cc2538RadioGetHgm(void)
 {
     if (HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT, GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN)) &
         GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN))

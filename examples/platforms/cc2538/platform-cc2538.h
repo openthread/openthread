@@ -101,7 +101,7 @@ void cc2538RadioSetHgm(bool aState);
 /**
  * Retrieve the state of the CC2592 HGM pin.
  */
-bool cc2538RadioGetHgm();
+bool cc2538RadioGetHgm(void);
 #endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 
 #endif // PLATFORM_CC2538_H_
