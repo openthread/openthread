@@ -4237,7 +4237,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     {
     case OT_DEVICE_ROLE_DISABLED:
     case OT_DEVICE_ROLE_DETACHED:
-        assert(false);
+        cost = static_cast<uint8_t>(kMaxRouteCost);
         break;
 
     case OT_DEVICE_ROLE_CHILD:
