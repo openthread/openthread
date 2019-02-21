@@ -307,19 +307,6 @@ bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
 void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function pointer is called to create IPv6 IID during SLAAC procedure.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[inout]  aContext   A pointer to creator-specific context.
- *
- * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
- * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
- *
- */
-typedef otError (*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
-
-/**
  * Create random IID for given IPv6 address.
  *
  * @param[in]     aInstance   A pointer to an OpenThread instance.
