@@ -69,6 +69,7 @@
     <ClCompile Include="..\..\src\core\api\logging_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\phy_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="..\..\src\core\net\netif.hpp" />
     <ClInclude Include="..\..\src\core\net\socket.hpp" />
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
+    <ClInclude Include="..\..\src\core\net\phy.hpp" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\announce_sender.hpp" />

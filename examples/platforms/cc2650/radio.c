@@ -55,6 +55,11 @@ enum
     CC2650_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
+enum
+{
+    CC2650_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+};
+
 /* phy state as defined by openthread */
 static volatile cc2650_PhyState sState;
 
@@ -192,7 +197,7 @@ static void rfCoreInitReceiveParams(void)
         .condition                  = {
             .rule                   = COND_NEVER,
         },
-        .channel                    = OT_RADIO_CHANNEL_MIN,
+        .channel                    = CC2650_CHANNEL_MIN,
         .rxConfig                   =
         {
             .bAutoFlushCrc          = 1,

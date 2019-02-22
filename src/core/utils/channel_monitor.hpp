@@ -41,6 +41,7 @@
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
+#include "phy/phy.hpp"
 
 namespace ot {
 namespace Utils {
@@ -191,7 +192,7 @@ private:
 #else
         kNumChannelMasks = 4,
 #endif
-        kNumChannels       = (OT_RADIO_CHANNEL_MAX - OT_RADIO_CHANNEL_MIN + 1),
+        kNumChannels       = (Phy::kChannelMax - Phy::kChannelMin + 1),
         kTimerInterval     = (kSampleInterval / kNumChannelMasks),
         kMaxJitterInterval = 4096,
         kMaxOccupancy      = 0xffff,

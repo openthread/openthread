@@ -49,6 +49,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "phy/phy.hpp"
 
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
@@ -1580,7 +1581,7 @@ public:
 private:
     enum
     {
-        kNumMaskEntries = OT_RADIO_NUM_PAGES,
+        kNumMaskEntries = Phy::kNumChannelPages,
     };
 
     ChannelMaskEntry mEntries[kNumMaskEntries];

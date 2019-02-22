@@ -52,6 +52,7 @@
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
 #endif
+#include <openthread/phy.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_FTD
@@ -1930,7 +1931,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANN
 {
     otError error = OT_ERROR_NONE;
 
-    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    for (uint8_t channel = otPhyGetChannelMin(mInstance); channel <= otPhyGetChannelMax(mInstance); channel++)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 

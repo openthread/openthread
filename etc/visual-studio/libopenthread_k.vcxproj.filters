@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\phy_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -476,6 +479,9 @@
     <ClInclude Include="..\..\src\core\net\udp6.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\phy\phy.hpp">
+      <Filter>Header Files\phy</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -678,6 +684,9 @@
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\netdata.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\phy.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\tasklet.h">

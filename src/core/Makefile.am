@@ -124,6 +124,7 @@ SOURCES_COMMON                      = \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/network_time_api.cpp          \
+    api/phy_api.cpp                   \
     api/server_api.cpp                \
     api/sntp_api.cpp                  \
     api/tasklet_api.cpp               \
@@ -234,6 +235,7 @@ libopenthread_radio_a_SOURCES       = \
     api/link_raw_api.cpp              \
     api/logging_api.cpp               \
     api/message_api.cpp               \
+    api/phy_api.cpp                   \
     api/tasklet_api.cpp               \
     common/instance.cpp               \
     common/locator.cpp                \
@@ -354,6 +356,7 @@ HEADERS_COMMON                      = \
     net/socket.hpp                    \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
+    phy/phy.hpp                       \
     thread/address_resolver.hpp       \
     thread/announce_begin_server.hpp  \
     thread/announce_sender.hpp        \

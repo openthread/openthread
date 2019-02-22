@@ -105,8 +105,8 @@ uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
     uint16_t occupancy = 0;
 
-    VerifyOrExit((OT_RADIO_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_CHANNEL_MAX));
-    occupancy = mChannelOccupancy[aChannel - OT_RADIO_CHANNEL_MIN];
+    VerifyOrExit((Phy::kChannelMin <= aChannel) && (aChannel <= Phy::kChannelMax));
+    occupancy = mChannelOccupancy[aChannel - Phy::kChannelMin];
 
 exit:
     return occupancy;
@@ -147,7 +147,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
     }
     else
     {
-        uint8_t  channelIndex = (aResult->mChannel - OT_RADIO_CHANNEL_MIN);
+        uint8_t  channelIndex = (aResult->mChannel - Phy::kChannelMin);
         uint32_t newAverage   = mChannelOccupancy[channelIndex];
         uint32_t newValue     = 0;
         uint32_t weight;

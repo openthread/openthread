@@ -102,6 +102,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
     src/core/api/netdata_api.cpp                            \
+    src/core/api/phy_api.cpp                                \
     src/core/api/server_api.cpp                             \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \

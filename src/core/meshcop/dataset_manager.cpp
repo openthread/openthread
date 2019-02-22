@@ -43,6 +43,7 @@
 #include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "phy/phy.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -227,7 +228,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
     SuccessOrExit(error = channelMaskTlv->GetChannelMask(mask));
 
-    aChannelMask.SetMask(mask & OT_RADIO_SUPPORTED_CHANNELS);
+    aChannelMask.SetMask(mask & Phy::kSupportedChannels);
 
     VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
