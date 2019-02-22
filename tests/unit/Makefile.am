@@ -69,28 +69,25 @@ AM_CPPFLAGS                                                        += \
     $(NULL)
 endif
 
+COMMON_LDADD                                                        = \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_NCP
-
-COMMON_LDADD                                                        = \
+COMMON_LDADD                                                       += \
     $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                   \
+    $(NULL)
+endif
+
+COMMON_LDADD                                                       += \
     $(top_builddir)/src/core/libopenthread-ftd.a                      \
     -lpthread                                                         \
     $(NULL)
-
-else
-
-COMMON_LDADD                                                        = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                      \
-    -lpthread                                                         \
-    $(NULL)
-
-endif # OPENTHREAD_ENABLE_NCP
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 COMMON_LDADD                                                       += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
     $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+endif
 
 if OPENTHREAD_ENABLE_POSIX_APP
 COMMON_LDADD                                                       += \
@@ -101,10 +98,14 @@ endif
 # Test applications that should be run when the 'check' target is run.
 
 check_PROGRAMS                                                      = \
+    test-toolchain                                                    \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_FTD
+check_PROGRAMS                                                     += \
     test-aes                                                          \
     test-child                                                        \
     test-child-table                                                  \
-    test-hdlc                                                         \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-link-quality                                                 \
@@ -114,25 +115,36 @@ check_PROGRAMS                                                      = \
     test-message-queue                                                \
     test-network-data                                                 \
     test-priority-queue                                               \
-    test-pskc                                                         \
-    test-spinel-decoder                                               \
-    test-spinel-encoder                                               \
     test-string                                                       \
     test-strlcat                                                      \
     test-strlcpy                                                      \
     test-strnlen                                                      \
     test-timer                                                        \
-    test-toolchain                                                    \
     $(NULL)
 
-XFAIL_TESTS                                                         = \
+if OPENTHREAD_ENABLE_COMMISSIONER
+check_PROGRAMS                                                     += \
+    test-pskc                                                         \
     $(NULL)
+endif
 
 if OPENTHREAD_ENABLE_NCP
 check_PROGRAMS                                                     += \
     test-ncp-buffer                                                   \
+    test-spinel-decoder                                               \
+    test-spinel-encoder                                               \
+    $(NULL)   
+
+if OPENTHREAD_ENABLE_NCP_UART
+check_PROGRAMS                                                     += \
+    test-hdlc                                                         \
     $(NULL)
-endif # OPENTHREAD_ENABLE_NCP
+endif
+endif
+endif # OPENTHREAD_ENABLE_FTD
+
+XFAIL_TESTS                                                         = \
+    $(NULL)
 
 if OPENTHREAD_WITH_ADDRESS_SANITIZER
 check_PROGRAMS                 += test-address-sanitizer
@@ -223,8 +235,8 @@ test_spinel_encoder_SOURCES  = test_platform.cpp test_spinel_encoder.cpp
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp
 
-test_toolchain_LDADD         = $(COMMON_LDADD)
-test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
+test_toolchain_LDADD         = $(NULL)
+test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
 
 PRETTY_FILES                                                        = \
     $(test_address_sanitizer_SOURCES)                                 \

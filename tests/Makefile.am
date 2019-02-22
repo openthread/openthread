@@ -48,10 +48,13 @@ PRETTY_SUBDIRS                          = \
     unit                                  \
     $(NULL)
 
+SUBDIRS                                += \
+    unit                                  \
+    $(NULL)
+
 if OPENTHREAD_POSIX
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += \
-    unit                                  \
     scripts                               \
     $(NULL)
 endif
