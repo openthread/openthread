@@ -32,6 +32,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/radio.h>
@@ -68,6 +69,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(buf, data, frame.mLength);
 
     otPlatRadioReceiveDone(instance, &frame, OT_ERROR_NONE);
+
+    while (otTaskletsArePending(instance))
+    {
+        otTaskletsProcess(instance);
+    }
 
 exit:
 
