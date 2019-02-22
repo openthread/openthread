@@ -32,6 +32,8 @@
  *   for OpenThread.
  */
 
+#include "em_msc.h"
+
 #ifndef OPENTHREAD_CORE_EFR32_CONFIG_H_
 #define OPENTHREAD_CORE_EFR32_CONFIG_H_
 
@@ -90,7 +92,7 @@
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                              0x800
+#define SETTINGS_CONFIG_PAGE_SIZE                              FLASH_PAGE_SIZE
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
