@@ -80,21 +80,30 @@
  * The actual physical address used for the cc2538 is set by the
  * linker file, the value here is "relative to the base address" set
  * in the linker file.
+ *
  */
 #define SETTINGS_CONFIG_BASE_ADDRESS                           0
 
 /**
- * @def The CC2538 linker script sets aside 2 pages.
+ * @def SETTINGS_CONFIG_PAGE_NUM
+ *
+ * The CC2538 linker script sets aside 2 pages.
+ *
  */
 #define SETTINGS_CONFIG_PAGE_NUM                               2
 
 /**
- * @def The page size of settings, 2K bytes
+ * @def SETTINGS_CONFIG_PAGE_SIZE
+ *
+ * The page size of settings, 2K bytes
+ *
  */
 #define SETTINGS_CONFIG_PAGE_SIZE                              2048
 
 /**
- * @def Enable support for the CC2592 range-extender front-end.
+ * @def OPENTHREAD_CONFIG_CC2538_WITH_CC2592
+ *
+ * Enable support for the CC2592 range-extender front-end.
  *
  * This is a feature of the CC2538-CC2592 EM and other peripherals which
  * extends the range of the bare CC2538 to over a kilometre line-of-sight.
@@ -103,13 +112,16 @@
  * SWRA447).
  *
  * If you have such a board, change this to 1.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2538_WITH_CC2592
 #define OPENTHREAD_CONFIG_CC2538_WITH_CC2592                    0
 #endif
 
 /**
- * @def Define the pin (on port C) that connects to the CC2592 PA_EN pin.
+ * @def OPENTHREAD_CONFIG_CC2592_PA_EN_PIN
+ *
+ * Define the pin (on port C) that connects to the CC2592 PA_EN pin.
  *
  * One of the 3 observable channels on the CC2538 radio module will be
  * configured to take the "PA power down" signal from the radio module itself,
@@ -117,13 +129,16 @@
  * may only be connected to a pin on GPIO port C.
  *
  * The default (PC3) is as per TI recommendations in AN130.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_PA_EN_PIN
 #define OPENTHREAD_CONFIG_CC2592_PA_EN_PIN                      3
 #endif
 
 /**
- * @def Define the pin (on port C) that connects to the CC2592 LNA_EN pin.
+ * @def OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN
+ *
+ * Define the pin (on port C) that connects to the CC2592 LNA_EN pin.
  *
  * One of the 3 observable channels on the CC2538 radio module will be
  * configured to take the "LNA power down" signal from the radio module itself,
@@ -131,13 +146,16 @@
  * may only be connected to a pin on GPIO port C.
  *
  * The default (PC2) is as per TI recommendations in AN130.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN
 #define OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN                     2
 #endif
 
 /**
- * @def Enable control of the high-gain mode signal.
+ * @def OPENTHREAD_CONFIG_CC2592_USE_HGM
+ *
+ * Enable control of the high-gain mode signal.
  *
  * High-gain mode is enabled through the `HGM` pin on the CC2592, which may be
  * connected to any free GPIO pin for software control, or may be linked to
@@ -145,47 +163,60 @@
  *
  * Set this to 0 if you have wired this pin to a power rail, or have a
  * non-standard way of controlling it.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_USE_HGM
 #define OPENTHREAD_CONFIG_CC2592_USE_HGM                        1
 #endif
 
 /**
- * @def Set the CC2538 receive sensitivity.
+ * @def OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY
+ *
+ * Set the CC2538 receive sensitivity.
  *
  * A bare CC2538 has a receive sensitivity of -88dBm.  The CC2592 changes this
  * to -85 or -81 depending on whether the HGM pin is high or low.  If
  * `OPENTHREAD_CONFIG_CC2592_USE_HGM` is 0, then this sets the receive
  * sensitivity.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY
 #define OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY            -88
 #endif
 
 /**
- * @def Define the GPIO port that the HGM pin is connected to.  It may be
+ * @def OPENTHREAD_CONFIG_CC2592_HGM_PORT
+ *
+ * Define the GPIO port that the HGM pin is connected to.  It may be
  * connected to any available GPIO pin.
  *
  * The default (GPIO port D) is as per TI recommendations.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_PORT
 #define OPENTHREAD_CONFIG_CC2592_HGM_PORT                       GPIO_D_BASE
 #endif
 
 /**
- * @def Define the pin on the GPIO port that the HGM pin is connected to.  It
+ * @def OPENTHREAD_CONFIG_CC2592_HGM_PIN
+ *
+ * Define the pin on the GPIO port that the HGM pin is connected to.  It
  * may be connected to any available GPIO pin.
  *
  * The default (PD2) is as per TI recommendations.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_PIN
 #define OPENTHREAD_CONFIG_CC2592_HGM_PIN                        2
 #endif
 
 /**
- * @def Define the default state of the CC2592's HGM pin.
+ * @def OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE
+ *
+ * Define the default state of the CC2592's HGM pin.
  *
  * The default is to turn high-gain mode on.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE
 #define OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE              true
