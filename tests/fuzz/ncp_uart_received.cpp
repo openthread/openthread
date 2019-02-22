@@ -33,6 +33,7 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
+#include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/uart.h>
@@ -64,6 +65,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(buf, data, size);
 
     otPlatUartReceived(buf, (uint16_t)size);
+
+    while (otTaskletsArePending(instance))
+    {
+        otTaskletsProcess(instance);
+    }
 
 exit:
 
