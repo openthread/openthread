@@ -237,6 +237,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         IgnoreReturnValue(write(STDERR_FILENO, sWriteBuffer, sWriteLength));
         sWriteBuffer = NULL;
         sWriteLength = 0;
+        otPlatUartSendDone();
     }
 
     otEXPECT(sSessionSocket != -1);
