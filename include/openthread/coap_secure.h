@@ -206,10 +206,8 @@ otError otCoapSecureConnect(otInstance *                    aInstance,
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE  Successfully stopped the DTLS connection.
- *
  */
-otError otCoapSecureDisconnect(otInstance *aInstance);
+void otCoapSecureDisconnect(otInstance *aInstance);
 
 /**
  * This method indicates whether or not the DTLS session is connected.

@@ -263,13 +263,13 @@ otError CoapSecure::Process(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "disconnect") == 0)
     {
-        SuccessOrExit(error = otCoapSecureDisconnect(mInterpreter.mInstance));
+        otCoapSecureDisconnect(mInterpreter.mInstance);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
         if (otCoapSecureIsConnectionActive(mInterpreter.mInstance))
         {
-            error         = otCoapSecureDisconnect(mInterpreter.mInstance);
+            otCoapSecureDisconnect(mInterpreter.mInstance);
             mShutdownFlag = true;
         }
         else
