@@ -146,18 +146,16 @@ bool CoapSecure::IsConnected(void)
     return GetNetif().GetDtls().GetState() == MeshCoP::Dtls::kStateConnected;
 }
 
-otError CoapSecure::Disconnect(void)
+void CoapSecure::Disconnect(void)
 {
-    Ip6::SockAddr sockAddr;
-    otError       error = OT_ERROR_NONE;
-
     GetNetif().GetDtls().Stop();
 
     // Disconnect from previous peer by connecting to any address
-    SuccessOrExit(error = mSocket.Connect(sockAddr));
+    {
+        otError error = mSocket.Connect(Ip6::SockAddr());
 
-exit:
-    return error;
+        assert(error == OT_ERROR_NONE);
+    }
 }
 
 MeshCoP::Dtls &CoapSecure::GetDtls(void)
@@ -307,6 +305,14 @@ void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
 
 void CoapSecure::HandleDtlsConnected(bool aConnected)
 {
+    if (!aConnected)
+    {
+        // Disconnect from previous peer by connecting to any address
+        otError error = mSocket.Connect(Ip6::SockAddr());
+
+        assert(error == OT_ERROR_NONE);
+    }
+
     if (mConnectedCallback != NULL)
     {
         mConnectedCallback(aConnected, mConnectedContext);

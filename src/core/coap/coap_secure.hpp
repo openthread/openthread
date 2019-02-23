@@ -140,10 +140,8 @@ public:
     /**
      * This method stops the DTLS connection.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the DTLS connection.
-     *
      */
-    otError Disconnect(void);
+    void Disconnect(void);
 
     /**
      * This method returns a reference to the DTLS object.
