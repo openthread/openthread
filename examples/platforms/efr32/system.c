@@ -51,6 +51,10 @@
 #include "fem-control.h"
 #endif
 
+#define USE_EFR32_LOG                                                                   \
+    ((OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL))
+
 void halInitChipSpecific(void);
 
 otInstance *sInstance;
@@ -71,7 +75,9 @@ void otSysInit(int argc, char *argv[])
     wakeupFem();
 #endif
 
+#if USE_EFR32_LOG
     efr32LogInit();
+#endif
     efr32RadioInit();
     efr32AlarmInit();
     efr32MiscInit();
@@ -86,7 +92,10 @@ bool otSysPseudoResetWasRequested(void)
 void otSysDeinit(void)
 {
     efr32RadioDeinit();
+
+#if USE_EFR32_LOG
     efr32LogDeinit();
+#endif
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
