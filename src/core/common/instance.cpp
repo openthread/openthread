@@ -67,9 +67,6 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoap(*this)
 #endif
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
-#endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     , mChannelMonitor(*this)
 #endif
@@ -239,6 +236,16 @@ void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
         mEnergyScanCallback(aResult, mEnergyScanCallbackContext);
     }
 }
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+Coap::CoapSecure &Instance::GetApplicationCoapSecure()
+{
+    Coap::CoapSecure &coapSecure = mThreadNetif.GetCoapSecure();
+    coapSecure.SetLinkSecurityEnabled(true);
+    return coapSecure;
+}
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace ot

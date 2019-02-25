@@ -71,10 +71,9 @@ public:
      * This constructor initializes the object.
      *
      * @param[in]  aInstance           A reference to the OpenThread instance.
-     * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
      *
      */
-    explicit CoapSecure(Instance &aInstance, bool aLayerTwoSecurity = false);
+    explicit CoapSecure(Instance &aInstance);
 
     /**
      * This method starts the secure CoAP agent.
@@ -318,6 +317,14 @@ public:
      */
     const Ip6::MessageInfo &GetPeerMessageInfo(void) const { return mPeerAddress; }
 
+    /**
+     * This method sets whether or not link security is enabled for transmitting CoAP messages.
+     *
+     * @param[in]  aEnabled  TRUE if link security is enabled, FALSE otherwise.
+     *
+     */
+    void SetLinkSecurityEnabled(bool aEnabled) { mLinkSecurityEnabled = aEnabled; }
+
 private:
     static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
@@ -348,7 +355,7 @@ private:
     TaskletContext    mTransmitTask;
     Ip6::UdpSocket    mSocket;
 
-    bool mLayerTwoSecurity : 1;
+    bool mLinkSecurityEnabled : 1;
 };
 
 } // namespace Coap

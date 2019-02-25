@@ -47,7 +47,7 @@
 namespace ot {
 namespace Coap {
 
-CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
+CoapSecure::CoapSecure(Instance &aInstance)
     : CoapBase(aInstance, &CoapSecure::Send)
     , mConnectedCallback(NULL)
     , mConnectedContext(NULL)
@@ -56,7 +56,7 @@ CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     , mTransmitQueue()
     , mTransmitTask(aInstance, &CoapSecure::HandleTransmit, this)
     , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
-    , mLayerTwoSecurity(aLayerTwoSecurity)
+    , mLinkSecurityEnabled(false)
 {
 }
 
@@ -348,7 +348,7 @@ otError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(aMessageSubType);
-    message->SetLinkSecurityEnabled(mLayerTwoSecurity);
+    message->SetLinkSecurityEnabled(mLinkSecurityEnabled);
 
     SuccessOrExit(error = message->Append(aBuf, aLength));
 

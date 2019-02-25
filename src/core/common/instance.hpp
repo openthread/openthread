@@ -330,7 +330,7 @@ public:
      * @returns A reference to the application COAP Secure object.
      *
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::CoapSecure &GetApplicationCoapSecure(void);
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -442,10 +442,6 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap::Coap mApplicationCoap;
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    Coap::CoapSecure mApplicationCoapSecure;
 #endif
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
