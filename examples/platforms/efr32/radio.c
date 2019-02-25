@@ -97,16 +97,15 @@ enum
 
 typedef enum
 {
-    ENERGY_SCAN_IDLE,
-    ENERGY_SCAN_IN_PROGRESS,
-    ENERGY_SCAN_COMPLETED,
-    ENERGY_SCAN_COMPLETED_ERROR
+    ENERGY_SCAN_STATUS_IDLE,
+    ENERGY_SCAN_STATUS_IN_PROGRESS,
+    ENERGY_SCAN_STATUS_COMPLETED
 } energyScanStatus;
 
 typedef enum
 {
-    ENERGY_SCAN_SYNC,
-    ENERGY_SCAN_ASYNC
+    ENERGY_SCAN_MODE_SYNC,
+    ENERGY_SCAN_MODE_ASYNC
 } energyScanMode;
 
 static uint16_t      sPanId             = 0;
@@ -134,7 +133,7 @@ static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
 
 efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
 
-static volatile energyScanStatus sEnergyScanStatus = ENERGY_SCAN_IDLE;
+static volatile energyScanStatus sEnergyScanStatus;
 static volatile int8_t           sEnergyScanResultDbm;
 static energyScanMode            sEnergyScanMode;
 
@@ -318,6 +317,8 @@ void efr32RadioInit(void)
     sTxBandConfig = sRxBandConfig;
     efr32RadioSetTxPower(sTxBandConfig->mRailHandle, sTxBandConfig->mChannelConfig, sTxPowerDbm);
 
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+
     otLogInfoPlat("Initialized", NULL);
 }
 
@@ -345,11 +346,10 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
     otError              error         = OT_ERROR_NONE;
 
-    otEXPECT_ACTION((sEnergyScanStatus == ENERGY_SCAN_IDLE), error = OT_ERROR_BUSY);
+    otEXPECT_ACTION((sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE), error = OT_ERROR_BUSY);
 
-    sEnergyScanStatus    = ENERGY_SCAN_IN_PROGRESS;
-    sEnergyScanResultDbm = OT_RADIO_RSSI_INVALID;
-    sEnergyScanMode      = aMode;
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IN_PROGRESS;
+    sEnergyScanMode   = aMode;
 
     RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
 
@@ -570,21 +570,24 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     OT_UNUSED_VARIABLE(aInstance);
 
-    error = efr32StartEnergyScan(ENERGY_SCAN_SYNC, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME);
+    error = efr32StartEnergyScan(ENERGY_SCAN_MODE_SYNC, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME);
     otEXPECT((error == OT_ERROR_NONE));
 
     start = RAIL_GetTime();
 
     // waiting for the event RAIL_EVENT_RSSI_AVERAGE_DONE
-    while (sEnergyScanStatus == ENERGY_SCAN_IN_PROGRESS && ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
+    while (sEnergyScanStatus == ENERGY_SCAN_STATUS_IN_PROGRESS &&
+           ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
         ;
 
-    if (sEnergyScanStatus == ENERGY_SCAN_COMPLETED)
+    if (sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
         rssi = sEnergyScanResultDbm;
     }
+
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+
 exit:
-    sEnergyScanStatus = ENERGY_SCAN_IDLE;
     return rssi;
 }
 
@@ -999,15 +1002,15 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
     {
         const int16_t energyScanResultQuarterDbm = RAIL_GetAverageRssi(aRailHandle);
 
+        sEnergyScanStatus = ENERGY_SCAN_STATUS_COMPLETED;
+
         if (energyScanResultQuarterDbm == RAIL_RSSI_INVALID)
         {
-            sEnergyScanResultDbm = 0;
-            sEnergyScanStatus    = ENERGY_SCAN_COMPLETED_ERROR;
+            sEnergyScanResultDbm = OT_RADIO_RSSI_INVALID;
         }
         else
         {
             sEnergyScanResultDbm = energyScanResultQuarterDbm / QUARTER_DBM_IN_DBM;
-            sEnergyScanStatus    = ENERGY_SCAN_COMPLETED;
         }
 
         RAIL_YieldRadio(aRailHandle);
@@ -1016,12 +1019,9 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    otError error;
     OT_UNUSED_VARIABLE(aInstance);
 
-    error = efr32StartEnergyScan(ENERGY_SCAN_ASYNC, aScanChannel, aScanDuration * US_IN_MS);
-
-    return error;
+    return efr32StartEnergyScan(ENERGY_SCAN_MODE_ASYNC, aScanChannel, aScanDuration * US_IN_MS);
 }
 
 void efr32RadioProcess(otInstance *aInstance)
@@ -1051,10 +1051,9 @@ void efr32RadioProcess(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
     }
-    else if (sEnergyScanMode == ENERGY_SCAN_ASYNC &&
-             (sEnergyScanStatus == ENERGY_SCAN_COMPLETED || sEnergyScanStatus == ENERGY_SCAN_COMPLETED_ERROR))
+    else if (sEnergyScanMode == ENERGY_SCAN_MODE_ASYNC && sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
-        sEnergyScanStatus = ENERGY_SCAN_IDLE;
+        sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
         otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
     }
 
