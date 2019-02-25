@@ -230,12 +230,13 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        nextMessage = curMessage->GetNext();
-
         if (curMessage->GetDirectTransmission() == false)
         {
+            nextMessage = curMessage->GetNext();
             continue;
         }
+
+        curMessage->SetDoNotEvict(true);
 
         switch (curMessage->GetType())
         {
@@ -265,6 +266,11 @@ Message *MeshForwarder::GetDirectTransmission(void)
             error = OT_ERROR_DROP;
             break;
         }
+
+        curMessage->SetDoNotEvict(false);
+
+        // the next message may have been evicted during processing (e.g. due to Address Solicit)
+        nextMessage = curMessage->GetNext();
 
         switch (error)
         {
