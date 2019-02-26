@@ -35,6 +35,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-application-coap         \
     --enable-application-coap-secure  \
     --enable-border-router            \
+    --enable-cert-log                 \
     --enable-cli                      \
     --enable-commissioner             \
     --enable-dhcp6-client             \
@@ -50,7 +51,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-radio-only               \
     --enable-service                  \
     --with-examples=posix             \
-    --enable-cert-log                 \
     $(NULL)
 
 SUBDIRS                             = \
