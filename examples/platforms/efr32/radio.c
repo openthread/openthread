@@ -346,7 +346,7 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
     otError              error         = OT_ERROR_NONE;
 
-    otEXPECT_ACTION((sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE), error = OT_ERROR_BUSY);
+    otEXPECT_ACTION(sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE, error = OT_ERROR_BUSY);
 
     sEnergyScanStatus = ENERGY_SCAN_STATUS_IN_PROGRESS;
     sEnergyScanMode   = aMode;
@@ -354,7 +354,7 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
     RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
 
     status = RAIL_StartAverageRssi(sRxBandConfig->mRailHandle, aChannel, aAveragingTimeUs, &schedulerInfo);
-    otEXPECT(status == RAIL_STATUS_NO_ERROR);
+    otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
 exit:
     return error;
@@ -571,7 +571,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     error = efr32StartEnergyScan(ENERGY_SCAN_MODE_SYNC, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME);
-    otEXPECT((error == OT_ERROR_NONE));
+    otEXPECT(error == OT_ERROR_NONE);
 
     start = RAIL_GetTime();
 
@@ -1021,7 +1021,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return efr32StartEnergyScan(ENERGY_SCAN_MODE_ASYNC, aScanChannel, aScanDuration * US_IN_MS);
+    return efr32StartEnergyScan(ENERGY_SCAN_MODE_ASYNC, aScanChannel, (RAIL_Time_t)aScanDuration * US_IN_MS);
 }
 
 void efr32RadioProcess(otInstance *aInstance)
