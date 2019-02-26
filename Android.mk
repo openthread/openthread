@@ -212,7 +212,6 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/random.c                             \
     src/posix/platform/settings.cpp                         \
-    src/posix/platform/spi-stubs.c                          \
     src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
     third_party/mbedtls/repo/library/md.c                   \
