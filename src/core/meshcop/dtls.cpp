@@ -160,6 +160,8 @@ otError Dtls::Start(bool             aClient,
     // do not handle new connection before guard time expired
     VerifyOrExit(mState == kStateStopped, rval = MBEDTLS_ERR_SSL_TIMEOUT);
 
+    mState = kStateConnecting;
+
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
     mbedtls_ctr_drbg_init(&mCtrDrbg);
@@ -244,7 +246,6 @@ otError Dtls::Start(bool             aClient,
     mContext          = aContext;
     mReceiveMessage   = NULL;
     mMessageSubType   = Message::kSubTypeNone;
-    mState            = kStateConnecting;
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
@@ -260,8 +261,9 @@ otError Dtls::Start(bool             aClient,
     Process();
 
 exit:
-    if (rval != 0)
+    if ((mState == kStateConnecting) && (rval != 0))
     {
+        mState = kStateStopped;
         FreeMbedtls();
     }
 
