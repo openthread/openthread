@@ -345,7 +345,8 @@ public:
     bool IsValid(void) const
     {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)));
+                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
+                (BitVectorBytes(mPrefixLength) <= sizeof(Ip6::Address)));
     }
 
     /**
