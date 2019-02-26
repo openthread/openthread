@@ -125,9 +125,11 @@ EXTRA_DIST                                                         = \
     command.py                                                       \
     common.py                                                        \
     config.py                                                        \
+    dtls.py                                                          \
     ipv6.py                                                          \
     lowpan.py                                                        \
     mac802154.py                                                     \
+    mesh_cop.py                                                      \
     message.py                                                       \
     mle.py                                                           \
     net_crypto.py                                                    \
