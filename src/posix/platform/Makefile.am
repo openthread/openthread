@@ -49,7 +49,6 @@ libopenthread_posix_a_SOURCES             = \
     radio_spinel.cpp                        \
     random.c                                \
     settings.cpp                            \
-    spi-stubs.c                             \
     sim.c                                   \
     system.c                                \
     uart.c                                  \
