@@ -40,17 +40,17 @@
 #include <sys/prctl.h>
 #endif
 
-#define OPENTHREAD_POSIX_APP_NCP 1
-#define OPENTHREAD_POSIX_APP_CLI 2
+#define OPENTHREAD_POSIX_APP_TYPE_NCP 1
+#define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
 #include <openthread/diag.h>
 #include <openthread/tasklet.h>
-#if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
-#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 #else
-#error "Unknown posix app mode!"
+#error "Unknown posix app type!"
 #endif
 #include <openthread/platform/logging.h>
 
@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
 
     instance = otSysInit(argc, argv);
 
-#if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
-#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #if OPENTHREAD_ENABLE_PLATFORM_NETIF
     otSysInitNetif(instance);
 #endif
@@ -142,9 +142,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     va_list ap;
     va_start(ap, aFormat);
-#if OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
     otNcpPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
-#elif OPENTHREAD_POSIX_APP == OPENTHREAD_POSIX_APP_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
     otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
 #endif
     va_end(ap);

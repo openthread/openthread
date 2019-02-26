@@ -79,7 +79,7 @@ bin_PROGRAMS                                                           = \
 if OPENTHREAD_ENABLE_EXECUTABLE
 ot_ncp_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP=1                                             \
+    -DOPENTHREAD_POSIX_APP_TYPE=1                                        \
     $(NULL)
 
 ot_ncp_SOURCES                                                         = \
@@ -128,16 +128,16 @@ ot_ctl_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
-ot_daemon_CPPFLAGS                                                        = \
+ot_daemon_CPPFLAGS                                                     = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP=2                                             \
+    -DOPENTHREAD_POSIX_APP_TYPE=2                                        \
     $(NULL)
 
-ot_daemon_SOURCES                                                         = \
+ot_daemon_SOURCES                                                      = \
     main.c                                                               \
     $(NULL)
 
-ot_daemon_LDADD                                                           = \
+ot_daemon_LDADD                                                        = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
@@ -145,17 +145,17 @@ ot_daemon_LDADD                                                           = \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
-ot_daemon_LDFLAGS                                                         = \
+ot_daemon_LDFLAGS                                                      = \
     $(LDFLAGS_COMMON)                                                    \
     $(NULL)
 
-ot_daemon_LIBTOOLFLAGS                                                    = \
+ot_daemon_LIBTOOLFLAGS                                                 = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
 ot_cli_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP=2                                             \
+    -DOPENTHREAD_POSIX_APP_TYPE=2                                        \
     $(NULL)
 
 ot_cli_SOURCES                                                         = \
