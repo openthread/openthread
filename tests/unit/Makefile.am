@@ -62,9 +62,9 @@ AM_CPPFLAGS                                                        += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX_APP
 AM_CPPFLAGS                                                        += \
-    -DOPENTHREAD_ENABLE_POSIX_APP=1                                   \
+    -DOPENTHREAD_PLATFORM_POSIX_APP=1                                 \
     -I$(top_srcdir)/src/posix/platform                                \
     $(NULL)
 endif
@@ -89,7 +89,7 @@ COMMON_LDADD                                                       += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX_APP
 COMMON_LDADD                                                       += \
     -lutil
     $(NULL)

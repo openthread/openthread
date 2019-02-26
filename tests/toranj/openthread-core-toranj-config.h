@@ -42,7 +42,7 @@
  */
 #if OPENTHREAD_RADIO
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-RCP-toranj"
-#elif OPENTHREAD_ENABLE_POSIX_APP
+#elif OPENTHREAD_PLATFORM_POSIX_APP
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-App-toranj"
 #else
 #define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-toranj"
