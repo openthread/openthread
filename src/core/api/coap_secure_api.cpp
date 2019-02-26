@@ -163,11 +163,11 @@ otError otCoapSecureConnect(otInstance *                    aInstance,
                                                        aContext);
 }
 
-otError otCoapSecureDisconnect(otInstance *aInstance)
+void otCoapSecureDisconnect(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Disconnect();
+    instance.GetApplicationCoapSecure().Disconnect();
 }
 
 bool otCoapSecureIsConnected(otInstance *aInstance)

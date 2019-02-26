@@ -691,11 +691,8 @@ void BorderAgent::HandleTimeout(void)
 
     if (coaps.IsConnected())
     {
-        otError error;
-
-        error = coaps.Disconnect();
-        otLogWarnMeshCoP("Reset commissioner session: %s", otThreadErrorToString(error));
-        OT_UNUSED_VARIABLE(error);
+        coaps.Disconnect();
+        otLogWarnMeshCoP("Reset commissioner session");
     }
 }
 
