@@ -244,6 +244,7 @@ otError MeshForwarder::EvictMessage(uint8_t aPriority)
 
     if (message->GetPriority() < aPriority)
     {
+        VerifyOrExit(!message->GetDoNotEvict());
         RemoveMessage(*message);
         ExitNow(error = OT_ERROR_NONE);
     }
