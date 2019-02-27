@@ -245,8 +245,6 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
         case HCI_OPCODE_READ_BD_ADDR:
         {
             BdaCpy(hciCoreCb.bdAddr, pMsg);
-            printf("BD_ADDR: %02x%02x%02x%02x%02x%02x\r\n", hciCoreCb.bdAddr[5], hciCoreCb.bdAddr[4],
-                   hciCoreCb.bdAddr[3], hciCoreCb.bdAddr[2], hciCoreCb.bdAddr[1], hciCoreCb.bdAddr[0]);
             HciLeReadBufSizeCmd();
             break;
         }

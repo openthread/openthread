@@ -174,7 +174,7 @@ static void bleGapConnectedHandler(const wsfMsgHdr_t *aMsg)
     // connEvent->localRpa
     // connEvent->peerRpa
 
-    otPlatBleGapOnConnected(bleMgmtGetThreadInstance(), connEvent->handle);
+    otPlatBleGapOnConnected(bleMgmtGetThreadInstance(), connEvent->hdr.param);
 
 exit:
     return;
@@ -187,7 +187,8 @@ static void bleGapDisconnectedHandler(const wsfMsgHdr_t *aMsg)
     // disconnectEvent->status
     // disconnectEvent->handle
     // disconnectEvent->reason
-    otPlatBleGapOnDisconnected(bleMgmtGetThreadInstance(), disconnectEvent->handle);
+
+    otPlatBleGapOnDisconnected(bleMgmtGetThreadInstance(), disconnectEvent->hdr.param);
 }
 
 enum
@@ -256,6 +257,11 @@ exit:
     return;
 }
 
+void bleGapReset(void)
+{
+    sConnectionId = DM_CONN_ID_NONE;
+}
+
 /*******************************************************************************
  * @section Bluetooth Low Energy management.
  ******************************************************************************/
@@ -263,13 +269,10 @@ exit:
 otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress)
 {
     // The public address cannot be set
-    uint8_t buf[OT_BLE_ADDRESS_LENGTH];
 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAddress);
 
-    memcpy(buf, aAddress->mAddr, OT_BLE_ADDRESS_LENGTH);
-    HciLeSetRandAddrCmd(buf);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -305,7 +308,7 @@ otError bleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t
     otError error = OT_ERROR_NONE;
     uint8_t buf[255];
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION((aAdvData != NULL) && (aAdvDataLength != 0), error = OT_ERROR_INVALID_ARGS);
 
     // avoid converting "const uint8_t*" to "uint8_t *"
@@ -325,7 +328,7 @@ otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
     uint8_t             advType           = 0;
     otPlatBleDeviceAddr peerAddr;
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(isInRange(aInterval, OT_BLE_ADV_INTERVAL_MIN, OT_BLE_ADV_INTERVAL_MAX),
                     error = OT_ERROR_INVALID_ARGS);
 
@@ -365,7 +368,7 @@ otError bleGapAdvStop(otInstance *aInstance)
     otError error        = OT_ERROR_NONE;
     uint8_t advHandles[] = {DM_ADV_HANDLE_DEFAULT};
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     DmAdvStop(1, advHandles);
 
 exit:
@@ -393,7 +396,7 @@ otError bleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWin
     otError error    = OT_ERROR_INVALID_ARGS;
     uint8_t scanType = DM_SCAN_TYPE_ACTIVE;
 
-    otEXPECT(aInstance == bleMgmtGetThreadInstance());
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT(aWindow <= aInterval);
     otEXPECT(isInRange(aInterval, OT_BLE_SCAN_INTERVAL_MIN, OT_BLE_SCAN_INTERVAL_MAX));
     otEXPECT(isInRange(aWindow, OT_BLE_SCAN_WINDOW_MIN, OT_BLE_SCAN_WINDOW_MAX));
@@ -413,7 +416,7 @@ otError bleGapScanStop(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     DmScanStop();
 
 exit:
@@ -424,7 +427,7 @@ otError bleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams 
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
-    otEXPECT(aInstance == bleMgmtGetThreadInstance());
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT(aConnParams != NULL);
     otEXPECT(aConnParams->mConnSlaveLatency <= OT_BLE_CONN_SLAVE_LATENCY_MAX);
     otEXPECT(aConnParams->mConnMinInterval <= aConnParams->mConnMaxInterval);
@@ -445,7 +448,7 @@ otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint
     otError       error = OT_ERROR_INVALID_ARGS;
     hciConnSpec_t connSpec;
 
-    otEXPECT(aInstance == bleMgmtGetThreadInstance());
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(sConnectionId == DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
     otEXPECT(aAddress != NULL);
     otEXPECT(aWindow <= aInterval);
@@ -479,7 +482,7 @@ otError bleGapDisconnect(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(sConnectionId != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
     DmConnClose(DM_CLIENT_ID_APP, sConnectionId, 0);

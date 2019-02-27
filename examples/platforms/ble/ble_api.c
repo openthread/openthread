@@ -35,6 +35,7 @@
 #include <openthread/config.h>
 
 #include "ble/ble_gap.h"
+#include "ble/ble_l2cap.h"
 #include "ble/ble_mgmt.h"
 
 #include <openthread/platform/ble.h>
@@ -63,6 +64,11 @@ bool otPlatBleIsEnabled(otInstance *aInstance)
 void otPlatBleTaskletsProcess(otInstance *aInstance)
 {
     bleMgmtTaskletsProcess(aInstance);
+}
+
+OT_TOOL_WEAK void otPlatBleOnEnabled(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 /****************************************************************************
@@ -343,78 +349,71 @@ OT_TOOL_WEAK void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, u
     OT_UNUSED_VARIABLE(aSubscribing);
 }
 
-otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t *aCid)
+/****************************************************************************
+ * @section Bluetooth Low Energy L2CAP Connection Oriented Channels.
+ ***************************************************************************/
+
+otError otPlatBleL2capConnectionRegister(otInstance *       aInstance,
+                                         uint16_t           aConnectionId,
+                                         uint16_t           aPsm,
+                                         uint16_t           aMtu,
+                                         otPlatBleL2capRole aRole,
+                                         uint8_t *          aL2capHandle)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPsm);
-    OT_UNUSED_VARIABLE(aMtu);
-    OT_UNUSED_VARIABLE(aCid);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return bleL2capConnectionRegister(aInstance, aConnectionId, aPsm, aMtu, aRole, aL2capHandle);
 }
 
-otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
-                                         otPlatBleL2capError aError,
-                                         uint16_t            aMtu,
-                                         uint16_t *          aCid)
+otError otPlatBleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aMtu);
-    OT_UNUSED_VARIABLE(aCid);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return bleL2capConnectionDeregister(aInstance, aL2capHandle);
 }
 
-otError otPlatBleL2capSduSend(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid, otBleRadioPacket *aPacket)
+otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    return bleL2capConnectionRequest(aInstance, aL2capHandle);
+}
+
+otError otPlatBleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+{
+    return bleL2capSduSend(aInstance, aL2capHandle, aPacket);
+}
+
+otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    return bleL2capDisconnect(aInstance, aL2capHandle);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aLocalCid);
-    OT_UNUSED_VARIABLE(aPeerCid);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aMtu);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aMtu);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnSduReceived(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
     OT_UNUSED_VARIABLE(aPacket);
-    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK void otPlatBleL2capOnConnectionRequest(otInstance *aInstance,
-                                                    uint16_t    aPsm,
-                                                    uint16_t    aMtu,
-                                                    uint16_t    aPeerCid)
+OT_TOOL_WEAK void otPlatBleL2capOnSduSent(otInstance *aInstance, uint8_t aL2capHandle, otError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPsm);
-    OT_UNUSED_VARIABLE(aMtu);
-    OT_UNUSED_VARIABLE(aPeerCid);
-}
-
-OT_TOOL_WEAK void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
-                                              uint16_t          aLocalCid,
-                                              uint16_t          aPeerCid,
-                                              otBleRadioPacket *aPacket)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aLocalCid);
-    OT_UNUSED_VARIABLE(aPeerCid);
-    OT_UNUSED_VARIABLE(aPacket);
-}
-
-OT_TOOL_WEAK void otPlatBleL2capOnSduSent(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aLocalCid);
-    OT_UNUSED_VARIABLE(aPeerCid);
-}
-
-OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
-                                                     otPlatBleL2capError aError,
-                                                     uint16_t            aMtu,
-                                                     uint16_t            aPeerCid)
-{
-    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
     OT_UNUSED_VARIABLE(aError);
-    OT_UNUSED_VARIABLE(aMtu);
-    OT_UNUSED_VARIABLE(aPeerCid);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
 }
 #endif // OPENTHREAD_ENABLE_TOBLE

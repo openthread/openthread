@@ -38,6 +38,7 @@
 #include "cli_server.hpp"
 #include "cli/adv_data.hpp"
 #include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -49,10 +50,10 @@
 namespace ot {
 namespace Cli {
 
-const struct Ble::Command Ble::sCommands[] = {{"help", &Ble::ProcessHelp},       {"enable", &Ble::ProcessEnable},
-                                              {"disable", &Ble::ProcessDisable}, {"adv", &Ble::ProcessAdvertise},
-                                              {"scan", &Ble::ProcessScan},       {"bdaddr", &Ble::ProcessAddr},
-                                              {"conn", &Ble::ProcessConnection}, {"test", &Ble::ProcessTest}};
+const struct Ble::Command Ble::sCommands[] = {
+    {"help", &Ble::ProcessHelp},     {"enable", &Ble::ProcessEnable},   {"disable", &Ble::ProcessDisable},
+    {"adv", &Ble::ProcessAdvertise}, {"scan", &Ble::ProcessScan},       {"bdaddr", &Ble::ProcessAddr},
+    {"l2cap", &Ble::ProcessL2cap},   {"connect", &Ble::ProcessConnect}, {"test", &Ble::ProcessTest}};
 
 Ble::Ble(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
@@ -80,6 +81,16 @@ otError Ble::Process(int argc, char *argv[])
         }
     }
     return error;
+}
+
+void Ble::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
+{
+    uint8_t i;
+
+    for (i = 0; i < aLength; i++)
+    {
+        mInterpreter.mServer->OutputFormat("%02x ", aBytes[i]);
+    }
 }
 
 otError Ble::ProcessHelp(int argc, char *argv[])
@@ -119,33 +130,34 @@ otError Ble::ProcessTest(int argc, char *argv[])
     uuid16AdvData.AddUuid(uuids[0]);
     uuid16AdvData.AddUuid(uuids[1]);
     serviceDataAdvData.SetUuid16(0xCC00);
-    serviceDataAdvData.SetServiceData(reinterpret_cast<const uint8_t *>(devName), strlen(devName));
+    serviceDataAdvData.SetServiceData(reinterpret_cast<const uint8_t *>(devName),
+                                      static_cast<uint8_t>(strlen(devName)));
 
     advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&flagsAdvData));
     advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&devNameAdvData));
     advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&uuid16AdvData));
     advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&serviceDataAdvData));
 
-    printf("\r\nAdvData: ");
+    mInterpreter.mServer->OutputFormat("\r\nAdvData: ");
     OutputBytes(advData.GetBuf(), advData.GetLength());
-    printf("\r\n");
+    mInterpreter.mServer->OutputFormat("\r\n");
 
     if (advData.GetAdvDataEntry(AdvDataHeader::kFlags, &flagsAdvData2) == OT_ERROR_NONE)
     {
-        printf("Flags: %04x\r\n", flagsAdvData2.GetFlags());
+        mInterpreter.mServer->OutputFormat("Flags: %04x\r\n", flagsAdvData2.GetFlags());
     }
     else
     {
-        printf("Get Flags error\r\n");
+        mInterpreter.mServer->OutputFormat("Get Flags error\r\n");
     }
 
     if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteLocalName, &devNameAdvData2) == OT_ERROR_NONE)
     {
-        printf("DevName: %s\r\n", devNameAdvData2.GetDeviceName());
+        mInterpreter.mServer->OutputFormat("DevName: %s\r\n", devNameAdvData2.GetDeviceName());
     }
     else
     {
-        printf("Get DevName error\r\n");
+        mInterpreter.mServer->OutputFormat("Get DevName error\r\n");
     }
 
     if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteList16BitService, &uuid16AdvData2) == OT_ERROR_NONE)
@@ -155,23 +167,23 @@ otError Ble::ProcessTest(int argc, char *argv[])
 
         while (uuid16AdvData2.GetNextUuid(iterator, uuid) == OT_ERROR_NONE)
         {
-            printf("Uuid16: %04x\r\n", uuid.mValue.mUuid16);
+            mInterpreter.mServer->OutputFormat("Uuid16: %04x\r\n", uuid.mValue.mUuid16);
         }
     }
     else
     {
-        printf("Get Uuid error\r\n");
+        mInterpreter.mServer->OutputFormat("Get Uuid error\r\n");
     }
 
     if (advData.GetAdvDataEntry(AdvDataHeader::kServiceData, &serviceDataAdvData2) == OT_ERROR_NONE)
     {
-        printf("ServiceData: uuid16 = %04x, data = ", serviceDataAdvData2.GetUuid16());
+        mInterpreter.mServer->OutputFormat("ServiceData: uuid16 = %04x, data = ", serviceDataAdvData2.GetUuid16());
         OutputBytes(serviceDataAdvData2.GetServiceData(), serviceDataAdvData2.GetServiceDataLength());
-        printf("\r\n\r\n");
+        mInterpreter.mServer->OutputFormat("\r\n\r\n");
     }
     else
     {
-        printf("Get ServiceData error\r\n");
+        mInterpreter.mServer->OutputFormat("Get ServiceData error\r\n");
     }
 
     OT_UNUSED_VARIABLE(argc);
@@ -233,10 +245,6 @@ otError Ble::ProcessAdvertise(int argc, char *argv[])
         advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&uuid16AdvData));
         advData.AddAdvDataEntry(reinterpret_cast<const AdvDataHeader *>(&serviceDataAdvData));
 
-        printf("\r\nAdvData: ");
-        OutputBytes(advData.GetBuf(), advData.GetLength());
-        printf("\r\n\r\n");
-
         error = otPlatBleGapAdvDataSet(mInterpreter.mInstance, advData.GetBuf(), advData.GetLength());
         error = otPlatBleGapScanResponseSet(mInterpreter.mInstance, advData.GetBuf(), advData.GetLength());
         error = otPlatBleGapAdvStart(mInterpreter.mInstance, kAdvInterval,
@@ -266,6 +274,11 @@ otError Ble::ProcessScan(int argc, char *argv[])
     if (strcmp(argv[0], "start") == 0)
     {
         error = otPlatBleGapScanStart(mInterpreter.mInstance, kScanInterval, kScanWindow);
+        if (error == OT_ERROR_NONE)
+        {
+            mInterpreter.mServer->OutputFormat("\r\n| advType | addrType |   address    | rssi |\r\n");
+            mInterpreter.mServer->OutputFormat("+---------+----------+--------------+------+\r\n");
+        }
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -298,7 +311,7 @@ exit:
     return error;
 }
 
-otError Ble::ProcessConnection(int argc, char *argv[])
+otError Ble::ProcessConnect(int argc, char *argv[])
 {
     otError error;
     long    value;
@@ -346,31 +359,97 @@ exit:
     return error;
 }
 
-void Ble::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
+otError Ble::ProcessL2cap(int argc, char *argv[])
 {
-    for (int i = 0; i < aLength; i++)
+    otError error;
+    long    value;
+    uint8_t l2capHandle;
+
+    VerifyOrExit(argc >= 1, error = OT_ERROR_INVALID_ARGS);
+
+    if ((argc == 3) && (strcmp(argv[0], "register") == 0))
     {
-        printf("%02x ", aBytes[i]);
+        uint16_t           connId;
+        uint16_t           psm = 0x0080;
+        uint16_t           mtu = 128;
+        otPlatBleL2capRole role;
+
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        connId = static_cast<uint16_t>(value);
+
+        SuccessOrExit(error = Interpreter::ParseLong(argv[2], value));
+        role = static_cast<otPlatBleL2capRole>(value);
+
+        error = otPlatBleL2capConnectionRegister(mInterpreter.mInstance, connId, psm, mtu, role, &l2capHandle);
+        if (error == OT_ERROR_NONE)
+        {
+            mInterpreter.mServer->OutputFormat("L2cap Handle: %d\r\n", l2capHandle);
+        }
     }
+    else if ((argc == 2) && (strcmp(argv[0], "deregister") == 0))
+    {
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        l2capHandle = static_cast<uint8_t>(value);
+
+        error = otPlatBleL2capConnectionDeregister(mInterpreter.mInstance, l2capHandle);
+    }
+    else if ((argc == 2) && (strcmp(argv[0], "connect") == 0))
+    {
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        l2capHandle = static_cast<uint8_t>(value);
+
+        error = otPlatBleL2capConnectionRequest(mInterpreter.mInstance, l2capHandle);
+    }
+    else if ((argc == 2) && (strcmp(argv[0], "disconnect") == 0))
+    {
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        l2capHandle = static_cast<uint8_t>(value);
+
+        error = otPlatBleL2capDisconnect(mInterpreter.mInstance, l2capHandle);
+    }
+    else if ((argc == 3) && (strcmp(argv[0], "send") == 0))
+    {
+        otBleRadioPacket packet;
+
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
+        l2capHandle    = static_cast<uint8_t>(value);
+        packet.mValue  = reinterpret_cast<uint8_t *>(argv[2]);
+        packet.mLength = static_cast<uint16_t>(strlen(argv[2]));
+
+        error = otPlatBleL2capSduSend(mInterpreter.mInstance, l2capHandle, &packet);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
 }
 
 void StdOutputBytes(const uint8_t *aBytes, uint8_t aLength)
 {
     for (int i = 0; i < aLength; i++)
     {
-        printf("%02x ", aBytes[i]);
+        Server::sServer->OutputFormat("%02x ", aBytes[i]);
     }
+}
+
+extern "C" void otPlatBleOnEnabled(otInstance *aInstance)
+{
+    Server::sServer->OutputFormat("BLE is enabled\r\n");
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 extern "C" void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
 {
-    printf("BleConnected   : connectionId = %d\r\n", aConnectionId);
+    Server::sServer->OutputFormat("GapConnected: connectionId = %d\r\n", aConnectionId);
     OT_UNUSED_VARIABLE(aInstance);
 }
 
 extern "C" void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
 {
-    printf("BleDisconnected: connectionId = %d\r\n", aConnectionId);
+    Server::sServer->OutputFormat("GapDisconnected: connectionId = %d\r\n", aConnectionId);
     OT_UNUSED_VARIABLE(aInstance);
 }
 
@@ -378,29 +457,11 @@ extern "C" void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
                                           otPlatBleDeviceAddr *aAddress,
                                           otBleRadioPacket *   aPacket)
 {
-    AdvData           advData;
-    DeviceNameAdvData devNameAdvData;
-
-    if (advData.Init(aPacket->mValue, aPacket->mLength) == OT_ERROR_NONE)
+    if (aPacket->mPower > -40)
     {
-        if (advData.GetAdvDataEntry(AdvDataHeader::kCompleteLocalName, &devNameAdvData) == OT_ERROR_NONE)
-        {
-            printf("AdvReceived    : ");
-            printf("peerAddrType = %d, ", aAddress->mAddrType);
-            printf("peerAddr = %02x%02x%02x%02x%02x%02x, ", aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
-                   aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0]);
-            printf("rssi = %d, ", aPacket->mPower);
-            printf("DevName = %s\r\n", devNameAdvData.GetDeviceName());
-
-            /*
-            if (aPacket->mLength != 0)
-            {
-                printf("AdvData    : ");
-                StdOutputBytes(aPacket->mValue, aPacket->mLength);
-                printf("\r\n");
-            }
-            */
-        }
+        Server::sServer->OutputFormat("| %-8s|    %d     | %02x%02x%02x%02x%02x%02x | %3d  |\r\n", "ADV",
+                                      aAddress->mAddrType, aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
+                                      aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0], aPacket->mPower);
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -412,17 +473,44 @@ extern "C" void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
 {
     if (aPacket->mPower > -40)
     {
-        printf("ScanRspReceived: ");
-        printf("peerAddrType = %d, ", aAddress->mAddrType);
-        printf("peerAddr = %02x%02x%02x%02x%02x%02x, ", aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
-               aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0]);
-        printf("rssi = %d\r\n", aPacket->mPower);
-
-        // printf("    AdvData: ");
-        // StdOutputBytes(aPacket->mValue, aPacket->mLength);
-        // printf("\r\n");
+        Server::sServer->OutputFormat("| %-8s|    %d     | %02x%02x%02x%02x%02x%02x | %3d  |\r\n", "SCAN_RSP",
+                                      aAddress->mAddrType, aAddress->mAddr[5], aAddress->mAddr[4], aAddress->mAddr[3],
+                                      aAddress->mAddr[2], aAddress->mAddr[1], aAddress->mAddr[0], aPacket->mPower);
     }
 
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+{
+    Server::sServer->OutputFormat("L2capConnectionRequestReceived: aL2capHandle = %d, aMtu = %d\r\n", aL2capHandle,
+                                  aMtu);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleL2capOnConnectionResponse(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+{
+    Server::sServer->OutputFormat("L2capConnectionResponseReceived: aL2capHandle = %d, aMtu = %d\r\n", aL2capHandle,
+                                  aMtu);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleL2capOnSduSent(otInstance *aInstance, uint8_t aL2capHandle, otError aError)
+{
+    Server::sServer->OutputFormat("L2capSduSent: aL2capHand = %d, error = %d\r\n", aL2capHandle, aError);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleL2capOnSduReceived(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+{
+    Server::sServer->OutputFormat("L2capSduReceived: aL2capHandle = %d, length = %d\r\n", aL2capHandle,
+                                  aPacket->mLength);
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+extern "C" void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    Server::sServer->OutputFormat("L2capDisconnected: aL2capHandle = %d\r\n", aL2capHandle);
     OT_UNUSED_VARIABLE(aInstance);
 }
 } // namespace Cli

@@ -29,15 +29,11 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack GAP interfaces.
+ *   This file defines the Cordio BLE stack L2CAP interfaces.
  */
 
-#ifndef BLE_GAP_H
-#define BLE_GAP_H
-
-#include "wsf_types.h"
-
-#include "wsf_os.h"
+#ifndef BLE_L2CAP_H
+#define BLE_L2CAP_H
 
 #include <stdint.h>
 #include <openthread/error.h>
@@ -48,23 +44,19 @@
 extern "C" {
 #endif
 
-otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress);
-otError bleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddress);
-otError bleGapServiceSet(otInstance *aInstance, const char *aDeviceName, uint16_t aAppearance);
-otError bleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t aAdvDataLength);
-otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType);
-otError bleGapAdvStop(otInstance *aInstance);
-otError bleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanResponse, uint8_t aScanResponseLength);
-otError bleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow);
-otError bleGapScanStop(otInstance *aInstance);
-otError bleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams *aConnParams);
-otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint16_t aInterval, uint16_t aWindow);
-otError bleGapDisconnect(otInstance *aInstance);
+otError bleL2capConnectionRegister(otInstance *       aInstance,
+                                   uint16_t           aConnectionId,
+                                   uint16_t           aPsm,
+                                   uint16_t           aMtu,
+                                   otPlatBleL2capRole aRole,
+                                   uint8_t *          aL2capHandle);
+otError bleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle);
+otError bleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle);
+otError bleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket);
+otError bleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle);
 
-void bleGapReset(void);
-void bleGapEventHandler(const wsfMsgHdr_t *aMsg);
-
+void bleL2capReset(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
-#endif // BLE_GAP_H
+#endif // BLE_L2CAP_H

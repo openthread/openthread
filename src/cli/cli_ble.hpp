@@ -87,7 +87,8 @@ private:
     otError ProcessDisable(int argc, char *argv[]);
     otError ProcessEnable(int argc, char *argv[]);
     otError ProcessScan(int argc, char *argv[]);
-    otError ProcessConnection(int argc, char *argv[]);
+    otError ProcessConnect(int argc, char *argv[]);
+    otError ProcessL2cap(int argc, char *argv[]);
     otError ProcessTest(int argc, char *argv[]);
 
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;

@@ -53,6 +53,7 @@
 
 #include "ble/ble_gap.h"
 #include "ble/ble_hci_driver.h"
+#include "ble/ble_l2cap.h"
 #include "ble/ble_mgmt.h"
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
@@ -67,26 +68,28 @@
 
 enum
 {
-    kBleCordioBufferSize  = 2250,
-    kBleCordioMaxRxAclLen = 100,
+    kBleBufferSize  = 2250,
+    kBleMaxRxAclLen = 100,
 };
 
 enum
 {
-    kStateIdle         = 0,
-    kStateInitializing = 1,
-    kStateInitialized  = 2,
+    kStateIdle           = 0,
+    kStateInitializing   = 1,
+    kStateInitialized    = 2,
+    kStateDeinitializing = 3,
 };
 
 static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
 
-__attribute__((aligned(4))) static uint8_t sBuffer[kBleCordioBufferSize];
+__attribute__((aligned(4))) static uint8_t sBuffer[kBleBufferSize];
 
 static uint32_t sLastUpdateMs;
-static uint8_t  sState    = kStateIdle;
-otInstance *    sInstance = NULL;
+static uint8_t  sState            = kStateIdle;
+otInstance *    sInstance         = NULL;
+static bool     sStackInitialized = false;
 
-static void bleSetup(void);
+static void bleStackInit(void);
 
 /*
  * This function will signal to the user code by calling signalEventsToProcess.
@@ -94,7 +97,7 @@ static void bleSetup(void);
  */
 void wsf_mbed_ble_signal_event(void)
 {
-    // utilsBleHostProcess();
+    // TODO:
 }
 
 void wsf_mbed_os_critical_section_enter(void)
@@ -107,7 +110,6 @@ void wsf_mbed_os_critical_section_exit(void)
     // Intentionally empty.
 }
 
-//-------------------------------
 otError bleMgmtEnable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
@@ -115,12 +117,12 @@ otError bleMgmtEnable(otInstance *aInstance)
     otEXPECT_ACTION((sInstance == NULL) && (aInstance != NULL), error = OT_ERROR_FAILED);
     otEXPECT_ACTION(sState == kStateIdle, error = OT_ERROR_FAILED);
 
-    sInstance = aInstance;
-    sState    = kStateInitializing;
+    sInstance     = aInstance;
+    sState        = kStateInitializing;
+    sLastUpdateMs = otPlatAlarmMilliGetNow();
 
-    bleSetup();
+    bleStackInit();
     bleHciEnable();
-
     DmDevReset();
 
 exit:
@@ -135,13 +137,9 @@ otError bleMgmtDisable(otInstance *aInstance)
     otEXPECT_ACTION(sState == kStateInitialized, error = OT_ERROR_FAILED);
 
     sInstance = NULL;
-    sState    = kStateIdle;
+    sState    = kStateDeinitializing;
 
-    // gattServer().reset();
-    // getGattClient().reset();
-    // getGap().reset();
-
-    bleHciDisable();
+    DmDevReset();
 
 exit:
     return error;
@@ -165,10 +163,14 @@ otInstance *bleMgmtGetThreadInstance(void)
 
 void bleMgmtTaskletsProcess(otInstance *aInstance)
 {
-    uint32_t        now = otPlatAlarmMilliGetNow();
+    uint32_t        now;
     uint32_t        delta;
     wsfTimerTicks_t ticks;
 
+    otEXPECT(sState != kStateIdle);
+    otEXPECT((sInstance != NULL) && (aInstance = sInstance));
+
+    now   = otPlatAlarmMilliGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
 
@@ -181,24 +183,9 @@ void bleMgmtTaskletsProcess(otInstance *aInstance)
     wsfOsDispatcher();
 
     OT_UNUSED_VARIABLE(aInstance);
-}
 
-static void bleHostInitDone(void)
-{
-    otPlatBleOnEnabled(sInstance);
-
-    // ble.gap().onDisconnection(disconnectionCallback);
-    // ble.gap().onConnection(connectionCallback);
-
-    // ble.gattClient().onDataRead(triggerToggledWrite);
-    // ble.gattClient().onDataWrite(triggerRead);
-
-    // scan interval: 400ms and scan window: 400ms.
-    // Every 400ms the device will scan for 400ms
-    // This means that the device will scan continuously.
-
-    // ble.gap().setScanParams(400, 400);
-    // ble.gap().startScan(advertisementCallback);
+exit:
+    return;
 }
 
 static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
@@ -213,12 +200,6 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
     {
     case DM_RESET_CMPL_IND:
     {
-        // BLE::InitializationCompleteCallbackContext context =
-        // {
-        //     BLE::Instance(::BLE::DEFAULT_INSTANCE),
-        //     BLE_ERROR_NONE
-        // };
-
         // initialize extended module if supported
         if (HciGetLeSupFeat() & HCI_LE_SUP_FEAT_LE_EXT_ADV)
         {
@@ -228,15 +209,27 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
             DmExtConnSlaveInit();
         }
 
-        // deviceInstance().getGattServer().initialize();
-        // deviceInstance().initialization_status = INITIALIZED;
-        // _init_callback.call(&context);
-        sState = kStateInitialized;
-        bleHostInitDone();
+        if (sState == kStateInitializing)
+        {
+            // deviceInstance().getGattServer().initialize();
+            sState = kStateInitialized;
+            otPlatBleOnEnabled(sInstance);
+        }
+        else if (sState == kStateDeinitializing)
+        {
+            sState = kStateIdle;
+
+            // gattServer().reset();
+            // getGattClient().reset();
+            // getGap().reset();
+
+            bleL2capReset();
+            bleGapReset();
+            bleHciDisable();
+        }
         break;
     }
     default:
-        // ble::pal::vendor::cordio::Gap::gap_handler(msg);
         bleGapEventHandler(aMsg);
         break;
     }
@@ -292,21 +285,22 @@ static void bleAttClientHandler(attEvt_t *aEvent)
     OT_UNUSED_VARIABLE(aEvent);
 }
 
-static void bleSetup(void)
+static void bleStackInit(void)
 {
     uint32_t       bytesUsed;
     wsfHandlerId_t handlerId;
 
-    bytesUsed = WsfBufInit(sizeof(sBuffer), sBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
+    otEXPECT(!sStackInitialized);
+    sStackInitialized = true;
 
+    bytesUsed = WsfBufInit(sizeof(sBuffer), sBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
     assert(bytesUsed != 0);
+
     if (bytesUsed < sizeof(sBuffer))
     {
-        otLogNotePlat("Too much memory allocated for Cordio memory pool, reduce kBleCordioBufferSize by %d bytes",
+        otLogCritPlat("Too much memory allocated for memory pool, reduce kBleBufferSize by %d bytes",
                       sizeof(sBuffer) - bytesUsed);
     }
-
-    sLastUpdateMs = otPlatAlarmMilliGetNow();
 
     WsfTimerInit();
     SecInit();
@@ -338,6 +332,10 @@ static void bleSetup(void)
     L2cSlaveInit();
     L2cMasterInit();
 
+    handlerId = WsfOsSetNextHandler(L2cCocHandler);
+    L2cCocInit();
+    L2cCocHandlerInit(handlerId);
+
     handlerId = WsfOsSetNextHandler(AttHandler);
     AttHandlerInit(handlerId);
     AttsInit();
@@ -356,19 +354,14 @@ static void bleSetup(void)
 
     WsfOsSetNextHandler(bleStackHandler);
 
-    HciSetMaxRxAclLen(kBleCordioMaxRxAclLen);
+    HciSetMaxRxAclLen(kBleMaxRxAclLen);
 
     DmRegister(bleDeviceManagerHandler);
     DmConnRegister(DM_CLIENT_ID_APP, bleDeviceManagerHandler);
     AttConnRegister(bleConnectionHandler);
     AttRegister(bleAttClientHandler);
-}
 
-// extern
-void otPlatBleOnEnabled(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    printf("BLE Stack Init Done\r\n");
+exit:
+    return;
 }
-
 #endif // OPENTHREAD_ENABLE_TOBLE

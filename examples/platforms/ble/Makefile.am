@@ -49,12 +49,14 @@ libopenthread_platform_ble_a_SOURCES  = \
     ble_api.c                           \
     ble_gap.c                           \
     ble_hci_driver.c                    \
+    ble_l2cap.c                         \
     ble_mgmt.c                          \
     $(NULL)
 
 noinst_HEADERS                        = \
     ble_gap.h                           \
     ble_hci_driver.h                    \
+    ble_l2cap.h                         \
     ble_mgmt.h                          \
     $(NULL)
 
