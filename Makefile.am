@@ -51,7 +51,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-radio-only               \
     --enable-service                  \
     --with-examples=posix             \
-    --enable-cert-log                 \
     $(NULL)
 
 SUBDIRS                             = \
