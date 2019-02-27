@@ -162,7 +162,11 @@ void nrf5RandomInit(void)
 
 void nrf5RandomDeinit(void)
 {
-    // Intentionally empty.
+    generatorStop();
+
+    NVIC_DisableIRQ(RNG_IRQn);
+    NVIC_ClearPendingIRQ(RNG_IRQn);
+    NVIC_SetPriority(RNG_IRQn, 0);
 }
 
 uint32_t otPlatRandomGet(void)
