@@ -169,7 +169,7 @@ configure_OPTIONS              += --enable-sntp-client
 endif
 
 ifeq ($(TIME_SYNC),1)
-COMMONCFLAGS                   += -DPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_HEADER_IE_SUPPORT=1
 endif
 
 ifeq ($(UDP_FORWARD),1)
