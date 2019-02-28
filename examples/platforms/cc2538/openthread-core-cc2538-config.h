@@ -185,6 +185,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET
+ *
+ * Set the CC2538 RSSI offset.  This calibrates the RSSI readings received from
+ * the CC2538 radio module to give a reading in dBm.
+ *
+ * For a standard CC2538 (no front-end), the RSSI offset is 73.
+ *
+ * For a CC2592 hard-wired in high-gain mode, an offset of 85 should be used;
+ * or for low-gain mode, 81.  If `OPENTHREAD_CONFIG_CC2592_USE_HGM` is 0, then
+ * this calibrates the RSSI value accordingly.
+ */
+#ifndef OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET
+#define OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET                    73
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CC2592_HGM_PORT
  *
  * Define the GPIO port that the HGM pin is connected to.  It may be
