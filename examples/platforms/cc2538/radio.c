@@ -101,17 +101,21 @@ enum
 
 enum
 {
-    CC2538_RSSI_OFFSET  = 73,
-    CC2538_CRC_BIT_MASK = 0x80,
-    CC2538_LQI_BIT_MASK = 0x7f,
+    CC2538_RSSI_OFFSET = OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET,
+    // TI AN130 (SWRA447) Table 4 (bottom of page 3)
+    CC2592_RSSI_OFFSET_HGM = 85,
+    CC2592_RSSI_OFFSET_LGM = 81,
+    CC2538_CRC_BIT_MASK    = 0x80,
+    CC2538_LQI_BIT_MASK    = 0x7f,
 };
 
 // All values in dBm
 enum
 {
-    CC2538_RECEIVE_SENSITIVITY     = OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY,
-    CC2592_RECEIVE_SENSITIVITY_LGM = -81,
-    CC2592_RECEIVE_SENSITIVITY_HGM = -85,
+    CC2538_RECEIVE_SENSITIVITY = OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY,
+    // TI AN130 (SWRA447) Table 3 (middle of page 3)
+    CC2592_RECEIVE_SENSITIVITY_LGM = -99,
+    CC2592_RECEIVE_SENSITIVITY_HGM = -101,
 };
 
 typedef struct TxPowerTable
@@ -613,6 +617,22 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
+static int8_t cc2538RadioGetRssiOffset(void)
+{
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+    if (cc2538RadioGetHgm())
+    {
+        return CC2592_RSSI_OFFSET_HGM;
+    }
+    else
+    {
+        return CC2592_RSSI_OFFSET_LGM;
+    }
+#else  // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+    return CC2538_RSSI_OFFSET;
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+}
+
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -655,7 +675,7 @@ void readFrame(otInstance *aInstance)
         sReceiveFrame.mPsdu[i] = HWREG(RFCORE_SFR_RFDATA);
     }
 
-    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - cc2538RadioGetRssiOffset();
     crcCorr                           = HWREG(RFCORE_SFR_RFDATA);
 
     if (crcCorr & CC2538_CRC_BIT_MASK)

@@ -72,6 +72,9 @@ Additional settings can be customised:
 * `CC2538_RECEIVE_SENSITIVITY`: If you have tied the HGM pin to a power rail, this allows
   you to calibrate the RSSI values according to the new receive sensitivity.  This has no
   effect if `CC2592_USE_HGM=1` (the default).
+* `CC2538_RSSI_OFFSET`: If you have tied the HGM pin to a power rail, this allows
+  you to calibrate the RSSI values according to the new RSSI offset.  This has no
+  effect if `CC2592_USE_HGM=1` (the default).
 
 ## Flash Binaries
 
