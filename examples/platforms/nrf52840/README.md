@@ -1,26 +1,39 @@
 # OpenThread on nRF52840 Example
 
-This directory contains example platform drivers for [Nordic Semiconductor nRF52840 SoC][nRF52840].
+<a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
+<img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right">
+</a>
 
-[nRF52840]: https://www.nordicsemi.com/eng/Products/nRF52840
+This directory contains example platform drivers for [Nordic Semiconductor nRF52840 SoC][nRF52840]. The OpenThread stack has been officially certified as a *Thread Certified Component* on this platform.
+
+[nRF52840]: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF52840
 
 To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread and Zigbee</i>. See [Nordic Semiconductor's nRF5 SDK for Thread and Zigbee][nRF5-SDK-section] section for more details.
 
 [nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread-and-zigbee
 
-## Toolchain
+## Prerequisites
+
+Before you start building the examples, you must download and install the toolchain and the tools required for flashing and debugging.
+
+### Toolchain
 
 Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
-To install the GNU toolchain and its dependencies,
-run the following commands in Bash:
+To install the GNU toolchain and its dependencies, run the following commands in Bash:
 
 ```bash
 $ cd <path-to-openthread>
 $ ./script/bootstrap
 ```
+
+### Flashing and debugging tools
+
+[nRF5-Command-Line-Tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF5-Command-Line-Tools
+
+Install the [nRF5 Command Line Tools][nRF5-Command-Line-Tools] to flash, debug, and make use of logging features on the nRF52840 DK with SEGGER J-Link.
 
 ## Building the examples
 
@@ -33,9 +46,8 @@ $ make -f examples/Makefile-nrf52840
 ```
 
 After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/nrf52840/bin`.  You can convert them to `hex`
-files using `arm-none-eabi-objcopy`:
-
+`<path-to-openthread>/output/nrf52840/bin`.
+You can convert them to hex using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 ```
@@ -51,9 +63,9 @@ The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic
 
 ### nRF52840 dongle support (PCA10059)
 
-You can build the libraries with support for USB bootloader with automatic USB DFU trigger support in PCA10059. As this dongle uses the native USB support, you must enable it as well.
+You can build the libraries with support for the USB bootloader with USB DFU trigger support in PCA10059. As this dongle uses the native USB support, you must enable it as well.
 
-To build the libraries, run make with the following parameter:
+To build the libraries, run make with the following parameters:
 
 ```
 $ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
@@ -61,9 +73,9 @@ $ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
 
 See [nRF52840 Dongle Programming][nrf52840-dongle-programming] for more details about how to use the USB bootloader.
 
-[nrf52840-dongle-programming]: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52%2Fdita%2Fnrf52%2Fdevelopment%2Fnrf52840_dongle%2Fprogramming.html&cp=2_0_4_4
+[nrf52840-dongle-programming]: https://www.nordicsemi.com/DocLib/Content/User_Guides/nrf52840_dongle/latest/UG/nrf52840_Dongle/programming
 
-### Native SPI Slave support
+### Native SPI support
 
 You can build the libraries with support for native SPI Slave.
 To build the libraries, run make with the following parameter:
@@ -79,9 +91,7 @@ should be chosen in wpantund configuration file, `/etc/wpantund.conf`. You can f
 Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gpio/gpio25 /dev/spidev0.0"
 ```
 
-[spi-hdlc-adapter][spi-hdlc-adapter]
-is a tool that can be used to perform communication between NCP and wpantund over SPI.
-In the above example it is assumed that `spi-hdlc-adapter` is installed in `/usr/bin`.
+In this example, [spi-hdlc-adapter][spi-hdlc-adapter] is a tool that you can use to communicate between NCP and wpantund over SPI. For this example, `spi-hdlc-adapter` is installed in `/usr/bin`.
 
 The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/platform-config.h`.
 
@@ -100,7 +110,7 @@ You can prefix the compiler command using the CCPREFIX parameter. This speeds up
 $ make -f examples/Makefile-nrf52840 USB=1 CCPREFIX=ccache
 ```
 
-### CryptoCell 310 support
+### Optional disabling of CryptoCell 310 support
 
 By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
 ```
@@ -110,9 +120,7 @@ $ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is
-part of the [nRF5x Command Line Tools][nRF5x-Command-Line-Tools].
-
-[nRF5x-Command-Line-Tools]: https://www.nordicsemi.com/eng/Products/nRF52840#Downloads
+part of the [nRF5 Command Line Tools][nRF5-Command-Line-Tools].
 
 ```bash
 $ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/ot-cli-ftd.hex --reset
@@ -120,129 +128,190 @@ $ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/ot-cli-ftd.hex --r
 
 ## Running the example
 
-1. Prepare two boards with the flashed `CLI Example` (as shown above).
-2. The CLI example uses UART connection. To view raw UART output, start a terminal
-   emulator like PuTTY and connect to the used COM port with the following UART settings:
-    - Baud rate: 115200
-    - 8 data bits
-    - 1 stop bit
-    - No parity
-    - HW flow control: RTS/CTS
+To test the example:
 
-   On Linux system a port name should be called e.g. `/dev/ttyACM0` or `/dev/ttyACM1`.
-3. Open a terminal connection on the first board and start a new Thread network.
+1. Prepare two boards with the flashed `CLI Example` (as shown above). The CLI FTD example uses the direct UART connection.
 
- ```bash
- > panid 0xabcd
- Done
- > ifconfig up
- Done
- > thread start
- Done
- ```
+2. Open a terminal connection on two boards:
 
-4. After a couple of seconds the node will become a Leader of the network.
+   a. Start a terminal emulator like screen.
 
- ```bash
- > state
- Leader
- ```
+   b. Connect to the used COM port with the following direct UART settings:
 
-5. Open a terminal connection on the second board and attach a node to the network.
+   * Baud rate: 115200
+   * 8 data bits
+   * 1 stop bit
+   * No parity
+   * HW flow control: RTS/CTS
+     This allows you to view the raw UART output.
 
- ```bash
- > panid 0xabcd
- Done
- > ifconfig up
- Done
- > thread start
- Done
- ```
+     On Linux system a port name should be called e.g. `/dev/ttyACM0` or `/dev/ttyACM1`.
 
-6. After a couple of seconds the second node will attach and become a Child.
+   c. Run the following command to connect to a board.
 
- ```bash
- > state
- Child
- ```
+   ```shell
+   screen /dev/ttyACM0 115200
+   ```
 
-7. List all IPv6 addresses of the first board.
+   Now you are connected with the CLI.
 
- ```bash
- > ipaddr
- fdde:ad00:beef:0:0:ff:fe00:fc00
- fdde:ad00:beef:0:0:ff:fe00:9c00
- fdde:ad00:beef:0:4bcb:73a5:7c28:318e
- fe80:0:0:0:5c91:c61:b67c:271c
- ```
+3. Use the following commands to form a network on the first board.
 
-8. Choose one of them and send an ICMPv6 ping from the second board.
+   ```bash
+   > panid 0xabcd
+   Done
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
 
- ```bash
- > ping fdde:ad00:beef:0:0:ff:fe00:fc00
- 16 bytes from fdde:ad00:beef:0:0:ff:fe00:fc00: icmp_seq=1 hlim=64 time=8ms
- ```
+   After a couple of seconds the node will become a Leader of the network.
+
+   ```bash
+   > state
+   Leader
+   ```
+
+4. Use the following commands to attach to the network on the second board.
+
+   ```bash
+   > panid 0xabcd
+   Done
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
+
+   After a couple of seconds the second node will attach and become a Child.
+
+   ```bash
+   > state
+   Child
+   ```
+
+5. List all IPv6 addresses of the first board.
+
+   ```bash
+   > ipaddr
+   fdde:ad00:beef:0:0:ff:fe00:fc00
+   fdde:ad00:beef:0:0:ff:fe00:9c00
+   fdde:ad00:beef:0:4bcb:73a5:7c28:318e
+   fe80:0:0:0:5c91:c61:b67c:271c
+   ```
+
+6. Choose one of them and send an ICMPv6 ping from the second board.
+
+   ```bash
+   > ping fdde:ad00:beef:0:0:ff:fe00:fc00
+   16 bytes from fdde:ad00:beef:0:0:ff:fe00:fc00: icmp_seq=1 hlim=64 time=8ms
+   ```
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
 
 [CLI]: ./../../../src/cli/README.md
 
-## Logging module
+## SEGGER J-Link tools
+
+SEGGER J-Link tools allow to debug and flash generated firmware using on-board debugger or external one.
+
+### Working with RTT logging
 
 By default, the OpenThread's logging module provides functions to output logging
 information over SEGGER's Real Time Transfer (RTT).
 
-RTT output can be viewed in the J-Link RTT Viewer, which is available from SEGGER.
-The viewer is also included in the nRF Tools. To read or write messages over RTT,
-connect an nRF5 development board via USB and run the J-Link RTT Viewer.
+You can set the desired log level by using the `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 
-Select the correct target device (nRF52) and the target interface "SWD".
-
-The intended log level can be set using `OPENTHREAD_CONFIG_LOG_LEVEL` define.
-
-## Segger J-Link configuration
-
-### Disabling the Mass Storage Device
-
-Due to a known issue in Segger’s J-Link firmware, depending on your version, you might experience data corruption or drops if you use the serial port. You can avoid this issue by disabling the Mass Storage Device:
-
- - On Linux or macOS (OS X), open JLinkExe from the terminal.
- - On Microsoft Windows, open the J-Link Commander application.
-
-Run the following command:
-
-```bash
-MSDDisable
+To enable the highest verbosity level, append `FULL_LOGS` flag to the `make` command:
+```
+$ make -f examples/Makefile-nrf52840 FULL_LOGS=1
 ```
 
-This command takes effect after a power cycle of the development kit and stay this way until changed again.
+#### Enable logging on Windows
+
+1. Connect the DK to your machine with a USB cable.
+2. Run `J-Link RTT Viewer`. The configuration window appears.
+3. From the Specify Target Device dropdown menu, select `NRF52840_XXAA`.
+4. From the Target Interface & Speed dropdown menu, select `SWD`.
+
+#### Enable logging on Linux
+
+1. Connect the DK to your machine with a USB cable.
+2. Run `JLinkExe` to connect to the target. For example:
+```
+JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID> -RTTTelnetPort 19021
+```
+3. Run `JLinkRTTTelnet` to obtain the RTT logs from the connected device in a separate console. For example:
+```
+JLinkRTTClient -RTTTelnetPort 19021
+```
+
+### Mass Storage Device known issue
+
+Depending on your version, due to a known issue in SEGGER's J-Link firmware, you might experience data corruption or data drops if you use the serial port. You can avoid this issue by disabling the Mass Storage Device.
+
+#### Disabling the Mass Storage Device on Windows
+
+1. Connect the DK to your machine with a USB cable.
+2. Run `J-Link Commander`. The configuration window appears.
+3. From the Specify Target Device dropdown menu, select `NRF52840_XXAA`.
+4. From the Target Interface & Speed dropdown menu, select `SWD`.
+5. Run the following command:
+```
+MSDDisable
+```
+6. Power cycle the DK.
+
+#### Disabling the Mass Storage Device on Linux
+
+1. Connect the DK to your machine with a USB cable.
+2. Run `JLinkExe` to connect to the target. For example:
+```
+JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
+```
+3. Run the following command:
+```
+MSDDisable
+```
+4. Power cycle the DK.
 
 ### Hardware Flow Control detection
 
-By default, J-Link detects at runtime if the target uses flow control or not.
+By default, SEGGER J-Link automatically detects at runtime whether the target is using Hardware Flow Control (HWFC).
 
-Automatic HWFC detection is done by driving P0.07 (Clear to Send (CTS)) from the interface MCU and evaluating the state of P0.05 (Request to Send (RTS)) when the first data is sent or received. If the state of P0.05 (RTS) is high, HWFC is assumed not to be used.
+The automatic HWFC detection is done by driving P0.07 (Clear to Send - CTS) from the interface MCU and evaluating the state of P0.05 (Request to Send - RTS) when the first data is sent or received. If the state of P0.05 (RTS) is high, it is assumed that HWFC is not used.
 
-To avoid potential race conditions, it is possible to force hardware flow control and bypass runtime auto-detection.
+To avoid potential race conditions, you can force HWFC and bypass the runtime auto-detection.
 
- - On Linux or macOS (OS X), open JLinkExe from the terminal.
- - On Microsoft Windows, open the J-Link Commander application.
+#### Disabling the HWFC detection on Windows
 
-Run the following command:
-
-```bash
+1. Connect the DK to your machine with a USB cable.
+2. Run `J-Link Commander`. The configuration window appears.
+3. From the Specify Target Device dropdown menu, select `NRF52840_XXAA`.
+4. From the Target Interface & Speed dropdown menu, select `SWD`.
+5. Run the following command:
+```
 SetHWFC Force
 ```
+6. Power cycle the DK.
 
-The auto-detection feature may be enabled again by the following command:
+#### Disabling the HWFC detection on Linux
 
-```bash
-SetHWFC Enable
+1. Connect the DK to your machine with a USB cable.
+2. Run `JLinkExe` to connect to the target. For example:
 ```
+JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
+```
+3. Run the following command:
+```
+SetHWFC Force
+```
+4. Power cycle the DK.
 
-You can find more details [here][J-Link_OB].
+You can find more details [here][J-Link-OB].
 
-[J-Link_OB]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
+[J-Link-OB]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
 
 ## Diagnostic module
 
@@ -267,7 +336,7 @@ The following toolchains have been used for testing and verification:
   - gcc version 6.2.0
 
  The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
-  - `704511c` - 18.09.2018 (the newest checked)
+  - `704511c` - 18.09.2018 (the latest checked)
   - `ec59d7e` - 06.04.2018
   - `a89eb88` - 16.11.2017
   - `6a15261` - 29.06.2017
@@ -289,8 +358,8 @@ The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - Border Router and cloud connectivity example,
  - Thread native commissioning with NFC example,
  - example applications demonstrating the use of FreeRTOS with OpenThread,
- - support for IAR, Keil MDK-ARM and Segger Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
+ - support for IAR, Keil MDK-ARM and SEGGER Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
  - range of PC tools including a Thread Topology Monitor,
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 
-[nRF5-SDK-Thread-Zigbee]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
+[nRF5-SDK-Thread-Zigbee]: https://www.nordicsemi.com/Software-and-Tools/Software/nRF5-SDK-for-Thread-and-Zigbee
