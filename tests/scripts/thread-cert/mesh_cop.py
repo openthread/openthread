@@ -226,7 +226,6 @@ class VendorData(object):
 
     def __init__(self, data):
         self._vendor_data = data
-
     @property
     def vendor_data(self):
         return self._vendor_data
