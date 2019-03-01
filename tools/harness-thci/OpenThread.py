@@ -254,7 +254,7 @@ class OpenThread(IThci):
                 # link local address
                 if ip6Addr.split(':')[4] != '0':
                     linkLocal64Addr = ip6Addr
-            elif ip6Addr.startswith(self.meshLocalPrefix)
+            elif ip6Addr.startswith(self.meshLocalPrefix):
                 # mesh local address
                 if ip6Addr.split(':')[4] == '0':
                     # rloc
