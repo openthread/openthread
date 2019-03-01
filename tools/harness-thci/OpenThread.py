@@ -254,7 +254,7 @@ class OpenThread(IThci):
                 # link local address
                 if ip6Addr.split(':')[4] != '0':
                     linkLocal64Addr = ip6Addr
-            elif ip6AddrPrefix == 'fd00':
+            elif ip6Addr.startswith(self.meshLocalPrefix)
                 # mesh local address
                 if ip6Addr.split(':')[4] == '0':
                     # rloc
@@ -1877,6 +1877,7 @@ class OpenThread(IThci):
         try:
             cmd = 'dataset meshlocalprefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
+            self.meshLocalPrefix = sMeshLocalPrefix
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
