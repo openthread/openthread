@@ -332,7 +332,7 @@ class OpenThread_WpanCtl(IThci):
                 # link local address
                 if ip6Addr.split(':')[4] != '0':
                     linkLocal64Addr = ip6Addr
-            elif ip6AddrPrefix == 'fd00':
+            elif ip6Addr.startswith(self.meshLocalPrefix)
                 # mesh local address
                 if ip6Addr.split(':')[4] == '0':
                     # rloc
@@ -1940,6 +1940,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = WPANCTL_CMD + 'setprop IPv6:MeshLocalPrefix %s' % sMeshLocalPrefix
             datasetCmd = WPANCTL_CMD + 'setprop Dataset:MeshLocalPrefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
+            self.meshLocalPrefix = sMeshLocalPrefix
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger('setMLPrefix() Error: ' + str(e))
