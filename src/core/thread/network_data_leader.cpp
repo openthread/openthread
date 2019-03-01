@@ -83,7 +83,7 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
     {
         aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
-        aContext.mContextId    = 0;
+        aContext.mContextId    = Mle::kRsvContextId;
         aContext.mCompressFlag = true;
     }
 
@@ -127,11 +127,11 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
     PrefixTlv * prefix;
     ContextTlv *contextTlv;
 
-    if (aContextId == 0)
+    if (aContextId == Mle::kRsvContextId)
     {
         aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
-        aContext.mContextId    = 0;
+        aContext.mContextId    = Mle::kRsvContextId;
         aContext.mCompressFlag = true;
         ExitNow(error = OT_ERROR_NONE);
     }

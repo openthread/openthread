@@ -3327,7 +3327,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         child = iter.GetChild();
 
-        if (context.mContextId == 0 && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
+        if (context.mContextId == kRsvContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
             aAddress.mFields.m16[5] == HostSwap16(0x00ff) && aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
             aAddress.mFields.m16[7] == HostSwap16(child->GetRloc16()))
         {
@@ -3340,7 +3340,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         }
     }
 
-    VerifyOrExit(context.mContextId == 0, rval = NULL);
+    VerifyOrExit(context.mContextId == kRsvContextId, rval = NULL);
 
     if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
         aAddress.mFields.m16[6] == HostSwap16(0xfe00))
@@ -4364,19 +4364,31 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
             entry.SetUncompressed();
             entry.SetIp6Address(address);
         }
-        else
+        else if (context.mContextId != kRsvContextId)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);
             entry.SetIid(address.GetIid());
+        }
+        else
+        {
+            continue;
         }
 
         SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
         length += entry.GetLength();
     }
 
-    tlv.SetLength(length);
-    aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    if (length > 0)
+    {
+        tlv.SetLength(length);
+        aMessage.Write(startOffset, sizeof(tlv), &tlv);
+    }
+    else
+    {
+        // remove AddressRegistrationTlv if no address to be echoed back
+        aMessage.SetLength(aMessage.GetLength() - sizeof(tlv));
+    }
 
 exit:
     return error;
