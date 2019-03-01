@@ -2768,7 +2768,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     // Otherwise use the one from commissioning data.
     if (!mSteeringData.IsCleared())
     {
-        SuccessOrExit(error = message->Append(&mSteeringData, sizeof(mSteeringData) + mSteeringData.GetLength()));
+        SuccessOrExit(error = message->Append(&mSteeringData, sizeof(Tlv) + mSteeringData.GetLength()));
     }
     else
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
