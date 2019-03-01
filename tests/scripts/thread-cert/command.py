@@ -377,10 +377,22 @@ def check_prefix(prefix):
     assert contains_tlv(prefix.sub_tlvs, network_data.BorderRouter), 'Prefix doesn\'t contain a border router sub-TLV!'
     assert contains_tlv(prefix.sub_tlvs, network_data.LowpanId), 'Prefix doesn\'t contain a LowpanId sub-TLV!'
 
-def check_child_update_request_by_child(command_msg):
-    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+def check_child_update_request_from_child(command_msg, source_address=CheckType.OPTIONAL,
+    leader_data=CheckType.OPTIONAL, challenge=CheckType.OPTIONAL, time_out=CheckType.OPTIONAL,
+    address_registration=CheckType.OPTIONAL, tlv_request_tlv=CheckType.OPTIONAL,
+    active_timestamp=CheckType.OPTIONAL, CIDs=[]):
+
     command_msg.assertMleMessageContainsTlv(mle.Mode)
-    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    check_mle_optional_tlv(command_msg, source_address, mle.SourceAddress)
+    check_mle_optional_tlv(command_msg, leader_data, mle.LeaderData)
+    check_mle_optional_tlv(command_msg, challenge, mle.Challenge)
+    check_mle_optional_tlv(command_msg, time_out, mle.Timeout)
+    check_mle_optional_tlv(command_msg, address_registration, mle.AddressRegistration)
+    check_mle_optional_tlv(command_msg, tlv_request_tlv, mle.TlvRequest)
+    check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
+
+    if (address_registration == CheckType.CONTAIN) and len(CIDs) > 0:
+        _check_address_registration(command_msg, CIDs)
 
 def check_coap_optional_tlv(coap_msg, type, tlv):
     if (type == CheckType.CONTAIN):
@@ -445,7 +457,7 @@ def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OP
 def check_child_update_response(command_msg, timeout=CheckType.OPTIONAL,
     address_registration=CheckType.OPTIONAL, address16=CheckType.OPTIONAL,
     leader_data=CheckType.OPTIONAL, network_data=CheckType.OPTIONAL, response=CheckType.OPTIONAL,
-    link_layer_frame_counter=CheckType.OPTIONAL, mle_frame_counter=CheckType.OPTIONAL):
+    link_layer_frame_counter=CheckType.OPTIONAL, mle_frame_counter=CheckType.OPTIONAL, CIDs=[]):
     """Verify a properly formatted Child Update Response from parent
     """
     check_secure_mle_key_id_mode(command_msg, 0x02)
@@ -461,17 +473,19 @@ def check_child_update_response(command_msg, timeout=CheckType.OPTIONAL,
     check_mle_optional_tlv(command_msg, link_layer_frame_counter, mle.LinkLayerFrameCounter)
     check_mle_optional_tlv(command_msg, mle_frame_counter, mle.MleFrameCounter)
 
-def unhashable_items_lists_equals(list1, list2):
-    return all(item in list1 for item in list2) and all(item in list2 for item in list1)
+    if (address_registration == CheckType.CONTAIN) and len(CIDs) > 0:
+        _check_address_registration(command_msg, CIDs)
 
-def check_message_address_registration_addr_set_equals(command_msg1, command_msg2):
-    """Verify that all addresses in the address set of AddressRegistration tlv in msg2
-       are contained in that address set of AddressRegistration tlv in msg1
-    """
-    addr_reg_tlv1 = command_msg1.assertMleMessageContainsTlv(mle.AddressRegistration)
-    addr_reg_tlv2 = command_msg2.assertMleMessageContainsTlv(mle.AddressRegistration)
-    # unordered lists comparison
-    assert unhashable_items_lists_equals(addr_reg_tlv1.addresses, addr_reg_tlv2.addresses), 'Some addresses are not included in AddressRegistration TLV'
+def _check_address_registration(command_msg, CIDs=[]):
+        addresses = command_msg.assertMleMessageContainsTlv(mle.AddressRegistration).addresses
+        for cid in CIDs:
+            found = False
+            for address in addresses:
+                if isinstance(address, mle.AddressCompressed):
+                    if cid == address.cid:
+                        found = True
+                        break
+            assert found, "AddressRegistration TLV doesn't have CID {} ".format(cid)
 
 def get_sub_tlv(tlvs, tlv_type):
     for sub_tlv in tlvs:

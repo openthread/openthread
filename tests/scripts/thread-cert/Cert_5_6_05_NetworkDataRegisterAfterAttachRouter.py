@@ -99,6 +99,10 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.simulator.go(10)
 
         addrs = self.nodes[ED1].get_addrs()
@@ -117,6 +121,9 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
 
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'pacs')
         self.nodes[ROUTER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(3, '2001:2:0:3::/64')
 
         self.simulator.go(10)
 

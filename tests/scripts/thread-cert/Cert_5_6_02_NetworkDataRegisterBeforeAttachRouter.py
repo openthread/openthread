@@ -91,6 +91,10 @@ class Cert_5_6_2_NetworkDataRouterAsBr(unittest.TestCase):
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.nodes[ED1].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
