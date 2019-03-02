@@ -3327,7 +3327,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         child = iter.GetChild();
 
-        if (context.mContextId == kRsvContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
+        if (context.mContextId == kMeshLocalPrefixContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
             aAddress.mFields.m16[5] == HostSwap16(0x00ff) && aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
             aAddress.mFields.m16[7] == HostSwap16(child->GetRloc16()))
         {
@@ -3340,7 +3340,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         }
     }
 
-    VerifyOrExit(context.mContextId == kRsvContextId, rval = NULL);
+    VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = NULL);
 
     if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
         aAddress.mFields.m16[6] == HostSwap16(0xfe00))
@@ -4364,7 +4364,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
             entry.SetUncompressed();
             entry.SetIp6Address(address);
         }
-        else if (context.mContextId != kRsvContextId)
+        else if (context.mContextId != kMeshLocalPrefixContextId)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);

@@ -295,7 +295,7 @@ compress:
     SuccessOrExit(error = buf.Advance(sizeof(hcCtl)));
 
     // Context Identifier
-    if (srcContext.mContextId != Mle::kRsvContextId || dstContext.mContextId != Mle::kRsvContextId)
+    if (srcContext.mContextId != 0 || dstContext.mContextId != 0)
     {
         hcCtl |= kHcContextId;
         SuccessOrExit(error = buf.Write(((srcContext.mContextId << 4) | dstContext.mContextId) & 0xff));
