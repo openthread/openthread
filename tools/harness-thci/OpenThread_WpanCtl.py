@@ -1451,7 +1451,7 @@ class OpenThread_WpanCtl(IThci):
         self.channelMask = "0x7fff800" #(0xffff << 11)
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
-        self.localprefix = ModuleHelper.Default_MLPrefix
+        self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
         self.pskc = "00000000000000000000000000000000"  # OT only accept hex format PSKc for now
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = "onrcb"
@@ -1480,7 +1480,7 @@ class OpenThread_WpanCtl(IThci):
             self.setXpanId(self.xpanId)
             self.setNetworkName(self.networkName)
             self.setNetworkKey(self.networkKey)
-            self.setMLPrefix(self.localprefix)
+            self.setMLPrefix(self.meshLocalPrefix)
             self.setPSKc(self.pskc)
             self.setActiveTimestamp(self.activetimestamp)
         except Exception, e:
