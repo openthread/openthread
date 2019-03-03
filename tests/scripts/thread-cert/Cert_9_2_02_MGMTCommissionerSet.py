@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+from ipaddress import ip_address
 import unittest
 
 from mle import NetworkData
@@ -78,15 +79,13 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         # Skip all other Coaps sent by Leader
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        while True:
-            msg = leader_messages.next_coap_message('2.04', assert_enabled=False)
-            if msg is None:
-                break
+        self.skip_coap_messages(COMMISSIONER, '0.02')
+        self.skip_coap_messages(LEADER, '2.04')
 
         # Commissioner start
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
+        self.skip_coap_messages(COMMISSIONER, '0.02')    # Skip LEAD_PET.req
 
         # Get CommissionerSesssionId from LEAD_PET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
@@ -102,10 +101,22 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
         command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),)) # (mesh_cop.State(0xFF),) <- this a tuple, don't delete the comma
+        self.skip_coap_messages(COMMISSIONER, '0.02')
 
         # Step 4 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs([steering_data_tlv, commissioner_session_id_tlv])
         self.simulator.go(5)
+        commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
+        msg = commissioner_messages.next_coap_message('0.02', assert_enabled=False)
+        # Check coap URI and payload
+        assert msg.coap.uri_path == '/c/cs'
+        assert command.contains_tlvs(msg.coap.payload, [mesh_cop.SteeringData, mesh_cop.CommissionerSessionId])
+
+        # Check destination address
+        dest_addr = msg.ipv6_packet.ipv6_header.destination_address
+        rloc = ip_address(self.nodes[LEADER].get_addr_rloc())
+        aloc = ip_address(self.nodes[LEADER].get_addr_aloc())
+        assert dest_addr == rloc or dest_addr == aloc
 
         # Step 5 - Leader sends MGMT_COMMISSIONER_SET.rsp to commissioner
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
@@ -165,6 +176,13 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 15 - Send ICMPv6 Echo Request to Leader
         leader_rloc = self.nodes[LEADER].get_addr_rloc()
         self.assertTrue(self.nodes[COMMISSIONER].ping(leader_rloc))
+
+    def skip_coap_messages(self, node_id, code):
+        messages = self.simulator.get_messages_sent_by(node_id)
+        while True:
+            msg = messages.next_coap_message(code, assert_enabled=False)
+            if msg is None:
+                break
 
 if __name__ == '__main__':
     unittest.main()
