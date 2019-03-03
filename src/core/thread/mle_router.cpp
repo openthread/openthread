@@ -4387,7 +4387,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     else
     {
         // remove AddressRegistrationTlv if no address to be echoed back
-        aMessage.SetLength(aMessage.GetLength() - sizeof(tlv));
+        aMessage.SetLength(startOffset);
     }
 
 exit:
