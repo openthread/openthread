@@ -76,6 +76,10 @@ class TlvType(IntEnum):
     DISCOVERY_REQUEST = 128
     DISCOVERY_RESPONSE = 129
 
+class MeshCopState(IntEnum):
+    ACCEPT = 0x1
+    REJECT = 0xFF
+
 class MeshCopMessageType(IntEnum):
     JOIN_FIN_REQ = 1,
     JOIN_FIN_RSP = 2,

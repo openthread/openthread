@@ -109,6 +109,7 @@ def create_default_network_data_service_sub_tlvs_factory():
 
 def create_default_network_data_commissioning_data_sub_tlvs_factories():
     return {
+        mesh_cop.TlvType.CHANNEL: mesh_cop.ChannelFactory(),
         mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
         mesh_cop.TlvType.BORDER_AGENT_LOCATOR: mesh_cop.BorderAgentLocatorFactory(),
         mesh_cop.TlvType.COMMISSIONER_SESSION_ID: mesh_cop.CommissionerSessionIdFactory(),
