@@ -169,9 +169,9 @@ def create_default_thread_discovery_sub_tlvs_factories():
         mesh_cop.TlvType.DISCOVERY_RESPONSE: mesh_cop.DiscoveryResponseFactory(),
         mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
         mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
-        mesh_cop.TlvType.STEERING_DATA: network_data.SteeringDataFactory(),
+        mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
         mesh_cop.TlvType.JOINER_UDP_PORT: mesh_cop.JoinerUdpPortFactory(),
-        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory()
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory()
     }
 
 def create_default_mle_tlvs_factories():
@@ -244,8 +244,8 @@ def create_default_network_tlvs_factory():
 def create_default_mesh_cop_tlvs_factories():
     return {
         mesh_cop.TlvType.CHANNEL: mesh_cop.ChannelFactory(),
-        mesh_cop.TlvType.PAN_ID: mesh_cop.PanIdFactory(),
-        mesh_cop.TlvType.EXTENDED_PAN_ID: mesh_cop.ExtendedPanIdFactory(),
+        mesh_cop.TlvType.PAN_ID: mesh_cop.PanidFactory(),
+        mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
         mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
         mesh_cop.TlvType.PSKC: mesh_cop.PSKcFactory(),
         mesh_cop.TlvType.NETWORK_MASTER_KEY: mesh_cop.NetworkMasterKeyFactory(),

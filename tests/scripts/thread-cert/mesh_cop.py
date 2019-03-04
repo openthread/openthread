@@ -38,7 +38,7 @@ import common
 class TlvType(IntEnum):
     CHANNEL = 0
     PAN_ID = 1
-    EXTENDED_PAN_ID = 2
+    EXTENDED_PANID = 2
     NETWORK_NAME = 3
     PSKC = 4
     NETWORK_MASTER_KEY = 5
@@ -664,7 +664,7 @@ class VendorStackVersion(object):
 
 class VendorStackVersionFactory:
 
-    def parse(self, data):
+    def parse(self, data, message_info):
         stack_vendor_oui = struct.unpack(">H", data.read(2))[0]
         rest = struct.unpack(">BBBB", data.read(4))
         build = rest[1] << 4 | (0xf0 & rest[2])
@@ -911,7 +911,7 @@ class MeshCopCommandFactory:
         factory = self._get_tlv_factory(_type)
         if factory == None:
             return None
-        return factory.parse(io.BytesIO(value))
+        return factory.parse(io.BytesIO(value), None) # message_info not needed here
 
     def _get_mesh_cop_msg_type(self, msg_type_str):
         tp = self._mesh_cop_msg_type_map[msg_type_str]

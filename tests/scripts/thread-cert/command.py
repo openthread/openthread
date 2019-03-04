@@ -526,11 +526,11 @@ def check_discovery_response(command_msg, request_src_addr, steering_data=CheckT
     assert response.version == config.PROTOCOL_VERSION
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.ExtendedPanid)
     assert_contains_tlv(tlvs, CheckType.CONTAIN, mesh_cop.NetworkName)
-    assert_contains_tlv(tlvs, steering_data, network_data.SteeringData)
+    assert_contains_tlv(tlvs, steering_data, mesh_cop.SteeringData)
     assert_contains_tlv(tlvs, steering_data, mesh_cop.JoinerUdpPort)
 
     check_type = CheckType.CONTAIN if response.native_flag else CheckType.OPTIONAL
-    assert_contains_tlv(tlvs, check_type, network_data.CommissionerUdpPort)
+    assert_contains_tlv(tlvs, check_type, mesh_cop.CommissionerUdpPort)
 
 def get_joiner_udp_port_in_discovery_response(command_msg):
     """Get the udp port specified in a DISCOVERY RESPONSE message
