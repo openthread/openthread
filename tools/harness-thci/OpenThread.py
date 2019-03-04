@@ -1877,7 +1877,6 @@ class OpenThread(IThci):
         try:
             cmd = 'dataset meshlocalprefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
-            self.meshLocalPrefix = sMeshLocalPrefix
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
