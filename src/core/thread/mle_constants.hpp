@@ -126,6 +126,7 @@ enum
     kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (sec)
     kLeaderWeight               = 64,                                      ///< Default leader weight
     kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (sec)
+    kMeshLocalPrefixContextId   = 0,                                       ///< 0 is reserved for Mesh Local Prefix
 };
 
 /**

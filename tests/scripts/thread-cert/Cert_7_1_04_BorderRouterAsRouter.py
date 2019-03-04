@@ -100,6 +100,10 @@ class Cert_7_1_4_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[ROUTER].register_netdata()
         self.simulator.go(5)
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         addrs = self.nodes[ED2].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
