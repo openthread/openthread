@@ -723,6 +723,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     switch (error)
     {
     case NRF_802154_RX_ERROR_INVALID_FRAME:
+    case NRF_802154_RX_ERROR_DELAYED_TIMEOUT:
         sReceiveError = OT_ERROR_NO_FRAME_RECEIVED;
         break;
 
@@ -737,6 +738,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     case NRF_802154_RX_ERROR_RUNTIME:
     case NRF_802154_RX_ERROR_TIMESLOT_ENDED:
     case NRF_802154_RX_ERROR_ABORTED:
+    case NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED:
     case NRF_802154_RX_ERROR_INVALID_LENGTH:
         sReceiveError = OT_ERROR_FAILED;
         break;
@@ -776,6 +778,8 @@ void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t err
     {
     case NRF_802154_TX_ERROR_BUSY_CHANNEL:
     case NRF_802154_TX_ERROR_TIMESLOT_ENDED:
+    case NRF_802154_TX_ERROR_ABORTED:
+    case NRF_802154_TX_ERROR_TIMESLOT_DENIED:
         setPendingEvent(kPendingEventChannelAccessFailure);
         break;
 

@@ -663,13 +663,16 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (Tlv::GetTlv(aMessage, Tlv::kTimeRequest, sizeof(timeRequest), timeRequest) == OT_ERROR_NONE)
+    if (neighbor != NULL)
     {
-        neighbor->SetTimeSyncEnabled(true);
-    }
-    else
-    {
-        neighbor->SetTimeSyncEnabled(false);
+        if (Tlv::GetTlv(aMessage, Tlv::kTimeRequest, sizeof(timeRequest), timeRequest) == OT_ERROR_NONE)
+        {
+            neighbor->SetTimeSyncEnabled(true);
+        }
+        else
+        {
+            neighbor->SetTimeSyncEnabled(false);
+        }
     }
 #endif
 
@@ -745,7 +748,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (aNeighbor->IsTimeSyncEnabled())
+    if (aNeighbor != NULL && aNeighbor->IsTimeSyncEnabled())
     {
         message->SetTimeSync(true);
     }
@@ -2765,7 +2768,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     // Otherwise use the one from commissioning data.
     if (!mSteeringData.IsCleared())
     {
-        SuccessOrExit(error = message->Append(&mSteeringData, sizeof(mSteeringData) + mSteeringData.GetLength()));
+        SuccessOrExit(error = message->Append(&mSteeringData, sizeof(Tlv) + mSteeringData.GetLength()));
     }
     else
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

@@ -60,6 +60,7 @@ SNTP_CLIENT                    ?= 1
 UDP_FORWARD                    ?= 1
 
 COMMONCFLAGS                   := \
+    -g                            \
     $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
@@ -80,7 +81,6 @@ configure_OPTIONS               = \
 ifneq ($(DEBUG),1)
 COMMONCFLAGS                   += \
     -O2                           \
-    -g                            \
     $(NULL)
 endif
 
