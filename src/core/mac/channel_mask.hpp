@@ -84,8 +84,6 @@ public:
     ChannelMask(void)
         : mMask(0)
     {
-        OT_STATIC_ASSERT((Phy::kChannelMin < 32) && (Phy::kChannelMax < 32),
-                         "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     }
 
     /**
@@ -246,6 +244,8 @@ public:
     InfoString ToString(void) const;
 
 private:
+    OT_STATIC_ASSERT((Phy::kChannelMin < 32) && (Phy::kChannelMax < 32),
+                     "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     uint32_t mMask;
 };
 

@@ -147,7 +147,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
             const ChannelMaskTlv *tlv = static_cast<const ChannelMaskTlv *>(cur);
             uint32_t              mask;
 
-            if (tlv->GetChannelMask(mask) == OT_ERROR_NONE)
+            if ((mask = tlv->GetChannelMask()) != 0)
             {
                 aDataset.mChannelMaskPage0                      = mask;
                 aDataset.mComponents.mIsChannelMaskPage0Present = true;

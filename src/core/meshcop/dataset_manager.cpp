@@ -226,7 +226,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-    SuccessOrExit(error = channelMaskTlv->GetChannelMask(mask));
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
     aChannelMask.SetMask(mask & Phy::kSupportedChannels);
 

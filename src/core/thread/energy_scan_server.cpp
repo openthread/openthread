@@ -92,7 +92,7 @@ void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::Message
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
     VerifyOrExit(scanDuration.IsValid());
 
-    SuccessOrExit(MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage, mask));
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;

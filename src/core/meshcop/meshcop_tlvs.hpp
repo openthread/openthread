@@ -1557,26 +1557,20 @@ public:
     /**
      * This method returns the Channel Mask value as a `uint32_t` bit mask.
      *
-     * @param[out]  aChannelMask The Channel Mask.
-     *
-     * @retval OT_ERROR_NONE       Successfully retrieved the channel mask.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the valid channel mask.
+     * @returns The Channel Mask or 0 if not found.
      *
      */
-    otError GetChannelMask(uint32_t &aChannelMask) const;
+    uint32_t GetChannelMask(void) const;
 
     /**
      * This method reads message and returns the Channel Mask value as a `uint32_t` bit mask.
      *
      * @param[in]   aMessage     A reference to the message.
-     * @param[out]  aChannelMask The channel mask.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the channel mask.
-     * @retval OT_ERROR_PARSE      Failed parsing the message.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the valid ChannelMask TLV.
+     * @returns The Channel Mask or 0 if not found.
      *
      */
-    static otError GetChannelMask(const Message &aMessage, uint32_t &aChannelMask);
+    static uint32_t GetChannelMask(const Message &aMessage);
 
 private:
     enum

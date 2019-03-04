@@ -196,7 +196,6 @@ private:
         kTimerInterval     = (kSampleInterval / kNumChannelMasks),
         kMaxJitterInterval = 4096,
         kMaxOccupancy      = 0xffff,
-        kStringSize        = 128,
     };
 
     static void HandleTimer(Timer &aTimer);

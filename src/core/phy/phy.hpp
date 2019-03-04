@@ -72,7 +72,7 @@ enum
     kChannelMin            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
     kChannelMax            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX,
     kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_2_MASK,
-#else
+#elif OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
     kNumChannelPages       = 1,
     kSupportedChannels     = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK,
     kChannelMin            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
@@ -81,6 +81,9 @@ enum
 #endif
 };
 
+OT_STATIC_ASSERT((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
+                 "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+                 "must be set to 1 to specify the radio mode");
 } // namespace Phy
 } // namespace ot
 

@@ -189,8 +189,9 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 void ChannelMonitor::LogResults(void)
 {
-    char  buf[kStringSize];
-    char *cur = buf;
+    const size_t kStringSize = 128;
+    char         buf[kStringSize];
+    char *       cur = buf;
 
     for (size_t i = 0; i < kNumChannels; i++)
     {
