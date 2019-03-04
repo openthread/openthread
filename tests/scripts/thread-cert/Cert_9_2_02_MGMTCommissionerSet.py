@@ -100,7 +100,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 3 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),)) # (mesh_cop.State(0xFF),) <- this a tuple, don't delete the comma
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.REJECT),)) # (mesh_cop.State(mesh_cop.MeshCopState.REJECT),) <- this a tuple, don't delete the comma
         self.skip_coap_messages(COMMISSIONER, '0.02')
 
         # Step 4 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
@@ -121,7 +121,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 5 - Leader sends MGMT_COMMISSIONER_SET.rsp to commissioner
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.ACCEPT),))
 
         # Step 6 - Leader sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
@@ -141,7 +141,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 8 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.REJECT),))
 
         # Step 9 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -151,7 +151,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 10 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.REJECT),))
 
         # Step 11 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -161,7 +161,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 12 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0xFF),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.REJECT),))
 
         # Step 13 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
@@ -171,7 +171,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Step 14 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04')
-        command.check_payload_same(msg.coap.payload, (mesh_cop.State(0x1),))
+        command.check_payload_same(msg.coap.payload, (mesh_cop.State(mesh_cop.MeshCopState.ACCEPT),))
 
         # Step 15 - Send ICMPv6 Echo Request to Leader
         leader_rloc = self.nodes[LEADER].get_addr_rloc()
