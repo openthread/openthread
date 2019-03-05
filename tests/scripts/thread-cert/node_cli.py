@@ -519,7 +519,7 @@ class otCli:
                 return addr
         return None
 
-    def get_addr_aloc(self):
+    def get_addr_leader_aloc(self):
         addrs = self.get_addrs()
         for addr in addrs:
             segs = addr.split(':')

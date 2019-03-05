@@ -115,8 +115,8 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
         # Check destination address
         dest_addr = msg.ipv6_packet.ipv6_header.destination_address
         rloc = ip_address(self.nodes[LEADER].get_addr_rloc())
-        aloc = ip_address(self.nodes[LEADER].get_addr_aloc())
-        assert dest_addr == rloc or dest_addr == aloc
+        leader_aloc = ip_address(self.nodes[LEADER].get_addr_leader_aloc())
+        assert dest_addr == rloc or dest_addr == leader_aloc
 
         # Step 5 - Leader sends MGMT_COMMISSIONER_SET.rsp to commissioner
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
