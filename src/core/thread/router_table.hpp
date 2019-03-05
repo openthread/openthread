@@ -332,6 +332,18 @@ public:
     void ProcessTimerTick(void);
 
 private:
+    class RouterIdSet
+    {
+    public:
+        void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
+        bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & (1 << (aRouterId % 8))) != 0; }
+        void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= 1 << (aRouterId % 8); }
+        void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~(1 << (aRouterId % 8)); }
+
+    private:
+        uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    };
+
     void          UpdateAllocation(void);
     const Router *GetFirstEntry(void) const;
     const Router *GetNextEntry(const Router *aRouter) const;
@@ -341,12 +353,12 @@ private:
         return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
     }
 
-    Router   mRouters[Mle::kMaxRouters];
-    uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId + 1)];
-    uint8_t  mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
-    uint32_t mRouterIdSequenceLastUpdated;
-    uint8_t  mRouterIdSequence;
-    uint8_t  mActiveRouterCount;
+    Router      mRouters[Mle::kMaxRouters];
+    RouterIdSet mAllocatedRouterIds;
+    uint8_t     mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
+    uint32_t    mRouterIdSequenceLastUpdated;
+    uint8_t     mRouterIdSequence;
+    uint8_t     mActiveRouterCount;
 };
 
 #endif // OPENTHREAD_FTD
