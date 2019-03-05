@@ -179,10 +179,9 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
 
     def skip_coap_messages(self, node_id, code):
         messages = self.simulator.get_messages_sent_by(node_id)
-        while True:
-            msg = messages.next_coap_message(code, assert_enabled=False)
-            if msg is None:
-                break
+        while not messages.next_coap_message(code, assert_enabled=False):
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()

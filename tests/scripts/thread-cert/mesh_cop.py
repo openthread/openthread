@@ -76,9 +76,11 @@ class TlvType(IntEnum):
     DISCOVERY_REQUEST = 128
     DISCOVERY_RESPONSE = 129
 
+
 class MeshCopState(IntEnum):
     ACCEPT = 0x1
     REJECT = 0xFF
+
 
 class MeshCopMessageType(IntEnum):
     JOIN_FIN_REQ = 1,
@@ -86,11 +88,13 @@ class MeshCopMessageType(IntEnum):
     JOIN_ENT_NTF = 3,
     JOIN_ENT_RSP = 4
 
+
 def create_mesh_cop_message_type_set():
     return [ MeshCopMessageType.JOIN_FIN_REQ,
              MeshCopMessageType.JOIN_FIN_RSP,
              MeshCopMessageType.JOIN_ENT_NTF,
              MeshCopMessageType.JOIN_ENT_RSP ]
+
 
 # Channel TLV (0)
 class Channel(object):
