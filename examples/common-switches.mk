@@ -53,7 +53,8 @@ MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
 SERVICE             ?= 0
-SLAAC               ?= 1  # SLAAC is enabled by default
+# SLAAC is enabled by default
+SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
