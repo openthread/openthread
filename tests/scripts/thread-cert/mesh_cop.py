@@ -917,15 +917,13 @@ class MeshCopCommandFactory:
         length = self._get_length(data)
         value = data.read(length)
         factory = self._get_tlv_factory(_type)
-        if factory == None:
-            return None
         return factory.parse(io.BytesIO(value), None) # message_info not needed here
 
     def _get_mesh_cop_msg_type(self, msg_type_str):
-        tp = self._mesh_cop_msg_type_map[msg_type_str]
-        if tp == None:
-            raise RuntimeError('Mesh cop message type not found: {}'.format(msg_type_str))
-        return tp
+        try:
+            return self._mesh_cop_msg_type_map[msg_type_str]
+        except KeyError:
+            raise KeyError('Mesh cop message type not found: {}'.format(msg_type_str))
 
     def parse(self, cmd_type_str, data):
         cmd_type = self._get_mesh_cop_msg_type(cmd_type_str)
