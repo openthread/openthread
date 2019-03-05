@@ -155,7 +155,7 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
 
         # Step 11 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs(
-            [mesh_cop.CommissionerSessionId(0xFFFF), border_agent_locator_tlv])
+            [mesh_cop.CommissionerSessionId(0xFFFF), steering_data_tlv])
         self.simulator.go(5)
 
         # Step 12 - Leader responds to MGMT_COMMISSIONER_SET.req with MGMT_COMMISSIONER_SET.rsp
