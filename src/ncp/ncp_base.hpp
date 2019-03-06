@@ -543,6 +543,9 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
+#if OPENTHREAD_ENABLE_SERVICE
+    bool mAllowLocalServerDataChange;
+#endif
 
 #if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

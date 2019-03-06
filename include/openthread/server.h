@@ -123,10 +123,10 @@ OTAPI otError OTCALL otServerAddService(otInstance *aInstance, const otServiceCo
  * @sa otServerRegister
  *
  */
-OTAPI otError OTCALL otServerRemoveService(otInstance *aInstance,
-                                           uint32_t    aEnterpriseNumber,
-                                           uint8_t *   aServiceData,
-                                           uint8_t     aServiceDataLength);
+OTAPI otError OTCALL otServerRemoveService(otInstance *   aInstance,
+                                           uint32_t       aEnterpriseNumber,
+                                           const uint8_t *aServiceData,
+                                           uint8_t        aServiceDataLength);
 
 /**
  * This function gets the next service in the local Network Data.

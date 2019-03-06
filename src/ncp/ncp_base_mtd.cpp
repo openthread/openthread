@@ -57,6 +57,9 @@
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+#include <openthread/server.h>
+#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -817,6 +820,110 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+
+#if OPENTHREAD_ENABLE_SERVICE
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>(void)
+{
+    return mEncoder.WriteBool(mAllowLocalServerDataChange);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>(void)
+{
+    bool    value                    = false;
+    otError error                    = OT_ERROR_NONE;
+    bool    shouldRegisterWithLeader = false;
+
+    SuccessOrExit(error = mDecoder.ReadBool(value));
+
+    // Register any server data changes on transition from `true` to `false`.
+    shouldRegisterWithLeader = (mAllowLocalServerDataChange == true) && (value == false);
+
+    mAllowLocalServerDataChange = value;
+
+exit:
+
+    if (shouldRegisterWithLeader)
+    {
+        otServerRegister(mInstance);
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(void)
+{
+    otError         error = OT_ERROR_NONE;
+    otServiceConfig cfg;
+    bool            stable;
+    const uint8_t * data;
+    uint16_t        dataLen;
+
+    VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
+
+    SuccessOrExit(error = mDecoder.ReadUint8(cfg.mServiceID));
+    SuccessOrExit(error = mDecoder.ReadUint32(cfg.mEnterpriseNumber));
+    SuccessOrExit(error = mDecoder.ReadData(data, dataLen));
+
+    VerifyOrExit(dataLen <= sizeof(cfg.mServiceData), error = OT_ERROR_INVALID_ARGS);
+    memcpy(cfg.mServiceData, data, dataLen);
+    cfg.mServiceDataLength = dataLen;
+
+    SuccessOrExit(error = mDecoder.ReadBool(stable));
+    cfg.mServerConfig.mStable = stable;
+    SuccessOrExit(error = mDecoder.ReadData(data, dataLen));
+    
+    VerifyOrExit(dataLen <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_INVALID_ARGS);
+    memcpy(cfg.mServerConfig.mServerData, data, dataLen);
+    cfg.mServerConfig.mServerDataLength = dataLen;
+
+    SuccessOrExit(error = otServerAddService(mInstance, &cfg));
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    uint32_t       enterpriseNumber;
+    const uint8_t *serviceData;
+    uint16_t       serviceDataLength;
+
+    VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
+
+    SuccessOrExit(error = mDecoder.ReadUint32(enterpriseNumber));
+    SuccessOrExit(error = mDecoder.ReadData(serviceData, serviceDataLength));
+
+    SuccessOrExit(error = otServerRemoveService(mInstance, enterpriseNumber, serviceData, serviceDataLength));
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>(void)
+{
+    otError               error    = OT_ERROR_NONE;
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otServiceConfig       cfg;
+
+    while (otServerGetNextService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
+        SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
+        SuccessOrExit(error = mEncoder.WriteData(cfg.mServiceData, cfg.mServiceDataLength));
+        SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
+        SuccessOrExit(error = mEncoder.WriteData(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
+        SuccessOrExit(error = mEncoder.WriteUint16(cfg.mServerConfig.mRloc16));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_ENABLE_SERVICE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG>(void)
 {
