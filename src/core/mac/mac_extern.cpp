@@ -1323,11 +1323,12 @@ void Mac::TransmitDoneTask(uint8_t aMsduHandle, int aMacError)
     switch (aMacError)
     {
     case OT_MAC_STATUS_CHANNEL_ACCESS_FAILURE:
-        error      = OT_ERROR_CHANNEL_ACCESS_FAILURE;
         ccaSuccess = false;
         mCounters.mTxErrBusyChannel++;
+	// fall through
     case OT_MAC_STATUS_NO_ACK:
         error = OT_ERROR_NO_ACK;
+	// fall through
     case OT_MAC_STATUS_SUCCESS:
         // TODO: if not on PAN channel skip cca tracking
         if (mCcaSampleCount < kMaxCcaSampleCount)
@@ -1347,6 +1348,7 @@ void Mac::TransmitDoneTask(uint8_t aMsduHandle, int aMacError)
         break;
     }
 
+    if (!ccaSuccess) error = OT_ERROR_CHANNEL_ACCESS_FAILURE;
     if (error != OT_ERROR_NONE)
     {
         otLogDebgMac("TX ERR %d", aMacError);

@@ -614,6 +614,8 @@ void Interpreter::ProcessChildIp(int argc, char *argv[])
     otError error = OT_ERROR_NONE;
     uint8_t maxChildren;
 
+    VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
+
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
     for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
@@ -639,7 +641,9 @@ void Interpreter::ProcessChildIp(int argc, char *argv[])
                                   HostSwap16(ip6Address.mFields.m16[6]), HostSwap16(ip6Address.mFields.m16[7]));
         }
     }
+
 exit:
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
