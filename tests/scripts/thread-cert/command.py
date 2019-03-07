@@ -433,6 +433,17 @@ def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL,
         network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
         check_network_data(network_data_tlv, network_data_check)
 
+def check_data_response_tmp(command_msg, network_data_check=None, active_timestamp=CheckType.OPTIONAL):
+    """Verify a properly formatted Data Response command message.
+    """
+    check_secure_mle_key_id_mode(command_msg, 0x02)
+    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
+    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
+    check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
+    if network_data_check is not None:
+        network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
+        network_data_check.check(network_data_tlv)
+
 def check_child_update_request_from_parent(command_msg, leader_data=CheckType.OPTIONAL,
     network_data=CheckType.OPTIONAL, challenge=CheckType.OPTIONAL,
     tlv_request=CheckType.OPTIONAL, active_timestamp=CheckType.OPTIONAL):
@@ -566,3 +577,63 @@ def check_payload_same(tp1, tp2):
     for tlv in tp2:
         peer_tlv = get_sub_tlv(tp1, type(tlv))
         assert peer_tlv is not None and peer_tlv == tlv
+
+
+class SinglePrefixCheck:
+
+    def __init__(self, prefix=None, border_router_16=None):
+        self._prefix = prefix
+        self._border_router = border_router
+
+    def check(self, prefix_tlv):
+        border_router_tlv = assert_contains_tlv(prefix.sub_tlvs, CheckType.CONTAIN, network_data.BorderRouter)
+        lowpan_id_tlv = assert_contains_tlv(prefix.sub_tlvs, CheckType.CONTAIN, network_data.LowpanId)
+        result = True
+        if self._prefix is not None:
+            result &= (self._prefix == prefix_tlv.prefix)
+        if self._border_router_16 is not None:
+            result &= (self._border_router.border_router_16 == border_router_tlv.border_router_16)
+        return result
+
+
+class PrefixesCheck:
+
+    def __init__(self, prefix_check_list=[]):
+        self._prefix_check_list = prefix_check_list
+
+    def check(self, prefix_tlvs):
+        for prefix_check in prefix_check_list:
+            found = False
+            for prefix_tlv in prefix_tlvs:
+                if prefix_check.check(prefix_tlv):
+                    found = True
+                    break
+            assert found, 'Some prefix is absent: {}'.format(prefix_check)
+
+
+class CommissioningDataCheck:
+
+    def __init__(self, stable=None, sub_tlv_type_list=[]):
+        self._stable = stable
+        self._sub_tlv_type_list = sub_tlv_type_list
+
+    def check(self, commissioning_data_tlv):
+        if self._stable is not None:
+            assert self._stable == commissioning_data_tlv.stable, 'Commissioning Data stable flag is not correct'
+        assert contains_tlvs(commissioning_data_tlv.sub_tlvs, self._sub_tlv_type_list), 'Some sub tlvs are missing in Commissioning Data'
+
+
+class NetworkDataCheck:
+
+    def __init__(self, prefixes_check=None, commissioning_data_check=None):
+        self._prefixes_check = prefixes_check
+        self._commissioning_data_check = commissioning_data_check
+
+    def check(self, network_data_tlv):
+        if self._prefixes_check is not None:
+            prefix_tlvs = [tlv for tlv in network_data_tlv.tlvs if isinstance(tlv, network_data.Prefix)]
+            self._prefixes_check.check(prefix_tlvs)
+        if self._commissioning_data_check is not None:
+            commissioning_data_tlv = assert_contains_tlv(network_data_tlv.tlvs, CheckType.CONTAIN, network_data.CommissioningData)
+            self._commissioning_data_check.check(commissioning_data_tlv)
+

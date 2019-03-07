@@ -42,7 +42,7 @@ COMMISSIONER = 1
 LEADER = 2
 
 
-class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
+class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
 
     def setUp(self):
         self.simulator = config.create_default_simulator()
@@ -125,12 +125,8 @@ class Cert_9_2_02A_MGMTCommissionerSet(unittest.TestCase):
 
         # Step 6 - Leader sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        network_data = msg.assertMleMessageContainsTlv(NetworkData)
-        commissioning_data = command.get_sub_tlv(network_data.tlvs, CommissioningData)
-        assert commissioning_data is not None
-        assert commissioning_data.stable == 0
-        assert command.contains_tlvs(commissioning_data.sub_tlvs,
-                [mesh_cop.CommissionerSessionId, mesh_cop.SteeringData, mesh_cop.BorderAgentLocator])
+        command.check_data_response_tmp(msg, command.NetworkDataCheck(
+            commissioning_data_check=command.CommissioningDataCheck(stable=0, sub_tlv_type_list=[mesh_cop.CommissionerSessionId, mesh_cop.SteeringData, mesh_cop.BorderAgentLocator])))
 
         # Step 7 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader
         border_agent_locator_tlv = mesh_cop.BorderAgentLocator(0x0400)
