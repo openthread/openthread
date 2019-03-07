@@ -66,6 +66,8 @@
 #include "common/instance.hpp"
 #include "net/ip6.hpp"
 
+#include "common/logging.hpp"
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 namespace ot {
@@ -861,9 +863,8 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
 
     VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = mDecoder.ReadUint8(cfg.mServiceID));
     SuccessOrExit(error = mDecoder.ReadUint32(cfg.mEnterpriseNumber));
-    SuccessOrExit(error = mDecoder.ReadData(data, dataLen));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
 
     VerifyOrExit(dataLen <= sizeof(cfg.mServiceData), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServiceData, data, dataLen);
@@ -893,7 +894,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>(v
     VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadUint32(enterpriseNumber));
-    SuccessOrExit(error = mDecoder.ReadData(serviceData, serviceDataLength));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(serviceData, serviceDataLength));
 
     SuccessOrExit(error = otServerRemoveService(mInstance, enterpriseNumber, serviceData, serviceDataLength));
 exit:
@@ -912,9 +913,32 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>(void
 
         SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
         SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
-        SuccessOrExit(error = mEncoder.WriteData(cfg.mServiceData, cfg.mServiceDataLength));
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
         SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
-        SuccessOrExit(error = mEncoder.WriteData(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
+        SuccessOrExit(error = mEncoder.WriteUint16(cfg.mServerConfig.mRloc16));
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>(void)
+{
+    otError               error    = OT_ERROR_NONE;
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otServiceConfig       cfg;
+
+    while (otServerGetNextLeaderService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
+        SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
+        SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
+        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
         SuccessOrExit(error = mEncoder.WriteUint16(cfg.mServerConfig.mRloc16));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
