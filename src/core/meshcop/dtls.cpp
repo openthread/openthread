@@ -160,7 +160,7 @@ otError Dtls::Start(bool             aClient,
     // do not handle new connection before guard time expired
     VerifyOrExit(mState == kStateStopped, rval = MBEDTLS_ERR_SSL_TIMEOUT);
 
-    mState = kStateConnecting;
+    mState = kStateInitializing;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -258,10 +258,12 @@ otError Dtls::Start(bool             aClient,
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+    mState = kStateConnecting;
+
     Process();
 
 exit:
-    if ((mState == kStateConnecting) && (rval != 0))
+    if ((mState == kStateInitializing) && (rval != 0))
     {
         mState = kStateStopped;
         FreeMbedtls();
