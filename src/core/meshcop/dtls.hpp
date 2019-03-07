@@ -92,8 +92,8 @@ public:
     /**
      * This constructor initializes the DTLS object.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
-     * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.
+     * @param[in]  aNetif               A reference to the Thread network interface.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      *
      */
     explicit Dtls(Instance &aInstance, bool aLayerTwoSecurity);
@@ -111,7 +111,7 @@ public:
      * This function pointer is called when data is received from the DTLS session.
      *
      * @param[in]  aContext  A pointer to application-specific context.
-     * @param[in]  aMessage  A pointer to the received data buffer.
+     * @param[in]  aBuf      A pointer to the received data buffer.
      * @param[in]  aLength   Number of bytes in the received data buffer.
      *
      */
@@ -166,13 +166,13 @@ public:
     otError Connect(const Ip6::SockAddr &aSockAddr);
 
     /**
-     * This method starts the DTLS service.
+     * This method set up the DTLS service.
      *
      * For CoAP Secure API do first:
      * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
      * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
      *
-     * @param[in]  aContext                A pointer to application-specific context.
+     * @param[in]  aClient  TRUE if setup for client, otherwise setup for server.
      *
      * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
@@ -185,10 +185,10 @@ public:
      * @param[in]  aPort              The port to bind.
      *
      * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already binded.
+     * @retval OT_ERROR_ALREADY     Already bound.
      *
      */
-    otError Start(uint16_t aPort);
+    otError Bind(uint16_t aPort);
 
     /**
      * This method binds this DTLS with a transport callback.
@@ -197,10 +197,10 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
      * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already binded.
+     * @retval OT_ERROR_ALREADY     Already bound.
      *
      */
-    otError Start(TransportCallback aCallback, void *aContext);
+    otError Bind(TransportCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether or not the DTLS session is active.

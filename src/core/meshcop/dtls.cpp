@@ -236,7 +236,7 @@ exit:
     return;
 }
 
-otError Dtls::Start(uint16_t aPort)
+otError Dtls::Bind(uint16_t aPort)
 {
     otError       error;
     Ip6::SockAddr sockaddr;
@@ -252,7 +252,7 @@ exit:
     return error;
 }
 
-otError Dtls::Start(TransportCallback aCallback, void *aContext)
+otError Dtls::Bind(TransportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 

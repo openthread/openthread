@@ -65,7 +65,7 @@ otError CoapSecure::Start(uint16_t aPort)
     mConnectedContext  = NULL;
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
-    SuccessOrExit(error = mDtls.Start(aPort));
+    SuccessOrExit(error = mDtls.Bind(aPort));
 
 exit:
     return error;
@@ -79,7 +79,7 @@ otError CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aCon
     mConnectedContext  = NULL;
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
-    SuccessOrExit(error = mDtls.Start(aCallback, aContext));
+    SuccessOrExit(error = mDtls.Bind(aCallback, aContext));
 
 exit:
     return error;
