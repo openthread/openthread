@@ -31,7 +31,7 @@ import functools
 import time
 import unittest
 
-from command import check_child_id_response, check_child_update_response, check_data_response, check_message_address_registration_addr_set_equals
+from command import check_child_id_response, check_child_update_response, check_child_update_request_from_child, check_data_response
 from command import CheckType
 from command import CommissioningDataCheck, NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 from command import NetworkDataCheckType
