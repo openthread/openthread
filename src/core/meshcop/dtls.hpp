@@ -141,9 +141,9 @@ public:
     /**
      * This method opens the DTLS socket.
      *
-     * @param[in]  aHandler     A pointer to a function that is called when receiving DTLS messages.
-     * @param[in]  aCallback    A pointer to the connected handler.
-     * @param[in]  aContext     A pointer to arbitrary context information.
+     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive DTLS payload.
+     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
+     * @param[in]  aContext             A pointer to arbitrary context information.
      *
      * @retval OT_ERROR_NONE     Successfully opened the socket.
      * @retval OT_ERROR_ALREADY  The DTLS is already open.
