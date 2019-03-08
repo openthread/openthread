@@ -124,7 +124,6 @@ SOURCES_COMMON                      = \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/network_time_api.cpp          \
-    api/phy_api.cpp                   \
     api/server_api.cpp                \
     api/sntp_api.cpp                  \
     api/tasklet_api.cpp               \
@@ -235,7 +234,6 @@ libopenthread_radio_a_SOURCES       = \
     api/link_raw_api.cpp              \
     api/logging_api.cpp               \
     api/message_api.cpp               \
-    api/phy_api.cpp                   \
     api/tasklet_api.cpp               \
     common/instance.cpp               \
     common/locator.cpp                \

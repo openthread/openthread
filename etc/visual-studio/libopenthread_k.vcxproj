@@ -78,7 +78,6 @@
     <ClCompile Include="..\..\src\core\api\link_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
-    <ClCompile Include="..\..\src\core\api\phy_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />
@@ -184,7 +183,6 @@
     <ClInclude Include="..\..\include\openthread\link.h" />
     <ClInclude Include="..\..\include\openthread\message.h" />
     <ClInclude Include="..\..\include\openthread\netdata.h" />
-    <ClInclude Include="..\..\include\openthread\phy.h" />
     <ClInclude Include="..\..\include\openthread\tasklet.h" />
     <ClInclude Include="..\..\include\openthread\thread.h" />
     <ClInclude Include="..\..\include\openthread\thread_ftd.h" />

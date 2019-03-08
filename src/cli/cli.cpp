@@ -66,7 +66,6 @@
 #ifndef OTDLL
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
-#include <openthread/phy.h>
 #include <openthread/platform/uart.h>
 
 #include "common/new.hpp"
@@ -512,7 +511,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
                 mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
-                for (uint8_t channel = otPhyGetChannelMin(mInstance); channel <= otPhyGetChannelMax(mInstance);
+                for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance);
                      channel++)
                 {
                     uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);

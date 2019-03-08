@@ -69,7 +69,6 @@
     <ClCompile Include="..\..\src\core\api\logging_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
-    <ClCompile Include="..\..\src\core\api\phy_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />

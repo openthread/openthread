@@ -105,9 +105,6 @@
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\api\phy_api.cpp">
-      <Filter>Source Files\api</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -684,9 +681,6 @@
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\netdata.h">
-      <Filter>Header Files\openthread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\openthread\phy.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\tasklet.h">
