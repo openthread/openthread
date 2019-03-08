@@ -62,7 +62,8 @@ public:
     /**
      * This method starts the Border Agent service.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Border Agent service.
+     * @retval OT_ERROR_NONE    Successfully started the Border Agent service.
+     * @retval OT_ERROR_ALREADY Already started.
      *
      */
     otError Start(void);
