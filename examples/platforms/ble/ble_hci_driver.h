@@ -35,17 +35,30 @@
 #ifndef BLE_HCI_DRIVER_H
 #define BLE_HCI_DRIVER_H
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <stdint.h>
+
+/**
+ * This method enables the BLE HCI interface.
+ *
+ */
 void bleHciEnable(void);
 
+/**
+ * This method disables the BLE HCI interface.
+ *
+ */
 void bleHciDisable(void);
 
-extern void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
+/**
+ * This method processes received HCI raw data.
+ * @note This method is implemented by Cordio stack.
+ *
+ */
+void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
 
 #ifdef __cplusplus
 } // extern "C"

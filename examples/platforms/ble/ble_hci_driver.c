@@ -43,6 +43,7 @@
 #include "hci_mbed_os_adaptation.h"
 
 #include "ble/ble_hci_driver.h"
+#include "ble/ble_utils.h"
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
@@ -52,17 +53,6 @@
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_ENABLE_TOBLE
-
-#define BYTES_TO_UINT16(n, p)                                       \
-    {                                                               \
-        n = (uint16_t)((uint16_t)(p)[0] + ((uint16_t)(p)[1] << 8)); \
-        p += 2;                                                     \
-    }
-
-#define BYTES_TO_UINT8(n, p)   \
-    {                          \
-        n = (uint8_t)(*(p)++); \
-    }
 
 enum
 {
@@ -102,7 +92,6 @@ void hci_mbed_os_handle_reset_sequence(uint8_t *msg)
     bleHciHandleResetSequence(msg);
 }
 
-// ----------------------------------
 void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 {
     hciTrSerialRxIncoming(aBuf, aBufLength);
@@ -113,7 +102,6 @@ void otPlatBleHciSendDone(void)
     bleHciHandleSendDone();
 }
 
-//-----------------------------------
 void bleHciEnable(void)
 {
     otPlatBleHciEnable();
@@ -302,6 +290,7 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
             HciLeWriteDefDataLen(maxTxOctets, maxTxTime);
         }
         break;
+
         case HCI_OPCODE_LE_WRITE_DEF_DATA_LEN:
             if (hciCoreCb.extResetSeq)
             {
@@ -345,5 +334,4 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
         }
     }
 }
-
 #endif // OPENTHREAD_ENABLE_TOBLE

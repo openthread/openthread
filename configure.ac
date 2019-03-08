@@ -1995,7 +1995,7 @@ src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
 third_party/jlink/Makefile
-third_party/mbedble/Makefile
+third_party/cordio/Makefile
 third_party/mbedtls/Makefile
 third_party/NordicSemiconductor/Makefile
 examples/Makefile

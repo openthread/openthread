@@ -190,7 +190,6 @@ exit:
 
 void platformBleHciInit(char *aDeviceFile)
 {
-    // sBleSerialFd = bleHciOpenSerial("/dev/ttyACM0", 1000000, true);
     sBleSerialFd = bleHciOpenSerial(aDeviceFile, 1000000, true);
 }
 
@@ -259,17 +258,6 @@ exit:
     return;
 }
 
-void OutputBytes(const char *aName, const uint8_t *aBytes, uint16_t aLength)
-{
-    printf("%s", aName);
-    for (int i = 0; i < aLength; i++)
-    {
-        printf("%02x ", aBytes[i]);
-    }
-
-    printf("\r\n");
-}
-
 void platformBleHciProcess(otInstance *aInstance)
 {
     ssize_t       rval;
@@ -288,7 +276,6 @@ void platformBleHciProcess(otInstance *aInstance)
         otEXPECT_ACTION((rval = read(sBleSerialFd, sRxBuffer, sizeof(sRxBuffer))) > 0, errStr = "read");
         if (sBleSerialEnabled)
         {
-            // OutputBytes("HCI RX: ", sRxBuffer, (uint16_t)rval);
             otPlatBleHciReceived(sRxBuffer, (uint8_t)rval);
         }
     }
@@ -302,7 +289,6 @@ void platformBleHciProcess(otInstance *aInstance)
 
         if (sTxLength == 0 && sBleSerialEnabled)
         {
-            // OutputBytes("HCI TX: ", sTxBuffer, sTxLength);
             otPlatBleHciSendDone();
         }
     }

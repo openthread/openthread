@@ -35,27 +35,16 @@
 #ifndef BLE_L2CAP_H
 #define BLE_L2CAP_H
 
-#include <stdint.h>
-#include <openthread/error.h>
-#include <openthread/instance.h>
-#include <openthread/platform/ble.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-otError bleL2capConnectionRegister(otInstance *       aInstance,
-                                   uint16_t           aConnectionId,
-                                   uint16_t           aPsm,
-                                   uint16_t           aMtu,
-                                   otPlatBleL2capRole aRole,
-                                   uint8_t *          aL2capHandle);
-otError bleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle);
-otError bleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle);
-otError bleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket);
-otError bleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle);
-
+/**
+ * This method resets the BLE L2cap module.
+ *
+ */
 void bleL2capReset(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

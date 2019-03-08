@@ -38,6 +38,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/platform/ble.h>
+
 namespace ot {
 namespace Cli {
 
@@ -65,14 +67,42 @@ public:
      */
     otError Process(int argc, char *argv[]);
 
+    /**
+     * This method prints the UUID to the client.
+     *
+     * @param[in]  aUuid A pointer to a UUID.
+     *
+     */
+    static void PrintUuid(const otPlatBleUuid *aUuid);
+
+    /**
+     * This method reverses the bytes in the buffer.
+     *
+     * @param[in]  aBuffer   A pointer to a buffer.
+     * @param[in]  aLength  The length of the buffer.
+     *
+     */
+    static void ReverseBuf(uint8_t *aBuffer, uint8_t aLength);
+
+    /**
+     * This method prints the bytes in the buffer to the client.
+     *
+     * @param[in]  aBuffer  A pointer to a buffer.
+     * @param[in]  aLength  The length of the buffer.
+     *
+     */
+    static void PrintBytes(const uint8_t *aBuffer, uint8_t aLength);
+
 private:
     enum
     {
-        kAdvInterval    = 320, ///< 200 ms (unit: 0.625ms)
-        kScanInterval   = 320, ///< 200 ms (unit: 0.625ms)
-        kScanWindow     = 80,  ///< 50  ms (unit: 0.625ms)
-        kConnInterval   = 160, ///< 100 ms (unit: 0.625ms)
-        kConnSupTimeout = 60,  ///< 600 ms (unit: 10ms)
+        kAdvInterval    = 320, ///< Advertising interval (unit: 0.625ms).
+        kScanInterval   = 320, ///< Scan interval (unit: 0.625ms).
+        kScanWindow     = 80,  ///< Scan window (unit: 0.625ms)
+        kConnInterval   = 160, ///< Connection interval (unit: 0.625ms).
+        kConnSupTimeout = 60,  ///< Connection establishment supervision timeout (unit: 10ms).
+        kMaxAdvDataSize = 31,  ///< The maximum advertising or scan response data size.
+        kAttMtu         = 23,  ///< The ATT_MTU value.
     };
 
     struct Command
@@ -82,16 +112,15 @@ private:
     };
 
     otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessAdvertise(int argc, char *argv[]);
-    otError ProcessAddr(int argc, char *argv[]);
+    otError ProcessBdAddr(int argc, char *argv[]);
     otError ProcessDisable(int argc, char *argv[]);
     otError ProcessEnable(int argc, char *argv[]);
+    otError ProcessAdvertise(int argc, char *argv[]);
     otError ProcessScan(int argc, char *argv[]);
     otError ProcessConnect(int argc, char *argv[]);
+    otError ProcessDisconnect(int argc, char *argv[]);
     otError ProcessL2cap(int argc, char *argv[]);
-    otError ProcessTest(int argc, char *argv[]);
-
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
+    otError ProcessGatt(int argc, char *argv[]);
 
     static const Command sCommands[];
 

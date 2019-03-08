@@ -154,13 +154,6 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         L2capConnnection *  conn;
         uint8_t             role;
 
-        printf("L2C_COC_CONNECT_IND\r\n");
-        // connectInd.hdr.event = L2C_COC_CONNECT_IND;
-        // connectInd.hdr.param = pChanCb->pConnCb->connId;
-        // connectInd.cid       = pChanCb->localCid;
-        // connectInd.peerMtu   = pChanCb->peerMtu;
-        // connectInd.psm       = pChanCb->psm;
-
         role        = aIsInitiator ? OT_BLE_L2CAP_ROLE_INITIATOR : OT_BLE_L2CAP_ROLE_ACCEPTOR;
         l2capHandle = l2capFindHandleByPsm(gapConnId, connInd->psm, role);
         otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
@@ -186,15 +179,9 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         l2cCocDataCnf_t *dataCnf = (l2cCocDataCnf_t *)pMsg;
         otError          error;
 
-        // dataCnf.hdr.event  = L2C_COC_DATA_CNF;
-        // dataCnf.hdr.param  = pChanCb->pConnCb->connId;
-        // dataCnf.hdr.status = status;
-        // dataCnf.cid        = pChanCb->localCid;
-
         l2capHandle = l2capFindHandleByCid(gapConnId, dataCnf->cid);
         otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
 
-        printf("L2C_COC_DATA_CNF\r\n");
         error = dataCnf->hdr.status == L2C_COC_DATA_SUCCESS ? OT_ERROR_NONE : OT_ERROR_FAILED;
         otPlatBleL2capOnSduSent(bleMgmtGetThreadInstance(), l2capHandle, error);
 
@@ -205,16 +192,8 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         l2cCocDataInd_t *dataInd = (l2cCocDataInd_t *)pMsg;
         otBleRadioPacket packet;
 
-        // dataInd.hdr.event = L2C_COC_DATA_IND;
-        // dataInd.hdr.param = pChanCb->pConnCb->connId;
-        // dataInd.cid       = pChanCb->localCid;
-        // dataInd.pData     = pPacket;
-        // dataInd.dataLen   = sduLen;
-
-        printf("L2C_COC_DATA_IND\r\n");
         packet.mValue  = dataInd->pData;
         packet.mLength = dataInd->dataLen;
-        packet.mPower  = 127;
 
         l2capHandle = l2capFindHandleByCid(gapConnId, dataInd->cid);
         otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
@@ -227,12 +206,6 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         l2cCocDisconnectInd_t *disconnectInd = (l2cCocDisconnectInd_t *)pMsg;
         L2capConnnection *     conn;
 
-        // disconnectInd.hdr.event = L2C_COC_DISCONNECT_IND;
-        // disconnectInd.hdr.param = pChanCb->pConnCb->connId;
-        // disconnectInd.cid       = pChanCb->localCid;
-        // disconnectInd.result    = result;
-
-        printf("L2C_COC_DISCONNECT_IND\r\n");
         l2capHandle = l2capFindHandleByCid(gapConnId, disconnectInd->cid);
         otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
 
@@ -263,12 +236,12 @@ void bleL2capReset(void)
     memset(sL2capConnections, 0, sizeof(sL2capConnections));
 }
 
-otError bleL2capConnectionRegister(otInstance *       aInstance,
-                                   uint16_t           aConnectionId,
-                                   uint16_t           aPsm,
-                                   uint16_t           aMtu,
-                                   otPlatBleL2capRole aRole,
-                                   uint8_t *          aL2capHandle)
+otError otPlatBleL2capConnectionRegister(otInstance *       aInstance,
+                                         uint16_t           aConnectionId,
+                                         uint16_t           aPsm,
+                                         uint16_t           aMtu,
+                                         otPlatBleL2capRole aRole,
+                                         uint8_t *          aL2capHandle)
 {
     otError           error = OT_ERROR_NONE;
     l2cCocReg_t       cocReg;
@@ -276,7 +249,7 @@ otError bleL2capConnectionRegister(otInstance *       aInstance,
     L2capConnnection *conn;
     uint8_t           l2capHandle;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(l2capFindHandleByPsm(aConnectionId, aPsm, aRole) == L2CAP_INVALID_CONN_HANDLE,
                     error = OT_ERROR_DUPLICATED);
 
@@ -321,12 +294,12 @@ exit:
     return error;
 }
 
-otError bleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle)
+otError otPlatBleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle)
 {
     otError           error = OT_ERROR_NONE;
     L2capConnnection *conn;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
 
     conn = l2capGetConnection(aL2capHandle);
     otEXPECT_ACTION((conn != NULL) || (!conn->mConnected), error = OT_ERROR_FAILED);
@@ -338,13 +311,13 @@ exit:
     return error;
 }
 
-otError bleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle)
+otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle)
 {
     otError           error = OT_ERROR_NONE;
     L2capConnnection *conn;
     uint16_t          cid;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION((conn = l2capGetConnection(aL2capHandle)) != NULL, error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION((conn->mRole == OT_BLE_L2CAP_ROLE_INITIATOR) && !conn->mConnected, error = OT_ERROR_FAILED);
 
@@ -357,12 +330,12 @@ exit:
     return error;
 }
 
-otError bleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+otError otPlatBleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
 {
     otError           error = OT_ERROR_NONE;
     L2capConnnection *conn;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
 
     conn = l2capGetConnection(aL2capHandle);
     otEXPECT_ACTION((conn != NULL) && conn->mConnected, error = OT_ERROR_FAILED);
@@ -373,12 +346,12 @@ exit:
     return error;
 }
 
-otError bleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
 {
     otError           error = OT_ERROR_NONE;
     L2capConnnection *conn;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION((conn = l2capGetConnection(aL2capHandle)) != NULL, error = OT_ERROR_FAILED);
     otEXPECT(conn->mConnected);
 
@@ -386,5 +359,43 @@ otError bleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
 
 exit:
     return error;
+}
+
+/**
+ * The BLE L2CAP module weak functions definition.
+ *
+ */
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aMtu);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aMtu);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnSduReceived(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnSduSent(otInstance *aInstance, uint8_t aL2capHandle, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
 }
 #endif

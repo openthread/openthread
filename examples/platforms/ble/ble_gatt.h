@@ -29,44 +29,22 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack GAP interfaces.
+ *   This file defines the Cordio BLE stack GATT interfaces.
  */
 
-#ifndef BLE_GAP_H
-#define BLE_GAP_H
+#ifndef BLE_GATT_H
+#define BLE_GATT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "wsf_types.h"
+#include "att_api.h"
 
-#include "dm_api.h"
-#include "wsf_os.h"
-
-/**
- * This method resets the BLE GAP module.
- *
- */
-void bleGapReset(void);
-
-/**
- * This method handles the event for BLE GAP module.
- *
- * @param[in] aMsg  A pointer to an WSF event message structure.
- *
- */
-void bleGapEventHandler(const wsfMsgHdr_t *aMsg);
-
-/**
- * This method returns the BLE GAP connection ID.
- *
- * @retval The BLE GAP connection ID value.
- *
- */
-dmConnId_t bleGapGetConnectionId(void);
+void bleAttHandler(attEvt_t *aEvent);
+void bleGattReset(void);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
-#endif // BLE_GAP_H
+#endif // BLE_GATT_H

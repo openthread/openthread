@@ -52,6 +52,7 @@
 #include "wsf_timer.h"
 
 #include "ble/ble_gap.h"
+#include "ble/ble_gatt.h"
 #include "ble/ble_hci_driver.h"
 #include "ble/ble_l2cap.h"
 #include "ble/ble_mgmt.h"
@@ -84,17 +85,13 @@ static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 
 
 __attribute__((aligned(4))) static uint8_t sBuffer[kBleBufferSize];
 
-static uint32_t sLastUpdateMs;
-static uint8_t  sState            = kStateIdle;
-otInstance *    sInstance         = NULL;
-static bool     sStackInitialized = false;
+static uint32_t    sLastUpdateMs;
+static uint8_t     sState            = kStateIdle;
+static otInstance *sInstance         = NULL;
+static bool        sStackInitialized = false;
 
 static void bleStackInit(void);
 
-/*
- * This function will signal to the user code by calling signalEventsToProcess.
- * It is registered and called into the Wsf Stack.
- */
 void wsf_mbed_ble_signal_event(void)
 {
     // TODO:
@@ -110,7 +107,7 @@ void wsf_mbed_os_critical_section_exit(void)
     // Intentionally empty.
 }
 
-otError bleMgmtEnable(otInstance *aInstance)
+otError otPlatBleEnable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
@@ -129,7 +126,7 @@ exit:
     return error;
 }
 
-otError bleMgmtDisable(otInstance *aInstance)
+otError otPlatBleDisable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
@@ -145,7 +142,7 @@ exit:
     return error;
 }
 
-bool bleMgmtIsEnabled(otInstance *aInstance)
+bool otPlatBleIsEnabled(otInstance *aInstance)
 {
     bool ret = false;
 
@@ -161,14 +158,13 @@ otInstance *bleMgmtGetThreadInstance(void)
     return sInstance;
 }
 
-void bleMgmtTaskletsProcess(otInstance *aInstance)
+void otPlatBleTaskletsProcess(otInstance *aInstance)
 {
     uint32_t        now;
     uint32_t        delta;
     wsfTimerTicks_t ticks;
 
     otEXPECT(sState != kStateIdle);
-    otEXPECT((sInstance != NULL) && (aInstance = sInstance));
 
     now   = otPlatAlarmMilliGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
@@ -192,10 +188,6 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
 {
     otEXPECT(aMsg != NULL);
 
-    // if (ble::pal::vendor::cordio::CordioSecurityManager::get_security_manager().sm_handler(aMsg)) {
-    //     return;
-    // }
-
     switch (aMsg->event)
     {
     case DM_RESET_CMPL_IND:
@@ -211,7 +203,6 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
 
         if (sState == kStateInitializing)
         {
-            // deviceInstance().getGattServer().initialize();
             sState = kStateInitialized;
             otPlatBleOnEnabled(sInstance);
         }
@@ -219,16 +210,14 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
         {
             sState = kStateIdle;
 
-            // gattServer().reset();
-            // getGattClient().reset();
-            // getGap().reset();
-
+            bleGattReset();
             bleL2capReset();
             bleGapReset();
             bleHciDisable();
         }
         break;
     }
+
     default:
         bleGapEventHandler(aMsg);
         break;
@@ -278,11 +267,6 @@ static uint8_t bleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit,
     OT_UNUSED_VARIABLE(aHandle);
 
     return 0;
-}
-
-static void bleAttClientHandler(attEvt_t *aEvent)
-{
-    OT_UNUSED_VARIABLE(aEvent);
 }
 
 static void bleStackInit(void)
@@ -359,9 +343,19 @@ static void bleStackInit(void)
     DmRegister(bleDeviceManagerHandler);
     DmConnRegister(DM_CLIENT_ID_APP, bleDeviceManagerHandler);
     AttConnRegister(bleConnectionHandler);
-    AttRegister(bleAttClientHandler);
+    AttRegister(bleAttHandler);
 
 exit:
     return;
 }
+
+/**
+ * The BLE Management module weak functions definition.
+ *
+ */
+OT_TOOL_WEAK void otPlatBleOnEnabled(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
 #endif // OPENTHREAD_ENABLE_TOBLE

@@ -65,7 +65,7 @@ endif # OPENTHREAD_ENABLE_DIAG
 
 if OPENTHREAD_ENABLE_TOBLE
 LDADD_COMMON                                                          += \
-    $(top_builddir)/third_party/mbedble/libmbedble.a                     \
+    $(top_builddir)/third_party/cordio/libcordio.a                       \
     $(NULL)
 endif # OPENTHREAD_ENABLE_TOBLE
 

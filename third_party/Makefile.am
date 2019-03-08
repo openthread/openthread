@@ -45,9 +45,9 @@ endif
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    cordio                                \
     jlink                                 \
     mbedtls                               \
-    mbedble                               \
     $(NULL)
 
 SUBDIRS =
@@ -79,7 +79,7 @@ SUBDIRS                                += \
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 SUBDIRS                                += \
-    mbedble                               \
+    cordio                                \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

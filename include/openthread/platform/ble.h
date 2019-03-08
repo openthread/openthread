@@ -191,7 +191,7 @@ enum
     /**
      * Length of 16-bit BLE UUID in bytes.
      */
-    OT_BLE_16BIT_UUID_LENGTH = 2,
+    OT_BLE_UUID16_LENGTH = 2,
 
     /**
      * Length of full BLE UUID in bytes.

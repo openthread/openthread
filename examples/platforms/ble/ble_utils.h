@@ -29,44 +29,40 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack GAP interfaces.
+ *   This file includes macros for converting the bytes stream to specified type.
  */
 
-#ifndef BLE_GAP_H
-#define BLE_GAP_H
+#ifndef BLE_UTILS_H
+#define BLE_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "wsf_types.h"
+#include <stdint.h>
+#include <openthread/platform/ble.h>
 
-#include "dm_api.h"
-#include "wsf_os.h"
+// Convert little endian byte stream to uint8_t, incrementing one byte.
+#define BYTES_TO_UINT8(n, p)   \
+    {                          \
+        n = (uint8_t)(*(p)++); \
+    }
 
-/**
- * This method resets the BLE GAP module.
- *
- */
-void bleGapReset(void);
+// Convert little endian byte stream to uint16_t, incrementing two bytes.
+#define BYTES_TO_UINT16(n, p)                                       \
+    {                                                               \
+        n = (uint16_t)((uint16_t)(p)[0] + ((uint16_t)(p)[1] << 8)); \
+        p += 2;                                                     \
+    }
 
-/**
- * This method handles the event for BLE GAP module.
- *
- * @param[in] aMsg  A pointer to an WSF event message structure.
- *
- */
-void bleGapEventHandler(const wsfMsgHdr_t *aMsg);
-
-/**
- * This method returns the BLE GAP connection ID.
- *
- * @retval The BLE GAP connection ID value.
- *
- */
-dmConnId_t bleGapGetConnectionId(void);
+// Convert little endian byte stream to uint32_t, incrementing four bytes.
+#define BYTES_TO_UINT32(n, p)                                                                                   \
+    {                                                                                                           \
+        n = ((uint32_t)(p)[0] + ((uint32_t)(p)[1] << 8) + ((uint32_t)(p)[2] << 16) + ((uint32_t)(p)[3] << 24)); \
+        p += 4;                                                                                                 \
+    }
 
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
-#endif // BLE_GAP_H
+#endif // BLE_UTILS_H

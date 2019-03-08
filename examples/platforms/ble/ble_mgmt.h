@@ -35,18 +35,16 @@
 #ifndef BLE_MGMT_H
 #define BLE_MGMT_H
 
-#include <stdint.h>
-#include <openthread/error.h>
-#include <openthread/instance.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-otError     bleMgmtEnable(otInstance *aInstance);
-otError     bleMgmtDisable(otInstance *aInstance);
-bool        bleMgmtIsEnabled(otInstance *aInstance);
-void        bleMgmtTaskletsProcess(otInstance *aInstance);
+#include <openthread/instance.h>
+
+/**
+ * This method returns the OpenThread instance.
+ *
+ */
 otInstance *bleMgmtGetThreadInstance(void);
 
 #ifdef __cplusplus

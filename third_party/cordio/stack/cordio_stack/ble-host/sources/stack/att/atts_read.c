@@ -60,11 +60,11 @@ uint16_t attsFindUuidInRange(uint16_t startHandle, uint16_t endHandle, uint8_t u
     }
 
     /*  if start handle within handle range of group */
-    if ((startHandle >= pGroup->startHandle) && (startHandle <= pGroup->endHandle))
+    if ((startHandle >= pGroup->startHandle) && (startHandle < pGroup->endHandle))
     {
       /* compare uuid with each attribute in group */
       *pAttr = &pGroup->pAttr[startHandle - pGroup->startHandle];
-      while ((startHandle <= pGroup->endHandle) && (startHandle <= endHandle))
+      while ((startHandle < pGroup->endHandle) && (startHandle <= endHandle))
       {
         /* compare uuid in attribute */
         if (attsUuidCmp(*pAttr, uuidLen, pUuid))

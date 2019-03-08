@@ -163,18 +163,8 @@ static void bleGapConnectedHandler(const wsfMsgHdr_t *aMsg)
 
     otEXPECT(connEvent->status == kHciErrorNone);
 
-    // connEvent->handle;
-    // connEvent->role
-    // connEvent->addrType
-    // connEvent->peerAddr
-    // connEvent->connInterval
-    // connEvent->connLatency
-    // connEvent->supTimeout
-    // connEvent->clockAccuracy
-    // connEvent->localRpa
-    // connEvent->peerRpa
-
-    otPlatBleGapOnConnected(bleMgmtGetThreadInstance(), connEvent->hdr.param);
+    sConnectionId = (dmConnId_t)connEvent->hdr.param;
+    otPlatBleGapOnConnected(bleMgmtGetThreadInstance(), sConnectionId);
 
 exit:
     return;
@@ -184,10 +174,7 @@ static void bleGapDisconnectedHandler(const wsfMsgHdr_t *aMsg)
 {
     const hciDisconnectCmplEvt_t *disconnectEvent = (const hciDisconnectCmplEvt_t *)aMsg;
 
-    // disconnectEvent->status
-    // disconnectEvent->handle
-    // disconnectEvent->reason
-
+    sConnectionId = DM_CONN_ID_NONE;
     otPlatBleGapOnDisconnected(bleMgmtGetThreadInstance(), disconnectEvent->hdr.param);
 }
 
@@ -262,13 +249,18 @@ void bleGapReset(void)
     sConnectionId = DM_CONN_ID_NONE;
 }
 
+dmConnId_t bleGapGetConnectionId(void)
+{
+    return sConnectionId;
+}
+
 /*******************************************************************************
  * @section Bluetooth Low Energy management.
  ******************************************************************************/
 
-otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress)
+otError otPlatBleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddress)
 {
-    // The public address cannot be set
+    // the public address cannot be set
 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aAddress);
@@ -276,7 +268,7 @@ otError bleGapAddressSet(otInstance *aInstance, const otPlatBleDeviceAddr *aAddr
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError bleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
+otError otPlatBleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
 {
     otError error = OT_ERROR_NONE;
 
@@ -293,23 +285,15 @@ exit:
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.
  ***************************************************************************/
-
-otError bleGapServiceSet(otInstance *aInstance, const char *aDeviceName, uint16_t aAppearance)
+otError otPlatBleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t aAdvDataLength)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aDeviceName);
-    OT_UNUSED_VARIABLE(aAppearance);
+    otError       error           = OT_ERROR_NONE;
+    const uint8_t kMaxAdvDataSize = 31;
+    uint8_t       buf[kMaxAdvDataSize];
 
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-otError bleGapAdvDataSet(otInstance *aInstance, const uint8_t *aAdvData, uint8_t aAdvDataLength)
-{
-    otError error = OT_ERROR_NONE;
-    uint8_t buf[255];
-
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION((aAdvData != NULL) && (aAdvDataLength != 0), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aAdvDataLength <= sizeof(buf), error = OT_ERROR_INVALID_ARGS);
 
     // avoid converting "const uint8_t*" to "uint8_t *"
     memcpy(buf, aAdvData, aAdvDataLength);
@@ -319,7 +303,7 @@ exit:
     return error;
 }
 
-otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
+otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
 {
     otError             error             = OT_ERROR_NONE;
     uint8_t             advHandles[]      = {DM_ADV_HANDLE_DEFAULT};
@@ -328,7 +312,7 @@ otError bleGapAdvStart(otInstance *aInstance, uint16_t aInterval, uint8_t aType)
     uint8_t             advType           = 0;
     otPlatBleDeviceAddr peerAddr;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(isInRange(aInterval, OT_BLE_ADV_INTERVAL_MIN, OT_BLE_ADV_INTERVAL_MAX),
                     error = OT_ERROR_INVALID_ARGS);
 
@@ -363,25 +347,27 @@ exit:
     return error;
 }
 
-otError bleGapAdvStop(otInstance *aInstance)
+otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     otError error        = OT_ERROR_NONE;
     uint8_t advHandles[] = {DM_ADV_HANDLE_DEFAULT};
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     DmAdvStop(1, advHandles);
 
 exit:
     return error;
 }
 
-otError bleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanResponse, uint8_t aScanResponseLength)
+otError otPlatBleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanResponse, uint8_t aScanResponseLength)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t buf[256];
+    otError       error               = OT_ERROR_NONE;
+    const uint8_t kMaxScanRspDataSize = 31;
+    uint8_t       buf[kMaxScanRspDataSize];
 
     otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION((aScanResponse != NULL) && (aScanResponseLength != 0), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aScanResponseLength <= sizeof(buf), error = OT_ERROR_INVALID_ARGS);
 
     // avoid converting "const uint8_t*" to "uint8_t *"
     memcpy(buf, aScanResponse, aScanResponseLength);
@@ -391,12 +377,12 @@ exit:
     return error;
 }
 
-otError bleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow)
+otError otPlatBleGapScanStart(otInstance *aInstance, uint16_t aInterval, uint16_t aWindow)
 {
     otError error    = OT_ERROR_INVALID_ARGS;
     uint8_t scanType = DM_SCAN_TYPE_ACTIVE;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT(aWindow <= aInterval);
     otEXPECT(isInRange(aInterval, OT_BLE_SCAN_INTERVAL_MIN, OT_BLE_SCAN_INTERVAL_MAX));
     otEXPECT(isInRange(aWindow, OT_BLE_SCAN_WINDOW_MIN, OT_BLE_SCAN_WINDOW_MAX));
@@ -412,22 +398,22 @@ exit:
     return error;
 }
 
-otError bleGapScanStop(otInstance *aInstance)
+otError otPlatBleGapScanStop(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     DmScanStop();
 
 exit:
     return error;
 }
 
-otError bleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams *aConnParams)
+otError otPlatBleGapConnParamsSet(otInstance *aInstance, const otPlatBleGapConnParams *aConnParams)
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT(aConnParams != NULL);
     otEXPECT(aConnParams->mConnSlaveLatency <= OT_BLE_CONN_SLAVE_LATENCY_MAX);
     otEXPECT(aConnParams->mConnMinInterval <= aConnParams->mConnMaxInterval);
@@ -443,12 +429,13 @@ exit:
     return error;
 }
 
-otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint16_t aInterval, uint16_t aWindow)
+otError otPlatBleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint16_t aInterval, uint16_t aWindow)
 {
     otError       error = OT_ERROR_INVALID_ARGS;
     hciConnSpec_t connSpec;
+    dmConnId_t    connId;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(sConnectionId == DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
     otEXPECT(aAddress != NULL);
     otEXPECT(aWindow <= aInterval);
@@ -456,7 +443,7 @@ otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint
     otEXPECT(isInRange(aWindow, OT_BLE_SCAN_WINDOW_MIN, OT_BLE_SCAN_WINDOW_MAX));
 
     // Force scan stop before initiating the scan used for connection
-    bleGapScanStop(aInstance);
+    otPlatBleGapScanStop(aInstance);
 
     DmConnSetScanInterval(aInterval, aWindow);
     DmDevSetFilterPolicy(DM_FILT_POLICY_MODE_INIT, kConnFilterPolicyNone);
@@ -471,18 +458,18 @@ otError bleGapConnect(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, uint
 
     DmConnSetConnSpec(&connSpec);
 
-    sConnectionId = DmConnOpen(DM_CLIENT_ID_APP, HCI_INIT_PHY_LE_1M_BIT, aAddress->mAddrType, aAddress->mAddr);
-    error         = (sConnectionId == DM_CONN_ID_NONE) ? OT_ERROR_FAILED : OT_ERROR_NONE;
+    connId = DmConnOpen(DM_CLIENT_ID_APP, HCI_INIT_PHY_LE_1M_BIT, aAddress->mAddrType, aAddress->mAddr);
+    error  = (connId == DM_CONN_ID_NONE) ? OT_ERROR_FAILED : OT_ERROR_NONE;
 
 exit:
     return error;
 }
 
-otError bleGapDisconnect(otInstance *aInstance)
+otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(bleMgmtIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(sConnectionId != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
     DmConnClose(DM_CLIENT_ID_APP, sConnectionId, 0);
@@ -492,4 +479,37 @@ exit:
     return error;
 }
 
+/**
+ * The BLE GAP module weak functions definition.
+ *
+ */
+OT_TOOL_WEAK void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
+                                            otPlatBleDeviceAddr *aAddress,
+                                            otBleRadioPacket *   aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aPacket);
+}
+
+OT_TOOL_WEAK void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
+                                                 otPlatBleDeviceAddr *aAddress,
+                                                 otBleRadioPacket *   aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(aPacket);
+}
 #endif // OPENTHREAD_ENABLE_TOBLE
