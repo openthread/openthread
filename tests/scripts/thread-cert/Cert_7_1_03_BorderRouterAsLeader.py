@@ -114,6 +114,10 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[LEADER].register_netdata()
         self.simulator.go(5)
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         med1_messages = self.simulator.get_messages_sent_by(MED1)
         sed1_messages = self.simulator.get_messages_sent_by(SED1)
@@ -143,13 +147,13 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         # 4 - N/A
         # Get addresses registered by MED1
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        med1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
+        command.check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
 
         # 5 - Leader
         # Make a copy of leader's messages to ensure that we don't miss messages to SED1
         leader_messages_copy = leader_messages.clone()
         msg = leader_messages_copy.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[MED1])
-        check_child_update_response(msg, address_registration=CheckType.CONTAIN)
+        check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1, 2])
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in med1_addresses))
 
@@ -165,11 +169,11 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         # 7 - N/A
         # Get addresses registered by SED1
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        sed1_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
+        command.check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
 
         # 8 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[SED1])
-        check_child_update_response(msg, address_registration=CheckType.CONTAIN)
+        command.check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1])
         leader_addresses = msg.get_mle_message_tlv(mle.AddressRegistration).addresses
         self.assertTrue(all(addr in leader_addresses for addr in sed1_addresses))
 

@@ -95,6 +95,10 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[LEADER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.nodes[ROUTER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
@@ -165,13 +169,14 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
-        check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN)
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_message_address_registration_addr_set_equals(msg, msg_chd_upd_res_to_med)
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
 
-        check_child_update_response(msg_chd_upd_res_to_sed, address_registration=CheckType.CONTAIN)
+        check_child_update_response(msg_chd_upd_res_to_med, address_registration=CheckType.CONTAIN, CIDs=[1, 2])
+
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_message_address_registration_addr_set_equals(msg, msg_chd_upd_res_to_sed)
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
+        check_child_update_response(msg_chd_upd_res_to_sed, address_registration=CheckType.CONTAIN, CIDs=[1])
 
 if __name__ == '__main__':
     unittest.main()

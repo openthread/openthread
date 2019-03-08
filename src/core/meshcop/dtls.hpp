@@ -82,6 +82,7 @@ public:
     enum State
     {
         kStateStopped = 0,
+        kStateInitializing,
         kStateConnecting,
         kStateConnected,
         kStateCloseNotify,
