@@ -872,8 +872,8 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
 
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     cfg.mServerConfig.mStable = stable;
-    SuccessOrExit(error = mDecoder.ReadData(data, dataLen));
-    
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
+
     VerifyOrExit(dataLen <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServerConfig.mServerData, data, dataLen);
     cfg.mServerConfig.mServerDataLength = dataLen;
@@ -911,11 +911,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>(void
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
-        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
         SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
         SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
         SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
-        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
+        SuccessOrExit(
+            error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
         SuccessOrExit(error = mEncoder.WriteUint16(cfg.mServerConfig.mRloc16));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
@@ -938,7 +938,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
         SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
         SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
         SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
-        SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
+        SuccessOrExit(
+            error = mEncoder.WriteDataWithLen(cfg.mServerConfig.mServerData, cfg.mServerConfig.mServerDataLength));
         SuccessOrExit(error = mEncoder.WriteUint16(cfg.mServerConfig.mRloc16));
 
         SuccessOrExit(error = mEncoder.CloseStruct());
