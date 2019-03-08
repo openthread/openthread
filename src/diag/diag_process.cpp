@@ -46,8 +46,9 @@ namespace ot {
 namespace Diagnostics {
 
 const struct Diag::Command Diag::sCommands[] = {
-    {"start", &ProcessStart}, {"stop", &ProcessStop},     {"channel", &ProcessChannel}, {"power", &ProcessPower},
-    {"send", &ProcessSend},   {"repeat", &ProcessRepeat}, {"stats", &ProcessStats},     {NULL, NULL},
+    {"start", &ProcessStart}, {"stop", &ProcessStop},   {"channel", &ProcessChannel},
+    {"power", &ProcessPower}, {"send", &ProcessSend},   {"repeat", &ProcessRepeat},
+    {"stats", &ProcessStats}, {"radio", &ProcessRadio}, {NULL, NULL},
 };
 
 struct Diag::DiagStats Diag::sStats;
@@ -304,6 +305,31 @@ void Diag::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t
              "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
              static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
              static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+void Diag::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aArgCount > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgVector[0], "sleep") == 0)
+    {
+        SuccessOrExit(error = otPlatRadioSleep(sInstance));
+        snprintf(aOutput, aOutputMaxLen, "set radio from receive to sleep \r\nstatus 0x%02x\r\n", error);
+    }
+    else if (strcmp(aArgVector[0], "receive") == 0)
+    {
+        SuccessOrExit(error = otPlatRadioReceive(sInstance, sChannel));
+        otPlatDiagChannelSet(sChannel);
+
+        snprintf(aOutput, aOutputMaxLen, "set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", sChannel,
+                 error);
+    }
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
