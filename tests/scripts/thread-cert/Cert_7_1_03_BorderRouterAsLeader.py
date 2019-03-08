@@ -136,7 +136,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
         check_data_response(msg,
             network_data_check=NetworkDataCheck(
-                prefixes_check=PrefixesCheck([ SinglePrefixCheck(b'2001000200000001'), SinglePrefixCheck(b'2001000200000002')])
+                prefixes_check=PrefixesCheck(prefix_check_list=[ SinglePrefixCheck(b'2001000200000001'), SinglePrefixCheck(b'2001000200000002')])
             )
         )
 

@@ -273,7 +273,6 @@ def check_parent_request(command_msg, is_first_request):
     elif not scan_mask.end_device:
         raise ValueError("Second parent request without E bit set")
 
-
 def check_parent_response(command_msg, mle_frame_counter = CheckType.OPTIONAL):
     """Verify a properly formatted Parent Response command message.
     """
@@ -313,41 +312,6 @@ def check_child_id_request(command_msg, tlv_request = CheckType.OPTIONAL, \
     check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.ADDRESS16)
     check_tlv_request_tlv(command_msg, CheckType.CONTAIN, mle.TlvType.NETWORK_DATA)
 
-def find_prefix_tlv(tlvs, cond_map):
-    """Find a prefix tlv in tlvs which matchs some conditions specified by cond_map
-    """
-    for tlv in tlvs:
-        if network_data.TlvType.PREFIX in cond_map:
-            if binascii.hexlify(tlv.prefix) != cond_map[network_data.TlvType.PREFIX]:
-                continue
-        if network_data.TlvType.BORDER_ROUTER in cond_map:
-            border_router_tlv = get_sub_tlv(tlv.sub_tlvs, network_data.BorderRouter)
-            if border_router_tlv.border_router_16 != cond_map[network_data.TlvType.BORDER_ROUTER]:
-                continue
-        return tlv
-    return None
-
-def check_network_data(data, check_detail):
-    check_type = check_detail[0]
-    prefixes = [tlv for tlv in data.tlvs if isinstance(tlv, network_data.Prefix)]
-    if check_type == NetworkDataCheckType.PREFIX_CNT:
-        # check_detail[1] should be a integer number representing the minimum count of prefixes should be
-        min_cnt = check_detail[1]
-        assert len(prefixes) >= min_cnt, 'Network data should contain at least {} prefixes'.format(mn_cnt)
-        for prefix in prefixes:
-            check_prefix(prefix)
-    elif check_type == NetworkDataCheckType.PREFIX_CONTENT:
-        # check_detail[1] should be a list of dictionary(like
-        # [{network_data.TlvType.PREFIX='...', network_data.TlvType.BORDER_ROUTER='...'}])
-        # each entry of the dictionary represents one thing to check of the prefix tlv
-        assert len(prefixes) >= len(check_detail[1]), 'Network data seems to have less prefixes than expected'
-        # basic check of prefixes
-        for prefix in prefixes:
-            check_prefix(prefix)
-        for cond_map in check_detail[1]:
-            tlv = find_prefix_tlv(prefixes, cond_map)
-            assert tlv is not None, 'Some prefix sub-tlv is not found:{}'.format(cond_map)
-
 def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_data = CheckType.OPTIONAL, \
     address_registration = CheckType.OPTIONAL, active_timestamp = CheckType.OPTIONAL, \
     pending_timestamp = CheckType.OPTIONAL, active_operational_dataset = CheckType.OPTIONAL, \
@@ -367,9 +331,9 @@ def check_child_id_response(command_msg, route64 = CheckType.OPTIONAL, network_d
     check_mle_optional_tlv(command_msg, active_operational_dataset, mle.ActiveOperationalDataset)
     check_mle_optional_tlv(command_msg, pending_operational_dataset, mle.PendingOperationalDataset)
 
-    if network_data_check != None:
+    if network_data_check is not None:
         network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
-        check_network_data(network_data_tlv, network_data_check)
+        network_data_check.check(network_data_tlv)
 
 def check_prefix(prefix):
     """Verify if a prefix contains 6loWPAN sub-TLV and border router sub-TLV
@@ -576,23 +540,28 @@ class SinglePrefixCheck:
         if self._prefix is not None:
             result &= (self._prefix == binascii.hexlify(prefix_tlv.prefix))
         if self._border_router_16 is not None:
-            result &= (self._border_router.border_router_16 == border_router_tlv.border_router_16)
+            result &= (self._border_router_16 == border_router_tlv.border_router_16)
         return result
 
 
 class PrefixesCheck:
 
-    def __init__(self, prefix_check_list=[]):
+    def __init__(self, prefix_cnt=0, prefix_check_list=[]):
+        self._prefix_cnt = prefix_cnt
         self._prefix_check_list = prefix_check_list
 
     def check(self, prefix_tlvs):
-        for prefix_check in self._prefix_check_list:
-            found = False
-            for prefix_tlv in prefix_tlvs:
-                if prefix_check.check(prefix_tlv):
-                    found = True
-                    break
-            assert found, 'Some prefix is absent: {}'.format(prefix_check)
+        # if prefix_cnt is given, then check count only
+        if self._prefix_cnt > 0:
+            assert len(prefix_tlvs) >= self._prefix_cnt, 'prefix count is less than expected'
+        else:
+            for prefix_check in self._prefix_check_list:
+                found = False
+                for prefix_tlv in prefix_tlvs:
+                    if prefix_check.check(prefix_tlv):
+                        found = True
+                        break
+                assert found, 'Some prefix is absent: {}'.format(prefix_check)
 
 
 class CommissioningDataCheck:
