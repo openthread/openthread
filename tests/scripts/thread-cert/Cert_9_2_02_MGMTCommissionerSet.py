@@ -125,7 +125,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
 
         # Step 6 - Leader sends a multicast MLE Data Response
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        command.check_data_response_tmp(msg, command.NetworkDataCheck(
+        command.check_data_response(msg, command.NetworkDataCheck(
             commissioning_data_check=command.CommissioningDataCheck(stable=0, sub_tlv_type_list=[mesh_cop.CommissionerSessionId, mesh_cop.SteeringData, mesh_cop.BorderAgentLocator])))
 
         # Step 7 - Harness instructs commissioner to send MGMT_COMMISSIONER_SET.req to Leader

@@ -30,7 +30,7 @@
 import time
 import unittest
 
-from command import check_child_update_request_from_parent, check_child_update_response, check_data_response_tmp
+from command import check_child_update_request_from_parent, check_child_update_response, check_data_response
 from command import CheckType
 from command import NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 from command import NetworkDataCheckType
@@ -134,7 +134,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        check_data_response_tmp(msg,
+        check_data_response(msg,
             network_data_check=NetworkDataCheck(
                 prefixes_check=PrefixesCheck([ SinglePrefixCheck(b'2001000200000001'), SinglePrefixCheck(b'2001000200000002')])
             )
@@ -160,7 +160,7 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
                 leader_data=CheckType.CONTAIN, network_data=CheckType.CONTAIN, active_timestamp=CheckType.CONTAIN)
         else:
             msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE, sent_to_node=self.nodes[SED1])
-            check_data_response_tmp(msg, network_data_check=command.NetworkDataCheck())
+            check_data_response(msg, network_data_check=command.NetworkDataCheck())
 
         # 7 - N/A
         # Get addresses registered by SED1

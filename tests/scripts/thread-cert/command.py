@@ -417,23 +417,7 @@ def check_secure_mle_key_id_mode(command_msg, key_id_mode):
     assert isinstance(command_msg.mle, mle.MleMessageSecured)
     assert command_msg.mle.aux_sec_hdr.key_id_mode == key_id_mode
 
-def check_data_response(command_msg, network_data_opt=CheckType.OPTIONAL,
-    active_timestamp=CheckType.OPTIONAL,
-    network_data_check=None):
-    """Verify a properly formatted Data Response command message.
-    """
-    check_secure_mle_key_id_mode(command_msg, 0x02)
-
-    command_msg.assertMleMessageContainsTlv(mle.SourceAddress)
-    command_msg.assertMleMessageContainsTlv(mle.LeaderData)
-    check_mle_optional_tlv(command_msg, network_data_opt, mle.NetworkData)
-    check_mle_optional_tlv(command_msg, active_timestamp, mle.ActiveTimestamp)
-
-    if network_data_check != None:
-        network_data_tlv = command_msg.assertMleMessageContainsTlv(mle.NetworkData)
-        check_network_data(network_data_tlv, network_data_check)
-
-def check_data_response_tmp(command_msg, network_data_check=None, active_timestamp=CheckType.OPTIONAL):
+def check_data_response(command_msg, network_data_check=None, active_timestamp=CheckType.OPTIONAL):
     """Verify a properly formatted Data Response command message.
     """
     check_secure_mle_key_id_mode(command_msg, 0x02)
