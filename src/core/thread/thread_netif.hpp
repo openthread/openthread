@@ -49,10 +49,6 @@
 
 #include "meshcop/dataset_manager.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
-#include "meshcop/dtls.hpp"
-#endif // OPENTHREAD_ENABLE_DTLS
-
 #if OPENTHREAD_ENABLE_JOINER
 #include "meshcop/joiner.hpp"
 #endif // OPENTHREAD_ENABLE_JOINER
@@ -342,14 +338,6 @@ public:
 
 #if OPENTHREAD_ENABLE_DTLS
     /**
-     * This method returns a reference to the Dtls object.
-     *
-     * @returns A reference to the Dtls object.
-     *
-     */
-    MeshCoP::Dtls &GetDtls(void) { return mDtls; }
-
-    /**
      * This method returns a reference to the secure CoAP object.
      *
      * @returns A reference to the secure CoAP object.
@@ -491,7 +479,6 @@ private:
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
-    MeshCoP::Dtls    mDtls;
     Coap::CoapSecure mCoapSecure;
 #endif // OPENTHREAD_ENABLE_DTLS
 

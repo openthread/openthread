@@ -78,21 +78,19 @@ typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext)
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
- * @param[in]  aContext   A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started the CoAP Secure server.
  *
  */
-otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext);
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function stops the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE  Successfully stopped the CoAP Secure server.
  */
-otError otCoapSecureStop(otInstance *aInstance);
+void otCoapSecureStop(otInstance *aInstance);
 
 /**
  * This method sets the Pre-Shared Key (PSK) and cipher suite

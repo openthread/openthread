@@ -88,7 +88,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mCommissioner(aInstance)
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
-    , mDtls(aInstance)
     , mCoapSecure(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_JOINER
@@ -150,14 +149,14 @@ void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
-#if OPENTHREAD_ENABLE_DTLS
-    mDtls.Stop();
-#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     mSntpClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_DTLS
+    mCoapSecure.Stop();
 #endif
     mCoap.Stop();
     mMleRouter.Disable();

@@ -44,11 +44,11 @@
 
 using namespace ot;
 
-otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
+    return instance.GetApplicationCoapSecure().Start(aPort);
 }
 
 otError otCoapSecureSetCertificate(otInstance *   aInstance,
@@ -184,11 +184,11 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().IsConnectionActive();
 }
 
-otError otCoapSecureStop(otInstance *aInstance)
+void otCoapSecureStop(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Stop();
+    instance.GetApplicationCoapSecure().Stop();
 }
 
 otError otCoapSecureSendRequest(otInstance *          aInstance,
