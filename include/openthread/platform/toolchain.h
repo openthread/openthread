@@ -310,6 +310,10 @@ extern "C" {
 #define UINT32_MAX 0xffffffff
 #endif
 
+#ifndef UINT8_MAX
+#define UINT8_MAX 0xff
+#endif
+
 #endif
 #endif
 

@@ -866,17 +866,20 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     SuccessOrExit(error = mDecoder.ReadUint32(cfg.mEnterpriseNumber));
     SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
 
-    VerifyOrExit(dataLen <= sizeof(cfg.mServiceData), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((dataLen <= sizeof(cfg.mServiceData) && dataLen <= UINT8_MAX), error = OT_ERROR_INVALID_ARGS);
+
     memcpy(cfg.mServiceData, data, dataLen);
-    cfg.mServiceDataLength = dataLen;
+    cfg.mServiceDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     cfg.mServerConfig.mStable = stable;
     SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
 
-    VerifyOrExit(dataLen <= sizeof(cfg.mServerConfig.mServerData), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((dataLen <= sizeof(cfg.mServerConfig.mServerData) && dataLen <= UINT8_MAX),
+                 error = OT_ERROR_INVALID_ARGS);
+
     memcpy(cfg.mServerConfig.mServerData, data, dataLen);
-    cfg.mServerConfig.mServerDataLength = dataLen;
+    cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = otServerAddService(mInstance, &cfg));
 exit:
@@ -896,7 +899,10 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>(v
     SuccessOrExit(error = mDecoder.ReadUint32(enterpriseNumber));
     SuccessOrExit(error = mDecoder.ReadDataWithLen(serviceData, serviceDataLength));
 
-    SuccessOrExit(error = otServerRemoveService(mInstance, enterpriseNumber, serviceData, serviceDataLength));
+    VerifyOrExit(serviceDataLength <= UINT8_MAX, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = otServerRemoveService(mInstance, enterpriseNumber, serviceData,
+                                                static_cast<uint8_t>(serviceDataLength)));
 exit:
     return error;
 }
