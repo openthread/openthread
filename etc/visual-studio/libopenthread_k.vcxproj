@@ -245,6 +245,7 @@
     <ClInclude Include="..\..\src\core\net\netif.hpp" />
     <ClInclude Include="..\..\src\core\net\socket.hpp" />
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
+    <ClInclude Include="..\..\src\core\phy\phy.hpp" />
     <ClInclude Include="..\..\src\core\openthread-core-config.h" />
     <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />

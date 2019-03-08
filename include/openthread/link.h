@@ -322,7 +322,7 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * Get the supported channel mask.
+ * Get the supported channel mask of MAC layer.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -332,7 +332,7 @@ OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
 
 /**
- * Set the supported channel mask.
+ * Set the supported channel mask of MAC layer.
  *
  * This function succeeds only when Thread protocols are disabled.
  *
@@ -801,6 +801,36 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
  *
  */
 bool otLinkIsEnabled(otInstance *aInstance);
+
+/**
+ * This function gets the minimum channel number of IEEE 802.15.4 physical layer.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The minimum channel number.
+ *
+ */
+OTAPI uint8_t OTCALL otLinkGetPhyChannelMin(otInstance *aInstance);
+
+/**
+ * This function gets the maximum channel number of IEEE 802.15.4 physical layer.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The maximum channel number.
+ *
+ */
+OTAPI uint8_t OTCALL otLinkGetPhyChannelMax(otInstance *aInstance);
+
+/**
+ * This function gets the supported channel mask of IEEE 802.15.4 physical layer.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The supported channel mask as `uint32_t` with bit 0 (lsb) mapping to channel 0, bit 1 to channel 1, so on.
+ *
+ */
+OTAPI uint32_t OTCALL otLinkGetPhySupportedChannelMask(otInstance *aInstance);
 
 /**
  * @}

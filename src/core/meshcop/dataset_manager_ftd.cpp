@@ -133,9 +133,7 @@ otError DatasetManager::Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     // check channel
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
-        VerifyOrExit(channel.IsValid() && channel.GetChannelPage() == OT_RADIO_CHANNEL_PAGE &&
-                         channel.GetChannel() >= OT_RADIO_CHANNEL_MIN && channel.GetChannel() <= OT_RADIO_CHANNEL_MAX,
-                     state = StateTlv::kReject);
+        VerifyOrExit(channel.IsValid(), state = StateTlv::kReject);
 
         if (channel.GetChannel() != netif.GetMac().GetPanChannel())
         {
@@ -345,7 +343,6 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ChannelTlv tlv;
         tlv.Init();
-        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         tlv.SetChannel(netif.GetMac().GetPanChannel());
         dataset.Set(tlv);
     }
@@ -355,8 +352,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ChannelMaskTlv tlv;
         tlv.Init();
-        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-        tlv.SetMask(netif.GetMac().GetSupportedChannelMask().GetMask());
+        tlv.SetChannelMask(netif.GetMac().GetSupportedChannelMask().GetMask());
         dataset.Set(tlv);
     }
 

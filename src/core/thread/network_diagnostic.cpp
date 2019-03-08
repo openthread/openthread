@@ -423,10 +423,20 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kChannelPages:
         {
+            uint8_t         length   = 0;
+            uint8_t         pageMask = Phy::kSupportedChannelPages;
             ChannelPagesTlv tlv;
+
             tlv.Init();
-            tlv.GetChannelPages()[0] = OT_RADIO_CHANNEL_PAGE;
-            tlv.SetLength(1);
+            for (uint8_t page = 0; page < sizeof(pageMask) * 8; page++)
+            {
+                if (pageMask & (1 << page))
+                {
+                    tlv.GetChannelPages()[length++] = page;
+                }
+            }
+
+            tlv.SetLength(length);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }

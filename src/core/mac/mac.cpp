@@ -48,6 +48,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
+#include "phy/phy.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -92,8 +93,8 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
-    , mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
-    , mScanChannel(OT_RADIO_CHANNEL_MIN)
+    , mSupportedChannelMask(Phy::kSupportedChannels)
+    , mScanChannel(Phy::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
@@ -167,7 +168,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = OT_RADIO_SUPPORTED_CHANNELS;
+        aScanChannels = Phy::kSupportedChannels;
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -426,7 +427,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(OT_RADIO_SUPPORTED_CHANNELS);
+    newMask.Intersect(Phy::kSupportedChannels);
     VerifyOrExit(newMask != mSupportedChannelMask, GetNotifier().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;

@@ -1661,7 +1661,6 @@ AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
-
 #
 # Examples
 #

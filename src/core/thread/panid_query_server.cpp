@@ -68,19 +68,17 @@ void PanIdQueryServer::HandleQuery(void *aContext, otMessage *aMessage, const ot
 
 void PanIdQueryServer::HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::PanIdTlv       panId;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    MeshCoP::PanIdTlv panId;
+    Ip6::MessageInfo  responseInfo(aMessageInfo);
+    uint32_t          mask;
 
     VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST);
-
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid());
 
-    mChannelMask  = channelMask.GetMask();
+    mChannelMask  = mask;
     mCommissioner = aMessageInfo.GetPeerAddr();
     mPanId        = panId.GetPanId();
     mTimer.Start(kScanDelay);
@@ -136,9 +134,8 @@ otError PanIdQueryServer::SendConflict(void)
     message->SetPayloadMarker();
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(mChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(mChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     panId.Init();
     panId.SetPanId(mPanId);
