@@ -583,14 +583,14 @@ class SinglePrefixCheck:
 
     def __init__(self, prefix=None, border_router_16=None):
         self._prefix = prefix
-        self._border_router = border_router
+        self._border_router_16 = border_router_16
 
     def check(self, prefix_tlv):
-        border_router_tlv = assert_contains_tlv(prefix.sub_tlvs, CheckType.CONTAIN, network_data.BorderRouter)
-        lowpan_id_tlv = assert_contains_tlv(prefix.sub_tlvs, CheckType.CONTAIN, network_data.LowpanId)
+        border_router_tlv = assert_contains_tlv(prefix_tlv.sub_tlvs, CheckType.CONTAIN, network_data.BorderRouter)
+        lowpan_id_tlv = assert_contains_tlv(prefix_tlv.sub_tlvs, CheckType.CONTAIN, network_data.LowpanId)
         result = True
         if self._prefix is not None:
-            result &= (self._prefix == prefix_tlv.prefix)
+            result &= (self._prefix == binascii.hexlify(prefix_tlv.prefix))
         if self._border_router_16 is not None:
             result &= (self._border_router.border_router_16 == border_router_tlv.border_router_16)
         return result
@@ -602,7 +602,7 @@ class PrefixesCheck:
         self._prefix_check_list = prefix_check_list
 
     def check(self, prefix_tlvs):
-        for prefix_check in prefix_check_list:
+        for prefix_check in self._prefix_check_list:
             found = False
             for prefix_tlv in prefix_tlvs:
                 if prefix_check.check(prefix_tlv):

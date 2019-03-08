@@ -31,12 +31,11 @@ import functools
 import time
 import unittest
 
-from command import check_child_id_response
-from command import check_child_update_response
-from command import check_data_response
-from command import check_message_address_registration_addr_set_equals
+from command import check_child_id_response, check_child_update_response, check_data_response_tmp, check_message_address_registration_addr_set_equals
 from command import CheckType
+from command import CommissioningDataCheck, NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 from command import NetworkDataCheckType
+
 import config
 import mle
 import network_data
@@ -131,8 +130,11 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 2 - DUT creates network data
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
-            [{network_data.TlvType.PREFIX:b'2001000200000001'}, {network_data.TlvType.PREFIX:b'2001000200000002'}]))
+        check_data_response_tmp(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck([ SinglePrefixCheck(prefix=b'2001000200000001'), SinglePrefixCheck(prefix=b'2001000200000002') ])
+            )
+        )
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
