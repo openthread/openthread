@@ -48,6 +48,7 @@
 #include "net/netif.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
+#include "phy/phy.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -1165,8 +1166,8 @@ void MeshForwarder::SetDiscoverParameters(const Mac::ChannelMask &aScanChannels)
 {
     uint32_t mask;
 
-    mask = aScanChannels.IsEmpty() ? static_cast<uint32_t>(OT_RADIO_SUPPORTED_CHANNELS) : aScanChannels.GetMask();
-    mScanChannels.SetMask(mask & OT_RADIO_SUPPORTED_CHANNELS);
+    mask = aScanChannels.IsEmpty() ? static_cast<uint32_t>(Phy::kSupportedChannels) : aScanChannels.GetMask();
+    mScanChannels.SetMask(mask & Phy::kSupportedChannels);
 }
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)

@@ -40,6 +40,8 @@
 #include <openthread/platform/radio.h>
 
 #include "common/string.hpp"
+#include "phy/phy.hpp"
+#include "utils/static_assert.hpp"
 
 namespace ot {
 namespace Mac {
@@ -242,10 +244,8 @@ public:
     InfoString ToString(void) const;
 
 private:
-#if (OT_RADIO_CHANNEL_MIN >= 32) || (OT_RADIO_CHANNEL_MAX >= 32)
-#error `OT_RADIO_CHANNEL_MAX` or `OT_RADIO_CHANNEL_MIN` are larger than 32. `ChannelMask` uses 32 bit mask.
-#endif
-
+    OT_STATIC_ASSERT((Phy::kChannelMin < 32) && (Phy::kChannelMax < 32),
+                     "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     uint32_t mMask;
 };
 

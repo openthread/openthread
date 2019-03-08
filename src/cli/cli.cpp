@@ -559,7 +559,8 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
                 mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
-                for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+                for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance);
+                     channel++)
                 {
                     uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
 
@@ -3404,7 +3405,7 @@ void Interpreter::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEner
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
-        mServer->OutputFormat("%d ", aEnergyList[i]);
+        mServer->OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
     mServer->OutputFormat("\r\n");

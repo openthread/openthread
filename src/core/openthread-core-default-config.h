@@ -106,16 +106,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_CHANNEL
- *
- * The default IEEE 802.15.4 channel.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_CHANNEL
-#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 11
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
  *
  * The default IEEE 802.15.4 transmit power (dBm).
@@ -1952,5 +1942,46 @@
 #ifndef OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES
 #define OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES 8
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 to support OQPSK modulation in 915MHz frequency band. The physical layer parameters are defined in
+ * section 6 of IEEE802.15.4-2006.
+ *
+ * @note If this setting is set to 1, the IEEE 802.15.4 channel range is 1 to 10.
+ *
+ * @def OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 to support OQPSK modulation in 2.4GHz frequency band. The physical layer parameters are defined in
+ * section 6 of IEEE802.15.4-2006.
+ *
+ * @note If this settings is set to 1, the IEEE 802.15.4 channel range is 11 to 26.
+ *
+ * @note At least one of these two settings must be set to 1. The platform must support the modulation and frequency
+ *       band configured by the setting.
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#ifndef OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 0
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+ *
+ * The default IEEE 802.15.4 channel.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 11
+#else
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 1
+#endif // OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#endif // OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

@@ -41,6 +41,7 @@
 
 #include <openthread/commissioner.h>
 #include <openthread/dataset.h>
+#include <openthread/platform/radio.h>
 
 #include "common/crc16.hpp"
 #include "common/encoding.hpp"
@@ -48,6 +49,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "phy/phy.hpp"
 
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
@@ -135,6 +137,12 @@ public:
      */
     Tlv *GetNext(void) { return static_cast<Tlv *>(ot::Tlv::GetNext()); }
 
+    /**
+     * This method returns a pointer to the next TLV.
+     *
+     * @returns A pointer to the next TLV.
+     *
+     */
     const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
 
     /**
@@ -233,7 +241,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const;
 
     /**
      * This method returns the ChannelPage value.
@@ -261,11 +269,12 @@ public:
 
     /**
      * This method sets the Channel value.
+     * Note: This method also sets the channel page according to the channel value.
      *
      * @param[in]  aChannel  The Channel value.
      *
      */
-    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
+    void SetChannel(uint16_t aChannel);
 
 private:
     uint8_t  mChannelPage;
@@ -1410,7 +1419,7 @@ public:
      * @returns The total size of this entry (number of bytes).
      *
      */
-    uint16_t GetSize(void) const { return sizeof(ChannelMaskEntryBase) + mMaskLength; }
+    uint16_t GetEntrySize(void) const { return sizeof(ChannelMaskEntryBase) + mMaskLength; }
 
     /**
      * This method clears the bit corresponding to @p aChannel in ChannelMask.
@@ -1457,6 +1466,16 @@ public:
      *
      */
     const ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv) const;
+
+    /**
+     * This method gets the next Channel Mask Entry in a Channel Mask TLV.
+     *
+     * @param[in] aChannelMaskBaseTlv  A pointer to the Channel Mask TLV to which this entry belongs.
+     *
+     * @returns A pointer to next Channel Mask Entry or NULL if not found.
+     *
+     */
+    ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv);
 
 private:
     uint8_t mChannelPage;
@@ -1546,15 +1565,12 @@ public:
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
 
     /**
-     * This method gets the Channel Mask Entry in the Channel Mask TLV.
+     * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @param[in]  aChannelPage  The ChannelPage value.
-     *
-     * @returns A pointer to Channel Mask Entry or NULL if not found.
+     * @returns A pointer to first Channel Mask Entry or NULL if not found.
      *
      */
-    const ChannelMaskEntry *GetMaskEntry(uint8_t aChannelPage) const;
-
+    ChannelMaskEntryBase *GetFirstEntry(void);
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1562,7 +1578,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMaskTlv : public ChannelMaskBaseTlv, public ChannelMaskEntry
+class ChannelMaskTlv : public ChannelMaskBaseTlv
 {
 public:
     /**
@@ -1573,17 +1589,44 @@ public:
     {
         SetType(kChannelMask);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        ChannelMaskEntry::Init();
+        memset(mEntries, 0, sizeof(mEntries));
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method sets the Channel Mask Entries.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in]  aMask  The Channel Mask value.
+     *
+     * @retval OT_ERROR_NONE       Successfully set the Channel Mask Entry.
+     * @retval OT_ERROR_NO_BUFS    Insufficient available buffers to store channel mask.
+     */
+    otError SetChannelMask(uint32_t aChannelMask);
+
+    /**
+     * This method returns the Channel Mask value as a `uint32_t` bit mask.
+     *
+     * @returns The Channel Mask or 0 if not found.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv) && ChannelMaskEntry::IsValid(); }
+    uint32_t GetChannelMask(void) const;
+
+    /**
+     * This method reads message and returns the Channel Mask value as a `uint32_t` bit mask.
+     *
+     * @param[in]   aMessage     A reference to the message.
+     *
+     * @returns The Channel Mask or 0 if not found.
+     *
+     */
+    static uint32_t GetChannelMask(const Message &aMessage);
+
+private:
+    enum
+    {
+        kNumMaskEntries = Phy::kNumChannelPages,
+    };
+
+    ChannelMaskEntry mEntries[kNumMaskEntries];
 } OT_TOOL_PACKED_END;
 
 /**

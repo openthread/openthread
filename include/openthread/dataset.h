@@ -157,6 +157,16 @@ enum
  */
 typedef uint32_t otChannelMaskPage0;
 
+#define OT_CHANNEL_1_MASK (1 << 1)   ///< Channel 1
+#define OT_CHANNEL_2_MASK (1 << 2)   ///< Channel 2
+#define OT_CHANNEL_3_MASK (1 << 3)   ///< Channel 3
+#define OT_CHANNEL_4_MASK (1 << 4)   ///< Channel 4
+#define OT_CHANNEL_5_MASK (1 << 5)   ///< Channel 5
+#define OT_CHANNEL_6_MASK (1 << 6)   ///< Channel 6
+#define OT_CHANNEL_7_MASK (1 << 7)   ///< Channel 7
+#define OT_CHANNEL_8_MASK (1 << 8)   ///< Channel 8
+#define OT_CHANNEL_9_MASK (1 << 9)   ///< Channel 9
+#define OT_CHANNEL_10_MASK (1 << 10) ///< Channel 10
 #define OT_CHANNEL_11_MASK (1 << 11) ///< Channel 11
 #define OT_CHANNEL_12_MASK (1 << 12) ///< Channel 12
 #define OT_CHANNEL_13_MASK (1 << 13) ///< Channel 13

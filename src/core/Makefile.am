@@ -354,6 +354,7 @@ HEADERS_COMMON                      = \
     net/socket.hpp                    \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
+    phy/phy.hpp                       \
     thread/address_resolver.hpp       \
     thread/announce_begin_server.hpp  \
     thread/announce_sender.hpp        \

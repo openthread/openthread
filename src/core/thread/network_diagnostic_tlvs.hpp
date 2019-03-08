@@ -45,6 +45,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/ip6_address.hpp"
+#include "phy/phy.hpp"
 #include "thread/mle_constants.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -1404,7 +1405,7 @@ public:
     uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
-    uint8_t mChannelPages[1];
+    uint8_t mChannelPages[Phy::kNumChannelPages];
 } OT_TOOL_PACKED_END;
 
 /**

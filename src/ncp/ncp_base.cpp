@@ -46,6 +46,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "phy/phy.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -203,7 +204,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDecoder()
     , mHostPowerStateInProgress(false)
     , mLastStatus(SPINEL_STATUS_OK)
-    , mScanChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
+    , mScanChannelMask(Phy::kSupportedChannels)
     , mScanPeriod(200)
     , mDiscoveryScanJoinerFlag(false)
     , mDiscoveryScanEnableFiltering(false)

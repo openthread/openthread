@@ -66,6 +66,11 @@ enum
     CC2652_RF_CMD0             = 0x0607,
 };
 
+enum
+{
+    CC2652_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+};
+
 /* phy state as defined by openthread */
 static volatile cc2652_PhyState_t sState;
 
@@ -247,7 +252,7 @@ static void rfCoreInitReceiveParams(void)
         .condition                  = {
             .rule                   = COND_NEVER,
         },
-        .channel                    = OT_RADIO_CHANNEL_MIN,
+        .channel                    = CC2652_CHANNEL_MIN,
         .rxConfig                   =
         {
             .bAutoFlushCrc          = 1,

@@ -41,6 +41,7 @@
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
+#include "phy/phy.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
 
@@ -481,14 +482,14 @@ exit:
 
 void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {
-    mSupportedChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
+    mSupportedChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
 
     otLogInfoUtil("ChannelManager: Supported channels: %s", mSupportedChannelMask.ToString().AsCString());
 }
 
 void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 {
-    mFavoredChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
+    mFavoredChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
 
     otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
 }

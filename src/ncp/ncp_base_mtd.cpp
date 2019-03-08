@@ -206,7 +206,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
-    return EncodeChannelMask(otLinkGetSupportedChannelMask(mInstance));
+    return EncodeChannelMask(otLinkGetPhySupportedChannelMask(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
@@ -1930,7 +1930,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANN
 {
     otError error = OT_ERROR_NONE;
 
-    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance); channel++)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
