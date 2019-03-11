@@ -630,6 +630,13 @@ template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+template <> inline Utils::Slaac &Instance::Get(void)
+{
+    return GetThreadNetif().GetSlaac();
+}
+#endif
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 template <> inline Utils::JamDetector &Instance::Get(void)
 {
