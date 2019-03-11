@@ -256,6 +256,7 @@ otError Dtls::Bind(TransportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mSocket.GetSockName().mPort == 0, error = OT_ERROR_ALREADY);
     VerifyOrExit(mTransportCallback == NULL, error = OT_ERROR_ALREADY);
 
     mState = kStateStopped;
@@ -1007,50 +1008,27 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     OT_UNUSED_VARIABLE(str);
 
     Dtls *pThis = static_cast<Dtls *>(ctx);
+    OT_UNUSED_VARIABLE(pThis);
 
-    if (pThis->mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
+    switch (level)
     {
-        switch (level)
-        {
-        case 1:
-            otLogCritMbedTls("%s", str);
-            break;
+    case 1:
+        otLogCritMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        break;
 
-        case 2:
-            otLogWarnMbedTls("%s", str);
-            break;
+    case 2:
+        otLogWarnMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        break;
 
-        case 3:
-            otLogInfoMbedTls("%s", str);
-            break;
+    case 3:
+        otLogInfoMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        break;
 
-        case 4:
-        default:
-            otLogDebgMbedTls("%s", str);
-            break;
-        }
+    case 4:
+    default:
+        otLogDebgMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        break;
     }
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    else
-    {
-        switch (level)
-        {
-        case 1:
-            otLogCritCoap("ApplicationCoapSecure Mbedtls: %s", str);
-            break;
-        case 2:
-            otLogWarnCoap("ApplicationCoapSecure Mbedtls: %s", str);
-            break;
-        case 3:
-            otLogInfoCoap("ApplicationCoapSecure Mbedtls: %s", str);
-            break;
-        case 4:
-        default:
-            otLogDebgCoap("ApplicationCoapSecure Mbedtls: %s", str);
-            break;
-        }
-    }
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 }
 
 otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
