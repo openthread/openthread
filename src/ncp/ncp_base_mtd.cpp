@@ -953,11 +953,11 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPage0Present)
+    if (aDataset.mComponents.mIsChannelMaskPagePresent)
     {
         SuccessOrExit(mEncoder.OpenStruct());
         SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN_SUPPORTED));
-        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMaskPage0));
+        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMaskPage));
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
@@ -1162,17 +1162,17 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
             {
                 uint8_t channel;
 
-                aDataset.mChannelMaskPage0 = 0;
+                aDataset.mChannelMaskPage = 0;
 
                 while (!mDecoder.IsAllReadInStruct())
                 {
                     SuccessOrExit(error = mDecoder.ReadUint8(channel));
                     VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                    aDataset.mChannelMaskPage0 |= (1UL << channel);
+                    aDataset.mChannelMaskPage |= (1UL << channel);
                 }
             }
 
-            aDataset.mComponents.mIsChannelMaskPage0Present = true;
+            aDataset.mComponents.mIsChannelMaskPagePresent = true;
             break;
 
         case SPINEL_PROP_DATASET_RAW_TLVS:
