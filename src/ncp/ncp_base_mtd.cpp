@@ -2833,6 +2833,27 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 
 #endif // OPENTHREAD_ENABLE_POSIX_APP
 
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>(void)
+{
+    return mEncoder.WriteBool(otIp6IsSlaacEnabled(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otIp6SetSlaacEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+
 #if OPENTHREAD_ENABLE_LEGACY
 
 void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
