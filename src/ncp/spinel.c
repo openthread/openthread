@@ -1851,6 +1851,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PARENT_RESPONSE_INFO";
         break;
 
+    case SPINEL_PROP_SLAAC_ENABLED:
+        ret = "SLAAC_ENABLED";
+        break;
+
     case SPINEL_PROP_UART_BITRATE:
         ret = "UART_BITRATE";
         break;
@@ -2478,6 +2482,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_POSIX_APP:
         ret = "POSIX_APP";
+        break;
+
+    case SPINEL_CAP_SLAAC:
+        ret = "SLAAC";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:
