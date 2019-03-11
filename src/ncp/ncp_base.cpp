@@ -1787,6 +1787,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OOB_STEERING_DATA));
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SLAAC));
+#endif
+
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PEEK_POKE));
 #endif
