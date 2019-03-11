@@ -66,14 +66,6 @@ enum
 
 enum
 {
-    EFR32_915MHZ_OQPSK_CHANNEL_MIN = 1,
-    EFR32_915MHZ_OQPSK_CHANNEL_MAX = 10,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MIN = 11,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MAX = 26,
-};
-
-enum
-{
     EFR32_RECEIVE_SENSITIVITY    = -100, // dBm
     EFR32_RSSI_AVERAGING_TIME    = 16,   // us
     EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
@@ -283,8 +275,8 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = NULL;
-    sBandConfigs[index].mChannelMin                = EFR32_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_2P4GHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
     index++;
@@ -295,8 +287,8 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = channelConfigs[0];
-    sBandConfigs[index].mChannelMin                = EFR32_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_915MHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
 #endif
