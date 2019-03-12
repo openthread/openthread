@@ -33,6 +33,17 @@
 #ifndef SPINEL_HEADER_INCLUDED
 #define SPINEL_HEADER_INCLUDED 1
 
+/*
+ * Spinel definition guideline:
+ *
+ * New NCP firmware should work with an older host driver, i.e., NCP implementation should remain backward compatible.
+ *
+ *  - Existing fields in the format of an already implemented spinel property or command cannot change.
+ *  - New fields may be appended at the end of the format (or the end of a struct) as long as the NCP implementation
+ *    treats the new fields as optional (i.e., a driver not aware of and therefore not using the new fields should
+ *    continue to function as before).
+ */
+
 #ifdef SPINEL_PLATFORM_HEADER
 #include SPINEL_PLATFORM_HEADER
 #else // ifdef SPINEL_PLATFORM_HEADER
