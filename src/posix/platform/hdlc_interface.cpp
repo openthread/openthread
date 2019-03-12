@@ -63,7 +63,7 @@
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
 #endif
 
-#if __APPLE__
+#ifdef __APPLE__
 
 #ifndef B230400
 #define B230400 230400
