@@ -51,4 +51,30 @@
     _Pragma("GCC diagnostic pop")
 #endif
 
+/*******************************************************************************
+ * @section nRF SoftDevice Handler declarations.
+ * 
+ * @note Definitions for below functions are placed in nRF5 SDK.
+ ******************************************************************************/
+
+/**
+ * @brief Function for stopping the incoming stack events.
+ *
+ * This function disables the SoftDevice interrupt. To resume polling for events,
+ * call @ref nrf_sdh_resume.
+ */
+void nrf_sdh_suspend(void);
+
+/**
+ * @brief Function for resuming polling incoming events from the SoftDevice.
+ */
+void nrf_sdh_resume(void);
+
+/**
+ * @brief Function for polling stack events from the SoftDevice.
+ *
+ * The events are passed to the application using the registered event handlers.
+ */
+void nrf_sdh_evts_poll(void);
+
 #endif  // SOFTDEVICE_H_
