@@ -33,6 +33,8 @@
 
 #include "meshcop_tlvs.hpp"
 
+#include "common/debug.hpp"
+
 namespace ot {
 namespace MeshCoP {
 
@@ -148,20 +150,6 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
     mChannel = HostSwap16(aChannel);
 }
 
-ChannelMaskEntryBase *ChannelMaskEntryBase::GetNext(const Tlv *aChannelMaskBaseTlv)
-{
-    return const_cast<ChannelMaskEntryBase *>(
-        static_cast<const ChannelMaskEntryBase *>(this)->GetNext(aChannelMaskBaseTlv));
-}
-
-const ChannelMaskEntryBase *ChannelMaskEntryBase::GetNext(const Tlv *aChannelMaskBaseTlv) const
-{
-    const uint8_t *entry = reinterpret_cast<const uint8_t *>(this) + GetEntrySize();
-    const uint8_t *end   = aChannelMaskBaseTlv->GetValue() + aChannelMaskBaseTlv->GetLength();
-
-    return (entry < end) ? reinterpret_cast<const ChannelMaskEntryBase *>(entry) : NULL;
-}
-
 const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
     const ChannelMaskEntryBase *entry = NULL;
@@ -180,33 +168,31 @@ ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void)
     return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskBaseTlv *>(this)->GetFirstEntry());
 }
 
-otError ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
+void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 {
-    otError           error  = OT_ERROR_NONE;
     uint8_t           length = 0;
     ChannelMaskEntry *entry;
 
-    VerifyOrExit((entry = static_cast<ChannelMaskEntry *>(GetFirstEntry())) != NULL, error = OT_ERROR_NO_BUFS);
+    entry = static_cast<ChannelMaskEntry *>(GetFirstEntry());
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK)
     {
+        assert(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_2);
         entry->SetMask(aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK);
 
         length += sizeof(MeshCoP::ChannelMaskEntry);
 
-#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
-        VerifyOrExit((entry = static_cast<MeshCoP::ChannelMaskEntry *>(entry->GetNext(this))) != NULL,
-                     error = OT_ERROR_NO_BUFS);
-#endif
+        entry = static_cast<MeshCoP::ChannelMaskEntry *>(entry->GetNext());
     }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK)
     {
+        assert(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_0);
         entry->SetMask(aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK);
@@ -216,33 +202,31 @@ otError ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 #endif
 
     SetLength(length);
-
-exit:
-    return error;
 }
 
 uint32_t ChannelMaskTlv::GetChannelMask(void) const
 {
     uint32_t                mask = 0;
-    const ChannelMaskEntry *entry;
+    const ChannelMaskEntry *cur  = static_cast<const ChannelMaskEntry *>(GetFirstEntry());
+    const ChannelMaskEntry *end  = reinterpret_cast<const ChannelMaskEntry *>(GetValue() + GetLength());
 
-    VerifyOrExit((entry = static_cast<const ChannelMaskEntry *>(GetFirstEntry())) != NULL);
-    while (entry != NULL)
+    for (; cur < end; cur = static_cast<const ChannelMaskEntry *>(cur->GetNext()))
     {
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-        if (entry->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
+        if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
         {
-            mask |= entry->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
+            mask |= cur->GetMask() & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
-        if (entry->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_0)
+        if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_0)
         {
-            mask |= entry->GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
+            mask |= cur->GetMask() & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
         }
 #endif
-        entry = static_cast<const ChannelMaskEntry *>(entry->GetNext(this));
     }
 
 exit:

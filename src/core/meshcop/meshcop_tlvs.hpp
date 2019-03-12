@@ -1373,6 +1373,9 @@ private:
     uint32_t mDelayTimer;
 } OT_TOOL_PACKED_END;
 
+// forward declare ChannelMaskTlv
+class ChannelMaskTlv;
+
 /**
  * This class implements Channel Mask Entry generation and parsing.
  *
@@ -1460,22 +1463,24 @@ public:
     /**
      * This method gets the next Channel Mask Entry in a Channel Mask TLV.
      *
-     * @param[in] aChannelMaskBaseTlv  A pointer to the Channel Mask TLV to which this entry belongs.
-     *
-     * @returns A pointer to next Channel Mask Entry or NULL if none found.
+     * @returns A pointer to next Channel Mask Entry.
      *
      */
-    const ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv) const;
+    const ChannelMaskEntryBase *GetNext(void) const
+    {
+        return reinterpret_cast<const ChannelMaskEntryBase *>(reinterpret_cast<const uint8_t *>(this) + GetEntrySize());
+    }
 
     /**
      * This method gets the next Channel Mask Entry in a Channel Mask TLV.
      *
-     * @param[in] aChannelMaskBaseTlv  A pointer to the Channel Mask TLV to which this entry belongs.
-     *
-     * @returns A pointer to next Channel Mask Entry or NULL if not found.
+     * @returns A pointer to next Channel Mask Entry.
      *
      */
-    ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv);
+    ChannelMaskEntryBase *GetNext(void)
+    {
+        return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskEntryBase *>(this)->GetNext());
+    }
 
 private:
     uint8_t mChannelPage;
@@ -1598,9 +1603,9 @@ public:
      * @param[in]  aMask  The Channel Mask value.
      *
      * @retval OT_ERROR_NONE       Successfully set the Channel Mask Entry.
-     * @retval OT_ERROR_NO_BUFS    Insufficient available buffers to store channel mask.
+     *
      */
-    otError SetChannelMask(uint32_t aChannelMask);
+    void SetChannelMask(uint32_t aChannelMask);
 
     /**
      * This method returns the Channel Mask value as a `uint32_t` bit mask.
