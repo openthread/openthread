@@ -48,4 +48,23 @@ else
     die "clang-format 6.0 required"
 fi
 
-clang-format $@
+clang-format $@ || die
+
+# ensure EOF newline
+REPLACE=no
+for arg
+do
+    case $arg in
+        -i)
+            REPLACE=yes
+            ;;
+    esac
+done
+
+file=$arg
+
+[ $REPLACE != yes ] || {
+    [ -n "$(tail -c1 $file)" ] && echo >> $file
+}
+
+exit 0
