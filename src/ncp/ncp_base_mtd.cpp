@@ -66,8 +66,6 @@
 #include "common/instance.hpp"
 #include "net/ip6.hpp"
 
-#include "common/logging.hpp"
-
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 namespace ot {
@@ -866,19 +864,20 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     SuccessOrExit(error = mDecoder.ReadUint32(cfg.mEnterpriseNumber));
     SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
 
-    VerifyOrExit((dataLen <= sizeof(cfg.mServiceData) && dataLen <= UINT8_MAX), error = OT_ERROR_INVALID_ARGS);
-
+    VerifyOrExit((dataLen <= sizeof(cfg.mServiceData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServiceData, data, dataLen);
+
+    OT_STATIC_ASSERT((sizeof(cfg.mServiceData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServiceDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = mDecoder.ReadBool(stable));
     cfg.mServerConfig.mStable = stable;
     SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
 
-    VerifyOrExit((dataLen <= sizeof(cfg.mServerConfig.mServerData) && dataLen <= UINT8_MAX),
-                 error = OT_ERROR_INVALID_ARGS);
-
+    VerifyOrExit((dataLen <= sizeof(cfg.mServerConfig.mServerData)), error = OT_ERROR_INVALID_ARGS);
     memcpy(cfg.mServerConfig.mServerData, data, dataLen);
+
+    OT_STATIC_ASSERT((sizeof(cfg.mServerConfig.mServerData) <= UINT8_MAX), "Cannot handle full range of buffer length");
     cfg.mServerConfig.mServerDataLength = static_cast<uint8_t>(dataLen);
 
     SuccessOrExit(error = otServerAddService(mInstance, &cfg));

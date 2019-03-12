@@ -808,6 +808,7 @@ enum
  *    Stream       | 0x070 - 0x07F, 0x1700 - 0x17FF | Stream
  *    MeshCop      | 0x080 - 0x08F, 0x1800 - 0x18FF | Thread Mesh Commissioning
  *    OpenThread   |                0x1900 - 0x19FF | OpenThread specific
+ *    Server       | 0x0A0 - 0x0AF                  | ALOC Service Server
  *    Interface    | 0x100 - 0x1FF                  | Interface (e.g., UART)
  *    PIB          | 0x400 - 0x4FF                  | 802.15.4 PIB
  *    Counter      | 0x500 - 0x7FF                  | Counters (MAC, IP, etc).
@@ -2696,58 +2697,6 @@ typedef enum
 
     SPINEL_PROP_MESHCOP__END = 0x90,
 
-    SPINEL_PROP_SERVER__BEGIN = 0x90,
-
-    /// Server Allow Local Network Data Change
-    /** Format `b` - Read-write
-     *
-     * Required capability: SPINEL_CAP_THREAD_SERVICE
-     *
-     * Set to true before changing local server net data. Set to false when finished.
-     * This allows changes to be aggregated into a single event.
-     *
-     */
-    SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE = SPINEL_PROP_SERVER__BEGIN + 0,
-
-    // Server Services
-    /** Format: `A(t(LDbDs))`
-     *
-     * This property provides all services registered on the device
-     *
-     * Required capability: SPINEL_CAP_THREAD_SERVICE
-     *
-     * Array of structures containing:
-     *
-     *  `L`: Enterprise Number
-     *  `d`: Service Data
-     *  `b`: Stable
-     *  `d`: Server Data
-     *  `s`: RLOC
-     *
-     */
-    SPINEL_PROP_SERVER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 1,
-
-    // Server Leader Services
-    /** Format: `A(t(cLDbDs))`
-     *
-     * This property provides all services registered on the leader
-     *
-     * Required capability: SPINEL_CAP_THREAD_SERVICE
-     *
-     * Array of structures containing:
-     *
-     *  `C`: Service ID
-     *  `L`: Enterprise Number
-     *  `d`: Service Data
-     *  `b`: Stable
-     *  `d`: Server Data
-     *  `s`: RLOC
-     *
-     */
-    SPINEL_PROP_SERVER_LEADER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 2,
-
-    SPINEL_PROP_SERVER__END = 0xA0,
-
     SPINEL_PROP_MESHCOP_EXT__BEGIN = 0x1800,
 
     // Thread Commissioner Announce Begin
@@ -3068,6 +3017,58 @@ typedef enum
     SPINEL_PROP_PARENT_RESPONSE_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 13,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
+
+    SPINEL_PROP_SERVER__BEGIN = 0xA0,
+
+    /// Server Allow Local Network Data Change
+    /** Format `b` - Read-write
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Set to true before changing local server net data. Set to false when finished.
+     * This allows changes to be aggregated into a single event.
+     *
+     */
+    SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE = SPINEL_PROP_SERVER__BEGIN + 0,
+
+    // Server Services
+    /** Format: `A(t(LdbdS))`
+     *
+     * This property provides all services registered on the device
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Array of structures containing:
+     *
+     *  `L`: Enterprise Number
+     *  `d`: Service Data
+     *  `b`: Stable
+     *  `d`: Server Data
+     *  `S`: RLOC
+     *
+     */
+    SPINEL_PROP_SERVER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 1,
+
+    // Server Leader Services
+    /** Format: `A(t(CLdbdS))`
+     *
+     * This property provides all services registered on the leader
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Array of structures containing:
+     *
+     *  `C`: Service ID
+     *  `L`: Enterprise Number
+     *  `d`: Service Data
+     *  `b`: Stable
+     *  `d`: Server Data
+     *  `S`: RLOC
+     *
+     */
+    SPINEL_PROP_SERVER_LEADER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 2,
+
+    SPINEL_PROP_SERVER__END = 0xB0,
 
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
 
