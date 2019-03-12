@@ -80,7 +80,7 @@ enum
 
 enum
 {
-#if RADIO_SUPPORT_2P4GHZ_OQPSK && RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT && RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     EFR32_NUM_BAND_CONFIGS = 2,
 #else
     EFR32_NUM_BAND_CONFIGS = 1,
@@ -270,7 +270,7 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
 {
     uint8_t index = 0;
 
-#if RADIO_SUPPORT_2P4GHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
@@ -282,7 +282,7 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
     index++;
 #endif
 
-#if RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
