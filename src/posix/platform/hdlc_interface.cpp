@@ -117,7 +117,7 @@
 #define B4000000 4000000
 #endif
 
-#endif
+#endif // __APPLE__
 
 namespace ot {
 namespace PosixApp {
