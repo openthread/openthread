@@ -87,6 +87,7 @@ enum
     OT_RADIO_CHANNEL_PAGE_0_MASK = (1U << OT_RADIO_CHANNEL_PAGE_0), ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_PAGE_2      = 2,                               ///< 915 MHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_PAGE_2_MASK = (1U << OT_RADIO_CHANNEL_PAGE_2), ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_MAX    = OT_RADIO_CHANNEL_PAGE_2,         ///< Maximum supported channel page value
 };
 
 /**
