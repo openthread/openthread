@@ -152,10 +152,10 @@ enum
 };
 
 /**
- * This type represents Channel Mask Page.
+ * This type represents Channel Mask.
  *
  */
-typedef uint32_t otChannelMaskPage;
+typedef uint32_t otChannelMask;
 
 #define OT_CHANNEL_1_MASK (1 << 1)   ///< Channel 1
 #define OT_CHANNEL_2_MASK (1 << 2)   ///< Channel 2
@@ -201,7 +201,7 @@ typedef struct otOperationalDatasetComponents
     bool mIsChannelPresent : 1;          ///< TRUE if Channel is present, FALSE otherwise.
     bool mIsPSKcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
     bool mIsSecurityPolicyPresent : 1;   ///< TRUE if Security Policy is present, FALSE otherwise.
-    bool mIsChannelMaskPagePresent : 1;  ///< TRUE if Channel Mask Page is present, FALSE otherwise.
+    bool mIsChannelMaskPresent : 1;      ///< TRUE if Channel Mask is present, FALSE otherwise.
 } otOperationalDatasetComponents;
 
 /**
@@ -223,7 +223,7 @@ typedef struct otOperationalDataset
     uint16_t                       mChannel;          ///< Channel
     otPSKc                         mPSKc;             ///< PSKc
     otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
-    otChannelMaskPage              mChannelMaskPage;  ///< Channel Mask Page
+    otChannelMask                  mChannelMask;      ///< Channel Mask
     otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.
 } otOperationalDataset;
 

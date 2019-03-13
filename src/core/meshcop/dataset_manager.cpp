@@ -534,11 +534,11 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPagePresent)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         ChannelMaskTlv channelMask;
         channelMask.Init();
-        channelMask.SetChannelMask(aDataset.mChannelMaskPage);
+        channelMask.SetChannelMask(aDataset.mChannelMask);
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
 
@@ -640,7 +640,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.mIsChannelMaskPagePresent)
+    if (aDatasetComponents.mIsChannelMaskPresent)
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }

@@ -149,8 +149,8 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
             if ((mask = tlv->GetChannelMask()) != 0)
             {
-                aDataset.mChannelMaskPage                      = mask;
-                aDataset.mComponents.mIsChannelMaskPagePresent = true;
+                aDataset.mChannelMask                      = mask;
+                aDataset.mComponents.mIsChannelMaskPresent = true;
             }
 
             break;
@@ -294,11 +294,11 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         Set(tlv);
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPagePresent)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         MeshCoP::ChannelMaskTlv tlv;
         tlv.Init();
-        tlv.SetChannelMask(aDataset.mChannelMaskPage);
+        tlv.SetChannelMask(aDataset.mChannelMask);
         Set(tlv);
     }
 
