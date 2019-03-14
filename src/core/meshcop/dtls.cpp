@@ -36,6 +36,9 @@
 #include "dtls.hpp"
 
 #include <mbedtls/debug.h>
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#include <mbedtls/pem.h>
+#endif
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
@@ -964,6 +967,7 @@ otError Dtls::MapError(int rval)
         break;
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    case MBEDTLS_ERR_PEM_ALLOC_FAILED:
     case MBEDTLS_ERR_PK_ALLOC_FAILED:
     case MBEDTLS_ERR_X509_BUFFER_TOO_SMALL:
     case MBEDTLS_ERR_X509_ALLOC_FAILED:
