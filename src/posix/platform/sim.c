@@ -97,7 +97,6 @@ void otSimInit(void)
         perror("bind");
         exit(OT_EXIT_FAILURE);
     }
-    // fprintf(stderr, "[%s] sim fd is %d\r\n", getenv("NODE_ID"), sSockFd);
 }
 
 void otSimDeinit(void)
@@ -139,8 +138,6 @@ void otSimReceiveEvent(struct Event *aEvent)
     }
 
     sNow += aEvent->mDelay;
-
-    // fprintf(stderr, "--[%s] now is %lu type is %d\n", getenv("NODE_ID"), sNow, aEvent->mEvent);
 }
 
 void otSimSendSleepEvent(const struct timeval *aTimeout)
@@ -196,7 +193,6 @@ void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set 
     if (FD_ISSET(sSockFd, aReadFdSet))
     {
         otSimReceiveEvent(&event);
-        // fprintf(stderr, "[%s] receive event\r\n", getenv("NODE_ID"));
     }
 
     otSimRadioSpinelProcess(aInstance, &event);

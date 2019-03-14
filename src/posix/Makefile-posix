@@ -56,6 +56,7 @@ LEGACY                               ?= 1
 LINK_RAW                             ?= 0
 MAC_FILTER                           ?= 1
 MTD_NETDIAG                          ?= 1
+READLINE                             ?= edit
 SERVICE                              ?= 1
 SNTP_CLIENT                          ?= 1
 UDP_FORWARD                          ?= 1
@@ -90,6 +91,10 @@ endif
 
 ifeq ($(PLATFORM_NETIF),1)
 configure_OPTIONS              += --enable-platform-netif
+endif
+
+ifneq ($(READLINE),)
+configure_OPTIONS              += --with-readline=$(READLINE)
 endif
 
 ifeq ($(VIRTUAL_TIME),1)

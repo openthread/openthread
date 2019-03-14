@@ -428,7 +428,8 @@ build_samr21() {
     ./bootstrap || die
     # enable code coverage for OpenThread transceiver only
     CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
-    CERT_LOG=1 COVERAGE=1 make -f src/posix/Makefile-posix || die
+    # readline supports pipe, editline does not
+    CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
     CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" make -f src/posix/Makefile-posix check || die
 }
 
@@ -451,7 +452,7 @@ build_samr21() {
     ./bootstrap || die
     CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # enable code coverage for OpenThread posix radio
-    CERT_LOG=1 COVERAGE=1 make -f src/posix/Makefile-posix || die
+    CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
     CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
