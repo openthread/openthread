@@ -35,6 +35,6 @@
 #ifndef __BOARD_CONFIG_H__
 #define __BOARD_CONFIG_H__
 
-#define RADIO_SUPPORT_2P4GHZ_OQPSK 1 ///< Dev board suppports OQPSK modulation in 2.4GHz band.
+#define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1 ///< Dev board suppports OQPSK modulation in 2.4GHz band.
 
 #endif // __BOARD_CONFIG_H__
