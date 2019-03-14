@@ -49,6 +49,9 @@
 #include <openthread/ncp.h>
 #elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
+#if HAVE_LIBEDIT || HAVE_LIBREADLINE
+#include "console_cli.h"
+#endif
 #else
 #error "Unknown posix app type!"
 #endif
@@ -92,7 +95,11 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_PLATFORM_NETIF
     otSysInitNetif(instance);
 #endif
+#if HAVE_LIBEDIT || HAVE_LIBREADLINE
+    otxConsoleInit(instance);
+#else
     otCliUartInit(instance);
+#endif
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -113,10 +120,18 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+        otxConsoleUpdate(&mainloop);
+#endif
+
         otSysMainloopUpdate(instance, &mainloop);
+
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+            otxConsoleProcess(&mainloop);
+#endif
         }
         else if (errno != EINTR)
         {
@@ -125,6 +140,9 @@ int main(int argc, char *argv[])
         }
     }
 
+#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+    otxConsoleDeinit();
+#endif
     otInstanceFinalize(instance);
 
     return 0;
