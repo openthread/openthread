@@ -538,8 +538,17 @@ def check_payload_same(tp1, tp2):
     assert len(tp1) == len(tp2)
     for tlv in tp2:
         peer_tlv = get_sub_tlv(tp1, type(tlv))
-        assert peer_tlv is not None and peer_tlv == tlv
+        assert peer_tlv is not None and peer_tlv == tlv, 'peer_tlv:{}, tlv:{} type:{}'.format(peer_tlv, tlv, type(tlv))
 
+def check_coap_message(msg, payloads, dest_addrs=None):
+    if dest_addrs is not None:
+        found = False
+        for dest in dest_addrs:
+            if msg.ipv6_packet.ipv6_header.destination_address == dest:
+                found = True
+                break
+        assert found, 'Destination address incorrect'
+    check_payload_same(msg.coap.payload, payloads)
 
 class SinglePrefixCheck:
 
