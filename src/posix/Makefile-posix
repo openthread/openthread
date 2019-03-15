@@ -62,7 +62,6 @@ SNTP_CLIENT                          ?= 1
 UDP_FORWARD                          ?= 1
 
 COMMONCFLAGS                         := \
-    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
     -g                                  \
     $(NULL)
 
