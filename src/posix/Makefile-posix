@@ -63,6 +63,7 @@ UDP_FORWARD                          ?= 1
 
 COMMONCFLAGS                         := \
     -DOPENTHREAD_CONFIG_UART_CLI_RAW=1  \
+    -g                                  \
     $(NULL)
 
 # If the user has asserted COVERAGE, alter the configuration options
@@ -85,7 +86,6 @@ endif
 ifneq ($(DEBUG),1)
 COMMONCFLAGS                   += \
     -O2                           \
-    -g                            \
     $(NULL)
 endif
 
