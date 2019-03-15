@@ -143,8 +143,13 @@ void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t)
 {
 }
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &, const Frame *, otError, uint8_t, bool)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
+                                                  const Frame *aAckFrame,
+                                                  otError      aError,
+                                                  uint8_t      aRetryCount,
+                                                  bool         aWillRetx)
 {
+    static_cast<LinkRaw *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
