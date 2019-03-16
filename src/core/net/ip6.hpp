@@ -470,4 +470,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_HPP_
+#endif // IP6_HPP_
