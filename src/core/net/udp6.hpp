@@ -463,4 +463,4 @@ public:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_UDP6_HPP_
+#endif // UDP6_HPP_

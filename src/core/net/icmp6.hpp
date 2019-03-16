@@ -358,4 +358,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_ICMP6_HPP_
+#endif // ICMP6_HPP_
