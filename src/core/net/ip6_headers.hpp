@@ -632,4 +632,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_HEADERS_HPP_
+#endif // IP6_HEADERS_HPP_
