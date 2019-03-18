@@ -93,7 +93,7 @@ void CoapSecure::SetConnectedCallback(ConnectedCallback aCallback, void *aContex
 
 void CoapSecure::Stop(void)
 {
-    mDtls.Stop();
+    mDtls.Close();
 
     for (ot::Message *message = mTransmitQueue.GetHead(); message != NULL; message = message->GetNext())
     {
