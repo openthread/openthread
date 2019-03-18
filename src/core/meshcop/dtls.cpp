@@ -59,7 +59,7 @@ namespace MeshCoP {
 
 Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     : InstanceLocator(aInstance)
-    , mState(kStateStopped)
+    , mState(kStateClosed)
     , mPskLength(0)
     , mVerifyPeerCertificate(true)
     , mTimer(aInstance, &Dtls::HandleTimer, this)
@@ -166,6 +166,7 @@ otError Dtls::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHa
     mReceiveHandler   = aReceiveHandler;
     mConnectedHandler = aConnectedHandler;
     mContext          = aContext;
+    mState            = kStateOpen;
 
 exit:
     return error;
@@ -173,6 +174,10 @@ exit:
 
 otError Dtls::Connect(const Ip6::SockAddr &aSockAddr)
 {
+    otError error;
+
+    VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
+
     memcpy(&mPeerAddress.mPeerAddr, &aSockAddr.mAddress, sizeof(mPeerAddress.mPeerAddr));
     mPeerAddress.mPeerPort = aSockAddr.mPort;
 
@@ -185,7 +190,10 @@ otError Dtls::Connect(const Ip6::SockAddr &aSockAddr)
         mPeerAddress.mInterfaceId = 0;
     }
 
-    return Setup(true);
+    error = Setup(true);
+
+exit:
+    return error;
 }
 
 void Dtls::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -198,7 +206,12 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 {
     ThreadNetif &netif = GetNetif();
 
-    if (mState == MeshCoP::Dtls::kStateStopped)
+    switch (mState)
+    {
+    case MeshCoP::Dtls::kStateClosed:
+        ExitNow();
+
+    case MeshCoP::Dtls::kStateOpen:
     {
         Ip6::SockAddr sockAddr;
 
@@ -218,12 +231,14 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
         SuccessOrExit(Setup(false));
+        break;
     }
-    else
-    {
+
+    default:
         // Once DTLS session is started, communicate only with a peer.
         VerifyOrExit((mPeerAddress.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
                      (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
+        break;
     }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
@@ -244,12 +259,11 @@ otError Dtls::Bind(uint16_t aPort)
     otError       error;
     Ip6::SockAddr sockaddr;
 
+    VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mTransportCallback == NULL, error = OT_ERROR_ALREADY);
 
     sockaddr.mPort = aPort;
     SuccessOrExit(error = mSocket.Bind(sockaddr));
-
-    mState = kStateStopped;
 
 exit:
     return error;
@@ -259,10 +273,9 @@ otError Dtls::Bind(TransportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mSocket.GetSockName().mPort == 0, error = OT_ERROR_ALREADY);
     VerifyOrExit(mTransportCallback == NULL, error = OT_ERROR_ALREADY);
-
-    mState = kStateStopped;
 
     mTransportCallback = aCallback;
     mTransportContext  = aContext;
@@ -276,7 +289,7 @@ otError Dtls::Setup(bool aClient)
     int rval;
 
     // do not handle new connection before guard time expired
-    VerifyOrExit(mState == kStateStopped, rval = MBEDTLS_ERR_SSL_TIMEOUT);
+    VerifyOrExit(mState == kStateOpen, rval = MBEDTLS_ERR_SSL_TIMEOUT);
 
     mState = kStateInitializing;
 
@@ -380,7 +393,7 @@ otError Dtls::Setup(bool aClient)
 exit:
     if ((mState == kStateInitializing) && (rval != 0))
     {
-        mState = kStateStopped;
+        mState = kStateOpen;
         FreeMbedtls();
     }
 
@@ -448,7 +461,7 @@ void Dtls::Stop(void)
 {
     Close();
 
-    mState             = kStateStopped;
+    mState             = kStateClosed;
     mTransportCallback = NULL;
     mTransportContext  = NULL;
     mTimerSet          = false;
@@ -828,7 +841,7 @@ void Dtls::HandleTimer(void)
         break;
 
     case kStateCloseNotify:
-        mState = kStateStopped;
+        mState = kStateOpen;
         mTimer.Stop();
         break;
 
