@@ -42,6 +42,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -66,20 +67,19 @@ void LeaderBase::Reset(void)
     mVersion       = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength        = 0;
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
 {
-    ThreadNetif &netif = GetNetif();
-    PrefixTlv *  prefix;
-    ContextTlv * contextTlv;
+    PrefixTlv * prefix;
+    ContextTlv *contextTlv;
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(netif.GetMle().GetMeshLocalPrefix().m8, aAddress.mFields.m8, 64) >= 0)
+    if (PrefixMatch(Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix       = netif.GetMle().GetMeshLocalPrefix().m8;
+        aContext.mPrefix       = Get<Mle::MleRouter>().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
         aContext.mCompressFlag = true;
@@ -127,7 +127,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
     {
-        aContext.mPrefix       = GetNetif().GetMle().GetMeshLocalPrefix().m8;
+        aContext.mPrefix       = Get<Mle::MleRouter>().GetMeshLocalPrefix().m8;
         aContext.mPrefixLength = 64;
         aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
         aContext.mCompressFlag = true;
@@ -198,7 +198,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool       rval = false;
 
-    if (memcmp(aAddress.mFields.m8, GetNetif().GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix)) == 0)
+    if (memcmp(aAddress.mFields.m8, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix)) == 0)
     {
         ExitNow(rval = true);
     }
@@ -276,7 +276,6 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
                                         uint8_t *           aPrefixMatch,
                                         uint16_t *          aRloc16)
 {
-    ThreadNetif &   netif = GetNetif();
     otError         error = OT_ERROR_NO_ROUTE;
     PrefixTlv *     prefix;
     HasRouteTlv *   hasRoute;
@@ -322,9 +321,10 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
 
                     if (rvalRoute == NULL || entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         (entry->GetRloc() == netif.GetMle().GetRloc16() ||
-                          (rvalRoute->GetRloc() != netif.GetMle().GetRloc16() &&
-                           netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(rvalRoute->GetRloc())))))
+                         (entry->GetRloc() == Get<Mle::MleRouter>().GetRloc16() ||
+                          (rvalRoute->GetRloc() != Get<Mle::MleRouter>().GetRloc16() &&
+                           Get<Mle::MleRouter>().GetCost(entry->GetRloc()) <
+                               Get<Mle::MleRouter>().GetCost(rvalRoute->GetRloc())))))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
@@ -354,7 +354,6 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
 
 otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 {
-    ThreadNetif &      netif = GetNetif();
     otError            error = OT_ERROR_NO_ROUTE;
     BorderRouterTlv *  borderRouter;
     BorderRouterEntry *entry;
@@ -380,9 +379,9 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 
             if (route == NULL || entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 (entry->GetRloc() == netif.GetMle().GetRloc16() ||
-                  (route->GetRloc() != netif.GetMle().GetRloc16() &&
-                   netif.GetMle().GetCost(entry->GetRloc()) < netif.GetMle().GetCost(route->GetRloc())))))
+                 (entry->GetRloc() == Get<Mle::MleRouter>().GetRloc16() ||
+                  (route->GetRloc() != Get<Mle::MleRouter>().GetRloc16() &&
+                   Get<Mle::MleRouter>().GetCost(entry->GetRloc()) < Get<Mle::MleRouter>().GetCost(route->GetRloc())))))
             {
                 route = entry;
             }
@@ -429,15 +428,15 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
 
 #if OPENTHREAD_FTD
     // Synchronize internal 6LoWPAN Context ID Set with recently obtained Network Data.
-    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
-        GetNetif().GetNetworkDataLeader().UpdateContextsAfterReset();
+        Get<Leader>().UpdateContextsAfterReset();
     }
 #endif
 
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;
@@ -463,7 +462,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     }
 
     mVersion++;
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;

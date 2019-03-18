@@ -34,8 +34,8 @@
 #include "channel_monitor.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -119,8 +119,7 @@ void ChannelMonitor::HandleTimer(Timer &aTimer)
 
 void ChannelMonitor::HandleTimer(void)
 {
-    GetInstance().Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
-                                             &ChannelMonitor::HandleEnergyScanResult);
+    Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0, &ChannelMonitor::HandleEnergyScanResult);
 
     mTimer.StartAt(mTimer.GetFireTime(), Random::AddJitter(kTimerInterval, kMaxJitterInterval));
 }

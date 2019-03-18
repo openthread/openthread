@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 
 using namespace ot;
@@ -48,7 +49,7 @@ void otTaskletsProcess(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    instance.GetTaskletScheduler().ProcessQueuedTasklets();
+    instance.Get<TaskletScheduler>().ProcessQueuedTasklets();
 
 exit:
     return;
@@ -60,7 +61,7 @@ bool otTaskletsArePending(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    retval = instance.GetTaskletScheduler().AreTaskletsPending();
+    retval = instance.Get<TaskletScheduler>().AreTaskletsPending();
 
 exit:
     return retval;

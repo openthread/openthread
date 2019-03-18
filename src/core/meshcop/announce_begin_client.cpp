@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -70,8 +71,8 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message = NULL;
 
-    VerifyOrExit(GetNetif().GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(GetNetif().GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
@@ -79,7 +80,7 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     message->SetPayloadMarker();
 
     sessionId.Init();
-    sessionId.SetCommissionerSessionId(GetNetif().GetCommissioner().GetSessionId());
+    sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
@@ -94,12 +95,12 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     period.SetPeriod(aPeriod);
     SuccessOrExit(error = message->Append(&period, sizeof(period)));
 
-    messageInfo.SetSockAddr(GetNetif().GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
+    messageInfo.SetInterfaceId(Get<ThreadNetif>().GetInterfaceId());
 
-    SuccessOrExit(error = GetNetif().GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent announce begin query");
 

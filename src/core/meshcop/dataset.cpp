@@ -40,6 +40,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -515,11 +516,11 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 
 otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
 {
-    ThreadNetif &netif = aInstance.GetThreadNetif();
-    Mac::Mac &   mac   = netif.GetMac();
-    otError      error = OT_ERROR_NONE;
-    const Tlv *  cur   = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *  end   = reinterpret_cast<const Tlv *>(mTlvs + mLength);
+    Mac::Mac &  mac        = aInstance.Get<Mac::Mac>();
+    KeyManager &keyManager = aInstance.Get<KeyManager>();
+    otError     error      = OT_ERROR_NONE;
+    const Tlv * cur        = reinterpret_cast<const Tlv *>(mTlvs);
+    const Tlv * end        = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
     VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
 
@@ -568,12 +569,12 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
 
             if (aIsMasterKeyUpdated &&
-                memcmp(&key->GetNetworkMasterKey(), &netif.GetKeyManager().GetMasterKey(), OT_MASTER_KEY_SIZE))
+                memcmp(&key->GetNetworkMasterKey(), &keyManager.GetMasterKey(), OT_MASTER_KEY_SIZE))
             {
                 *aIsMasterKeyUpdated = true;
             }
 
-            netif.GetKeyManager().SetMasterKey(key->GetNetworkMasterKey());
+            keyManager.SetMasterKey(key->GetNetworkMasterKey());
             break;
         }
 
@@ -582,7 +583,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         case Tlv::kPSKc:
         {
             const PSKcTlv *pskc = static_cast<const PSKcTlv *>(cur);
-            netif.GetKeyManager().SetPSKc(pskc->GetPSKc());
+            keyManager.SetPSKc(pskc->GetPSKc());
             break;
         }
 
@@ -591,15 +592,15 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         case Tlv::kMeshLocalPrefix:
         {
             const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);
-            netif.GetMle().SetMeshLocalPrefix(prefix->GetMeshLocalPrefix());
+            aInstance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix->GetMeshLocalPrefix());
             break;
         }
 
         case Tlv::kSecurityPolicy:
         {
             const SecurityPolicyTlv *securityPolicy = static_cast<const SecurityPolicyTlv *>(cur);
-            netif.GetKeyManager().SetKeyRotation(securityPolicy->GetRotationTime());
-            netif.GetKeyManager().SetSecurityPolicyFlags(securityPolicy->GetFlags());
+            keyManager.SetKeyRotation(securityPolicy->GetRotationTime());
+            keyManager.SetSecurityPolicyFlags(securityPolicy->GetFlags());
             break;
         }
 

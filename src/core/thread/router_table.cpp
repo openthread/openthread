@@ -34,6 +34,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "thread/mle.hpp"
@@ -52,12 +53,12 @@ RouterTable::Iterator::Iterator(Instance &aInstance)
 
 void RouterTable::Iterator::Reset(void)
 {
-    mRouter = GetInstance().Get<RouterTable>().GetFirstEntry();
+    mRouter = Get<RouterTable>().GetFirstEntry();
 }
 
 void RouterTable::Iterator::Advance(void)
 {
-    mRouter = GetInstance().Get<RouterTable>().GetNextEntry(mRouter);
+    mRouter = Get<RouterTable>().GetNextEntry(mRouter);
 }
 
 RouterTable::RouterTable(Instance &aInstance)
@@ -250,7 +251,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
 
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
-    GetNetif().GetMle().ResetAdvertiseInterval();
+    Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
     otLogNoteMle("Allocate router id %d", aRouterId);
 
@@ -260,13 +261,12 @@ exit:
 
 otError RouterTable::Release(uint8_t aRouterId)
 {
-    otError      error  = OT_ERROR_NONE;
-    ThreadNetif &netif  = GetNetif();
-    uint16_t     rloc16 = Mle::Mle::GetRloc16(aRouterId);
+    otError  error  = OT_ERROR_NONE;
+    uint16_t rloc16 = Mle::Mle::GetRloc16(aRouterId);
 
     assert(aRouterId <= Mle::kMaxRouterId);
 
-    VerifyOrExit(netif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
 
     mAllocatedRouterIds.Remove(aRouterId);
@@ -286,9 +286,9 @@ otError RouterTable::Release(uint8_t aRouterId)
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
 
-    netif.GetAddressResolver().Remove(aRouterId);
-    netif.GetNetworkDataLeader().RemoveBorderRouter(rloc16, NetworkData::Leader::kMatchModeRouterId);
-    netif.GetMle().ResetAdvertiseInterval();
+    Get<AddressResolver>().Remove(aRouterId);
+    Get<NetworkData::Leader>().RemoveBorderRouter(rloc16, NetworkData::Leader::kMatchModeRouterId);
+    Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
     otLogNoteMle("Release router id %d", aRouterId);
 
@@ -298,8 +298,6 @@ exit:
 
 void RouterTable::RemoveNeighbor(Router &aRouter)
 {
-    ThreadNetif &netif = GetNetif();
-
     aRouter.SetLinkQualityOut(0);
     aRouter.SetLastHeard(TimerMilli::GetNow());
 
@@ -312,17 +310,17 @@ void RouterTable::RemoveNeighbor(Router &aRouter)
 
             if (GetLinkCost(*cur) >= Mle::kMaxRouteCost)
             {
-                netif.GetMle().ResetAdvertiseInterval();
+                Get<Mle::MleRouter>().ResetAdvertiseInterval();
             }
         }
     }
 
     if (aRouter.GetNextHop() == Mle::kInvalidRouterId)
     {
-        netif.GetMle().ResetAdvertiseInterval();
+        Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
         // Clear all EID-to-RLOC entries associated with the router.
-        netif.GetAddressResolver().Remove(aRouter.GetRouterId());
+        Get<AddressResolver>().Remove(aRouter.GetRouterId());
     }
 }
 
@@ -345,7 +343,7 @@ Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 {
     Router *router = NULL;
 
-    VerifyOrExit(aRloc16 != GetNetif().GetMle().GetRloc16());
+    VerifyOrExit(aRloc16 != Get<Mle::MleRouter>().GetRloc16());
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
@@ -363,7 +361,7 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 {
     Router *router = NULL;
 
-    VerifyOrExit(aExtAddress != GetNetif().GetMac().GetExtAddress());
+    VerifyOrExit(aExtAddress != Get<Mac::Mac>().GetExtAddress());
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
@@ -446,7 +444,7 @@ exit:
 
 Router *RouterTable::GetLeader(void)
 {
-    return GetRouter(GetNetif().GetMle().GetLeaderId());
+    return GetRouter(Get<Mle::MleRouter>().GetLeaderId());
 }
 
 uint32_t RouterTable::GetLeaderAge(void) const
@@ -474,7 +472,8 @@ uint8_t RouterTable::GetLinkCost(Router &aRouter)
 {
     uint8_t rval = Mle::kMaxRouteCost;
 
-    VerifyOrExit(aRouter.GetRloc16() != GetNetif().GetMle().GetRloc16() && aRouter.GetState() == Neighbor::kStateValid);
+    VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() &&
+                 aRouter.GetState() == Neighbor::kStateValid);
 
     rval = aRouter.GetLinkInfo().GetLinkQuality();
 
@@ -524,7 +523,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
     if (allocationChanged)
     {
         UpdateAllocation();
-        GetNetif().GetMle().ResetAdvertiseInterval();
+        Get<Mle::MleRouter>().ResetAdvertiseInterval();
     }
 }
 
@@ -557,13 +556,13 @@ void RouterTable::ProcessTlv(const ThreadRouterMaskTlv &aTlv)
     if (allocationChanged)
     {
         UpdateAllocation();
-        GetNetif().GetMle().ResetAdvertiseInterval();
+        Get<Mle::MleRouter>().ResetAdvertiseInterval();
     }
 }
 
 void RouterTable::ProcessTimerTick(void)
 {
-    Mle::MleRouter &mle = GetNetif().GetMle();
+    Mle::MleRouter &mle = Get<Mle::MleRouter>();
 
     if (mle.GetRole() == OT_DEVICE_ROLE_LEADER)
     {

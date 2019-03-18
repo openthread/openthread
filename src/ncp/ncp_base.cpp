@@ -291,7 +291,7 @@ NcpBase::NcpBase(Instance *aInstance)
     mUpdateChangedPropsTask.Post();
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
-    aInstance->GetExtension().SignalNcpInit(*this);
+    aInstance->Get<Extension::ExtensionBase>().SignalNcpInit(*this);
 #endif
 }
 

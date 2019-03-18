@@ -38,6 +38,7 @@
 #include "openthread/network_time.h"
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -45,7 +46,7 @@ otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t &aNetworkTi
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetTimeSync().GetTime(aNetworkTime);
+    return instance.Get<TimeSync>().GetTime(aNetworkTime);
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
@@ -53,10 +54,9 @@ otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeri
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetTimeSync().SetTimeSyncPeriod(aTimeSyncPeriod);
+    instance.Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
 
 exit:
     return error;
@@ -66,7 +66,7 @@ uint16_t otNetworkTimeGetSyncPeriod(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetTimeSync().GetTimeSyncPeriod();
+    return instance.Get<TimeSync>().GetTimeSyncPeriod();
 }
 
 otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThreshold)
@@ -74,10 +74,9 @@ otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThres
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetTimeSync().SetXtalThreshold(aXtalThreshold);
+    instance.Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
 
 exit:
     return error;
@@ -87,14 +86,14 @@ uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetTimeSync().GetXtalThreshold();
+    return instance.Get<TimeSync>().GetXtalThreshold();
 }
 
 void otNetworkTimeSyncSetCallback(otInstance *aInstance, otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetTimeSync().SetTimeSyncCallback(aCallback, aCallbackContext);
+    return instance.Get<TimeSync>().SetTimeSyncCallback(aCallback, aCallbackContext);
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC

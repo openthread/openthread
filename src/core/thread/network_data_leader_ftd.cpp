@@ -44,9 +44,9 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
@@ -82,34 +82,30 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    Coap::Coap &coap = GetNetif().GetCoap();
-
-    coap.AddResource(mServerData);
-    coap.AddResource(mCommissioningDataGet);
-    coap.AddResource(mCommissioningDataSet);
+    Get<Coap::Coap>().AddResource(mServerData);
+    Get<Coap::Coap>().AddResource(mCommissioningDataGet);
+    Get<Coap::Coap>().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
-    Coap::Coap &coap = GetNetif().GetCoap();
-
-    coap.RemoveResource(mServerData);
-    coap.RemoveResource(mCommissioningDataGet);
-    coap.RemoveResource(mCommissioningDataSet);
+    Get<Coap::Coap>().RemoveResource(mServerData);
+    Get<Coap::Coap>().RemoveResource(mCommissioningDataGet);
+    Get<Coap::Coap>().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
 {
-    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mVersion++;
-        GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+        Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
     }
 }
 
 void Leader::IncrementStableVersion(void)
 {
-    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mStableVersion++;
     }
@@ -141,7 +137,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
         mStableVersion++;
     }
 
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return;
@@ -173,7 +169,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
                             networkData.GetLength());
     }
 
-    SuccessOrExit(GetNetif().GetCoap().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment");
 
@@ -201,7 +197,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     MeshCoP::Tlv *end;
 
     VerifyOrExit(length <= sizeof(tlvs));
-    VerifyOrExit(GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
 
     aMessage.Read(offset, length, tlvs);
 
@@ -280,7 +276,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
 
 exit:
 
-    if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         SendCommissioningSetResponse(aMessage, aMessageInfo, state);
     }
@@ -321,14 +317,13 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                           const uint8_t *         aTlvs,
                                           uint8_t                 aLength)
 {
-    ThreadNetif &  netif = GetNetif();
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
     uint8_t        index;
     uint8_t *      data   = NULL;
     uint8_t        length = 0;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->SetDefaultResponseHeader(aRequest);
     message->SetPayloadMarker();
@@ -372,7 +367,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
         message->SetLength(message->GetLength() - 1);
     }
 
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");
 
@@ -388,12 +383,11 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                           const Ip6::MessageInfo & aMessageInfo,
                                           MeshCoP::StateTlv::State aState)
 {
-    ThreadNetif &     netif = GetNetif();
     otError           error = OT_ERROR_NONE;
     Coap::Message *   message;
     MeshCoP::StateTlv state;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->SetDefaultResponseHeader(aRequest);
     message->SetPayloadMarker();
@@ -402,7 +396,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset set response");
 
@@ -792,7 +786,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
         }
     }
 
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;
@@ -1201,7 +1195,7 @@ void Leader::FreeContext(uint8_t aContextId)
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
     mStableVersion++;
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 void Leader::StartContextReuseTimer(uint8_t aContextId)

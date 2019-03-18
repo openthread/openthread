@@ -37,8 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 
 namespace ot {
 
@@ -48,7 +48,7 @@ Notifier::Callback::Callback(Instance &aInstance, Handler aHandler, void *aOwner
     , mNext(NULL)
 {
     assert(aHandler != NULL);
-    aInstance.GetNotifier().RegisterCallback(*this);
+    aInstance.Get<Notifier>().RegisterCallback(*this);
 }
 
 Notifier::Notifier(Instance &aInstance)

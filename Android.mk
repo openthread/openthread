@@ -115,7 +115,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/crc16.cpp                               \
     src/core/common/instance.cpp                            \
     src/core/common/logging.cpp                             \
-    src/core/common/locator.cpp                             \
     src/core/common/message.cpp                             \
     src/core/common/notifier.cpp                            \
     src/core/common/settings.cpp                            \

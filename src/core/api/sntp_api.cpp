@@ -36,6 +36,7 @@
 #include <openthread/sntp.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -47,13 +48,13 @@ otError otSntpClientQuery(otInstance *          aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetSntpClient().Query(aQuery, aHandler, aContext);
+    return instance.Get<Sntp::Client>().Query(aQuery, aHandler, aContext);
 }
 
 void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetSntpClient().SetUnixEra(aUnixEra);
+    return instance.Get<Sntp::Client>().SetUnixEra(aUnixEra);
 }
 #endif

@@ -381,7 +381,7 @@ void TestNcpFrameBuffer(void)
     NcpFrameBuffer::WritePosition pos1, pos2;
 
     sInstance    = testInitInstance();
-    sMessagePool = &sInstance->GetMessagePool();
+    sMessagePool = &sInstance->Get<MessagePool>();
 
     for (i = 0; i < sizeof(buffer); i++)
     {
@@ -1006,7 +1006,7 @@ void TestFuzzNcpFrameBuffer(void)
     uint32_t lensArrayCount[kNumPrios];
 
     sInstance    = testInitInstance();
-    sMessagePool = &sInstance->GetMessagePool();
+    sMessagePool = &sInstance->Get<MessagePool>();
 
     memset(buffer, 0, sizeof(buffer));
 
