@@ -1602,8 +1602,6 @@ public:
      *
      * @param[in]  aMask  The Channel Mask value.
      *
-     * @retval OT_ERROR_NONE       Successfully set the Channel Mask Entry.
-     *
      */
     void SetChannelMask(uint32_t aChannelMask);
 
