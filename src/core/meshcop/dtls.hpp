@@ -83,7 +83,8 @@ public:
 
     enum State
     {
-        kStateStopped = 0,
+        kStateClosed = 0,
+        kStateOpen,
         kStateInitializing,
         kStateConnecting,
         kStateConnected,
@@ -161,7 +162,8 @@ public:
      *
      * @param[in]  aSockAddr               A reference to the remote sockaddr.
      *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     * @retval OT_ERROR_NONE           Successfully started the DTLS service.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
      *
      */
     otError Connect(const Ip6::SockAddr &aSockAddr);
@@ -175,7 +177,8 @@ public:
      *
      * @param[in]  aClient  TRUE if setup for client, otherwise setup for server.
      *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     * @retval OT_ERROR_NONE           Successfully started the DTLS service.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateClosed.
      *
      */
     otError Setup(bool aClient);
@@ -185,8 +188,9 @@ public:
      *
      * @param[in]  aPort              The port to bind.
      *
-     * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already bound.
+     * @retval OT_ERROR_NONE           Successfully binded the DTLS service.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
      *
      */
     otError Bind(uint16_t aPort);
@@ -197,8 +201,9 @@ public:
      * @param[in]  aCallback  A pointer to a function for sending messages.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already bound.
+     * @retval OT_ERROR_NONE           Successfully binded the DTLS service.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
      *
      */
     otError Bind(TransportCallback aCallback, void *aContext);
@@ -206,20 +211,24 @@ public:
     /**
      * This method indicates whether or not the DTLS session is active.
      *
+     * In other words, the state is kStateConnecting, kStateConnected, or kStateCloseNotify.
+     *
      * @retval TRUE  If DTLS session is active.
      * @retval FALSE If DTLS session is not active.
      *
      */
-    bool IsConnectionActive(void) { return mState != kStateStopped; }
+    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
 
     /**
      * This method indicates whether or not the DTLS session is connected.
+     *
+     * In other words, the state is kStateConnected.
      *
      * @retval TRUE   The DTLS session is connected.
      * @retval FALSE  The DTLS session is not connected.
      *
      */
-    bool IsConnected(void) { return mState == kStateConnected; }
+    bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
      * This method close the current session.
@@ -236,10 +245,11 @@ public:
     /**
      * This method returns the DTLS connection state.
      *
-     * @retval kStateStopped      If the DTLS service has not been started.
-     * @retval kStateConnecting   If the DTLS service is establishing a connection.
-     * @retval kStateConnected    If the DTLS service has a connection established.
-     * @retval kStateCloseNotify  If the DTLS service is closing a connection.
+     * @retval kStateClosed       The UDP socket closed.
+     * @retval kStateOpen         The UDP socket is open.
+     * @retval kStateConnecting   The DTLS service is establishing a connection.
+     * @retval kStateConnected    The DTLS service has a connection established.
+     * @retval kStateCloseNotify  The DTLS service is closing a connection.
      *
      */
     State GetState(void) const { return mState; }
