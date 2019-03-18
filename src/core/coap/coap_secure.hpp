@@ -138,7 +138,7 @@ public:
      * This method stops the DTLS connection.
      *
      */
-    void Disconnect(void) { mDtls.Close(); }
+    void Disconnect(void) { mDtls.Disconnect(); }
 
     /**
      * This method returns a reference to the DTLS object.
