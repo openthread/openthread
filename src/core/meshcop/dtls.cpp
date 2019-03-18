@@ -457,9 +457,9 @@ void Dtls::SetSslAuthMode(bool aVerifyPeerCertificate)
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-void Dtls::Stop(void)
+void Dtls::Close(void)
 {
-    Close();
+    Disconnect();
 
     mState             = kStateClosed;
     mTransportCallback = NULL;
@@ -470,7 +470,7 @@ void Dtls::Stop(void)
     mTimer.Stop();
 }
 
-void Dtls::Close(void)
+void Dtls::Disconnect(void)
 {
     VerifyOrExit(mState == kStateConnecting || mState == kStateConnected);
 
@@ -854,7 +854,7 @@ void Dtls::HandleTimer(void)
 void Dtls::Process(void)
 {
     uint8_t buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
-    bool    shouldClose = false;
+    bool    shouldDisconnect = false;
     int     rval;
 
     while ((mState == kStateConnecting) || (mState == kStateConnected))
@@ -892,7 +892,7 @@ void Dtls::Process(void)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
-                ExitNow(shouldClose = true);
+                ExitNow(shouldDisconnect = true);
                 break;
 
             case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
@@ -900,7 +900,7 @@ void Dtls::Process(void)
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
                 mbedtls_ssl_close_notify(&mSsl);
-                ExitNow(shouldClose = true);
+                ExitNow(shouldDisconnect = true);
                 break;
 
             case MBEDTLS_ERR_SSL_INVALID_MAC:
@@ -908,7 +908,7 @@ void Dtls::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
-                    ExitNow(shouldClose = true);
+                    ExitNow(shouldDisconnect = true);
                 }
 
                 break;
@@ -918,7 +918,7 @@ void Dtls::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
-                    ExitNow(shouldClose = true);
+                    ExitNow(shouldDisconnect = true);
                 }
 
                 break;
@@ -935,9 +935,9 @@ void Dtls::Process(void)
 
 exit:
 
-    if (shouldClose)
+    if (shouldDisconnect)
     {
-        Close();
+        Disconnect();
     }
 }
 
