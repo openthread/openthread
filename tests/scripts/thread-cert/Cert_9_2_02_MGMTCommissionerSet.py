@@ -107,7 +107,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         self.nodes[COMMISSIONER].commissioner_mgmtset_with_tlvs([steering_data_tlv, commissioner_session_id_tlv])
         self.simulator.go(5)
         commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)
-        msg = commissioner_messages.next_coap_message('0.02', uri_path='/c/cs', assert_enabled=False)
+        msg = commissioner_messages.next_coap_message('0.02', uri_path='/c/cs')
         rloc = ip_address(self.nodes[LEADER].get_addr_rloc())
         leader_aloc = ip_address(self.nodes[LEADER].get_addr_leader_aloc())
         command.check_coap_message(msg, [steering_data_tlv, commissioner_session_id_tlv], dest_addrs=[rloc, leader_aloc])
