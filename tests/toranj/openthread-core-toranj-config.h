@@ -288,6 +288,13 @@
  */
 #define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ *
+ * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_SLAAC    1
 
 #if OPENTHREAD_RADIO
 /**
