@@ -840,19 +840,18 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
             if (hopsLeft != Mle::kMaxRouteCost)
             {
-                hopsLeft +=
-                    netif.GetMle().GetLinkCost(netif.GetMle().GetRouterId(netif.GetMle().GetNextHop(mMeshDest)));
+                hopsLeft += netif.GetMle().GetLinkCost(Mle::Mle::GetRouterId(netif.GetMle().GetNextHop(mMeshDest)));
             }
             else
             {
                 // In case there is no route to the destination router (only link).
-                hopsLeft = netif.GetMle().GetLinkCost(netif.GetMle().GetRouterId(mMeshDest));
+                hopsLeft = netif.GetMle().GetLinkCost(Mle::Mle::GetRouterId(mMeshDest));
             }
         }
 
         // The hopsLft field MUST be incremented by one if the destination RLOC16
         // is not that of an active Router.
-        if (!netif.GetMle().IsActiveRouter(mMeshDest))
+        if (!Mle::Mle::IsActiveRouter(mMeshDest))
         {
             hopsLeft += 1;
         }
@@ -1036,7 +1035,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         case OT_ERROR_NO_ACK:
             neighbor->IncrementLinkFailures();
 
-            if (netif.GetMle().IsActiveRouter(neighbor->GetRloc16()))
+            if (Mle::Mle::IsActiveRouter(neighbor->GetRloc16()))
             {
                 if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
                 {
@@ -1593,7 +1592,7 @@ otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
 
     SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
                                               nextHeaderCompressed));
-    aPriority = GetNetif().GetIp6().DscpToPriority(ip6Header.GetDscp());
+    aPriority = Ip6::Ip6::DscpToPriority(ip6Header.GetDscp());
     VerifyOrExit(ip6Header.GetNextHeader() == Ip6::kProtoUdp);
 
     aFrame += headerLength;
