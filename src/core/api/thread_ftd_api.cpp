@@ -149,7 +149,7 @@ void otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetMle().SetNetworkIdTimeout((uint8_t)aTimeout);
+    instance.GetThreadNetif().GetMle().SetNetworkIdTimeout(aTimeout);
 }
 
 uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance)
