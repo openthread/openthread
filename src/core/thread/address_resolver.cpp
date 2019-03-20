@@ -580,8 +580,6 @@ exit:
     {
         otLogWarnArp("Error while processing address error notification: %s", otThreadErrorToString(error));
     }
-
-    return;
 }
 
 void AddressResolver::HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
