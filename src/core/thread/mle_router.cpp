@@ -4012,8 +4012,6 @@ exit:
 
     // send announce after received address solicit reply if needed
     InformPreviousChannel();
-
-    return;
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

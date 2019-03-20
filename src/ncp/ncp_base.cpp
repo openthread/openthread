@@ -824,7 +824,6 @@ void NcpBase::UpdateChangedProps(void)
 
 exit:
     mDidInitialUpdates = true;
-    return;
 }
 
 // ----------------------------------------------------------------------------

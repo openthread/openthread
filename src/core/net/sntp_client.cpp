@@ -384,8 +384,6 @@ exit:
     {
         FinalizeSntpTransaction(*message, queryMetadata, 0, error);
     }
-
-    return;
 }
 
 } // namespace Sntp
