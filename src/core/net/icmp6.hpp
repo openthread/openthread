@@ -42,10 +42,10 @@
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-ip6-icmp6

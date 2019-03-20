@@ -46,6 +46,8 @@
 namespace ot {
 namespace Sntp {
 
+using ot::Encoding::BigEndian::HostSwap32;
+
 /**
  * This class implements SNTP header generation and parsing.
  *
