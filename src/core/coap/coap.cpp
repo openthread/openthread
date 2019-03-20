@@ -661,8 +661,6 @@ exit:
             cachedResponse->Free();
         }
     }
-
-    return;
 }
 
 CoapMetadata::CoapMetadata(bool                    aConfirmable,

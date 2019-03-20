@@ -284,8 +284,6 @@ exit:
     {
         SendCommissioningSetResponse(aMessage, aMessageInfo, state);
     }
-
-    return;
 }
 
 void Leader::HandleCommissioningGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
