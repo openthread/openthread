@@ -159,6 +159,9 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
 
+    VerifyOrExit((aMessageInfo.GetSockPort() == 0) || (GetSockName().mPort == aMessageInfo.GetSockPort()),
+                 error = OT_ERROR_INVALID_ARGS);
+
     messageInfoLocal = aMessageInfo;
 
     if (messageInfoLocal.GetPeerAddr().IsUnspecified())
@@ -183,6 +186,7 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     {
         SuccessOrExit(error = Bind(GetSockName()));
     }
+
     messageInfoLocal.SetSockPort(GetSockName().mPort);
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
