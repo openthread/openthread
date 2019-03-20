@@ -52,7 +52,7 @@ class Interpreter;
 class Dataset
 {
 public:
-    Dataset(Interpreter &aInterpreter)
+    explicit Dataset(Interpreter &aInterpreter)
         : mInterpreter(aInterpreter)
     {
     }

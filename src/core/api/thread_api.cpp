@@ -507,8 +507,8 @@ otError otThreadDiscover(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().Discover(aScanChannels, aPanId, aJoiner, aEnableEui64Filtering, aCallback,
-                                                       aCallbackContext);
+    return instance.GetThreadNetif().GetMle().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
+                                                       aEnableEui64Filtering, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

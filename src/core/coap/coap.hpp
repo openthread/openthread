@@ -267,7 +267,7 @@ public:
      * @param[in]  aMessageInfo  The message info containing source endpoint identification.
      *
      */
-    EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo)
+    explicit EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo)
         : mDequeueTime(TimerMilli::GetNow() + TimerMilli::SecToMsec(kExchangeLifetime))
         , mMessageInfo(aMessageInfo)
     {
