@@ -56,7 +56,7 @@ public:
          * @param[in] aInstance  A reference to the OpenThread instance.
          *
          */
-        Iterator(Instance &aInstance);
+        explicit Iterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start over.
@@ -118,7 +118,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    RouterTable(Instance &aInstance);
+    explicit RouterTable(Instance &aInstance);
 
     /**
      * This method clears the router table.
@@ -371,7 +371,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(Instance &) {}
+        explicit Iterator(Instance &) {}
         void    Reset(void) {}
         bool    IsDone(void) const { return true; }
         void    Advance(void) {}

@@ -66,7 +66,7 @@ otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aMask, uint8_t aCount,
     VerifyOrExit(aPeriod != 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aJitter < aPeriod, error = OT_ERROR_INVALID_ARGS);
 
-    aMask.Intersect(Phy::kSupportedChannels);
+    aMask.Intersect(Mac::ChannelMask(Phy::kSupportedChannels));
     VerifyOrExit(!aMask.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     mChannelMask = aMask;

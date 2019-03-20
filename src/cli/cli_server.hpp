@@ -48,7 +48,7 @@ namespace Cli {
 class Server
 {
 public:
-    Server(Instance *aInstance)
+    explicit Server(Instance *aInstance)
         : mInterpreter(aInstance)
     {
     }
