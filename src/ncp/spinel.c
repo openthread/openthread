@@ -777,7 +777,7 @@ static spinel_ssize_t spinel_datatype_vpack_(uint8_t *     data_ptr,
         case SPINEL_DATATYPE_INT64_C:
         case SPINEL_DATATYPE_UINT64_C:
         {
-            uint64_t arg = (uint64_t)va_arg(args->obj, uint64_t);
+            uint64_t arg = va_arg(args->obj, uint64_t);
 
             ret += sizeof(uint64_t);
 
