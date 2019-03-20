@@ -30,10 +30,12 @@
 import time
 import unittest
 
+from command import check_child_update_request_from_child, check_child_update_request_from_parent, check_child_update_response, check_data_response
 from command import CheckType
+from command import NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 from command import NetworkDataCheckType
+
 import config
-import command
 import mle
 import network_data
 import node
@@ -136,37 +138,40 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
 
         # 3 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        command.check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
-            [{network_data.TlvType.PREFIX:b'2001000200000001'}, {network_data.TlvType.PREFIX:b'2001000200000002'}]))
+        check_data_response(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck(prefix_check_list=[ SinglePrefixCheck(b'2001000200000001'), SinglePrefixCheck(b'2001000200000002')])
+            )
+        )
 
         # 4 - N/A
         # Get addresses registered by MED1
         msg = med1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        command.check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
 
         # 5 - Leader
         # Make a copy of leader's messages to ensure that we don't miss messages to SED1
         leader_messages_copy = leader_messages.clone()
         msg = leader_messages_copy.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[MED1])
-        command.check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1, 2])
+        check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1, 2])
 
         # 6A & 6B - Leader
         if config.LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
             msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST, sent_to_node=self.nodes[SED1])
-            command.check_child_update_request_from_parent(msg,
+            check_child_update_request_from_parent(msg,
                 leader_data=CheckType.CONTAIN, network_data=CheckType.CONTAIN, active_timestamp=CheckType.CONTAIN)
         else:
             msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE, sent_to_node=self.nodes[SED1])
-            command.check_data_response(msg, network_data=CheckType.CONTAIN, active_timestamp=CheckType.CONTAIN)
+            check_data_response(msg, network_data_check=command.NetworkDataCheck())
 
         # 7 - N/A
         # Get addresses registered by SED1
         msg = sed1_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        command.check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
+        check_child_update_request_from_child(msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
 
         # 8 - Leader
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE, sent_to_node=self.nodes[SED1])
-        command.check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1])
+        check_child_update_response(msg, address_registration=CheckType.CONTAIN, CIDs=[1])
 
 
 if __name__ == '__main__':

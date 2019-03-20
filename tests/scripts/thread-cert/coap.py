@@ -257,10 +257,10 @@ class CoapMessage(object):
 
 class CoapMessageProxy(object):
 
-    """ Proxy class of CoAP message. 
+    """ Proxy class of CoAP message.
 
-    The main idea behind this class is to delay parsing payload. Due to architecture of the existing solution 
-    it is possible to process confirmation message before a request message. In such case it is not possible 
+    The main idea behind this class is to delay parsing payload. Due to architecture of the existing solution
+    it is possible to process confirmation message before a request message. In such case it is not possible
     to get URI path to get proper payload parser.
     """
 
