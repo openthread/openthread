@@ -53,9 +53,6 @@
 #include "net/socket.hpp"
 #include "net/udp6.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 /**
@@ -66,6 +63,9 @@ namespace ot {
  *
  */
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-ipv6

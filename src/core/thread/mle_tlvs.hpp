@@ -45,12 +45,12 @@
 #include "net/ip6_address.hpp"
 #include "thread/mle_constants.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 namespace Mle {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 #define TLVREQUESTTLV_ITERATOR_INIT 0 ///< Initializer for TlvRequestTlvIterator.
 

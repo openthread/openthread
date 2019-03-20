@@ -43,10 +43,10 @@
 
 #include "common/encoding.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace MeshCoP {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * This class implements Timestamp generation and parsing.

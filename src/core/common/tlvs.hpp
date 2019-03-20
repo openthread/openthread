@@ -41,10 +41,10 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 
+namespace ot {
+
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-
-namespace ot {
 
 /**
  * This class implements TLV generation and parsing.

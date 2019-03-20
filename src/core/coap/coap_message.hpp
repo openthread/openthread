@@ -45,8 +45,6 @@
 #include "common/message.hpp"
 #include "utils/static_assert.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 
 /**
@@ -56,6 +54,8 @@ namespace ot {
  *
  */
 namespace Coap {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-coap

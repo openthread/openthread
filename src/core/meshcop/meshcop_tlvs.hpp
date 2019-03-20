@@ -51,12 +51,12 @@
 #include "net/ip6_address.hpp"
 #include "phy/phy.hpp"
 
+namespace ot {
+namespace MeshCoP {
+
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-
-namespace ot {
-namespace MeshCoP {
 
 /**
  * This class implements MeshCoP TLV generation and parsing.
