@@ -44,9 +44,6 @@
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 namespace Dhcp6 {
 
