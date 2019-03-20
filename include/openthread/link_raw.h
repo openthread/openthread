@@ -267,7 +267,7 @@ otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable);
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * Adding extended address to the source match table.
@@ -293,7 +293,7 @@ otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * Removing extended address to the source match table of the radio.
