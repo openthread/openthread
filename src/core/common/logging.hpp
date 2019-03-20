@@ -1888,7 +1888,7 @@ extern "C" {
  * @param[in]  aLength   Number of bytes to print.
  *
  */
-void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, const size_t aLength);
+void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, size_t aLength);
 
 /**
  * This function converts a log level to a prefix string for appending to log message.
