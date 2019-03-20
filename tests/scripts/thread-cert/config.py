@@ -26,9 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-import os
 from enum import Enum
+import os
 
+from tlvs_parsing import SubTlvsFactory
 import coap
 import dtls
 import ipv6
@@ -108,10 +109,11 @@ def create_default_network_data_service_sub_tlvs_factory():
 
 def create_default_network_data_commissioning_data_sub_tlvs_factories():
     return {
-        network_data.MeshcopTlvType.STEERING_DATA: network_data.SteeringDataFactory(),
-        network_data.MeshcopTlvType.BORDER_AGENT_LOCATOR: network_data.BorderAgentLocatorFactory(),
-        network_data.MeshcopTlvType.COMMISSIONER_SESSION_ID: network_data.CommissionerSessionIdFactory(),
-        network_data.MeshcopTlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory(),
+        mesh_cop.TlvType.CHANNEL: mesh_cop.ChannelFactory(),
+        mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
+        mesh_cop.TlvType.BORDER_AGENT_LOCATOR: mesh_cop.BorderAgentLocatorFactory(),
+        mesh_cop.TlvType.COMMISSIONER_SESSION_ID: mesh_cop.CommissionerSessionIdFactory(),
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory(),
     }
 
 
@@ -168,9 +170,9 @@ def create_default_thread_discovery_sub_tlvs_factories():
         mesh_cop.TlvType.DISCOVERY_RESPONSE: mesh_cop.DiscoveryResponseFactory(),
         mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
         mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
-        mesh_cop.TlvType.STEERING_DATA: network_data.SteeringDataFactory(),
+        mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
         mesh_cop.TlvType.JOINER_UDP_PORT: mesh_cop.JoinerUdpPortFactory(),
-        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory()
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory()
     }
 
 def create_default_mle_tlvs_factories():
@@ -238,20 +240,64 @@ def create_deafult_network_tlvs_factories():
 
 
 def create_default_network_tlvs_factory():
-    return network_layer.NetworkLayerTlvsFactory(
-        tlvs_factories=create_deafult_network_tlvs_factories())
+    return SubTlvsFactory(sub_tlvs_factories=create_deafult_network_tlvs_factories())
 
+def create_default_mesh_cop_tlvs_factories():
+    return {
+        mesh_cop.TlvType.CHANNEL: mesh_cop.ChannelFactory(),
+        mesh_cop.TlvType.PAN_ID: mesh_cop.PanidFactory(),
+        mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
+        mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
+        mesh_cop.TlvType.PSKC: mesh_cop.PSKcFactory(),
+        mesh_cop.TlvType.NETWORK_MASTER_KEY: mesh_cop.NetworkMasterKeyFactory(),
+        mesh_cop.TlvType.NETWORK_KEY_SEQUENCE_COUNTER: mesh_cop.NetworkKeySequenceCounterFactory(),
+        mesh_cop.TlvType.NETWORK_MESH_LOCAL_PREFIX: mesh_cop.NetworkMeshLocalPrefixFactory(),
+        mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
+        mesh_cop.TlvType.BORDER_AGENT_LOCATOR: mesh_cop.BorderAgentLocatorFactory(),
+        mesh_cop.TlvType.COMMISSIONER_ID: mesh_cop.CommissionerIdFactory(),
+        mesh_cop.TlvType.COMMISSIONER_SESSION_ID: mesh_cop.CommissionerSessionIdFactory(),
+        mesh_cop.TlvType.SECURITY_POLICY: mesh_cop.SecurityPolicyFactory(),
+        mesh_cop.TlvType.GET: mesh_cop.GetFactory(),
+        mesh_cop.TlvType.ACTIVE_TIMESTAMP: mesh_cop.ActiveTimestampFactory(),
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory(),
+        mesh_cop.TlvType.STATE: mesh_cop.StateFactory(),
+        mesh_cop.TlvType.JOINER_DTLS_ENCAPSULATION: mesh_cop.JoinerDtlsEncapsulationFactory(),
+        mesh_cop.TlvType.JOINER_UDP_PORT: mesh_cop.JoinerUdpPortFactory(),
+        mesh_cop.TlvType.JOINER_IID: mesh_cop.JoinerIIDFactory(),
+        mesh_cop.TlvType.JOINER_ROUTER_LOCATOR: mesh_cop.JoinerRouterLocatorFactory(),
+        mesh_cop.TlvType.JOINER_ROUTER_KEK: mesh_cop.JoinerRouterKEKFactory(),
+        mesh_cop.TlvType.PROVISIONING_URL: mesh_cop.ProvisioningUrlFactory(),
+        mesh_cop.TlvType.VENDOR_NAME: mesh_cop.VendorNameFactory(),
+        mesh_cop.TlvType.VENDOR_MODEL: mesh_cop.VendorModelFactory(),
+        mesh_cop.TlvType.VENDOR_SW_VERSION: mesh_cop.VendorSWVersionFactory(),
+        mesh_cop.TlvType.VENDOR_DATA: mesh_cop.VendorDataFactory(),
+        mesh_cop.TlvType.VENDOR_STACK_VERSION: mesh_cop.VendorStackVersionFactory(),
+        mesh_cop.TlvType.UDP_ENCAPSULATION: mesh_cop.UdpEncapsulationFactory(),
+        mesh_cop.TlvType.IPV6_ADDRESS: mesh_cop.Ipv6AddressFactory(),
+        mesh_cop.TlvType.PENDING_TIMESTAMP: mesh_cop.PendingTimestampFactory(),
+        mesh_cop.TlvType.DELAY_TIMER: mesh_cop.DelayTimerFactory(),
+        mesh_cop.TlvType.CHANNEL_MASK: mesh_cop.ChannelMaskFactory(),
+        mesh_cop.TlvType.COUNT: mesh_cop.CountFactory(),
+        mesh_cop.TlvType.PERIOD: mesh_cop.PeriodFactory(),
+        mesh_cop.TlvType.SCAN_DURATION: mesh_cop.ScanDurationFactory(),
+        mesh_cop.TlvType.ENERGY_LIST: mesh_cop.EnergyListFactory()
+    }
+
+def create_default_mesh_cop_tlvs_factory():
+    return SubTlvsFactory(sub_tlvs_factories=create_default_mesh_cop_tlvs_factories())
 
 def create_default_uri_path_based_payload_factories():
     network_layer_tlvs_factory = create_default_network_tlvs_factory()
-
+    mesh_cop_tlvs_factory = create_default_mesh_cop_tlvs_factory()
     return {
         "/a/as": network_layer_tlvs_factory,
         "/a/aq": network_layer_tlvs_factory,
         "/a/ar": network_layer_tlvs_factory,
         "/a/ae": network_layer_tlvs_factory,
         "/a/an": network_layer_tlvs_factory,
-        "/a/sd": network_layer_tlvs_factory
+        "/a/sd": network_layer_tlvs_factory,
+        "/c/lp": mesh_cop_tlvs_factory,
+        "/c/cs": mesh_cop_tlvs_factory
     }
 
 

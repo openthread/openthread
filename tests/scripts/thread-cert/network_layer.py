@@ -314,22 +314,3 @@ class ThreadNetworkDataFactory(object):
         tlvs = self._network_data_tlvs_factory.parse(data, message_info)
         return ThreadNetworkData(tlvs)
 
-
-class NetworkLayerTlvsFactory(object):
-
-    def __init__(self, tlvs_factories):
-        self._tlvs_factories = tlvs_factories
-
-    def parse(self, data, message_info):
-        tlvs = []
-
-        while data.tell() < len(data.getvalue()):
-            _type = ord(data.read(1))
-            length = ord(data.read(1))
-
-            factory = self._tlvs_factories[_type]
-            tlv = factory.parse(io.BytesIO(data.read(length)), message_info)
-
-            tlvs.append(tlv)
-
-        return tlvs

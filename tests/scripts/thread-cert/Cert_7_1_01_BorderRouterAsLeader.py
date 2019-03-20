@@ -31,12 +31,11 @@ import functools
 import time
 import unittest
 
-from command import check_child_id_response
-from command import check_child_update_response
-from command import check_child_update_request_from_child
-from command import check_data_response
+from command import check_child_id_response, check_child_update_response, check_child_update_request_from_child, check_data_response
 from command import CheckType
+from command import CommissioningDataCheck, NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 from command import NetworkDataCheckType
+
 import config
 import mle
 import network_data
@@ -135,22 +134,38 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
 
         # Step 2 - DUT creates network data
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
-        check_data_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT,
-            [{network_data.TlvType.PREFIX:b'2001000200000001'}, {network_data.TlvType.PREFIX:b'2001000200000002'}]))
+        check_data_response(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck(prefix_check_list=[ SinglePrefixCheck(prefix=b'2001000200000001'), SinglePrefixCheck(prefix=b'2001000200000002') ])
+            )
+        )
 
         # Step 4 - DUT sends a MLE Child ID Response to Router1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CNT, 2))
+        check_child_id_response(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck(prefix_cnt=2)
+            )
+        )
 
         # Step 6 - DUT sends a MLE Child ID Response to SED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CONTENT, [{network_data.TlvType.BORDER_ROUTER:0xFFFE}]))
+        check_child_id_response(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck(prefix_check_list=[ SinglePrefixCheck(border_router_16=0xFFFE) ])
+            )
+        )
+
         # For Step 10
         msg_chd_upd_res_to_sed = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
 
         # Step 8 - DUT sends a MLE Child ID Response to MED1
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        check_child_id_response(msg, network_data_check=(NetworkDataCheckType.PREFIX_CNT, 2))
+        check_child_id_response(msg,
+            network_data_check=NetworkDataCheck(
+                prefixes_check=PrefixesCheck(prefix_cnt=2)
+            )
+        )
 
         # Step 10 - DUT sends Child Update Response
         msg_chd_upd_res_to_med = leader_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_RESPONSE)
