@@ -44,8 +44,6 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 
 ThreadNetif::ThreadNetif(Instance &aInstance)
