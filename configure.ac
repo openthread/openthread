@@ -1718,6 +1718,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_TOBLE], [test "${enable_toble}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_TOBLE], [${OPENTHREAD_ENABLE_TOBLE}], [Define to 1 if you want to enable ToBLE support])
 
 #
+# Support for BLE CLI
+#
+
+AC_MSG_CHECKING([whether to build with CLI BLE support])
+AC_ARG_ENABLE(cli_ble,
+    [AS_HELP_STRING([--enable-cli-ble], [Enable BLE cli support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_cli_ble=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_cli_ble} for --enable-cli-ble])
+            ;;
+        esac
+    ],
+    [enable_cli_ble=no])
+
+if test "$enable_cli_ble" = "yes"; then
+    OPENTHREAD_ENABLE_CLI_BLE=1
+else
+    OPENTHREAD_ENABLE_CLI_BLE=0
+fi
+
+AC_MSG_RESULT(${enable_cli_ble})
+AC_SUBST(OPENTHREAD_ENABLE_CLI_BLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_BLE], [test "${enable_cli_ble}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_BLE], [${OPENTHREAD_ENABLE_CLI_BLE}], [Define to 1 if you want to enable BLE cli support])
+#
 # Examples
 #
 

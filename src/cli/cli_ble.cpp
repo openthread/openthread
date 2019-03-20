@@ -32,8 +32,6 @@
  *
  */
 
-#include <openthread/platform/ble-host.h>
-
 #include "cli_ble.hpp"
 #include "cli_server.hpp"
 #include "cli/cli.hpp"
@@ -43,6 +41,8 @@
 #include "common/instance.hpp"
 
 #include <string.h>
+
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 
 namespace ot {
 namespace Cli {
@@ -71,7 +71,7 @@ otError Ble::Process(int argc, char *argv[])
     if (argc < 1)
     {
         ProcessHelp(0, NULL);
-        error = OT_ERROR_INVALID_ARGS;
+        error = OT_ERROR_NONE;
     }
     else
     {
@@ -338,113 +338,98 @@ otError Ble::ProcessGatt(int argc, char *argv[])
 
     if (strcmp(argv[0], "server") == 0)
     {
-        if ((argc >= 3) && (strcmp(argv[1], "register") == 0))
+        if ((argc == 2) && (strcmp(argv[1], "register") == 0))
         {
-            if ((argc == 5) && (strcmp(argv[2], "gap") == 0))
-            {
-                char *  deviceName = argv[3];
-                uint8_t apperance;
+            const uint8_t                kGattCharsSize = 3;
+            char                         deviceName[]   = "ThreadBLE";
+            otPlatBleGattCharacteristic *characteristic;
+            static uint8_t sRxBufUuid[] = {0x11, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
+                                           0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18};
+            static uint8_t sTxBufUuid[] = {0x12, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
+                                           0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18};
 
-                VerifyOrExit(strlen(deviceName) > 0, error = OT_ERROR_INVALID_ARGS);
-                SuccessOrExit(error = Interpreter::ParseLong(argv[4], value));
-                apperance = static_cast<uint8_t>(value);
-
-                error = otPlatBleGapServiceSet(mInterpreter.mInstance, deviceName, apperance);
-            }
-            else if (strcmp(argv[2], "toble") == 0)
+            // clang-format off
+            static otPlatBleGattCharacteristic sCharacteristics[kGattCharsSize] =
             {
-                const uint8_t                kGattCharsSize = 3;
-                otPlatBleGattCharacteristic *characteristic;
-                // Receive Buffer UUID
-                static uint8_t sRxBufUuid[] = {0x11, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
-                                               0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18};
-                // Transmit Buffer UUID
-                static uint8_t sTxBufUuid[] = {0x12, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
-                                               0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18};
-             
-                // clang-format off
-                static otPlatBleGattCharacteristic sCharacteristics[kGattCharsSize] =
                 {
+                    .mUuid               =
                     {
-                        .mUuid               =
+                        .mType           = OT_BLE_UUID_TYPE_128,
+                        .mValue          =
                         {
-                            .mType           = OT_BLE_UUID_TYPE_128,
-                            .mValue          =
-                            {
-                                .mUuid128    = sRxBufUuid,
-                            },
+                            .mUuid128    = sRxBufUuid,
                         },
-                        .mHandleValue        = 0,
-                        .mHandleCccd         = 0,
-                        .mProperties         = OT_BLE_CHAR_PROP_WRITE,
                     },
+                    .mHandleValue        = 0,
+                    .mHandleCccd         = 0,
+                    .mProperties         = OT_BLE_CHAR_PROP_WRITE,
+                    .mMaxAttrLength      = 128,
+                },
+                {
+                    .mUuid               =
                     {
-                        .mUuid               =
+                        .mType           = OT_BLE_UUID_TYPE_128,
+                        .mValue          =
                         {
-                            .mType           = OT_BLE_UUID_TYPE_128,
-                            .mValue          =
-                            {
-                                .mUuid128    = sTxBufUuid,
-                            },
+                            .mUuid128    = sTxBufUuid,
                         },
-                        .mHandleValue        = 0,
-                        .mHandleCccd         = 0,
-                        .mProperties         = OT_BLE_CHAR_PROP_READ | OT_BLE_CHAR_PROP_INDICATE,
                     },
+                    .mHandleValue        = 0,
+                    .mHandleCccd         = 0,
+                    .mProperties         = OT_BLE_CHAR_PROP_READ | OT_BLE_CHAR_PROP_INDICATE,
+                    .mMaxAttrLength      = 128,
+                },
+                {
+                    .mUuid               =
                     {
-                        .mUuid               =
+                        .mType           = OT_BLE_UUID_TYPE_NONE,
+                        .mValue          =
                         {
-                            .mType           = OT_BLE_UUID_TYPE_NONE,
-                            .mValue          =
-                            {
-                                .mUuid128    = NULL,
-                            },
+                            .mUuid128    = NULL,
                         },
-                        .mHandleValue        = 0,
-                        .mHandleCccd         = 0,
-                        .mProperties         = 0,
+                    },
+                    .mHandleValue        = 0,
+                    .mHandleCccd         = 0,
+                    .mProperties         = 0,
+                    .mMaxAttrLength      = 0,
+                }
+            };
+
+            // 6LoWPAN GATT Profile
+            static otPlatBleGattService sService =
+            {
+                .mUuid            =
+                {
+                    .mType        = OT_BLE_UUID_TYPE_16,
+                    .mValue       =
+                    {
+                        .mUuid16  = 0xFFFB, // BTP service UUID
                     }
-                };
-             
-                // 6LoWPAN GATT Profile
-                static otPlatBleGattService sService =
-                {
-                    .mUuid            =
-                    {
-                        .mType        = OT_BLE_UUID_TYPE_16,
-                        .mValue       =
-                        {
-                            .mUuid16  = 0xFFFB, // BTP service UUID
-                        }
-                    },
-                    .mHandle          = 0,
-                    .mCharacteristics = sCharacteristics,
-                };
-                // clang-format on
-             
-                SuccessOrExit(error = otPlatBleGattServerServicesRegister(mInterpreter.mInstance, &sService));
+                },
+                .mHandle          = 0,
+                .mCharacteristics = sCharacteristics,
+            };
+            // clang-format on
 
-                characteristic = sService.mCharacteristics;
+            SuccessOrExit(error = otPlatBleGapServiceSet(mInterpreter.mInstance, deviceName, 0));
+            SuccessOrExit(error = otPlatBleGattServerServicesRegister(mInterpreter.mInstance, &sService));
 
-                mInterpreter.mServer->OutputFormat("service       : handle = %2d, uuid = ", sService.mHandle);
-                Ble::PrintUuid(&sService.mUuid);
+            characteristic = sService.mCharacteristics;
+
+            mInterpreter.mServer->OutputFormat("service       : handle = %2d, uuid = ", sService.mHandle);
+            Ble::PrintUuid(&sService.mUuid);
+            mInterpreter.mServer->OutputFormat("\r\n");
+
+            while (characteristic->mUuid.mType != OT_BLE_UUID_TYPE_NONE)
+            {
+                mInterpreter.mServer->OutputFormat("characteristic: handle = %2d, properties = 0x%02x, ",
+                                                   characteristic->mHandleValue, characteristic->mProperties);
+                mInterpreter.mServer->OutputFormat("handleCccd = %2d, ", characteristic->mHandleCccd);
+                mInterpreter.mServer->OutputFormat("uuid = ");
+                Ble::PrintUuid(&characteristic->mUuid);
                 mInterpreter.mServer->OutputFormat("\r\n");
 
-                while (characteristic->mUuid.mType != OT_BLE_UUID_TYPE_NONE)
-                {
-                    mInterpreter.mServer->OutputFormat("characteristic: handle = %2d, properties = 0x%02x, ",
-                                                       characteristic->mHandleValue, characteristic->mProperties);
-                    mInterpreter.mServer->OutputFormat("handleCccd = %2d, ", characteristic->mHandleCccd);
-                    mInterpreter.mServer->OutputFormat("uuid = ");
-                    Ble::PrintUuid(&characteristic->mUuid);
-                    mInterpreter.mServer->OutputFormat("\r\n");
-
-                    characteristic++;
-                }
-            }
-            else
-            {
-                error = OT_ERROR_INVALID_ARGS;
+                characteristic++;
             }
         }
         else if ((argc == 4) && (strcmp(argv[1], "ind") == 0))
@@ -744,11 +729,11 @@ extern "C" void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, 
 {
     if (aError == OT_ERROR_NONE)
     {
-        Server::sServer->OutputFormat("GattClientOnMtuExchangeResponse: MTU = %d\r\n", aMtu);
+        Server::sServer->OutputFormat("MTU : %d\r\n", aMtu);
     }
     else
     {
-        Server::sServer->OutputFormat("GattClientOnMtuExchangeResponse: error = %d\r\n", aError);
+        Server::sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -766,7 +751,7 @@ extern "C" void otPlatBleGattClientOnServiceDiscovered(otInstance *aInstance,
     }
     else
     {
-        Server::sServer->OutputFormat("GattClientOnServiceDiscovered: error = %d\r\n", aError);
+        Server::sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -788,7 +773,7 @@ extern "C" void otPlatBleGattClientOnCharacteristicsDiscoverDone(otInstance *   
     }
     else
     {
-        Server::sServer->OutputFormat("GattClientOnCharacteristicsDiscoverDone: error = %d\r\n", aError);
+        Server::sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -810,7 +795,7 @@ extern "C" void otPlatBleGattClientOnDescriptorsDiscoverDone(otInstance *       
     }
     else
     {
-        Server::sServer->OutputFormat("GattClientOnDescriptorsDiscoverDone: error = %d\r\n", aError);
+        Server::sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 
     OT_UNUSED_VARIABLE(aInstance);
@@ -898,3 +883,5 @@ extern "C" void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstanc
 
 } // namespace Cli
 } // namespace ot
+
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

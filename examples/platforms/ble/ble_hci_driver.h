@@ -35,6 +35,8 @@
 #ifndef BLE_HCI_DRIVER_H
 #define BLE_HCI_DRIVER_H
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -64,4 +66,5 @@ void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
 } // extern "C"
 #endif
 
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 #endif // BLE_HCI_DRIVER_H

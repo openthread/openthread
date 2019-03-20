@@ -35,6 +35,8 @@
 #ifndef BLE_GAP_H
 #define BLE_GAP_H
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,4 +71,7 @@ dmConnId_t bleGapGetConnectionId(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
+
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #endif // BLE_GAP_H

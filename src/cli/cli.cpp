@@ -241,8 +241,8 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
-#if OPENTHREAD_ENABLE_TOBLE
-    {"ble", &Interpreter::ProcessToBle},
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+    {"ble", &Interpreter::ProcessBle},
 #endif
 #ifndef OTDLL
     {"txpower", &Interpreter::ProcessTxPower},
@@ -303,7 +303,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mUdp(*this)
 #endif
     , mDataset(*this)
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
     , mBle(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -884,9 +884,9 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 
-void Interpreter::ProcessToBle(int argc, char *argv[])
+void Interpreter::ProcessBle(int argc, char *argv[])
 {
     otError error;
 
@@ -894,7 +894,7 @@ void Interpreter::ProcessToBle(int argc, char *argv[])
     AppendResult(error);
 }
 
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

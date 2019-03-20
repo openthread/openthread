@@ -50,7 +50,7 @@
 #include <openthread/platform/ble.h>
 #include <openthread/platform/toolchain.h>
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
@@ -129,6 +129,11 @@ static uint16_t sCccdWriteHandle = 0;
 static uint16_t sCharDiscoverEndHandle;
 static uint16_t sDescDiscoverEndHandle;
 
+static bool sServicesDiscovered;
+static bool sServiceDiscovered;
+static bool sCharacteristicDiscovered;
+static bool sDescriptorDiscovered;
+
 void bleGattReset(void)
 {
     if (sGapService.mService.startHandle != 0)
@@ -161,7 +166,7 @@ void SetUuid128(otPlatBleUuid *aUuid, uint8_t *aUuid128)
     aUuid->mValue.mUuid128 = aUuid128;
 }
 
-int8_t GetUuidLength(const otPlatBleUuid *aUuid)
+uint8_t GetUuidLength(const otPlatBleUuid *aUuid)
 {
     uint8_t len = 0;
 
@@ -207,14 +212,29 @@ static uint8_t GetCharacteristicLength(const Characteristic *aChar)
     return sizeof(aChar->mProperties) + sizeof(aChar->mCharVauleHanle) + aChar->mUuidLength;
 }
 
+static otError AttToOtError(uint8_t aError)
+{
+    otError error;
+
+    switch (aError)
+    {
+    case ATT_SUCCESS:
+        error = OT_ERROR_NONE;
+        break;
+    case ATT_ERR_NOT_FOUND:
+        error = OT_ERROR_NOT_FOUND;
+        break;
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
+
+    return error;
+}
+
 static void gattProcessMtuUpdateInd(attEvt_t *aEvent)
 {
-    otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
-
-    otPlatBleGattClientOnMtuExchangeResponse(bleMgmtGetThreadInstance(), aEvent->mtu, OT_ERROR_NONE);
-
-exit:
-    return;
+    otPlatBleGattClientOnMtuExchangeResponse(bleMgmtGetThreadInstance(), aEvent->mtu, AttToOtError(aEvent->hdr.status));
 }
 
 static void gattProcessClientReadRsp(attEvt_t *aEvent)
@@ -250,6 +270,7 @@ exit:
 
 static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
 {
+    otError  error          = AttToOtError(aEvent->hdr.status);
     uint8_t *p              = aEvent->pValue;
     uint8_t *end            = aEvent->pValue + aEvent->valueLen;
     uint16_t endGroupHandle = 0;
@@ -257,14 +278,14 @@ static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
     uint16_t attHandle;
     uint16_t uuid;
 
-    otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
+    otEXPECT(error == OT_ERROR_NONE);
 
     BYTES_TO_UINT8(length, p);
 
-    otEXPECT(length > sizeof(attHandle) + sizeof(endGroupHandle));
+    otEXPECT_ACTION(length > sizeof(attHandle) + sizeof(endGroupHandle), error = OT_ERROR_FAILED);
 
     length = length - sizeof(attHandle) - sizeof(endGroupHandle);
-    otEXPECT((length == OT_BLE_UUID_LENGTH) || (length == OT_BLE_UUID16_LENGTH));
+    otEXPECT_ACTION((length == OT_BLE_UUID_LENGTH) || (length == OT_BLE_UUID16_LENGTH), error = OT_ERROR_FAILED);
 
     while (p < end)
     {
@@ -272,6 +293,8 @@ static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
         BYTES_TO_UINT16(endGroupHandle, p);
         if (length == OT_BLE_UUID16_LENGTH)
         {
+            sServicesDiscovered = true;
+
             BYTES_TO_UINT16(uuid, p);
             otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), attHandle, endGroupHandle, uuid,
                                                    OT_ERROR_NONE);
@@ -292,22 +315,34 @@ static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
     }
 
 exit:
+    if ((!sServicesDiscovered) && (error != OT_ERROR_NONE))
+    {
+        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0, error);
+    }
+
     return;
 }
 
 static void gattProcessClientFindByTypeValueRsp(attEvt_t *aEvent)
 {
-    uint8_t *p = aEvent->pValue;
+    otError  error = AttToOtError(aEvent->hdr.status);
+    uint8_t *p     = aEvent->pValue;
+    uint8_t *end   = aEvent->pValue + aEvent->valueLen;
     uint16_t attrHandle;
-    uint16_t groupEndHandle;
+    uint16_t groupEndHandle = 0;
 
-    otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
+    otEXPECT(error == OT_ERROR_NONE);
+    otEXPECT_ACTION(aEvent->valueLen >= sizeof(attrHandle) + sizeof(groupEndHandle), error = OT_ERROR_FAILED);
 
-    BYTES_TO_UINT16(attrHandle, p);
-    BYTES_TO_UINT16(groupEndHandle, p);
+    while (p < end)
+    {
+        BYTES_TO_UINT16(attrHandle, p);
+        BYTES_TO_UINT16(groupEndHandle, p);
 
-    otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), attrHandle, groupEndHandle,
-                                           sServiceDiscoverUuid.mValue.mUuid16, OT_ERROR_NONE);
+        sServiceDiscovered = true;
+        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), attrHandle, groupEndHandle,
+                                               sServiceDiscoverUuid.mValue.mUuid16, OT_ERROR_NONE);
+    }
 
     if (groupEndHandle != ATT_HANDLE_MAX)
     {
@@ -318,13 +353,20 @@ static void gattProcessClientFindByTypeValueRsp(attEvt_t *aEvent)
     }
 
 exit:
+    if (!sServiceDiscovered && (error != OT_ERROR_NONE))
+    {
+        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0 , error);
+    }
+
     return;
 }
 
 static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
 {
-    const uint8_t               kNumGattChars = 5;
+    const uint8_t               kMinReadByTypeRspLength = 8;
+    const uint8_t               kNumGattChars           = 5;
     otPlatBleGattCharacteristic gattChars[kNumGattChars];
+    otError                     error      = AttToOtError(aEvent->hdr.status);
     uint8_t *                   p          = aEvent->pValue;
     uint8_t *                   end        = aEvent->pValue + aEvent->valueLen;
     uint8_t                     i          = 0;
@@ -334,11 +376,12 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
     uint8_t                     properties;
     uint16_t                    charsValueHandle;
 
-    otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
+    otEXPECT(error == OT_ERROR_NONE);
+    otEXPECT_ACTION(aEvent->valueLen >= kMinReadByTypeRspLength, error = OT_ERROR_FAILED);
 
     BYTES_TO_UINT8(pairLength, p);
-
     uuidLength = pairLength - sizeof(attrHandle) - sizeof(properties) - sizeof(charsValueHandle);
+
     while ((p < end) && (i < kNumGattChars))
     {
         BYTES_TO_UINT16(attrHandle, p);
@@ -350,10 +393,14 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
             SetUuid16(&gattChars[i].mUuid, p);
             p += OT_BLE_UUID16_LENGTH;
         }
-        else
+        else if (uuidLength == OT_BLE_UUID_LENGTH)
         {
             SetUuid128(&gattChars[i].mUuid, p);
             p += OT_BLE_UUID_LENGTH;
+        }
+        else
+        {
+            otEXPECT_ACTION(0, error = OT_ERROR_FAILED);
         }
 
         gattChars[i].mHandleValue = charsValueHandle;
@@ -361,6 +408,7 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
         i++;
     }
 
+    sCharacteristicDiscovered = true;
     otPlatBleGattClientOnCharacteristicsDiscoverDone(bleMgmtGetThreadInstance(), gattChars, i, OT_ERROR_NONE);
 
     if (attrHandle + 1 <= sCharDiscoverEndHandle)
@@ -368,11 +416,17 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
         uint16_t uuid = ATT_UUID_CHARACTERISTIC;
 
         otEXPECT(bleGapGetConnectionId() != DM_CONN_ID_NONE);
-        AttcReadByTypeReq(bleGapGetConnectionId(), gattChars[i - 1].mHandleValue + 1, sCharDiscoverEndHandle,
+        AttcReadByTypeReq(bleGapGetConnectionId(), attrHandle + 1, sCharDiscoverEndHandle,
                           sizeof(uuid), (uint8_t *)&uuid, false);
     }
 
 exit:
+
+    if (!sCharacteristicDiscovered && (error != OT_ERROR_NONE))
+    {
+        otPlatBleGattClientOnCharacteristicsDiscoverDone(bleMgmtGetThreadInstance(), NULL, 0, error);
+    }
+
     return;
 }
 
@@ -380,12 +434,15 @@ static void gattProcessClientFindInfoRsp(attEvt_t *aEvent)
 {
     const uint8_t           kNumDescriptors = 5;
     otPlatBleGattDescriptor gattDescriptors[kNumDescriptors];
-    uint8_t *               p   = aEvent->pValue;
-    uint8_t *               end = aEvent->pValue + aEvent->valueLen;
-    uint8_t                 i   = 0;
+    otError                 error = AttToOtError(aEvent->hdr.status);
+    uint8_t *               p     = aEvent->pValue;
+    uint8_t *               end   = aEvent->pValue + aEvent->valueLen;
+    uint8_t                 i     = 0;
     uint8_t                 format;
 
-    otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
+    otEXPECT(error == OT_ERROR_NONE);
+    otEXPECT_ACTION(aEvent->valueLen >= sizeof(format) + sizeof(gattDescriptors[0].mHandle) + OT_BLE_UUID16_LENGTH,
+                    error = OT_ERROR_FAILED);
 
     BYTES_TO_UINT8(format, p);
 
@@ -398,24 +455,34 @@ static void gattProcessClientFindInfoRsp(attEvt_t *aEvent)
             SetUuid16(&gattDescriptors[i].mUuid, p);
             p += OT_BLE_UUID16_LENGTH;
         }
-        else
+        else if (format == kUuidFormat128Bit)
         {
             SetUuid128(&gattDescriptors[i].mUuid, p);
             p += OT_BLE_UUID_LENGTH;
+        }
+        else
+        {
+            otEXPECT_ACTION(0, error = OT_ERROR_FAILED);
         }
 
         i++;
     }
 
+    sDescriptorDiscovered = true;
     otPlatBleGattClientOnDescriptorsDiscoverDone(bleMgmtGetThreadInstance(), gattDescriptors, i, OT_ERROR_NONE);
 
-    if ((i > 0) && (gattDescriptors[i - 1].mHandle + 1 <= sDescDiscoverEndHandle))
+    if (gattDescriptors[i - 1].mHandle + 1 <= sDescDiscoverEndHandle)
     {
         otEXPECT(bleGapGetConnectionId() != DM_CONN_ID_NONE);
         AttcFindInfoReq(bleGapGetConnectionId(), gattDescriptors[i - 1].mHandle + 1, sDescDiscoverEndHandle, false);
     }
 
 exit:
+    if (!sDescriptorDiscovered && (error != OT_ERROR_NONE))
+    {
+        otPlatBleGattClientOnDescriptorsDiscoverDone(bleMgmtGetThreadInstance(), NULL, 0, error);
+    }
+
     return;
 }
 
@@ -641,7 +708,7 @@ otError otPlatBleGapServiceSet(otInstance *aInstance, const char *aDeviceName, u
     attr->settings    = 0;
     attr->permissions = ATTS_PERMIT_READ;
 
-    sGapService.mDeviceNameLength = strlen(aDeviceName);
+    sGapService.mDeviceNameLength = (uint16_t)strlen(aDeviceName);
 
     attr++;
     attr->pUuid       = attDnChUuid;
@@ -761,7 +828,7 @@ static otError AddCharacteristicAttribute(otPlatBleGattCharacteristic *aChar)
     attr++;
     attr->pUuid       = GetUuid(&aChar->mUuid);
     attr->pValue      = NULL;
-    attr->maxLen      = 0;
+    attr->maxLen      = aChar->mMaxAttrLength;
     attr->pLen        = &attr->maxLen;
     attr->settings    = 0;
     attr->permissions = 0;
@@ -770,7 +837,6 @@ static otError AddCharacteristicAttribute(otPlatBleGattCharacteristic *aChar)
     {
         otEXPECT_ACTION(sToBleService.mLengthArrayIndex < kMaxToBleLengthArrayNum, error = OT_ERROR_NO_BUFS);
 
-        attr->maxLen   = AttGetMtu(bleGapGetConnectionId());
         attr->settings = ATTS_SET_VARIABLE_LEN;
         attr->pLen     = &sToBleService.mLengthArrays[sToBleService.mLengthArrayIndex++];
     }
@@ -906,6 +972,7 @@ otError otPlatBleGattClientServicesDiscover(otInstance *aInstance)
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
+    sServicesDiscovered = false;
     AttcReadByGroupTypeReq(bleGapGetConnectionId(), ATT_HANDLE_START, ATT_HANDLE_MAX, sizeof(uuid), (uint8_t *)&uuid,
                            false);
 
@@ -921,6 +988,7 @@ otError otPlatBleGattClientServiceDiscover(otInstance *aInstance, const otPlatBl
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION((aUuid != NULL) && (aUuid->mType != OT_BLE_UUID_TYPE_NONE), error = OT_ERROR_INVALID_ARGS);
 
+    sServiceDiscovered   = false;
     sServiceDiscoverUuid = *aUuid;
     AttcFindByTypeValueReq(bleGapGetConnectionId(), ATT_HANDLE_START, ATT_HANDLE_MAX, ATT_UUID_PRIMARY_SERVICE,
                            GetUuidLength(aUuid), GetUuid(aUuid), false);
@@ -937,7 +1005,8 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
-    sCharDiscoverEndHandle = aEndHandle;
+    sCharacteristicDiscovered = false;
+    sCharDiscoverEndHandle    = aEndHandle;
     AttcReadByTypeReq(bleGapGetConnectionId(), aStartHandle, aEndHandle, sizeof(uuid), (uint8_t *)&uuid, false);
 
 exit:
@@ -951,6 +1020,7 @@ otError otPlatBleGattClientDescriptorsDiscover(otInstance *aInstance, uint16_t a
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
+    sDescriptorDiscovered  = false;
     sDescDiscoverEndHandle = aEndHandle;
     AttcFindInfoReq(bleGapGetConnectionId(), aStartHandle, aEndHandle, false);
 
@@ -1055,4 +1125,4 @@ OT_TOOL_WEAK void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, u
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aSubscribing);
 }
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

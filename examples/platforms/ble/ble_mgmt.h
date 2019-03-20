@@ -35,6 +35,8 @@
 #ifndef BLE_MGMT_H
 #define BLE_MGMT_H
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,4 +53,5 @@ otInstance *bleMgmtGetThreadInstance(void);
 } // extern "C"
 #endif
 
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 #endif // BLE_MGMT_H

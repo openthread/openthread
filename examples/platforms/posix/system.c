@@ -50,6 +50,9 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#include <openthread/platform/ble.h>
+#endif
 
 uint32_t gNodeId = 1;
 
@@ -150,11 +153,15 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
     platformBleHciUpdateFdSet(&read_fds, &write_fds, &max_fd);
 #endif
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+    if (!otTaskletsArePending(aInstance) && !otPlatBleTaskletsArePending(aInstance))
+#else
     if (!otTaskletsArePending(aInstance))
+#endif
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
 
@@ -173,7 +180,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartProcess();
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
     platformBleHciProcess(aInstance);
 #endif
 }

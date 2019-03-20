@@ -35,6 +35,8 @@
 #ifndef BLE_L2CAP_H
 #define BLE_L2CAP_H
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,4 +50,6 @@ void bleL2capReset(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
+
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 #endif // BLE_L2CAP_H

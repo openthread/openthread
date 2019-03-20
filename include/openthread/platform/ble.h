@@ -368,10 +368,11 @@ typedef struct otPlatBleUuid
  */
 typedef struct otPlatBleGattCharacteristic
 {
-    otPlatBleUuid mUuid;        ///< [in]  A UUID value of a characteristic.
-    uint16_t      mHandleValue; ///< [out] Characteristic value handle.
-    uint16_t      mHandleCccd;  ///< [out] CCCD handle or OT_BLE_INVALID_HANDLE if CCCD is not present.
-    uint8_t       mProperties;  ///< [in]  Characteristic properties.
+    otPlatBleUuid mUuid;           ///< [in]  A UUID value of a characteristic.
+    uint16_t      mHandleValue;    ///< [out] Characteristic value handle.
+    uint16_t      mHandleCccd;     ///< [out] CCCD handle or OT_BLE_INVALID_HANDLE if CCCD is not present.
+    uint8_t       mProperties;     ///< [in]  Characteristic properties.
+    uint8_t       mMaxAttrLength;  ///< [in]  Maximum length of attribute's value.
 } otPlatBleGattCharacteristic;
 
 /**
@@ -495,6 +496,17 @@ extern void otPlatBleOnEnabled(otInstance *aInstance);
  *
  */
 void otPlatBleTaskletsProcess(otInstance *aInstance);
+
+/**
+ * Indicates whether or not BLE stack has tasklets pending.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If there are tasklets pending.
+ * @retval FALSE  If there are no tasklets pending.
+ *
+ */
+bool otPlatBleTaskletsArePending(otInstance *aInstance);
 
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.

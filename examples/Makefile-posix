@@ -72,7 +72,6 @@ configure_OPTIONS               = \
     --enable-mtd                  \
     --enable-ncp                  \
     --enable-radio-only           \
-    --enable-toble                \
     --with-examples=posix         \
     --with-ncp-bus=uart           \
     $(NULL)

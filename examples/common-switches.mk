@@ -38,6 +38,7 @@ COVERAGE            ?= 0
 CHANNEL_MANAGER     ?= 0
 CHANNEL_MONITOR     ?= 0
 CHILD_SUPERVISION   ?= 0
+CLI_BLE             ?= 0
 DEBUG               ?= 0
 DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
@@ -57,6 +58,7 @@ SERVICE             ?= 0
 SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
 TIME_SYNC           ?= 0
+TOBLE               ?= 0
 UDP_FORWARD         ?= 0
 
 
@@ -99,6 +101,10 @@ endif
 
 ifeq ($(CHILD_SUPERVISION),1)
 configure_OPTIONS              += --enable-child-supervision
+endif
+
+ifeq ($(CLI_BLE),1)
+configure_OPTIONS              += --enable-cli-ble
 endif
 
 ifeq ($(DEBUG),1)
@@ -171,6 +177,10 @@ endif
 
 ifeq ($(TIME_SYNC),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_HEADER_IE_SUPPORT=1
+endif
+
+ifeq ($(TOBLE),1)
+configure_OPTIONS              += --enable-toble
 endif
 
 ifeq ($(UDP_FORWARD),1)

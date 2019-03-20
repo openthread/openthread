@@ -52,7 +52,7 @@
 #include <openthread/platform/ble-hci.h>
 #include <openthread/platform/logging.h>
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
@@ -334,4 +334,4 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
         }
     }
 }
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

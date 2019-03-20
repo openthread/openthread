@@ -34,6 +34,7 @@
 
 #ifndef BLE_GATT_H
 #define BLE_GATT_H
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +48,6 @@ void bleGattReset(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus
+
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 #endif // BLE_GATT_H

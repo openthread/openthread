@@ -63,11 +63,11 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_DIAG
 
-if OPENTHREAD_ENABLE_TOBLE
+if OPENTHREAD_ENABLE_CLI_BLE
 LDADD_COMMON                                                          += \
     $(top_builddir)/third_party/cordio/libcordio.a                       \
     $(NULL)
-endif # OPENTHREAD_ENABLE_TOBLE
+endif # OPENTHREAD_ENABLE_CLI_BLE
 
 if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \

@@ -91,6 +91,36 @@ extern void otPlatAlarmMilliFired(otInstance *aInstance);
 extern void otPlatDiagAlarmFired(otInstance *aInstance);
 
 /**
+ * Set the alarm for BLE stack to fire at @p aDt milliseconds after @p aT0.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aT0        The reference time.
+ * @param[in] aDt        The time delay in milliseconds from @p aT0.
+ */
+void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+
+/**
+ * Stop the alarm for the BLE stack.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+void otPlatBleAlarmMilliStop(otInstance *aInstance);
+
+/**
+ * Signal that the alarm for the BLE stack has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+uint32_t otPlatBleAlarmMilliGetNow(void);
+
+/**
+ * Signal BLE stack that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatBleAlarmMilliFired(otInstance *aInstance);
+
+/**
  * @}
  *
  */

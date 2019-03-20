@@ -46,7 +46,7 @@
 
 #include <openthread/platform/ble.h>
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
@@ -512,4 +512,4 @@ OT_TOOL_WEAK void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aPacket);
 }
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

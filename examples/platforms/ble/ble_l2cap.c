@@ -47,7 +47,7 @@
 
 #include <openthread/platform/ble.h>
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
@@ -398,4 +398,4 @@ OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint8_t aL2c
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aL2capHandle);
 }
-#endif
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

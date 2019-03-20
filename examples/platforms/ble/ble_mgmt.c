@@ -65,12 +65,11 @@
 #include <openthread/platform/ble.h>
 #include <openthread/platform/logging.h>
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
-    kBleBufferSize  = 2250,
-    kBleMaxRxAclLen = 100,
+    kBleStackBufferSize  = 2250,
 };
 
 enum
@@ -81,20 +80,28 @@ enum
     kStateDeinitializing = 3,
 };
 
+enum
+{
+    kBleResetTimeout     = 100,
+};
+
 static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
 
-__attribute__((aligned(4))) static uint8_t sBuffer[kBleBufferSize];
+__attribute__((aligned(4))) static uint8_t sStackBuffer[kBleStackBufferSize];
 
-static uint32_t    sLastUpdateMs;
 static uint8_t     sState            = kStateIdle;
 static otInstance *sInstance         = NULL;
 static bool        sStackInitialized = false;
+static bool        sTaskletsPending  = false;
+static uint32_t    sLastUpdateMs;
+static wsfTimer_t  sTimer;
 
 static void bleStackInit(void);
 
+// This function is called by the ble stack to signal to user code to run wsfOsDispatcher().
 void wsf_mbed_ble_signal_event(void)
 {
-    // TODO:
+    sTaskletsPending = true;
 }
 
 void wsf_mbed_os_critical_section_enter(void)
@@ -122,6 +129,8 @@ otError otPlatBleEnable(otInstance *aInstance)
     bleHciEnable();
     DmDevReset();
 
+    WsfTimerStartMs(&sTimer, kBleResetTimeout);
+
 exit:
     return error;
 }
@@ -137,6 +146,7 @@ otError otPlatBleDisable(otInstance *aInstance)
     sState    = kStateDeinitializing;
 
     DmDevReset();
+    WsfTimerStartMs(&sTimer, kBleResetTimeout);
 
 exit:
     return error;
@@ -153,20 +163,23 @@ exit:
     return ret;
 }
 
-otInstance *bleMgmtGetThreadInstance(void)
+bool otPlatBleTaskletsArePending(otInstance *aInstance)
 {
-    return sInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+    return sTaskletsPending;
 }
 
 void otPlatBleTaskletsProcess(otInstance *aInstance)
 {
     uint32_t        now;
     uint32_t        delta;
+    uint32_t        nextTimestamp;
+    bool_t          timerRunning;
     wsfTimerTicks_t ticks;
 
     otEXPECT(sState != kStateIdle);
 
-    now   = otPlatAlarmMilliGetNow();
+    now   = otPlatBleAlarmMilliGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
 
@@ -178,10 +191,29 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
     wsfOsDispatcher();
 
+    if (wsfOsReadyToSleep()) {
+        nextTimestamp = (uint32_t) (WsfTimerNextExpiration(&timerRunning) * WSF_MS_PER_TICK);
+
+        if (timerRunning)
+        {
+            otPlatBleAlarmMilliStartAt(aInstance, now, nextTimestamp);
+        }
+    }
+
     OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return;
+}
+
+void otPlatBleAlarmMilliFired(otInstance *aInstance)
+{
+    otPlatBleTaskletsProcess(aInstance);
+}
+
+otInstance *bleMgmtGetThreadInstance(void)
+{
+    return sInstance;
 }
 
 static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
@@ -204,12 +236,15 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
         if (sState == kStateInitializing)
         {
             sState = kStateInitialized;
+
+            WsfTimerStop(&sTimer);
             otPlatBleOnEnabled(sInstance);
         }
         else if (sState == kStateDeinitializing)
         {
             sState = kStateIdle;
 
+            WsfTimerStop(&sTimer);
             bleGattReset();
             bleL2capReset();
             bleGapReset();
@@ -234,11 +269,6 @@ static void bleDeviceManagerHandler(dmEvt_t *aDmEvent)
     bleStackHandler(0, &aDmEvent->hdr);
 }
 
-/*
- * AttServerInitDeInitCback callback is used to Initialize/Deinitialize
- * the CCC Table of the ATT Server when a remote peer requests to Open
- * or Close the connection.
- */
 static void bleConnectionHandler(dmEvt_t *aDmEvent)
 {
     dmConnId_t connId = (dmConnId_t)aDmEvent->hdr.param;
@@ -260,6 +290,23 @@ static void bleConnectionHandler(dmEvt_t *aDmEvent)
     }
 }
 
+static void bleTimerHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
+{
+    if (sState == kStateDeinitializing)
+    {
+        bleGattReset();
+        bleL2capReset();
+        bleGapReset();
+        bleHciDisable();
+    }
+
+    sState    = kStateIdle;
+    sInstance = NULL;
+
+    OT_UNUSED_VARIABLE(event);
+    OT_UNUSED_VARIABLE(pMsg);
+}
+
 static uint8_t bleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit, uint16_t aHandle)
 {
     OT_UNUSED_VARIABLE(aConnId);
@@ -277,13 +324,13 @@ static void bleStackInit(void)
     otEXPECT(!sStackInitialized);
     sStackInitialized = true;
 
-    bytesUsed = WsfBufInit(sizeof(sBuffer), sBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
+    bytesUsed = WsfBufInit(sizeof(sStackBuffer), sStackBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
     assert(bytesUsed != 0);
 
-    if (bytesUsed < sizeof(sBuffer))
+    if (bytesUsed < sizeof(sStackBuffer))
     {
-        otLogCritPlat("Too much memory allocated for memory pool, reduce kBleBufferSize by %d bytes",
-                      sizeof(sBuffer) - bytesUsed);
+        otLogCritPlat("Too much memory allocated for memory pool, reduce kBleStackBufferSize by %d bytes",
+                      sizeof(sStackBuffer) - bytesUsed);
     }
 
     WsfTimerInit();
@@ -338,12 +385,12 @@ static void bleStackInit(void)
 
     WsfOsSetNextHandler(bleStackHandler);
 
-    HciSetMaxRxAclLen(kBleMaxRxAclLen);
-
     DmRegister(bleDeviceManagerHandler);
     DmConnRegister(DM_CLIENT_ID_APP, bleDeviceManagerHandler);
     AttConnRegister(bleConnectionHandler);
     AttRegister(bleAttHandler);
+
+    sTimer.handlerId = WsfOsSetNextHandler(bleTimerHandler);
 
 exit:
     return;
@@ -358,4 +405,4 @@ OT_TOOL_WEAK void otPlatBleOnEnabled(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

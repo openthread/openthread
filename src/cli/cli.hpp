@@ -55,7 +55,7 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 #include "cli/cli_ble.hpp"
 #endif
 
@@ -210,9 +210,9 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_TOBLE
-    void ProcessToBle(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+    void ProcessBle(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -453,9 +453,9 @@ private:
 
     Dataset mDataset;
 
-#if OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
     Ble mBle;
-#endif // OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

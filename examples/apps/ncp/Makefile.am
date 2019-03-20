@@ -69,6 +69,12 @@ LDADD_DIAG                                                            += \
     $(NULL)
 endif
 
+if OPENTHREAD_ENABLE_CLI_BLE
+LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/cordio/libcordio.a                       \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_CLI_BLE
+
 if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 LDADD_COMMON                                                          += \
     $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                              \

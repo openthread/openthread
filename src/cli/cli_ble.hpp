@@ -40,6 +40,8 @@
 
 #include <openthread/platform/ble.h>
 
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+
 namespace ot {
 namespace Cli {
 
@@ -129,4 +131,5 @@ private:
 } // namespace Cli
 } // namespace ot
 
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #endif // CLI_BLE_HPP_
