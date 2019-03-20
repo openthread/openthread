@@ -121,7 +121,7 @@ int Dtls::HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t a
     otError error;
     int     rval = 0;
 
-    error = otPlatRandomGetTrue((uint8_t *)aOutput, (uint16_t)aInLen);
+    error = otPlatRandomGetTrue(static_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen));
     SuccessOrExit(error);
 
     if (aOutLen != NULL)
@@ -413,17 +413,19 @@ int Dtls::SetApplicationCoapSecureKeys(void)
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
         if (mCaChainSrc != NULL)
         {
-            rval = mbedtls_x509_crt_parse(&mCaChain, (const unsigned char *)mCaChainSrc, (size_t)mCaChainLength);
+            rval = mbedtls_x509_crt_parse(&mCaChain, static_cast<const unsigned char *>(mCaChainSrc),
+                                          static_cast<size_t>(mCaChainLength));
             VerifyOrExit(rval == 0);
             mbedtls_ssl_conf_ca_chain(&mConf, &mCaChain, NULL);
         }
 
         if (mOwnCertSrc != NULL && mPrivateKeySrc != NULL)
         {
-            rval = mbedtls_x509_crt_parse(&mOwnCert, (const unsigned char *)mOwnCertSrc, (size_t)mOwnCertLength);
+            rval = mbedtls_x509_crt_parse(&mOwnCert, static_cast<const unsigned char *>(mOwnCertSrc),
+                                          static_cast<size_t>(mOwnCertLength));
             VerifyOrExit(rval == 0);
-            rval = mbedtls_pk_parse_key(&mPrivateKey, (const unsigned char *)mPrivateKeySrc, (size_t)mPrivateKeyLength,
-                                        NULL, 0);
+            rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
+                                        static_cast<size_t>(mPrivateKeyLength), NULL, 0);
             VerifyOrExit(rval == 0);
             rval = mbedtls_ssl_conf_own_cert(&mConf, &mOwnCert, &mPrivateKey);
             VerifyOrExit(rval == 0);
@@ -433,8 +435,8 @@ int Dtls::SetApplicationCoapSecureKeys(void)
 
     case MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8:
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-        rval = mbedtls_ssl_conf_psk(&mConf, (unsigned char *)mPreSharedKey, mPreSharedKeyLength,
-                                    (unsigned char *)mPreSharedKeyIdentity, mPreSharedKeyIdLength);
+        rval = mbedtls_ssl_conf_psk(&mConf, static_cast<const unsigned char *>(mPreSharedKey), mPreSharedKeyLength,
+                                    static_cast<const unsigned char *>(mPreSharedKeyIdentity), mPreSharedKeyIdLength);
         VerifyOrExit(rval == 0);
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
         break;
@@ -706,7 +708,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
         aLength = mReceiveLength;
     }
 
-    rval = (int)mReceiveMessage->Read(mReceiveOffset, (uint16_t)aLength, aBuf);
+    rval = mReceiveMessage->Read(mReceiveOffset, static_cast<uint16_t>(aLength), aBuf);
     mReceiveOffset += static_cast<uint16_t>(rval);
     mReceiveLength -= static_cast<uint16_t>(rval);
 
