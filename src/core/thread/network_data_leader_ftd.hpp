@@ -226,7 +226,7 @@ private:
 
     void SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                       const Ip6::MessageInfo &aMessageInfo,
-                                      uint8_t *               aTlvs,
+                                      const uint8_t *         aTlvs,
                                       uint8_t                 aLength);
     void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,

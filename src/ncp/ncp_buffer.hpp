@@ -595,7 +595,7 @@ private:
     };
 
     uint8_t *GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction aDirection) const;
-    uint16_t GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direction aDirection) const;
+    uint16_t GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, Direction aDirection) const;
 
     uint16_t ReadUint16At(uint8_t *aBufPtr, Direction aDirection);
     void     WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection);

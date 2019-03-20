@@ -154,7 +154,7 @@ uint8_t *NcpFrameBuffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Di
 }
 
 // Gets the distance between two buffer pointers (adjusts for the wrap-around) given a direction (forward or backward).
-uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr, Direction aDirection) const
+uint16_t NcpFrameBuffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, Direction aDirection) const
 {
     size_t distance = 0;
 

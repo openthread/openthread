@@ -320,7 +320,7 @@ void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageI
 
 void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                           const Ip6::MessageInfo &aMessageInfo,
-                                          uint8_t *               aTlvs,
+                                          const uint8_t *         aTlvs,
                                           uint8_t                 aLength)
 {
     ThreadNetif &  netif = GetNetif();
