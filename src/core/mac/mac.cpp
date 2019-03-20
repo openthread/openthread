@@ -53,8 +53,6 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
-using ot::Encoding::BigEndian::HostSwap64;
-
 namespace ot {
 namespace Mac {
 

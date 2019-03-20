@@ -47,8 +47,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
