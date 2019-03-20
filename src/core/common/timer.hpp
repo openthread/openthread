@@ -295,7 +295,7 @@ protected:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(Instance &aInstance)
+    explicit TimerScheduler(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mHead(NULL)
     {
@@ -351,7 +351,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(Instance &aInstance)
+    explicit TimerMilliScheduler(Instance &aInstance)
         : TimerScheduler(aInstance)
     {
     }

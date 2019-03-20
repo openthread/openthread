@@ -402,7 +402,7 @@ public:
          * @param[in]  aInstance  A reference to the OpenThread instance.
          *
          */
-        ChildInfoIterator(Instance &aInstance);
+        explicit ChildInfoIterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start from the first Child Info entry in the list.

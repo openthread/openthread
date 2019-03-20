@@ -528,7 +528,7 @@ public:
      * @param[in]  aNetif    A reference to the network interface that SNTP client should be assigned to.
      *
      */
-    Client(Ip6::Netif &aNetif)
+    explicit Client(Ip6::Netif &aNetif)
         : mSocket(aNetif.GetIp6().GetUdp())
         , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this)
         , mUnixEra(0){};

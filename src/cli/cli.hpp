@@ -110,7 +110,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
-    Interpreter(Instance *aInstance);
+    explicit Interpreter(Instance *aInstance);
 
     /**
      * This method interprets a CLI command.

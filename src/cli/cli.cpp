@@ -263,7 +263,7 @@ template <class T> class otPtr
     T *ptr;
 
 public:
-    otPtr(T *_ptr)
+    explicit otPtr(T *_ptr)
         : ptr(_ptr)
     {
     }

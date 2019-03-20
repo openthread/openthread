@@ -58,7 +58,7 @@ public:
      * @param[in] aBuffer     Pointer to buffer containing the frame.
      *
      */
-    SpiFrame(uint8_t *aBuffer)
+    explicit SpiFrame(uint8_t *aBuffer)
         : mBuffer(aBuffer)
     {
     }
@@ -152,7 +152,7 @@ public:
      * @param[in]  aInstance  A pointer to the OpenThread instance structure.
      *
      */
-    NcpSpi(Instance *aInstance);
+    explicit NcpSpi(Instance *aInstance);
 
 private:
     enum
