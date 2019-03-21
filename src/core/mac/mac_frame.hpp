@@ -549,11 +549,11 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf     The Frame Control field.
-     * @param[in]  aSecCtl  The Security Control field.
+     * @param[in]  aFcf          The Frame Control field.
+     * @param[in]  aSecurityCtl  The Security Control field.
      *
      */
-    void InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
+    void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
 
     /**
      * This method validates the frame.
@@ -1247,10 +1247,10 @@ public:
      * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
      * the PSDU buffer of the current frame.
 
-     * @param[in] aFrame   The frame to copy from.
+     * @param[in] aFromFrame  The frame to copy from.
      *
      */
-    void CopyFrom(const Frame &aFrame);
+    void CopyFrom(const Frame &aFromFrame);
 
     /**
      * This method returns information about the frame object as an `InfoString` object.

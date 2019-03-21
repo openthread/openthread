@@ -650,7 +650,7 @@ uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
     return aPosition;
 }
 
-otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aKeyOrStatus)
+otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus)
 {
     otError        error = OT_ERROR_NONE;
     spinel_tid_t   tid   = SPINEL_HEADER_GET_TID(aHeader);
@@ -664,7 +664,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
 
         if (aType == kResponseTypeLastStatus)
         {
-            mChangedPropsSet.AddLastStatus(static_cast<spinel_status_t>(aKeyOrStatus));
+            mChangedPropsSet.AddLastStatus(static_cast<spinel_status_t>(aPropKeyOrStatus));
         }
 
         ExitNow();
@@ -709,7 +709,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
     entry->mTid             = tid;
     entry->mIsInUse         = true;
     entry->mType            = aType;
-    entry->mPropKeyOrStatus = aKeyOrStatus;
+    entry->mPropKeyOrStatus = aPropKeyOrStatus;
 
     mResponseQueueTail++;
 

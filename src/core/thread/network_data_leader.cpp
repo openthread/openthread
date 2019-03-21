@@ -404,7 +404,7 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 
 otError LeaderBase::SetNetworkData(uint8_t        aVersion,
                                    uint8_t        aStableVersion,
-                                   bool           aStable,
+                                   bool           aStableOnly,
                                    const Message &aMessage,
                                    uint16_t       aMessageOffset)
 {
@@ -422,7 +422,7 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
-    if (aStable)
+    if (aStableOnly)
     {
         RemoveTemporaryData(mTlvs, mLength);
     }

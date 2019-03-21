@@ -162,7 +162,7 @@ public:
      *
      * @param[in]  aError Error code value.
      */
-    void AppendResult(otError error) const;
+    void AppendResult(otError aError) const;
 
     /**
      * Write a number of bytes to the CLI console as a hex string.

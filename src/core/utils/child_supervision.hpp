@@ -238,11 +238,11 @@ public:
     /**
      * This method updates the supervision listener state. It informs the listener of a received frame.
      *
-     * @param[in]   aSource    The source MAC address of the received frame
-     * @param[in]   aIsSecure  TRUE to indicate that the received frame is secure, FALSE otherwise.
+     * @param[in]   aSourceAddress    The source MAC address of the received frame
+     * @param[in]   aIsSecure         TRUE to indicate that the received frame is secure, FALSE otherwise.
      *
      */
-    void UpdateOnReceive(const Mac::Address &aSource, bool aIsSecure);
+    void UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure);
 
 private:
     enum

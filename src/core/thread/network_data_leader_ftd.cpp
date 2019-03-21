@@ -1302,15 +1302,15 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
     otDumpDebgNetData("remove done", mTlvs, mLength);
 }
 
-void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode)
 {
-    NetworkDataTlv *cur = prefix.GetSubTlvs();
+    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end;
     ContextTlv *    context;
 
     while (1)
     {
-        end = prefix.GetNext();
+        end = aPrefix.GetNext();
 
         if (cur >= end)
         {
@@ -1320,12 +1320,12 @@ void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMod
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            RemoveRloc(prefix, *static_cast<HasRouteTlv *>(cur), aRloc16, aMatchMode);
+            RemoveRloc(aPrefix, *static_cast<HasRouteTlv *>(cur), aRloc16, aMatchMode);
 
             // remove has route tlv if empty
             if (cur->GetLength() == 0)
             {
-                prefix.SetSubTlvsLength(prefix.GetSubTlvsLength() - sizeof(HasRouteTlv));
+                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteTlv));
                 Remove(reinterpret_cast<uint8_t *>(cur), sizeof(HasRouteTlv));
                 continue;
             }
@@ -1333,12 +1333,12 @@ void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMod
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            RemoveRloc(prefix, *static_cast<BorderRouterTlv *>(cur), aRloc16, aMatchMode);
+            RemoveRloc(aPrefix, *static_cast<BorderRouterTlv *>(cur), aRloc16, aMatchMode);
 
             // remove border router tlv if empty
             if (cur->GetLength() == 0)
             {
-                prefix.SetSubTlvsLength(prefix.GetSubTlvsLength() - sizeof(BorderRouterTlv));
+                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterTlv));
                 Remove(reinterpret_cast<uint8_t *>(cur), sizeof(BorderRouterTlv));
                 continue;
             }
@@ -1352,9 +1352,9 @@ void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMod
         cur = cur->GetNext();
     }
 
-    if ((context = FindContext(prefix)) != NULL)
+    if ((context = FindContext(aPrefix)) != NULL)
     {
-        if (prefix.GetSubTlvsLength() == sizeof(ContextTlv))
+        if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
             context->ClearCompress();
             StartContextReuseTimer(context->GetContextId());
@@ -1368,16 +1368,16 @@ void Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16, MatchMode aMatchMod
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
-void Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatchMode)
 {
-    NetworkDataTlv *cur = service.GetSubTlvs();
+    NetworkDataTlv *cur = aService.GetSubTlvs();
     NetworkDataTlv *end;
     ServerTlv *     server;
     uint8_t         removeLength;
 
     while (1)
     {
-        end = service.GetNext();
+        end = aService.GetNext();
 
         if (cur >= end)
         {
@@ -1392,7 +1392,7 @@ void Leader::RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchM
             if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode))
             {
                 removeLength = sizeof(ServerTlv) + server->GetServerDataLength();
-                service.SetSubTlvsLength(service.GetSubTlvsLength() - removeLength);
+                aService.SetSubTlvsLength(aService.GetSubTlvsLength() - removeLength);
                 Remove(reinterpret_cast<uint8_t *>(cur), removeLength);
                 continue;
             }

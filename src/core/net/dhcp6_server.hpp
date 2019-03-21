@@ -189,15 +189,15 @@ private:
     otError AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
     otError AppendHeader(Message &aMessage, uint8_t *aTransactionId);
-    otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClient);
+    otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
     otError AppendServerIdentifier(Message &aMessage);
     otError AppendIaNa(Message &aMessage, IaNa &aIaNa);
     otError AppendStatusCode(Message &aMessage, Status aStatusCode);
-    otError AppendIaAddress(Message &aMessage, ClientIdentifier &aClient);
+    otError AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId);
     otError AppendRapidCommit(Message &aMessage);
     otError AppendVendorSpecificInformation(Message &aMessage);
 
-    otError AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClient);
+    otError AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -205,12 +205,12 @@ private:
     void ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClient);
+    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
     otError  ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
     otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
     otError  ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
-    otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientIdentifier, IaNa &aIaNa);
+    otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientId, IaNa &aIaNa);
 
     Ip6::UdpSocket mSocket;
 

@@ -157,10 +157,10 @@ exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-otError Diag::ParseLong(char *aArgVector, long &aValue)
+otError Diag::ParseLong(char *aString, long &aLong)
 {
     char *endptr;
-    aValue = strtol(aArgVector, &endptr, 0);
+    aLong = strtol(aString, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 

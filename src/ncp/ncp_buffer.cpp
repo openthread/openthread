@@ -41,10 +41,10 @@ namespace Ncp {
 
 const NcpFrameBuffer::FrameTag NcpFrameBuffer::kInvalidTag = NULL;
 
-NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen)
+NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
     : mBuffer(aBuffer)
-    , mBufferEnd(aBuffer + aBufferLen)
-    , mBufferLength(aBufferLen)
+    , mBufferEnd(aBuffer + aBufferLength)
+    , mBufferLength(aBufferLength)
 {
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
@@ -268,7 +268,7 @@ exit:
 }
 
 // This function closes/ends the current segment.
-void NcpFrameBuffer::InFrameEndSegment(uint16_t aHeaderFlags)
+void NcpFrameBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 {
     uint16_t segmentLength;
     uint16_t header;
@@ -283,7 +283,7 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aHeaderFlags)
         // Update the length and the flags in segment header (at segment head pointer).
         header = ReadUint16At(mWriteSegmentHead, mWriteDirection);
         header |= (segmentLength & kSegmentHeaderLengthMask);
-        header |= aHeaderFlags;
+        header |= aSegmentHeaderFlags;
         WriteUint16At(mWriteSegmentHead, header, mWriteDirection);
 
         // Move the segment head to current tail (to be ready for a possible next segment).
