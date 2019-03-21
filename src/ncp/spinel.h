@@ -3530,11 +3530,11 @@ typedef char spinel_datatype_t;
 #define SPINEL_MAX_UINT_PACKED 2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *     data_out,
-                                                      spinel_size_t data_len,
+                                                      spinel_size_t data_len_max,
                                                       const char *  pack_format,
                                                       ...);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vpack(uint8_t *     data_out,
-                                                       spinel_size_t data_len,
+                                                       spinel_size_t data_len_max,
                                                        const char *  pack_format,
                                                        va_list       args);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
@@ -3602,7 +3602,7 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack_in_place(const uint8_t 
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_decode(const uint8_t *bytes,
                                                            spinel_size_t  len,
-                                                           unsigned int * value);
+                                                           unsigned int * value_ptr);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_encode(uint8_t *bytes, spinel_size_t len, unsigned int value);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 

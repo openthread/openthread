@@ -62,11 +62,11 @@ uint16_t otChannelManagerGetDelay(otInstance *aInstance)
     return instance.GetChannelManager().GetDelay();
 }
 
-otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aMinDelay)
+otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().SetDelay(aMinDelay);
+    return instance.GetChannelManager().SetDelay(aDelay);
 }
 
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)

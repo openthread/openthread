@@ -456,14 +456,14 @@ public:
      *
      * On success, the read position gets updated.
      *
-     * @param[out] aUt8                 Reference to a `char` pointer to output the string.
+     * @param[out] aUtf8                Reference to a `char` pointer to output the string.
      *                                  On success, the pointer variable is updated.
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
      *
      */
-    otError ReadUtf8(const char *&aUt8);
+    otError ReadUtf8(const char *&aUtf8);
 
     /**
      * This method decodes and reads a data blob (sequence of bytes) form the frame.

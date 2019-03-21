@@ -637,7 +637,7 @@ exit:
 }
 
 void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &             aTargetTlv,
-                                               const ThreadMeshLocalEidTlv &       aMlIidTlv,
+                                               const ThreadMeshLocalEidTlv &       aMlEidTlv,
                                                const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                                const Ip6::Address &                aDestination)
 {
@@ -654,7 +654,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
     message->SetPayloadMarker();
 
     SuccessOrExit(error = message->Append(&aTargetTlv, sizeof(aTargetTlv)));
-    SuccessOrExit(error = message->Append(&aMlIidTlv, sizeof(aMlIidTlv)));
+    SuccessOrExit(error = message->Append(&aMlEidTlv, sizeof(aMlEidTlv)));
 
     rloc16Tlv.Init();
     rloc16Tlv.SetRloc16(netif.GetMle().GetRloc16());

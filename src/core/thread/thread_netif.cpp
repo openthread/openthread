@@ -172,11 +172,11 @@ exit:
     return;
 }
 
-otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
+otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &aAddress) const
 {
-    address.mType       = Ip6::LinkAddress::kEui64;
-    address.mLength     = sizeof(address.mExtAddress);
-    address.mExtAddress = mMac.GetExtAddress();
+    aAddress.mType       = Ip6::LinkAddress::kEui64;
+    aAddress.mLength     = sizeof(aAddress.mExtAddress);
+    aAddress.mExtAddress = mMac.GetExtAddress();
     return OT_ERROR_NONE;
 }
 

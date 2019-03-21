@@ -303,9 +303,9 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
     }
 }
 
-void Mac::EnergyScanDone(int8_t aRssi)
+void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    ReportEnergyScanResult(aRssi);
+    ReportEnergyScanResult(aEnergyScanMaxRssi);
     PerformEnergyScan();
 }
 

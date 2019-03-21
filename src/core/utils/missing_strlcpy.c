@@ -27,25 +27,25 @@
 
 #include "utils/wrap_string.h"
 
-size_t missing_strlcpy(char *dest, const char *src, size_t size)
+size_t missing_strlcpy(char *dst, const char *src, size_t dstsize)
 {
     const size_t slen = strlen(src);
 
-    if (size != 0)
+    if (dstsize != 0)
     {
-        size--;
+        dstsize--;
 
-        if (slen < size)
+        if (slen < dstsize)
         {
-            size = slen;
+            dstsize = slen;
         }
 
-        if (size != 0)
+        if (dstsize != 0)
         {
-            memcpy(dest, src, size);
+            memcpy(dst, src, dstsize);
         }
 
-        dest[size] = 0;
+        dst[dstsize] = 0;
     }
 
     return slen;

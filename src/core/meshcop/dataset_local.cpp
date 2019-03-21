@@ -193,11 +193,11 @@ exit:
     return error;
 }
 
-int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)
+int DatasetLocal::Compare(const Timestamp *aCompare)
 {
     int rval = 1;
 
-    if (aCompareTimestamp == NULL)
+    if (aCompare == NULL)
     {
         if (!mTimestampPresent)
         {
@@ -216,7 +216,7 @@ int DatasetLocal::Compare(const Timestamp *aCompareTimestamp)
         }
         else
         {
-            rval = mTimestamp.Compare(*aCompareTimestamp);
+            rval = mTimestamp.Compare(*aCompare);
         }
     }
 

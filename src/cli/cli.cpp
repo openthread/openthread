@@ -404,17 +404,17 @@ void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
     }
 }
 
-otError Interpreter::ParseLong(char *argv, long &value)
+otError Interpreter::ParseLong(char *aString, long &aLong)
 {
     char *endptr;
-    value = strtol(argv, &endptr, 0);
+    aLong = strtol(aString, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
-otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
+otError Interpreter::ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong)
 {
     char *endptr;
-    value = strtoul(argv, &endptr, 0);
+    aUnsignedLong = strtoul(aString, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 

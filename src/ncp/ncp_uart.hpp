@@ -121,7 +121,7 @@ private:
     void HandleFrameAddedToNcpBuffer(void);
 
     static void EncodeAndSendToUart(Tasklet &aTasklet);
-    static void HandleFrame(void *aConext, otError aError);
+    static void HandleFrame(void *aContext, otError aError);
     static void HandleFrameAddedToNcpBuffer(void *                   aContext,
                                             NcpFrameBuffer::FrameTag aTag,
                                             NcpFrameBuffer::Priority aPriority,
