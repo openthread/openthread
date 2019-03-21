@@ -50,6 +50,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_BOARD_DIR)                 \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
+    -I$(EFR32MG_SDK_SRCDIR)                                                     \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/protocol/ieee802154         \
