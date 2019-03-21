@@ -315,11 +315,11 @@ public:
     /**
      * This method updates the UDP checksum.
      *
-     * @param[in]  aMessage               A reference to the UDP message.
-     * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
+     * @param[in]  aMessage   A reference to the UDP message.
+     * @param[in]  aChecksum  The pseudo-header checksum value.
      *
      */
-    void UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     otUdpSocket *GetUdpSockets(void) { return mSockets; }

@@ -312,10 +312,10 @@ public:
     /**
      * This method updates the router table with a received Route TLV.
      *
-     * @param[in]  aRoute  A reference to the Route TLV.
+     * @param[in]  aTlv  A reference to the Route TLV.
      *
      */
-    void ProcessTlv(const Mle::RouteTlv &aRoute);
+    void ProcessTlv(const Mle::RouteTlv &aTlv);
 
     /**
      * This method updates the router table with a received Router Mask TLV.
@@ -323,7 +323,7 @@ public:
      * @param[in]  aTlv  A reference to the Router Mask TLV.
      *
      */
-    void ProcessTlv(const ThreadRouterMaskTlv &Tlv);
+    void ProcessTlv(const ThreadRouterMaskTlv &aTlv);
 
     /**
      * This method updates the router table and must be called with a one second period.

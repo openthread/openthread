@@ -55,7 +55,7 @@ void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t a
     Diag::ProcessCmd(aArgCount, aArgVector, aOutput, aOutputMaxLen);
 }
 
-void otDiagProcessCmdLine(const char *aInput, char *aOutput, size_t aOutputMaxLen)
+void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     enum
     {
@@ -68,9 +68,9 @@ void otDiagProcessCmdLine(const char *aInput, char *aOutput, size_t aOutputMaxLe
     char *  argVector[kMaxArgs];
     uint8_t argCount = 0;
 
-    VerifyOrExit(strnlen(aInput, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(strnlen(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
 
-    strcpy(buffer, aInput);
+    strcpy(buffer, aString);
     error = ot::Utils::CmdLineParser::ParseCmd(buffer, argCount, argVector, kMaxArgs);
 
 exit:

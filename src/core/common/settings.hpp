@@ -470,7 +470,7 @@ public:
     };
 
 private:
-    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedLength) const;
+    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedSize) const;
     otError Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);

@@ -2977,7 +2977,7 @@ exit:
 void MleRouter::SendChildUpdateResponse(Child *                 aChild,
                                         const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *         aTlvs,
-                                        uint8_t                 aTlvslength,
+                                        uint8_t                 aTlvsLength,
                                         const ChallengeTlv *    aChallenge)
 {
     otError  error = OT_ERROR_NONE;
@@ -2986,7 +2986,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
 
-    for (int i = 0; i < aTlvslength; i++)
+    for (int i = 0; i < aTlvsLength; i++)
     {
         switch (aTlvs[i])
         {
@@ -4108,7 +4108,7 @@ exit:
     }
 }
 
-void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequestHeader,
+void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                            const Router *          aRouter,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
@@ -4121,7 +4121,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequestHeade
 
     VerifyOrExit((message = netif.GetCoap().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequestHeader);
+    message->SetDefaultResponseHeader(aRequest);
     message->SetPayloadMarker();
 
     statusTlv.Init();
