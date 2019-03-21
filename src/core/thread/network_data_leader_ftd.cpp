@@ -695,8 +695,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             bool       foundInBase = false;
                             ServerTlv *server      = reinterpret_cast<ServerTlv *>(curInner);
 
-                            NetworkDataTlv *curServerBase = service->GetSubTlvs();
-                            NetworkDataTlv *endServerBase = service->GetNext();
+                            NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
+                            NetworkDataTlv *endServerBase = serviceBase->GetNext();
 
                             while (curServerBase <= endServerBase)
                             {
