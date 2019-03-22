@@ -41,7 +41,7 @@ This is selection mode. You may select the node to inspect here.
 
 - `list`      - list available nodes.
 - `exit`      - end inspecting, continue running test case.
-- <numbers>   - select the node with id <number>. This will result in enter `>  mode.
+- \<number\>   - select the node with id \<number\>. This will result in entering `>`  mode.
 
 #### `>` mode
 This is node mode. You may run OpenThread CLI here.
