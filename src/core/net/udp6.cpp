@@ -101,7 +101,7 @@ otError UdpSocket::Bind(const SockAddr &aSockAddr)
 
     mSockName = aSockAddr;
 
-    if (mSockName.mPort == 0)
+    if (!IsBound())
     {
         do
         {
@@ -182,7 +182,7 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
         messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
     }
 
-    if (GetSockName().mPort == 0)
+    if (!IsBound())
     {
         SuccessOrExit(error = Bind(GetSockName()));
     }

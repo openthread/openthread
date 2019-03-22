@@ -144,6 +144,15 @@ public:
     otError Bind(const SockAddr &aSockAddr);
 
     /**
+     * This method indicates whether or not the socket is bound.
+     *
+     * @retval TRUE if the socket is bound (i.e. source port is non-zero).
+     * @retval FALSE if the socket is not bound (source port is zero).
+     *
+     */
+    bool IsBound(void) const { return mSockName.mPort != 0; }
+
+    /**
      * This method connects the UDP socket.
      *
      * @param[in]  aSockAddr  A reference to the socket address.

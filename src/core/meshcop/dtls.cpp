@@ -274,7 +274,7 @@ otError Dtls::Bind(TransportCallback aCallback, void *aContext)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mState == kStateOpen, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mSocket.GetSockName().mPort == 0, error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mSocket.IsBound(), error = OT_ERROR_ALREADY);
     VerifyOrExit(mTransportCallback == NULL, error = OT_ERROR_ALREADY);
 
     mTransportCallback = aCallback;
