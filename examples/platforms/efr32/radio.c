@@ -705,13 +705,13 @@ static void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddr
 static void removeFromSrcMatchShortIndirect(uint8_t entry)
 {
     srcMatchShortEntry[entry].allocated = false;
-    srcMatchShortEntry[entry].checksum = 0;
+    srcMatchShortEntry[entry].checksum  = 0;
 }
 
 static void removeFromSrcMatchExtIndirect(uint8_t entry)
 {
     srcMatchExtEntry[entry].allocated = false;
-    srcMatchExtEntry[entry].checksum = 0;
+    srcMatchExtEntry[entry].checksum  = 0;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
