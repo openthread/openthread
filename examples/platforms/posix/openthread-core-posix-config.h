@@ -121,9 +121,9 @@
 
 /**
  * @def CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
- * 
- * Set it to 1 to use DefaultHandler for unhandled requests
+ *
+ * Define to 1 to use DefaultHandler for unhandled requests
+ *
  */
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 1
-
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
