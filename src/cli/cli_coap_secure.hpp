@@ -97,8 +97,8 @@ private:
     void               HandleClientResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-    static void OTCALL DefaultHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void               DefaultHandle(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void OTCALL DefaultHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void               DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
     static void OTCALL HandleClientConnect(bool aConnected, void *aContext);
