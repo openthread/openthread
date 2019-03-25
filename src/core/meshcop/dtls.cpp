@@ -161,6 +161,8 @@ otError Dtls::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHa
 {
     otError error;
 
+    VerifyOrExit(mState == kStateClosed, error = OT_ERROR_ALREADY);
+
     SuccessOrExit(error = mSocket.Open(&Dtls::HandleUdpReceive, this));
 
     mReceiveHandler   = aReceiveHandler;
