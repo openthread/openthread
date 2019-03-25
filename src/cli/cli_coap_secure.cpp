@@ -150,7 +150,7 @@ otError CoapSecure::Process(int argc, char *argv[])
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
         otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecure::HandleClientConnect, this);
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandle, this);
+        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandler, this);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
         if (mUseCertificate)
@@ -586,12 +586,12 @@ void CoapSecure::HandleClientResponse(otMessage *aMessage, const otMessageInfo *
 }
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-void OTCALL CoapSecure::DefaultHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void OTCALL CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapSecure *>(aContext)->DefaultHandle(aMessage, aMessageInfo);
+    static_cast<CoapSecure *>(aContext)->DefaultHandler(aMessage, aMessageInfo);
 }
 
-void CoapSecure::DefaultHandle(otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     otError    error = OT_ERROR_NONE;
     otMessage *responseMessage;
