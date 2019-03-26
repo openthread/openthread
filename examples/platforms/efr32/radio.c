@@ -123,7 +123,7 @@ typedef struct srcMatchEntry
 static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
 static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
 
-efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
+static efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
 
 static volatile energyScanStatus sEnergyScanStatus;
 static volatile int8_t           sEnergyScanResultDbm;
@@ -172,7 +172,7 @@ static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static efr32BandConfig *sTxBandConfig = NULL;
 static efr32BandConfig *sRxBandConfig = NULL;
 
-RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
+static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t     status;
     RAIL_Handle_t     handle;
@@ -250,7 +250,7 @@ static void efr32RadioSetTxPower(RAIL_Handle_t               aRailHandle,
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
+static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
     efr32BandConfig *config = NULL;
 
@@ -266,7 +266,7 @@ efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
     return config;
 }
 
-void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
+static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
 {
     uint8_t index = 0;
 
@@ -612,7 +612,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-int8_t findSrcMatchAvailEntry(bool aShortAddress)
+static int8_t findSrcMatchAvailEntry(bool aShortAddress)
 {
     int8_t entry = -1;
 
@@ -642,7 +642,7 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
     return entry;
 }
 
-int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
+static int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 {
     int8_t   entry    = -1;
     uint16_t checksum = aShortAddress + sPanId;
@@ -659,7 +659,7 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
     return entry;
 }
 
-int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
+static int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
 {
     int8_t   entry    = -1;
     uint16_t checksum = sPanId;
@@ -681,7 +681,7 @@ int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
     return entry;
 }
 
-void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
+static void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
 {
     uint16_t checksum = aShortAddress + sPanId;
 
@@ -689,7 +689,7 @@ void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
     srcMatchShortEntry[entry].allocated = true;
 }
 
-void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
+static void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
 {
     uint16_t checksum = sPanId;
 
@@ -702,16 +702,16 @@ void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
     srcMatchExtEntry[entry].allocated = true;
 }
 
-void removeFromSrcMatchShortIndirect(uint8_t entry)
+static void removeFromSrcMatchShortIndirect(uint8_t entry)
 {
     srcMatchShortEntry[entry].allocated = false;
-    memset(&srcMatchShortEntry[entry].checksum, 0, sizeof(uint16_t));
+    srcMatchShortEntry[entry].checksum  = 0;
 }
 
-void removeFromSrcMatchExtIndirect(uint8_t entry)
+static void removeFromSrcMatchExtIndirect(uint8_t entry)
 {
     srcMatchExtEntry[entry].allocated = false;
-    memset(&srcMatchExtEntry[entry].checksum, 0, sizeof(uint16_t));
+    srcMatchExtEntry[entry].checksum  = 0;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
