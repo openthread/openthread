@@ -499,7 +499,7 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
 
         if (service->GetServiceID() == aServiceId)
         {
-            subCur = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(service->GetSubTlvs()));
+            subCur = service->GetSubTlvs();
             subEnd = cur->GetNext();
 
             for (; subCur < subEnd; subCur = subCur->GetNext())
@@ -553,7 +553,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            prefix = static_cast<PrefixTlv *>(cur);
             RemoveTemporaryData(aData, aDataLength, *prefix);
 
             if (prefix->GetSubTlvsLength() == 0)
@@ -574,7 +574,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
         case NetworkDataTlv::kTypeService:
         {
-            service = reinterpret_cast<ServiceTlv *>(cur);
+            service = static_cast<ServiceTlv *>(cur);
             RemoveTemporaryData(aData, aDataLength, *service);
 
             if (service->GetSubTlvsLength() == 0)
@@ -733,7 +733,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
             {
             case NetworkDataTlv::kTypeServer:
             {
-                server = reinterpret_cast<ServerTlv *>(cur);
+                server = static_cast<ServerTlv *>(cur);
                 server->SetServer16(Mle::Mle::GetServiceAlocFromId(aService.GetServiceID()));
                 break;
             }
@@ -773,7 +773,7 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
 
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter)
         {
-            ExitNow(rval = reinterpret_cast<BorderRouterTlv *>(cur));
+            ExitNow(rval = static_cast<BorderRouterTlv *>(cur));
         }
 
         cur = cur->GetNext();
@@ -795,7 +795,7 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
 
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter && cur->IsStable() == aStable)
         {
-            ExitNow(rval = reinterpret_cast<BorderRouterTlv *>(cur));
+            ExitNow(rval = static_cast<BorderRouterTlv *>(cur));
         }
 
         cur = cur->GetNext();
@@ -817,7 +817,7 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix)
 
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute)
         {
-            ExitNow(rval = reinterpret_cast<HasRouteTlv *>(cur));
+            ExitNow(rval = static_cast<HasRouteTlv *>(cur));
         }
 
         cur = cur->GetNext();
@@ -839,7 +839,7 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix, bool aStable)
 
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute && cur->IsStable() == aStable)
         {
-            ExitNow(rval = reinterpret_cast<HasRouteTlv *>(cur));
+            ExitNow(rval = static_cast<HasRouteTlv *>(cur));
         }
 
         cur = cur->GetNext();
@@ -861,7 +861,7 @@ ContextTlv *NetworkData::FindContext(PrefixTlv &aPrefix)
 
         if (cur->GetType() == NetworkDataTlv::kTypeContext)
         {
-            ExitNow(rval = reinterpret_cast<ContextTlv *>(cur));
+            ExitNow(rval = static_cast<ContextTlv *>(cur));
         }
 
         cur = cur->GetNext();
@@ -888,7 +888,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
-            compare = reinterpret_cast<PrefixTlv *>(cur);
+            compare = static_cast<PrefixTlv *>(cur);
 
             if (compare->GetPrefixLength() == aPrefixLength &&
                 PrefixMatch(compare->GetPrefix(), aPrefix, aPrefixLength) >= aPrefixLength)
@@ -959,7 +959,7 @@ ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
 
         if (cur->GetType() == NetworkDataTlv::kTypeService)
         {
-            compare = reinterpret_cast<ServiceTlv *>(cur);
+            compare = static_cast<ServiceTlv *>(cur);
 
             if ((compare->GetEnterpriseNumber() == aEnterpriseNumber) &&
                 (compare->GetServiceDataLength() == aServiceDataLength) &&

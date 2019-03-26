@@ -432,21 +432,19 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (netif.GetCommissioner().IsActive())
     {
-        const uint8_t *cur          = aTlvs;
-        const uint8_t *end          = aTlvs + aLength;
-        bool           hasSessionId = false;
+        const Tlv *cur          = reinterpret_cast<const Tlv *>(aTlvs);
+        const Tlv *end          = reinterpret_cast<const Tlv *>(aTlvs + aLength);
+        bool       hasSessionId = false;
 
-        while (cur < end)
+        for (; cur < end; cur = cur->GetNext())
         {
-            const Tlv *data = reinterpret_cast<const Tlv *>(cur);
+            VerifyOrExit((cur + 1) <= end, error = OT_ERROR_INVALID_ARGS);
 
-            if (data->GetType() == Tlv::kCommissionerSessionId)
+            if (cur->GetType() == Tlv::kCommissionerSessionId)
             {
                 hasSessionId = true;
                 break;
             }
-
-            cur += sizeof(Tlv) + data->GetLength();
         }
 
         if (!hasSessionId)
