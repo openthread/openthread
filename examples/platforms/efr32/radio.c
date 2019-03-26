@@ -102,7 +102,6 @@ typedef enum
     ENERGY_SCAN_MODE_ASYNC
 } energyScanMode;
 
-static uint16_t      sPanId             = 0;
 static volatile bool sTransmitBusy      = false;
 static bool          sPromiscuous       = false;
 static bool          sIsSrcMatchEnabled = false;
@@ -369,7 +368,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
     otLogInfoPlat("PANID=%X", aPanId);
 
-    sPanId = aPanId;
+    utilsSoftSrcMatchSetPanId(aPanId);
 
     for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
