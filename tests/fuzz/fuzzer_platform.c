@@ -28,6 +28,7 @@
 
 #include <string.h>
 
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/logging.h>
@@ -37,6 +38,15 @@
 #include <openthread/platform/settings.h>
 #include <openthread/platform/uart.h>
 
+typedef struct AlarmState
+{
+    uint32_t fire;
+    bool     isRunning;
+} AlarmState;
+
+static uint32_t     sAlarmNow;
+static AlarmState   sAlarmMilli;
+static AlarmState   sAlarmMicro;
 static uint32_t     sRandomState = 1;
 static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
@@ -44,40 +54,83 @@ static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
 void FuzzerPlatformInit(void)
 {
     sRandomState = 1;
+    sAlarmNow    = 0;
+    memset(&sAlarmMilli, 0, sizeof(sAlarmMilli));
+    memset(&sAlarmMicro, 0, sizeof(sAlarmMicro));
+}
+
+void FuzzerPlatformProcess(otInstance *aInstance)
+{
+    if (sAlarmMilli.isRunning || sAlarmMicro.isRunning)
+    {
+        uint32_t fire = UINT32_MAX;
+
+        if (sAlarmMilli.isRunning && fire > sAlarmMilli.fire)
+        {
+            fire = sAlarmMilli.fire;
+        }
+
+        if (sAlarmMicro.isRunning && fire > sAlarmMicro.fire)
+        {
+            fire = sAlarmMicro.fire;
+        }
+
+        sAlarmNow = fire;
+
+        if (sAlarmMilli.isRunning && sAlarmNow >= sAlarmMilli.fire)
+        {
+            sAlarmMilli.isRunning = false;
+            otPlatAlarmMilliFired(aInstance);
+        }
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+        if (sAlarmMicro.isRunning && sAlarmNow >= sAlarmMicro.fire)
+        {
+            sAlarmMicro.isRunning = false;
+            otPlatAlarmMicroFired(aInstance);
+        }
+#endif
+    }
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
-    return 0;
+    return sAlarmNow / 1000;
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aT0);
-    OT_UNUSED_VARIABLE(aDt);
+
+    sAlarmMilli.fire      = (aT0 + aDt) * 1000;
+    sAlarmMilli.isRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMilli.isRunning = false;
 }
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return 0;
+    return sAlarmNow;
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aT0);
-    OT_UNUSED_VARIABLE(aDt);
+
+    sAlarmMicro.fire      = aT0 + aDt;
+    sAlarmMicro.isRunning = true;
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMicro.isRunning = false;
 }
 
 bool otDiagIsEnabled(void)
