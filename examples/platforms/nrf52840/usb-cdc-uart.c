@@ -44,6 +44,7 @@
 #include <stdint.h>
 
 #include <common/logging.hpp>
+#include <openthread-system.h>
 #include <utils/code_utils.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -123,6 +124,7 @@ static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aCdcAcmInstance,
     default:
         break;
     }
+    otSysEventSignalPending();
 }
 
 static void usbdUserEventHandler(app_usbd_event_type_t aEvent)
@@ -151,6 +153,7 @@ static void usbdUserEventHandler(app_usbd_event_type_t aEvent)
     default:
         break;
     }
+    otSysEventSignalPending();
 }
 
 static bool hasPortOpenDelayPassed(void)
@@ -210,6 +213,7 @@ static void processConnection(void)
             app_usbd_start();
         }
     }
+    otSysEventSignalPending();
 }
 
 static void processReceive(void)
@@ -228,6 +232,7 @@ static void processReceive(void)
             sUsbState.mReceiveDone = false;
         }
     }
+    otSysEventSignalPending();
 }
 
 static void processTransmit(void)
@@ -249,6 +254,7 @@ static void processTransmit(void)
 
         otPlatUartSendDone();
     }
+    otSysEventSignalPending();
 }
 
 void nrf5UartInit(void)
