@@ -41,12 +41,12 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
-#include "common/crc16.hpp"
 #include "common/locator.hpp"
+#include "common/logging.hpp"
 #include "common/message.hpp"
+#include "mac/mac_frame.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
-#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -96,15 +96,10 @@ public:
     /**
      * This function returns the Joiner State.
      *
-     * @retval OT_JOINER_STATE_IDLE
-     * @retval OT_JOINER_STATE_DISCOVER
-     * @retval OT_JOINER_STATE_CONNECT
-     * @retval OT_JOINER_STATE_CONNECTED
-     * @retval OT_JOINER_STATE_ENTRUST
-     * @retval OT_JOINER_STATE_JOINED
+     * @returns The Joiner state (see `otJoinerState`).
      *
      */
-    otJoinerState GetState(void) const;
+    otJoinerState GetState(void) const { return mState; }
 
     /**
      * This method retrieves the Joiner ID.
@@ -117,36 +112,26 @@ public:
 private:
     enum
     {
-        kConfigExtAddressDelay = 100,  ///< milliseconds
-        kTimeout               = 4000, ///< milliseconds
-        kSpecificPriorityBonus = (1 << 9),
+        kJoinerUdpPort         = OPENTHREAD_CONFIG_JOINER_UDP_PORT,
+        kConfigExtAddressDelay = 100,  ///< [milliseconds]
+        kReponseTimeout        = 4000, ///< Maximum wait time to receive response [milliseconds].
     };
 
     struct JoinerRouter
     {
         Mac::ExtAddress mExtAddr;
-        uint16_t        mPriority;
-        uint16_t        mPanId;
+        Mac::PanId      mPanId;
         uint16_t        mJoinerUdpPort;
         uint8_t         mChannel;
+        uint8_t         mPriority;
     };
 
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(otActiveScanResult *aResult);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    void Close(void);
-    void Complete(otError aError);
-
-    void    AddJoinerRouter(JoinerRouter &aJoinerRouter);
-    otError TryNextJoin();
-
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void        HandleSecureCoapClientConnect(bool aConnected);
 
-    void        SendJoinerFinalize(void);
     static void HandleJoinerFinalizeResponse(void *               aContext,
                                              otMessage *          aMessage,
                                              const otMessageInfo *aMessageInfo,
@@ -155,17 +140,32 @@ private:
 
     static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
+    static const char *JoinerStateToString(otJoinerState aState);
+
+    void    SetState(otJoinerState aState);
+    void    SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult);
+    void    TryNextJoinerRouter(otError aPrevError);
+    otError Connect(JoinerRouter &aRouter);
+    void    Finish(otError aError);
+    uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
+    void    SendJoinerFinalize(void);
+    void    SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
+
+#if OPENTHREAD_ENABLE_CERT_LOG
+    void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
+#endif
 
     otJoinerState mState;
 
     otJoinerCallback mCallback;
     void *           mContext;
 
-    uint16_t mCcitt;
-    uint16_t mAnsi;
-
     JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES];
+    uint16_t     mJoinerRouterIndex;
 
     const char *mVendorName;
     const char *mVendorModel;
