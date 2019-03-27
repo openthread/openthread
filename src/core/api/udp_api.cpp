@@ -57,13 +57,13 @@ exit:
     return message;
 }
 
-otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
+otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
     otError         error    = OT_ERROR_INVALID_ARGS;
     Instance &      instance = *static_cast<Instance *>(aInstance);
     Ip6::UdpSocket &socket   = *new (aSocket) Ip6::UdpSocket(instance.GetIp6().GetUdp());
 
-    error = socket.Open(aCallback, aCallbackContext);
+    error = socket.Open(aCallback, aContext);
 
     return error;
 }

@@ -205,6 +205,12 @@ class Node:
     def get_addr(self, prefix):
         return self.interface.get_addr(prefix)
 
+    def get_addr_rloc(self):
+        return self.interface.get_addr_rloc()
+
+    def get_addr_leader_aloc(self):
+        return self.interface.get_addr_leader_aloc()
+
     def get_eidcaches(self):
         return self.interface.get_eidcaches()
 
@@ -295,6 +301,12 @@ class Node:
 
     def coaps_get(self):
         self.interface.coaps_get()
+
+    def commissioner_mgmtset(self, tlvs_binary):
+        self.interface.commissioner_mgmtset(tlvs_binary)
+
+    def commissioner_mgmtset_with_tlvs(self, tlvs):
+        self.interface.commissioner_mgmtset_with_tlvs(tlvs)
 
 if __name__ == '__main__':
     unittest.main()

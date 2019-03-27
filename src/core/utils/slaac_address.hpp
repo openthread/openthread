@@ -86,7 +86,7 @@ public:
     /**
      * This method enables the SLAAC module.
      *
-     * When enabled, new SLAAC addresses are generated and added fron on-mesh prefixes in network data.
+     * When enabled, new SLAAC addresses are generated and added from on-mesh prefixes in network data.
      *
      */
     void Enable(void);
@@ -98,6 +98,15 @@ public:
      *
      */
     void Disable(void);
+
+    /**
+     * This method indicates whether SLAAC module is enabled or not.
+     *
+     * @retval TRUE    SLAAC module is enabled.
+     * @retval FALSE   SLAAC module is disabled.
+     *
+     */
+    bool IsEnabled(void) const { return mEnabled; }
 
     /**
      * This methods sets a SLAAC prefix filter handler.

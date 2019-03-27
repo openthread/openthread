@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define MAX_ITERATIONS 100
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,6 +43,7 @@
 #include "common/code_utils.hpp"
 
 extern "C" void FuzzerPlatformInit(void);
+extern "C" void FuzzerPlatformProcess(otInstance *aInstance);
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -66,9 +69,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     otPlatUartReceived(buf, (uint16_t)size);
 
-    while (otTaskletsArePending(instance))
+    for (int i = 0; i < MAX_ITERATIONS; i++)
     {
-        otTaskletsProcess(instance);
+        while (otTaskletsArePending(instance))
+        {
+            otTaskletsProcess(instance);
+        }
+
+        FuzzerPlatformProcess(instance);
     }
 
 exit:

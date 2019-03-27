@@ -128,8 +128,8 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
  */
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              unsigned char *aPeerCert,
-                                             uint64_t *     aCertLength,
-                                             uint64_t       aCertBufferSize);
+                                             size_t *       aCertLength,
+                                             size_t         aCertBufferSize);
 
 /**
  * This method sets the authentication mode for the coap secure connection.

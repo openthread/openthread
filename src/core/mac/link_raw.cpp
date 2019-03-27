@@ -205,6 +205,24 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
 }
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
+                                        const Frame *aAckFrame,
+                                        otError      aError,
+                                        uint8_t      aRetryCount,
+                                        bool         aWillRetx)
+{
+    OT_UNUSED_VARIABLE(aAckFrame);
+    OT_UNUSED_VARIABLE(aWillRetx);
+
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogInfoMac("Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError), aRetryCount,
+                     aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+    }
+}
+#endif
+
 } // namespace Mac
 } // namespace ot
 

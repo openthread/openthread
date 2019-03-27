@@ -523,6 +523,17 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo);
 
 /**
+ * This function indicates whether the SLAAC module is enabled or not.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ *
+ * @retval TRUE    SLAAC module is enabled.
+ * @retval FALSE   SLAAC module is disabled.
+ *
+ */
+bool otIp6IsSlaacEnabled(otInstance *aInstance);
+
+/**
  * This function enables/disables the SLAAC module.
  *
  * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.

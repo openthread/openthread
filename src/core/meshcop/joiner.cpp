@@ -127,8 +127,8 @@ otError Joiner::Start(const char *     aPSKd,
 
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
 
-    SuccessOrExit(error =
-                      netif.GetMle().Discover(0, netif.GetMac().GetPanId(), true, false, HandleDiscoverResult, this));
+    SuccessOrExit(error = netif.GetMle().Discover(Mac::ChannelMask(0), netif.GetMac().GetPanId(), true, false,
+                                                  HandleDiscoverResult, this));
 
     mVendorName      = aVendorName;
     mVendorModel     = aVendorModel;

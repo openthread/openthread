@@ -59,7 +59,7 @@ public:
      * @param[in]  aPolynomial  The polynomial value.
      *
      */
-    Crc16(Polynomial aPolynomial);
+    explicit Crc16(Polynomial aPolynomial);
 
     /**
      * This method initializes the CRC16 computation.

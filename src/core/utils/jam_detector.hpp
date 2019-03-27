@@ -187,7 +187,7 @@ private:
     void        SetJamState(bool aNewState);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    void        UpdateHistory(bool aThresholdExceeded);
+    void        UpdateHistory(bool aDidExceedThreshold);
     void        UpdateJamState(void);
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
     void        HandleStateChanged(otChangedFlags aFlags);

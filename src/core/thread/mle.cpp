@@ -3173,8 +3173,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
         case kAttachBetter:
             VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId());
-            VerifyOrExit(netif.GetMle().ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
-                                                          netif.GetMle().IsSingleton(), mLeaderData) > 0);
+            VerifyOrExit(MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                      netif.GetMle().IsSingleton(), mLeaderData) > 0);
             break;
         }
     }
@@ -3187,8 +3187,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
         if (IsFullThreadDevice())
         {
-            compare = netif.GetMle().ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
-                                                       mParentIsSingleton, mParentLeaderData);
+            compare = MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData, mParentIsSingleton,
+                                                   mParentLeaderData);
         }
 
         // only consider partitions that are the same or better

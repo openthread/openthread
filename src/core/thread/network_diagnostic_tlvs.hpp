@@ -48,12 +48,12 @@
 #include "phy/phy.hpp"
 #include "thread/mle_constants.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 namespace NetworkDiagnostic {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-mle-tlvs

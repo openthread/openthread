@@ -52,8 +52,6 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace NetworkData {
 
@@ -406,7 +404,7 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 
 otError LeaderBase::SetNetworkData(uint8_t        aVersion,
                                    uint8_t        aStableVersion,
-                                   bool           aStable,
+                                   bool           aStableOnly,
                                    const Message &aMessage,
                                    uint16_t       aMessageOffset)
 {
@@ -424,7 +422,7 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
-    if (aStable)
+    if (aStableOnly)
     {
         RemoveTemporaryData(mTlvs, mLength);
     }

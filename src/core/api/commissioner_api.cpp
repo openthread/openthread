@@ -299,12 +299,12 @@ otError otCommissionerGeneratePSKc(otInstance *           aInstance,
                                    const otExtendedPanId *aExtPanId,
                                    uint8_t *              aPSKc)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    error = instance.GetThreadNetif().GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
+    error = MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPassPhrase);

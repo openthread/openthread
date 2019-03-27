@@ -110,7 +110,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
-    Interpreter(Instance *aInstance);
+    explicit Interpreter(Instance *aInstance);
 
     /**
      * This method interprets a CLI command.
@@ -162,7 +162,7 @@ public:
      *
      * @param[in]  aError Error code value.
      */
-    void AppendResult(otError error) const;
+    void AppendResult(otError aError) const;
 
     /**
      * Write a number of bytes to the CLI console as a hex string.

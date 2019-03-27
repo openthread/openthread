@@ -33,7 +33,7 @@ from wpan import verify
 #-----------------------------------------------------------------------------------------------------------------------
 # Test description: SLAAC address
 #
-# This test covers the addition/removal of SLAAC IPv6 address.
+# This test covers the addition/removal of SLAAC IPv6 address by `wpantund`.
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
@@ -124,6 +124,13 @@ c2.join_node(r2, node_type=wpan.JOIN_TYPE_END_DEVICE)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test implementation
+
+# This test covers the SLAAC address management by `wpantund`. So before starting the test we ensure that SLAAC module
+# on NCP is disabled on all nodes
+
+for node in all_nodes:
+    node.set(wpan.WPAN_OT_SLAAC_ENABLED, 'false')
+    verify(node.get(wpan.WPAN_OT_SLAAC_ENABLED) == 'false')
 
 WAIT_INTERVAL = 5
 
