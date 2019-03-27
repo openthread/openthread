@@ -106,9 +106,9 @@ void otPlatDebugUart_vprintf(const char *fmt, va_list ap);
  *
  * This function MUST be implemented by the platform
  *
- * @param[in] the_byte   what to transmit
+ * @param[in] c   what to transmit
  */
-void otPlatDebugUart_putchar_raw(int the_byte);
+void otPlatDebugUart_putchar_raw(int c);
 
 /**
  * Poll/test debug uart if a key has been pressed.
@@ -138,9 +138,9 @@ int otPlatDebugUart_getc(void);
  * A WEAK default implementation is provided
  * that can be overridden as needed.
  *
- * @param[in] the_byte   the byte to transmit
+ * @param[in] c   the byte to transmit
  */
-void otPlatDebugUart_putchar(int the_byte);
+void otPlatDebugUart_putchar(int c);
 
 /**
  * identical to "man 3 puts" - terminates with lf

@@ -746,6 +746,30 @@ AC_MSG_CHECKING([should NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
+# Readline - readline library to use for POSIX CLI
+#
+
+AC_ARG_WITH(
+    [readline],
+    [AS_HELP_STRING([--with-readline],[Specify the readline library (none|readline|edit) @<:@default=none@:>@.])],
+    [],
+    [with_readline=none])
+
+case "${with_readline}" in
+"none")
+    ;;
+"readline")
+    AC_CHECK_LIB([readline], [rl_callback_handler_install])
+    ;;
+"edit")
+    AC_CHECK_LIB([edit], [rl_callback_handler_install])
+    ;;
+*)
+    AC_MSG_ERROR([unexpected --with-readline=${with_readline}])
+    ;;
+esac
+
+#
 # Thread UDP forward
 #
 
@@ -1660,7 +1684,6 @@ AC_MSG_RESULT(${enable_ecdsa})
 AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
-
 
 #
 # Examples

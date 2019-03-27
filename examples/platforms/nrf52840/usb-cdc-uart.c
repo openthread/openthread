@@ -75,7 +75,7 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(sAppCdcAcm,
                             CDC_ACM_COMM_EPIN,
                             CDC_ACM_DATA_EPIN,
                             CDC_ACM_DATA_EPOUT,
-                            APP_USBD_CDC_COMM_PROTOCOL_AT_V250);
+                            APP_USBD_CDC_COMM_PROTOCOL_NONE);
 
 // Rx buffer length must by multiple of NRF_DRV_USBD_EPSIZE.
 static char sRxBuffer[NRF_DRV_USBD_EPSIZE * ((UART_RX_BUFFER_SIZE + NRF_DRV_USBD_EPSIZE - 1) / NRF_DRV_USBD_EPSIZE)];

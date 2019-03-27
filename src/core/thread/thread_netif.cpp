@@ -43,11 +43,6 @@
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-#include "utils/slaac_address.hpp"
-#endif
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
@@ -60,6 +55,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     , mDhcp6Server(aInstance)
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    , mSlaac(aInstance)
+#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mDnsClient(aInstance.GetThreadNetif())
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
@@ -88,7 +86,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mCommissioner(aInstance)
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
-    , mDtls(aInstance)
     , mCoapSecure(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_JOINER
@@ -112,9 +109,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
 {
     mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
-#endif
 }
 
 void ThreadNetif::Up(void)
@@ -150,14 +144,14 @@ void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
-#if OPENTHREAD_ENABLE_DTLS
-    mDtls.Stop();
-#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     mSntpClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_DTLS
+    mCoapSecure.Stop();
 #endif
     mCoap.Stop();
     mMleRouter.Disable();
@@ -178,11 +172,11 @@ exit:
     return;
 }
 
-otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
+otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &aAddress) const
 {
-    address.mType       = Ip6::LinkAddress::kEui64;
-    address.mLength     = sizeof(address.mExtAddress);
-    address.mExtAddress = mMac.GetExtAddress();
+    aAddress.mType       = Ip6::LinkAddress::kEui64;
+    aAddress.mLength     = sizeof(aAddress.mExtAddress);
+    aAddress.mExtAddress = mMac.GetExtAddress();
     return OT_ERROR_NONE;
 }
 
@@ -227,13 +221,5 @@ bool ThreadNetif::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo)
 exit:
     return rval;
 }
-
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-void ThreadNetif::UpdateSlaac(void)
-{
-    Utils::Slaac::UpdateAddresses(&GetInstance(), mSlaacAddresses, OT_ARRAY_LENGTH(mSlaacAddresses),
-                                  otIp6CreateRandomIid, NULL);
-}
-#endif
 
 } // namespace ot

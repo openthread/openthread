@@ -242,7 +242,7 @@ uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, u
     return rval;
 }
 
-uint8_t Address::PrefixMatch(const Address &aOther) const
+uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
 {
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }

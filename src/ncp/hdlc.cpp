@@ -201,9 +201,9 @@ exit:
     return error;
 }
 
-Decoder::Decoder(FrameWritePointer &aWritePointer, FrameHandler aFrameHandler, void *aContext)
+Decoder::Decoder(FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext)
     : mState(kStateNoSync)
-    , mWritePointer(aWritePointer)
+    , mWritePointer(aFrameWritePointer)
     , mFrameHandler(aFrameHandler)
     , mContext(aContext)
     , mFcs(0)

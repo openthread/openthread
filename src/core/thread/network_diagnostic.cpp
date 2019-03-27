@@ -52,8 +52,6 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
 namespace ot {
@@ -252,7 +250,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
         entry.SetReserved(0);
         entry.SetTimeout(timeout + 4);
-        entry.SetChildId(netif.GetMle().GetChildId(child.GetRloc16()));
+        entry.SetChildId(Mle::Mle::GetChildId(child.GetRloc16()));
         entry.SetMode(child.GetDeviceMode());
 
         SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
@@ -423,10 +421,20 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kChannelPages:
         {
+            uint8_t         length   = 0;
+            uint8_t         pageMask = Phy::kSupportedChannelPages;
             ChannelPagesTlv tlv;
+
             tlv.Init();
-            tlv.GetChannelPages()[0] = OT_RADIO_CHANNEL_PAGE;
-            tlv.SetLength(1);
+            for (uint8_t page = 0; page < sizeof(pageMask) * 8; page++)
+            {
+                if (pageMask & (1 << page))
+                {
+                    tlv.GetChannelPages()[length++] = page;
+                }
+            }
+
+            tlv.SetLength(length);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }

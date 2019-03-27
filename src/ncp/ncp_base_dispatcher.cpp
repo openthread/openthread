@@ -511,6 +511,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
         break;
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    case SPINEL_PROP_SLAAC_ENABLED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>;
+        break;
+#endif
 #if OPENTHREAD_ENABLE_SERVICE
     case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
@@ -853,11 +858,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    case SPINEL_PROP_SLAAC_ENABLED:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>;
+        break;
+#endif
 #if OPENTHREAD_ENABLE_SERVICE
     case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
         break;
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------

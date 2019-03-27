@@ -59,7 +59,7 @@ public:
      * @param[in] aNcpBuffer   A reference to a `NcpFrameBuffer` where the frames are written.
      *
      */
-    SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
+    explicit SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
         : mNcpBuffer(aNcpBuffer)
         , mNumOpenStructs(0)
         , mSavedNumOpenStructs(0)

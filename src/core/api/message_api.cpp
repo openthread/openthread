@@ -100,7 +100,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
     return message.Append(aBuf, aLength);
 }
 
-int otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
+uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
     const Message &message = *static_cast<const Message *>(aMessage);
     return message.Read(aOffset, aLength, aBuf);

@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_SYSTEM_H_
 #define OPENTHREAD_SYSTEM_H_
 
+#include <sys/select.h>
+
 #include <openthread/instance.h>
 
 #ifdef __cplusplus

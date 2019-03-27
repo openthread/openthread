@@ -295,6 +295,7 @@ void UARTE0_UART0_IRQHandler(void)
         {
             sReceiveBuffer[sReceiveHead] = byte;
             sReceiveHead                 = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
+
             otSysEventSignalPending();
         }
     }
@@ -314,6 +315,7 @@ void UARTE0_UART0_IRQHandler(void)
         {
             sTransmitDone = true;
             nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STOPTX);
+
             otSysEventSignalPending();
         }
     }

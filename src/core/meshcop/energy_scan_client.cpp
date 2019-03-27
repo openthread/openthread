@@ -50,9 +50,6 @@
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 EnergyScanClient::EnergyScanClient(Instance &aInstance)
@@ -95,9 +92,8 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     count.Init();
     count.SetCount(aCount);
@@ -140,9 +136,8 @@ void EnergyScanClient::HandleReport(void *aContext, otMessage *aMessage, const o
 
 void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &           netif = GetNetif();
-    MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        responseInfo(aMessageInfo);
+    ThreadNetif &netif = GetNetif();
+    uint32_t     mask;
 
     OT_TOOL_PACKED_BEGIN
     struct
@@ -155,18 +150,17 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
 
     otLogInfoMeshCoP("received energy scan report");
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid() && channelMask.GetChannelPage() == OT_RADIO_CHANNEL_PAGE);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
     VerifyOrExit(energyList.tlv.IsValid());
 
     if (mCallback != NULL)
     {
-        mCallback(channelMask.GetMask(), energyList.list, energyList.tlv.GetLength(), mContext);
+        mCallback(mask, energyList.list, energyList.tlv.GetLength(), mContext);
     }
 
-    SuccessOrExit(netif.GetCoap().SendEmptyAck(aMessage, responseInfo));
+    SuccessOrExit(netif.GetCoap().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoMeshCoP("sent energy scan report response");
 

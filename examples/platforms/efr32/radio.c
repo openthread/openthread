@@ -66,14 +66,6 @@ enum
 
 enum
 {
-    EFR32_915MHZ_OQPSK_CHANNEL_MIN = 1,
-    EFR32_915MHZ_OQPSK_CHANNEL_MAX = 10,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MIN = 11,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MAX = 26,
-};
-
-enum
-{
     EFR32_RECEIVE_SENSITIVITY    = -100, // dBm
     EFR32_RSSI_AVERAGING_TIME    = 16,   // us
     EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
@@ -88,7 +80,7 @@ enum
 
 enum
 {
-#if RADIO_SUPPORT_2P4GHZ_OQPSK && RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT && RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     EFR32_NUM_BAND_CONFIGS = 2,
 #else
     EFR32_NUM_BAND_CONFIGS = 1,
@@ -131,7 +123,7 @@ typedef struct srcMatchEntry
 static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
 static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
 
-efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
+static efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
 
 static volatile energyScanStatus sEnergyScanStatus;
 static volatile int8_t           sEnergyScanResultDbm;
@@ -180,7 +172,7 @@ static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static efr32BandConfig *sTxBandConfig = NULL;
 static efr32BandConfig *sRxBandConfig = NULL;
 
-RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
+static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t     status;
     RAIL_Handle_t     handle;
@@ -258,7 +250,7 @@ static void efr32RadioSetTxPower(RAIL_Handle_t               aRailHandle,
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
+static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
     efr32BandConfig *config = NULL;
 
@@ -274,29 +266,29 @@ efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
     return config;
 }
 
-void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
+static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
 {
     uint8_t index = 0;
 
-#if RADIO_SUPPORT_2P4GHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = NULL;
-    sBandConfigs[index].mChannelMin                = EFR32_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_2P4GHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
     index++;
 #endif
 
-#if RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = channelConfigs[0];
-    sBandConfigs[index].mChannelMin                = EFR32_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_915MHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
 #endif
@@ -620,7 +612,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-int8_t findSrcMatchAvailEntry(bool aShortAddress)
+static int8_t findSrcMatchAvailEntry(bool aShortAddress)
 {
     int8_t entry = -1;
 
@@ -650,7 +642,7 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
     return entry;
 }
 
-int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
+static int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 {
     int8_t   entry    = -1;
     uint16_t checksum = aShortAddress + sPanId;
@@ -667,7 +659,7 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
     return entry;
 }
 
-int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
+static int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
 {
     int8_t   entry    = -1;
     uint16_t checksum = sPanId;
@@ -689,7 +681,7 @@ int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
     return entry;
 }
 
-void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
+static void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
 {
     uint16_t checksum = aShortAddress + sPanId;
 
@@ -697,7 +689,7 @@ void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
     srcMatchShortEntry[entry].allocated = true;
 }
 
-void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
+static void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
 {
     uint16_t checksum = sPanId;
 
@@ -710,16 +702,16 @@ void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
     srcMatchExtEntry[entry].allocated = true;
 }
 
-void removeFromSrcMatchShortIndirect(uint8_t entry)
+static void removeFromSrcMatchShortIndirect(uint8_t entry)
 {
     srcMatchShortEntry[entry].allocated = false;
-    memset(&srcMatchShortEntry[entry].checksum, 0, sizeof(uint16_t));
+    srcMatchShortEntry[entry].checksum  = 0;
 }
 
-void removeFromSrcMatchExtIndirect(uint8_t entry)
+static void removeFromSrcMatchExtIndirect(uint8_t entry)
 {
     srcMatchExtEntry[entry].allocated = false;
-    memset(&srcMatchExtEntry[entry].checksum, 0, sizeof(uint16_t));
+    srcMatchExtEntry[entry].checksum  = 0;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)

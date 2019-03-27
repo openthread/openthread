@@ -636,11 +636,13 @@ public:
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
      *
+     * @param[in]  aDeviceMode  The device mode to set.
+     *
      * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
      * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
      *
      */
-    otError SetDeviceMode(uint8_t aMode);
+    otError SetDeviceMode(uint8_t aDeviceMode);
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -700,10 +702,10 @@ public:
     /**
      * This method sets the Mesh Local Prefix.
      *
-     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
+     * @param[in]  aMeshLocalPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aPrefix);
+    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix);
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -1549,21 +1551,21 @@ protected:
     /**
      * This method prints an MLE log message with an IPv6 address.
      *
-     * @param[in]  aLogMessage  The log message string.
-     * @param[in]  aAddress     The IPv6 address of the peer.
+     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAddress    The IPv6 address of the peer.
      *
      */
-    void LogMleMessage(const char *aLogMessage, const Ip6::Address &aAddress) const;
+    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const;
 
     /**
      * This method prints an MLE log message with an IPv6 address and RLOC16.
      *
-     * @param[in]  aLogMessage  The log message string.
-     * @param[in]  aAddress     The IPv6 address of the peer.
-     * @param[in]  aRloc        The RLOC16.
+     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAddress    The IPv6 address of the peer.
+     * @param[in]  aRloc       The RLOC16.
      *
      */
-    void LogMleMessage(const char *aLogMessage, const Ip6::Address &aAddress, uint16_t aRloc) const;
+    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const;
 
     /**
      * This method triggers MLE Announce on previous channel after the Thread device successfully

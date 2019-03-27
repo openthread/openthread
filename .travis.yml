@@ -33,7 +33,7 @@ sudo: required
 dist: trusty
 
 before_install:
-  - .travis/before_install.sh
+  - travis_retry .travis/before_install.sh
 
 before_script:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
@@ -49,9 +49,6 @@ after_success:
 matrix:
   include:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="posix-app-pty" VERBOSE=1

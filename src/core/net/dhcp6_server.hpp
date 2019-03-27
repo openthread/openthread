@@ -66,35 +66,6 @@ namespace Dhcp6 {
 #define OT_DHCP6_DEFAULT_PREFERRED_LIFETIME 0xffffffffU
 #define OT_DHCP6_DEFAULT_VALID_LIFETIME 0xffffffffU
 
-/**
- * This class implements prefix agent.
- *
- */
-
-OT_TOOL_PACKED_BEGIN
-class PrefixAgent
-{
-public:
-    /**
-     * This method returns the reference to the IPv6 prefix.
-     *
-     * @returns A reference to the IPv6 prefix.
-     *
-     */
-    otIp6Prefix *GetPrefix(void) { return &mIp6Prefix; }
-
-    /**
-     * This method sets the IPv6 prefix.
-     *
-     * @param[in]  aIp6Prefix The reference to the IPv6 prefix to set.
-     *
-     */
-    void SetPrefix(otIp6Prefix &aIp6Prefix) { memcpy(&mIp6Prefix, &aIp6Prefix, sizeof(otIp6Prefix)); }
-
-private:
-    otIp6Prefix mIp6Prefix; ///< prefix
-} OT_TOOL_PACKED_END;
-
 class Dhcp6Server : public InstanceLocator
 {
 public:
@@ -113,22 +84,120 @@ public:
     otError UpdateService();
 
 private:
+    class PrefixAgent
+    {
+    public:
+        /**
+         * This method indicates whether or not @p aPrefix matches this entry.
+         *
+         * @param[in]  aPrefix  The prefix to compare.
+         *
+         * @retval TRUE if the prefix matches.
+         * @retval FALSE if the prefix does not match.
+         *
+         */
+        bool IsPrefixMatch(const otIp6Prefix &aPrefix) const
+        {
+            return (mPrefix.mLength == aPrefix.mLength) &&
+                   (otIp6PrefixMatch(&mPrefix.mPrefix, &aPrefix.mPrefix) >= mPrefix.mLength);
+        }
+
+        /**
+         * This method indicates whether or not @p aAddress has a matching prefix.
+         *
+         * @param[in]  aAddress  The IPv6 address to compare.
+         *
+         * @retval TRUE if the address has a matching prefix.
+         * @retval FALSE if the address does not have a matching prefix.
+         *
+         */
+        bool IsPrefixMatch(const otIp6Address &aAddress) const
+        {
+            return (otIp6PrefixMatch(&mPrefix.mPrefix, &aAddress) >= mPrefix.mLength);
+        }
+
+        /**
+         * This method indicates whether or not this entry is valid.
+         *
+         * @retval TRUE if this entry is valid.
+         * @retval FALSE if this entry is not valid.
+         *
+         */
+        bool IsValid(void) const { return mAloc.mValid; }
+
+        /**
+         * This method sets the entry to invalid.
+         *
+         */
+        void Clear(void) { mAloc.mValid = false; }
+
+        /**
+         * This method returns the 6LoWPAN context ID.
+         *
+         * @returns The 6LoWPAN context ID.
+         *
+         */
+        uint8_t GetContextId(void) const { return mAloc.mAddress.mFields.m8[15]; }
+
+        /**
+         * This method returns the ALOC.
+         *
+         * @returns the ALOC.
+         *
+         */
+        Ip6::NetifUnicastAddress &GetAloc(void) { return mAloc; }
+
+        /**
+         * This method returns the IPv6 prefix.
+         *
+         * @returns The IPv6 prefix.
+         *
+         */
+        const Ip6::Address &GetPrefix(void) const { return static_cast<const Ip6::Address &>(mPrefix.mPrefix); }
+
+        /**
+         * This method sets the ALOC.
+         *
+         * @param[in]  aPrefix           The IPv6 prefix.
+         * @param[in]  aMeshLocalPrefix  The Mesh Local Prefix.
+         * @param[in]  aContextId        The 6LoWPAN Context ID.
+         *
+         */
+        void Set(const otIp6Prefix &aPrefix, const otMeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
+        {
+            mPrefix = aPrefix;
+
+            memcpy(&mAloc.mAddress, &aMeshLocalPrefix, OT_IP6_PREFIX_SIZE);
+            mAloc.mAddress.mFields.m16[4] = HostSwap16(0x0000);
+            mAloc.mAddress.mFields.m16[5] = HostSwap16(0x00ff);
+            mAloc.mAddress.mFields.m16[6] = HostSwap16(0xfe00);
+            mAloc.mAddress.mFields.m8[14] = Ip6::Address::kAloc16Mask;
+            mAloc.mAddress.mFields.m8[15] = aContextId;
+            mAloc.mPrefixLength           = 64;
+            mAloc.mPreferred              = true;
+            mAloc.mValid                  = true;
+        }
+
+    private:
+        Ip6::NetifUnicastAddress mAloc;
+        otIp6Prefix              mPrefix;
+    };
+
     void Start(void);
     void Stop(void);
 
-    otError AddPrefixAgent(otIp6Prefix &aIp6Prefix);
-    otError RemovePrefixAgent(const uint8_t *aIp6Address);
+    otError AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
     otError AppendHeader(Message &aMessage, uint8_t *aTransactionId);
-    otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClient);
+    otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
     otError AppendServerIdentifier(Message &aMessage);
     otError AppendIaNa(Message &aMessage, IaNa &aIaNa);
     otError AppendStatusCode(Message &aMessage, Status aStatusCode);
-    otError AppendIaAddress(Message &aMessage, ClientIdentifier &aClient);
+    otError AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId);
     otError AppendRapidCommit(Message &aMessage);
     otError AppendVendorSpecificInformation(Message &aMessage);
 
-    otError AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix, ClientIdentifier &aClient);
+    otError AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -136,19 +205,18 @@ private:
     void ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClient);
+    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
     otError  ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
     otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
     otError  ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
-    otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientIdentifier, IaNa &aIaNa);
+    otError SendReply(otIp6Address &aDst, uint8_t *aTransactionId, ClientIdentifier &aClientId, IaNa &aIaNa);
 
     Ip6::UdpSocket mSocket;
 
-    Ip6::NetifUnicastAddress mAgentsAloc[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    PrefixAgent              mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-    uint8_t                  mPrefixAgentsMask;
-    uint8_t                  mPrefixAgentsCount;
+    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    uint8_t     mPrefixAgentsCount;
+    uint8_t     mPrefixAgentsMask;
 };
 
 } // namespace Dhcp6

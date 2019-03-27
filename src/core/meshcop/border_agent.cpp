@@ -164,7 +164,7 @@ static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aFor
 
     VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != NULL, error = OT_ERROR_NO_BUFS);
     aForwardContext.ToHeader(*message, CoapCodeFromError(error));
-    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerMessageInfo()));
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -197,7 +197,7 @@ static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, const Coap::Message 
     message->SetMessageId(aSeparate ? 0 : aRequest.GetMessageId());
     message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
 
-    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerMessageInfo()));
+    SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -436,7 +436,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
     }
 
-    SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerMessageInfo()));
+    SuccessOrExit(error = netif.GetCoapSecure().SendMessage(*message, netif.GetCoapSecure().GetPeerAddress()));
 
     otLogInfoMeshCoP("Sent to commissioner on %s", OT_URI_PATH_PROXY_RX);
 
@@ -477,17 +477,17 @@ exit:
     }
 }
 
-otError BorderAgent::ForwardToCommissioner(Coap::Message &aNewMessage, const Message &aMessage)
+otError BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage)
 {
     ThreadNetif &netif  = GetNetif();
     otError      error  = OT_ERROR_NONE;
     uint16_t     offset = 0;
 
-    offset = aNewMessage.GetLength();
-    SuccessOrExit(error = aNewMessage.SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
-    aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), aNewMessage);
+    offset = aForwardMessage.GetLength();
+    SuccessOrExit(error = aForwardMessage.SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
+    aMessage.CopyTo(aMessage.GetOffset(), offset, aMessage.GetLength() - aMessage.GetOffset(), aForwardMessage);
 
-    SuccessOrExit(error = netif.GetCoapSecure().SendMessage(aNewMessage, netif.GetCoapSecure().GetPeerMessageInfo()));
+    SuccessOrExit(error = netif.GetCoapSecure().SendMessage(aForwardMessage, netif.GetCoapSecure().GetPeerAddress()));
 
     otLogInfoMeshCoP("Sent to commissioner");
 
@@ -698,7 +698,7 @@ void BorderAgent::HandleTimeout(void)
 
 otError BorderAgent::Stop(void)
 {
-    otError           error;
+    otError           error = OT_ERROR_NONE;
     ThreadNetif &     netif = GetNetif();
     Coap::CoapSecure &coaps = netif.GetCoapSecure();
     Coap::Coap &      coap  = netif.GetCoap();
@@ -720,8 +720,7 @@ otError BorderAgent::Stop(void)
 
     coap.RemoveResource(mRelayReceive);
 
-    error = coaps.Stop();
-    assert(error == OT_ERROR_NONE);
+    coaps.Stop();
 
     SetState(OT_BORDER_AGENT_STATE_STOPPED);
 

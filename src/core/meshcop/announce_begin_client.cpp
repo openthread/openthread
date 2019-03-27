@@ -83,9 +83,8 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
 
     count.Init();
     count.SetCount(aCount);

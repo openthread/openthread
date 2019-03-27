@@ -89,8 +89,9 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     if (mTimer.IsRunning())
     {
-        VerifyOrExit(
-            !strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(), sizeof(mCommissionerId)));
+        VerifyOrExit((commissionerId.GetLength() == mCommissionerId.GetLength()) &&
+                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                               commissionerId.GetLength())));
 
         ResignCommissioner();
     }

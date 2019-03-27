@@ -109,7 +109,7 @@ public:
      * @param[in] ...        Arguments for the format specification.
      *
      */
-    String(const char *aFormat, ...)
+    explicit String(const char *aFormat, ...)
         : mLength(0)
     {
         va_list args;

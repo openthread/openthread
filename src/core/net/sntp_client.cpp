@@ -45,8 +45,6 @@
  *   This file implements the SNTP client.
  */
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Sntp {
 
@@ -386,8 +384,6 @@ exit:
     {
         FinalizeSntpTransaction(*message, queryMetadata, 0, error);
     }
-
-    return;
 }
 
 } // namespace Sntp

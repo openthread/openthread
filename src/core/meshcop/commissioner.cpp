@@ -107,7 +107,7 @@ otError Commissioner::Start(void)
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = GetNetif().GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT, SendRelayTransmit, this));
+    SuccessOrExit(error = GetNetif().GetCoapSecure().Start(SendRelayTransmit, this));
 
     mState            = OT_COMMISSIONER_STATE_PETITION;
     mTransmitAttempts = 0;
@@ -135,7 +135,7 @@ otError Commissioner::Stop(void)
 
     mTimer.Stop();
 
-    GetNetif().GetDtls().Stop();
+    GetNetif().GetCoapSecure().Stop();
 
     SendKeepAlive();
 
@@ -318,7 +318,7 @@ exit:
 
 const char *Commissioner::GetProvisioningUrl(uint16_t &aLength) const
 {
-    ProvisioningUrlTlv &provisioningUrl = GetNetif().GetDtls().mProvisioningUrl;
+    ProvisioningUrlTlv &provisioningUrl = GetNetif().GetCoapSecure().GetDtls().mProvisioningUrl;
 
     aLength = provisioningUrl.GetLength();
 
@@ -327,7 +327,7 @@ const char *Commissioner::GetProvisioningUrl(uint16_t &aLength) const
 
 otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
-    return GetNetif().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
+    return GetNetif().GetCoapSecure().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
 }
 
 uint16_t Commissioner::GetSessionId(void) const
@@ -898,8 +898,9 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == OT_ERROR_NONE)
     {
-        if (provisioningUrl.GetLength() != GetNetif().GetDtls().mProvisioningUrl.GetLength() ||
-            memcmp(provisioningUrl.GetProvisioningUrl(), GetNetif().GetDtls().mProvisioningUrl.GetProvisioningUrl(),
+        if (provisioningUrl.GetLength() != GetNetif().GetCoapSecure().GetDtls().mProvisioningUrl.GetLength() ||
+            memcmp(provisioningUrl.GetProvisioningUrl(),
+                   GetNetif().GetCoapSecure().GetDtls().mProvisioningUrl.GetProvisioningUrl(),
                    provisioningUrl.GetLength()) != 0)
         {
             state = StateTlv::kReject;

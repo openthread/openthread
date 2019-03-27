@@ -41,12 +41,12 @@
 #include "common/encoding.hpp"
 #include "net/ip6_address.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 #define THREAD_ENTERPRISE_NUMBER 44970
 
 namespace ot {
 namespace NetworkData {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-netdata-tlvs

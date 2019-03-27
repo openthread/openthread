@@ -43,6 +43,7 @@
 #include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "phy/phy.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -216,20 +217,18 @@ exit:
 
 otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 {
-    otError                            error;
-    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
-    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
-    Dataset                            dataset(mLocal.GetType());
+    otError                        error;
+    const MeshCoP::ChannelMaskTlv *channelMaskTlv;
+    uint32_t                       mask;
+    Dataset                        dataset(mLocal.GetType());
 
     SuccessOrExit(error = mLocal.Get(dataset));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
-    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
-    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
-
-    aChannelMask.SetMask(channelMaskEntry->GetMask() & OT_RADIO_SUPPORTED_CHANNELS);
+    aChannelMask.SetMask(mask & Phy::kSupportedChannels);
 
     VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
@@ -531,17 +530,15 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ChannelTlv channel;
         channel.Init();
-        channel.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         channel.SetChannel(aDataset.mChannel);
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPage0Present)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         ChannelMaskTlv channelMask;
         channelMask.Init();
-        channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-        channelMask.SetMask(aDataset.mChannelMaskPage0);
+        channelMask.SetChannelMask(aDataset.mChannelMask);
         SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
     }
 
@@ -643,7 +640,7 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.mIsChannelMaskPage0Present)
+    if (aDatasetComponents.mIsChannelMaskPresent)
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }

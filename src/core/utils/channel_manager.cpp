@@ -41,6 +41,7 @@
 #include "common/logging.hpp"
 #include "common/owner-locator.hpp"
 #include "common/random.hpp"
+#include "phy/phy.hpp"
 
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
 
@@ -254,14 +255,14 @@ void ChannelManager::HandleTimer(void)
     }
 }
 
-void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aChangedFlags)
 {
-    aCallback.GetOwner<ChannelManager>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<ChannelManager>().HandleStateChanged(aChangedFlags);
 }
 
-void ChannelManager::HandleStateChanged(otChangedFlags aFlags)
+void ChannelManager::HandleStateChanged(otChangedFlags aChangedFlags)
 {
-    VerifyOrExit((aFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
+    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
     VerifyOrExit(mChannel == GetInstance().Get<Mac::Mac>().GetPanChannel());
 
     mState = kStateIdle;
@@ -481,14 +482,14 @@ exit:
 
 void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {
-    mSupportedChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
+    mSupportedChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
 
     otLogInfoUtil("ChannelManager: Supported channels: %s", mSupportedChannelMask.ToString().AsCString());
 }
 
 void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 {
-    mFavoredChannelMask.SetMask(aChannelMask & OT_RADIO_SUPPORTED_CHANNELS);
+    mFavoredChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
 
     otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
 }

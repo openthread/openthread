@@ -343,7 +343,7 @@ public:
      * @returns The number of IPv6 prefix bits that match.
      *
      */
-    uint8_t PrefixMatch(const Address &aOther) const;
+    uint8_t PrefixMatch(const otIp6Address &aOther) const;
 
     /**
      * This method evaluates whether or not the IPv6 addresses match.
@@ -413,4 +413,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_ADDRESS_HPP_
+#endif // IP6_ADDRESS_HPP_

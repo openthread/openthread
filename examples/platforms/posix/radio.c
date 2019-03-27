@@ -92,6 +92,12 @@ enum
     POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
+enum
+{
+    POSIX_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    POSIX_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+};
+
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
@@ -543,13 +549,13 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     uint8_t  channel = sReceiveFrame.mChannel;
     uint32_t probabilityThreshold;
 
-    otEXPECT((OT_RADIO_CHANNEL_MIN <= channel) && channel <= (OT_RADIO_CHANNEL_MAX));
+    otEXPECT((POSIX_RADIO_CHANNEL_MIN <= channel) && channel <= (POSIX_RADIO_CHANNEL_MAX));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
 
-    probabilityThreshold = (channel - OT_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    probabilityThreshold = (channel - POSIX_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
     if ((otPlatRandomGet() & 0xffff) < (probabilityThreshold * 0xffff / 100))
     {

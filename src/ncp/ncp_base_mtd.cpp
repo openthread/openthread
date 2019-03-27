@@ -209,7 +209,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
-    return EncodeChannelMask(otLinkGetSupportedChannelMask(mInstance));
+    return EncodeChannelMask(otLinkGetPhySupportedChannelMask(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
@@ -1090,11 +1090,11 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPage0Present)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         SuccessOrExit(mEncoder.OpenStruct());
         SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_PHY_CHAN_SUPPORTED));
-        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMaskPage0));
+        SuccessOrExit(EncodeChannelMask(aDataset.mChannelMask));
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
@@ -1122,7 +1122,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                                           const uint8_t **      aTlvs,
                                           uint8_t *             aTlvsLength,
                                           const otIp6Address ** aDestIpAddress,
-                                          bool                  aAllowEmptyValue)
+                                          bool                  aAllowEmptyValues)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1154,7 +1154,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
         {
         case SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mActiveTimestamp));
             }
@@ -1164,7 +1164,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_DATASET_PENDING_TIMESTAMP:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mPendingTimestamp));
             }
@@ -1174,7 +1174,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_NET_MASTER_KEY:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const uint8_t *key;
                 uint16_t       len;
@@ -1189,7 +1189,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_NET_NETWORK_NAME:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const char *name;
                 size_t      len;
@@ -1205,7 +1205,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_NET_XPANID:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const uint8_t *xpanid;
                 uint16_t       len;
@@ -1220,7 +1220,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_IPV6_ML_PREFIX:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const otIp6Address *addr;
                 uint8_t             prefixLen;
@@ -1236,7 +1236,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_DATASET_DELAY_TIMER:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = mDecoder.ReadUint32(aDataset.mDelay));
             }
@@ -1246,7 +1246,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_MAC_15_4_PANID:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mPanId));
             }
@@ -1256,7 +1256,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_PHY_CHAN:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 uint8_t channel;
 
@@ -1269,7 +1269,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_NET_PSKC:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const uint8_t *psk;
                 uint16_t       len;
@@ -1284,7 +1284,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_DATASET_SECURITY_POLICY:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mSecurityPolicy.mRotationTime));
                 SuccessOrExit(error = mDecoder.ReadUint8(aDataset.mSecurityPolicy.mFlags));
@@ -1295,26 +1295,26 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_PHY_CHAN_SUPPORTED:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 uint8_t channel;
 
-                aDataset.mChannelMaskPage0 = 0;
+                aDataset.mChannelMask = 0;
 
                 while (!mDecoder.IsAllReadInStruct())
                 {
                     SuccessOrExit(error = mDecoder.ReadUint8(channel));
                     VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                    aDataset.mChannelMaskPage0 |= (1UL << channel);
+                    aDataset.mChannelMask |= (1UL << channel);
                 }
             }
 
-            aDataset.mComponents.mIsChannelMaskPage0Present = true;
+            aDataset.mComponents.mIsChannelMaskPresent = true;
             break;
 
         case SPINEL_PROP_DATASET_RAW_TLVS:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const uint8_t *tlvs;
                 uint16_t       len;
@@ -1337,7 +1337,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
         case SPINEL_PROP_DATASET_DEST_ADDRESS:
 
-            if (!aAllowEmptyValue || !mDecoder.IsAllReadInStruct())
+            if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
                 const otIp6Address *addr;
 
@@ -2067,7 +2067,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANN
 {
     otError error = OT_ERROR_NONE;
 
-    for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance); channel++)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -2969,6 +2969,27 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 }
 
 #endif // OPENTHREAD_ENABLE_POSIX_APP
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>(void)
+{
+    return mEncoder.WriteBool(otIp6IsSlaacEnabled(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otIp6SetSlaacEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
 
 #if OPENTHREAD_ENABLE_LEGACY
 

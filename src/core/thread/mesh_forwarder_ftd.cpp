@@ -804,7 +804,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 
         if (aloc16 == Mle::kAloc16Leader)
         {
-            mMeshDest = netif.GetMle().GetRloc16(netif.GetMle().GetLeaderId());
+            mMeshDest = Mle::Mle::GetRloc16(netif.GetMle().GetLeaderId());
         }
         else if ((aloc16 >= Mle::kAloc16CommissionerStart) && (aloc16 <= Mle::kAloc16CommissionerEnd))
         {
@@ -820,18 +820,18 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
                               static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask), agentRloc16) == OT_ERROR_NONE),
                          error = OT_ERROR_DROP);
 
-            routerId = netif.GetMle().GetRouterId(agentRloc16);
+            routerId = Mle::Mle::GetRouterId(agentRloc16);
 
             // if agent is active router or the child of the device
-            if ((netif.GetMle().IsActiveRouter(agentRloc16)) ||
-                (netif.GetMle().GetRloc16(routerId) == netif.GetMle().GetRloc16()))
+            if ((Mle::Mle::IsActiveRouter(agentRloc16)) ||
+                (Mle::Mle::GetRloc16(routerId) == netif.GetMle().GetRloc16()))
             {
                 mMeshDest = agentRloc16;
             }
             else
             {
                 // use the parent of the ED Agent as Dest
-                mMeshDest = netif.GetMle().GetRloc16(routerId);
+                mMeshDest = Mle::Mle::GetRloc16(routerId);
             }
         }
 
@@ -1179,7 +1179,7 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
 {
     otError                  error      = OT_ERROR_NONE;
     ThreadNetif &            netif      = GetNetif();
-    uint8_t                  serviceId  = netif.GetMle().GetServiceIdFromAloc(aServiceAloc);
+    uint8_t                  serviceId  = Mle::Mle::GetServiceIdFromAloc(aServiceAloc);
     NetworkData::ServiceTlv *serviceTlv = netif.GetNetworkDataLeader().FindServiceById(serviceId);
 
     if (serviceTlv != NULL)

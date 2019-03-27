@@ -49,10 +49,6 @@
 
 #include "meshcop/dataset_manager.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
-#include "meshcop/dtls.hpp"
-#endif // OPENTHREAD_ENABLE_DTLS
-
 #if OPENTHREAD_ENABLE_JOINER
 #include "meshcop/joiner.hpp"
 #endif // OPENTHREAD_ENABLE_JOINER
@@ -78,6 +74,10 @@
 #include "thread/panid_query_server.hpp"
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#include "utils/slaac_address.hpp"
+#endif
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include "utils/jam_detector.hpp"
@@ -186,6 +186,16 @@ public:
      */
     Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    /**
+     * This method returns a reference to the SLAAC manager object.
+     *
+     * @returns A reference to the SLAAC manager object.
+     *
+     */
+    Utils::Slaac &GetSlaac(void) { return mSlaac; }
+#endif
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     /**
@@ -342,14 +352,6 @@ public:
 
 #if OPENTHREAD_ENABLE_DTLS
     /**
-     * This method returns a reference to the Dtls object.
-     *
-     * @returns A reference to the Dtls object.
-     *
-     */
-    MeshCoP::Dtls &GetDtls(void) { return mDtls; }
-
-    /**
      * This method returns a reference to the secure CoAP object.
      *
      * @returns A reference to the secure CoAP object.
@@ -439,14 +441,6 @@ public:
      */
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo);
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
-    /**
-     * This method updates addresses that shall be automatically created using SLAAC.
-     *
-     */
-    void UpdateSlaac(void);
-#endif
-
 private:
     static otError TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
@@ -458,7 +452,7 @@ private:
     Dhcp6::Dhcp6Server mDhcp6Server;
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
-    Ip6::NetifUnicastAddress mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+    Utils::Slaac mSlaac;
 #endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     Dns::Client mDnsClient;
@@ -491,7 +485,6 @@ private:
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
-    MeshCoP::Dtls    mDtls;
     Coap::CoapSecure mCoapSecure;
 #endif // OPENTHREAD_ENABLE_DTLS
 

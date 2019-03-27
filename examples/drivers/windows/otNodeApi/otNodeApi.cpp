@@ -1992,8 +1992,8 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
 
     if (aChannelMask != 0)
     {
-        aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mComponents.mIsChannelMaskPage0Present = true;
+        aDataset.mChannelMask = aChannelMask;
+        aDataset.mComponents.mIsChannelMaskPresent = true;
     }
 
     if (aMasterKey != NULL && strlen(aMasterKey) != 0)
@@ -2144,8 +2144,8 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
 
     if (aChannelMask != 0)
     {
-        aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mComponents.mIsChannelMaskPage0Present = true;
+        aDataset.mChannelMask = aChannelMask;
+        aDataset.mComponents.mIsChannelMaskPresent = true;
     }
 
     if (aExtPanId != NULL && strlen(aExtPanId) != 0)

@@ -623,22 +623,17 @@ template <> inline Dns::Client &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DTLS
-template <> inline MeshCoP::Dtls &Instance::Get(void)
-{
-    return GetThreadNetif().GetDtls();
-}
-
-template <> inline Coap::CoapSecure &Instance::Get(void)
-{
-    return GetThreadNetif().GetCoapSecure();
-}
-#endif
-
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 {
     return GetThreadNetif().GetDhcp6Client();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+template <> inline Utils::Slaac &Instance::Get(void)
+{
+    return GetThreadNetif().GetSlaac();
 }
 #endif
 

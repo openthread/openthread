@@ -144,13 +144,13 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kChannelMask:
         {
-            const ChannelMaskBaseTlv *tlv   = static_cast<const ChannelMaskBaseTlv *>(cur);
-            const ChannelMaskEntry *  entry = tlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
+            const ChannelMaskTlv *tlv = static_cast<const ChannelMaskTlv *>(cur);
+            uint32_t              mask;
 
-            if (entry != NULL)
+            if ((mask = tlv->GetChannelMask()) != 0)
             {
-                aDataset.mChannelMaskPage0                      = entry->GetMask();
-                aDataset.mComponents.mIsChannelMaskPage0Present = true;
+                aDataset.mChannelMask                      = mask;
+                aDataset.mComponents.mIsChannelMaskPresent = true;
             }
 
             break;
@@ -290,17 +290,15 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::ChannelTlv tlv;
         tlv.Init();
-        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         tlv.SetChannel(aDataset.mChannel);
         Set(tlv);
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPage0Present)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         MeshCoP::ChannelMaskTlv tlv;
         tlv.Init();
-        tlv.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-        tlv.SetMask(aDataset.mChannelMaskPage0);
+        tlv.SetChannelMask(aDataset.mChannelMask);
         Set(tlv);
     }
 

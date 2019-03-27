@@ -46,6 +46,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "phy/phy.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -203,7 +204,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDecoder()
     , mHostPowerStateInProgress(false)
     , mLastStatus(SPINEL_STATUS_OK)
-    , mScanChannelMask(OT_RADIO_SUPPORTED_CHANNELS)
+    , mScanChannelMask(Phy::kSupportedChannels)
     , mScanPeriod(200)
     , mDiscoveryScanJoinerFlag(false)
     , mDiscoveryScanEnableFiltering(false)
@@ -652,7 +653,7 @@ uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
     return aPosition;
 }
 
-otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aKeyOrStatus)
+otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus)
 {
     otError        error = OT_ERROR_NONE;
     spinel_tid_t   tid   = SPINEL_HEADER_GET_TID(aHeader);
@@ -666,7 +667,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
 
         if (aType == kResponseTypeLastStatus)
         {
-            mChangedPropsSet.AddLastStatus(static_cast<spinel_status_t>(aKeyOrStatus));
+            mChangedPropsSet.AddLastStatus(static_cast<spinel_status_t>(aPropKeyOrStatus));
         }
 
         ExitNow();
@@ -711,7 +712,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
     entry->mTid             = tid;
     entry->mIsInUse         = true;
     entry->mType            = aType;
-    entry->mPropKeyOrStatus = aKeyOrStatus;
+    entry->mPropKeyOrStatus = aPropKeyOrStatus;
 
     mResponseQueueTail++;
 
@@ -826,7 +827,6 @@ void NcpBase::UpdateChangedProps(void)
 
 exit:
     mDidInitialUpdates = true;
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -1578,7 +1578,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
             VerifyOrExit(HasOnly1BitSet(mScanChannelMask), error = OT_ERROR_INVALID_ARGS);
 
             scanChannel     = IndexOfMSB(mScanChannelMask);
-            mCurScanChannel = (int8_t)scanChannel;
+            mCurScanChannel = static_cast<int8_t>(scanChannel);
 
             error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
         }
@@ -1724,6 +1724,14 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MCU_POWER_STATE));
 #endif
 
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_802_15_4_2450MHZ_OQPSK));
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_802_15_4_915MHZ_OQPSK));
+#endif
+
 #if OPENTHREAD_FTD
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_FTD));
 #elif OPENTHREAD_MTD
@@ -1781,12 +1789,13 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OOB_STEERING_DATA));
 #endif
 
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SLAAC));
+#endif
+
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PEEK_POKE));
 #endif
-
-    // TODO: Somehow get the following capability from the radio.
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_802_15_4_2450MHZ_OQPSK));
 
 #if OPENTHREAD_CONFIG_MAX_CHILDREN > 0
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_ROLE_ROUTER));

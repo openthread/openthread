@@ -263,7 +263,7 @@ template <class T> class otPtr
     T *ptr;
 
 public:
-    otPtr(T *_ptr)
+    explicit otPtr(T *_ptr)
         : ptr(_ptr)
     {
     }
@@ -404,17 +404,17 @@ void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
     }
 }
 
-otError Interpreter::ParseLong(char *argv, long &value)
+otError Interpreter::ParseLong(char *aString, long &aLong)
 {
     char *endptr;
-    value = strtol(argv, &endptr, 0);
+    aLong = strtol(aString, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
-otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
+otError Interpreter::ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong)
 {
     char *endptr;
-    value = strtoul(argv, &endptr, 0);
+    aUnsignedLong = strtoul(aString, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
@@ -559,7 +559,8 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
                 mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
-                for (uint8_t channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+                for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance);
+                     channel++)
                 {
                     uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
 
@@ -1798,7 +1799,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
     if (argc == 0)
     {
         otStringPtr networkName(otThreadGetNetworkName(mInstance));
-        mServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, (const char *)networkName);
+        mServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, static_cast<const char *>(networkName));
     }
     else
     {
@@ -3134,7 +3135,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
     otStringPtr version(otGetVersionString());
-    mServer->OutputFormat("%s\r\n", (const char *)version);
+    mServer->OutputFormat("%s\r\n", static_cast<const char *>(version));
     AppendResult(OT_ERROR_NONE);
 }
 
@@ -3404,7 +3405,7 @@ void Interpreter::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEner
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
-        mServer->OutputFormat("%d ", aEnergyList[i]);
+        mServer->OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
     mServer->OutputFormat("\r\n");

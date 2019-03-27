@@ -36,6 +36,8 @@
 #include <openthread/link.h>
 
 #include "common/instance.hpp"
+#include "mac/mac.hpp"
+#include "phy/phy.hpp"
 
 using namespace ot;
 
@@ -100,7 +102,7 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetMac().SetSupportedChannelMask(aChannelMask);
+    instance.GetThreadNetif().GetMac().SetSupportedChannelMask(static_cast<Mac::ChannelMask>(aChannelMask));
 
 exit:
     return error;
@@ -435,4 +437,22 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetThreadNetif().GetMac().GetCcaFailureRate();
+}
+
+uint8_t otLinkGetPhyChannelMin(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Phy::kChannelMin;
+}
+
+uint8_t otLinkGetPhyChannelMax(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Phy::kChannelMax;
+}
+
+uint32_t otLinkGetPhySupportedChannelMask(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return Phy::kSupportedChannels;
 }

@@ -68,7 +68,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(Instance *aInstance);
+    explicit NcpBase(Instance *aInstance);
 
     /**
      * This static method returns the pointer to the single NCP instance.

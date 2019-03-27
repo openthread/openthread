@@ -39,7 +39,9 @@
 
 #include "common/instance.hpp"
 #include "common/logging.hpp"
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
 #include "utils/slaac_address.hpp"
+#endif
 
 using namespace ot;
 
@@ -129,27 +131,6 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     instance.GetThreadNetif().SetMulticastPromiscuous(aEnabled);
-}
-
-otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
-}
-
-otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
-           &instance.GetThreadNetif().GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
-    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
-
-    return OT_ERROR_NONE;
-}
-
-otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
 }
 
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
@@ -288,3 +269,34 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+
+bool otIp6IsSlaacEnabled(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Utils::Slaac>().IsEnabled();
+}
+
+void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Utils::Slaac &slaac    = instance.Get<Utils::Slaac>();
+
+    if (aEnabled)
+    {
+        slaac.Enable();
+    }
+    else
+    {
+        slaac.Disable();
+    }
+}
+
+void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Utils::Slaac>().SetFilter(aFilter);
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC

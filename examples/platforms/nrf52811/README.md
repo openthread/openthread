@@ -15,6 +15,10 @@ For the SoC capable to a run full OpenThread stack, see the [nRF52840 platform][
 
 [nRF52840-page]: ./../nrf52840/README.md
 
+## Emulation on nRF52840
+
+You can use examples for nRF52811 on nRF52840 without any changes in the generated binary files. This allows for easier testing in early stages of development.
+
 ## Prerequisites
 
 Before you start building the examples, you must download and install the toolchain and the tools required for flashing and debugging.

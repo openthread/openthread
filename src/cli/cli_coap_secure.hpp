@@ -64,7 +64,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    CoapSecure(Interpreter &aInterpreter);
+    explicit CoapSecure(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -90,7 +90,7 @@ private:
 
     otError ProcessRequest(int argc, char *argv[]);
 
-    otError Stop(void);
+    void Stop(void);
 
     static void OTCALL HandleServerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void               HandleServerResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo);
