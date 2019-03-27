@@ -302,7 +302,7 @@ public:
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
+     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
      *
      */
     otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);

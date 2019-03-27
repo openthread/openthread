@@ -79,7 +79,7 @@ public:
     /**
      * This method gets the state of the Border Agent service.
      *
-     * @returns The state of the the Border Agent service.
+     * @returns The state of the Border Agent service.
      *
      */
     otBorderAgentState GetState(void) const { return mState; }

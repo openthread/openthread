@@ -1411,7 +1411,7 @@
  * better parent and will switch parent if a better one is found.
  *
  * The child will periodically check the average RSS value for the current parent, and only if it is below a specific
- * threshold, a parent search is performed. The `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` specifies the the
+ * threshold, a parent search is performed. The `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` specifies the
  * check interval (in seconds) and `OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD` gives the RSS threshold.
  *
  * Since the parent search process can be power consuming (child needs to stays in RX mode to collect parent response)
