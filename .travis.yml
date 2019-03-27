@@ -33,7 +33,7 @@ sudo: required
 dist: trusty
 
 before_install:
-  - .travis/before_install.sh
+  - travis_retry .travis/before_install.sh
 
 before_script:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then

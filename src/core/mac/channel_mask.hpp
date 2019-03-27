@@ -92,7 +92,7 @@ public:
      * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
      *
      */
-    ChannelMask(uint32_t aMask)
+    explicit ChannelMask(uint32_t aMask)
         : mMask(aMask)
     {
     }

@@ -173,7 +173,7 @@ protected:
      *
      */
     DatasetManager(Instance &          aInstance,
-                   const Tlv::Type     aType,
+                   Tlv::Type           aType,
                    const char *        aUriGet,
                    const char *        aUriSet,
                    TimerMilli::Handler aTimerHandler);

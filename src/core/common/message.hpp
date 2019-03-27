@@ -1244,7 +1244,7 @@ public:
         }
 
     private:
-        Iterator(Message *aMessage)
+        explicit Iterator(Message *aMessage)
             : mMessage(aMessage)
         {
         }

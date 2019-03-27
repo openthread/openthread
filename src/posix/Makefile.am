@@ -160,6 +160,7 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_SOURCES                                                         = \
     main.c                                                               \
+    console_cli.c                                                        \
     $(NULL)
 
 ot_cli_LDADD                                                           = \
@@ -168,6 +169,7 @@ ot_cli_LDADD                                                           = \
     $(LDADD_COMMON)                                                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
+    $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
     $(NULL)
 
 ot_cli_LDFLAGS                                                         = \
@@ -191,5 +193,9 @@ CPPFLAGS_COMMON                                                       += \
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 endif # OPENTHREAD_ENABLE_EXECUTABLE
+
+noinst_HEADERS                                                         = \
+    console_cli.h                                                        \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

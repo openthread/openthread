@@ -39,11 +39,11 @@
 #include "common/message.hpp"
 #include "net/udp6.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 namespace Dhcp6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-dhcp6

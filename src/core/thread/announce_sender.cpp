@@ -59,17 +59,20 @@ AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHand
 {
 }
 
-otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aMask, uint8_t aCount, uint32_t aPeriod, uint16_t aJitter)
+otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
+                                         uint8_t          aCount,
+                                         uint32_t         aPeriod,
+                                         uint16_t         aJitter)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aPeriod != 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aJitter < aPeriod, error = OT_ERROR_INVALID_ARGS);
 
-    aMask.Intersect(Phy::kSupportedChannels);
-    VerifyOrExit(!aMask.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    aChannelMask.Intersect(Mac::ChannelMask(Phy::kSupportedChannels));
+    VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    mChannelMask = aMask;
+    mChannelMask = aChannelMask;
     mCount       = aCount;
     mPeriod      = aPeriod;
     mJitter      = aJitter;

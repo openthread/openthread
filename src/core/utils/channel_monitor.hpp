@@ -102,7 +102,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    ChannelMonitor(Instance &aInstance);
+    explicit ChannelMonitor(Instance &aInstance);
 
     /**
      * This method starts the Channel Monitoring operation.

@@ -59,7 +59,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    CoapSecure(Interpreter &aInterpreter);
+    explicit CoapSecure(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.

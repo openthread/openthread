@@ -272,6 +272,11 @@ exit:
 
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
 
+bool otIp6IsSlaacEnabled(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Utils::Slaac>().IsEnabled();
+}
+
 void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &    instance = *static_cast<Instance *>(aInstance);

@@ -96,8 +96,8 @@ private:
     static void HandleJoinerEntrustResponse(void *               aContext,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
-                                            otError              result);
-    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError result);
+                                            otError              aResult);
+    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

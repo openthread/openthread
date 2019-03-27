@@ -248,18 +248,18 @@ exit:
     return error;
 }
 
-otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo &aMessageInfo)
+otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
-                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
+    VerifyOrExit(aHeader.GetDestination().IsMulticast() &&
+                 aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
-    if (aIp6Header.GetDestination().IsRealmLocalMulticast())
+    if (aHeader.GetDestination().IsRealmLocalMulticast())
     {
-        aMessage.RemoveHeader(sizeof(aIp6Header));
+        aMessage.RemoveHeader(sizeof(aHeader));
 
-        if (aIp6Header.GetNextHeader() == kProtoHopOpts)
+        if (aHeader.GetNextHeader() == kProtoHopOpts)
         {
             HopByHopHeader hbh;
             uint16_t       hbhLength = 0;
@@ -269,7 +269,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             aMessage.Read(0, sizeof(hbh), &hbh);
             hbhLength = (hbh.GetLength() + 1) * 8;
 
-            VerifyOrExit(hbhLength <= aIp6Header.GetPayloadLength(), error = OT_ERROR_PARSE);
+            VerifyOrExit(hbhLength <= aHeader.GetPayloadLength(), error = OT_ERROR_PARSE);
 
             // increase existing hop-by-hop option header length by 8 bytes
             hbh.SetLength(hbh.GetLength() + 1);
@@ -280,7 +280,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             aMessage.CopyTo(8, 0, hbhLength, aMessage);
 
             // insert MPL Option
-            mMpl.InitOption(mplOption, aIp6Header.GetSource());
+            mMpl.InitOption(mplOption, aHeader.GetSource());
             aMessage.Write(hbhLength, mplOption.GetTotalLength(), &mplOption);
 
             // insert Pad Option (if needed)
@@ -292,19 +292,19 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             }
 
             // increase IPv6 Payload Length
-            aIp6Header.SetPayloadLength(aIp6Header.GetPayloadLength() + 8);
+            aHeader.SetPayloadLength(aHeader.GetPayloadLength() + 8);
         }
         else
         {
-            SuccessOrExit(error = AddMplOption(aMessage, aIp6Header));
+            SuccessOrExit(error = AddMplOption(aMessage, aHeader));
         }
 
-        SuccessOrExit(error = aMessage.Prepend(&aIp6Header, sizeof(aIp6Header)));
+        SuccessOrExit(error = aMessage.Prepend(&aHeader, sizeof(aHeader)));
     }
     else
     {
-        if (aIp6Header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aIp6Header.GetDestination()))
+        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
+            GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
         {
             Message *messageCopy = NULL;
 
@@ -319,7 +319,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             }
         }
 
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, aIp6Header, aMessageInfo));
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader, aMessageInfo));
     }
 
 exit:

@@ -508,8 +508,6 @@ exit:
     {
         FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, error);
     }
-
-    return;
 }
 
 } // namespace Dns

@@ -27,13 +27,13 @@
 
 #include "utils/wrap_string.h"
 
-size_t missing_strlcat(char *dest, const char *src, size_t size)
+size_t missing_strlcat(char *dst, const char *src, size_t dstsize)
 {
-    size_t len = strlen(dest);
+    size_t len = strlen(dst);
 
-    if (len < size - 1)
+    if (len < dstsize - 1)
     {
-        return (len + strlcpy(dest + len, src, size - len));
+        return (len + strlcpy(dst + len, src, dstsize - len));
     }
 
     return len + strlen(src);

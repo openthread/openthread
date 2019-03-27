@@ -413,4 +413,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_ADDRESS_HPP_
+#endif // IP6_ADDRESS_HPP_

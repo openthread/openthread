@@ -56,7 +56,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    UdpExample(Interpreter &aInterpreter);
+    explicit UdpExample(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.

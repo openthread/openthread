@@ -53,8 +53,6 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
-using ot::Encoding::BigEndian::HostSwap64;
-
 namespace ot {
 namespace Mac {
 
@@ -305,9 +303,9 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
     }
 }
 
-void Mac::EnergyScanDone(int8_t aRssi)
+void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    ReportEnergyScanResult(aRssi);
+    ReportEnergyScanResult(aEnergyScanMaxRssi);
     PerformEnergyScan();
 }
 
@@ -427,7 +425,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(Phy::kSupportedChannels);
+    newMask.Intersect(ChannelMask(Phy::kSupportedChannels));
     VerifyOrExit(newMask != mSupportedChannelMask, GetNotifier().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;
