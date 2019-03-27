@@ -92,8 +92,10 @@ Mle::Mle(Instance &aInstance)
     , mTimeout(kMleEndDeviceTimeout)
     , mDiscoverHandler(NULL)
     , mDiscoverContext(NULL)
-    , mIsDiscoverInProgress(false)
-    , mEnableEui64Filtering(false)
+    , mDiscoverCcittIndex(0)
+    , mDiscoverAnsiIndex(0)
+    , mDiscoverInProgress(false)
+    , mDiscoverEnableFiltering(false)
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #endif
@@ -483,7 +485,7 @@ exit:
 otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
                       uint16_t                aPanId,
                       bool                    aJoiner,
-                      bool                    aEnableEui64Filtering,
+                      bool                    aEnableFiltering,
                       DiscoverHandler         aCallback,
                       void *                  aContext)
 {
@@ -494,9 +496,29 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
     uint16_t                     startOffset;
 
-    VerifyOrExit(!mIsDiscoverInProgress, error = OT_ERROR_BUSY);
+    VerifyOrExit(!mDiscoverInProgress, error = OT_ERROR_BUSY);
 
-    mEnableEui64Filtering = aEnableEui64Filtering;
+    mDiscoverEnableFiltering = aEnableFiltering;
+
+    if (mDiscoverEnableFiltering)
+    {
+        Mac::ExtAddress extAddress;
+        Crc16           ccitt(Crc16::kCcitt);
+        Crc16           ansi(Crc16::kAnsi);
+
+        otPlatRadioGetIeeeEui64(&GetInstance(), extAddress.m8);
+        MeshCoP::ComputeJoinerId(extAddress, extAddress);
+
+        // Compute bloom filter (for steering data)
+        for (size_t i = 0; i < sizeof(extAddress.m8); i++)
+        {
+            ccitt.Update(extAddress.m8[i]);
+            ansi.Update(extAddress.m8[i]);
+        }
+
+        mDiscoverCcittIndex = ccitt.Get();
+        mDiscoverAnsiIndex  = ansi.Get();
+    }
 
     mDiscoverHandler = aCallback;
     mDiscoverContext = aContext;
@@ -527,7 +549,7 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     destination.mFields.m16[7] = HostSwap16(0x0002);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    mIsDiscoverInProgress = true;
+    mDiscoverInProgress = true;
 
     LogMleMessage("Send Discovery Request", destination);
 
@@ -543,8 +565,8 @@ exit:
 
 void Mle::HandleDiscoverComplete(void)
 {
-    mIsDiscoverInProgress = false;
-    mEnableEui64Filtering = false;
+    mDiscoverInProgress      = false;
+    mDiscoverEnableFiltering = false;
     mDiscoverHandler(NULL, mDiscoverContext);
 }
 
@@ -3633,10 +3655,11 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
     otActiveScanResult            result;
     uint16_t                      offset;
     uint16_t                      end;
+    bool                          didCheckSteeringData = false;
 
     LogMleMessage("Receive Discovery Response", aMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(mIsDiscoverInProgress, error = OT_ERROR_DROP);
+    VerifyOrExit(mDiscoverInProgress, error = OT_ERROR_DROP);
 
     // find MLE Discovery TLV
     VerifyOrExit(Tlv::GetOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
@@ -3683,33 +3706,13 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
             aMessage.Read(offset, sizeof(steeringData), &steeringData);
             VerifyOrExit(steeringData.IsValid(), error = OT_ERROR_PARSE);
 
-            // Pass up MLE discovery responses only if the steering data is set to all 0xFFs,
-            // or if it matches the factory set EUI64.
-            if (mEnableEui64Filtering)
+            if (mDiscoverEnableFiltering)
             {
-                Mac::ExtAddress extaddr;
-                Crc16           ccitt(Crc16::kCcitt);
-                Crc16           ansi(Crc16::kAnsi);
-
-                otPlatRadioGetIeeeEui64(&GetInstance(), extaddr.m8);
-
-                MeshCoP::ComputeJoinerId(extaddr, extaddr);
-
-                // Compute bloom filter
-                for (size_t i = 0; i < sizeof(extaddr.m8); i++)
-                {
-                    ccitt.Update(extaddr.m8[i]);
-                    ansi.Update(extaddr.m8[i]);
-                }
-
-                // Drop responses that don't match the bloom filter
-                if (!steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) ||
-                    !steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
-                {
-                    ExitNow(error = OT_ERROR_NONE);
-                }
+                VerifyOrExit((steeringData.GetBit(mDiscoverCcittIndex % steeringData.GetNumBits()) &&
+                              steeringData.GetBit(mDiscoverAnsiIndex % steeringData.GetNumBits())));
             }
 
+            didCheckSteeringData         = true;
             result.mSteeringData.mLength = steeringData.GetLength();
             memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
 
@@ -3728,7 +3731,8 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
         offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
     }
 
-    // signal callback
+    VerifyOrExit(!mDiscoverEnableFiltering || didCheckSteeringData);
+
     mDiscoverHandler(&result, mDiscoverContext);
 
 exit:

@@ -545,7 +545,7 @@ public:
      * @param[in]  aScanChannels          A bit vector indicating which channels to scan.
      * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
-     * @param[in]  aEnableEui64Filtering  Enable filtering out MLE discovery responses that don't match our factory
+     * @param[in]  aEnableFiltering       Enable filtering out MLE discovery responses that don't match our factory
      *                                    assigned EUI64.
      * @param[in]  aHandler               A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext               A pointer to arbitrary context information.
@@ -557,7 +557,7 @@ public:
     otError Discover(const Mac::ChannelMask &aScanChannels,
                      uint16_t                aPanId,
                      bool                    aJoiner,
-                     bool                    aEnableEui64Filtering,
+                     bool                    aEnableFiltering,
                      DiscoverHandler         aCallback,
                      void *                  aContext);
 
@@ -567,7 +567,7 @@ public:
      * @returns true if an MLE Thread Discovery is in progress, false otherwise.
      *
      */
-    bool IsDiscoverInProgress(void) const { return mIsDiscoverInProgress; }
+    bool IsDiscoverInProgress(void) const { return mDiscoverInProgress; }
 
     /**
      * This method is called by the MeshForwarder to indicate that discovery is complete.
@@ -1767,8 +1767,10 @@ private:
 
     DiscoverHandler mDiscoverHandler;
     void *          mDiscoverContext;
-    bool            mIsDiscoverInProgress;
-    bool            mEnableEui64Filtering;
+    uint16_t        mDiscoverCcittIndex;
+    uint16_t        mDiscoverAnsiIndex;
+    bool            mDiscoverInProgress;
+    bool            mDiscoverEnableFiltering;
 
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
