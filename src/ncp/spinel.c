@@ -2516,6 +2516,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "THREAD_BORDER_ROUTER";
         break;
 
+    case SPINEL_CAP_THREAD_SERVICE:
+        ret = "THREAD_SERVICE";
+        break;
+
     case SPINEL_CAP_NEST_LEGACY_INTERFACE:
         ret = "NEST_LEGACY_INTERFACE";
         break;
@@ -2526,10 +2530,6 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_NEST_TRANSMIT_HOOK:
         ret = "NEST_TRANSMIT_HOOK";
-        break;
-
-    case SPINEL_CAP_THREAD_SERVICE:
-        ret = "THREAD_SERVICE";
         break;
 
     default:
