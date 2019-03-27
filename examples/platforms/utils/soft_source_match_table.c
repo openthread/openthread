@@ -34,24 +34,23 @@
  *
  */
 
-#include <openthread-core-config.h>
-#include <openthread/platform/radio.h>
+#include "utils/soft_source_match_table.h"
 
 #include <stdlib.h>
 
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
-#if defined(RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM) || defined(RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM)
+#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 static uint16_t sPanId = 0;
 
 void utilsSoftSrcMatchSetPanId(uint16_t aPanId)
 {
     sPanId = aPanId;
 }
-#endif // defined(RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM) || defined(RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM)
+#endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 
-#ifdef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
 typedef struct srcMatchShortEntry
 {
     uint16_t checksum;
@@ -153,7 +152,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 }
 #endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
 
-#ifdef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+#if RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 typedef struct srcMatchExtEntry
 {
     uint16_t checksum;

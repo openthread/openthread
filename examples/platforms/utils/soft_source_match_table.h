@@ -37,20 +37,31 @@
 #define SOFT_SOURCE_MATCH_TABLE_H
 
 #include "openthread-core-config.h"
+#include <openthread/platform/radio.h>
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM) || defined(RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM)
-void utilsSoftSrcMatchSetPanId(uint16_t aPanId);
-#endif // defined(RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM) || defined(RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM)
+#if !defined(RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM)
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 0
+#endif
 
-#ifdef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+#if !defined(RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM)
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 0
+#endif
+
+#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+void utilsSoftSrcMatchSetPanId(uint16_t aPanId);
+#endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+
+#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
 int8_t utilsSoftSrcMatchShortFindEntry(const uint16_t aShortAddress);
 #endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
 
-#ifdef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+#if RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 int8_t utilsSoftSrcMatchExtFindEntry(const otExtAddress *aExtAddress);
 #endif // RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 
