@@ -83,7 +83,8 @@ public:
 
     enum State
     {
-        kStateStopped = 0,
+        kStateClosed = 0,
+        kStateOpen,
         kStateInitializing,
         kStateConnecting,
         kStateConnected,
@@ -153,40 +154,13 @@ public:
     otError Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
 
     /**
-     * This method starts the DTLS service.
-     *
-     * For CoAP Secure API do first:
-     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
-     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
-     *
-     * @param[in]  aSockAddr               A reference to the remote sockaddr.
-     *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
-     *
-     */
-    otError Connect(const Ip6::SockAddr &aSockAddr);
-
-    /**
-     * This method set up the DTLS service.
-     *
-     * For CoAP Secure API do first:
-     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
-     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
-     *
-     * @param[in]  aClient  TRUE if setup for client, otherwise setup for server.
-     *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
-     *
-     */
-    otError Setup(bool aClient);
-
-    /**
      * This method binds this DTLS to a UDP port.
      *
      * @param[in]  aPort              The port to bind.
      *
-     * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already bound.
+     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
      *
      */
     otError Bind(uint16_t aPort);
@@ -197,49 +171,70 @@ public:
      * @param[in]  aCallback  A pointer to a function for sending messages.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE        Successfully binded the DTLS service.
-     * @retval OT_ERROR_ALREADY     Already bound.
+     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
      *
      */
     otError Bind(TransportCallback aCallback, void *aContext);
 
     /**
+     * This method establishes a DTLS session.
+     *
+     * For CoAP Secure API do first:
+     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
+     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
+     *
+     * @param[in]  aSockAddr               A reference to the remote sockaddr.
+     *
+     * @retval OT_ERROR_NONE           Successfully started DTLS handshake.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     *
+     */
+    otError Connect(const Ip6::SockAddr &aSockAddr);
+
+    /**
      * This method indicates whether or not the DTLS session is active.
+     *
+     * In other words, the state is kStateConnecting, kStateConnected, or kStateCloseNotify.
      *
      * @retval TRUE  If DTLS session is active.
      * @retval FALSE If DTLS session is not active.
      *
      */
-    bool IsConnectionActive(void) { return mState != kStateStopped; }
+    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
 
     /**
      * This method indicates whether or not the DTLS session is connected.
+     *
+     * In other words, the state is kStateConnected.
      *
      * @retval TRUE   The DTLS session is connected.
      * @retval FALSE  The DTLS session is not connected.
      *
      */
-    bool IsConnected(void) { return mState == kStateConnected; }
+    bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
-     * This method close the current session.
+     * This method disconnects the DTLS session.
+     *
+     */
+    void Disconnect(void);
+
+    /**
+     * This method closes the DTLS socket.
      *
      */
     void Close(void);
 
     /**
-     * This method stops the DTLS service.
-     *
-     */
-    void Stop(void);
-
-    /**
      * This method returns the DTLS connection state.
      *
-     * @retval kStateStopped      If the DTLS service has not been started.
-     * @retval kStateConnecting   If the DTLS service is establishing a connection.
-     * @retval kStateConnected    If the DTLS service has a connection established.
-     * @retval kStateCloseNotify  If the DTLS service is closing a connection.
+     * @retval kStateClosed       The UDP socket closed.
+     * @retval kStateOpen         The UDP socket is open.
+     * @retval kStateConnecting   The DTLS service is establishing a connection.
+     * @retval kStateConnected    The DTLS service has a connection established.
+     * @retval kStateCloseNotify  The DTLS service is closing a connection.
      *
      */
     State GetState(void) const { return mState; }
@@ -404,7 +399,8 @@ public:
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    void FreeMbedtls(void);
+    void    FreeMbedtls(void);
+    otError Setup(bool aClient);
 
     static otError MapError(int rval);
 

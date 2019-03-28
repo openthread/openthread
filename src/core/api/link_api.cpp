@@ -36,6 +36,7 @@
 #include <openthread/link.h>
 
 #include "common/instance.hpp"
+#include "mac/mac.hpp"
 #include "phy/phy.hpp"
 
 using namespace ot;
@@ -101,7 +102,7 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
     VerifyOrExit(instance.GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
-    instance.GetThreadNetif().GetMac().SetSupportedChannelMask(aChannelMask);
+    instance.GetThreadNetif().GetMac().SetSupportedChannelMask(static_cast<Mac::ChannelMask>(aChannelMask));
 
 exit:
     return error;

@@ -488,7 +488,7 @@ private:
         };
 
     public:
-        NetworkDataIterator(otNetworkDataIterator *aIterator)
+        explicit NetworkDataIterator(otNetworkDataIterator *aIterator)
             : mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator))
         {
         }

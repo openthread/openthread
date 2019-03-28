@@ -57,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Uart(Instance *aInstance);
+    explicit Uart(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.

@@ -63,6 +63,8 @@ namespace ot {
  */
 namespace Lowpan {
 
+using ot::Encoding::BigEndian::HostSwap16;
+
 /**
  * This structure represents a LOWPAN_IPHC Context.
  *
@@ -263,12 +265,12 @@ public:
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aMessage      A reference where the IPv6 header will be placed.
-     * @param[in]   aMacSource    The MAC source address.
-     * @param[in]   aMacDest      The MAC destination address.
-     * @param[in]   aBuf          A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLen       The number of bytes in @p aBuf.
-     * @param[in]   aDatagramLen  The IPv6 datagram length.
+     * @param[out]  aMessage         A reference where the IPv6 header will be placed.
+     * @param[in]   aMacSource       The MAC source address.
+     * @param[in]   aMacDest         The MAC destination address.
+     * @param[in]   aBuf             A pointer to the LOWPAN_IPHC header.
+     * @param[in]   aBufLength       The number of bytes in @p aBuf.
+     * @param[in]   aDatagramLength  The IPv6 datagram length.
      *
      * @returns The size of the compressed header in bytes.
      *
@@ -277,13 +279,13 @@ public:
                    const Mac::Address &aMacSource,
                    const Mac::Address &aMacDest,
                    const uint8_t *     aBuf,
-                   uint16_t            aBufLen,
-                   uint16_t            aDatagramLen);
+                   uint16_t            aBufLength,
+                   uint16_t            aDatagramLength);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aHeader                 A reference where the IPv6 header will be placed.
+     * @param[out]  aIp6Header              A reference where the IPv6 header will be placed.
      * @param[out]  aCommpressedNextHeader  A boolean reference to output whether next header is compressed or not.
      * @param[in]   aMacSource              The MAC source address.
      * @param[in]   aMacDest                The MAC destination address.
@@ -293,7 +295,7 @@ public:
      * @returns The size of the compressed header in bytes or -1 if decompression fails.
      *
      */
-    int DecompressBaseHeader(Ip6::Header &       aHeader,
+    int DecompressBaseHeader(Ip6::Header &       aIp6Header,
                              bool &              aCompressedNextHeader,
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,

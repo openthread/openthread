@@ -56,7 +56,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpUart(Instance *aInstance);
+    explicit NcpUart(Instance *aInstance);
 
     /**
      * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
@@ -121,7 +121,7 @@ private:
     void HandleFrameAddedToNcpBuffer(void);
 
     static void EncodeAndSendToUart(Tasklet &aTasklet);
-    static void HandleFrame(void *aConext, otError aError);
+    static void HandleFrame(void *aContext, otError aError);
     static void HandleFrameAddedToNcpBuffer(void *                   aContext,
                                             NcpFrameBuffer::FrameTag aTag,
                                             NcpFrameBuffer::Priority aPriority,
