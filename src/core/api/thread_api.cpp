@@ -88,14 +88,14 @@ exit:
     return error;
 }
 
-otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aAddress)
+otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aLeaderRloc != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetMle().GetLeaderAddress(*static_cast<Ip6::Address *>(aAddress));
+    error = instance.GetThreadNetif().GetMle().GetLeaderAddress(*static_cast<Ip6::Address *>(aLeaderRloc));
 
 exit:
     return error;
@@ -507,8 +507,8 @@ otError otThreadDiscover(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().Discover(aScanChannels, aPanId, aJoiner, aEnableEui64Filtering, aCallback,
-                                                       aCallbackContext);
+    return instance.GetThreadNetif().GetMle().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
+                                                       aEnableEui64Filtering, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

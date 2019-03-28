@@ -172,7 +172,7 @@ private:
     void UpdateRloc(BorderRouterTlv &aBorderRouter);
 #if OPENTHREAD_ENABLE_SERVICE
     void UpdateRloc(ServiceTlv &aService);
-    void UpdateRloc(ServerTlv &aService);
+    void UpdateRloc(ServerTlv &aServer);
 #endif
 
     bool IsOnMeshPrefixConsistent(void);

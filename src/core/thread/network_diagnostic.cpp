@@ -52,8 +52,6 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
 namespace ot {
@@ -252,7 +250,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
         entry.SetReserved(0);
         entry.SetTimeout(timeout + 4);
-        entry.SetChildId(netif.GetMle().GetChildId(child.GetRloc16()));
+        entry.SetChildId(Mle::Mle::GetChildId(child.GetRloc16()));
         entry.SetMode(child.GetDeviceMode());
 
         SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));

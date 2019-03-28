@@ -511,6 +511,22 @@ class otCli:
 
         return None
 
+    def get_addr_rloc(self):
+        addrs = self.get_addrs()
+        for addr in addrs:
+            segs = addr.split(':')
+            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] != 'fc00':
+                return addr
+        return None
+
+    def get_addr_leader_aloc(self):
+        addrs = self.get_addrs()
+        for addr in addrs:
+            segs = addr.split(':')
+            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] == 'fc00':
+                return addr
+        return None
+
     def get_eidcaches(self):
         eidcaches = []
         self.send_command('eidcache')
@@ -901,3 +917,18 @@ class otCli:
             timeout = 5
 
         self._expect('Received coap secure response', timeout=timeout)
+
+    def commissioner_mgmtset(self, tlvs_binary):
+        cmd = 'commissioner mgmtset binary ' + tlvs_binary
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def bytes_to_hex_str(self, src):
+        return ''.join(format(x, '02x') for x in src)
+
+    def commissioner_mgmtset_with_tlvs(self, tlvs):
+        payload = bytearray()
+        for tlv in tlvs:
+            payload += tlv.to_hex()
+        self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
+

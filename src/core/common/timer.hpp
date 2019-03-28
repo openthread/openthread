@@ -120,14 +120,14 @@ protected:
     /**
      * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.
      *
-     * @param[in]  aTimer   A reference to the second timer object.
-     * @param[in]  aNow     The current time (may in milliseconds or microsecond, which depends on the timer type).
+     * @param[in]  aSecondTimer   A reference to the second timer object.
+     * @param[in]  aNow           The current time (milliseconds or microsecond, depending on timer type).
      *
      * @retval TRUE  If the fire time of this timer object is strictly before aTimer's fire time
      * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
      *
      */
-    bool DoesFireBefore(const Timer &aTimer, uint32_t aNow);
+    bool DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow);
 
     void Fired(void) { mHandler(*this); }
 
@@ -295,7 +295,7 @@ protected:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(Instance &aInstance)
+    explicit TimerScheduler(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mHead(NULL)
     {
@@ -351,7 +351,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(Instance &aInstance)
+    explicit TimerMilliScheduler(Instance &aInstance)
         : TimerScheduler(aInstance)
     {
     }

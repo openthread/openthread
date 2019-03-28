@@ -106,6 +106,7 @@ WPAN_THREAD_ADDRESS_CACHE_TABLE                = "Thread:AddressCacheTable"
 WPAN_THREAD_ADDRESS_CACHE_TABLE_ASVALMAP       = "Thread:AddressCacheTable:AsValMap"
 
 WPAN_OT_LOG_LEVEL                              = "OpenThread:LogLevel"
+WPAN_OT_SLAAC_ENABLED                          = "OpenThread:SLAAC:Enabled"
 WPAN_OT_STEERING_DATA_ADDRESS                  = "OpenThread:SteeringData:Address"
 WPAN_OT_STEERING_DATA_SET_WHEN_JOINABLE        = "OpenThread:SteeringData:SetWhenJoinable"
 WPAN_OT_MSG_BUFFER_COUNTERS                    = "OpenThread:MsgBufferCounters"

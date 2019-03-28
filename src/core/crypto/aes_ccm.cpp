@@ -200,15 +200,15 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
     }
 }
 
-void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncrypt)
+void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, bool aEncrypt)
 {
-    uint8_t *plaintextBytes  = reinterpret_cast<uint8_t *>(plaintext);
-    uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(ciphertext);
+    uint8_t *plaintextBytes  = reinterpret_cast<uint8_t *>(aPlainText);
+    uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(aCipherText);
     uint8_t  byte;
 
-    assert(mPlainTextCur + len <= mPlainTextLength);
+    assert(mPlainTextCur + aLength <= mPlainTextLength);
 
-    for (unsigned i = 0; i < len; i++)
+    for (unsigned i = 0; i < aLength; i++)
     {
         if (mCtrLength == 16)
         {
@@ -244,7 +244,7 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
         mBlock[mBlockLength++] ^= byte;
     }
 
-    mPlainTextCur += len;
+    mPlainTextCur += aLength;
 
     if (mPlainTextCur >= mPlainTextLength)
     {
@@ -261,9 +261,9 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
     }
 }
 
-void AesCcm::Finalize(void *tag, uint8_t *aTagLength)
+void AesCcm::Finalize(void *aTag, uint8_t *aTagLength)
 {
-    uint8_t *tagBytes = reinterpret_cast<uint8_t *>(tag);
+    uint8_t *tagBytes = reinterpret_cast<uint8_t *>(aTag);
 
     assert(mPlainTextCur == mPlainTextLength);
 

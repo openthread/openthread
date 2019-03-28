@@ -51,12 +51,12 @@
 #include "net/ip6_address.hpp"
 #include "phy/phy.hpp"
 
+namespace ot {
+namespace MeshCoP {
+
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-
-namespace ot {
-namespace MeshCoP {
 
 /**
  * This class implements MeshCoP TLV generation and parsing.
@@ -1601,8 +1601,6 @@ public:
      * This method sets the Channel Mask Entries.
      *
      * @param[in]  aMask  The Channel Mask value.
-     *
-     * @retval OT_ERROR_NONE       Successfully set the Channel Mask Entry.
      *
      */
     void SetChannelMask(uint32_t aChannelMask);

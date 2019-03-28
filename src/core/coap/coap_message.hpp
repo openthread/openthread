@@ -45,8 +45,6 @@
 #include "common/message.hpp"
 #include "utils/static_assert.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 
 /**
@@ -56,6 +54,8 @@ namespace ot {
  *
  */
 namespace Coap {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-coap
@@ -412,10 +412,10 @@ public:
     /**
      * This method sets a default response header based on request header.
      *
-     * @param[in]  aRequestHeader  Request header to base on.
+     * @param[in]  aRequest  The request message.
      *
      */
-    void SetDefaultResponseHeader(const Message &aRequestHeader);
+    void SetDefaultResponseHeader(const Message &aRequest);
 
     /**
      * This method checks if a header is an empty message header.

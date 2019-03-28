@@ -432,7 +432,7 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     return index;
 }
 
-otError Frame::GetSrcAddr(Address &address) const
+otError Frame::GetSrcAddr(Address &aAddress) const
 {
     otError  error = OT_ERROR_NONE;
     uint8_t  index = FindSrcAddrIndex();
@@ -443,15 +443,15 @@ otError Frame::GetSrcAddr(Address &address) const
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrShort:
-        address.SetShort(Encoding::LittleEndian::ReadUint16(GetPsdu() + index));
+        aAddress.SetShort(Encoding::LittleEndian::ReadUint16(GetPsdu() + index));
         break;
 
     case kFcfSrcAddrExt:
-        address.SetExtended(GetPsdu() + index, /* reverse */ true);
+        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
         break;
 
     default:
-        address.SetNone();
+        aAddress.SetNone();
         break;
     }
 
@@ -1031,12 +1031,12 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
-void Frame::CopyFrom(const Frame &aAnotherFrame)
+void Frame::CopyFrom(const Frame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
     otRadioIeInfo *ieInfoBuffer = mIeInfo;
 
-    memcpy(this, &aAnotherFrame, sizeof(Frame));
+    memcpy(this, &aFromFrame, sizeof(Frame));
 
     // Set the original buffer pointers back on the frame
     // which were overwritten by above `memcpy()`.
@@ -1044,8 +1044,8 @@ void Frame::CopyFrom(const Frame &aAnotherFrame)
     mPsdu   = psduBuffer;
     mIeInfo = ieInfoBuffer;
 
-    memcpy(mPsdu, aAnotherFrame.mPsdu, aAnotherFrame.GetPsduLength());
-    memcpy(mIeInfo, aAnotherFrame.mIeInfo, sizeof(otRadioIeInfo));
+    memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
+    memcpy(mIeInfo, aFromFrame.mIeInfo, sizeof(otRadioIeInfo));
 }
 
 Frame::InfoString Frame::ToInfoString(void) const

@@ -42,10 +42,10 @@
 #include "net/ip6_address.hpp"
 #include "thread/mle.hpp"
 
+namespace ot {
+
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-
-namespace ot {
 
 enum
 {

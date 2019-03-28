@@ -114,7 +114,7 @@ protected:
      * @param[in]  aInstance  A pointer to the otInstance.
      *
      */
-    InstanceLocator(Instance &aInstance)
+    explicit InstanceLocator(Instance &aInstance)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         : mInstance(aInstance)
 #endif
@@ -162,7 +162,7 @@ protected:
      * @param[in]  aOwner   A pointer to the owner object (as `void *`).
      *
      */
-    OwnerLocator(void *aOwner)
+    explicit OwnerLocator(void *aOwner)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         : mOwner(aOwner)
 #endif

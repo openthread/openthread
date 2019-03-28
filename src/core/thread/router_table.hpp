@@ -56,7 +56,7 @@ public:
          * @param[in] aInstance  A reference to the OpenThread instance.
          *
          */
-        Iterator(Instance &aInstance);
+        explicit Iterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start over.
@@ -118,7 +118,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    RouterTable(Instance &aInstance);
+    explicit RouterTable(Instance &aInstance);
 
     /**
      * This method clears the router table.
@@ -312,10 +312,10 @@ public:
     /**
      * This method updates the router table with a received Route TLV.
      *
-     * @param[in]  aRoute  A reference to the Route TLV.
+     * @param[in]  aTlv  A reference to the Route TLV.
      *
      */
-    void ProcessTlv(const Mle::RouteTlv &aRoute);
+    void ProcessTlv(const Mle::RouteTlv &aTlv);
 
     /**
      * This method updates the router table with a received Router Mask TLV.
@@ -323,7 +323,7 @@ public:
      * @param[in]  aTlv  A reference to the Router Mask TLV.
      *
      */
-    void ProcessTlv(const ThreadRouterMaskTlv &Tlv);
+    void ProcessTlv(const ThreadRouterMaskTlv &aTlv);
 
     /**
      * This method updates the router table and must be called with a one second period.
@@ -371,7 +371,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(Instance &) {}
+        explicit Iterator(Instance &) {}
         void    Reset(void) {}
         bool    IsDone(void) const { return true; }
         void    Advance(void) {}

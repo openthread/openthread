@@ -400,16 +400,16 @@ private:
     void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     otError  PrepareDataPoll(void);
     void     HandleMesh(uint8_t *               aFrame,
-                        uint8_t                 aPayloadLength,
+                        uint8_t                 aFrameLength,
                         const Mac::Address &    aMacSource,
                         const otThreadLinkInfo &aLinkInfo);
     void     HandleFragment(uint8_t *               aFrame,
-                            uint8_t                 aPayloadLength,
+                            uint8_t                 aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
     void     HandleLowpanHC(uint8_t *               aFrame,
-                            uint8_t                 aPayloadLength,
+                            uint8_t                 aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
@@ -441,7 +441,7 @@ private:
     void    HandleReceivedFrame(Mac::Frame &aFrame);
     otError HandleFrameRequest(Mac::Frame &aFrame);
     void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
+    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);

@@ -7,7 +7,7 @@
 
 #define RADIO_CONFIG_XTAL_FREQUENCY 38400000UL
 
-#if RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
 extern const RAIL_ChannelConfig_t *channelConfigs[];
 #endif
 
