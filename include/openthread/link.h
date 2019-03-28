@@ -99,7 +99,6 @@ typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address
     int8_t       mRssIn;      ///< Received signal strength
-    bool         mFiltered;   ///< Indicates whether or not this entry is filtered.
 } otMacFilterEntry;
 
 /**
