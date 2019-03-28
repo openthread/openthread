@@ -180,7 +180,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_CAPS>(void)
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SRC_MATCH_ENABLED>(void)
 {
-    // TODO: Would be good to add an `otLinkRaw` API to give the the status of source match.
+    // TODO: Would be good to add an `otLinkRaw` API to give the status of source match.
     return mEncoder.WriteBool(mSrcMatchEnabled);
 }
 
