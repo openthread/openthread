@@ -691,14 +691,14 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                         case NetworkDataTlv::kTypeServer:
                         {
                             bool       foundInBase = false;
-                            ServerTlv *server      = reinterpret_cast<ServerTlv *>(curInner);
+                            ServerTlv *server      = static_cast<ServerTlv *>(curInner);
 
                             NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
                             NetworkDataTlv *endServerBase = serviceBase->GetNext();
 
                             while (curServerBase <= endServerBase)
                             {
-                                ServerTlv *serverBase = reinterpret_cast<ServerTlv *>(curServerBase);
+                                ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
 
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
@@ -1038,7 +1038,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
     }
 
-    dstServer = reinterpret_cast<ServerTlv *>(dstService->GetNext());
+    dstServer = static_cast<ServerTlv *>(dstService->GetNext());
 
     Insert(reinterpret_cast<uint8_t *>(dstServer), sizeof(ServerTlv) + aServer.GetServerDataLength());
     dstServer->Init();
@@ -1069,7 +1069,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 
         if (cur->GetType() == NetworkDataTlv::kTypeService)
         {
-            compare = reinterpret_cast<ServiceTlv *>(cur);
+            compare = static_cast<ServiceTlv *>(cur);
 
             if (compare->GetServiceID() == aServiceId)
             {

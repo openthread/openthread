@@ -202,7 +202,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
     serviceTlv->SetLength(static_cast<uint8_t>(serviceTlvLength));
 
-    serverTlv = reinterpret_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
+    serverTlv = static_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
     serverTlv->Init();
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:

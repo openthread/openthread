@@ -343,7 +343,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             ConnectivityTlv tlv;
             tlv.Init();
-            netif.GetMle().FillConnectivityTlv(*reinterpret_cast<Mle::ConnectivityTlv *>(&tlv));
+            netif.GetMle().FillConnectivityTlv(reinterpret_cast<Mle::ConnectivityTlv &>(tlv));
             SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
             break;
         }
@@ -353,7 +353,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             RouteTlv tlv;
             tlv.Init();
-            netif.GetMle().FillRouteTlv(*reinterpret_cast<Mle::RouteTlv *>(&tlv));
+            netif.GetMle().FillRouteTlv(reinterpret_cast<Mle::RouteTlv &>(tlv));
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
@@ -371,7 +371,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             NetworkDataTlv tlv;
             tlv.Init();
-            netif.GetMle().FillNetworkDataTlv((*reinterpret_cast<Mle::NetworkDataTlv *>(&tlv)), false);
+            netif.GetMle().FillNetworkDataTlv((reinterpret_cast<Mle::NetworkDataTlv &>(tlv)), false);
             SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
             break;
         }
