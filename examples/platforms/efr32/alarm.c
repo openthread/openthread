@@ -39,6 +39,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "platform-efr32.h"
 #include "utils/code_utils.h"
 
 #include "em_core.h"
@@ -47,11 +48,18 @@
 #define XTAL_ACCURACY 200
 #define US_IN_MS 1000
 
+// The longest Rail can set a timer is 53 minutes.  Timers of a longer duration
+// must wake up before this and set another timer for the remainder.  We currently
+// split long delays in 30 minute intervals using a value of 1800000.
+#define RAIL_TIMER_MAX_DELTA_MS 1800000
+
 static uint32_t sTimerHi   = 0;
 static uint32_t sTimerLo   = 0;
 static uint32_t sAlarmT0   = 0;
 static uint32_t sAlarmDt   = 0;
 static bool     sIsRunning = false;
+
+static void RAILCb_TimerExpired(RAIL_Handle_t aHandle);
 
 void efr32AlarmInit(void)
 {
@@ -94,10 +102,24 @@ uint32_t otPlatTimeGetXtalAccuracy(void)
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    uint32_t expires;
+
+    if (sIsRunning)
+    {
+        RAIL_CancelTimer(gRailHandle);
+    }
 
     sAlarmT0   = t0;
     sAlarmDt   = dt;
     sIsRunning = true;
+
+    if (dt >= RAIL_TIMER_MAX_DELTA_MS)
+    {
+        dt = RAIL_TIMER_MAX_DELTA_MS;
+    }
+
+    expires = (t0 + dt) * US_IN_MS;
+    RAIL_SetTimer(gRailHandle, expires, RAIL_TIME_ABSOLUTE, RAILCb_TimerExpired);
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
@@ -105,6 +127,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     sIsRunning = false;
+    RAIL_CancelTimer(gRailHandle);
 }
 
 void efr32AlarmProcess(otInstance *aInstance)
@@ -142,11 +165,18 @@ void efr32AlarmProcess(otInstance *aInstance)
             otPlatAlarmMilliFired(aInstance);
         }
     }
-
+    else
+    {
+        if (RAIL_IsTimerExpired(gRailHandle))
+        {
+            expires = sAlarmT0 + sAlarmDt;
+            RAIL_SetTimer(gRailHandle, expires, RAIL_TIME_ABSOLUTE, RAILCb_TimerExpired);
+        }
+    }
 exit:
     return;
 }
 
-void RAILCb_TimerExpired(void)
+static void RAILCb_TimerExpired(RAIL_Handle_t aHandle)
 {
 }

@@ -110,6 +110,7 @@ if OPENTHREAD_EXAMPLES_SAMR21
 SUBDIRS                                += samr21
 endif
 
+
 noinst_HEADERS                          = \
     openthread-system.h                   \
     $(NULL)

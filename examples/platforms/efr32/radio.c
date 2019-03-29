@@ -45,6 +45,7 @@
 #include "utils/soft_source_match_table.h"
 
 #include "board_config.h"
+#include "em_cmu.h"
 #include "em_core.h"
 #include "em_system.h"
 #include "openthread-core-efr32-config.h"
@@ -53,6 +54,7 @@
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
+#include "rtcdriver.h"
 
 enum
 {
@@ -101,6 +103,8 @@ typedef enum
     ENERGY_SCAN_MODE_SYNC,
     ENERGY_SCAN_MODE_ASYNC
 } energyScanMode;
+
+RAIL_Handle_t gRailHandle;
 
 static volatile bool sTransmitBusy      = false;
 static bool          sPromiscuous       = false;
@@ -177,6 +181,12 @@ static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 
     handle = RAIL_Init(&aBandConfig->mRailConfig, NULL);
     assert(handle != NULL);
+    gRailHandle = handle;
+
+    CMU_ClockEnable(cmuClock_PRS, true);
+    RTCDRV_Init();
+    status = RAIL_ConfigSleep(handle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
+    assert(status == RAIL_STATUS_NO_ERROR);
 
     status = RAIL_ConfigData(handle, &railDataConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
