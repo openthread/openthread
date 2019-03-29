@@ -516,6 +516,17 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
+        break;
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>;
+        break;
+    case SPINEL_PROP_SERVER_LEADER_SERVICES:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -852,6 +863,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -1032,6 +1048,11 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -1110,6 +1131,11 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
         break;
     case SPINEL_PROP_MAC_FIXED_RSS:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>;
         break;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

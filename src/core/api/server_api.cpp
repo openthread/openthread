@@ -64,10 +64,10 @@ otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig
         aConfig->mServerConfig.mServerDataLength);
 }
 
-otError otServerRemoveService(otInstance *aInstance,
-                              uint32_t    aEnterpriseNumber,
-                              uint8_t *   aServiceData,
-                              uint8_t     aServiceDataLength)
+otError otServerRemoveService(otInstance *   aInstance,
+                              uint32_t       aEnterpriseNumber,
+                              const uint8_t *aServiceData,
+                              uint8_t        aServiceDataLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
