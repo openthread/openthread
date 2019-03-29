@@ -1295,6 +1295,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PHY_PCAP_ENABLED";
         break;
 
+    case SPINEL_PROP_PHY_CHAN_PREFERRED:
+        ret = "PHY_CHAN_PREFERRED";
+        break;
+
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         ret = "JAM_DETECT_ENABLE";
         break;

@@ -2173,6 +2173,20 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
+{
+#if OPENTHREAD_RADIO
+    return EncodeChannelMask(otPlatRadioGetSupportedChannelMask(mInstance));
+#else
+    return EncodeChannelMask(otLinkGetSupportedChannelMask(mInstance));
+#endif // OPENTHREAD_RADIO
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>(void)
+{
+    return EncodeChannelMask(otPlatRadioGetPreferredChannelMask(mInstance));
+}
+
 } // namespace Ncp
 } // namespace ot
 

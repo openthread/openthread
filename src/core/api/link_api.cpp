@@ -443,9 +443,3 @@ uint8_t otLinkGetPhyChannelMax(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return Phy::kChannelMax;
 }
-
-uint32_t otLinkGetPhySupportedChannelMask(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return Phy::kSupportedChannels;
-}

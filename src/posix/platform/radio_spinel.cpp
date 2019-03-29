@@ -1337,6 +1337,36 @@ otError RadioSpinel::PlatDiagProcess(const char *aString, char *aOutput, size_t 
 }
 #endif
 
+uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
+{
+    uint8_t        maskBuffer[kChannelMaskBufferSize];
+    otError        error       = OT_ERROR_NONE;
+    uint32_t       channelMask = 0;
+    const uint8_t *maskData    = maskBuffer;
+    spinel_size_t  maskLength  = sizeof(maskBuffer);
+
+    SuccessOrExit(error = Get(aPreferred ? SPINEL_PROP_PHY_CHAN_PREFERRED : SPINEL_PROP_PHY_CHAN_SUPPORTED,
+                              SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength));
+
+    while (maskLength > 0)
+    {
+        uint8_t        channel;
+        spinel_ssize_t unpacked;
+
+        unpacked = spinel_datatype_unpack(maskData, maskLength, SPINEL_DATATYPE_UINT8_S, &channel);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_FAILED);
+        VerifyOrExit(channel < kChannelMaskBufferSize, error = OT_ERROR_PARSE);
+        channelMask |= (1UL << channel);
+
+        maskData += unpacked;
+        maskLength -= static_cast<spinel_size_t>(unpacked);
+    }
+
+exit:
+    LogIfFail("Get radio channel mask failed", error);
+    return channelMask;
+}
+
 } // namespace PosixApp
 } // namespace ot
 
@@ -1671,3 +1701,15 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 #endif // OPENTHREAD_ENABLE_DIAG
+
+uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetRadioChannelMask(false);
+}
+
+uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetRadioChannelMask(true);
+}

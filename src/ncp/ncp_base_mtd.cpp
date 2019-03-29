@@ -207,11 +207,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
     return mEncoder.WriteUint32(freq_khz);
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
-{
-    return EncodeChannelMask(otLinkGetPhySupportedChannelMask(mInstance));
-}
-
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
     uint32_t newMask = 0;
