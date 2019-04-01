@@ -134,7 +134,7 @@ static void usbdIsrHandler(app_usbd_internal_evt_t const *const aEvent, bool aQu
     otSysEventSignalPending();
 }
 
-static void usbdUserEventStateHandler(app_usbd_event_type_t aEvent)
+static void usbdUserEventHandler(app_usbd_event_type_t aEvent)
 {
     switch (aEvent)
     {
@@ -263,7 +263,7 @@ static void processTransmit(void)
 void nrf5UartInit(void)
 {
     static const app_usbd_config_t usbdConfig = {
-        .ev_state_proc  = usbdUserEventStateHandler,
+        .ev_state_proc  = usbdUserEventHandler,
         .ev_isr_handler = usbdIsrHandler,
     };
 
