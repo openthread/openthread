@@ -2964,7 +2964,8 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         if (activeDatasetOffset > 0)
         {
             aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
-            netif.GetActiveDataset().Set(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv), tlv.GetLength());
+            netif.GetActiveDataset().Save(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv),
+                                          tlv.GetLength());
         }
     }
 
@@ -2974,8 +2975,8 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         if (pendingDatasetOffset > 0)
         {
             aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
-            netif.GetPendingDataset().Set(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv),
-                                          tlv.GetLength());
+            netif.GetPendingDataset().Save(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv),
+                                           tlv.GetLength());
         }
     }
 
@@ -3316,7 +3317,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
         if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == OT_ERROR_NONE)
         {
             aMessage.Read(offset, sizeof(tlv), &tlv);
-            netif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            netif.GetActiveDataset().Save(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
     }
 
@@ -3335,7 +3336,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
         if (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, offset) == OT_ERROR_NONE)
         {
             aMessage.Read(offset, sizeof(tlv), &tlv);
-            netif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            netif.GetPendingDataset().Save(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
     }
     else

@@ -307,7 +307,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     networkName.SetNetworkName(netif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(Tlv) + networkName.GetLength()));
 
-    netif.GetActiveDataset().Get(dataset);
+    netif.GetActiveDataset().Read(dataset);
     if ((tlv = dataset.Get(Tlv::kActiveTimestamp)) != NULL)
     {
         SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));

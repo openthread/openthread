@@ -62,12 +62,12 @@ otError DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
     Dataset dataset(mLocal.GetType());
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
 
     return dataset.AppendMleDatasetTlv(aMessage);
 }
 
-otError DatasetManager::Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetif &   netif = GetNetif();
     Tlv             tlv;
@@ -201,7 +201,7 @@ otError DatasetManager::Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     {
         // Thread specification allows partial dataset changes for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req
         // from Commissioner based on existing active dataset.
-        netif.GetActiveDataset().Get(dataset);
+        netif.GetActiveDataset().Read(dataset);
     }
 
     if (type == Tlv::kPendingTimestamp || !doesAffectConnectivity)
@@ -252,7 +252,7 @@ otError DatasetManager::Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
             offset += sizeof(Tlv) + data.tlv.GetLength();
         }
 
-        VerifyOrExit(Set(dataset) == OT_ERROR_NONE, state = StateTlv::kReject);
+        VerifyOrExit(Save(dataset) == OT_ERROR_NONE, state = StateTlv::kReject);
         netif.GetNetworkDataLeader().IncrementVersion();
         netif.GetNetworkDataLeader().IncrementStableVersion();
     }
@@ -326,7 +326,7 @@ otError ActiveDataset::GenerateLocal(void)
 
     VerifyOrExit(netif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
 
     // Active Timestamp
     if (dataset.Get(Tlv::kActiveTimestamp) == NULL)
@@ -420,7 +420,7 @@ otError ActiveDataset::GenerateLocal(void)
         dataset.Set(tlv);
     }
 
-    SuccessOrExit(error = mLocal.Set(dataset));
+    SuccessOrExit(error = mLocal.Save(dataset));
     Restore();
 
     otLogInfoMeshCoP("Generated local dataset");
@@ -448,7 +448,7 @@ void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessa
 
 void ActiveDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    SuccessOrExit(DatasetManager::Set(aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     ApplyConfiguration();
 
 exit:
@@ -474,7 +474,7 @@ void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMess
 
 void PendingDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    SuccessOrExit(DatasetManager::Set(aMessage, aMessageInfo));
+    SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     StartDelayTimer();
 
 exit:
@@ -512,7 +512,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);
-    DatasetManager::Set(dataset);
+    DatasetManager::Save(dataset);
 
     // reset delay timer
     StartDelayTimer();

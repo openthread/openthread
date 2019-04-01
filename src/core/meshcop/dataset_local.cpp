@@ -70,7 +70,7 @@ otError DatasetLocal::Restore(Dataset &aDataset)
     const Timestamp *timestamp;
     otError          error;
 
-    error = Get(aDataset);
+    error = Read(aDataset);
     SuccessOrExit(error);
 
     timestamp = aDataset.GetTimestamp();
@@ -89,7 +89,7 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Get(Dataset &aDataset) const
+otError DatasetLocal::Read(Dataset &aDataset) const
 {
     DelayTimerTlv *delayTimer;
     uint32_t       elapsed;
@@ -126,14 +126,14 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Get(otOperationalDataset &aDataset) const
+otError DatasetLocal::Read(otOperationalDataset &aDataset) const
 {
     Dataset dataset(mType);
     otError error;
 
     memset(&aDataset, 0, sizeof(aDataset));
 
-    error = Get(dataset);
+    error = Read(dataset);
     SuccessOrExit(error);
 
     dataset.Get(aDataset);
@@ -142,7 +142,7 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Set(const otOperationalDataset &aDataset)
+otError DatasetLocal::Save(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
     Dataset dataset(mType);
@@ -150,14 +150,14 @@ otError DatasetLocal::Set(const otOperationalDataset &aDataset)
     error = dataset.Set(aDataset);
     SuccessOrExit(error);
 
-    error = Set(dataset);
+    error = Save(dataset);
     SuccessOrExit(error);
 
 exit:
     return error;
 }
 
-otError DatasetLocal::Set(const Dataset &aDataset)
+otError DatasetLocal::Save(const Dataset &aDataset)
 {
     const Timestamp *timestamp;
     otError          error;

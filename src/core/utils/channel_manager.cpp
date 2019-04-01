@@ -109,7 +109,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     VerifyOrExit(mChannel != GetInstance().Get<Mac::Mac>().GetPanChannel());
 
-    if (netif.GetPendingDataset().Get(dataset) == OT_ERROR_NONE)
+    if (netif.GetPendingDataset().Read(dataset) == OT_ERROR_NONE)
     {
         if (dataset.mComponents.mIsPendingTimestampPresent)
         {
@@ -134,7 +134,7 @@ void ChannelManager::PreparePendingDataset(void)
 
     pendingTimestamp += 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
 
-    error = netif.GetActiveDataset().Get(dataset);
+    error = netif.GetActiveDataset().Read(dataset);
 
     if (error != OT_ERROR_NONE)
     {

@@ -93,7 +93,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset) const;
+    otError Read(Dataset &aDataset) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -104,7 +104,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(otOperationalDataset &aDataset) const;
+    otError Read(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the local time this dataset was last updated or restored.
@@ -120,7 +120,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully stored the dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
 
     /**
      * This method stores the dataset into non-volatile memory.
@@ -128,7 +128,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully stored the dataset.
      *
      */
-    otError Set(const Dataset &aDataset);
+    otError Save(const Dataset &aDataset);
 
     /**
      * This method compares this dataset to another based on the timestamp.

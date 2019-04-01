@@ -90,7 +90,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset) const { return mLocal.Get(aDataset); }
+    otError Read(Dataset &aDataset) const { return mLocal.Read(aDataset); }
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -101,7 +101,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(otOperationalDataset &aDataset) const { return mLocal.Get(aDataset); }
+    otError Read(otOperationalDataset &aDataset) const { return mLocal.Read(aDataset); }
 
     /**
      * This method retrieves the channel mask from local dataset.
@@ -185,7 +185,7 @@ protected:
     void Clear(void);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
@@ -193,15 +193,15 @@ protected:
      * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError Set(const Dataset &aDataset);
+    otError Save(const Dataset &aDataset);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -214,7 +214,7 @@ protected:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
      * This method handles a MGMT_GET request message.
@@ -224,7 +224,7 @@ protected:
      * @param[in]  aMessageInfo  The message info.
      *
      */
-    void Get(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
      * This method compares the partition's Operational Dataset with that stored in non-volatile memory.
@@ -288,7 +288,7 @@ protected:
      * @retval OT_ERROR_DROP  The MGMT_SET request message was dropped.
      *
      */
-    otError Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
@@ -310,17 +310,17 @@ public:
      * This method clears the Active Operational Dataset.
      *
      */
-    void Clear(void);
+    void Clear(void) { DatasetManager::Clear(); }
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * This method also reconfigures the Thread interface.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    void Set(const Dataset &aDataset);
+    void Save(const Dataset &aDataset) { DatasetManager::Save(aDataset); }
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -334,7 +334,7 @@ public:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
      * This method sets the Operational Dataset in non-volatile memory.
@@ -342,7 +342,7 @@ public:
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset) { return DatasetManager::Save(aDataset); }
 
 #if OPENTHREAD_FTD
 
@@ -417,14 +417,14 @@ public:
     void ClearNetwork(void);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * This method also starts the Delay Timer.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -439,7 +439,7 @@ public:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 #if OPENTHREAD_FTD
 
