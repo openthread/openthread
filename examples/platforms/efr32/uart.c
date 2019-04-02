@@ -40,17 +40,23 @@
 
 #include "em_core.h"
 #include "uartdrv.h"
+#include <assert.h>
+#include <string.h>
 
 #include "hal-config.h"
 
 enum
 {
     kReceiveFifoSize = 128,
+    kDmaBlockSize    = 32,
 };
+
+#define USART_PORT USART0
+#define USART_PORT_RX_IRQn USART0_RX_IRQn
 
 #define USART_INIT                                                                               \
     {                                                                                            \
-        USART0,                                               /* USART port */                   \
+        USART_PORT,                                           /* USART port */                   \
             115200,                                           /* Baud rate */                    \
             BSP_SERIAL_APP_TX_LOC,                            /* USART Tx pin location number */ \
             BSP_SERIAL_APP_RX_LOC,                            /* USART Rx pin location number */ \
@@ -72,9 +78,9 @@ enum
 DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_RX_BUFS, sUartRxQueue);
 DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS, sUartTxQueue);
 
+static CORE_DECLARE_NVIC_MASK(sRxNvicMask);
 static UARTDRV_HandleData_t sUartHandleData;
-static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
-static uint8_t              sReceiveBuffer[2];
+static UARTDRV_Handle_t     sUartHandle     = &sUartHandleData;
 static const uint8_t *      sTransmitBuffer = NULL;
 static volatile uint16_t    sTransmitLength = 0;
 
@@ -82,26 +88,63 @@ typedef struct ReceiveFifo_t
 {
     // The data buffer
     uint8_t mBuffer[kReceiveFifoSize];
-    // The offset of the first item written to the list.
-    volatile uint16_t mHead;
-    // The offset of the next item to be written to the list.
-    volatile uint16_t mTail;
+    // The offset of the first item to be read from the list
+    uint16_t mReadStart;
+    // The offset of the last item to be read plus one
+    volatile uint16_t mReadEnd;
+    // The offset of first unused item
+    volatile uint16_t mWrite;
+
 } ReceiveFifo_t;
 
 static ReceiveFifo_t sReceiveFifo;
 
-static void processReceive(void);
+static void queueNextReceive(void);
+
+static void updateReceiveProgress(uint8_t *aData, UARTDRV_Count_t aCount)
+{
+    assert(aData != NULL);
+
+    const uint16_t buffPos = aData - sReceiveFifo.mBuffer;
+
+    if (buffPos + kDmaBlockSize == kReceiveFifoSize)
+    {
+        assert(sReceiveFifo.mReadEnd >= buffPos || sReceiveFifo.mReadEnd == 0);
+        assert(sReceiveFifo.mReadEnd <= buffPos + aCount);
+    }
+    else
+    {
+        assert(sReceiveFifo.mReadEnd >= buffPos);
+        assert(sReceiveFifo.mReadEnd <= buffPos + aCount);
+    }
+
+    sReceiveFifo.mReadEnd = (buffPos + aCount) % kReceiveFifoSize;
+}
 
 static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
-    // We can only write if incrementing mTail doesn't equal mHead
-    if (sReceiveFifo.mHead != (sReceiveFifo.mTail + 1) % kReceiveFifoSize)
+    updateReceiveProgress(aData, aCount);
+    queueNextReceive();
+}
+
+static void queueNextReceive(void)
+{
+    if (sReceiveFifo.mWrite > sReceiveFifo.mReadStart)
     {
-        sReceiveFifo.mBuffer[sReceiveFifo.mTail] = aData[0];
-        sReceiveFifo.mTail                       = (sReceiveFifo.mTail + 1) % kReceiveFifoSize;
+        assert(kReceiveFifoSize - sReceiveFifo.mWrite >= kDmaBlockSize);
+    }
+    else if (sReceiveFifo.mWrite < sReceiveFifo.mReadStart)
+    {
+        assert(sReceiveFifo.mReadStart - sReceiveFifo.mWrite >= kDmaBlockSize);
+    }
+    else
+    {
+        assert(sReceiveFifo.mReadStart == sReceiveFifo.mReadEnd);
+        assert(kReceiveFifoSize - sReceiveFifo.mWrite >= kDmaBlockSize);
     }
 
-    UARTDRV_Receive(aHandle, aData, 1, receiveDone);
+    UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + sReceiveFifo.mWrite, kDmaBlockSize, receiveDone);
+    sReceiveFifo.mWrite = (sReceiveFifo.mWrite + kDmaBlockSize) % kReceiveFifoSize;
 }
 
 static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
@@ -111,25 +154,32 @@ static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDa
 
 static void processReceive(void)
 {
-    // Copy tail to prevent multiple reads
-    uint16_t tail = sReceiveFifo.mTail;
+    uint16_t        readEnd;
+    uint8_t *       buffer;
+    UARTDRV_Count_t itemsReceived;
+    UARTDRV_Count_t itemsRemaining;
 
-    // If the data wraps around, process the first part
-    if (sReceiveFifo.mHead > tail)
+    CORE_DECLARE_NVIC_STATE;
+
+    CORE_ENTER_NVIC(&sRxNvicMask);
+
+    UARTDRV_GetReceiveStatus(sUartHandle, &buffer, &itemsReceived, &itemsRemaining);
+    updateReceiveProgress(buffer, itemsReceived);
+
+    readEnd = sReceiveFifo.mReadEnd;
+
+    CORE_EXIT_NVIC();
+
+    if (sReceiveFifo.mReadStart > readEnd)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, kReceiveFifoSize - sReceiveFifo.mHead);
-
-        // Reset the buffer mHead back to zero.
-        sReceiveFifo.mHead = 0;
+        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mReadStart, kReceiveFifoSize - sReceiveFifo.mReadStart);
+        sReceiveFifo.mReadStart = 0;
     }
 
-    // For any data remaining, process it
-    if (sReceiveFifo.mHead != tail)
+    if (sReceiveFifo.mReadStart != readEnd)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mHead, tail - sReceiveFifo.mHead);
-
-        // Set mHead to the local tail we have cached
-        sReceiveFifo.mHead = tail;
+        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mReadStart, readEnd - sReceiveFifo.mReadStart);
+        sReceiveFifo.mReadStart = readEnd;
     }
 }
 
@@ -146,15 +196,25 @@ otError otPlatUartEnable(void)
 {
     UARTDRV_Init_t uartInit = USART_INIT;
 
-    sReceiveFifo.mHead = 0;
-    sReceiveFifo.mTail = 0;
+    memset(&sRxNvicMask, 0, sizeof(sRxNvicMask));
+    CORE_NvicMaskSetIRQ(LDMA_IRQn, &sRxNvicMask);
+    CORE_NvicMaskSetIRQ(USART_PORT_RX_IRQn, &sRxNvicMask);
+
+    sReceiveFifo.mReadStart = 0;
+    sReceiveFifo.mReadEnd   = 0;
+    sReceiveFifo.mWrite     = 0;
 
     UARTDRV_Init(sUartHandle, &uartInit);
 
-    for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
+    CORE_DECLARE_NVIC_STATE;
+    CORE_ENTER_NVIC(&sRxNvicMask);
+
+    for (int i = 0; i < 2; i++)
     {
-        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
+        queueNextReceive();
     }
+
+    CORE_EXIT_NVIC();
 
     return OT_ERROR_NONE;
 }
