@@ -923,12 +923,9 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    struct timeval end;
-    struct timeval now;
+    uint64_t       now     = otSysGetTime();
+    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-
-    otSysGetTime(&now);
-    timeradd(&now, &timeout, &end);
 
     do
     {
@@ -997,10 +994,14 @@ otError RadioSpinel::WaitResponse(void)
         }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-        otSysGetTime(&now);
-        if (timercmp(&end, &now, >))
+        now = otSysGetTime();
+
+        if (end > now)
         {
-            timersub(&end, &now, &timeout);
+            uint64_t remain = end - now;
+
+            timeout.tv_sec  = remain / US_PER_S;
+            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
         }
         else
         {

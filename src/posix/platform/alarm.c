@@ -33,16 +33,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
 #include "code_utils.h"
-
-#define MS_PER_S 1000
-#define US_PER_MS 1000
-#define US_PER_S 1000000
 
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
@@ -52,28 +49,32 @@ static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 #endif
 
-static uint32_t       sSpeedUpFactor = 1;
-static struct timeval sStart;
+static uint32_t sSpeedUpFactor = 1;
+
+#if !OPENTHREAD_POSIX_VIRTUAL_TIME
+uint64_t otSysGetTime(void)
+{
+    struct timespec now;
+
+    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC, &now) == 0, OT_EXIT_FAILURE);
+
+    return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
+}
+#endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
+
+static uint64_t platformAlarmGetNow(void)
+{
+    return otSysGetTime() * sSpeedUpFactor;
+}
 
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
     sSpeedUpFactor = aSpeedUpFactor;
-    otSysGetTime(&sStart);
-}
-
-static uint64_t platformGetNow(void)
-{
-    struct timeval now;
-
-    otSysGetTime(&now);
-    timersub(&now, &sStart, &now);
-
-    return (uint64_t)now.tv_sec * US_PER_S * sSpeedUpFactor + (uint64_t)now.tv_usec * sSpeedUpFactor;
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
-    return (uint32_t)(platformGetNow() / US_PER_MS);
+    return (uint32_t)(platformAlarmGetNow() / US_PER_MS);
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -94,7 +95,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)(platformGetNow());
+    return (uint32_t)(otSysGetTime());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -116,7 +117,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int64_t  remaining = INT32_MAX;
-    uint64_t now       = platformGetNow();
+    uint64_t now       = platformAlarmGetNow();
 
     assert(aTimeout != NULL);
 

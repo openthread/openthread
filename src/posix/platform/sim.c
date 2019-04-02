@@ -198,10 +198,9 @@ void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set 
     otSimRadioSpinelProcess(aInstance, &event);
 }
 
-void otSimGetTime(struct timeval *aTime)
+uint64_t otSysGetTime(void)
 {
-    aTime->tv_sec  = (time_t)sNow / kUsPerSecond;
-    aTime->tv_usec = sNow % kUsPerSecond;
+    return sNow;
 }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
