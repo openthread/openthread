@@ -36,8 +36,8 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -135,7 +135,7 @@ void Netif::SubscribeAllNodesMulticast(void)
         }
     }
 
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 }
 
 void Netif::UnsubscribeAllNodesMulticast(void)
@@ -153,7 +153,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
         }
     }
 
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
 }
 
 otError Netif::SubscribeAllRoutersMulticast(void)
@@ -191,7 +191,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
         }
     }
 
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
 exit:
     return error;
@@ -232,7 +232,7 @@ exit:
             }
         }
 
-        GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
     }
 
     return error;
@@ -258,7 +258,7 @@ otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
         mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, true, mAddressCallbackContext);
     }
 
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
 exit:
     return error;
@@ -296,7 +296,7 @@ exit:
             mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, false, mAddressCallbackContext);
         }
 
-        GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
     }
 
     return error;
@@ -357,7 +357,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     entry->mAddress     = aAddress;
     entry->mNext        = mMulticastAddresses;
     mMulticastAddresses = entry;
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
 
 exit:
     return error;
@@ -397,7 +397,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
 
-    GetNotifier().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
 
 exit:
     return error;
@@ -443,7 +443,7 @@ otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
         mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, true, mAddressCallbackContext);
     }
 
-    GetNotifier().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
+    Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -481,7 +481,7 @@ exit:
             mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, false, mAddressCallbackContext);
         }
 
-        GetNotifier().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
+        Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
     }
 
     return error;
@@ -526,7 +526,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     entry->mNext      = mUnicastAddresses;
     mUnicastAddresses = entry;
 
-    GetNotifier().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -566,7 +566,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
 
-    GetNotifier().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
 
 exit:
     return error;

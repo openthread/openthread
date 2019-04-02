@@ -50,6 +50,7 @@ namespace Mle {
 class MleRouter : public Mle
 {
     friend class Mle;
+    friend class ot::Instance;
 
 public:
     explicit MleRouter(Instance &aInstance)
@@ -82,9 +83,6 @@ public:
 
     otError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
-
-    ChildTable & GetChildTable(void) { return mChildTable; }
-    RouterTable &GetRouterTable(void) { return mRouterTable; }
 
     bool IsMinimalChild(uint16_t) { return false; }
 

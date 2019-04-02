@@ -38,8 +38,8 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
@@ -55,7 +55,7 @@ namespace Dhcp6 {
 
 Dhcp6Client::Dhcp6Client(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
+    , mSocket(Get<Ip6::Udp>())
     , mTrickleTimer(aInstance, &Dhcp6Client::HandleTrickleTimer, NULL, this)
     , mStartTime(0)
     , mIdentityAssociationCurrent(NULL)
@@ -105,7 +105,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            GetNetif().RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }
@@ -263,7 +263,6 @@ exit:
 
 otError Dhcp6Client::Solicit(uint16_t aRloc16)
 {
-    ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
     Message *        message;
     Ip6::MessageInfo messageInfo;
@@ -278,14 +277,15 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendIaAddress(*message, aRloc16));
     SuccessOrExit(error = AppendRapidCommit(*message));
 
-    memcpy(messageInfo.GetPeerAddr().mFields.m8, netif.GetMle().GetMeshLocalPrefix().m8, sizeof(otMeshLocalPrefix));
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8,
+           sizeof(otMeshLocalPrefix));
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.mPeerPort    = kDhcpServerPort;
-    messageInfo.mInterfaceId = netif.GetInterfaceId();
+    messageInfo.mInterfaceId = Get<ThreadNetif>().GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
     otLogInfoIp6("solicit");
@@ -582,7 +582,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            GetNetif().AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
             break;
         }
     }

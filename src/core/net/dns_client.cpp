@@ -33,7 +33,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/owner-locator.hpp"
+#include "common/locator-getters.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -48,6 +48,13 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Dns {
+
+Client::Client(Ip6::Netif &aNetif)
+    : mSocket(aNetif.Get<Ip6::Udp>())
+    , mMessageId(0)
+    , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this)
+{
+}
 
 otError Client::Start(void)
 {

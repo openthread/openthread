@@ -39,9 +39,9 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -71,7 +71,7 @@ otError DataPollManager::StartPolling(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
-    VerifyOrExit(!GetNetif().GetMle().IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -94,28 +94,27 @@ void DataPollManager::StopPolling(void)
 
 otError DataPollManager::SendDataPoll(void)
 {
-    ThreadNetif &netif = GetNetif();
-    otError      error;
-    Message *    message;
-    Neighbor *   parent;
+    otError   error;
+    Message * message;
+    Neighbor *parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!netif.GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = netif.GetMle().GetParentCandidate();
+    parent = Get<Mle::MleRouter>().GetParentCandidate();
     VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
-    for (message = netif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
+    for (message = Get<MeshForwarder>().GetSendQueue().GetHead(); message; message = message->GetNext())
     {
         VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
-    message = GetInstance().GetMessagePool().New(Message::kTypeMacDataPoll, 0);
+    message = Get<MessagePool>().New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    error = netif.GetMeshForwarder().SendMessage(*message);
+    error = Get<MeshForwarder>().SendMessage(*message);
 
     if (error != OT_ERROR_NONE)
     {
@@ -431,7 +430,7 @@ void DataPollManager::HandlePollTimer(Timer &aTimer)
 
 uint32_t DataPollManager::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(GetNetif().GetMle().GetTimeout()) -
+    return TimerMilli::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

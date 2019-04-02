@@ -37,6 +37,7 @@
 
 #include <openthread/logging.h>
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 

@@ -38,9 +38,9 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_routes.hpp"
@@ -69,8 +69,8 @@ Ip6::Ip6(Instance &aInstance)
 
 Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 {
-    return GetInstance().GetMessagePool().New(
-        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+    return Get<MessagePool>().New(Message::kTypeIp6,
+                                  sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
@@ -84,7 +84,7 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMes
     }
 
     SuccessOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)));
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, &settings)) != NULL);
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
     {
@@ -304,7 +304,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
     else
     {
         if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
+            Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
         {
             Message *messageCopy = NULL;
 
@@ -500,7 +500,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
-        if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
+        if (Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
         {
             Message *messageCopy = NULL;
 
@@ -742,7 +742,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
             case kCoapUdpPort:
 
                 // do not pass TMF messages
-                if (GetInstance().GetThreadNetif().IsTmfMessage(aMessageInfo))
+                if (Get<ThreadNetif>().IsTmfMessage(aMessageInfo))
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
@@ -752,7 +752,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
             default:
 #if OPENTHREAD_FTD
-                if (udp.GetDestinationPort() == GetInstance().Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
+                if (udp.GetDestinationPort() == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
@@ -865,7 +865,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
             }
 
             if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-                GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
+                Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
             {
                 forward = true;
             }

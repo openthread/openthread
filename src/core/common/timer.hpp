@@ -204,15 +204,6 @@ public:
      *
      */
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
-
-private:
-    /**
-     * This method returns a reference to the TimerMilliScheduler.
-     *
-     * @returns   A reference to the TimerMilliScheduler.
-     *
-     */
-    TimerMilliScheduler &GetTimerMilliScheduler(void) const;
 };
 
 /**
@@ -437,15 +428,6 @@ public:
      *
      */
     static uint32_t GetNow(void) { return otPlatAlarmMicroGetNow(); }
-
-private:
-    /**
-     * This method returns a reference to the TimerMicroScheduler.
-     *
-     * @returns   A reference to the TimerMicroScheduler.
-     *
-     */
-    TimerMicroScheduler &GetTimerMicroScheduler(void) const;
 };
 
 /**

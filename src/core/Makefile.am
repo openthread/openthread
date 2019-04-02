@@ -135,7 +135,6 @@ SOURCES_COMMON                      = \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
     common/notifier.cpp               \
@@ -236,7 +235,6 @@ libopenthread_radio_a_SOURCES       = \
     api/message_api.cpp               \
     api/tasklet_api.cpp               \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
     common/string.cpp                 \
@@ -297,11 +295,11 @@ HEADERS_COMMON                      = \
     common/extension.hpp              \
     common/instance.hpp               \
     common/locator.hpp                \
+    common/locator-getters.hpp        \
     common/logging.hpp                \
     common/message.hpp                \
     common/new.hpp                    \
     common/notifier.hpp               \
-    common/owner-locator.hpp          \
     common/random.hpp                 \
     common/settings.hpp               \
     common/string.hpp                 \

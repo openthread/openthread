@@ -45,7 +45,7 @@ void TestMessage(void)
     instance = static_cast<ot::Instance *>(testInitInstance());
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->GetMessagePool();
+    messagePool = &instance->Get<ot::MessagePool>();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {

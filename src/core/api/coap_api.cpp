@@ -37,6 +37,7 @@
 
 #include "coap/coap_message.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

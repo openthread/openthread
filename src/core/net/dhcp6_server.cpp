@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
@@ -49,7 +50,7 @@ namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSocket(GetNetif().GetIp6().GetUdp())
+    , mSocket(Get<Ip6::Udp>())
     , mPrefixAgentsCount(0)
     , mPrefixAgentsMask(0)
 {
@@ -59,8 +60,7 @@ Dhcp6Server::Dhcp6Server(Instance &aInstance)
 otError Dhcp6Server::UpdateService(void)
 {
     otError               error  = OT_ERROR_NONE;
-    ThreadNetif &         netif  = GetNetif();
-    uint16_t              rloc16 = netif.GetMle().GetRloc16();
+    uint16_t              rloc16 = Get<Mle::MleRouter>().GetRloc16();
     otNetworkDataIterator iterator;
     otBorderRouterConfig  config;
     Lowpan::Context       lowpanContext;
@@ -77,14 +77,14 @@ otError Dhcp6Server::UpdateService(void)
 
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while (netif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
         {
             if (!config.mDhcp)
             {
                 continue;
             }
 
-            error = netif.GetNetworkDataLeader().GetContext(mPrefixAgents[i].GetPrefix(), lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(mPrefixAgents[i].GetPrefix(), lowpanContext);
 
             if ((error == OT_ERROR_NONE) && (mPrefixAgents[i].GetContextId() == lowpanContext.mContextId))
             {
@@ -104,15 +104,15 @@ otError Dhcp6Server::UpdateService(void)
     // add dhcp agent aloc and prefix delegation
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (netif.GetNetworkDataLeader().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
     {
         if (!config.mDhcp)
         {
             continue;
         }
 
-        error = netif.GetNetworkDataLeader().GetContext(static_cast<const Ip6::Address &>(config.mPrefix.mPrefix),
-                                                        lowpanContext);
+        error = Get<NetworkData::Leader>().GetContext(static_cast<const Ip6::Address &>(config.mPrefix.mPrefix),
+                                                      lowpanContext);
 
         if (error == OT_ERROR_NONE)
         {
@@ -166,8 +166,8 @@ otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan:
 
     VerifyOrExit(newEntry != NULL, error = OT_ERROR_NO_BUFS);
 
-    newEntry->Set(aIp6Prefix, GetNetif().GetMle().GetMeshLocalPrefix(), aContext.mContextId);
-    GetNetif().AddUnicastAddress(newEntry->GetAloc());
+    newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
+    Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
     mPrefixAgentsCount++;
 
 exit:

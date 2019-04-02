@@ -35,6 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 namespace ot {
 
@@ -60,11 +61,9 @@ ChildTable::Iterator::Iterator(Instance &aInstance, StateFilter aFilter, Child *
 
 void ChildTable::Iterator::Reset(void)
 {
-    ChildTable &childTable = GetInstance().Get<ChildTable>();
-
     if (mStart == NULL)
     {
-        mStart = &childTable.mChildren[0];
+        mStart = &Get<ChildTable>().mChildren[0];
     }
 
     mChild = mStart;
@@ -77,7 +76,7 @@ void ChildTable::Iterator::Reset(void)
 
 void ChildTable::Iterator::Advance(void)
 {
-    ChildTable &childTable = GetInstance().Get<ChildTable>();
+    ChildTable &childTable = Get<ChildTable>();
     Child *     listStart  = &childTable.mChildren[0];
     Child *     listEnd    = &childTable.mChildren[childTable.mMaxChildrenAllowed];
 

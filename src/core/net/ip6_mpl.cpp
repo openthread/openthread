@@ -35,8 +35,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "net/ip6.hpp"
 
@@ -244,8 +244,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
     // adjust the first MPL forward interval dynamically according to the network scale
-    uint8_t interval = (kDataMessageInterval / Mle::kMaxRouters) *
-                       GetInstance().GetThreadNetif().GetMle().GetRouterTable().GetNeighborCount();
+    uint8_t interval = (kDataMessageInterval / Mle::kMaxRouters) * Get<RouterTable>().GetNeighborCount();
 #else
     uint8_t interval = kDataMessageInterval;
 #endif
@@ -370,7 +369,7 @@ void Mpl::HandleRetransmissionTimer(void)
                         messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
                     }
 
-                    GetIp6().EnqueueDatagram(*messageCopy);
+                    Get<Ip6>().EnqueueDatagram(*messageCopy);
                 }
 
                 messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
@@ -395,7 +394,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
                     // Remove the extra metadata from the MPL Data Message.
                     messageMetadata.RemoveFrom(*message);
-                    GetIp6().EnqueueDatagram(*message);
+                    Get<Ip6>().EnqueueDatagram(*message);
                 }
                 else
                 {

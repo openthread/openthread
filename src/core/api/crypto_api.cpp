@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/locator-getters.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"

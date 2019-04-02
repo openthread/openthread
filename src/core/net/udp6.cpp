@@ -40,6 +40,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -64,14 +65,9 @@ UdpSocket::UdpSocket(Udp &aUdp)
     mHandle = NULL;
 }
 
-Udp &UdpSocket::GetUdp(void)
-{
-    return GetInstance().GetIp6().GetUdp();
-}
-
 Message *UdpSocket::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 {
-    return GetUdp().NewMessage(aReserved, aSettings);
+    return Get<Udp>().NewMessage(aReserved, aSettings);
 }
 
 otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
@@ -87,7 +83,7 @@ otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
     SuccessOrExit(error = otPlatUdpSocket(this));
 #endif
 
-    GetUdp().AddSocket(*this);
+    Get<Udp>().AddSocket(*this);
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
 exit:
@@ -105,7 +101,7 @@ otError UdpSocket::Bind(const SockAddr &aSockAddr)
     {
         do
         {
-            mSockName.mPort = GetUdp().GetEphemeralPort();
+            mSockName.mPort = Get<Udp>().GetEphemeralPort();
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
             error = otPlatUdpBind(this);
 #endif
@@ -144,7 +140,7 @@ otError UdpSocket::Close(void)
     SuccessOrExit(error = otPlatUdpClose(this));
 #endif
 
-    GetUdp().RemoveSocket(*this);
+    Get<Udp>().RemoveSocket(*this);
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
 
@@ -198,7 +194,7 @@ otError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
     else
 #endif
     {
-        SuccessOrExit(error = GetUdp().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+        SuccessOrExit(error = Get<Udp>().SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
     }
 
 exit:
@@ -319,7 +315,7 @@ uint16_t Udp::GetEphemeralPort(void)
 
 Message *Udp::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 {
-    return GetIp6().NewMessage(sizeof(UdpHeader) + aReserved, aSettings);
+    return Get<Ip6>().NewMessage(sizeof(UdpHeader) + aReserved, aSettings);
 }
 
 otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
@@ -347,7 +343,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
         SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
         aMessage.SetOffset(0);
 
-        error = GetIp6().SendDatagram(aMessage, aMessageInfo, aIpProto);
+        error = Get<Ip6>().SendDatagram(aMessage, aMessageInfo, aIpProto);
     }
 
 exit:

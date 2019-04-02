@@ -42,8 +42,8 @@
 #include <openthread/platform/time.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
 
@@ -87,14 +87,14 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
         // receive older time sync sequence.
         mTimeSyncRequired = true;
     }
-    else if (GetInstance().GetThreadNetif().GetMle().GetRole() != OT_DEVICE_ROLE_LEADER)
+    else if (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_LEADER)
     {
         // Update network time in following three cases:
         //  1. during first attach;
         //  2. already attached, receive newer time sync sequence;
         //  3. during reattach or migration process.
         if (mTimeSyncSeq == OT_TIME_SYNC_INVALID_SEQ || (int8_t)(aMessage.GetTimeSyncSeq() - mTimeSyncSeq) > 0 ||
-            GetInstance().GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_DETACHED)
+            Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DETACHED)
         {
             // update network time and forward it.
             mLastTimeSyncReceived = TimerMilli::GetNow();
@@ -132,7 +132,7 @@ void TimeSync::NotifyTimeSyncCallback(void)
 #if OPENTHREAD_FTD
 void TimeSync::ProcessTimeSync(void)
 {
-    if (GetInstance().GetThreadNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER &&
+    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER &&
         TimerMilli::GetNow() - mLastTimeSyncSent > TimerMilli::SecToMsec(mTimeSyncPeriod))
     {
         IncrementTimeSyncSeq();
@@ -141,7 +141,7 @@ void TimeSync::ProcessTimeSync(void)
 
     if (mTimeSyncRequired)
     {
-        VerifyOrExit(GetInstance().GetThreadNetif().GetMle().SendTimeSync() == OT_ERROR_NONE);
+        VerifyOrExit(Get<Mle::MleRouter>().SendTimeSync() == OT_ERROR_NONE);
 
         mLastTimeSyncSent = TimerMilli::GetNow();
         mTimeSyncRequired = false;
@@ -178,7 +178,7 @@ void TimeSync::HandleTimeout(Timer &aTimer)
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 {
     otNetworkTimeStatus networkTimeStatus       = OT_NETWORK_TIME_SYNCHRONIZED;
-    const otDeviceRole  role                    = GetInstance().GetThreadNetif().GetMle().GetRole();
+    const otDeviceRole  role                    = Get<Mle::MleRouter>().GetRole();
     const uint32_t      resyncNeededThresholdMs = 2 * TimerMilli::SecToMsec(mTimeSyncPeriod);
     const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
 

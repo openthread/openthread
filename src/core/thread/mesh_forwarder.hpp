@@ -168,6 +168,7 @@ private:
 class MeshForwarder : public InstanceLocator
 {
     friend class Mac::Mac;
+    friend class Instance;
 
 public:
     /**
@@ -295,14 +296,6 @@ public:
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
-     * This method returns a reference to the data poll manager.
-     *
-     * @returns  A reference to the data poll manager.
-     *
-     */
-    DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
-
-    /**
      * This method returns a reference to the IP level counters.
      *
      * @returns A reference to the IP level counters.
@@ -318,14 +311,6 @@ public:
      *
      */
     const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-
-    /**
-     * This method returns a reference to the source match controller.
-     *
-     * @returns  A reference to the source match controller.
-     *
-     */
-    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
 #endif
 
 private:

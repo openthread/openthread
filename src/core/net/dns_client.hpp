@@ -158,10 +158,7 @@ public:
      * @param[in]  aNetif    A reference to the network interface that DNS client should be assigned to.
      *
      */
-    explicit Client(Ip6::Netif &aNetif)
-        : mSocket(aNetif.GetIp6().GetUdp())
-        , mMessageId(0)
-        , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this){};
+    explicit Client(Ip6::Netif &aNetif);
 
     /**
      * This method starts the DNS client.

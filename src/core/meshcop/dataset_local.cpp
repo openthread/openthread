@@ -40,6 +40,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
 #include "meshcop/dataset.hpp"
@@ -62,7 +63,7 @@ void DatasetLocal::Clear(void)
 {
     mTimestamp.Init();
     mTimestampPresent = false;
-    GetInstance().GetSettings().DeleteOperationalDataset(IsActive());
+    Get<Settings>().DeleteOperationalDataset(IsActive());
 }
 
 otError DatasetLocal::Restore(Dataset &aDataset)
@@ -95,7 +96,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
     uint32_t       elapsed;
     otError        error;
 
-    error = GetInstance().GetSettings().ReadOperationalDataset(IsActive(), aDataset);
+    error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
     if (mType == Tlv::kActiveTimestamp)
@@ -164,12 +165,12 @@ otError DatasetLocal::Save(const Dataset &aDataset)
 
     if (aDataset.GetSize() == 0)
     {
-        error = GetInstance().GetSettings().DeleteOperationalDataset(IsActive());
+        error = Get<Settings>().DeleteOperationalDataset(IsActive());
         otLogInfoMeshCoP("%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = GetInstance().GetSettings().SaveOperationalDataset(IsActive(), aDataset);
+        error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset);
         otLogInfoMeshCoP("%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
 

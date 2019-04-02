@@ -39,6 +39,7 @@
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
@@ -72,7 +73,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
     otLogDebgMac("LinkRaw::Enabled(%s)", aEnabled ? "true" : "false");
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    VerifyOrExit(!GetInstance().GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 #endif
 
     if (aEnabled)

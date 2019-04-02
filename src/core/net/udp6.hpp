@@ -209,8 +209,6 @@ private:
     {
         mHandler(mContext, &aMessage, &aMessageInfo);
     }
-
-    Udp &GetUdp(void);
 };
 
 /**

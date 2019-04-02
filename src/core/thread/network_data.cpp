@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
@@ -219,7 +220,7 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator,
                     aConfig->mPreference          = hasRouteEntry->GetPreference();
                     aConfig->mStable              = hasRoute->IsStable();
                     aConfig->mRloc16              = hasRouteEntry->GetRloc();
-                    aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == GetNetif().GetMle().GetRloc16());
+                    aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == Get<Mle::MleRouter>().GetRloc16());
 
                     iterator.SaveTlvOffset(cur, mTlvs);
                     iterator.SaveSubTlvOffset(subCur, prefix->GetSubTlvs());
@@ -995,7 +996,6 @@ void NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
 
 otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 {
-    ThreadNetif &    netif   = GetNetif();
     otError          error   = OT_ERROR_NONE;
     Coap::Message *  message = NULL;
     Ip6::MessageInfo messageInfo;
@@ -1003,7 +1003,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(TimerMilli::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = OT_ERROR_ALREADY);
 
-    VerifyOrExit((message = netif.GetCoap().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
@@ -1027,10 +1027,10 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
     }
 
-    netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
+    Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     if (mType == kTypeLocal)
     {
