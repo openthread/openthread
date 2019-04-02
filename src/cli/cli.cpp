@@ -47,6 +47,7 @@
 #include <openthread/icmp6.h>
 #include <openthread/joiner.h>
 #include <openthread/link.h>
+#include <openthread/ncp.h>
 #include <openthread/thread.h>
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #include <openthread/network_time.h>
@@ -4037,3 +4038,20 @@ exit:
 
 } // namespace Cli
 } // namespace ot
+
+#if OPENTHREAD_ENABLE_LEGACY
+extern "C" void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
+{
+    OT_UNUSED_VARIABLE(aHandlers);
+}
+
+extern "C" void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
+{
+    OT_UNUSED_VARIABLE(aUlaPrefix);
+}
+
+extern "C" void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aExtAddr);
+}
+#endif // OPENTHREAD_ENABLE_LEGACY

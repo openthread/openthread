@@ -201,7 +201,6 @@ LOCAL_SRC_FILES                                          := \
     src/diag/diag_process.cpp                               \
     src/diag/openthread-diag.cpp                            \
     src/ncp/hdlc.cpp                                        \
-    src/ncp/ncp_spi.cpp                                     \
     src/ncp/spinel.c                                        \
     src/ncp/spinel_decoder.cpp                              \
     src/ncp/spinel_encoder.cpp                              \
