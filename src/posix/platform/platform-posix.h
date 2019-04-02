@@ -144,14 +144,6 @@ int32_t platformAlarmGetNext(void);
 #define NS_PER_US 1000
 
 /**
- * This function returns the current alarm time.
- *
- * @returns The current alarm time.
- *
- */
-uint64_t platformAlarmGetNow(void);
-
-/**
  * This function advances the alarm time by @p aDelta.
  *
  * @param[in]  aDelta  The amount of time to advance.
@@ -350,6 +342,14 @@ void otSimRadioSpinelUpdate(struct timeval *atimeout);
  *
  */
 void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+
+/**
+ * This function gets system time in microseconds without applying speed up factor.
+ *
+ * @returns System time in microseconds.
+ *
+ */
+uint64_t otSysGetTime(void);
 
 /**
  * This function initializes platform UDP driver.

@@ -256,7 +256,7 @@ otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-    uint64_t       now     = platformAlarmGetNow();
+    uint64_t       now     = otSysGetTime();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
@@ -294,7 +294,7 @@ otError HdlcInterface::WaitForWritable(void)
             exit(OT_EXIT_FAILURE);
         }
 
-        now = platformAlarmGetNow();
+        now = otSysGetTime();
 
         if (end > now)
         {

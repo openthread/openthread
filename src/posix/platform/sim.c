@@ -198,7 +198,7 @@ void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set 
     otSimRadioSpinelProcess(aInstance, &event);
 }
 
-uint64_t platformAlarmGetNow(void)
+uint64_t otSysGetTime(void)
 {
     return sNow;
 }

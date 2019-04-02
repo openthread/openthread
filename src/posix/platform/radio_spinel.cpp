@@ -923,7 +923,7 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    uint64_t       now     = platformAlarmGetNow();
+    uint64_t       now     = otSysGetTime();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
 
@@ -994,7 +994,7 @@ otError RadioSpinel::WaitResponse(void)
         }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-        now = platformAlarmGetNow();
+        now = otSysGetTime();
 
         if (end > now)
         {

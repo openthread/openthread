@@ -52,15 +52,20 @@ static uint32_t sUsAlarm     = 0;
 static uint32_t sSpeedUpFactor = 1;
 
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
-uint64_t platformAlarmGetNow(void)
+uint64_t otSysGetTime(void)
 {
     struct timespec now;
 
     VerifyOrDie(clock_gettime(CLOCK_MONOTONIC, &now) == 0, OT_EXIT_FAILURE);
 
-    return (uint64_t)now.tv_sec * US_PER_S * sSpeedUpFactor + (uint64_t)now.tv_nsec * sSpeedUpFactor / NS_PER_US;
+    return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
+
+static uint64_t platformAlarmGetNow(void)
+{
+    return otSysGetTime() * sSpeedUpFactor;
+}
 
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
