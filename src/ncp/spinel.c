@@ -525,17 +525,21 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
 
             require_action((spinel_ssize_t)data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
 
-            if (in_place)
+            if (block_len > 0)
             {
-                require_action(NULL != block_len_ptr && *block_len_ptr >= block_len, bail, (ret = -1, errno = EINVAL));
-                memcpy(arg_ptr, block_ptr, block_len);
-            }
-            else
-            {
-                const uint8_t **block_ptr_ptr = (const uint8_t **)arg_ptr;
-                if (NULL != block_ptr_ptr)
+                if (in_place)
                 {
-                    *block_ptr_ptr = block_ptr;
+                    require_action(NULL != block_len_ptr && *block_len_ptr >= block_len, bail,
+                                   (ret = -1, errno = EINVAL));
+                    memcpy(arg_ptr, block_ptr, block_len);
+                }
+                else
+                {
+                    const uint8_t **block_ptr_ptr = (const uint8_t **)arg_ptr;
+                    if (NULL != block_ptr_ptr)
+                    {
+                        *block_ptr_ptr = block_ptr;
+                    }
                 }
             }
 

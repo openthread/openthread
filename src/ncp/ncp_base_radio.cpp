@@ -61,14 +61,20 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     uint16_t flags  = 0;
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    // Append frame header and frame length
+    // Append frame header
     SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
-    SuccessOrExit(mEncoder.WriteUint16((aError == OT_ERROR_NONE) ? aFrame->mLength : 0));
 
     if (aError == OT_ERROR_NONE)
     {
+        // Append length
+        SuccessOrExit(mEncoder.WriteUint16(aFrame->mLength));
         // Append the frame contents
         SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
+    }
+    else
+    {
+        // Append length
+        SuccessOrExit(mEncoder.WriteUint16(0));
     }
 
     // Append metadata (rssi, etc)
@@ -123,11 +129,17 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
             SuccessOrExit(mEncoder.WriteInt8(-128));                           // Noise Floor (Currently unused)
             SuccessOrExit(mEncoder.WriteUint16(0));                            // Flags
 
-            SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
+            SuccessOrExit(mEncoder.OpenStruct());                                // PHY-data
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel));             // Receive channel
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi));   // Link Quality Indicator
+            SuccessOrExit(mEncoder.WriteUint32(aAckFrame->mInfo.mRxInfo.mMsec)); // The timestamp milliseconds
+            SuccessOrExit(
+                mEncoder.WriteUint16(aAckFrame->mInfo.mRxInfo.mUsec)); // The timestamp microseconds, offset to mMsec
 
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel));           // Receive channel
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi)); // Link Quality Indicator
+            SuccessOrExit(mEncoder.CloseStruct());
 
+            SuccessOrExit(mEncoder.OpenStruct());            // Vendor-data
+            SuccessOrExit(mEncoder.WriteUintPacked(aError)); // Receive error
             SuccessOrExit(mEncoder.CloseStruct());
         }
 
