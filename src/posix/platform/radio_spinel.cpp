@@ -627,7 +627,7 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-    if (receiveError == 0)
+    if (receiveError == OT_ERROR_NONE)
     {
         aFrame.mLength = static_cast<uint8_t>(size);
     }
