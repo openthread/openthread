@@ -181,6 +181,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"parentpriority", &Interpreter::ProcessParentPriority},
 #endif
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+    {"perf", &Interpreter::ProcessPerf},
+#endif
     {"ping", &Interpreter::ProcessPing},
     {"pollperiod", &Interpreter::ProcessPollPeriod},
     {"promiscuous", &Interpreter::ProcessPromiscuous},
@@ -244,6 +247,9 @@ Interpreter::Interpreter(Instance *aInstance)
     , mJoiner(*this)
 #endif
     , mInstance(aInstance)
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+    , mPerf(*this)
+#endif
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
@@ -3060,6 +3066,13 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
     error = mUdp.Process(argc, argv);
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+void Interpreter::ProcessPerf(int argc, char *argv[])
+{
+    AppendResult(mPerf.Process(argc, argv));
+}
+#endif
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {

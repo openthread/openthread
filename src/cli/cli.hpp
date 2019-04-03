@@ -48,6 +48,9 @@
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+#include "cli/cli_perf.hpp"
+#endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
@@ -100,6 +103,7 @@ class Interpreter
     friend class Commissioner;
     friend class Dataset;
     friend class Joiner;
+    friend class Perf;
     friend class UdpExample;
 
 public:
@@ -285,6 +289,9 @@ private:
 #if OPENTHREAD_FTD
     void ProcessParentPriority(int argc, char *argv[]);
 #endif
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+    void ProcessPerf(int argc, char *argv[]);
+#endif
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -406,6 +413,10 @@ private:
 #endif
 
     Instance *mInstance;
+
+#if OPENTHREAD_CONFIG_CLI_PERF_ENABLE
+    Perf mPerf;
+#endif
 };
 
 } // namespace Cli

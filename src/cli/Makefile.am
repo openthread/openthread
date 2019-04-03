@@ -149,6 +149,7 @@ SOURCES_COMMON =                      \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
     cli_joiner.cpp                    \
+    cli_perf.cpp                      \
     cli_server.cpp                    \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
@@ -171,6 +172,7 @@ noinst_HEADERS                      = \
     cli_console.hpp                   \
     cli_dataset.hpp                   \
     cli_joiner.hpp                    \
+    cli_perf.hpp                      \
     cli_server.hpp                    \
     cli_uart.hpp                      \
     cli_udp.hpp                       \

@@ -65,4 +65,14 @@
 #define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE 1024
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_PERF_NUM_SESSIONS
+ *
+ * The number of CLI Perf sessions. The minimum value is 2.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_PERF_NUM_SESSIONS
+#define OPENTHREAD_CONFIG_CLI_PERF_NUM_SESSIONS 3
+#endif
+
 #endif // CONFIG_CLI_H_

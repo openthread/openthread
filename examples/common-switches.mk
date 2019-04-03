@@ -31,6 +31,7 @@
 BIG_ENDIAN          ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
+CLI_PERF            ?= 0
 COAP                ?= 0
 COAPS               ?= 0
 COMMISSIONER        ?= 0
@@ -76,6 +77,10 @@ endif
 
 ifeq ($(BORDER_ROUTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1
+endif
+
+ifeq ($(CLI_PERF),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CLI_PERF_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
