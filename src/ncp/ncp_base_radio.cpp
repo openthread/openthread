@@ -66,10 +66,8 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 
     if (aError == OT_ERROR_NONE)
     {
-        // Append length
-        SuccessOrExit(mEncoder.WriteUint16(aFrame->mLength));
         // Append the frame contents
-        SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
+        SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, aFrame->mLength));
     }
     else
     {
