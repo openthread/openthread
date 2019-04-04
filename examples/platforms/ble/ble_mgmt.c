@@ -67,10 +67,21 @@
 
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
+#if OPENTHREAD_ENABLE_L2CAP
 enum
 {
-    kBleStackBufferSize  = 2250,
+    kStackBufferSize = 4832,
 };
+
+static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}, {1300, 2}};
+#else
+enum
+{
+    kStackBufferSize = 2200,
+};
+
+static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
+#endif
 
 enum
 {
@@ -82,12 +93,10 @@ enum
 
 enum
 {
-    kBleResetTimeout     = 100,
+    kBleResetTimeout = 100,
 };
 
-static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
-
-__attribute__((aligned(4))) static uint8_t sStackBuffer[kBleStackBufferSize];
+__attribute__((aligned(4))) static uint8_t sStackBuffer[kStackBufferSize];
 
 static uint8_t     sState            = kStateIdle;
 static otInstance *sInstance         = NULL;
@@ -179,6 +188,8 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
     otEXPECT(sState != kStateIdle);
 
+    sTaskletsPending = false;
+
     now   = otPlatBleAlarmMilliGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
@@ -246,7 +257,9 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
 
             WsfTimerStop(&sTimer);
             bleGattReset();
+#if OPENTHREAD_ENABLE_L2CAP
             bleL2capReset();
+#endif
             bleGapReset();
             bleHciDisable();
         }
@@ -295,7 +308,9 @@ static void bleTimerHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
     if (sState == kStateDeinitializing)
     {
         bleGattReset();
+#if OPENTHREAD_ENABLE_L2CAP
         bleL2capReset();
+#endif
         bleGapReset();
         bleHciDisable();
     }
@@ -326,12 +341,6 @@ static void bleStackInit(void)
 
     bytesUsed = WsfBufInit(sizeof(sStackBuffer), sStackBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
     assert(bytesUsed != 0);
-
-    if (bytesUsed < sizeof(sStackBuffer))
-    {
-        otLogCritPlat("Too much memory allocated for memory pool, reduce kBleStackBufferSize by %d bytes",
-                      sizeof(sStackBuffer) - bytesUsed);
-    }
 
     WsfTimerInit();
     SecInit();

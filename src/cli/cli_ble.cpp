@@ -134,7 +134,7 @@ otError Ble::ProcessAdvertise(int argc, char *argv[])
 
     if ((argc == 2) && (strcmp(argv[0], "advdata") == 0))
     {
-        uint8_t advData[kMaxAdvDataSize];
+        uint8_t advData[OT_BLE_ADV_DATA_MAX_LENGTH];
         int     advDataLength;
 
         VerifyOrExit((advDataLength = Interpreter::Hex2Bin(argv[1], advData, sizeof(advData))) > 0,
@@ -168,7 +168,7 @@ otError Ble::ProcessScan(int argc, char *argv[])
 
     if ((argc == 2) && (strcmp(argv[0], "rspdata") == 0))
     {
-        uint8_t rspData[kMaxAdvDataSize];
+        uint8_t rspData[OT_BLE_ADV_DATA_MAX_LENGTH];
         int     rspDataLength;
 
         VerifyOrExit((rspDataLength = Interpreter::Hex2Bin(argv[1], rspData, sizeof(rspData))) > 0,

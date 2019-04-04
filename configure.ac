@@ -1748,6 +1748,39 @@ AC_MSG_RESULT(${enable_cli_ble})
 AC_SUBST(OPENTHREAD_ENABLE_CLI_BLE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_BLE], [test "${enable_cli_ble}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_BLE], [${OPENTHREAD_ENABLE_CLI_BLE}], [Define to 1 if you want to enable BLE cli support])
+
+#
+# Support for L2CAP
+#
+
+AC_MSG_CHECKING([whether to build with L2CAP support])
+AC_ARG_ENABLE(l2cap,
+    [AS_HELP_STRING([--enable-l2cap], [Enable L2CAP support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_l2cap=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_l2cap} for --enable-l2cap])
+            ;;
+        esac
+    ],
+    [enable_l2cap=no])
+
+if test "$enable_l2cap" = "yes"; then
+    OPENTHREAD_ENABLE_L2CAP=1
+else
+    OPENTHREAD_ENABLE_L2CAP=0
+fi
+
+AC_MSG_RESULT(${enable_l2cap})
+AC_SUBST(OPENTHREAD_ENABLE_L2CAP)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_L2CAP], [test "${enable_l2cap}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_L2CAP], [${OPENTHREAD_ENABLE_L2CAP}], [Define to 1 if you want to enable L2CAP support])
+
 #
 # Examples
 #

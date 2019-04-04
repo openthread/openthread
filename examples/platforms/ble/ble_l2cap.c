@@ -48,31 +48,32 @@
 #include <openthread/platform/ble.h>
 
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-
+#if OPENTHREAD_ENABLE_L2CAP
 enum
 {
-    L2CAP_MAX_NUM_CONN        = 4,
-    L2CAP_INVALID_CONN_HANDLE = 0,
+    kL2capMaxNumConnections       = 1, //< Maximum number of L2CAP connections.
+    kL2capInvalidConnectionHandle = 0, //< Invalid L2CAP connection handle.
+    kL2capMaxCredits              = 1, //< Maximum credits for L2CAP flow control.
 };
 
 typedef struct L2capConnnection
 {
-    l2cCocRegId_t      mRegisterId;
-    uint16_t           mGapConnId;
-    uint16_t           mPsm;
-    uint16_t           mLocalCid;
-    otPlatBleL2capRole mRole : 2;
-    bool               mConnected : 1;
-    bool               mIsValid : 1;
+    l2cCocRegId_t      mRegisterId;    //< L2CAP register identifier returned by the Cordio stack.
+    uint16_t           mGapConnId;     //< BLE GAP connection ID.
+    uint16_t           mPsm;           //< L2CAP protocol/service multiplexer
+    uint16_t           mLocalCid;      //< L2CAP local channel ID.
+    otPlatBleL2capRole mRole : 2;      //< L2CAP role.
+    bool               mConnected : 1; //< Indicates if the L2CAP connection has been established.
+    bool               mIsValid : 1;   //< Indicates if the entry is valid.
 } L2capConnnection;
 
-static L2capConnnection sL2capConnections[L2CAP_MAX_NUM_CONN];
+static L2capConnnection sL2capConnections[kL2capMaxNumConnections];
 
 static uint8_t l2capGetFreeConnection(void)
 {
     uint8_t i;
 
-    for (i = 0; i < L2CAP_MAX_NUM_CONN; i++)
+    for (i = 0; i < kL2capMaxNumConnections; i++)
     {
         if (!sL2capConnections[i].mIsValid)
         {
@@ -82,12 +83,12 @@ static uint8_t l2capGetFreeConnection(void)
         }
     }
 
-    return (i >= L2CAP_MAX_NUM_CONN) ? L2CAP_INVALID_CONN_HANDLE : i + 1;
+    return (i >= kL2capMaxNumConnections) ? kL2capInvalidConnectionHandle : i + 1;
 }
 
 static void l2capFreeConnection(uint8_t aL2capHandle)
 {
-    if ((0 < aL2capHandle) && (aL2capHandle < L2CAP_MAX_NUM_CONN + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
+    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
     {
         sL2capConnections[aL2capHandle - 1].mIsValid = false;
     }
@@ -97,7 +98,7 @@ static L2capConnnection *l2capGetConnection(uint8_t aL2capHandle)
 {
     L2capConnnection *conn = NULL;
 
-    if ((0 < aL2capHandle) && (aL2capHandle < L2CAP_MAX_NUM_CONN + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
+    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
     {
         conn = &sL2capConnections[aL2capHandle - 1];
     }
@@ -110,7 +111,7 @@ static uint8_t l2capFindHandleByPsm(uint16_t aConnectionId, uint16_t aPsm, otPla
     L2capConnnection *conn = &sL2capConnections[0];
     uint8_t           i;
 
-    for (i = 0; i < L2CAP_MAX_NUM_CONN; i++)
+    for (i = 0; i < kL2capMaxNumConnections; i++)
     {
         if (conn->mIsValid && (conn->mPsm == aPsm) && (conn->mGapConnId == aConnectionId) && (conn->mRole == aRole))
         {
@@ -120,7 +121,7 @@ static uint8_t l2capFindHandleByPsm(uint16_t aConnectionId, uint16_t aPsm, otPla
         conn++;
     }
 
-    return (i >= L2CAP_MAX_NUM_CONN) ? L2CAP_INVALID_CONN_HANDLE : i + 1;
+    return (i >= kL2capMaxNumConnections) ? kL2capInvalidConnectionHandle : i + 1;
 }
 
 static uint8_t l2capFindHandleByCid(uint16_t aConnectionId, uint16_t aLocalCid)
@@ -128,7 +129,7 @@ static uint8_t l2capFindHandleByCid(uint16_t aConnectionId, uint16_t aLocalCid)
     L2capConnnection *conn = &sL2capConnections[0];
     uint8_t           i;
 
-    for (i = 0; i < L2CAP_MAX_NUM_CONN; i++)
+    for (i = 0; i < kL2capMaxNumConnections; i++)
     {
         if (conn->mIsValid && (conn->mLocalCid == aLocalCid) && (conn->mGapConnId == aConnectionId))
         {
@@ -138,7 +139,7 @@ static uint8_t l2capFindHandleByCid(uint16_t aConnectionId, uint16_t aLocalCid)
         conn++;
     }
 
-    return (i >= L2CAP_MAX_NUM_CONN) ? L2CAP_INVALID_CONN_HANDLE : i + 1;
+    return (i >= kL2capMaxNumConnections) ? kL2capInvalidConnectionHandle : i + 1;
 }
 
 static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
@@ -156,7 +157,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
 
         role        = aIsInitiator ? OT_BLE_L2CAP_ROLE_INITIATOR : OT_BLE_L2CAP_ROLE_ACCEPTOR;
         l2capHandle = l2capFindHandleByPsm(gapConnId, connInd->psm, role);
-        otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
+        otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
         otEXPECT((conn = l2capGetConnection(l2capHandle)) != NULL);
         conn->mConnected = true;
@@ -180,7 +181,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         otError          error;
 
         l2capHandle = l2capFindHandleByCid(gapConnId, dataCnf->cid);
-        otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
+        otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
         error = dataCnf->hdr.status == L2C_COC_DATA_SUCCESS ? OT_ERROR_NONE : OT_ERROR_FAILED;
         otPlatBleL2capOnSduSent(bleMgmtGetThreadInstance(), l2capHandle, error);
@@ -196,7 +197,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         packet.mLength = dataInd->dataLen;
 
         l2capHandle = l2capFindHandleByCid(gapConnId, dataInd->cid);
-        otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
+        otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
         otPlatBleL2capOnSduReceived(bleMgmtGetThreadInstance(), l2capHandle, &packet);
         break;
@@ -207,7 +208,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         L2capConnnection *     conn;
 
         l2capHandle = l2capFindHandleByCid(gapConnId, disconnectInd->cid);
-        otEXPECT(l2capHandle != L2CAP_INVALID_CONN_HANDLE);
+        otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
         otEXPECT((conn = l2capGetConnection(l2capHandle)) != NULL);
         conn->mConnected = false;
@@ -250,11 +251,11 @@ otError otPlatBleL2capConnectionRegister(otInstance *       aInstance,
     uint8_t           l2capHandle;
 
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
-    otEXPECT_ACTION(l2capFindHandleByPsm(aConnectionId, aPsm, aRole) == L2CAP_INVALID_CONN_HANDLE,
+    otEXPECT_ACTION(l2capFindHandleByPsm(aConnectionId, aPsm, aRole) == kL2capInvalidConnectionHandle,
                     error = OT_ERROR_DUPLICATED);
 
     l2capHandle = l2capGetFreeConnection();
-    otEXPECT_ACTION(l2capHandle != L2CAP_INVALID_CONN_HANDLE, error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(l2capHandle != kL2capInvalidConnectionHandle, error = OT_ERROR_NO_BUFS);
 
     conn = l2capGetConnection(l2capHandle);
     otEXPECT_ACTION(conn != NULL, error = OT_ERROR_FAILED);
@@ -262,7 +263,7 @@ otError otPlatBleL2capConnectionRegister(otInstance *       aInstance,
     cocReg.psm      = aPsm;
     cocReg.mtu      = aMtu;
     cocReg.mps      = HciGetMaxRxAclLen() - L2C_HDR_LEN;
-    cocReg.credits  = 1000;
+    cocReg.credits  = kL2capMaxCredits;
     cocReg.secLevel = DM_SEC_LEVEL_NONE;
     cocReg.authoriz = false;
 
@@ -360,6 +361,58 @@ otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
 exit:
     return error;
 }
+#else
+otError otPlatBleL2capConnectionRegister(otInstance *       aInstance,
+                                         uint16_t           aConnectionId,
+                                         uint16_t           aPsm,
+                                         uint16_t           aMtu,
+                                         otPlatBleL2capRole aRole,
+                                         uint8_t *          aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aConnectionId);
+    OT_UNUSED_VARIABLE(aPsm);
+    OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aRole);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capSduSend(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+    OT_UNUSED_VARIABLE(aPacket);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aL2capHandle);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif // OPENTHREAD_ENABLE_L2CAP
 
 /**
  * The BLE L2CAP module weak functions definition.

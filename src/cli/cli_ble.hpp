@@ -103,7 +103,6 @@ private:
         kScanWindow     = 80,  ///< Scan window (unit: 0.625ms)
         kConnInterval   = 160, ///< Connection interval (unit: 0.625ms).
         kConnSupTimeout = 60,  ///< Connection establishment supervision timeout (unit: 10ms).
-        kMaxAdvDataSize = 31,  ///< The maximum advertising or scan response data size.
         kAttMtu         = 23,  ///< The ATT_MTU value.
     };
 

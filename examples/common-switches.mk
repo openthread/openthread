@@ -48,6 +48,7 @@ DNS_CLIENT          ?= 0
 ECDSA               ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
+L2CAP               ?= 0
 LEGACY              ?= 0
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
@@ -141,6 +142,10 @@ endif
 
 ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
+endif
+
+ifeq ($(L2CAP),1)
+configure_OPTIONS              += --enable-l2cap
 endif
 
 ifeq ($(LEGACY),1)
