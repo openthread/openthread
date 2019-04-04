@@ -148,10 +148,11 @@ otError SubMac::Disable(void)
     otError error;
 
     mTimer.Stop();
-    error = otPlatRadioDisable(&GetInstance());
-    assert(error == OT_ERROR_NONE);
+    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
+    SuccessOrExit(error = otPlatRadioDisable(&GetInstance()));
     SetState(kStateDisabled);
 
+exit:
     return error;
 }
 

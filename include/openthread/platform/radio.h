@@ -422,7 +422,8 @@ otError otPlatRadioEnable(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE  Successfully transitioned to Disabled.
+ * @retval OT_ERROR_NONE            Successfully transitioned to Disabled.
+ * @retval OT_ERROR_INVALID_STATE   The radio was not in sleep state.
  *
  */
 otError otPlatRadioDisable(otInstance *aInstance);

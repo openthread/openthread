@@ -1290,22 +1290,24 @@ otError RadioSpinel::Enable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    if (!otPlatRadioIsEnabled(mInstance))
-    {
-        mInstance = aInstance;
+    VerifyOrExit(!IsEnabled());
 
-        SuccessOrExit(error = Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
-        SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
-        SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
+    mInstance = aInstance;
 
-        error = Get(SPINEL_PROP_PHY_RX_SENSITIVITY, SPINEL_DATATYPE_INT8_S, &mRxSensitivity);
-        VerifyOrExit(error == OT_ERROR_NONE);
+    SuccessOrExit(error = Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
+    SuccessOrExit(error = Get(SPINEL_PROP_PHY_RX_SENSITIVITY, SPINEL_DATATYPE_INT8_S, &mRxSensitivity));
 
-        mState = kStateSleep;
-    }
+    mState = kStateSleep;
 
 exit:
-    assert(error == OT_ERROR_NONE);
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("RadioSpinel enable: %s", otThreadErrorToString(error));
+        error = OT_ERROR_FAILED;
+    }
+
     return error;
 }
 
@@ -1313,14 +1315,12 @@ otError RadioSpinel::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    if (otPlatRadioIsEnabled(mInstance))
-    {
-        mInstance = NULL;
-        error     = sRadioSpinel.Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
-        VerifyOrExit(error == OT_ERROR_NONE);
+    VerifyOrExit(IsEnabled());
+    VerifyOrExit(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
-        mState = kStateDisabled;
-    }
+    SuccessOrDie(sRadioSpinel.Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
+    mState    = kStateDisabled;
+    mInstance = NULL;
 
 exit:
     return error;
