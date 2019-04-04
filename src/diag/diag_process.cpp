@@ -46,9 +46,8 @@ namespace ot {
 namespace Diagnostics {
 
 const struct Diag::Command Diag::sCommands[] = {
-    {"start", &ProcessStart}, {"stop", &ProcessStop},   {"channel", &ProcessChannel},
-    {"power", &ProcessPower}, {"send", &ProcessSend},   {"repeat", &ProcessRepeat},
-    {"stats", &ProcessStats}, {"radio", &ProcessRadio}, {NULL, NULL},
+    {"start", &ProcessStart}, {"stop", &ProcessStop},     {"channel", &ProcessChannel}, {"power", &ProcessPower},
+    {"send", &ProcessSend},   {"repeat", &ProcessRepeat}, {"stats", &ProcessStats},     {"radio", &ProcessRadio},
 };
 
 struct Diag::DiagStats Diag::sStats;
@@ -86,11 +85,11 @@ void Diag::ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t a
         ExitNow();
     }
 
-    for (const Command *command = &sCommands[0]; command->mName != NULL; command++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
-        if (strcmp(aArgVector[0], command->mName) == 0)
+        if (strcmp(aArgVector[0], sCommands[i].mName) == 0)
         {
-            command->mHandler(aArgCount - 1, (aArgCount > 1) ? &aArgVector[1] : NULL, aOutput, aOutputMaxLen);
+            sCommands[i].mHandler(aArgCount - 1, (aArgCount > 1) ? &aArgVector[1] : NULL, aOutput, aOutputMaxLen);
             ExitNow();
         }
     }
