@@ -2961,14 +2961,14 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 {
     return mEncoder.WriteUtf8(otGetRadioVersionString(mInstance));
 }
 
-#endif // OPENTHREAD_ENABLE_POSIX_APP
+#endif
 
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
 
