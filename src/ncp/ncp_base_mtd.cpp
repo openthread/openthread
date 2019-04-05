@@ -2060,10 +2060,17 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_SAMPL
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error       = OT_ERROR_NONE;
+    uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
+    uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
 
-    for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance); channel++)
+    for (uint8_t channel = 0; channel < channelNum; channel++)
     {
+        if (!((1UL << channel) & channelMask))
+        {
+            continue;
+        }
+
         SuccessOrExit(error = mEncoder.OpenStruct());
 
         SuccessOrExit(error = mEncoder.WriteUint8(channel));

@@ -40,6 +40,7 @@
 #include <openthread/link.h>
 
 #include "common/code_utils.hpp"
+#include "phy/phy.hpp"
 #include "utils/wrap_string.h"
 
 namespace ot {
@@ -191,8 +192,7 @@ void Diag::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size
         long value;
 
         SuccessOrExit(error = ParseLong(aArgVector[0], value));
-        VerifyOrExit(value >= otLinkGetPhyChannelMin(sInstance) && value <= otLinkGetPhyChannelMax(sInstance),
-                     error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(value >= Phy::kChannelMin && value <= Phy::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
         sChannel = static_cast<uint8_t>(value);
         otPlatRadioReceive(sInstance, sChannel);
