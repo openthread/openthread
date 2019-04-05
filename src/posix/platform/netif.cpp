@@ -82,8 +82,7 @@ static int          sNetlinkFd = -1; ///< Used to receive netlink events.
 static unsigned int sTunIndex  = 0;
 static char         sTunName[IFNAMSIZ];
 
-static const size_t  kMaxIp6Size            = 1536;
-static const uint8_t kMulticastPrefixLength = 128;
+static const size_t kMaxIp6Size = 1536;
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, uint8_t aPrefixLength, bool aIsAdded)
 {
@@ -96,7 +95,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
 
     memcpy(&ifr6.ifr6_addr, &aAddress, sizeof(ifr6.ifr6_addr));
 
-    ifr6.ifr6_ifindex   = sTunIndex;
+    ifr6.ifr6_ifindex   = static_cast<int>(sTunIndex);
     ifr6.ifr6_prefixlen = aPrefixLength;
 
     VerifyOrExit(ioctl(sIpFd, (aIsAdded ? SIOCSIFADDR : SIOCDIFADDR), &ifr6) == 0, perror("ioctl");
@@ -238,7 +237,7 @@ static void processTransmit(otInstance *aInstance)
     message = otIp6NewMessage(aInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = otMessageAppend(message, packet, rval));
+    SuccessOrExit(error = otMessageAppend(message, packet, static_cast<uint16_t>(rval)));
 
     error   = otIp6Send(aInstance, message);
     message = NULL;

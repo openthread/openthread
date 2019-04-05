@@ -414,11 +414,11 @@ void platformRadioInit(void)
 
     if (sPromiscuous)
     {
-        sockaddr.sin_port = htons(9000 + sPortOffset + WELLKNOWN_NODE_ID);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + WELLKNOWN_NODE_ID));
     }
     else
     {
-        sockaddr.sin_port = htons(9000 + sPortOffset + gNodeId);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + gNodeId));
     }
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
@@ -753,7 +753,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
             continue;
         }
 
-        sockaddr.sin_port = htons(9000 + sPortOffset + i);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + i));
         rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr,
                       sizeof(sockaddr));
 
