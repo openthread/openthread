@@ -174,10 +174,18 @@ all_gettable_props = [
     wpan.WPAN_THREAD_STABLE_LEADER_NETWORK_DATA
 ]
 
+all_posix_app_gettable_props = [
+    wpan.WPAN_RCP_VERSION
+]
+
 node.form('get-set')
 
 for prop in all_gettable_props:
     node.get(prop)
+
+if node.using_posix_app_with_rcp:
+    for prop in all_posix_app_gettable_props:
+        node.get(prop)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
