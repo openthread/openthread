@@ -119,4 +119,11 @@
  */
 #define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
 
+/**
+ * @def CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
+ *
+ * Define to 1 to use DefaultHandler for unhandled requests
+ *
+ */
+#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 1
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

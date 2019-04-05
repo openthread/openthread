@@ -586,30 +586,26 @@ void CoapSecure::HandleClientResponse(otMessage *aMessage, const otMessageInfo *
 }
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-void OTCALL CoapSecure::DefaultHandle(void *               aContext,
-                                      otCoapMessage *      aHeader,
-                                      otMessage *          aMessage,
-                                      const otMessageInfo *aMessageInfo)
+void OTCALL CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapSecure *>(aContext)->DefaultHandle(aHeader, aMessage, aMessageInfo);
+    static_cast<CoapSecure *>(aContext)->DefaultHandler(aMessage, aMessageInfo);
 }
 
-void CoapSecure::DefaultHandle(otCoapMessage *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    OT_UNUSED_VARIABLE(aMessage);
+    otError    error = OT_ERROR_NONE;
+    otMessage *responseMessage;
 
-    otError       error = OT_ERROR_NONE;
-    otCoapMessage responseHeader;
-    otMessage *   responseMessage;
-
-    if (otCoapMessageGetType(aHeader) == OT_COAP_TYPE_CONFIRMABLE || otCoapMessageGetCode(aHeader) == OT_COAP_CODE_GET)
+    if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
+        (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
     {
-        otCoapMessageInit(&responseHeader, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
-        otCoapMessageSetMessageId(&responseHeader, otCoapMessageGetMessageId(aHeader));
-        otCoapMessageSetToken(&responseHeader, otCoapMessageGetToken(aHeader), otCoapMessageGetTokenLength(aHeader));
-
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
+
+        otCoapMessageInit(responseMessage, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
+        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
+        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }
 

@@ -41,11 +41,6 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 
-/**
- * to test the default handler for not handled requests set to 1.
- */
-#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
-
 namespace ot {
 namespace Cli {
 
