@@ -506,7 +506,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
     case SPINEL_PROP_RCP_VERSION:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
         break;

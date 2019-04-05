@@ -1744,7 +1744,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif
 
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_POSIX_APP));
 #endif
 
