@@ -150,7 +150,7 @@ otError CoapSecure::Process(int argc, char *argv[])
         SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
         otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecure::HandleClientConnect, this);
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandle, this);
+        otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandler, this);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
         if (mUseCertificate)
