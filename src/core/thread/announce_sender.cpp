@@ -154,7 +154,7 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
+    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
 
     period = interval / channelMask.GetNumberOfChannels();
 
