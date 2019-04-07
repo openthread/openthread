@@ -1000,7 +1000,7 @@ otError RadioSpinel::WaitResponse(void)
         {
             uint64_t remain = end - now;
 
-            timeout.tv_sec  = remain / US_PER_S;
+            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
             timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
         }
         else
