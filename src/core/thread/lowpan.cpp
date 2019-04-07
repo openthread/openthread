@@ -448,8 +448,8 @@ compress:
 exit:
     if (error == OT_ERROR_NONE)
     {
-        aBuf.Write(hcCtl >> 8);
-        aBuf.Write(hcCtl & 0xff);
+        IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
+        IgnoreReturnValue(aBuf.Write(hcCtl & 0xff));
         aBuf = buf;
     }
     else
