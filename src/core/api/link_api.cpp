@@ -438,18 +438,6 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
     return instance.GetThreadNetif().GetMac().GetCcaFailureRate();
 }
 
-uint8_t otLinkGetPhyChannelMin(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return Phy::kChannelMin;
-}
-
-uint8_t otLinkGetPhyChannelMax(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return Phy::kChannelMax;
-}
-
 uint32_t otLinkGetPhySupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

@@ -803,26 +803,6 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
 bool otLinkIsEnabled(otInstance *aInstance);
 
 /**
- * This function gets the minimum channel number of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The minimum channel number.
- *
- */
-OTAPI uint8_t OTCALL otLinkGetPhyChannelMin(otInstance *aInstance);
-
-/**
- * This function gets the maximum channel number of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The maximum channel number.
- *
- */
-OTAPI uint8_t OTCALL otLinkGetPhyChannelMax(otInstance *aInstance);
-
-/**
  * This function gets the supported channel mask of IEEE 802.15.4 physical layer.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

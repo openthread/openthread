@@ -192,7 +192,7 @@ void Diag::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size
         long value;
 
         SuccessOrExit(error = ParseLong(aArgVector[0], value));
-        VerifyOrExit(value >= otLinkGetPhyChannelMin(sInstance) && value <= otLinkGetPhyChannelMax(sInstance),
+        VerifyOrExit((value <= OT_RADIO_CHANNEL_MAX) && (otLinkGetPhySupportedChannelMask(sInstance) & (1UL << value)),
                      error = OT_ERROR_INVALID_ARGS);
 
         sChannel = static_cast<uint8_t>(value);

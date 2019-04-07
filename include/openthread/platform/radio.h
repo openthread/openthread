@@ -75,6 +75,7 @@ enum
     OT_RADIO_SYMBOL_TIME  = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
     OT_RADIO_LQI_NONE     = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_CHANNEL_MAX  = 31,  ///< Maximum number of channel
 };
 
 /**

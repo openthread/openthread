@@ -553,20 +553,27 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
             mServer->OutputFormat("enabled: %d\r\n", otChannelMonitorIsEnabled(mInstance));
             if (otChannelMonitorIsEnabled(mInstance))
             {
+                uint8_t  channel     = 0;
+                uint32_t channelMask = otLinkGetPhySupportedChannelMask(mInstance);
+
                 mServer->OutputFormat("interval: %lu\r\n", otChannelMonitorGetSampleInterval(mInstance));
                 mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
                 mServer->OutputFormat("window: %lu\r\n", otChannelMonitorGetSampleWindow(mInstance));
                 mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
-                for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance);
-                     channel++)
-                {
-                    uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
 
-                    mServer->OutputFormat("ch %d (0x%04x) ", channel, occupancy);
-                    occupancy = (occupancy * 10000) / 0xffff;
-                    mServer->OutputFormat("%2d.%02d%% busy\r\n", occupancy / 100, occupancy % 100);
+                while (channel <= OT_RADIO_CHANNEL_MAX)
+                {
+                    if (channelMask & (1UL << channel))
+                    {
+                        uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
+                        mServer->OutputFormat("ch %d (0x%04x) ", channel, occupancy);
+                        occupancy = (occupancy * 10000) / 0xffff;
+                        mServer->OutputFormat("%2d.%02d%% busy\r\n", occupancy / 100, occupancy % 100);
+                    }
+
+                    channel++;
                 }
                 mServer->OutputFormat("\r\n");
             }
