@@ -47,8 +47,9 @@
 
 enum
 {
-    kReceiveFifoSize = 128,
-    kDmaBlockSize    = 32,
+    kReceiveFifoSize     = 128,
+    kDmaBlockSize        = 32,
+    kConcurrentRxBuffers = 2,
 };
 
 #define USART_PORT USART0
@@ -80,9 +81,10 @@ DEFINE_BUF_QUEUE(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS, sUartTxQueue);
 
 static CORE_DECLARE_NVIC_MASK(sRxNvicMask);
 static UARTDRV_HandleData_t sUartHandleData;
-static UARTDRV_Handle_t     sUartHandle     = &sUartHandleData;
-static const uint8_t *      sTransmitBuffer = NULL;
-static volatile uint16_t    sTransmitLength = 0;
+static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
+static const uint8_t *      sTransmitBuffer;
+static volatile uint16_t    sTransmitLength;
+static volatile uint8_t     sDeferredQueueReceives;
 
 typedef struct ReceiveFifo_t
 {
@@ -94,57 +96,67 @@ typedef struct ReceiveFifo_t
     volatile uint16_t mReadEnd;
     // The offset of first unused item
     volatile uint16_t mWrite;
-
+    // Last number of items value in current transfer
+    volatile uint16_t mLastCount;
 } ReceiveFifo_t;
 
 static ReceiveFifo_t sReceiveFifo;
 
-static void queueNextReceive(void);
+static bool queueNextReceive(void);
 
 static void updateReceiveProgress(uint8_t *aData, UARTDRV_Count_t aCount)
 {
-    assert(aData != NULL);
-
-    const uint16_t buffPos = aData - sReceiveFifo.mBuffer;
-
-    if (buffPos + kDmaBlockSize == kReceiveFifoSize)
+    if (aCount < sReceiveFifo.mLastCount)
     {
-        assert(sReceiveFifo.mReadEnd >= buffPos || sReceiveFifo.mReadEnd == 0);
-        assert(sReceiveFifo.mReadEnd <= buffPos + aCount);
-    }
-    else
-    {
-        assert(sReceiveFifo.mReadEnd >= buffPos);
-        assert(sReceiveFifo.mReadEnd <= buffPos + aCount);
+        // aCount has wrapped
+        sReceiveFifo.mReadEnd += kDmaBlockSize - sReceiveFifo.mLastCount;
+        sReceiveFifo.mLastCount = 0;
     }
 
-    sReceiveFifo.mReadEnd = (buffPos + aCount) % kReceiveFifoSize;
+    sReceiveFifo.mReadEnd += aCount - sReceiveFifo.mLastCount;
+    sReceiveFifo.mLastCount = aCount;
 }
 
 static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
     updateReceiveProgress(aData, aCount);
-    queueNextReceive();
+
+    if (!queueNextReceive() && sDeferredQueueReceives < UINT8_MAX)
+    {
+        assert(sDeferredQueueReceives < kConcurrentRxBuffers);
+
+        sDeferredQueueReceives += 1;
+    }
 }
 
-static void queueNextReceive(void)
+static bool queueNextReceive(void)
 {
-    if (sReceiveFifo.mWrite > sReceiveFifo.mReadStart)
+    bool           result           = true;
+    const uint16_t wrappedWrite     = sReceiveFifo.mWrite % kReceiveFifoSize;
+    const uint16_t wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
+
+    if (wrappedWrite > wrappedReadStart)
     {
-        assert(kReceiveFifoSize - sReceiveFifo.mWrite >= kDmaBlockSize);
+        assert(kReceiveFifoSize - wrappedWrite >= kDmaBlockSize);
     }
-    else if (sReceiveFifo.mWrite < sReceiveFifo.mReadStart)
+    else if (wrappedWrite < wrappedReadStart)
     {
-        assert(sReceiveFifo.mReadStart - sReceiveFifo.mWrite >= kDmaBlockSize);
+        assert(wrappedReadStart - wrappedWrite >= kDmaBlockSize);
     }
     else
     {
-        assert(sReceiveFifo.mReadStart == sReceiveFifo.mReadEnd);
-        assert(kReceiveFifoSize - sReceiveFifo.mWrite >= kDmaBlockSize);
+        // Buffer is empty
+        result = sReceiveFifo.mReadEnd == sReceiveFifo.mReadStart;
     }
 
-    UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + sReceiveFifo.mWrite, kDmaBlockSize, receiveDone);
-    sReceiveFifo.mWrite = (sReceiveFifo.mWrite + kDmaBlockSize) % kReceiveFifoSize;
+    otEXPECT(result);
+    otEXPECT_ACTION(ECODE_OK ==
+                        UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + wrappedWrite, kDmaBlockSize, receiveDone),
+                    result = false);
+
+    sReceiveFifo.mWrite += kDmaBlockSize;
+exit:
+    return result;
 }
 
 static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
@@ -158,7 +170,10 @@ static void processReceive(void)
     uint8_t *       buffer;
     UARTDRV_Count_t itemsReceived;
     UARTDRV_Count_t itemsRemaining;
-
+    uint8_t         numQueuedReceives = 0;
+    uint16_t        wrappedReadStart;
+    uint16_t        wrappedReadEnd;
+    uint16_t        readLength;
     CORE_DECLARE_NVIC_STATE;
 
     CORE_ENTER_NVIC(&sRxNvicMask);
@@ -170,17 +185,43 @@ static void processReceive(void)
 
     CORE_EXIT_NVIC();
 
-    if (sReceiveFifo.mReadStart > readEnd)
+    wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
+    wrappedReadEnd   = readEnd % kReceiveFifoSize;
+
+    if (wrappedReadStart > wrappedReadEnd)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mReadStart, kReceiveFifoSize - sReceiveFifo.mReadStart);
-        sReceiveFifo.mReadStart = 0;
+        readLength = kReceiveFifoSize - wrappedReadStart;
+        otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
+
+        sReceiveFifo.mReadStart += readLength;
     }
+
+    wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
 
     if (sReceiveFifo.mReadStart != readEnd)
     {
-        otPlatUartReceived(sReceiveFifo.mBuffer + sReceiveFifo.mReadStart, readEnd - sReceiveFifo.mReadStart);
+        readLength = wrappedReadEnd - wrappedReadStart;
+        otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
+
+        assert(sReceiveFifo.mReadStart + readLength == readEnd);
         sReceiveFifo.mReadStart = readEnd;
     }
+
+    CORE_ENTER_NVIC(&sRxNvicMask);
+
+    for (uint8_t i = 0; i < sDeferredQueueReceives; i++)
+    {
+        if (queueNextReceive())
+        {
+            numQueuedReceives += 1;
+        }
+    }
+
+    assert(sDeferredQueueReceives >= numQueuedReceives);
+
+    sDeferredQueueReceives -= numQueuedReceives;
+
+    CORE_EXIT_NVIC();
 }
 
 static void processTransmit(void)
@@ -194,7 +235,9 @@ static void processTransmit(void)
 
 otError otPlatUartEnable(void)
 {
-    UARTDRV_Init_t uartInit = USART_INIT;
+    otError        error             = OT_ERROR_NONE;
+    UARTDRV_Init_t uartInit          = USART_INIT;
+    uint8_t        numQueuedReceives = 0;
 
     memset(&sRxNvicMask, 0, sizeof(sRxNvicMask));
     CORE_NvicMaskSetIRQ(LDMA_IRQn, &sRxNvicMask);
@@ -203,20 +246,30 @@ otError otPlatUartEnable(void)
     sReceiveFifo.mReadStart = 0;
     sReceiveFifo.mReadEnd   = 0;
     sReceiveFifo.mWrite     = 0;
+    sReceiveFifo.mLastCount = 0;
+    sDeferredQueueReceives  = 0;
+    sTransmitLength         = 0;
+    sTransmitBuffer         = NULL;
 
-    UARTDRV_Init(sUartHandle, &uartInit);
+    otEXPECT_ACTION(ECODE_OK == UARTDRV_Init(sUartHandle, &uartInit), error = OT_ERROR_FAILED);
 
     CORE_DECLARE_NVIC_STATE;
     CORE_ENTER_NVIC(&sRxNvicMask);
 
-    for (int i = 0; i < 2; i++)
+    for (uint8_t i = 0; i < kConcurrentRxBuffers; i++)
     {
-        queueNextReceive();
+        if (queueNextReceive())
+        {
+            numQueuedReceives += 1;
+        }
     }
 
     CORE_EXIT_NVIC();
 
-    return OT_ERROR_NONE;
+    otEXPECT_ACTION(numQueuedReceives == kConcurrentRxBuffers, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
 }
 
 otError otPlatUartDisable(void)
@@ -233,8 +286,9 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;
 
-    UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
-
+    otEXPECT_ACTION(ECODE_OK ==
+                        UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone),
+                    error = OT_ERROR_FAILED);
 exit:
     return error;
 }
