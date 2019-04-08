@@ -348,6 +348,11 @@ typedef enum otError
     OT_ERROR_LINK_MARGIN_LOW = 34,
 
     /**
+     * The number of defined errors.
+     */
+    OT_NUM_ERRORS,
+
+    /**
      * Generic error (should not use).
      */
     OT_ERROR_GENERIC = 255,
