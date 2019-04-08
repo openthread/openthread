@@ -1153,9 +1153,10 @@ exit:
 void MeshForwarder::SetDiscoverParameters(const Mac::ChannelMask &aScanChannels)
 {
     uint32_t mask;
+    uint32_t supportedMask = Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
 
-    mask = aScanChannels.IsEmpty() ? static_cast<uint32_t>(Phy::kSupportedChannels) : aScanChannels.GetMask();
-    mScanChannels.SetMask(mask & Phy::kSupportedChannels);
+    mask = aScanChannels.IsEmpty() ? supportedMask : aScanChannels.GetMask();
+    mScanChannels.SetMask(mask & supportedMask);
 }
 
 void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)

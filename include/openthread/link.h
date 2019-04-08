@@ -822,16 +822,6 @@ OTAPI uint8_t OTCALL otLinkGetPhyChannelMin(otInstance *aInstance);
 OTAPI uint8_t OTCALL otLinkGetPhyChannelMax(otInstance *aInstance);
 
 /**
- * This function gets the supported channel mask of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The supported channel mask as `uint32_t` with bit 0 (lsb) mapping to channel 0, bit 1 to channel 1, so on.
- *
- */
-OTAPI uint32_t OTCALL otLinkGetPhySupportedChannelMask(otInstance *aInstance);
-
-/**
  * @}
  *
  */

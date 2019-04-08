@@ -440,6 +440,18 @@ public:
 #endif
 
     /**
+     * This method returns the radio channel mask.
+     *
+     * @param[in]   aPreferred  TRUE to get preferred channel mask, FALSE to get supported channel mask.
+     *
+     * @returns The radio channel mask according to @aPreferred:
+     *   The radio supported channel mask that the device is allowed to be on.
+     *   The radio preferred channel mask that the device prefers to form on.
+     *
+     */
+    uint32_t GetRadioChannelMask(bool aPreferred);
+
+    /**
      *  This method processes a received Spinel frame.
      *
      * @param[in] aFrameBuffer The frame buffer constaining the newly received frame.
@@ -449,10 +461,11 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame    = HdlcInterface::kMaxFrameSize,
-        kMaxWaitTime       = 2000, ///< Max time to wait for response in milliseconds.
-        kVersionStringSize = 128,  ///< Max size of version string.
-        kCapsBufferSize    = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
+        kMaxSpinelFrame        = HdlcInterface::kMaxFrameSize,
+        kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
+        kVersionStringSize     = 128,  ///< Max size of version string.
+        kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
+        kChannelMaskBufferSize = 32,   ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
     };
 
     enum State

@@ -91,7 +91,7 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
-    , mSupportedChannelMask(Phy::kSupportedChannels)
+    , mSupportedChannelMask(otPlatRadioGetSupportedChannelMask(&aInstance))
     , mScanChannel(Phy::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -166,7 +166,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = Phy::kSupportedChannels;
+        aScanChannels = GetSupportedChannelMask().GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -425,7 +425,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(Phy::kSupportedChannels));
+    newMask.Intersect(ChannelMask(otPlatRadioGetSupportedChannelMask(&GetInstance())));
     VerifyOrExit(newMask != mSupportedChannelMask, Get<Notifier>().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;

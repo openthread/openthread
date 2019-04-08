@@ -207,6 +207,9 @@
     <ClCompile Include="..\..\src\core\net\netif.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\phy\radio_weak.cpp">
+      <Filter>Source Files\phy</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>

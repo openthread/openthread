@@ -480,14 +480,14 @@ exit:
 
 void ChannelManager::SetSupportedChannels(uint32_t aChannelMask)
 {
-    mSupportedChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
+    mSupportedChannelMask.SetMask(aChannelMask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     otLogInfoUtil("ChannelManager: Supported channels: %s", mSupportedChannelMask.ToString().AsCString());
 }
 
 void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 {
-    mFavoredChannelMask.SetMask(aChannelMask & Phy::kSupportedChannels);
+    mFavoredChannelMask.SetMask(aChannelMask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
 }

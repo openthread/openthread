@@ -163,6 +163,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_routes.cpp                             \
     src/core/net/netif.cpp                                  \
     src/core/net/udp6.cpp                                   \
+    src/core/phy/radio_weak.cpp                             \
     src/core/thread/address_resolver.cpp                    \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \

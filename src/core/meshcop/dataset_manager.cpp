@@ -227,7 +227,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
     VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
-    aChannelMask.SetMask(mask & Phy::kSupportedChannels);
+    aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
