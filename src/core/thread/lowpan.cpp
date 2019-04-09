@@ -37,6 +37,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"
@@ -186,10 +187,9 @@ exit:
 
 otError Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf)
 {
-    otError              error       = OT_ERROR_NONE;
-    BufferWriter         buf         = aBuf;
-    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
-    Context              multicastContext;
+    otError      error = OT_ERROR_NONE;
+    BufferWriter buf   = aBuf;
+    Context      multicastContext;
 
     aHcCtl |= kHcMulticast;
 
@@ -220,7 +220,7 @@ otError Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl,
             else
             {
                 // Check if multicast address can be compressed using Context ID 0.
-                if (networkData.GetContext(0, multicastContext) == OT_ERROR_NONE &&
+                if (Get<NetworkData::Leader>().GetContext(0, multicastContext) == OT_ERROR_NONE &&
                     multicastContext.mPrefixLength == aIpAddr.mFields.m8[3] &&
                     memcmp(multicastContext.mPrefix, aIpAddr.mFields.m8 + 4, 8) == 0)
                 {
@@ -253,7 +253,7 @@ otError Lowpan::Compress(Message &           aMessage,
                          BufferWriter &      aBuf)
 {
     otError              error       = OT_ERROR_NONE;
-    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
+    NetworkData::Leader &networkData = Get<NetworkData::Leader>();
     uint16_t             startOffset = aMessage.GetOffset();
     BufferWriter         buf         = aBuf;
     uint16_t             hcCtl;
@@ -448,8 +448,8 @@ compress:
 exit:
     if (error == OT_ERROR_NONE)
     {
-        aBuf.Write(hcCtl >> 8);
-        aBuf.Write(hcCtl & 0xff);
+        IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
+        IgnoreReturnValue(aBuf.Write(hcCtl & 0xff));
         aBuf = buf;
     }
     else
@@ -664,7 +664,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
                                  const uint8_t *     aBuf,
                                  uint16_t            aBufLength)
 {
-    NetworkData::Leader &networkData = GetNetif().GetNetworkDataLeader();
+    NetworkData::Leader &networkData = Get<NetworkData::Leader>();
     otError              error       = OT_ERROR_PARSE;
     const uint8_t *      cur         = aBuf;
     uint16_t             remaining   = aBufLength;

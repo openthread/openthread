@@ -39,8 +39,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -69,7 +69,7 @@ otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
     VerifyOrExit(aPeriod != 0, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aJitter < aPeriod, error = OT_ERROR_INVALID_ARGS);
 
-    aChannelMask.Intersect(Mac::ChannelMask(Phy::kSupportedChannels));
+    aChannelMask.Intersect(Get<Mac::Mac>().GetSupportedChannelMask());
     VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     mChannelMask = aChannelMask;
@@ -104,7 +104,7 @@ void AnnounceSenderBase::HandleTimer(void)
 
     assert(error == OT_ERROR_NONE);
 
-    GetNetif().GetMle().SendAnnounce(mChannel, false);
+    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
     mTimer.Start(Random::AddJitter(mPeriod, mJitter));
 
@@ -127,7 +127,7 @@ void AnnounceSender::HandleTimer(Timer &aTimer)
 
 void AnnounceSender::CheckState(void)
 {
-    Mle::MleRouter & mle      = GetInstance().Get<Mle::MleRouter>();
+    Mle::MleRouter & mle      = Get<Mle::MleRouter>();
     uint32_t         interval = kRouterTxInterval;
     uint32_t         period;
     Mac::ChannelMask channelMask;
@@ -154,7 +154,7 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    SuccessOrExit(GetNetif().GetActiveDataset().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
+    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
 
     period = interval / channelMask.GetNumberOfChannels();
 

@@ -61,14 +61,18 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     uint16_t flags  = 0;
     uint8_t  header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    // Append frame header and frame length
+    // Append frame header
     SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
-    SuccessOrExit(mEncoder.WriteUint16((aError == OT_ERROR_NONE) ? aFrame->mLength : 0));
 
     if (aError == OT_ERROR_NONE)
     {
         // Append the frame contents
-        SuccessOrExit(mEncoder.WriteData(aFrame->mPsdu, aFrame->mLength));
+        SuccessOrExit(mEncoder.WriteDataWithLen(aFrame->mPsdu, aFrame->mLength));
+    }
+    else
+    {
+        // Append length
+        SuccessOrExit(mEncoder.WriteUint16(0));
     }
 
     // Append metadata (rssi, etc)
@@ -123,11 +127,17 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
             SuccessOrExit(mEncoder.WriteInt8(-128));                           // Noise Floor (Currently unused)
             SuccessOrExit(mEncoder.WriteUint16(0));                            // Flags
 
-            SuccessOrExit(mEncoder.OpenStruct()); // PHY-data
+            SuccessOrExit(mEncoder.OpenStruct());                                // PHY-data
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel));             // Receive channel
+            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi));   // Link Quality Indicator
+            SuccessOrExit(mEncoder.WriteUint32(aAckFrame->mInfo.mRxInfo.mMsec)); // The timestamp milliseconds
+            SuccessOrExit(
+                mEncoder.WriteUint16(aAckFrame->mInfo.mRxInfo.mUsec)); // The timestamp microseconds, offset to mMsec
 
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mChannel));           // Receive channel
-            SuccessOrExit(mEncoder.WriteUint8(aAckFrame->mInfo.mRxInfo.mLqi)); // Link Quality Indicator
+            SuccessOrExit(mEncoder.CloseStruct());
 
+            SuccessOrExit(mEncoder.OpenStruct());            // Vendor-data
+            SuccessOrExit(mEncoder.WriteUintPacked(aError)); // Receive error
             SuccessOrExit(mEncoder.CloseStruct());
         }
 
@@ -336,32 +346,57 @@ exit:
     return error;
 }
 
+otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
+{
+    otError        error;
+    const uint8_t *payloadPtr;
+    uint16_t       payloadLen;
+    bool           csmaEnable;
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
+    VerifyOrExit(payloadLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
+
+    aFrame.mLength = static_cast<uint8_t>(payloadLen);
+    memcpy(aFrame.mPsdu, payloadPtr, aFrame.mLength);
+
+    // Parse the meta data
+
+    // Channel is a required parameter in meta data.
+    SuccessOrExit(error = mDecoder.ReadUint8(aFrame.mChannel));
+
+    // Set the default value for all optional parameters.
+    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
+
+    // All the next parameters are optional. Note that even if the
+    // decoder fails to parse any of optional parameters we still want to
+    // return `OT_ERROR_NONE` (so `error` is not updated after this
+    // point).
+
+    SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
+    SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
+    SuccessOrExit(mDecoder.ReadBool(csmaEnable));
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
+
+exit:
+    return error;
+}
+
 otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 {
-    const uint8_t *frameBuffer = NULL;
-    otRadioFrame * frame;
-    uint16_t       frameLen = 0;
-    otError        error    = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
+    otRadioFrame *frame;
 
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
 
     frame = otLinkRawGetTransmitBuffer(mInstance);
+    VerifyOrExit(frame != NULL, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = mDecoder.ReadDataWithLen(frameBuffer, frameLen));
-    SuccessOrExit(error = mDecoder.ReadUint8(frame->mChannel));
-
-    VerifyOrExit(frameLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
 
     // Cache the transaction ID for async response
     mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
-
-    // Update frame buffer and length
-    frame->mLength = static_cast<uint8_t>(frameLen);
-    memcpy(frame->mPsdu, frameBuffer, frame->mLength);
-
-    // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
-    frame->mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    frame->mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT;
 
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.

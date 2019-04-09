@@ -241,6 +241,13 @@ protected:
      */
     void HandleTimer(void);
 
+    /**
+     * This method re-defines template `Get<Type>()` as the `InstanceLoctaor` (base class) definition is shadowed by
+     * the public `Get(dataset)` methods in this class.
+     *
+     */
+    template <typename Type> inline Type &Get(void) const { return InstanceLocator::Get<Type>(); }
+
     DatasetLocal mLocal;
     Timestamp    mTimestamp;
     bool         mTimestampValid : 1;

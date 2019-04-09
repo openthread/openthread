@@ -422,7 +422,8 @@ otError otPlatRadioEnable(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE  Successfully transitioned to Disabled.
+ * @retval OT_ERROR_NONE            Successfully transitioned to Disabled.
+ * @retval OT_ERROR_INVALID_STATE   The radio was not in sleep state.
  *
  */
 otError otPlatRadioDisable(otInstance *aInstance);
@@ -693,6 +694,26 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
  *
  */
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
+
+/**
+ * Get the radio supported channel mask that the device is allowed to be on.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ * @returns The radio supported channel mask.
+ *
+ */
+uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
+
+/**
+ * Get the radio preferred channel mask that the device prefers to form on.
+ *
+ * @param[in]  aInstance   The OpenThread instance strucyyture.
+ *
+ * @returns The radio preferred channel mask.
+ *
+ */
+uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 
 /**
  * @}

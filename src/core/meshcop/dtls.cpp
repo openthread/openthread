@@ -45,9 +45,9 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "common/owner-locator.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "thread/thread_netif.hpp"
@@ -73,7 +73,7 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     , mReceiveHandler(NULL)
     , mSendHandler(NULL)
     , mContext(NULL)
-    , mSocket(aInstance.GetThreadNetif().GetIp6().GetUdp())
+    , mSocket(Get<Ip6::Udp>())
     , mTransportCallback(NULL)
     , mTransportContext(NULL)
     , mMessageSubType(Message::kSubTypeNone)
@@ -206,8 +206,6 @@ void Dtls::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessage
 
 void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &netif = GetNetif();
-
     switch (mState)
     {
     case MeshCoP::Dtls::kStateClosed:
@@ -225,7 +223,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
         mPeerAddress.SetInterfaceId(aMessageInfo.GetInterfaceId());
 
-        if (netif.IsUnicastAddress(aMessageInfo.GetSockAddr()))
+        if (Get<ThreadNetif>().IsUnicastAddress(aMessageInfo.GetSockAddr()))
         {
             mPeerAddress.SetSockAddr(aMessageInfo.GetSockAddr());
         }
@@ -815,7 +813,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    GetNetif().GetKeyManager().SetKek(kek);
+    Get<KeyManager>().SetKek(kek);
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {

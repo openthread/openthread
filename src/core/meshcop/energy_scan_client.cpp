@@ -42,6 +42,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -58,7 +59,7 @@ EnergyScanClient::EnergyScanClient(Instance &aInstance)
 {
     mContext  = NULL;
     mCallback = NULL;
-    GetNetif().GetCoap().AddResource(mEnergyScan);
+    Get<Coap::Coap>().AddResource(mEnergyScan);
 }
 
 otError EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
@@ -69,7 +70,6 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
                                     otCommissionerEnergyReportCallback aCallback,
                                     void *                             aContext)
 {
-    ThreadNetif &                     netif = GetNetif();
     otError                           error = OT_ERROR_NONE;
     MeshCoP::CommissionerSessionIdTlv sessionId;
     MeshCoP::ChannelMaskTlv           channelMask;
@@ -79,8 +79,8 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     Ip6::MessageInfo                  messageInfo;
     Coap::Message *                   message = NULL;
 
-    VerifyOrExit(netif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
@@ -88,7 +88,7 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     message->SetPayloadMarker();
 
     sessionId.Init();
-    sessionId.SetCommissionerSessionId(netif.GetCommissioner().GetSessionId());
+    sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
@@ -107,11 +107,11 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     scanDuration.SetScanDuration(aScanDuration);
     SuccessOrExit(error = message->Append(&scanDuration, sizeof(scanDuration)));
 
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(netif.GetInterfaceId());
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
+    messageInfo.SetInterfaceId(Get<ThreadNetif>().GetInterfaceId());
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent energy scan query");
 
@@ -136,8 +136,7 @@ void EnergyScanClient::HandleReport(void *aContext, otMessage *aMessage, const o
 
 void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetif &netif = GetNetif();
-    uint32_t     mask;
+    uint32_t mask;
 
     OT_TOOL_PACKED_BEGIN
     struct
@@ -160,7 +159,7 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
         mCallback(mask, energyList.list, energyList.tlv.GetLength(), mContext);
     }
 
-    SuccessOrExit(netif.GetCoap().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoMeshCoP("sent energy scan report response");
 

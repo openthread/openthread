@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -73,17 +74,12 @@ void TimerMilli::StartAt(uint32_t aT0, uint32_t aDt)
 {
     assert(aDt <= kMaxDt);
     mFireTime = aT0 + aDt;
-    GetTimerMilliScheduler().Add(*this);
+    Get<TimerMilliScheduler>().Add(*this);
 }
 
 void TimerMilli::Stop(void)
 {
-    GetTimerMilliScheduler().Remove(*this);
-}
-
-TimerMilliScheduler &TimerMilli::GetTimerMilliScheduler(void) const
-{
-    return GetInstance().GetTimerMilliScheduler();
+    Get<TimerMilliScheduler>().Remove(*this);
 }
 
 void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
@@ -212,7 +208,7 @@ extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
     Instance *instance = static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    instance->GetTimerMilliScheduler().ProcessTimers();
+    instance->Get<TimerMilliScheduler>().ProcessTimers();
 
 exit:
     return;
@@ -226,17 +222,12 @@ void TimerMicro::StartAt(uint32_t aT0, uint32_t aDt)
 {
     assert(aDt <= kMaxDt);
     mFireTime = aT0 + aDt;
-    GetTimerMicroScheduler().Add(*this);
+    Get<TimerMicroScheduler>().Add(*this);
 }
 
 void TimerMicro::Stop(void)
 {
-    GetTimerMicroScheduler().Remove(*this);
-}
-
-TimerMicroScheduler &TimerMicro::GetTimerMicroScheduler(void) const
-{
-    return GetInstance().GetTimerMicroScheduler();
+    Get<TimerMicroScheduler>().Remove(*this);
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
@@ -244,7 +235,7 @@ extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
     Instance *instance = static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    instance->GetTimerMicroScheduler().ProcessTimers();
+    instance->Get<TimerMicroScheduler>().ProcessTimers();
 
 exit:
     return;

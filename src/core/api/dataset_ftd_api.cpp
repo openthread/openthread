@@ -38,6 +38,7 @@
 #include <openthread/dataset_ftd.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -45,14 +46,14 @@ uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetLeader().GetDelayTimerMinimal();
+    return instance.Get<MeshCoP::Leader>().GetDelayTimerMinimal();
 }
 
 otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
+    return instance.Get<MeshCoP::Leader>().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
 
 #endif // OPENTHREAD_FTD

@@ -135,7 +135,6 @@ SOURCES_COMMON                      = \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
     common/notifier.cpp               \
@@ -188,6 +187,7 @@ SOURCES_COMMON                      = \
     net/netif.cpp                     \
     net/sntp_client.cpp               \
     net/udp6.cpp                      \
+    phy/radio_weak.cpp                \
     thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
     thread/announce_sender.cpp        \
@@ -236,7 +236,6 @@ libopenthread_radio_a_SOURCES       = \
     api/message_api.cpp               \
     api/tasklet_api.cpp               \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
     common/string.cpp                 \
@@ -246,6 +245,7 @@ libopenthread_radio_a_SOURCES       = \
     mac/mac_frame.cpp                 \
     mac/sub_mac.cpp                   \
     mac/sub_mac_callbacks.cpp         \
+    phy/radio_weak.cpp                \
     thread/link_quality.cpp           \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
@@ -297,11 +297,11 @@ HEADERS_COMMON                      = \
     common/extension.hpp              \
     common/instance.hpp               \
     common/locator.hpp                \
+    common/locator-getters.hpp        \
     common/logging.hpp                \
     common/message.hpp                \
     common/new.hpp                    \
     common/notifier.hpp               \
-    common/owner-locator.hpp          \
     common/random.hpp                 \
     common/settings.hpp               \
     common/string.hpp                 \

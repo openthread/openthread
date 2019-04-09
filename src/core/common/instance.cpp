@@ -46,7 +46,7 @@ namespace ot {
 #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
-static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(Instance), uint64_t);
+otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
@@ -102,7 +102,7 @@ Instance &Instance::InitSingle(void)
 
     VerifyOrExit(instance->mIsInitialized == false);
 
-    instance = new (&sInstanceRaw) Instance();
+    instance = new (&gInstanceRaw) Instance();
 
     instance->AfterInit();
 
@@ -112,7 +112,7 @@ exit:
 
 Instance &Instance::Get(void)
 {
-    void *instance = &sInstanceRaw;
+    void *instance = &gInstanceRaw;
 
     return *static_cast<Instance *>(instance);
 }
@@ -152,8 +152,8 @@ void Instance::AfterInit(void)
 
     // Restore datasets and network information
 
-    GetSettings().Init();
-    mThreadNetif.GetMle().Restore();
+    Get<Settings>().Init();
+    Get<Mle::MleRouter>().Restore();
 
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
 
@@ -174,7 +174,7 @@ void Instance::AfterInit(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
-    GetExtension().SignalInstanceInit();
+    Get<Extension::ExtensionBase>().SignalInstanceInit();
 #endif
 }
 
@@ -197,7 +197,7 @@ exit:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 void Instance::FactoryReset(void)
 {
-    GetSettings().Wipe();
+    Get<Settings>().Wipe();
     otPlatReset(this);
 }
 
@@ -205,8 +205,8 @@ otError Instance::ErasePersistentInfo(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    GetSettings().Wipe();
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    Get<Settings>().Wipe();
 
 exit:
     return error;

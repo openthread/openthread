@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -104,7 +105,7 @@ otError Child::GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddres
 
     VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
 
-    memcpy(aAddress.mFields.m8, aInstance.GetThreadNetif().GetMle().GetMeshLocalPrefix().m8,
+    memcpy(aAddress.mFields.m8, aInstance.Get<Mle::MleRouter>().GetMeshLocalPrefix().m8,
            Ip6::Address::kMeshLocalPrefixSize);
 
     aAddress.SetIid(mMeshLocalIid);
@@ -144,7 +145,7 @@ otError Child::AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress)
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
-    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    if (aInstance.Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         VerifyOrExit(IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_ALREADY);
         memcpy(mMeshLocalIid, aAddress.GetIid(), Ip6::Address::kInterfaceIdentifierSize);
@@ -175,7 +176,7 @@ otError Child::RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddres
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
-    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    if (aInstance.Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         if (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0)
         {
@@ -216,7 +217,7 @@ bool Child::HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) con
 
     VerifyOrExit(!aAddress.IsUnspecified());
 
-    if (aInstance.GetThreadNetif().GetMle().IsMeshLocalAddress(aAddress))
+    if (aInstance.Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         retval = (memcmp(aAddress.GetIid(), mMeshLocalIid, Ip6::Address::kInterfaceIdentifierSize) == 0);
         ExitNow();

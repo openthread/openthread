@@ -35,6 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -114,7 +115,7 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
         rval           = cur->mInterfaceId;
     }
 
-    for (Netif *netif = GetIp6().GetNetifList(); netif; netif = netif->GetNext())
+    for (Netif *netif = Get<Ip6>().GetNetifList(); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == OT_ERROR_NONE &&
             static_cast<int8_t>(prefixMatch) > maxPrefixMatch)

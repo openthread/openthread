@@ -99,7 +99,6 @@ typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address
     int8_t       mRssIn;      ///< Received signal strength
-    bool         mFiltered;   ///< Indicates whether or not this entry is filtered.
 } otMacFilterEntry;
 
 /**
@@ -801,36 +800,6 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
  *
  */
 bool otLinkIsEnabled(otInstance *aInstance);
-
-/**
- * This function gets the minimum channel number of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The minimum channel number.
- *
- */
-OTAPI uint8_t OTCALL otLinkGetPhyChannelMin(otInstance *aInstance);
-
-/**
- * This function gets the maximum channel number of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The maximum channel number.
- *
- */
-OTAPI uint8_t OTCALL otLinkGetPhyChannelMax(otInstance *aInstance);
-
-/**
- * This function gets the supported channel mask of IEEE 802.15.4 physical layer.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns The supported channel mask as `uint32_t` with bit 0 (lsb) mapping to channel 0, bit 1 to channel 1, so on.
- *
- */
-OTAPI uint32_t OTCALL otLinkGetPhySupportedChannelMask(otInstance *aInstance);
 
 /**
  * @}

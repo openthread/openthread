@@ -38,7 +38,6 @@ namespace ot {
 
 ot::Instance *  sInstance;
 Ip6::Ip6 *      sIp6;
-ThreadNetif *   sThreadNetif;
 Lowpan::Lowpan *sLowpan;
 
 void TestIphcVector::GetCompressedStream(uint8_t *aIphc, uint16_t &aIphcLength)
@@ -110,7 +109,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
 static void Init()
 {
     otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
-    sThreadNetif->GetMle().SetMeshLocalPrefix(meshLocalPrefix);
+    sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(meshLocalPrefix);
 
     // Emulate global prefixes with contextes.
     uint8_t mockNetworkData[] = {
@@ -128,12 +127,12 @@ static void Init()
         0x02, 0x40                                                              // Context ID = 2, C = FALSE
     };
 
-    Message *message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0);
+    Message *message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != NULL, "6lo: Ip6::NewMessage failed");
 
     SuccessOrQuit(message->Append(mockNetworkData, sizeof(mockNetworkData)), "6lo: Message::Append failed");
 
-    sThreadNetif->GetNetworkDataLeader().SetNetworkData(0, 0, true, *message, 0);
+    sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, true, *message, 0);
 }
 
 /**
@@ -180,7 +179,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     {
         Lowpan::BufferWriter buffer(result, 127);
 
-        VerifyOrQuit((message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         aVector.GetUncompressedStream(*message);
@@ -210,7 +209,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sInstance->GetMessagePool().New(Message::kTypeIp6, 0)) != NULL,
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         int decompressedBytes =
@@ -1754,9 +1753,8 @@ void TestLowpanIphc(void)
 
     VerifyOrQuit(sInstance != NULL, "NULL instance");
 
-    sIp6         = &sInstance->GetIp6();
-    sThreadNetif = &sInstance->GetThreadNetif();
-    sLowpan      = &sThreadNetif->GetLowpan();
+    sIp6    = &sInstance->Get<Ip6::Ip6>();
+    sLowpan = &sInstance->Get<Lowpan::Lowpan>();
 
     Init();
 

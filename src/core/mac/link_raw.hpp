@@ -57,6 +57,8 @@ class LinkRaw : public InstanceLocator
                 public SubMac::Callbacks
 #endif
 {
+    friend class ot::Instance;
+
 public:
     /**
      * This constructor initializes the object.
@@ -65,14 +67,6 @@ public:
      *
      */
     explicit LinkRaw(Instance &aInstance);
-
-    /**
-     * This method gets the associated `SubMac` object.
-     *
-     * @returns A reference to the `SubMac` object.
-     *
-     */
-    SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
      * This method returns true if the raw link-layer is enabled.

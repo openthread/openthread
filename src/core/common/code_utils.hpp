@@ -50,6 +50,19 @@
 #define OT_ARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
 
 /**
+ * This macro returns a pointer to end of a given array (pointing to the past-the-end element).
+ *
+ * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
+ * not point to an actual element in array, and thus should not be dereferenced.
+ *
+ * @param[in]    Name of the array variable
+ *
+ * @returns Pointer to the past-the-end element.
+ *
+ */
+#define OT_ARRAY_END(aArray) (&aArray[OT_ARRAY_LENGTH(aArray)])
+
+/**
  * This macro returns a pointer aligned by @p aAlignment.
  *
  * @param[in] aPointer      A pointer to contiguous space.

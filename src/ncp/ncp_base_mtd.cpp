@@ -207,11 +207,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
     return mEncoder.WriteUint32(freq_khz);
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
-{
-    return EncodeChannelMask(otLinkGetPhySupportedChannelMask(mInstance));
-}
-
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
     uint32_t newMask = 0;
@@ -2065,10 +2060,17 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_SAMPL
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error       = OT_ERROR_NONE;
+    uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
+    uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
 
-    for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance); channel++)
+    for (uint8_t channel = 0; channel < channelNum; channel++)
     {
+        if (!((1UL << channel) & channelMask))
+        {
+            continue;
+        }
+
         SuccessOrExit(error = mEncoder.OpenStruct());
 
         SuccessOrExit(error = mEncoder.WriteUint8(channel));
@@ -2961,14 +2963,14 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 {
     return mEncoder.WriteUtf8(otGetRadioVersionString(mInstance));
 }
 
-#endif // OPENTHREAD_ENABLE_POSIX_APP
+#endif
 
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
 

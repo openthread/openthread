@@ -78,7 +78,6 @@
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\instance.cpp" />
-    <ClCompile Include="..\..\src\core\common\locator.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
@@ -127,6 +126,7 @@
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
     <ClCompile Include="..\..\src\core\net\netif.cpp" />
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
+    <ClCompile Include="..\..\src\core\phy\radio_weak.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_sender.cpp" />
@@ -171,6 +171,7 @@
     <ClInclude Include="..\..\src\core\common\encoding.hpp" />
     <ClInclude Include="..\..\src\core\common\instance.hpp" />
     <ClInclude Include="..\..\src\core\common\locator.hpp" />
+    <ClInclude Include="..\..\src\core\common\locator-getters.hpp" />
     <ClInclude Include="..\..\src\core\common\logging.hpp" />
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />

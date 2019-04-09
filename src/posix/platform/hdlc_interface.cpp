@@ -256,14 +256,11 @@ otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-    struct timeval end;
-    struct timeval now;
+    uint64_t       now     = otSysGetTime();
+    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
     int            rval;
-
-    otSysGetTime(&now);
-    timeradd(&now, &timeout, &end);
 
     while (true)
     {
@@ -297,11 +294,14 @@ otError HdlcInterface::WaitForWritable(void)
             exit(OT_EXIT_FAILURE);
         }
 
-        otSysGetTime(&now);
+        now = otSysGetTime();
 
-        if (timercmp(&end, &now, >))
+        if (end > now)
         {
-            timersub(&end, &now, &timeout);
+            uint64_t remain = end - now;
+
+            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
         }
         else
         {

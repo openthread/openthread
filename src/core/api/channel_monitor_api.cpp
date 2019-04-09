@@ -35,6 +35,7 @@
 #include "openthread/channel_monitor.h"
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -42,7 +43,7 @@ using namespace ot;
 
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Utils::ChannelMonitor monitor = static_cast<Instance *>(aInstance)->GetChannelMonitor();
+    Utils::ChannelMonitor monitor = static_cast<Instance *>(aInstance)->Get<Utils::ChannelMonitor>();
 
     return aEnabled ? monitor.Start() : monitor.Stop();
 }
@@ -51,7 +52,7 @@ bool otChannelMonitorIsEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelMonitor().IsRunning();
+    return instance.Get<Utils::ChannelMonitor>().IsRunning();
 }
 
 uint32_t otChannelMonitorGetSampleInterval(otInstance *aInstance)
@@ -79,14 +80,14 @@ uint32_t otChannelMonitorGetSampleCount(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelMonitor().GetSampleCount();
+    return instance.Get<Utils::ChannelMonitor>().GetSampleCount();
 }
 
 uint16_t otChannelMonitorGetChannelOccupancy(otInstance *aInstance, uint8_t aChannel)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelMonitor().GetChannelOccupancy(aChannel);
+    return instance.Get<Utils::ChannelMonitor>().GetChannelOccupancy(aChannel);
 }
 
 #endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR

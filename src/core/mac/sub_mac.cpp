@@ -40,8 +40,8 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 
 namespace ot {
@@ -148,10 +148,11 @@ otError SubMac::Disable(void)
     otError error;
 
     mTimer.Stop();
-    error = otPlatRadioDisable(&GetInstance());
-    assert(error == OT_ERROR_NONE);
+    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
+    SuccessOrExit(error = otPlatRadioDisable(&GetInstance()));
     SetState(kStateDisabled);
 
+exit:
     return error;
 }
 
@@ -495,7 +496,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -513,7 +514,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -531,7 +532,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -549,7 +550,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO

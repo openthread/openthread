@@ -134,6 +134,12 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_VENDOR_ID:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_VENDOR_ID>;
         break;
+    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>;
+        break;
+    case SPINEL_PROP_PHY_CHAN_PREFERRED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>;
+        break;
 
         // --------------------------------------------------------------------------
         // MTD (or FTD) Properties (Get Handler)
@@ -170,9 +176,6 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif
     case SPINEL_PROP_MSG_BUFFER_COUNTERS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MSG_BUFFER_COUNTERS>;
-        break;
-    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>;
         break;
     case SPINEL_PROP_PHY_FREQ:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>;
@@ -506,7 +509,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
     case SPINEL_PROP_RCP_VERSION:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
         break;

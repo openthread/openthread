@@ -42,8 +42,8 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
@@ -91,7 +91,7 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
-    , mSupportedChannelMask(Phy::kSupportedChannels)
+    , mSupportedChannelMask(otPlatRadioGetSupportedChannelMask(&aInstance))
     , mScanChannel(Phy::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -166,7 +166,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = Phy::kSupportedChannels;
+        aScanChannels = GetSupportedChannelMask().GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -358,11 +358,11 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(mPanChannel != aChannel, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
+    VerifyOrExit(mPanChannel != aChannel, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
 
     mPanChannel = aChannel;
     mCcaSuccessRateTracker.Reset();
-    GetNotifier().Signal(OT_CHANGED_THREAD_CHANNEL);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_CHANNEL);
 
     VerifyOrExit(!mRadioChannelAcquisitionId);
 
@@ -425,11 +425,11 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(Phy::kSupportedChannels));
-    VerifyOrExit(newMask != mSupportedChannelMask, GetNotifier().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
+    newMask.Intersect(ChannelMask(otPlatRadioGetSupportedChannelMask(&GetInstance())));
+    VerifyOrExit(newMask != mSupportedChannelMask, Get<Notifier>().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;
-    GetNotifier().Signal(OT_CHANGED_SUPPORTED_CHANNEL_MASK);
+    Get<Notifier>().Signal(OT_CHANGED_SUPPORTED_CHANNEL_MASK);
 
 exit:
     return;
@@ -447,11 +447,11 @@ otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
 
     VerifyOrExit(newLen <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(newLen != strlen(mNetworkName.m8) || memcmp(mNetworkName.m8, aBuffer, newLen) != 0,
-                 GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
+                 Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
 
     memcpy(mNetworkName.m8, aBuffer, newLen);
     mNetworkName.m8[newLen] = 0;
-    GetNotifier().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
     return error;
@@ -459,10 +459,10 @@ exit:
 
 void Mac::SetPanId(PanId aPanId)
 {
-    VerifyOrExit(mPanId != aPanId, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_PANID));
+    VerifyOrExit(mPanId != aPanId, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_PANID));
     mPanId = aPanId;
     mSubMac.SetPanId(mPanId);
-    GetNotifier().Signal(OT_CHANGED_THREAD_PANID);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_PANID);
 
 exit:
     return;
@@ -471,10 +471,10 @@ exit:
 void Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
 {
     VerifyOrExit(memcmp(mExtendedPanId.m8, aExtendedPanId.m8, sizeof(mExtendedPanId)) != 0,
-                 GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
+                 Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
 
     mExtendedPanId = aExtendedPanId;
-    GetNotifier().Signal(OT_CHANGED_THREAD_EXT_PANID);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_EXT_PANID);
 
 exit:
     return;
@@ -751,12 +751,12 @@ void Mac::SendBeacon(Frame &aFrame)
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (GetNetif().GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
+    if (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
     {
         beaconPayload->Init();
 
         // set the Joining Permitted flag
-        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
 
         if (numUnsecurePorts)
         {
@@ -798,7 +798,7 @@ bool Mac::ShouldSendBeacon(void) const
 
         uint8_t numUnsecurePorts;
 
-        GetNetif().GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
         shouldSend = (numUnsecurePorts != 0);
     }
 #endif
@@ -834,7 +834,7 @@ void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
 {
-    KeyManager &      keyManager = GetNetif().GetKeyManager();
+    KeyManager &      keyManager = Get<KeyManager>();
     uint8_t           keyIdMode;
     const ExtAddress *extAddress = NULL;
 
@@ -938,7 +938,7 @@ void Mac::BeginTransmit(void)
     case kOperationTransmitData:
         sendFrame.SetChannel(mRadioChannel);
 
-        SuccessOrExit(error = GetNetif().GetMeshForwarder().HandleFrameRequest(sendFrame));
+        SuccessOrExit(error = Get<MeshForwarder>().HandleFrameRequest(sendFrame));
 
         // If the frame is marked as a retransmission, then data sequence number is already set.
         if (!sendFrame.IsARetransmission())
@@ -966,8 +966,8 @@ void Mac::BeginTransmit(void)
     {
         // Transmit security will be processed after time IE content is updated.
         processTransmitAesCcm = false;
-        sendFrame.SetTimeSyncSeq(GetNetif().GetTimeSync().GetTimeSyncSeq());
-        sendFrame.SetNetworkTimeOffset(GetNetif().GetTimeSync().GetNetworkTimeOffset());
+        sendFrame.SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
+        sendFrame.SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
     }
 #endif
 
@@ -1029,7 +1029,7 @@ void Mac::RecordFrameTransmitStatus(const Frame &aFrame,
     Neighbor *neighbor;
 
     aFrame.GetDstAddr(dstAddr);
-    neighbor = GetNetif().GetMle().GetNeighbor(dstAddr);
+    neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
 
 #if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
 
@@ -1188,7 +1188,7 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
-        GetNetif().GetMeshForwarder().HandleSentFrame(aFrame, aError);
+        Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
         break;
 
@@ -1222,7 +1222,7 @@ void Mac::HandleTimer(void)
     case kOperationWaitingForData:
         otLogDebgMac("Data poll timeout");
         FinishOperation();
-        GetNetif().GetMeshForwarder().GetDataPollManager().HandlePollTimeout();
+        Get<DataPollManager>().HandlePollTimeout();
         PerformNextOperation();
         break;
 
@@ -1246,7 +1246,7 @@ void Mac::HandleTimer(void)
 
 otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
-    KeyManager &      keyManager = GetNetif().GetKeyManager();
+    KeyManager &      keyManager = Get<KeyManager>();
     otError           error      = OT_ERROR_NONE;
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
@@ -1390,13 +1390,12 @@ exit:
 
 void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 {
-    ThreadNetif &netif = GetNetif();
-    Address      srcaddr;
-    Address      dstaddr;
-    PanId        panid;
-    Neighbor *   neighbor;
-    bool         receive = false;
-    otError      error   = aError;
+    Address   srcaddr;
+    Address   dstaddr;
+    PanId     panid;
+    Neighbor *neighbor;
+    bool      receive = false;
+    otError   error   = aError;
 #if OPENTHREAD_ENABLE_MAC_FILTER
     int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
@@ -1413,7 +1412,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     aFrame->GetSrcAddr(srcaddr);
     aFrame->GetDstAddr(dstaddr);
-    neighbor = netif.GetMle().GetNeighbor(srcaddr);
+    neighbor = Get<Mle::MleRouter>().GetNeighbor(srcaddr);
 
     // Destination Address Filtering
     switch (dstaddr.GetType())
@@ -1428,9 +1427,9 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
         // Allow  multicasts from neighbor routers if FTD
-        if (neighbor == NULL && dstaddr.IsBroadcast() && netif.GetMle().IsFullThreadDevice())
+        if (neighbor == NULL && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
-            neighbor = netif.GetMle().GetRxOnlyNeighborRouter(srcaddr);
+            neighbor = Get<Mle::MleRouter>().GetRxOnlyNeighborRouter(srcaddr);
         }
 
         break;
@@ -1527,7 +1526,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         ExitNow();
     }
 
-    netif.GetMeshForwarder().GetDataPollManager().CheckFramePending(*aFrame);
+    Get<DataPollManager>().CheckFramePending(*aFrame);
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
@@ -1650,7 +1649,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     if (receive)
     {
         otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
-        netif.GetMeshForwarder().HandleReceivedFrame(*aFrame);
+        Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
     }
 
 exit:

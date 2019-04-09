@@ -95,6 +95,8 @@ enum
  */
 class Mac : public InstanceLocator, public SubMac::Callbacks
 {
+    friend class ot::Instance;
+
 public:
     /**
      * This constructor initializes the MAC object.
@@ -103,14 +105,6 @@ public:
      *
      */
     explicit Mac(Instance &aInstance);
-
-    /**
-     * This method gets the associated `SubMac` object.
-     *
-     * @returns A reference to the `SubMac` object.
-     *
-     */
-    SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -409,16 +403,6 @@ public:
      *
      */
     void SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
-
-#if OPENTHREAD_ENABLE_MAC_FILTER
-    /**
-     * This method returns the MAC filter.
-     *
-     * @returns A reference to the MAC filter.
-     *
-     */
-    Filter &GetFilter(void) { return mFilter; }
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
 
     /**
      * This method is called to handle a received frame.

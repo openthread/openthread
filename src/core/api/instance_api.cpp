@@ -40,6 +40,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 
@@ -92,14 +93,14 @@ otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback 
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetNotifier().RegisterCallback(aCallback, aContext);
+    return instance.Get<Notifier>().RegisterCallback(aCallback, aContext);
 }
 
 void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetNotifier().RemoveCallback(aCallback, aContext);
+    instance.Get<Notifier>().RemoveCallback(aCallback, aContext);
 }
 
 void otInstanceFactoryReset(otInstance *aInstance)

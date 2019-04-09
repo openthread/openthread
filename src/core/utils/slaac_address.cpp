@@ -37,8 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
@@ -142,8 +142,6 @@ exit:
 
 void Slaac::Update(UpdateMode aMode)
 {
-    ThreadNetif &             netif       = GetNetif();
-    NetworkData::Leader &     networkData = GetInstance().Get<NetworkData::Leader>();
     otNetworkDataIterator     iterator;
     otBorderRouterConfig      config;
     Ip6::NetifUnicastAddress *slaacAddr;
@@ -167,7 +165,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-                while (networkData.GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+                while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
                 {
                     otIp6Prefix &prefix = config.mPrefix;
 
@@ -184,7 +182,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 otLogInfoUtil("SLAAC: Removing address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                netif.RemoveUnicastAddress(*slaacAddr);
+                Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr);
                 slaacAddr->mValid = false;
             }
         }
@@ -196,7 +194,7 @@ void Slaac::Update(UpdateMode aMode)
 
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while (networkData.GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
         {
             otIp6Prefix &prefix = config.mPrefix;
 
@@ -207,8 +205,8 @@ void Slaac::Update(UpdateMode aMode)
 
             found = false;
 
-            for (const Ip6::NetifUnicastAddress *netifAddr = netif.GetUnicastAddresses(); netifAddr != NULL;
-                 netifAddr                                 = netifAddr->GetNext())
+            for (const Ip6::NetifUnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
+                 netifAddr != NULL; netifAddr              = netifAddr->GetNext())
             {
                 if ((netifAddr->mPrefixLength == prefix.mLength) &&
                     (netifAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
@@ -240,7 +238,7 @@ void Slaac::Update(UpdateMode aMode)
 
                     otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                    netif.AddUnicastAddress(*slaacAddr);
+                    Get<ThreadNetif>().AddUnicastAddress(*slaacAddr);
 
                     added = true;
                     break;
@@ -311,10 +309,9 @@ exit:
 
 void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 {
-    otError   error;
-    Settings &settings = GetInstance().GetSettings();
+    otError error;
 
-    error = settings.ReadSlaacIidSecretKey(aKey);
+    error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
     VerifyOrExit(error != OT_ERROR_NONE);
 
     // If there is no previously saved secret key, generate
@@ -327,7 +324,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
         Random::FillBuffer(aKey.m8, sizeof(IidSecretKey));
     }
 
-    settings.SaveSlaacIidSecretKey(aKey);
+    Get<Settings>().SaveSlaacIidSecretKey(aKey);
 
     otLogInfoUtil("SLAAC: Generated and saved secret key");
 

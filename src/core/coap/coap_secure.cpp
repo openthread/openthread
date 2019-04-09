@@ -31,9 +31,9 @@
 #include "coap_secure.hpp"
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "common/owner-locator.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -219,8 +219,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = NULL;
 
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, Message::GetHelpDataReserved())) !=
-                 NULL);
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     CoapBase::Receive(*message, mDtls.GetPeerAddress());

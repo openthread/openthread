@@ -138,13 +138,10 @@ void platformAlarmProcess(otInstance *aInstance);
  */
 int32_t platformAlarmGetNext(void);
 
-/**
- * This function returns the current alarm time.
- *
- * @returns The current alarm time.
- *
- */
-uint64_t platformAlarmGetNow(void);
+#define MS_PER_S 1000
+#define US_PER_MS 1000
+#define US_PER_S 1000000
+#define NS_PER_US 1000
 
 /**
  * This function advances the alarm time by @p aDelta.
@@ -276,14 +273,6 @@ void otSimInit(void);
 void otSimDeinit(void);
 
 /**
- * This function gets simulation time.
- *
- * @param[in] aTime   A pointer to a timeval receiving the current time.
- *
- */
-void otSimGetTime(struct timeval *aTime);
-
-/**
  * This function performs simulation processing.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
@@ -354,11 +343,13 @@ void otSimRadioSpinelUpdate(struct timeval *atimeout);
  */
 void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-#define otSysGetTime(aTime) otSimGetTime(aTime)
-#else
-#define otSysGetTime(aTime) gettimeofday(aTime, NULL)
-#endif
+/**
+ * This function gets system time in microseconds without applying speed up factor.
+ *
+ * @returns System time in microseconds.
+ *
+ */
+uint64_t otSysGetTime(void);
 
 /**
  * This function initializes platform UDP driver.

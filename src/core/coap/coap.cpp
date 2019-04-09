@@ -33,8 +33,8 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
@@ -129,7 +129,7 @@ Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(GetInstance().GetIp6().GetUdp().NewMessage(0, aSettings))) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL);
     message->SetOffset(0);
 
 exit:
@@ -302,7 +302,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerAddr(coapMetadata.mDestinationAddress);
                 messageInfo.SetPeerPort(coapMetadata.mDestinationPort);
                 messageInfo.SetSockAddr(coapMetadata.mSourceAddress);
-                messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
+                messageInfo.SetInterfaceId(Get<ThreadNetif>().GetInterfaceId());
 
                 SendCopy(*message, messageInfo);
             }
@@ -843,7 +843,7 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
-    , mSocket(aInstance.GetIp6().GetUdp())
+    , mSocket(aInstance.Get<Ip6::Udp>())
 {
 }
 

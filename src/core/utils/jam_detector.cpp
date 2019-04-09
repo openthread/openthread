@@ -35,8 +35,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -103,7 +103,7 @@ void JamDetector::CheckState(void)
 {
     VerifyOrExit(mEnabled);
 
-    switch (GetInstance().Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::MleRouter>().GetRole())
     {
     case OT_DEVICE_ROLE_DISABLED:
         VerifyOrExit(mTimer.IsRunning());

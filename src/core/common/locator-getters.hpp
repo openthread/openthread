@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2017-2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,12 @@
 
 /**
  * @file
- *   This file includes definitions for owner locator.
+ *   This file includes definitions locator getter methods.
+ *
  */
 
-#ifndef OWNER_LOCATOR_HPP_
-#define OWNER_LOCATOR_HPP_
+#ifndef LOCATOR_GETTERS_HPP_
+#define LOCATOR_GETTERS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -41,20 +42,31 @@
 
 namespace ot {
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+/**
+ * This method returns a reference to the parent OpenThread Instance.
+ *
+ * This definition is a specialization of template `Get<Type>` for `Get<Instance>()`,
+ *
+ * @returns A reference to `Instance` object.
+ *
+ */
+template <> inline Instance &InstanceLocator::Get(void) const
+{
+    return GetInstance();
+}
 
-template <typename OwnerType> OwnerType &OwnerLocator::GetOwner(void)
+template <typename Type> inline Type &InstanceLocator::Get(void) const
 {
     // This method uses the `Instance` template method `Get<Type>`
     // to get to the given `Type` from the single OpenThread
     // instance.
-    //
-    // The specializations of `Instance::Get<Type>` should be defined
-    // for any class (type) which would use `GetOwner<Type>` method
-    // (i.e., any class that is an owner of a callback providing object
-    // such as a `Timer`, `Tasklet`, or in general any sub-class of
-    // `OwnerLocator`).
+    return GetInstance().Get<Type>();
+}
 
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
+template <typename OwnerType> OwnerType &OwnerLocator::GetOwner(void)
+{
     return Instance::Get().Get<OwnerType>();
 }
 
@@ -62,4 +74,4 @@ template <typename OwnerType> OwnerType &OwnerLocator::GetOwner(void)
 
 } // namespace ot
 
-#endif // OWNER_LOCATOR_HPP_
+#endif // LOCATOR_GETTERS_HPP_

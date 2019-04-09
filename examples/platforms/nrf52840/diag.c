@@ -380,9 +380,9 @@ const struct PlatformDiagCommand sCommands[] = {
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    uint32_t i;
+    size_t i;
 
-    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
@@ -391,7 +391,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
         }
     }
 
-    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    if (i == otARRAY_LENGTH(sCommands))
     {
         snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
     }

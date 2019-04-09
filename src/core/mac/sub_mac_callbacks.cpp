@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "mac/mac.hpp"
 
 namespace ot {
@@ -49,7 +50,7 @@ void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {
@@ -81,7 +82,7 @@ void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aE
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {
@@ -99,7 +100,7 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {

@@ -220,7 +220,7 @@ void TestPriorityQueue(void)
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->GetMessagePool();
+    messagePool = &instance->Get<ot::MessagePool>();
 
     // Use the function "New()" to allocate messages with different priorities
     for (int i = 0; i < kNumNewPriorityTestMessages; i++)

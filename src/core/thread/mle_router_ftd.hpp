@@ -74,6 +74,7 @@ namespace Mle {
 class MleRouter : public Mle
 {
     friend class Mle;
+    friend class ot::Instance;
 
 public:
     /**
@@ -333,14 +334,6 @@ public:
      *
      */
     void RemoveNeighbor(Neighbor &aNeighbor);
-
-    /**
-     * This method gets the `ChildTable` object.
-     *
-     * @returns  A reference to the `ChildTable`.
-     *
-     */
-    ChildTable &GetChildTable(void) { return mChildTable; }
 
     /**
      * This method restores children information from non-volatile memory.
@@ -650,12 +643,6 @@ public:
      *
      */
     void ResetAdvertiseInterval(void);
-
-    /**
-     * This method returns a reference to the router table object.
-     *
-     */
-    RouterTable &GetRouterTable(void) { return mRouterTable; }
 
     /**
      * This static method converts link quality to route cost.
