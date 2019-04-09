@@ -354,7 +354,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
             {
                 if (cur->GetType() == aTlvs[index])
                 {
-                    SuccessOrExit(error = message->Append(cur, sizeof(NetworkDataTlv) + cur->GetLength()));
+                    SuccessOrExit(error = message->AppendTlv(*cur));
                     break;
                 }
             }
@@ -394,7 +394,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = message->AppendTlv(state));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 

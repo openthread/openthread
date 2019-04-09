@@ -44,6 +44,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/tlvs.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/link_quality.hpp"
 
@@ -404,6 +405,19 @@ public:
      *
      */
     otError Append(const void *aBuf, uint16_t aLength);
+
+    /**
+     * This method appends a TLV to the end of the message.
+     *
+     * On success, this method grows the message by the size of the TLV.
+     *
+     * @param[in]  aTlv     A reference to a TLV.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    otError AppendTlv(const Tlv &aTlv);
 
     /**
      * This method reads bytes from the message.

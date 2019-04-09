@@ -408,33 +408,33 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
 
     stateTlv.Init();
     stateTlv.SetState(MeshCoP::StateTlv::kAccept);
-    SuccessOrExit(error = mFinalizeMessage->Append(&stateTlv, sizeof(stateTlv)));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(stateTlv));
 
     vendorNameTlv.Init();
     vendorNameTlv.SetVendorName(aVendorName);
-    SuccessOrExit(error = mFinalizeMessage->Append(&vendorNameTlv, vendorNameTlv.GetSize()));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorNameTlv));
 
     vendorModelTlv.Init();
     vendorModelTlv.SetVendorModel(aVendorModel);
-    SuccessOrExit(error = mFinalizeMessage->Append(&vendorModelTlv, vendorModelTlv.GetSize()));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorModelTlv));
 
     vendorSwVersionTlv.Init();
     vendorSwVersionTlv.SetVendorSwVersion(aVendorSwVersion);
-    SuccessOrExit(error = mFinalizeMessage->Append(&vendorSwVersionTlv, vendorSwVersionTlv.GetSize()));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorSwVersionTlv));
 
     vendorStackVersionTlv.Init();
     vendorStackVersionTlv.SetOui(OPENTHREAD_CONFIG_STACK_VENDOR_OUI);
     vendorStackVersionTlv.SetMajor(OPENTHREAD_CONFIG_STACK_VERSION_MAJOR);
     vendorStackVersionTlv.SetMinor(OPENTHREAD_CONFIG_STACK_VERSION_MINOR);
     vendorStackVersionTlv.SetRevision(OPENTHREAD_CONFIG_STACK_VERSION_REV);
-    SuccessOrExit(error = mFinalizeMessage->Append(&vendorStackVersionTlv, vendorStackVersionTlv.GetSize()));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorStackVersionTlv));
 
     if (aVendorData != NULL)
     {
         VendorDataTlv vendorDataTlv;
         vendorDataTlv.Init();
         vendorDataTlv.SetVendorData(aVendorData);
-        SuccessOrExit(error = mFinalizeMessage->Append(&vendorDataTlv, vendorDataTlv.GetSize()));
+        SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorDataTlv));
     }
 
     provisioningUrlTlv.Init();
@@ -442,7 +442,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
 
     if (provisioningUrlTlv.GetLength() > 0)
     {
-        SuccessOrExit(error = mFinalizeMessage->Append(&provisioningUrlTlv, provisioningUrlTlv.GetSize()));
+        SuccessOrExit(error = mFinalizeMessage->AppendTlv(provisioningUrlTlv));
     }
 
 exit:
