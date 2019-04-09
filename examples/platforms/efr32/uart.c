@@ -84,17 +84,17 @@ static UARTDRV_HandleData_t sUartHandleData;
 static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
 static const uint8_t *      sTransmitBuffer;
 static volatile uint16_t    sTransmitLength;
-static volatile uint8_t     sDeferredQueueReceives;
+static volatile uint8_t     sDeferredReceives;
 
 typedef struct ReceiveFifo_t
 {
     // The data buffer
     uint8_t mBuffer[kReceiveFifoSize];
-    // The offset of the first item to be read from the list
+    // The offset of the first item to be read from the list (unwrapped)
     uint16_t mReadStart;
-    // The offset of the last item to be read plus one
+    // The offset of the last item to be read plus one (unwrapped)
     volatile uint16_t mReadEnd;
-    // The offset of first unused item
+    // The offset of first unused item (unwrapped)
     volatile uint16_t mWrite;
     // Last number of items value in current transfer
     volatile uint16_t mLastCount;
@@ -102,7 +102,7 @@ typedef struct ReceiveFifo_t
 
 static ReceiveFifo_t sReceiveFifo;
 
-static bool queueNextReceive(void);
+static bool enqueueNextReceive(void);
 
 static void updateReceiveProgress(uint8_t *aData, UARTDRV_Count_t aCount)
 {
@@ -121,38 +121,32 @@ static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDat
 {
     updateReceiveProgress(aData, aCount);
 
-    if (!queueNextReceive() && sDeferredQueueReceives < UINT8_MAX)
+    if (!enqueueNextReceive() && sDeferredReceives < UINT8_MAX)
     {
-        assert(sDeferredQueueReceives < kConcurrentRxBuffers);
-
-        sDeferredQueueReceives += 1;
+        // A failure to enqueue the next receive is due to no free blocks remaining in the buffer. Defer enqueueing
+        // the next receive operation to processReceive() (running in the main execution context) where the
+        // contents of the buffer shall firstly be emptied. In the mean time, assuming all (kConcurrentRxBuffers)
+        // receive operations have been deferred, flow control RTS will be deasserted.
+        assert(sDeferredReceives < kConcurrentRxBuffers);
+        sDeferredReceives += 1;
     }
 }
 
-static bool queueNextReceive(void)
+static bool enqueueNextReceive(void)
 {
-    bool           result           = true;
+    bool           result;
     const uint16_t wrappedWrite     = sReceiveFifo.mWrite % kReceiveFifoSize;
     const uint16_t wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
+    Ecode_t        status;
 
-    if (wrappedWrite > wrappedReadStart)
-    {
-        assert(kReceiveFifoSize - wrappedWrite >= kDmaBlockSize);
-    }
-    else if (wrappedWrite < wrappedReadStart)
-    {
-        assert(wrappedReadStart - wrappedWrite >= kDmaBlockSize);
-    }
-    else
-    {
-        // Buffer is empty
-        result = sReceiveFifo.mReadEnd == sReceiveFifo.mReadStart;
-    }
+    // Buffer has a remaining block or buffer is totally empty
+    result = wrappedWrite != wrappedReadStart || sReceiveFifo.mReadEnd == sReceiveFifo.mReadStart;
 
     otEXPECT(result);
-    otEXPECT_ACTION(ECODE_OK ==
-                        UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + wrappedWrite, kDmaBlockSize, receiveDone),
-                    result = false);
+
+    status = UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + wrappedWrite, kDmaBlockSize, receiveDone);
+    assert(ECODE_OK == status);
+    otEXPECT_ACTION(ECODE_OK == status, result = false);
 
     sReceiveFifo.mWrite += kDmaBlockSize;
 exit:
@@ -170,7 +164,7 @@ static void processReceive(void)
     uint8_t *       buffer;
     UARTDRV_Count_t itemsReceived;
     UARTDRV_Count_t itemsRemaining;
-    uint8_t         numQueuedReceives = 0;
+    uint8_t         numEnqueuedReceives = 0;
     uint16_t        wrappedReadStart;
     uint16_t        wrappedReadEnd;
     uint16_t        readLength;
@@ -209,17 +203,19 @@ static void processReceive(void)
 
     CORE_ENTER_NVIC(&sRxNvicMask);
 
-    for (uint8_t i = 0; i < sDeferredQueueReceives; i++)
+    // Now the buffer has been emptied, attempt to enqueue any receive operations that previously failed to enqueue due
+    // to a full buffer.
+
+    for (uint8_t i = 0; i < sDeferredReceives; i++)
     {
-        if (queueNextReceive())
+        if (enqueueNextReceive())
         {
-            numQueuedReceives += 1;
+            numEnqueuedReceives += 1;
         }
     }
 
-    assert(sDeferredQueueReceives >= numQueuedReceives);
-
-    sDeferredQueueReceives -= numQueuedReceives;
+    assert(sDeferredReceives >= numEnqueuedReceives);
+    sDeferredReceives -= numEnqueuedReceives;
 
     CORE_EXIT_NVIC();
 }
@@ -235,9 +231,9 @@ static void processTransmit(void)
 
 otError otPlatUartEnable(void)
 {
-    otError        error             = OT_ERROR_NONE;
-    UARTDRV_Init_t uartInit          = USART_INIT;
-    uint8_t        numQueuedReceives = 0;
+    otError        error               = OT_ERROR_NONE;
+    UARTDRV_Init_t uartInit            = USART_INIT;
+    uint8_t        numEnqueuedReceives = 0;
 
     memset(&sRxNvicMask, 0, sizeof(sRxNvicMask));
     CORE_NvicMaskSetIRQ(LDMA_IRQn, &sRxNvicMask);
@@ -247,7 +243,7 @@ otError otPlatUartEnable(void)
     sReceiveFifo.mReadEnd   = 0;
     sReceiveFifo.mWrite     = 0;
     sReceiveFifo.mLastCount = 0;
-    sDeferredQueueReceives  = 0;
+    sDeferredReceives       = 0;
     sTransmitLength         = 0;
     sTransmitBuffer         = NULL;
 
@@ -258,15 +254,16 @@ otError otPlatUartEnable(void)
 
     for (uint8_t i = 0; i < kConcurrentRxBuffers; i++)
     {
-        if (queueNextReceive())
+        if (enqueueNextReceive())
         {
-            numQueuedReceives += 1;
+            numEnqueuedReceives += 1;
         }
     }
 
     CORE_EXIT_NVIC();
 
-    otEXPECT_ACTION(numQueuedReceives == kConcurrentRxBuffers, error = OT_ERROR_FAILED);
+    assert(numEnqueuedReceives == kConcurrentRxBuffers);
+    otEXPECT_ACTION(numEnqueuedReceives == kConcurrentRxBuffers, error = OT_ERROR_FAILED);
 
 exit:
     return error;
@@ -280,15 +277,16 @@ otError otPlatUartDisable(void)
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
+    Ecode_t status;
 
     otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;
 
-    otEXPECT_ACTION(ECODE_OK ==
-                        UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone),
-                    error = OT_ERROR_FAILED);
+    status = UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
+    assert(ECODE_OK == status);
+    otEXPECT_ACTION(ECODE_OK == status, error = OT_ERROR_FAILED);
 exit:
     return error;
 }
