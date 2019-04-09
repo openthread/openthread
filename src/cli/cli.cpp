@@ -554,16 +554,25 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
             mServer->OutputFormat("enabled: %d\r\n", otChannelMonitorIsEnabled(mInstance));
             if (otChannelMonitorIsEnabled(mInstance))
             {
+                uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
+                uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
+
                 mServer->OutputFormat("interval: %lu\r\n", otChannelMonitorGetSampleInterval(mInstance));
                 mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
                 mServer->OutputFormat("window: %lu\r\n", otChannelMonitorGetSampleWindow(mInstance));
                 mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
-                for (uint8_t channel = otLinkGetPhyChannelMin(mInstance); channel <= otLinkGetPhyChannelMax(mInstance);
-                     channel++)
+                for (uint8_t channel = 0; channel < channelNum; channel++)
                 {
-                    uint32_t occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
+                    uint32_t occupancy = 0;
+
+                    if (!((1UL << channel) & channelMask))
+                    {
+                        continue;
+                    }
+
+                    occupancy = otChannelMonitorGetChannelOccupancy(mInstance, channel);
 
                     mServer->OutputFormat("ch %d (0x%04x) ", channel, occupancy);
                     occupancy = (occupancy * 10000) / 0xffff;
