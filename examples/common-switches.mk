@@ -52,6 +52,7 @@ LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
+SETTINGS_STUB       ?= 0
 SERVICE             ?= 0
 # SLAAC is enabled by default
 SLAAC               ?= 1
@@ -155,6 +156,10 @@ endif
 
 ifeq ($(PLATFORM_UDP),1)
 configure_OPTIONS              += --enable-platform-udp
+endif
+
+ifeq ($(SETTINGS_STUB),1)
+configure_OPTIONS              += --enable-settings-stub
 endif
 
 ifeq ($(SERVICE),1)

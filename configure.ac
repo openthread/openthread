@@ -1612,6 +1612,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
+# Settings stub
+#
+
+AC_ARG_ENABLE(settings-stub,
+    [AS_HELP_STRING([--enable-settings-stub], [Disables non-volatile storage of settings @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            settings-stub=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${settings-stub} for --settings-stub])
+            ;;
+        esac
+    ],
+    [settings-stub=no])
+
+if test "$enable_settings_stub" = "yes"; then
+    OPENTHREAD_SETTINGS_STUB=1
+else
+    OPENTHREAD_SETTINGS_STUB=0
+fi
+
+AC_SUBST(OPENTHREAD_SETTINGS_STUB)
+AM_CONDITIONAL([OPENTHREAD_SETTINGS_STUB], [test "${enable_settings_stub}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_SETTINGS_STUB],[${OPENTHREAD_SETTINGS_STUB}],[Define to 1 if you want to enable settings stub])
+
+#
 # Linker Map Output
 #
 
@@ -2099,5 +2129,6 @@ AC_MSG_NOTICE([
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
+  OpenThread Settings Stub                  : $(enable_settings_stub)
 
 ])

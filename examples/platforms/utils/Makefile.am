@@ -44,6 +44,16 @@ libopenthread_platform_utils_a_SOURCES  = \
     soft_source_match_table.c             \
     $(NULL)
 
+if OPENTHREAD_SETTINGS_STUB
+    libopenthread_platform_utils_a_SOURCES += \
+        settings_stub.c \
+        $(NULL)
+else
+    libopenthread_platform_utils_a_SOURCES += \
+        settings_flash.c \
+        $(NULL)
+endif
+
 noinst_HEADERS                          = \
     code_utils.h                          \
     flash.h                               \
