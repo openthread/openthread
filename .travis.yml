@@ -44,14 +44,14 @@ script:
   - .travis/script.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - .travis/after_success.sh
 
 matrix:
   include:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-app-pty" CC=clang CXX=clang++ VERBOSE=1
+    - env: BUILD_TARGET="posix-app-pty" CC=clang CXX=clang++ VERBOSE=1 COVERAGE=1
       os: linux
       compiler: clang
     - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
