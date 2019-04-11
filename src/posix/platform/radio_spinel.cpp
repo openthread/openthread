@@ -55,8 +55,6 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
-#define MAC_MIN_BE 3
-
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
@@ -182,7 +180,7 @@ RadioSpinel::RadioSpinel(void)
     , mDiagOutput(NULL)
     , mDiagOutputMaxLen(0)
 #endif
-    , mTxRadioEndUs(0)
+    , mTxRadioEndUs(UINT64_MAX)
 {
     mVersion[0] = '\0';
 }
@@ -193,7 +191,8 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
     SuccessOrExit(error = mHdlcInterface.Init(aRadioFile, aRadioConfig));
 
-    SuccessOrExit(error = ResetRCP());
+    SuccessOrExit(error = SendReset());
+    SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
@@ -211,19 +210,6 @@ void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
 
 exit:
     SuccessOrDie(error);
-}
-
-otError RadioSpinel::ResetRCP(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    fprintf(stderr, "Reset rcp called\n");
-    SuccessOrExit(error = SendReset());
-    fprintf(stderr, "sent reset\n");
-    SuccessOrExit(error = WaitResponse());
-    fprintf(stderr, "got response\n");
-exit:
-    return error;
 }
 
 otError RadioSpinel::CheckSpinelVersion(void)
@@ -723,18 +709,24 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
     {
         FD_SET(sockFd, &aWriteFdSet);
     }
-
-    if (mState == kStateTransmitting)
+    else if (mState == kStateTransmitting)
     {
         uint64_t now = otSysGetTime();
+
         if (now < mTxRadioEndUs)
         {
             uint64_t remain = mTxRadioEndUs - now;
+
             if (remain < static_cast<uint64_t>(aTimeout.tv_sec * US_PER_S + aTimeout.tv_usec))
             {
-                aTimeout.tv_sec  = (mTxRadioEndUs - now) / US_PER_S;
-                aTimeout.tv_usec = (mTxRadioEndUs - now) % US_PER_S;
+                aTimeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+                aTimeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
             }
+        }
+        else
+        {
+            aTimeout.tv_sec  = 0;
+            aTimeout.tv_usec = 0;
         }
     }
 
@@ -763,7 +755,8 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 
     if (mState == kStateTransmitDone)
     {
-        mState = kStateReceive;
+        mState        = kStateReceive;
+        mTxRadioEndUs = UINT64_MAX;
 
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
@@ -777,23 +770,17 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
                               mTxError);
         }
     }
+    else if (mState == kStateTransmitting && otSysGetTime() >= mTxRadioEndUs)
+    {
+        otLogCritPlat("radio tx timeout, exit");
+        exit(OT_EXIT_FAILURE);
+    }
 
     if (FD_ISSET(mHdlcInterface.GetSocket(), &aWriteFdSet))
     {
         if (mState == kStateTransmitPending)
         {
             RadioTransmit();
-        }
-    }
-
-    // handle radio tx timeout
-    {
-        uint64_t now = otSysGetTime();
-
-        if (now > mTxRadioEndUs && mState == kStateTransmitting)
-        {
-            otLogCritPlat("radio tx timeout, exit");
-            exit(OT_EXIT_FAILURE);
         }
     }
 }
@@ -1434,12 +1421,6 @@ uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
 exit:
     LogIfFail("Get radio channel mask failed", error);
     return channelMask;
-}
-
-RadioSpinel::~RadioSpinel(void)
-{
-    mState = kStateDisabled;
-    SendReset();
 }
 
 } // namespace PosixApp

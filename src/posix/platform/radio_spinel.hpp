@@ -458,8 +458,6 @@ public:
      */
     void HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer);
 
-    ~RadioSpinel();
-
 private:
     enum
     {
@@ -483,7 +481,6 @@ private:
     otError CheckSpinelVersion(void);
     otError CheckCapabilities(void);
     otError CheckRadioCapabilities(void);
-    otError ResetRCP(void);
     void    ProcessFrameQueue(void);
 
     /**
