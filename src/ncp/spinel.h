@@ -2638,7 +2638,7 @@ typedef enum
     SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
 
     /// Thread Joiner Commissioning command and the parameters
-    /** Format `bUU` - Write Only
+    /** Format `b` or `bU(UUUUU)` (fields in parenthesis are optional) - Write Only
      *
      * This property starts or stops Joiner's commissioning process
      *
@@ -2649,7 +2649,7 @@ typedef enum
      * the Joiner commissioning process.
      *
      * After a successful start operation, the join process outcome is reported through an
-     * asynchronous `VALUE_IS(LAST_STATUS)`  update with one of the following error status values:
+     * asynchronous `VALUE_IS(LAST_STATUS)` update with one of the following error status values:
      *
      *     - SPINEL_STATUS_JOIN_SUCCESS     the join process succeeded.
      *     - SPINEL_STATUS_JOIN_SECURITY    the join process failed due to security credentials.
@@ -2657,11 +2657,21 @@ typedef enum
      *     - SPINEL_STATUS_JOIN_RSP_TIMEOUT if a response timed out.
      *     - SPINEL_STATUS_JOIN_FAILURE     join failure.
      *
-     * Data per item is:
+     * Frame format:
      *
-     *  `b` : Start or stop commissioning process
-     *  `U` : Joiner's PSKd if start commissioning, empty string if stop commissioning
-     *  `U` : Provisioning url if start commissioning, empty string if stop commissioning
+     *  `b` : Start or stop commissioning process (true to start).
+     *
+     * Only if the start commissioning.
+     *
+     *  `U` : Joiner's PSKd.
+     *
+     * The next fields are all optional. If not provided, OpenThread default values would be used.
+     *
+     *  `U` : Provisioning URL (use empty string if not required).
+     *  `U` : Vendor Name. If not specified or empty string, use OpenThread default (PACKAGE_NAME).
+     *  `U` : Vendor Model. If not specified or empty string, use OpenThread default (OPENTHREAD_CONFIG_PLATFORM_INFO).
+     *  `U` : Vendor Sw Version. If not specified or empty string, use OpenThread default (PACKAGE_VERSION).
+     *  `U` : Vendor Data String. Will not be appended if not specified.
      *
      */
     SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING = SPINEL_PROP_MESHCOP__BEGIN + 1,
