@@ -1309,7 +1309,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
     int                    headerLength;
 
     // Check the fragment header
-    VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
+    VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
     aFrame += fragmentHeader.GetHeaderLength();
     aFrameLength -= fragmentHeader.GetHeaderLength();
 

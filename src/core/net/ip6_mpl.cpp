@@ -300,7 +300,7 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
                      (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
                       option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
     if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
     {

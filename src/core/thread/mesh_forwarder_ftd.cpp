@@ -924,7 +924,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     Lowpan::MeshHeader meshHeader;
 
     // Check the mesh header
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
+    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
 
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aLinkInfo.mLinkSecurity && meshHeader.IsValid(), error = OT_ERROR_SECURITY);
@@ -1212,13 +1212,13 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
         else
         {
             // ServiceTLV without ServerTLV? Can't forward packet anywhere.
-            ExitNow(error = OT_ERROR_DROP);
+            ExitNow(error = OT_ERROR_NO_ROUTE);
         }
     }
     else
     {
         // Unknown service, can't forward
-        ExitNow(error = OT_ERROR_DROP);
+        ExitNow(error = OT_ERROR_NO_ROUTE);
     }
 
 exit:

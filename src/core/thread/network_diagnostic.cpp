@@ -290,7 +290,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
     for (uint32_t i = 0; i < aNetworkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = OT_ERROR_DROP);
+        VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = OT_ERROR_PARSE);
 
         otLogInfoNetDiag("Type %d", type);
 
@@ -454,7 +454,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         }
 
         default:
-            ExitNow(error = OT_ERROR_DROP);
+            ExitNow(error = OT_ERROR_PARSE);
         }
 
         offset += sizeof(type);
@@ -483,11 +483,11 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv), &networkDiagnosticTlv) ==
                   sizeof(NetworkDiagnosticTlv)),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_DROP);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_PARSE);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_DROP);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_PARSE);
 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE)
@@ -556,11 +556,11 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv), &networkDiagnosticTlv) ==
                   sizeof(NetworkDiagnosticTlv)),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_DROP);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_PARSE);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_DROP);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_PARSE);
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
