@@ -52,11 +52,15 @@ You can convert them to hex using `arm-none-eabi-objcopy`:
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 ```
 
+### USB CDC ACM support
+
 You can build the libraries with support for the native USB CDC ACM as a serial transport.
 To do so, build the firmware with the following parameter:
 ```
 $ make -f examples/Makefile-nrf52840 USB=1
 ```
+
+Note that the USB CDC ACM serial transport is not supported with Engineering sample A of the nRF52840 chip.
 
 If you are using Windows 7 or earlier, you must load an additional USB CDC driver.
 The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf`.
@@ -331,12 +335,20 @@ machines in this module. To open the `*.uml` sequence diagrams, use [PlantUML][P
 
 ## Verification
 
-The following toolchains have been used for testing and verification:
-  - gcc version 4.9.3
-  - gcc version 6.2.0
+The following development kits have been used for testing and verification:
+  - PCA10056 1.0.0
+  - PCA10059 1.0.0
+  - PCA10068 0.5.0
 
- The following OpenThread commits have been verified with nRF52840 examples by Nordic Semiconductor:
-  - `704511c` - 18.09.2018 (the latest checked)
+The following toolchains have been used for testing and verification:
+  - GCC: GCC ARM Embedded 7.2018 q2 update
+  - IAR: IAR Workbench 7.80.4
+  - SES: SES 4.12
+  - ARM: MDK-ARM version 5.25
+
+ The following OpenThread commits have been verified with nRF52840 and nRF52811 examples by Nordic Semiconductor:
+  - `23ff101` - 22.03.2019 (the latest checked)
+  - `704511c` - 18.09.2018
   - `ec59d7e` - 06.04.2018
   - `a89eb88` - 16.11.2017
   - `6a15261` - 29.06.2017
@@ -353,13 +365,13 @@ The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
  - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
  - unique support for DFU-over-Thread (Device Firmware Upgrade),
- - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP or MQTT-SN protocols,
+ - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP, CoAP Secure or MQTT-SN protocols,
  - support for an OpenThread Network Co-Processor (NCP) using UART, USB or SPI transport protocol,
- - Border Router and cloud connectivity example,
+ - Border Router and cloud connectivity example (e.g. with Google Cloud Platform)
  - Thread native commissioning with NFC example,
  - example applications demonstrating the use of FreeRTOS with OpenThread,
  - support for IAR, Keil MDK-ARM and SEGGER Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
- - range of PC tools including a Thread Topology Monitor,
+ - range of PC tools including Thread Topology Monitor and nRF Sniffer for 802.15.4
  - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 
 [nRF5-SDK-Thread-Zigbee]: https://www.nordicsemi.com/Software-and-Tools/Software/nRF5-SDK-for-Thread-and-Zigbee
