@@ -1369,8 +1369,8 @@ uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
     const uint8_t *maskData    = maskBuffer;
     spinel_size_t  maskLength  = sizeof(maskBuffer);
 
-    SuccessOrExit(error = Get(aPreferred ? SPINEL_PROP_PHY_CHAN_PREFERRED : SPINEL_PROP_PHY_CHAN_SUPPORTED,
-                              SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength));
+    SuccessOrDie(Get(aPreferred ? SPINEL_PROP_PHY_CHAN_PREFERRED : SPINEL_PROP_PHY_CHAN_SUPPORTED,
+                     SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength));
 
     while (maskLength > 0)
     {
