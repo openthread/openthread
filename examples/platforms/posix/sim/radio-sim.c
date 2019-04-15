@@ -410,12 +410,15 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    if (otPlatRadioIsEnabled(aInstance))
-    {
-        sState = OT_RADIO_STATE_DISABLED;
-    }
+    otError error = OT_ERROR_NONE;
 
-    return OT_ERROR_NONE;
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
+
+    sState = OT_RADIO_STATE_DISABLED;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
