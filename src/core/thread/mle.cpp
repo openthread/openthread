@@ -3360,8 +3360,6 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                               !IsFullNetworkData(), aMessage, networkDataOffset);
 
-    Get<MeshCoP::ActiveDataset>().ApplyConfiguration();
-
     SetStateChild(shortAddress.GetRloc16());
 
 exit:
