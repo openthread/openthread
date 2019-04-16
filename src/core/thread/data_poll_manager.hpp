@@ -189,6 +189,15 @@ public:
     void SendFastPolls(uint8_t aNumFastPolls);
 
     /**
+     * This method asks data poll manager to stop fast polls when the expecting response is received.
+     *
+     * @retval OT_ERROR_NONE            Successfully stopped fast polls when no other responses are expected.
+     * @retval OT_ERROR_BUSY            There are other callers who are waiting for responses.
+     *
+     */
+    otError StopFastPolls(void);
+
+    /**
      * This method gets the maximum data polling period in use.
      *
      * @returns the maximum data polling period in use.
@@ -237,6 +246,7 @@ private:
     uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
     uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.
+    uint8_t mFastPollsUsers;           //< Number of callers which request fast polls.
 };
 
 /**

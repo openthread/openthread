@@ -2835,6 +2835,11 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
         otLogWarnMleErr(error, "Failed to process Data Response");
     }
 
+    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    {
+        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
+    }
+
     return error;
 }
 

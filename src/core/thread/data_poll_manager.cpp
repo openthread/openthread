@@ -63,6 +63,7 @@ DataPollManager::DataPollManager(Instance &aInstance)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
+    , mFastPollsUsers(0)
 {
 }
 
@@ -330,6 +331,8 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
 {
     bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
 
+    mFastPollsUsers++;
+
     if (aNumFastPolls == 0)
     {
         aNumFastPolls = kDefaultFastPolls;
@@ -349,6 +352,23 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
     {
         ScheduleNextPoll(kRecalculatePollPeriod);
     }
+}
+
+otError DataPollManager::StopFastPolls(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mFastPollsUsers != 0);
+
+    mFastPollsUsers--;
+
+    VerifyOrExit(mFastPollsUsers == 0, error = OT_ERROR_BUSY);
+
+    mRemainingFastPolls = 0;
+    ScheduleNextPoll(kRecalculatePollPeriod);
+
+exit:
+    return error;
 }
 
 void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
