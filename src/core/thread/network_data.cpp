@@ -1024,7 +1024,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         ThreadRloc16Tlv rloc16Tlv;
         rloc16Tlv.Init();
         rloc16Tlv.SetRloc16(aRloc16);
-        SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
+        SuccessOrExit(error = message->AppendTlv(rloc16Tlv));
     }
 
     Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());

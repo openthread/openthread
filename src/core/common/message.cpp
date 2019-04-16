@@ -458,6 +458,11 @@ exit:
     return error;
 }
 
+otError Message::AppendTlv(const Tlv &aTlv)
+{
+    return Append(&aTlv, aTlv.GetSize());
+}
+
 otError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     otError error     = OT_ERROR_NONE;
