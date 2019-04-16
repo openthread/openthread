@@ -47,7 +47,7 @@
 namespace ot {
 namespace Cli {
 
-#define BLE_FILTER_ADV_RSSI_THRESHOLD -40
+#define BLE_FILTER_ADV_RSSI_THRESHOLD -50
 #define MAX_RD_WR_BUFFER_SIZE          20
 static uint8_t sRdWrBuffer[MAX_RD_WR_BUFFER_SIZE] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa,
                                                      0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55};
@@ -60,7 +60,8 @@ const struct Ble::Command Ble::sCommands[] = {{"help", &Ble::ProcessHelp},      
                                               {"l2cap", &Ble::ProcessL2cap},     {"gatt", &Ble::ProcessGatt}};
 
 Ble::Ble(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
+    : mScanTimer(*aInterpreter.mInstance, &Ble::s_HandleScanTimer, this)
+    , mInterpreter(aInterpreter)
 {
 }
 
@@ -176,17 +177,34 @@ otError Ble::ProcessScan(int argc, char *argv[])
 
         error = otPlatBleGapScanResponseSet(mInterpreter.mInstance, rspData, rspDataLength);
     }
-    else if ((argc == 1) && (strcmp(argv[0], "start") == 0))
+    else if ((argc >= 1) && (strcmp(argv[0], "start") == 0))
     {
+        long interval = 0;
+
+        if (argc >= 2)
+        {
+            SuccessOrExit(error = Interpreter::ParseLong(argv[1], interval));
+        }
+
         error = otPlatBleGapScanStart(mInterpreter.mInstance, kScanInterval, kScanWindow);
         if (error == OT_ERROR_NONE)
         {
             mInterpreter.mServer->OutputFormat("\r\n| advType | addrType |   address    | rssi | AD or Scan Rsp Data |\r\n");
             mInterpreter.mServer->OutputFormat("+---------+----------+--------------+------+---------------------|\r\n");
         }
+
+        if (interval != 0)
+        {
+            mScanTimer.Start(interval * 1000);
+        }
     }
     else if ((argc == 1) && (strcmp(argv[0], "stop") == 0))
     {
+        if (mScanTimer.IsRunning())
+        {
+            mScanTimer.Stop();
+        }
+
         error = otPlatBleGapScanStop(mInterpreter.mInstance);
     }
     else
@@ -207,8 +225,8 @@ otError Ble::ProcessBdAddr(int argc, char *argv[])
 
     if ((error = otPlatBleGapAddressGet(mInterpreter.mInstance, &addr)) == OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("%02x%02x%02x%02x%02x%02x\r\n", addr.mAddr[5], addr.mAddr[4], addr.mAddr[3],
-                                           addr.mAddr[2], addr.mAddr[1], addr.mAddr[0]);
+        mInterpreter.mServer->OutputFormat("%d %02x%02x%02x%02x%02x%02x\r\n", addr.mAddrType, addr.mAddr[5], addr.mAddr[4],
+                                           addr.mAddr[3], addr.mAddr[2], addr.mAddr[1], addr.mAddr[0]);
     }
 
     OT_UNUSED_VARIABLE(argv);
@@ -266,11 +284,11 @@ otError Ble::ProcessL2cap(int argc, char *argv[])
 
     VerifyOrExit(argc >= 1, error = OT_ERROR_INVALID_ARGS);
 
-    if ((argc == 4) && (strcmp(argv[0], "register") == 0))
+    if ((argc >= 3) && (strcmp(argv[0], "register") == 0))
     {
         uint16_t           connId;
-        uint16_t           psm = 0x0080;
-        uint16_t           mtu;
+        uint16_t           mtu = kL2capMaxMtu;
+        uint16_t           psm = kL2capPsm;
         otPlatBleL2capRole role;
 
         SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
@@ -279,8 +297,19 @@ otError Ble::ProcessL2cap(int argc, char *argv[])
         SuccessOrExit(error = Interpreter::ParseLong(argv[2], value));
         role = static_cast<otPlatBleL2capRole>(value);
 
-        SuccessOrExit(error = Interpreter::ParseLong(argv[3], value));
-        mtu = static_cast<otPlatBleL2capRole>(value);
+        if (argc >= 4)
+        {
+            SuccessOrExit(error = Interpreter::ParseLong(argv[3], value));
+            mtu = static_cast<uint16_t>(value);
+        }
+
+        if (argc >= 5)
+        {
+            SuccessOrExit(error = Interpreter::ParseLong(argv[4], value));
+            psm = static_cast<uint16_t>(value);
+        }
+
+        VerifyOrExit(mtu <= kL2capMaxMtu, error = OT_ERROR_INVALID_ARGS);
 
         error = otPlatBleL2capConnectionRegister(mInterpreter.mInstance, connId, psm, mtu, role, &l2capHandle);
         if (error == OT_ERROR_NONE)
@@ -312,11 +341,16 @@ otError Ble::ProcessL2cap(int argc, char *argv[])
     else if ((argc == 3) && (strcmp(argv[0], "send") == 0))
     {
         otBleRadioPacket packet;
+        uint8_t          data[kL2capMaxMtu] = {0};
 
         SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
         l2capHandle    = static_cast<uint8_t>(value);
-        packet.mValue  = reinterpret_cast<uint8_t *>(argv[2]);
-        packet.mLength = static_cast<uint16_t>(strlen(argv[2]));
+
+        SuccessOrExit(error = Interpreter::ParseLong(argv[2], value));
+        packet.mLength = static_cast<uint16_t>(value);
+
+        VerifyOrExit(packet.mLength <= sizeof(data));
+        packet.mValue = data;
 
         error = otPlatBleL2capSduSend(mInterpreter.mInstance, l2capHandle, &packet);
     }
@@ -432,7 +466,7 @@ otError Ble::ProcessGatt(int argc, char *argv[])
                 characteristic++;
             }
         }
-        else if ((argc == 4) && (strcmp(argv[1], "ind") == 0))
+        else if ((argc == 4) && (strcmp(argv[1], "indicate") == 0))
         {
             uint8_t          data[kAttMtu - 3];
             uint16_t         handle;
@@ -474,7 +508,7 @@ otError Ble::ProcessGatt(int argc, char *argv[])
                 error = OT_ERROR_INVALID_ARGS;
             }
         }
-        else if ((argc >= 4) && (strcmp(argv[1], "find") == 0))
+        else if ((argc >= 4) && (strcmp(argv[1], "get") == 0))
         {
             if (strcmp(argv[2], "service") == 0)
             {
@@ -558,7 +592,7 @@ otError Ble::ProcessGatt(int argc, char *argv[])
                 error = OT_ERROR_INVALID_ARGS;
             }
         }
-        else if ((argc == 4) && (strcmp(argv[1], "subs") == 0))
+        else if ((argc == 4) && (strcmp(argv[1], "subscribe") == 0))
         {
             uint16_t handle;
             bool     subscribe;
@@ -638,6 +672,28 @@ void Ble::ReverseBuf(uint8_t *aBuffer, uint8_t aLength)
         aBuffer[i]               = aBuffer[aLength - 1 - i];
         aBuffer[aLength - 1 - i] = temp;
     }
+}
+
+Ble &Ble::GetOwner(OwnerLocator &aOwnerLocator)
+{
+#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Ble &ble = (aOwnerLocator.GetOwner<Ble>());
+#else
+    Ble &ble = Server::sServer->GetInterpreter().GetBle();
+    OT_UNUSED_VARIABLE(aOwnerLocator);
+#endif
+
+    return ble;
+}
+
+void Ble::s_HandleScanTimer(Timer &aTimer)
+{
+    GetOwner(aTimer).HandleScanTimer();
+}
+
+void Ble::HandleScanTimer(void)
+{
+    otPlatBleGapScanStop(mInterpreter.mInstance);
 }
 
 extern "C" void otPlatBleOnEnabled(otInstance *aInstance)

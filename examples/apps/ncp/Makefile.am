@@ -71,7 +71,7 @@ endif
 
 if OPENTHREAD_ENABLE_CLI_BLE
 LDADD_COMMON                                                          += \
-    $(top_builddir)/third_party/cordio/libcordio.a                       \
+    $(top_builddir)/third_party/cordio/libcordio-ble-host.a              \
     $(NULL)
 endif # OPENTHREAD_ENABLE_CLI_BLE
 

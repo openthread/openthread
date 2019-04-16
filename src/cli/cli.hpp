@@ -185,6 +185,16 @@ public:
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
+#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+    /**
+     * This method returns a reference to the ble object.
+     *
+     * @returns A reference to the ble object.
+     *
+     */
+    Ble &GetBle(void) { return mBle; }
+#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+
 private:
     enum
     {

@@ -73,15 +73,19 @@ enum
     kStackBufferSize = 4832,
 };
 
-static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}, {1300, 2}};
+static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}, {1300, 2}};
 #else
 enum
 {
-    kStackBufferSize = 2200,
+    kStackBufferSize = 2250,
 };
 
-static const wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
+static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
 #endif
+
+/* WSF heap allocation */
+uint8_t *SystemHeapStart;
+uint32_t SystemHeapSize;
 
 enum
 {
@@ -339,8 +343,14 @@ static void bleStackInit(void)
     otEXPECT(!sStackInitialized);
     sStackInitialized = true;
 
-    bytesUsed = WsfBufInit(sizeof(sStackBuffer), sStackBuffer, sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
+    SystemHeapStart = sStackBuffer;
+    SystemHeapSize  = sizeof(sStackBuffer);
+
+    bytesUsed = WsfBufInit(sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
     assert(bytesUsed != 0);
+
+    SystemHeapStart += bytesUsed;
+    SystemHeapSize -= bytesUsed;
 
     WsfTimerInit();
     SecInit();
@@ -403,6 +413,67 @@ static void bleStackInit(void)
 
 exit:
     return;
+}
+
+/**
+ * The WSF adaptation functions definition.
+ *
+ */
+
+/* LED */
+
+void PalLedOn(uint8_t id)
+{
+    OT_UNUSED_VARIABLE(id);
+}
+
+void PalLedOff(uint8_t id)
+{
+    OT_UNUSED_VARIABLE(id);
+}
+
+/* RTC */
+
+void PalRtcInit(void)
+{
+}
+
+void PalRtcEnableCompareIrq(void)
+{
+}
+
+void PalRtcDisableCompareIrq(void)
+{
+}
+
+uint32_t PalRtcCounterGet(void)
+{
+    return 0;
+}
+
+void PalRtcCompareSet(uint32_t value)
+{
+    OT_UNUSED_VARIABLE(value);
+}
+
+uint32_t PalRtcCompareGet(void)
+{
+    return 0;
+}
+
+/* SYS */
+
+bool_t PalSysIsBusy(void)
+{
+    return 0;
+}
+
+void PalSysAssertTrap(void)
+{
+}
+
+void PalSysSleep(void)
+{
 }
 
 /**

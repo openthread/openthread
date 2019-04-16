@@ -30,19 +30,19 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                        = libopenthread-platform-ble.a
 
-CORDIO_SRCDIR                       = $(top_srcdir)/third_party/cordio/stack/
+CORDIO_SRCDIR                       = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
 
 libopenthread_platform_ble_a_CPPFLAGS                             = \
     -I$(top_srcdir)/include                                         \
     -I$(top_srcdir)/examples/platforms                              \
     -I$(top_srcdir)/src/core                                        \
-    -I$(CORDIO_SRCDIR)/cordio_stack/ble-host/include               \
-    -I$(CORDIO_SRCDIR)/cordio_stack/ble-host/sources/hci/dual_chip \
-    -I$(CORDIO_SRCDIR)/cordio_stack/ble-host/sources/stack/cfg     \
-    -I$(CORDIO_SRCDIR)/cordio_stack/platform/common/include        \
-    -I$(CORDIO_SRCDIR)/cordio_stack/wsf/common/include             \
-    -I$(CORDIO_SRCDIR)/cordio_stack/wsf/common/include/util        \
-    -I$(CORDIO_SRCDIR)/mbed_os_adaptation                          \
+    -I$(CORDIO_SRCDIR)/stack/ble-host/include                       \
+    -I$(CORDIO_SRCDIR)/stack/ble-host/sources/hci/dual_chip         \
+    -I$(CORDIO_SRCDIR)/stack/ble-host/sources/stack/cfg             \
+    -I$(CORDIO_SRCDIR)/stack/platform/include                       \
+    -I$(CORDIO_SRCDIR)/stack/wsf/include                            \
+    -I$(CORDIO_SRCDIR)/stack/wsf/include/util                       \
+    -I$(CORDIO_SRCDIR)/stack_adaptation                             \
     $(NULL)
 
 libopenthread_platform_ble_a_SOURCES  = \
