@@ -50,6 +50,18 @@ extern "C" {
  */
 
 /**
+ * This method creates a new Operational Dataset to use when forming a new network.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[out] aDataset   The Operational Dataset.
+ *
+ * @retval OT_ERROR_NONE    Successfully created a new Operational Dataset.
+ * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
+ *
+ */
+OTAPI otError OTCALL otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
  * Get minimal delay timer.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

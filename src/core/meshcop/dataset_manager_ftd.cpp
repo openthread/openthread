@@ -317,6 +317,47 @@ exit:
     }
 }
 
+otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
+{
+    otError error = OT_ERROR_NONE;
+
+    memset(&aDataset, 0, sizeof(aDataset));
+
+    aDataset.mActiveTimestamp = 1;
+
+    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey)));
+    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc)));
+    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
+
+    aDataset.mMeshLocalPrefix.m8[0] = 0xfd;
+    SuccessOrExit(error = otPlatRandomGetTrue(&aDataset.mMeshLocalPrefix.m8[1], OT_MESH_LOCAL_PREFIX_SIZE - 1));
+
+    aDataset.mSecurityPolicy.mFlags = Get<KeyManager>().GetSecurityPolicyFlags();
+    aDataset.mChannelMask           = Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
+    aDataset.mChannel               = Get<Mac::Mac>().GetSupportedChannelMask().ChooseRandomChannel();
+
+    do
+    {
+        aDataset.mPanId = Random::GetUint16();
+    } while (aDataset.mPanId == Mac::kPanIdBroadcast);
+
+    snprintf(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName), "OpenThread-%04x", aDataset.mPanId);
+
+    aDataset.mComponents.mIsActiveTimestampPresent = true;
+    aDataset.mComponents.mIsMasterKeyPresent       = true;
+    aDataset.mComponents.mIsNetworkNamePresent     = true;
+    aDataset.mComponents.mIsExtendedPanIdPresent   = true;
+    aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
+    aDataset.mComponents.mIsPanIdPresent           = true;
+    aDataset.mComponents.mIsChannelPresent         = true;
+    aDataset.mComponents.mIsPSKcPresent            = true;
+    aDataset.mComponents.mIsSecurityPolicyPresent  = true;
+    aDataset.mComponents.mIsChannelMaskPresent     = true;
+
+exit:
+    return error;
+}
+
 otError ActiveDataset::GenerateLocal(void)
 {
     otError error = OT_ERROR_NONE;

@@ -1415,6 +1415,20 @@ otDatasetSetDelayTimerMinimal(
 }
 
 OTAPI
+otError
+OTCALL
+otDatasetCreateNewNetwork(
+    _In_ otInstance *aInstance,
+    _Out_ otOperationalDataset *aDataset
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    // TODO
+    UNREFERENCED_PARAMETER(aDataset);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OTAPI
 uint32_t
 OTCALL
 otDatasetGetDelayTimerMinimal(

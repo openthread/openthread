@@ -366,6 +366,17 @@ public:
 #if OPENTHREAD_FTD
 
     /**
+     * This method creates a new Operational Dataset to use when forming a new network.
+     *
+     * @param[out]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE    Successfully created a new Operational Dataset.
+     * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
+     *
+     */
+    otError CreateNewNetwork(otOperationalDataset &aDataset);
+
+    /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
      *
      */
