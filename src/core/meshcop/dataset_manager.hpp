@@ -314,6 +314,18 @@ public:
     explicit ActiveDataset(Instance &aInstance);
 
     /**
+     * This method indicates whether the Active Dataset is partially complete.
+     *
+     * This method is primarily used to determine whether a user has supplied a partial Active Dataset for use
+     * with joining a network.
+     *
+     * @retval TRUE   if an Active Dataset is saved but does not include an Active Timestamp.
+     * @retval FALSE  if an Active Dataset is not saved or does include an Active Timestamp.
+     *
+     */
+    bool IsPartiallyComplete(void) const;
+
+    /**
      * This method clears the Active Operational Dataset.
      *
      */

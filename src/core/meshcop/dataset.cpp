@@ -257,34 +257,32 @@ void Dataset::Set(const Dataset &aDataset)
 
 otError Dataset::Set(const otOperationalDataset &aDataset)
 {
-    otError                     error = OT_ERROR_NONE;
-    MeshCoP::ActiveTimestampTlv activeTimestampTlv;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aDataset.mComponents.mIsActiveTimestampPresent, error = OT_ERROR_INVALID_ARGS);
-
-    activeTimestampTlv.Init();
-    activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
-    activeTimestampTlv.SetTicks(0);
-    Set(activeTimestampTlv);
-
-    if (mType == Tlv::kPendingTimestamp)
+    if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        MeshCoP::PendingTimestampTlv pendingTimestampTlv;
+        MeshCoP::ActiveTimestampTlv tlv;
+        tlv.Init();
+        tlv.SetSeconds(aDataset.mActiveTimestamp);
+        tlv.SetTicks(0);
+        Set(tlv);
+    }
 
-        VerifyOrExit(aDataset.mComponents.mIsPendingTimestampPresent, error = OT_ERROR_INVALID_ARGS);
+    if (aDataset.mComponents.mIsPendingTimestampPresent)
+    {
+        MeshCoP::PendingTimestampTlv tlv;
+        tlv.Init();
+        tlv.SetSeconds(aDataset.mPendingTimestamp);
+        tlv.SetTicks(0);
+        Set(tlv);
+    }
 
-        pendingTimestampTlv.Init();
-        pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
-        pendingTimestampTlv.SetTicks(0);
-        Set(pendingTimestampTlv);
-
-        if (aDataset.mComponents.mIsDelayPresent)
-        {
-            MeshCoP::DelayTimerTlv tlv;
-            tlv.Init();
-            tlv.SetDelayTimer(aDataset.mDelay);
-            Set(tlv);
-        }
+    if (aDataset.mComponents.mIsDelayPresent)
+    {
+        MeshCoP::DelayTimerTlv tlv;
+        tlv.Init();
+        tlv.SetDelayTimer(aDataset.mDelay);
+        Set(tlv);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -362,7 +360,6 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
 
     mUpdateTime = TimerMilli::GetNow();
 
-exit:
     return error;
 }
 

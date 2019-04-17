@@ -92,6 +92,8 @@ otError DatasetManager::Restore(void)
 
     mTimer.Stop();
 
+    mTimestampValid = false;
+
     SuccessOrExit(error = mLocal.Restore(dataset));
 
     timestamp = dataset.GetTimestamp();
@@ -100,11 +102,11 @@ otError DatasetManager::Restore(void)
     {
         mTimestamp      = *timestamp;
         mTimestampValid = true;
+    }
 
-        if (mLocal.GetType() == Tlv::kActiveTimestamp)
-        {
-            dataset.ApplyConfiguration(GetInstance());
-        }
+    if (mLocal.GetType() == Tlv::kActiveTimestamp)
+    {
+        dataset.ApplyConfiguration(GetInstance());
     }
 
 exit:
@@ -701,6 +703,11 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
 #endif
 {
     Get<Coap::Coap>().AddResource(mResourceGet);
+}
+
+bool ActiveDataset::IsPartiallyComplete(void) const
+{
+    return mLocal.IsSaved() && !mTimestampValid;
 }
 
 otError ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
