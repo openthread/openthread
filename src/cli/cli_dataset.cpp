@@ -55,6 +55,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"commit", &Dataset::ProcessCommit},
     {"delay", &Dataset::ProcessDelay},
     {"extpanid", &Dataset::ProcessExtPanId},
+    {"init", &Dataset::ProcessInit},
     {"masterkey", &Dataset::ProcessMasterKey},
     {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
     {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
@@ -213,6 +214,29 @@ otError Dataset::ProcessHelp(int argc, char *argv[])
     }
 
     return OT_ERROR_NONE;
+}
+
+otError Dataset::ProcessInit(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &sDataset));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &sDataset));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
 }
 
 otError Dataset::ProcessActive(int argc, char *argv[])
