@@ -460,7 +460,7 @@ public:
      * @returns The PSKc value.
      *
      */
-    const uint8_t *GetPSKc(void) const { return mPSKc; }
+    const otPSKc &GetPSKc(void) const { return mPSKc; }
 
     /**
      * This method sets the PSKc value.
@@ -468,10 +468,10 @@ public:
      * @param[in]  aPSKc  A pointer to the PSKc value.
      *
      */
-    void SetPSKc(const uint8_t *aPSKc) { memcpy(mPSKc, aPSKc, sizeof(mPSKc)); }
+    void SetPSKc(const otPSKc &aPSKc) { mPSKc = aPSKc; }
 
 private:
-    uint8_t mPSKc[16];
+    otPSKc mPSKc;
 } OT_TOOL_PACKED_END;
 
 /**

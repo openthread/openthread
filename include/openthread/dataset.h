@@ -112,7 +112,7 @@ struct otMeshLocalPrefix
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a Mesh Local Prefix
+ * This structure represents a Mesh Local Prefix.
  *
  */
 typedef struct otMeshLocalPrefix otMeshLocalPrefix;
@@ -123,10 +123,17 @@ typedef struct otMeshLocalPrefix otMeshLocalPrefix;
  * This structure represents PSKc.
  *
  */
-typedef struct otPSKc
+OT_TOOL_PACKED_BEGIN
+struct otPSKc
 {
     uint8_t m8[OT_PSKC_MAX_SIZE]; ///< Byte values
-} otPSKc;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a PSKc.
+ *
+ */
+typedef struct otPSKc otPSKc;
 
 /**
  * This structure represent Security Policy.

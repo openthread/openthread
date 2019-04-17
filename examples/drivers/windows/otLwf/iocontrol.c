@@ -1746,12 +1746,12 @@ otLwfIoCtl_otPSKc(
 
     if (InBufferLength >= sizeof(otPSKc))
     {
-        status = ThreadErrorToNtstatus(otThreadSetPSKc(pFilter->otCtx, InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetPSKc(pFilter->otCtx, (otPSKc*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otPSKc))
     {
-        const uint8_t* aPSKc = otThreadGetPSKc(pFilter->otCtx);
+        const otPSKc* aPSKc = otThreadGetPSKc(pFilter->otCtx);
         memcpy(OutBuffer, aPSKc, sizeof(otPSKc));
         *OutBufferLength = sizeof(otPSKc);
         status = STATUS_SUCCESS;

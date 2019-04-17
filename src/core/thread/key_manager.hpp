@@ -102,21 +102,23 @@ public:
      */
     otError SetMasterKey(const otMasterKey &aKey);
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * This method returns a pointer to the PSKc.
      *
-     * @returns A pointer to the PSKc.
+     * @returns A reference to the PSKc.
      *
      */
-    const uint8_t *GetPSKc(void) const;
+    const otPSKc &GetPSKc(void) const { return mPSKc; }
 
     /**
      * This method sets the PSKc.
      *
-     * @param[in]  aPSKc    A pointer to the PSKc.
+     * @param[in]  aPSKc    A reference to the PSKc.
      *
      */
-    void SetPSKc(const uint8_t *aPSKc);
+    void SetPSKc(const otPSKc &aPSKc);
+#endif
 
     /**
      * This method returns the current key sequence value.
@@ -360,7 +362,7 @@ private:
     TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    uint8_t mPSKc[kMaxKeyLength];
+    otPSKc mPSKc;
 #endif
     uint8_t  mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;

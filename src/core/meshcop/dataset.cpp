@@ -216,8 +216,8 @@ void Dataset::Get(otOperationalDataset &aDataset) const
 
         case Tlv::kPSKc:
         {
-            const PSKcTlv *tlv = static_cast<const PSKcTlv *>(cur);
-            memcpy(aDataset.mPSKc.m8, tlv->GetPSKc(), tlv->GetLength());
+            const PSKcTlv *tlv                  = static_cast<const PSKcTlv *>(cur);
+            aDataset.mPSKc                      = tlv->GetPSKc();
             aDataset.mComponents.mIsPSKcPresent = true;
             break;
         }
@@ -347,7 +347,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::PSKcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(aDataset.mPSKc.m8);
+        tlv.SetPSKc(aDataset.mPSKc);
         Set(tlv);
     }
 
