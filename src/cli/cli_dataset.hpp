@@ -85,6 +85,7 @@ private:
     otError ProcessCommit(int argc, char *argv[]);
     otError ProcessDelay(int argc, char *argv[]);
     otError ProcessExtPanId(int argc, char *argv[]);
+    otError ProcessInit(int argc, char *argv[]);
     otError ProcessMasterKey(int argc, char *argv[]);
     otError ProcessMeshLocalPrefix(int argc, char *argv[]);
     otError ProcessNetworkName(int argc, char *argv[]);
