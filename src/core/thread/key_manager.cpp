@@ -81,7 +81,9 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
+    , mIsPSKcSet(false)
 {
+    memset(&mPSKc, 0, sizeof(mPSKc));
     ComputeKey(mKeySequence, mKey);
 }
 
@@ -104,7 +106,7 @@ void KeyManager::SetPSKc(const otPSKc &aPSKc)
     Get<Notifier>().Signal(OT_CHANGED_PSKC);
 
 exit:
-    return;
+    mIsPSKcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

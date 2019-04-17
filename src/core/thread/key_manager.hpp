@@ -104,6 +104,17 @@ public:
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
+     * This method indicates whether the PSKc is configured.
+     *
+     * A value of all zeros indicates that the PSKc is not configured.
+     *
+     * @retval TRUE  if the PSKc is configured.
+     * @retval FALSE if the PSKc is not not configured.
+     *
+     */
+    bool IsPSKcSet(void) const { return mIsPSKcSet; }
+
+    /**
      * This method returns a pointer to the PSKc.
      *
      * @returns A reference to the PSKc.
@@ -368,6 +379,7 @@ private:
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;
+    bool    mIsPSKcSet : 1;
 };
 
 /**
