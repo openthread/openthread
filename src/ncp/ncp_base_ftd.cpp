@@ -294,7 +294,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    return mEncoder.WriteData(otThreadGetPSKc(mInstance), sizeof(spinel_net_pskc_t));
+    return mEncoder.WriteData(otThreadGetPSKc(mInstance)->m8, sizeof(spinel_net_pskc_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
@@ -307,7 +307,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_pskc_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetPSKc(mInstance, ptr);
+    error = otThreadSetPSKc(mInstance, reinterpret_cast<const otPSKc *>(ptr));
 
 exit:
     return error;
