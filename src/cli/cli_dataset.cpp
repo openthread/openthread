@@ -38,6 +38,7 @@
 #include "utils/wrap_string.h"
 
 #include <openthread/dataset.h>
+#include <openthread/dataset_ftd.h>
 
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
@@ -230,6 +231,12 @@ otError Dataset::ProcessInit(int argc, char *argv[])
     {
         SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &sDataset));
     }
+#if OPENTHREAD_FTD
+    else if (strcmp(argv[0], "new") == 0)
+    {
+        SuccessOrExit(error = otDatasetCreateNewNetwork(mInterpreter.mInstance, &sDataset));
+    }
+#endif
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
