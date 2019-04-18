@@ -1112,9 +1112,12 @@ Frame::InfoString Frame::ToInfoString(void) const
 BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     const uint8_t *xpanid = GetExtendedPanId();
+    otNetworkName  networkname;
+
+    strlcpy(networkname.m8, GetNetworkName(), sizeof(networkname.m8));
 
     return InfoString("name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
-                      GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6],
+                      networkname.m8, xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6],
                       xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
                       IsNative() ? "yes" : "no");
 }
