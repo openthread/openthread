@@ -1441,7 +1441,31 @@ exit:
 #if OPENTHREAD_ENABLE_JOINER
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>(void)
 {
-    return mEncoder.WriteUint8(static_cast<uint8_t>(otJoinerGetState(mInstance)));
+    spinel_meshcop_joiner_state_t state = SPINEL_MESHCOP_JOINER_STATE_IDLE;
+
+    switch (otJoinerGetState(mInstance))
+    {
+    case OT_JOINER_STATE_IDLE:
+        state = SPINEL_MESHCOP_JOINER_STATE_IDLE;
+        break;
+    case OT_JOINER_STATE_DISCOVER:
+        state = SPINEL_MESHCOP_JOINER_STATE_DISCOVER;
+        break;
+    case OT_JOINER_STATE_CONNECT:
+        state = SPINEL_MESHCOP_JOINER_STATE_CONNECTING;
+        break;
+    case OT_JOINER_STATE_CONNECTED:
+        state = SPINEL_MESHCOP_JOINER_STATE_CONNECTED;
+        break;
+    case OT_JOINER_STATE_ENTRUST:
+        state = SPINEL_MESHCOP_JOINER_STATE_ENTRUST;
+        break;
+    case OT_JOINER_STATE_JOINED:
+        state = SPINEL_MESHCOP_JOINER_STATE_JOINED;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>(void)
