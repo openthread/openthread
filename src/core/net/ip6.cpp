@@ -358,6 +358,9 @@ otError Ip6::RemoveMplOption(Message &aMessage)
         switch (option.GetType())
         {
         case OptionMpl::kType:
+            // if multiple MPL options exist, discard packet
+            VerifyOrExit(mplOffset == 0, error = OT_ERROR_PARSE);
+
             mplOffset = offset;
             mplLength = option.GetLength();
 
