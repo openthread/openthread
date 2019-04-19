@@ -2837,7 +2837,10 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
 
     if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
     {
-        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
+        while (mDataRequestAttempts--)
+        {
+            IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
+        }
     }
 
     return error;
@@ -2990,8 +2993,7 @@ exit:
     }
     else if (error == OT_ERROR_NONE)
     {
-        mDataRequestAttempts = 0;
-        mDataRequestState    = kDataRequestNone;
+        mDataRequestState = kDataRequestNone;
 
         // Here the `mMessageTransmissionTimer` is intentionally not canceled
         // so that when it fires from its callback a "Child Update" is sent
