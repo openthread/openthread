@@ -184,6 +184,12 @@ public:
      * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead. The number of
      * fast polls is clipped by maximum value specified by `kMaxFastPolls`.
      *
+     * Note that per `SendFastPolls()` would increase the internal reference count until up to the allowed maximum
+     * value. If there are retransmission mechanism in the caller component, it should be responsible to call
+     * `StopFastPolls()` the same times as `SendFastPolls()` it triggered to decrease the reference count properly,
+     * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until spontaneously exit
+     * after running out of the specified number.
+     *
      * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
      *
      */
