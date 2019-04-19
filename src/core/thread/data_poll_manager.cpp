@@ -213,7 +213,12 @@ void DataPollManager::HandlePollSent(otError aError)
         if (mRemainingFastPolls != 0)
         {
             mRemainingFastPolls--;
-            shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
+
+            if (mRemainingFastPolls == 0)
+            {
+                shouldRecalculatePollPeriod = true;
+                mFastPollsUsers             = 0;
+            }
         }
 
         if (mRetxMode == true)
