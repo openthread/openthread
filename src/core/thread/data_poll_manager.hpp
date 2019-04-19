@@ -62,8 +62,9 @@ class DataPollManager : public InstanceLocator
 public:
     enum
     {
-        kDefaultFastPolls = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
-        kMaxFastPolls     = 15, ///< Maximum number of fast poll transmissions allowed.
+        kDefaultFastPolls  = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
+        kMaxFastPolls      = 15, ///< Maximum number of fast poll transmissions allowed.
+        kMaxFastPollsUsers = 63, ///< Maximum number of the users of fast poll transmissions allowed.
     };
 
     /**
@@ -234,8 +235,9 @@ private:
     uint32_t    GetDefaultPollPeriod(void) const;
 
     uint32_t mTimerStartTime;
-    uint32_t mExternalPollPeriod;
     uint32_t mPollPeriod;
+    uint32_t mExternalPollPeriod : 26; //< In milliseconds, about 18.64 hours ((1 << 26) / (1000 * 3600)) in maximum.
+    uint8_t  mFastPollsUsers : 6;      //< Number of callers which request fast polls.
 
     TimerMilli mTimer;
 
@@ -246,7 +248,6 @@ private:
     uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
     uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.
-    uint8_t mFastPollsUsers;           //< Number of callers which request fast polls.
 };
 
 /**

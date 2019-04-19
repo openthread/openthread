@@ -53,8 +53,9 @@ namespace ot {
 DataPollManager::DataPollManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimerStartTime(0)
-    , mExternalPollPeriod(0)
     , mPollPeriod(0)
+    , mExternalPollPeriod(0)
+    , mFastPollsUsers(0)
     , mTimer(aInstance, &DataPollManager::HandlePollTimer, this)
     , mEnabled(false)
     , mAttachMode(false)
@@ -63,7 +64,6 @@ DataPollManager::DataPollManager(Instance &aInstance)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
-    , mFastPollsUsers(0)
 {
 }
 
@@ -90,6 +90,7 @@ void DataPollManager::StopPolling(void)
     mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
     mRemainingFastPolls   = 0;
+    mFastPollsUsers       = 0;
     mEnabled              = false;
 }
 
@@ -336,7 +337,10 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
 {
     bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
 
-    mFastPollsUsers++;
+    if (mFastPollsUsers < kMaxFastPollsUsers)
+    {
+        mFastPollsUsers++;
+    }
 
     if (aNumFastPolls == 0)
     {
