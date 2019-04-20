@@ -429,6 +429,9 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
  * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms).
  *       Or zero to clear user-specified poll period.
  *
+ * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,
+ * otherwise it would be cilpped by the maximal value.
+ *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.
  *

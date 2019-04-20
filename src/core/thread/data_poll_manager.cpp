@@ -166,9 +166,15 @@ otError DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
 {
     otError error = OT_ERROR_NONE;
 
-    if (aPeriod != 0 && aPeriod < OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD)
+    if (aPeriod != 0)
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD, error = OT_ERROR_INVALID_ARGS);
+
+        // Clipped by the maximal value.
+        if (aPeriod > kMaxExternalPeriod)
+        {
+            aPeriod = kMaxExternalPeriod;
+        }
     }
 
     if (mExternalPollPeriod != aPeriod)
@@ -368,6 +374,10 @@ otError DataPollManager::StopFastPolls(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mFastPollsUsers != 0);
+
+    // If `mFastPollsUsers` hits the max, let it be cleared
+    // from `HandlePollSent()` (after all fast polls are sent).
+    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
 
     mFastPollsUsers--;
 

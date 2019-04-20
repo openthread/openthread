@@ -2828,25 +2828,21 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
 
     LogMleMessage("Receive Data Response", aMessageInfo.GetPeerAddr());
 
-    if (mDataRequestState == kDataRequestActive && !IsRxOnWhenIdle())
-    {
-        // Here decreases the reference count increasement of data poll manager caused by
-        // the retransmission mechanism.
-        while (mDataRequestAttempts && (--mDataRequestAttempts))
-        {
-            IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
-        }
-
-        // Here notifies the data poll manager that the expecting response arrived,
-        // and decreases the reference count introduced by Mle Data Request.
-        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
-    }
-
     error = HandleLeaderData(aMessage, aMessageInfo);
 
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMleErr(error, "Failed to process Data Response");
+    }
+
+    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    {
+        // Here simply stops fast data poll request by Mle Data Request.
+        // Note that in some cases fast data poll may continue after below stop operation until
+        // running out the specified number. E.g. other component also trigger fast poll, and
+        // is waiting for response; or the corner case where multiple Mle Data Request attempts
+        // happened due to the retransmission mechanism.
+        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
     }
 
     return error;
@@ -2999,7 +2995,8 @@ exit:
     }
     else if (error == OT_ERROR_NONE)
     {
-        mDataRequestState = kDataRequestNone;
+        mDataRequestAttempts = 0;
+        mDataRequestState    = kDataRequestNone;
 
         // Here the `mMessageTransmissionTimer` is intentionally not canceled
         // so that when it fires from its callback a "Child Update" is sent

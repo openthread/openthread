@@ -112,6 +112,9 @@ public:
      * Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear user-specified
      * poll period.
      *
+     * User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed, otherwise it
+     * would be cilpped by the maximal value.
+     *
      * @param[in]  aPeriod  The data poll period in milliseconds.
      *
      * @retval OT_ERROR_NONE           Successfully set/cleared user-specified poll period.
@@ -187,8 +190,8 @@ public:
      * Note that per `SendFastPolls()` would increase the internal reference count until up to the allowed maximum
      * value. If there are retransmission mechanism in the caller component, it should be responsible to call
      * `StopFastPolls()` the same times as `SendFastPolls()` it triggered to decrease the reference count properly,
-     * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until spontaneously exit
-     * after running out of the specified number.
+     * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until all data polls are sent
+     * out.
      *
      * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
      *
@@ -220,6 +223,8 @@ private:
         kNoBufferRetxPollPeriod = 200,                                       ///< Poll retx due to no buffer space.
         kFastPollPeriod         = 188,                                       ///< Period used for fast polls.
         kMinPollPeriod          = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
+        kMaxExternalPeriod      = ((1 << 26) - 1),                           ///< Maximum allowed user-specified period.
+                                                                             ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
     };
 
     enum
@@ -242,7 +247,7 @@ private:
 
     uint32_t mTimerStartTime;
     uint32_t mPollPeriod;
-    uint32_t mExternalPollPeriod : 26; //< In milliseconds, about 18.64 hours ((1 << 26) / (1000 * 3600)) in maximum.
+    uint32_t mExternalPollPeriod : 26; //< In milliseconds.
     uint8_t  mFastPollsUsers : 6;      //< Number of callers which request fast polls.
 
     TimerMilli mTimer;
