@@ -259,6 +259,16 @@ typedef enum
     SPINEL_HOST_POWER_STATE_ONLINE     = 4,
 } spinel_host_power_state_t;
 
+typedef enum
+{
+    SPINEL_MESHCOP_JOINER_STATE_IDLE       = 0,
+    SPINEL_MESHCOP_JOINER_STATE_DISCOVER   = 1,
+    SPINEL_MESHCOP_JOINER_STATE_CONNECTING = 2,
+    SPINEL_MESHCOP_JOINER_STATE_CONNECTED  = 3,
+    SPINEL_MESHCOP_JOINER_STATE_ENTRUST    = 4,
+    SPINEL_MESHCOP_JOINER_STATE_JOINED     = 5,
+} spinel_meshcop_joiner_state_t;
+
 enum
 {
     SPINEL_NET_FLAG_ON_MESH       = (1 << 0),
@@ -2632,7 +2642,8 @@ typedef enum
      *
      * Required capability: SPINEL_CAP_THREAD_JOINER
      *
-     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     * The valid values are specified by `spinel_meshcop_joiner_state_t` (`SPINEL_MESHCOP_JOINER_STATE_<state>`)
+     * enumeration.
      *
      */
     SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
