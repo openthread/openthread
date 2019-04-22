@@ -411,15 +411,15 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     SuccessOrExit(error = mFinalizeMessage->AppendTlv(stateTlv));
 
     vendorNameTlv.Init();
-    vendorNameTlv.SetVendorName(aVendorName);
+    SuccessOrExit(error = vendorNameTlv.SetVendorName(aVendorName));
     SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorNameTlv));
 
     vendorModelTlv.Init();
-    vendorModelTlv.SetVendorModel(aVendorModel);
+    SuccessOrExit(error = vendorModelTlv.SetVendorModel(aVendorModel));
     SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorModelTlv));
 
     vendorSwVersionTlv.Init();
-    vendorSwVersionTlv.SetVendorSwVersion(aVendorSwVersion);
+    SuccessOrExit(error = vendorSwVersionTlv.SetVendorSwVersion(aVendorSwVersion));
     SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorSwVersionTlv));
 
     vendorStackVersionTlv.Init();
@@ -433,12 +433,12 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     {
         VendorDataTlv vendorDataTlv;
         vendorDataTlv.Init();
-        vendorDataTlv.SetVendorData(aVendorData);
+        SuccessOrExit(error = vendorDataTlv.SetVendorData(aVendorData));
         SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorDataTlv));
     }
 
     provisioningUrlTlv.Init();
-    provisioningUrlTlv.SetProvisioningUrl(aProvisioningUrl);
+    SuccessOrExit(error = provisioningUrlTlv.SetProvisioningUrl(aProvisioningUrl));
 
     if (provisioningUrlTlv.GetLength() > 0)
     {
