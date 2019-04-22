@@ -47,9 +47,8 @@
 
 enum
 {
-    kReceiveFifoSize     = 128,
-    kDmaBlockSize        = 32,
-    kConcurrentRxBuffers = 2,
+    kReceiveFifoSize = 128,
+    kDmaBlockSize    = 64
 };
 
 #define USART_PORT USART0
@@ -84,8 +83,12 @@ static UARTDRV_HandleData_t sUartHandleData;
 static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
 static const uint8_t *      sTransmitBuffer;
 static volatile uint16_t    sTransmitLength;
-static volatile uint8_t     sDeferredReceives;
+static volatile bool        sReceiveDeferred;
 
+// Using unwrapped indexes allows buffer full and buffer empty conditions to be easily distinguished.
+// These values will eventually wrap themselves (due to an integer overflow). They should always be wrapped
+// using %kReceiveFifoSize at the point of use, except if testing for a buffer empty condition (mReadEnd == mReadStart).
+// kReceiveFifoSize must therefore also be specified to a length of a power of 2.
 typedef struct ReceiveFifo_t
 {
     // The data buffer
@@ -96,8 +99,6 @@ typedef struct ReceiveFifo_t
     volatile uint16_t mReadEnd;
     // The offset of first unused item (unwrapped)
     volatile uint16_t mWrite;
-    // Last number of items value in current transfer
-    volatile uint16_t mLastCount;
 } ReceiveFifo_t;
 
 static ReceiveFifo_t sReceiveFifo;
@@ -106,30 +107,36 @@ static bool enqueueNextReceive(void);
 
 static void updateReceiveProgress(uint8_t *aData, UARTDRV_Count_t aCount)
 {
-    if (aCount < sReceiveFifo.mLastCount)
-    {
-        // aCount has wrapped
-        sReceiveFifo.mReadEnd += kDmaBlockSize - sReceiveFifo.mLastCount;
-        sReceiveFifo.mLastCount = 0;
-    }
+    assert(aData != NULL);
 
-    sReceiveFifo.mReadEnd += aCount - sReceiveFifo.mLastCount;
-    sReceiveFifo.mLastCount = aCount;
+    const uint16_t blockStartWrapped = aData - sReceiveFifo.mBuffer;
+    const uint16_t readEndWrapped    = sReceiveFifo.mReadEnd % kReceiveFifoSize;
+
+    // Check readEndWrapped is within range of the current block. Required when mReadEnd was set to the end of
+    // the buffer on a previous call and readEndWrapped now wraps to 0.
+    if (readEndWrapped >= blockStartWrapped && readEndWrapped < blockStartWrapped + kDmaBlockSize)
+    {
+        sReceiveFifo.mReadEnd += blockStartWrapped + aCount - readEndWrapped;
+    }
 }
 
 static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
     updateReceiveProgress(aData, aCount);
 
-    if (!enqueueNextReceive() && sDeferredReceives < UINT8_MAX)
+    if (!enqueueNextReceive())
     {
         // A failure to enqueue the next receive is due to no free blocks remaining in the buffer. Defer enqueueing
         // the next receive operation to processReceive() (running in the main execution context) where the
-        // contents of the buffer shall firstly be emptied. In the mean time, assuming all (kConcurrentRxBuffers)
-        // receive operations have been deferred, flow control RTS will be deasserted.
-        assert(sDeferredReceives < kConcurrentRxBuffers);
-        sDeferredReceives += 1;
+        // contents of the buffer shall firstly be emptied. In the mean time, flow control RTS will be deasserted.
+        assert(sReceiveDeferred == false);
+        sReceiveDeferred = true;
     }
+}
+
+static inline bool isBufferEmpty(uint16_t unwrappedReadStart, uint16_t unwrappedReadEnd)
+{
+    return (unwrappedReadStart == unwrappedReadEnd);
 }
 
 static bool enqueueNextReceive(void)
@@ -139,13 +146,30 @@ static bool enqueueNextReceive(void)
     const uint16_t wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
     Ecode_t        status;
 
-    // Buffer has a remaining block or buffer is totally empty
-    result = wrappedWrite != wrappedReadStart || sReceiveFifo.mReadEnd == sReceiveFifo.mReadStart;
+    if (isBufferEmpty(sReceiveFifo.mReadStart, sReceiveFifo.mReadEnd))
+    {
+        // Buffer is completely empty
+        result = true;
+    }
+    else if (wrappedReadStart == wrappedWrite)
+    {
+        // Buffer is completely full because it isn't empty and wrappedReadStart == wrappedWrite
+        result = false;
+    }
+    else if (wrappedReadStart > wrappedWrite)
+    {
+        // Read wrappedReadStart is ahead of wrappedWrite: the next block may or may not be fully vacant
+        result = (wrappedReadStart - wrappedWrite >= kDmaBlockSize);
+    }
+    else
+    {
+        // Read wrappedReadStart is behind wrappedWrite, so therefore there is at least one block free
+        result = true;
+    }
 
     otEXPECT(result);
 
     status = UARTDRV_Receive(sUartHandle, sReceiveFifo.mBuffer + wrappedWrite, kDmaBlockSize, receiveDone);
-    assert(ECODE_OK == status);
     otEXPECT_ACTION(ECODE_OK == status, result = false);
 
     sReceiveFifo.mWrite += kDmaBlockSize;
@@ -164,7 +188,6 @@ static void processReceive(void)
     uint8_t *       buffer;
     UARTDRV_Count_t itemsReceived;
     UARTDRV_Count_t itemsRemaining;
-    uint8_t         numEnqueuedReceives = 0;
     uint16_t        wrappedReadStart;
     uint16_t        wrappedReadEnd;
     uint16_t        readLength;
@@ -173,7 +196,11 @@ static void processReceive(void)
     CORE_ENTER_NVIC(&sRxNvicMask);
 
     UARTDRV_GetReceiveStatus(sUartHandle, &buffer, &itemsReceived, &itemsRemaining);
-    updateReceiveProgress(buffer, itemsReceived);
+    if (buffer != NULL)
+    {
+        // Only update the receive progress if a current receive is in progress (buffer not NULL)
+        updateReceiveProgress(buffer, itemsReceived);
+    }
 
     readEnd = sReceiveFifo.mReadEnd;
 
@@ -182,40 +209,44 @@ static void processReceive(void)
     wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
     wrappedReadEnd   = readEnd % kReceiveFifoSize;
 
-    if (wrappedReadStart > wrappedReadEnd)
+    if (!isBufferEmpty(sReceiveFifo.mReadStart, readEnd))
     {
-        readLength = kReceiveFifoSize - wrappedReadStart;
-        otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
+        if (wrappedReadStart >= wrappedReadEnd)
+        {
+            // The buffer isn't empty, and wrappedReadStart >= wrappedReadEnd. Firstly, data needs to be read
+            // from wrappedReadStart to the end of the buffer. Subsequently, data can then be read from the start
+            // of the buffer to wrappedReadEnd.
+            readLength = kReceiveFifoSize - wrappedReadStart;
+            otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
 
-        sReceiveFifo.mReadStart += readLength;
-    }
+            // Move the read start index by the amount of data read
+            sReceiveFifo.mReadStart += readLength;
+        }
 
-    wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
+        // mReadStart may have been modified above, so recalculate wrappedReadStart
+        wrappedReadStart = sReceiveFifo.mReadStart % kReceiveFifoSize;
 
-    if (sReceiveFifo.mReadStart != readEnd)
-    {
-        readLength = wrappedReadEnd - wrappedReadStart;
-        otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
+        if (!isBufferEmpty(sReceiveFifo.mReadStart, readEnd))
+        {
+            // There is still data in the buffer (i.e. wrappedReadStart < wrappedReadEnd)
+            readLength = wrappedReadEnd - wrappedReadStart;
 
-        assert(sReceiveFifo.mReadStart + readLength == readEnd);
-        sReceiveFifo.mReadStart = readEnd;
+            otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
+            assert(sReceiveFifo.mReadStart + readLength == readEnd);
+
+            // All data has been read
+            sReceiveFifo.mReadStart = readEnd;
+        }
     }
 
     CORE_ENTER_NVIC(&sRxNvicMask);
 
-    // Now the buffer has been emptied, attempt to enqueue any receive operations that previously failed to enqueue due
-    // to a full buffer.
-
-    for (uint8_t i = 0; i < sDeferredReceives; i++)
+    // The buffer has been emptied, but it may have since filled up again just before entering this critical section.
+    // Attempt to enqueue any receive operations that previously failed to enqueue due to a full buffer.
+    if (sReceiveDeferred)
     {
-        if (enqueueNextReceive())
-        {
-            numEnqueuedReceives += 1;
-        }
+        sReceiveDeferred = !enqueueNextReceive();
     }
-
-    assert(sDeferredReceives >= numEnqueuedReceives);
-    sDeferredReceives -= numEnqueuedReceives;
 
     CORE_EXIT_NVIC();
 }
@@ -231,9 +262,9 @@ static void processTransmit(void)
 
 otError otPlatUartEnable(void)
 {
-    otError        error               = OT_ERROR_NONE;
-    UARTDRV_Init_t uartInit            = USART_INIT;
-    uint8_t        numEnqueuedReceives = 0;
+    otError        error    = OT_ERROR_NONE;
+    UARTDRV_Init_t uartInit = USART_INIT;
+    bool           enqueuedReceive;
 
     memset(&sRxNvicMask, 0, sizeof(sRxNvicMask));
     CORE_NvicMaskSetIRQ(LDMA_IRQn, &sRxNvicMask);
@@ -242,8 +273,6 @@ otError otPlatUartEnable(void)
     sReceiveFifo.mReadStart = 0;
     sReceiveFifo.mReadEnd   = 0;
     sReceiveFifo.mWrite     = 0;
-    sReceiveFifo.mLastCount = 0;
-    sDeferredReceives       = 0;
     sTransmitLength         = 0;
     sTransmitBuffer         = NULL;
 
@@ -252,18 +281,11 @@ otError otPlatUartEnable(void)
     CORE_DECLARE_NVIC_STATE;
     CORE_ENTER_NVIC(&sRxNvicMask);
 
-    for (uint8_t i = 0; i < kConcurrentRxBuffers; i++)
-    {
-        if (enqueueNextReceive())
-        {
-            numEnqueuedReceives += 1;
-        }
-    }
+    enqueuedReceive = enqueueNextReceive();
 
     CORE_EXIT_NVIC();
 
-    assert(numEnqueuedReceives == kConcurrentRxBuffers);
-    otEXPECT_ACTION(numEnqueuedReceives == kConcurrentRxBuffers, error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(enqueuedReceive, error = OT_ERROR_FAILED);
 
 exit:
     return error;
@@ -285,7 +307,6 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     sTransmitLength = aBufLength;
 
     status = UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
-    assert(ECODE_OK == status);
     otEXPECT_ACTION(ECODE_OK == status, error = OT_ERROR_FAILED);
 exit:
     return error;
