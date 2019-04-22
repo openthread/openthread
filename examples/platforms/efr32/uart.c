@@ -230,9 +230,7 @@ static void processReceive(void)
         {
             // There is still data in the buffer (i.e. wrappedReadStart < wrappedReadEnd)
             readLength = wrappedReadEnd - wrappedReadStart;
-
             otPlatUartReceived(sReceiveFifo.mBuffer + wrappedReadStart, readLength);
-            assert(sReceiveFifo.mReadStart + readLength == readEnd);
 
             // All data has been read
             sReceiveFifo.mReadStart = readEnd;
