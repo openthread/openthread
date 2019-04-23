@@ -485,7 +485,7 @@ exit:
 otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
                       uint16_t                aPanId,
                       bool                    aJoiner,
-                      bool                    aEnableFiltering,
+                      const Mac::ExtAddress * aEui64Filter,
                       DiscoverHandler         aCallback,
                       void *                  aContext)
 {
@@ -498,22 +498,21 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
 
     VerifyOrExit(!mDiscoverInProgress, error = OT_ERROR_BUSY);
 
-    mDiscoverEnableFiltering = aEnableFiltering;
+    mDiscoverEnableFiltering = (aEui64Filter != NULL);
 
     if (mDiscoverEnableFiltering)
     {
-        Mac::ExtAddress extAddress;
+        Mac::ExtAddress joinerId;
         Crc16           ccitt(Crc16::kCcitt);
         Crc16           ansi(Crc16::kAnsi);
 
-        otPlatRadioGetIeeeEui64(&GetInstance(), extAddress.m8);
-        MeshCoP::ComputeJoinerId(extAddress, extAddress);
+        MeshCoP::ComputeJoinerId(*aEui64Filter, joinerId);
 
         // Compute bloom filter (for steering data)
-        for (size_t i = 0; i < sizeof(extAddress.m8); i++)
+        for (size_t i = 0; i < sizeof(joinerId.m8); i++)
         {
-            ccitt.Update(extAddress.m8[i]);
-            ansi.Update(extAddress.m8[i]);
+            ccitt.Update(joinerId.m8[i]);
+            ansi.Update(joinerId.m8[i]);
         }
 
         mDiscoverCcittIndex = ccitt.Get();

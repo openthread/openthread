@@ -542,13 +542,13 @@ public:
     /**
      * This method initiates a Thread Discovery.
      *
-     * @param[in]  aScanChannels          A bit vector indicating which channels to scan.
-     * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
-     * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
-     * @param[in]  aEnableFiltering       Enable filtering out MLE discovery responses that don't match our factory
-     *                                    assigned EUI64.
-     * @param[in]  aHandler               A pointer to a function that is called on receiving an MLE Discovery Response.
-     * @param[in]  aContext               A pointer to arbitrary context information.
+     * @param[in]  aScanChannels        Channel mask providing channels to scan.
+     * @param[in]  aPanId               The PAN ID filter (set to Broadcast PAN to disable filter).
+     * @param[in]  aJoiner              Value of the Joiner Flag in the Discovery Request TLV.
+     * @param[in]  aEui64Filter         If not NULL, enables filtering of MLE discovery responses not matching the given
+     *                                  EUI64 (in steering data bloom filter). If NULL filtering is disabled.
+     * @param[in]  aHandler             A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aContext             A pointer to arbitrary context information.
      *
      * @retval OT_ERROR_NONE  Successfully started a Thread Discovery.
      * @retval OT_ERROR_BUSY  Thread Discovery is already in progress.
@@ -557,7 +557,7 @@ public:
     otError Discover(const Mac::ChannelMask &aScanChannels,
                      uint16_t                aPanId,
                      bool                    aJoiner,
-                     bool                    aEnableFiltering,
+                     const Mac::ExtAddress * aEui64Filter,
                      DiscoverHandler         aCallback,
                      void *                  aContext);
 

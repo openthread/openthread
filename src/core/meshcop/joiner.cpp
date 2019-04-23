@@ -99,6 +99,7 @@ otError Joiner::Start(const char *     aPSKd,
                       void *           aContext)
 {
     otError         error;
+    Mac::ExtAddress eui64;
     Mac::ExtAddress joinerId;
 
     otLogInfoMeshCoP("Joiner starting");
@@ -106,7 +107,8 @@ otError Joiner::Start(const char *     aPSKd,
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
     // Use extended address based on factory-assigned IEEE EUI-64
-    GetJoinerId(joinerId);
+    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    ComputeJoinerId(eui64, joinerId);
     Get<Mac::Mac>().SetExtAddress(joinerId);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
@@ -123,8 +125,7 @@ otError Joiner::Start(const char *     aPSKd,
                                                        aVendorData));
 
     SuccessOrExit(error = Get<Mle::MleRouter>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
-                                                         /* aJoiner */ true, /* aEnableFiltering */ true,
-                                                         HandleDiscoverResult, this));
+                                                         /* aJoiner */ true, &eui64, HandleDiscoverResult, this));
     mCallback = aCallback;
     mContext  = aContext;
 

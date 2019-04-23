@@ -501,10 +501,16 @@ otError otThreadDiscover(otInstance *             aInstance,
                          otHandleActiveScanResult aCallback,
                          void *                   aCallbackContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Instance &      instance = *static_cast<Instance *>(aInstance);
+    Mac::ExtAddress eui64;
+
+    if (aEnableEui64Filtering)
+    {
+        otPlatRadioGetIeeeEui64(aInstance, eui64.m8);
+    }
 
     return instance.Get<Mle::MleRouter>().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
-                                                   aEnableEui64Filtering, aCallback, aCallbackContext);
+                                                   aEnableEui64Filtering ? &eui64 : NULL, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
