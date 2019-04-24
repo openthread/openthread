@@ -1713,9 +1713,13 @@ bool Mle::PrepareAnnounceState(void)
     bool             shouldAnnounce = false;
     Mac::ChannelMask channelMask;
 
-    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && !IsFullThreadDevice() && (mReattachState == kReattachStop));
+    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && (mReattachState == kReattachStop) &&
+                 (Get<MeshCoP::ActiveDataset>().IsPartiallyComplete() || !IsFullThreadDevice()));
 
-    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
 
     mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
 
@@ -2374,7 +2378,11 @@ otError Mle::SendOrphanAnnounce(void)
     otError          error;
     Mac::ChannelMask channelMask;
 
-    SuccessOrExit(error = Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
+
     SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
     SendAnnounce(mAnnounceChannel, true);
