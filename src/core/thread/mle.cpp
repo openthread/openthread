@@ -2845,6 +2845,16 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
         otLogWarnMleErr(error, "Failed to process Data Response");
     }
 
+    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    {
+        // Here simply stops fast data poll request by Mle Data Request.
+        // Note that in some cases fast data poll may continue after below stop operation until
+        // running out the specified number. E.g. other component also trigger fast poll, and
+        // is waiting for response; or the corner case where multiple Mle Data Request attempts
+        // happened due to the retransmission mechanism.
+        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
+    }
+
     return error;
 }
 
