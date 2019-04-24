@@ -2649,7 +2649,7 @@ typedef enum
     SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
 
     /// Thread Joiner Commissioning command and the parameters
-    /** Format `b` or `bU(UUUUU)` (fields in parenthesis are optional) - Write Only
+    /** Format `b` or `bU(UUUUUE)` (fields in parenthesis are optional) - Write Only
      *
      * This property starts or stops Joiner's commissioning process
      *
@@ -2683,6 +2683,7 @@ typedef enum
      *  `U` : Vendor Model. If not specified or empty string, use OpenThread default (OPENTHREAD_CONFIG_PLATFORM_INFO).
      *  `U` : Vendor Sw Version. If not specified or empty string, use OpenThread default (PACKAGE_VERSION).
      *  `U` : Vendor Data String. Will not be appended if not specified.
+     *  `E` : EUI64 address used to derive Joiner ID. Will use factory-assigned EUI64 (from radio) if not specified.
      *
      */
     SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING = SPINEL_PROP_MESHCOP__BEGIN + 1,

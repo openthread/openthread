@@ -1470,14 +1470,15 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>(void)
 {
-    otError     error           = OT_ERROR_NONE;
-    bool        action          = false;
-    const char *psk             = NULL;
-    const char *provisioningUrl = NULL;
-    const char *vendorName      = NULL;
-    const char *vendorModel     = NULL;
-    const char *vendorSwVersion = NULL;
-    const char *vendorData      = NULL;
+    otError             error           = OT_ERROR_NONE;
+    bool                action          = false;
+    const char *        psk             = NULL;
+    const char *        provisioningUrl = NULL;
+    const char *        vendorName      = NULL;
+    const char *        vendorModel     = NULL;
+    const char *        vendorSwVersion = NULL;
+    const char *        vendorData      = NULL;
+    const otExtAddress *eui64           = NULL;
 
     SuccessOrExit(error = mDecoder.ReadBool(action));
 
@@ -1516,6 +1517,11 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
         SuccessOrExit(error = mDecoder.ReadUtf8(vendorData));
     }
 
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadEui64(eui64));
+    }
+
     // Use OpenThread default values for vendor name, mode, sw version if
     // not specified or an empty string is given.
 
@@ -1534,7 +1540,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
         vendorSwVersion = PACKAGE_VERSION;
     }
 
-    error = otJoinerStart(mInstance, psk, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData, NULL,
+    error = otJoinerStart(mInstance, psk, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData, eui64,
                           &NcpBase::HandleJoinerCallback_Jump, this);
 
 exit:
