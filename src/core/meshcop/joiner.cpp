@@ -89,14 +89,15 @@ exit:
     return;
 }
 
-otError Joiner::Start(const char *     aPSKd,
-                      const char *     aProvisioningUrl,
-                      const char *     aVendorName,
-                      const char *     aVendorModel,
-                      const char *     aVendorSwVersion,
-                      const char *     aVendorData,
-                      otJoinerCallback aCallback,
-                      void *           aContext)
+otError Joiner::Start(const char *           aPSKd,
+                      const char *           aProvisioningUrl,
+                      const char *           aVendorName,
+                      const char *           aVendorModel,
+                      const char *           aVendorSwVersion,
+                      const char *           aVendorData,
+                      const Mac::ExtAddress *aEui64,
+                      otJoinerCallback       aCallback,
+                      void *                 aContext)
 {
     otError         error;
     Mac::ExtAddress eui64;
@@ -106,8 +107,15 @@ otError Joiner::Start(const char *     aPSKd,
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    // Use extended address based on factory-assigned IEEE EUI-64
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    if (aEui64 != NULL)
+    {
+        eui64 = *aEui64;
+    }
+    else
+    {
+        otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    }
+
     ComputeJoinerId(eui64, joinerId);
     Get<Mac::Mac>().SetExtAddress(joinerId);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();

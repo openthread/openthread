@@ -72,20 +72,23 @@ public:
      * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
      * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
      * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
+     * @param[in]  aEui64            A pointer to the EUI64 to use as extended address during join. If NULL the
+     *                               factory-assigned one will be used instead.
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE  Successfully started the Joiner service.
      *
      */
-    otError Start(const char *     aPSKd,
-                  const char *     aProvisioningUrl,
-                  const char *     aVendorName,
-                  const char *     aVendorModel,
-                  const char *     aVendorSwVersion,
-                  const char *     aVendorData,
-                  otJoinerCallback aCallback,
-                  void *           aContext);
+    otError Start(const char *           aPSKd,
+                  const char *           aProvisioningUrl,
+                  const char *           aVendorName,
+                  const char *           aVendorModel,
+                  const char *           aVendorSwVersion,
+                  const char *           aVendorData,
+                  const Mac::ExtAddress *aEui64,
+                  otJoinerCallback       aCallback,
+                  void *                 aContext);
 
     /**
      * This method stops the Joiner service.

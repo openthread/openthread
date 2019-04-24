@@ -88,6 +88,8 @@ typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
  * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
  * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
+ * @param[in]  aEui64            A pointer to the EUI64 to use as extended address during join. If NULL the
+ *                               factory-assigned one will be used instead.
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
@@ -96,15 +98,16 @@ typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
-                                   const char *     aPSKd,
-                                   const char *     aProvisioningUrl,
-                                   const char *     aVendorName,
-                                   const char *     aVendorModel,
-                                   const char *     aVendorSwVersion,
-                                   const char *     aVendorData,
-                                   otJoinerCallback aCallback,
-                                   void *           aContext);
+OTAPI otError OTCALL otJoinerStart(otInstance *        aInstance,
+                                   const char *        aPSKd,
+                                   const char *        aProvisioningUrl,
+                                   const char *        aVendorName,
+                                   const char *        aVendorModel,
+                                   const char *        aVendorSwVersion,
+                                   const char *        aVendorData,
+                                   const otExtAddress *aEui64,
+                                   otJoinerCallback    aCallback,
+                                   void *              aContext);
 
 /**
  * This function disables the Thread Joiner role.

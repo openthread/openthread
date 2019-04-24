@@ -1534,7 +1534,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
         vendorSwVersion = PACKAGE_VERSION;
     }
 
-    error = otJoinerStart(mInstance, psk, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData,
+    error = otJoinerStart(mInstance, psk, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData, NULL,
                           &NcpBase::HandleJoinerCallback_Jump, this);
 
 exit:

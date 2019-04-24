@@ -40,22 +40,24 @@
 
 using namespace ot;
 
-otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPSKd,
-                      const char *     aProvisioningUrl,
-                      const char *     aVendorName,
-                      const char *     aVendorModel,
-                      const char *     aVendorSwVersion,
-                      const char *     aVendorData,
-                      otJoinerCallback aCallback,
-                      void *           aContext)
+otError otJoinerStart(otInstance *        aInstance,
+                      const char *        aPSKd,
+                      const char *        aProvisioningUrl,
+                      const char *        aVendorName,
+                      const char *        aVendorModel,
+                      const char *        aVendorSwVersion,
+                      const char *        aVendorData,
+                      const otExtAddress *aEui64,
+                      otJoinerCallback    aCallback,
+                      void *              aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Joiner>().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
-                                                  aVendorData, aCallback, aContext);
+                                                  aVendorData, static_cast<const Mac::ExtAddress *>(aEui64), aCallback,
+                                                  aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPSKd);
@@ -64,6 +66,7 @@ otError otJoinerStart(otInstance *     aInstance,
     OT_UNUSED_VARIABLE(aVendorModel);
     OT_UNUSED_VARIABLE(aVendorSwVersion);
     OT_UNUSED_VARIABLE(aVendorData);
+    OT_UNUSED_VARIABLE(aEui64);
     OT_UNUSED_VARIABLE(aCallback);
     OT_UNUSED_VARIABLE(aContext);
 #endif

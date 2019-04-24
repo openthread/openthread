@@ -5442,6 +5442,7 @@ otLwfIoCtl_otJoinerStart(
                     pFilter->otVendorModel,
                     pFilter->otVendorSwVersion,
                     pFilter->otVendorData[0] == '\0' ? NULL : pFilter->otVendorData,
+                    NULL,
                     otLwfJoinerCallback,
                     pFilter)
                 );

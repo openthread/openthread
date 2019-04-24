@@ -3876,6 +3876,7 @@ otJoinerStart(
     _Null_terminated_ const char *aVendorModel,
     _Null_terminated_ const char *aVendorSwVersion,
     _Null_terminated_ const char *aVendorData,
+    _In_ const otExtAddress *aEui64,
     _In_ otJoinerCallback aCallback,
     _In_ void *aCallbackContext
     )
@@ -3890,6 +3891,7 @@ otJoinerStart(
     size_t aVendorModelLength = aVendorModel == nullptr ? 0 : strlen(aVendorModel);
     size_t aVendorSwVersionLength = aVendorSwVersion == nullptr ? 0 : strlen(aVendorSwVersion);
     size_t aVendorDataLength = aVendorData == nullptr ? 0 : strlen(aVendorData);
+    size_t aEui64Length = aEui64 == nullptr ? 0 : sizeof(aEui64);
 
     if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH ||
         aProvisioningUrlLength > OPENTHREAD_PROV_URL_MAX_LENGTH ||
