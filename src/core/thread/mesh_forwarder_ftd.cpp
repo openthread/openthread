@@ -573,7 +573,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
     indirectMsgCount = child->GetIndirectMessageCount();
 
 #if OPENTHREAD_CONFIG_ENABLE_VERIFY_ACK_FP_FLAG
-    VerifyOrExit(aFrame.IsAckWithFramePending());
+    VerifyOrExit(aFrame.DidAckWithFramePending());
 #endif
 
     if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))

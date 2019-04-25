@@ -1024,7 +1024,7 @@ public:
      * @retval FALSE  This frame is acknowledged with frame pending not set.
      *
      */
-    bool IsAckWithFramePending(void) const { return mInfo.mRxInfo.mAckWithFramePending; }
+    bool DidAckWithFramePending(void) const { return mInfo.mRxInfo.mAckWithFramePending; }
 
     /**
      * This method sets the retransmission flag attribute.
