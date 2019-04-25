@@ -583,8 +583,10 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
 
     mScheduleTransmissionTask.Post();
 
-exit:
     otLogDebgMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
+
+exit:
+    return;
 }
 
 void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)
