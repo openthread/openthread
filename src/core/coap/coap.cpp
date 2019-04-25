@@ -732,9 +732,8 @@ otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
             continue;
         }
 
-        VerifyOrExit((*aResponse = message->Clone()) != NULL, error = OT_ERROR_NO_BUFS);
-
-        EnqueuedResponseHeader::RemoveFrom(**aResponse);
+        VerifyOrExit((*aResponse = message->Clone(message->GetLength() - sizeof(EnqueuedResponseHeader))) != NULL,
+                     error = OT_ERROR_NO_BUFS);
 
         error = OT_ERROR_NONE;
         break;

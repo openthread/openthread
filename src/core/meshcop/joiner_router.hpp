@@ -163,12 +163,12 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
     }
 
     /**
@@ -176,12 +176,12 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the header.
-     *
      */
-    static otError RemoveFrom(Message &aMessage)
+    static void RemoveFrom(Message &aMessage)
     {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
     }
 
     /**
