@@ -400,7 +400,7 @@ enum
     SPINEL_MD_FLAG_BAD_FCS  = 0x0004, //!< Packet was received with bad FCS
     SPINEL_MD_FLAG_DUPE     = 0x0008, //!< Packet seems to be a duplicate
     SPINEL_MD_FLAG_ACK_FP   = 0x0010, //!< Packet was acknowledged with frame pending set
-    SPINEL_MD_FLAG_RESERVED = 0xFFF2, //!< Flags reserved for future use.
+    SPINEL_MD_FLAG_RESERVED = 0xFFE2, //!< Flags reserved for future use.
 };
 
 enum
