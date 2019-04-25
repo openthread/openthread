@@ -392,20 +392,29 @@ exit:
 
 void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
+    uint32_t now, interval;
+
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
         mPollPeriod = CalculatePollPeriod();
     }
 
-    if (mTimer.IsRunning())
+    now      = TimerMilli::GetNow();
+    interval = mPollPeriod;
+
+    if (!mTimer.IsRunning())
     {
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        mTimerStartTime = now;
     }
-    else
+    // Ensure at least kMinPollPeriod (`OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD`, 10ms by default)
+    // before sending data poll.
+    else if (TimerScheduler::IsStrictlyBefore((mTimerStartTime + mPollPeriod - kMinPollPeriod), now))
     {
-        mTimerStartTime = TimerMilli::GetNow();
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        mTimerStartTime = now;
+        interval        = kMinPollPeriod;
     }
+
+    mTimer.StartAt(mTimerStartTime, interval);
 }
 
 uint32_t DataPollManager::CalculatePollPeriod(void) const
