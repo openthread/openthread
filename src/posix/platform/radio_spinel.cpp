@@ -635,6 +635,8 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     if (receiveError == OT_ERROR_NONE)
     {
         aFrame.mLength = static_cast<uint8_t>(size);
+
+        aFrame.mInfo.mRxInfo.mAckWithFramePending = ((flags & SPINEL_MD_FLAG_ACK_FP) != 0);
     }
     else if (receiveError < OT_NUM_ERRORS)
     {

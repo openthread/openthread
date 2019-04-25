@@ -398,7 +398,7 @@ private:
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
-    void     HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
+    void HandleDataRequest(const Mac::Frame &aFrame, const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
 
     static otError GetFragmentHeader(const uint8_t *         aFrame,
                                      uint8_t                 aFrameLength,
