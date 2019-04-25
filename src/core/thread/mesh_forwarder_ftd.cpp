@@ -557,7 +557,8 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
 {
     OT_UNUSED_VARIABLE(aFrame);
 
-    Child *child = NULL;
+    Child *  child = NULL;
+    uint16_t indirectMsgCount;
 
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aLinkInfo.mLinkSecurity);
@@ -569,12 +570,13 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
+    indirectMsgCount = child->GetIndirectMessageCount();
 
 #if OPENTHREAD_CONFIG_ENABLE_VERIFY_ACK_FP_FLAG
     VerifyOrExit(aFrame.IsAckWithFramePending());
 #endif
 
-    if (!mSourceMatchController.IsEnabled() || (child->GetIndirectMessageCount() > 0))
+    if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))
     {
         child->SetDataRequestPending(true);
     }
