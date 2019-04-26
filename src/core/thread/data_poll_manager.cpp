@@ -392,29 +392,44 @@ exit:
 
 void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
-    uint32_t now, interval;
+    uint32_t now;
+    uint32_t oldPeriod = mPollPeriod;
 
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
         mPollPeriod = CalculatePollPeriod();
     }
 
-    now      = TimerMilli::GetNow();
-    interval = mPollPeriod;
+    now = TimerMilli::GetNow();
 
-    if (!mTimer.IsRunning())
+    if (mTimer.IsRunning())
+    {
+        if (oldPeriod != mPollPeriod)
+        {
+            // If poll interval did change and re-starting the timer from
+            // last start time with new poll interval would fire quickly
+            // (i.e., fires within window `[now, now + kMinPollPeriod]`)
+            // add an extra minimum delay of `kMinPollPeriod`. This
+            // ensures that when an internal or external request triggers
+            // a switch to a shorter poll interval, the first data poll
+            // will not be sent too quickly (and possibly before the
+            // response is available/prepared on the parent node).
+            if (TimerScheduler::IsStrictlyBefore(mTimerStartTime + mPollPeriod, now + kMinPollPeriod))
+            {
+                mTimer.StartAt(now, kMinPollPeriod);
+            }
+            else
+            {
+                mTimer.StartAt(mTimerStartTime, mPollPeriod);
+            }
+        }
+        // Do nothing on the running poll timer if the poll interval doesn't change
+    }
+    else
     {
         mTimerStartTime = now;
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
-    // Ensure at least kMinPollPeriod (`OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD`, 10ms by default)
-    // before sending data poll.
-    else if (TimerScheduler::IsStrictlyBefore((mTimerStartTime + mPollPeriod - kMinPollPeriod), now))
-    {
-        mTimerStartTime = now;
-        interval        = kMinPollPeriod;
-    }
-
-    mTimer.StartAt(mTimerStartTime, interval);
 }
 
 uint32_t DataPollManager::CalculatePollPeriod(void) const
