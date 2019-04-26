@@ -219,7 +219,7 @@ typedef struct otRadioFrame
             uint8_t  mLqi;  ///< Link Quality Indicator for received frames.
 
             // Flags
-            bool mAckWithFramePending : 1; /// This indicates whether this frame is acknowledged with frame pending set.
+            bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
         } mRxInfo;
     } mInfo;
 } otRadioFrame;

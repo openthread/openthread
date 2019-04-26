@@ -557,7 +557,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
 {
     OT_UNUSED_VARIABLE(aFrame);
 
-    Child *  child = NULL;
+    Child *  child;
     uint16_t indirectMsgCount;
 
     // Security Check: only process secure Data Poll frames.
@@ -572,8 +572,10 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
+
 #if OPENTHREAD_CONFIG_ENABLE_VERIFY_ACK_FP_FLAG
-    VerifyOrExit(aFrame.DidAckWithFramePending());
+    VerifyOrExit(aFrame.IsAckedWithFramePending());
 #endif
 
     if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))
@@ -582,8 +584,6 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
     }
 
     mScheduleTransmissionTask.Post();
-
-    otLogDebgMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
 
 exit:
     return;

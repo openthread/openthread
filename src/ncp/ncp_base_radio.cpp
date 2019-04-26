@@ -79,7 +79,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise Floor (Currently unused)
 
-    if (aFrame->mInfo.mRxInfo.mAckWithFramePending)
+    if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
     {
         flags |= SPINEL_MD_FLAG_ACK_FP;
     }
