@@ -572,10 +572,12 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 
-    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
-
 #if OPENTHREAD_CONFIG_ENABLE_VERIFY_ACK_FP_FLAG
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d ack-fp:%d", child->GetRloc16(), indirectMsgCount,
+                 aLinkInfo.mRss, aFrame.IsAckedWithFramePending());
     VerifyOrExit(aFrame.IsAckedWithFramePending());
+#else
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
 #endif
 
     if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))
