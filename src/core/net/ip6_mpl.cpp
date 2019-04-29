@@ -300,7 +300,7 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
                      (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
                       option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
     if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
     {
@@ -393,7 +393,7 @@ void Mpl::HandleRetransmissionTimer(void)
                     }
 
                     // Remove the extra metadata from the MPL Data Message.
-                    messageMetadata.RemoveFrom(*message);
+                    MplBufferedMessageMetadata::RemoveFrom(*message);
                     Get<Ip6>().EnqueueDatagram(*message);
                 }
                 else

@@ -145,7 +145,7 @@ static const char *sSpiDevPath     = NULL;
 static const char *sIntGpioDevPath = NULL;
 static const char *sResGpioDevPath = NULL;
 
-static int sVerbose = LOG_NOTICE;
+static int sLogLevel = LOG_WARNING;
 
 static int sSpiDevFd       = -1;
 static int sResGpioValueFd = -1;
@@ -351,7 +351,7 @@ static void log_debug_buffer(const char *desc, const uint8_t *buffer_ptr, int bu
 {
     int i = 0;
 
-    if (!force && (sVerbose < LOG_DEBUG))
+    if (!force && (sLogLevel < LOG_DEBUG))
     {
         return;
     }
@@ -475,7 +475,7 @@ static int do_spi_xfer(int len)
 
 static void debug_spi_header(const char *hint, bool force)
 {
-    if (force || (sVerbose >= LOG_DEBUG))
+    if (force || (sLogLevel >= LOG_DEBUG))
     {
         const uint8_t *spiRxFrameBuffer = get_real_rx_frame_start();
 
@@ -604,7 +604,7 @@ static int push_pull_spi(void)
             syslog(LOG_WARNING, "Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0],
                    spiRxFrameBuffer[1], spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
             sSpiGarbageFrameCount++;
-            if (sVerbose < LOG_DEBUG)
+            if (sLogLevel < LOG_DEBUG)
             {
                 log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance,
                                  true);
@@ -627,7 +627,7 @@ static int push_pull_spi(void)
         slave_data_len = 0;
         syslog(LOG_WARNING, "Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
                spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
-        if (sVerbose < LOG_DEBUG)
+        if (sLogLevel < LOG_DEBUG)
         {
             log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance,
                              true);
@@ -1409,11 +1409,54 @@ static void print_help(void)
                        "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
                        "                                   in a single transaction(larger packets will\n"
                        "                                   require two transactions). Default value is 32.\n"
-                       "    -v/--verbose ................. Increase debug verbosity. (Repeatable)\n"
+                       "    -v/--verbose[=num] ............Change log verbosity level. (Repeatable)\n"
+                       "                                   num argument is optional and value 1 is default\n"
+                       "                                   when not specified. Every instance of this option\n"
+                       "                                   will increment or decrement (when num is negative)\n"
+                       "                                   the syslog log level accordingly. Starting default\n"
+                       "                                   log level is LOG_NOTICE (5).\n"
                        "    -h/-?/--help ................. Print out usage information and exit.\n"
                        "\n";
 
     printf("%s", help);
+}
+
+static const char *log_level_to_str(int log_level)
+{
+    const char *str;
+
+    switch (log_level)
+    {
+    case LOG_EMERG:
+        str = "EMERG";
+        break;
+    case LOG_ALERT:
+        str = "ALERT";
+        break;
+    case LOG_CRIT:
+        str = "CRIT";
+        break;
+    case LOG_ERR:
+        str = "ERR";
+        break;
+    case LOG_WARNING:
+        str = "WARNING";
+        break;
+    case LOG_NOTICE:
+        str = "NOTICE";
+        break;
+    case LOG_INFO:
+        str = "INFO";
+        break;
+    case LOG_DEBUG:
+        str = "DEBUG";
+        break;
+    default:
+        str = "-unknown-";
+        break;
+    }
+
+    return str;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1497,7 +1540,7 @@ int main(int argc, char *argv[])
 
     openlog(basename(prog), LOG_PERROR | LOG_PID | LOG_CONS, LOG_DAEMON);
 
-    setlogmask(LOG_UPTO(sVerbose));
+    setlogmask(LOG_UPTO(sLogLevel));
 
     while (1)
     {
@@ -1610,19 +1653,20 @@ int main(int argc, char *argv[])
 
             case 'v':
             case ARG_VERBOSE:
-                if (sVerbose < LOG_DEBUG)
+                sLogLevel += (optarg != NULL) ? atoi(optarg) : 1;
+
+                if (sLogLevel > LOG_DEBUG)
                 {
-                    if (optarg)
-                    {
-                        sVerbose += atoi(optarg);
-                    }
-                    else
-                    {
-                        sVerbose++;
-                    }
-                    setlogmask(setlogmask(0) | LOG_UPTO(sVerbose));
-                    syslog(sVerbose, "Verbosity set to level %d", sVerbose);
+                    sLogLevel = LOG_DEBUG;
                 }
+
+                if (sLogLevel < LOG_EMERG)
+                {
+                    sLogLevel = LOG_EMERG;
+                }
+
+                setlogmask(LOG_UPTO(sLogLevel));
+                syslog(sLogLevel, "Verbosity set to log level %s (%d)", log_level_to_str(sLogLevel), sLogLevel);
                 break;
 
             case 'V':

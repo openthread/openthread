@@ -41,7 +41,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <common/code_utils.hpp>
+#include "utils/code_utils.h"
+
 #include <platform-config.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/diag.h>
@@ -248,6 +249,8 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
         return OT_RADIO_STATE_RECEIVE;
 
     case NRF_802154_STATE_TRANSMIT:
+    case NRF_802154_STATE_CCA:
+    case NRF_802154_STATE_CONTINUOUS_CARRIER:
         return OT_RADIO_STATE_TRANSMIT;
 
     default:
@@ -257,11 +260,18 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     return OT_RADIO_STATE_RECEIVE; // It is the default state. Return it in case of unknown.
 }
 
+bool otPlatRadioIsEnabled(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return !sDisabled;
+}
+
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    sInstance = aInstance;
-
     otError error;
+
+    sInstance = aInstance;
 
     if (sDisabled)
     {
@@ -278,28 +288,16 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
 
-    otError error;
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
+    otEXPECT_ACTION(otPlatRadioGetState(aInstance) == OT_RADIO_STATE_SLEEP || isPendingEventSet(kPendingEventSleep),
+                    error = OT_ERROR_INVALID_STATE);
 
-    if (!sDisabled)
-    {
-        sDisabled = true;
-        error     = OT_ERROR_NONE;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_STATE;
-    }
+    sDisabled = true;
 
+exit:
     return error;
-}
-
-bool otPlatRadioIsEnabled(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return !sDisabled;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
@@ -335,7 +333,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError result = OT_ERROR_NONE;
+    bool result = true;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
@@ -347,20 +345,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
-        if (!nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false))
-        {
-            result = OT_ERROR_FAILED;
-        }
+        result = nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
     }
 
     clearPendingEvents();
+    otPlatRadioTxStarted(aInstance, aFrame);
 
-    if (result == OT_ERROR_NONE)
+    if (!result)
     {
-        otPlatRadioTxStarted(aInstance, aFrame);
+        setPendingEvent(kPendingEventChannelAccessFailure);
     }
 
-    return result;
+    return OT_ERROR_NONE;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
@@ -550,6 +546,8 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 void nrf5RadioProcess(otInstance *aInstance)
 {
+    bool isEventPending = false;
+
     for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
@@ -660,6 +658,10 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             resetPendingEvent(kPendingEventSleep);
         }
+        else
+        {
+            isEventPending = true;
+        }
     }
 
     if (isPendingEventSet(kPendingEventEnergyDetectionStart))
@@ -670,6 +672,15 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             resetPendingEvent(kPendingEventEnergyDetectionStart);
         }
+        else
+        {
+            isEventPending = true;
+        }
+    }
+
+    if (isEventPending)
+    {
+        otSysEventSignalPending();
     }
 }
 

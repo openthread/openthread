@@ -460,7 +460,7 @@ public:
      * @returns The PSKc value.
      *
      */
-    const uint8_t *GetPSKc(void) const { return mPSKc; }
+    const otPSKc &GetPSKc(void) const { return mPSKc; }
 
     /**
      * This method sets the PSKc value.
@@ -468,10 +468,10 @@ public:
      * @param[in]  aPSKc  A pointer to the PSKc value.
      *
      */
-    void SetPSKc(const uint8_t *aPSKc) { memcpy(mPSKc, aPSKc, sizeof(mPSKc)); }
+    void SetPSKc(const otPSKc &aPSKc) { mPSKc = aPSKc; }
 
 private:
-    uint8_t mPSKc[16];
+    otPSKc mPSKc;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1809,6 +1809,11 @@ OT_TOOL_PACKED_BEGIN
 class ProvisioningUrlTlv : public Tlv
 {
 public:
+    enum
+    {
+        kMaxLength = 64, // Maximum number of chars in the Provisioning URL string.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1842,29 +1847,19 @@ public:
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL value.
      *
      */
-    otError SetProvisioningUrl(const char *aProvisioningUrl)
+    void SetProvisioningUrl(const char *aProvisioningUrl)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength + 1) : 0;
+        size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength) : 0;
 
-        VerifyOrExit(len <= kMaxLength, error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mProvisioningUrl, aProvisioningUrl, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     char mProvisioningUrl[kMaxLength];
 } OT_TOOL_PACKED_END;
 
@@ -1909,21 +1904,16 @@ public:
      * @param[in]  aVendorName  A pointer to the Vendor Name value.
      *
      */
-    otError SetVendorName(const char *aVendorName)
+    void SetVendorName(const char *aVendorName)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName) + 1);
+        size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName));
 
-        VerifyOrExit(len <= sizeof(mVendorName), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorName, aVendorName, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -1976,21 +1966,16 @@ public:
      * @param[in]  aVendorModel  A pointer to the Vendor Model value.
      *
      */
-    otError SetVendorModel(const char *aVendorModel)
+    void SetVendorModel(const char *aVendorModel)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel) + 1);
+        size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel));
 
-        VerifyOrExit(len <= sizeof(mVendorModel), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorModel, aVendorModel, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -2043,21 +2028,16 @@ public:
      * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version value.
      *
      */
-    otError SetVendorSwVersion(const char *aVendorSwVersion)
+    void SetVendorSwVersion(const char *aVendorSwVersion)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion) + 1);
+        size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion));
 
-        VerifyOrExit(len <= sizeof(mVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorSwVersion, aVendorSwVersion, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -2110,21 +2090,16 @@ public:
      * @param[in]  aVendorData  A pointer to the Vendor Data value.
      *
      */
-    otError SetVendorData(const char *aVendorData)
+    void SetVendorData(const char *aVendorData)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData) + 1);
+        size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData));
 
-        VerifyOrExit(len <= sizeof(mVendorData), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorData, aVendorData, len);
         }
-
-    exit:
-        return error;
     }
 
 private:

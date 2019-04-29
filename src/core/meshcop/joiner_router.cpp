@@ -155,15 +155,15 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     udpPort.Init();
     udpPort.SetUdpPort(aMessageInfo.GetPeerPort());
-    SuccessOrExit(error = message->Append(&udpPort, sizeof(udpPort)));
+    SuccessOrExit(error = message->AppendTlv(udpPort));
 
     iid.Init();
     iid.SetIid(aMessageInfo.GetPeerAddr().mFields.m8 + 8);
-    SuccessOrExit(error = message->Append(&iid, sizeof(iid)));
+    SuccessOrExit(error = message->AppendTlv(iid));
 
     rloc.Init();
     rloc.SetJoinerRouterLocator(Get<Mle::MleRouter>().GetRloc16());
-    SuccessOrExit(error = message->Append(&rloc, sizeof(rloc)));
+    SuccessOrExit(error = message->AppendTlv(rloc));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength() - aMessage.GetOffset());
@@ -289,75 +289,76 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
     masterKey.Init();
     masterKey.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
-    SuccessOrExit(error = message->Append(&masterKey, sizeof(masterKey)));
+    SuccessOrExit(error = message->AppendTlv(masterKey));
 
     meshLocalPrefix.Init();
     meshLocalPrefix.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    SuccessOrExit(error = message->Append(&meshLocalPrefix, sizeof(meshLocalPrefix)));
+    SuccessOrExit(error = message->AppendTlv(meshLocalPrefix));
 
     extendedPanId.Init();
     extendedPanId.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-    SuccessOrExit(error = message->Append(&extendedPanId, sizeof(extendedPanId)));
+    SuccessOrExit(error = message->AppendTlv(extendedPanId));
 
     networkName.Init();
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName());
-    SuccessOrExit(error = message->Append(&networkName, sizeof(Tlv) + networkName.GetLength()));
+    SuccessOrExit(error = message->AppendTlv(networkName));
 
     Get<ActiveDataset>().Read(dataset);
 
     if ((tlv = dataset.Get(Tlv::kActiveTimestamp)) != NULL)
     {
-        SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+        SuccessOrExit(error = message->AppendTlv(*tlv));
     }
     else
     {
         ActiveTimestampTlv activeTimestamp;
         activeTimestamp.Init();
-        SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
+        SuccessOrExit(error = message->AppendTlv(activeTimestamp));
     }
 
     if ((tlv = dataset.Get(Tlv::kChannelMask)) != NULL)
     {
-        SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+        SuccessOrExit(error = message->AppendTlv(*tlv));
     }
     else
     {
         ChannelMaskBaseTlv channelMask;
         channelMask.Init();
-        SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+        SuccessOrExit(error = message->AppendTlv(channelMask));
     }
 
     if ((tlv = dataset.Get(Tlv::kPSKc)) != NULL)
     {
-        SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+        SuccessOrExit(error = message->AppendTlv(*tlv));
     }
     else
     {
         PSKcTlv pskc;
         pskc.Init();
-        SuccessOrExit(error = message->Append(&pskc, sizeof(pskc)));
+        SuccessOrExit(error = message->AppendTlv(pskc));
     }
 
     if ((tlv = dataset.Get(Tlv::kSecurityPolicy)) != NULL)
     {
-        SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+        SuccessOrExit(error = message->AppendTlv(*tlv));
     }
     else
     {
         SecurityPolicyTlv securityPolicy;
         securityPolicy.Init();
-        SuccessOrExit(error = message->Append(&securityPolicy, sizeof(securityPolicy)));
+        SuccessOrExit(error = message->AppendTlv(securityPolicy));
     }
 
     networkKeySequence.Init();
     networkKeySequence.SetNetworkKeySequence(Get<KeyManager>().GetCurrentKeySequence());
-    SuccessOrExit(error = message->Append(&networkKeySequence, networkKeySequence.GetSize()));
+    SuccessOrExit(error = message->AppendTlv(networkKeySequence));
 
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
 
     delayedMessage = DelayedJoinEntHeader(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
-    SuccessOrExit(delayedMessage.AppendTo(*message));
+    SuccessOrExit(error = delayedMessage.AppendTo(*message));
+
     mDelayedJoinEnts.Enqueue(*message);
 
     if (!mTimer.IsRunning())

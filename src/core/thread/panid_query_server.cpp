@@ -134,11 +134,11 @@ otError PanIdQueryServer::SendConflict(void)
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
+    SuccessOrExit(error = message->AppendTlv(channelMask));
 
     panId.Init();
     panId.SetPanId(mPanId);
-    SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
+    SuccessOrExit(error = message->AppendTlv(panId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);

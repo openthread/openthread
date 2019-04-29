@@ -1515,21 +1515,21 @@ void Interpreter::ProcessPSKc(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *currentPSKc = otThreadGetPSKc(mInstance);
+        const otPSKc *pskc = otThreadGetPSKc(mInstance);
 
         for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
         {
-            mServer->OutputFormat("%02x", currentPSKc[i]);
+            mServer->OutputFormat("%02x", pskc->m8[i]);
         }
 
         mServer->OutputFormat("\r\n");
     }
     else
     {
-        uint8_t newPSKc[OT_PSKC_MAX_SIZE];
+        otPSKc pskc;
 
-        VerifyOrExit(Hex2Bin(argv[0], newPSKc, sizeof(newPSKc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_PARSE);
-        SuccessOrExit(error = otThreadSetPSKc(mInstance, newPSKc));
+        VerifyOrExit(Hex2Bin(argv[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = otThreadSetPSKc(mInstance, &pskc));
     }
 
 exit:

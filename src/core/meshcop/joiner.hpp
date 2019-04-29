@@ -68,10 +68,10 @@ public:
      *
      * @param[in]  aPSKd             A pointer to the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
-     * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
-     * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
@@ -152,6 +152,13 @@ private:
     otError Connect(JoinerRouter &aRouter);
     void    Finish(otError aError);
     uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
+
+    otError PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
+                                         const char *aVendorName,
+                                         const char *aVendorModel,
+                                         const char *aVendorSwVersion,
+                                         const char *aVendorData);
+    void    FreeJoinerFinalizeMessage(void);
     void    SendJoinerFinalize(void);
     void    SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
 
@@ -167,10 +174,7 @@ private:
     JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES];
     uint16_t     mJoinerRouterIndex;
 
-    const char *mVendorName;
-    const char *mVendorModel;
-    const char *mVendorSwVersion;
-    const char *mVendorData;
+    Coap::Message *mFinalizeMessage;
 
     TimerMilli     mTimer;
     Coap::Resource mJoinerEntrust;

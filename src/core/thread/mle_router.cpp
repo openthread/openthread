@@ -169,6 +169,7 @@ otError MleRouter::BecomeLeader(void)
     uint32_t partitionId;
     uint8_t  leaderId;
 
+    VerifyOrExit(!Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_LEADER, error = OT_ERROR_NONE);
     VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_NOT_CAPABLE);
@@ -581,7 +582,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
     // Version
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
-    VerifyOrExit(version.IsValid() && version.GetVersion() >= kThreadVersion, error = OT_ERROR_PARSE);
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Leader Data
     if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == OT_ERROR_NONE)
@@ -1596,7 +1597,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     // Version
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
-    VerifyOrExit(version.IsValid() && version.GetVersion() >= kThreadVersion, error = OT_ERROR_PARSE);
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Scan Mask
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kScanMask, sizeof(scanMask), scanMask));
@@ -2722,7 +2723,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
         commissionerUdpPort.Init();
         commissionerUdpPort.SetUdpPort(MeshCoP::kBorderAgentUdpPort);
-        SuccessOrExit(error = message->Append(&commissionerUdpPort, sizeof(commissionerUdpPort)));
+        SuccessOrExit(error = message->AppendTlv(commissionerUdpPort));
 
         discoveryResponse.SetNativeCommissioner(true);
     }
@@ -2731,17 +2732,17 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
         discoveryResponse.SetNativeCommissioner(false);
     }
 
-    SuccessOrExit(error = message->Append(&discoveryResponse, sizeof(discoveryResponse)));
+    SuccessOrExit(error = message->AppendTlv(discoveryResponse));
 
     // Extended PAN ID TLV
     extPanId.Init();
     extPanId.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-    SuccessOrExit(error = message->Append(&extPanId, sizeof(extPanId)));
+    SuccessOrExit(error = message->AppendTlv(extPanId));
 
     // Network Name TLV
     networkName.Init();
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName());
-    SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
+    SuccessOrExit(error = message->AppendTlv(networkName));
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
@@ -2749,7 +2750,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     // Otherwise use the one from commissioning data.
     if (!mSteeringData.IsCleared())
     {
-        SuccessOrExit(error = message->Append(&mSteeringData, sizeof(Tlv) + mSteeringData.GetLength()));
+        SuccessOrExit(error = message->AppendTlv(mSteeringData));
     }
     else
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
@@ -2759,14 +2760,14 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
         if (steeringData != NULL)
         {
-            SuccessOrExit(error = message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
+            SuccessOrExit(error = message->AppendTlv(*steeringData));
         }
     }
 
     // Joiner UDP Port TLV
     joinerUdpPort.Init();
     joinerUdpPort.SetUdpPort(Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort());
-    SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(tlv) + joinerUdpPort.GetLength()));
+    SuccessOrExit(error = message->AppendTlv(joinerUdpPort));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
@@ -3799,18 +3800,18 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     macAddr64Tlv.Init();
     macAddr64Tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
-    SuccessOrExit(error = message->Append(&macAddr64Tlv, sizeof(macAddr64Tlv)));
+    SuccessOrExit(error = message->AppendTlv(macAddr64Tlv));
 
     if (IsRouterIdValid(mPreviousRouterId))
     {
         rlocTlv.Init();
         rlocTlv.SetRloc16(GetRloc16(mPreviousRouterId));
-        SuccessOrExit(error = message->Append(&rlocTlv, sizeof(rlocTlv)));
+        SuccessOrExit(error = message->AppendTlv(rlocTlv));
     }
 
     statusTlv.Init();
     statusTlv.SetStatus(aStatus);
-    SuccessOrExit(error = message->Append(&statusTlv, sizeof(statusTlv)));
+    SuccessOrExit(error = message->AppendTlv(statusTlv));
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     SuccessOrExit(error = AppendXtalAccuracy(*message));
@@ -3853,11 +3854,11 @@ otError MleRouter::SendAddressRelease(void)
 
     rlocTlv.Init();
     rlocTlv.SetRloc16(GetRloc16(mRouterId));
-    SuccessOrExit(error = message->Append(&rlocTlv, sizeof(rlocTlv)));
+    SuccessOrExit(error = message->AppendTlv(rlocTlv));
 
     macAddr64Tlv.Init();
     macAddr64Tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
-    SuccessOrExit(error = message->Append(&macAddr64Tlv, sizeof(macAddr64Tlv)));
+    SuccessOrExit(error = message->AppendTlv(macAddr64Tlv));
 
     messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
@@ -4098,13 +4099,13 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
 
     statusTlv.Init();
     statusTlv.SetStatus(aRouter == NULL ? statusTlv.kNoAddressAvailable : statusTlv.kSuccess);
-    SuccessOrExit(error = message->Append(&statusTlv, sizeof(statusTlv)));
+    SuccessOrExit(error = message->AppendTlv(statusTlv));
 
     if (aRouter != NULL)
     {
         rlocTlv.Init();
         rlocTlv.SetRloc16(aRouter->GetRloc16());
-        SuccessOrExit(error = message->Append(&rlocTlv, sizeof(rlocTlv)));
+        SuccessOrExit(error = message->AppendTlv(rlocTlv));
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
@@ -4118,7 +4119,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
             }
         }
 
-        SuccessOrExit(error = message->Append(&routerMaskTlv, sizeof(routerMaskTlv)));
+        SuccessOrExit(error = message->AppendTlv(routerMaskTlv));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
@@ -4300,15 +4301,12 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
 otError MleRouter::AppendConnectivity(Message &aMessage)
 {
-    otError         error;
     ConnectivityTlv tlv;
 
     tlv.Init();
     FillConnectivityTlv(tlv);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-exit:
-    return error;
+    return aMessage.AppendTlv(tlv);
 }
 
 otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
@@ -4421,15 +4419,12 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
 
 otError MleRouter::AppendRoute(Message &aMessage)
 {
-    otError  error;
     RouteTlv tlv;
 
     tlv.Init();
     FillRouteTlv(tlv);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
 
-exit:
-    return error;
+    return aMessage.AppendTlv(tlv);
 }
 
 otError MleRouter::AppendActiveDataset(Message &aMessage)

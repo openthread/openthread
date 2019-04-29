@@ -89,23 +89,23 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    SuccessOrExit(error = message->AppendTlv(sessionId));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
+    SuccessOrExit(error = message->AppendTlv(channelMask));
 
     count.Init();
     count.SetCount(aCount);
-    SuccessOrExit(error = message->Append(&count, sizeof(count)));
+    SuccessOrExit(error = message->AppendTlv(count));
 
     period.Init();
     period.SetPeriod(aPeriod);
-    SuccessOrExit(error = message->Append(&period, sizeof(period)));
+    SuccessOrExit(error = message->AppendTlv(period));
 
     scanDuration.Init();
     scanDuration.SetScanDuration(aScanDuration);
-    SuccessOrExit(error = message->Append(&scanDuration, sizeof(scanDuration)));
+    SuccessOrExit(error = message->AppendTlv(scanDuration));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);

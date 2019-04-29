@@ -81,7 +81,9 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
+    , mIsPSKcSet(false)
 {
+    memset(&mPSKc, 0, sizeof(mPSKc));
     ComputeKey(mKeySequence, mKey);
 }
 
@@ -97,19 +99,14 @@ void KeyManager::Stop(void)
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-const uint8_t *KeyManager::GetPSKc(void) const
+void KeyManager::SetPSKc(const otPSKc &aPSKc)
 {
-    return mPSKc;
-}
-
-void KeyManager::SetPSKc(const uint8_t *aPSKc)
-{
-    VerifyOrExit(memcmp(mPSKc, aPSKc, sizeof(mPSKc)) != 0, Get<Notifier>().SignalIfFirst(OT_CHANGED_PSKC));
-    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
+    VerifyOrExit(memcmp(&mPSKc, &aPSKc, sizeof(mPSKc)) != 0, Get<Notifier>().SignalIfFirst(OT_CHANGED_PSKC));
+    mPSKc = aPSKc;
     Get<Notifier>().Signal(OT_CHANGED_PSKC);
 
 exit:
-    return;
+    mIsPSKcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

@@ -215,6 +215,7 @@ otError Ip6::AddMplOption(Message &aMessage, Header &aHeader)
     SuccessOrExit(error = aMessage.Prepend(&hbhHeader, sizeof(hbhHeader)));
     aHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(hbhHeader) + sizeof(mplOption));
     aHeader.SetNextHeader(kProtoHopOpts);
+
 exit:
     return error;
 }
@@ -357,6 +358,9 @@ otError Ip6::RemoveMplOption(Message &aMessage)
         switch (option.GetType())
         {
         case OptionMpl::kType:
+            // if multiple MPL options exist, discard packet
+            VerifyOrExit(mplOffset == 0, error = OT_ERROR_PARSE);
+
             mplOffset = offset;
             mplLength = option.GetLength();
 
@@ -554,17 +558,17 @@ otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
     uint16_t       endOffset;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(hbhHeader), &hbhHeader) == sizeof(hbhHeader),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
     endOffset = aMessage.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
 
-    VerifyOrExit(endOffset <= aMessage.GetLength(), error = OT_ERROR_DROP);
+    VerifyOrExit(endOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
 
     aMessage.MoveOffset(sizeof(optionHeader));
 
     while (aMessage.GetOffset() < endOffset)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         if (optionHeader.GetType() == OptionPad1::kType)
         {
@@ -573,7 +577,7 @@ otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
         }
 
         VerifyOrExit(aMessage.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         switch (optionHeader.GetType())
         {
@@ -615,7 +619,7 @@ otError Ip6::HandleFragment(Message &aMessage)
     FragmentHeader fragmentHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
 
@@ -637,7 +641,7 @@ otError Ip6::HandleExtensionHeaders(Message &aMessage,
     while (aReceive == true || aNextHeader == kProtoHopOpts)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         switch (aNextHeader)
         {
@@ -696,7 +700,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     otError  error       = OT_ERROR_NONE;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_DROP);
+    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_NO_ROUTE);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = OT_ERROR_NO_ROUTE);
 
     if (mIsReceiveIp6FilterEnabled)
@@ -716,7 +720,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_NO_ROUTE);
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_DROP);
             }
 
             break;

@@ -38,13 +38,17 @@
 
 #include "utils/wrap_string.h"
 
+#include <openthread/error.h>
+#include <openthread/platform/toolchain.h>
+
 #include "common/encoding.hpp"
-#include "common/message.hpp"
 
 namespace ot {
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
+
+class Message;
 
 /**
  * This class implements TLV generation and parsing.

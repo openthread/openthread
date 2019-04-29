@@ -63,10 +63,7 @@ Joiner::Joiner(Instance &aInstance)
     , mCallback(NULL)
     , mContext(NULL)
     , mJoinerRouterIndex(0)
-    , mVendorName(NULL)
-    , mVendorModel(NULL)
-    , mVendorSwVersion(NULL)
-    , mVendorData(NULL)
+    , mFinalizeMessage(NULL)
     , mTimer(aInstance, &Joiner::HandleTimer, this)
     , mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this)
 {
@@ -116,22 +113,20 @@ otError Joiner::Start(const char *     aPSKd,
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
     SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                          static_cast<uint8_t>(strlen(aPSKd))));
-    SuccessOrExit(error = Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
 
     for (JoinerRouter *router = &mJoinerRouters[0]; router < OT_ARRAY_END(mJoinerRouters); router++)
     {
         router->mPriority = 0; // Priority zero means entry is not in-use.
     }
 
+    SuccessOrExit(error = PrepareJoinerFinalizeMessage(aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
+                                                       aVendorData));
+
     SuccessOrExit(error = Get<Mle::MleRouter>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
                                                          /* aJoiner */ true, /* aEnableFiltering */ true,
                                                          HandleDiscoverResult, this));
-    mVendorName      = aVendorName;
-    mVendorModel     = aVendorModel;
-    mVendorSwVersion = aVendorSwVersion;
-    mVendorData      = aVendorData;
-    mCallback        = aCallback;
-    mContext         = aContext;
+    mCallback = aCallback;
+    mContext  = aContext;
 
     SetState(OT_JOINER_STATE_DISCOVER);
 
@@ -139,6 +134,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Error %s while starting joiner", otThreadErrorToString(error));
+        FreeJoinerFinalizeMessage();
     }
 
     return error;
@@ -172,6 +168,7 @@ void Joiner::Finish(otError aError)
 
     case OT_JOINER_STATE_DISCOVER:
         Get<Coap::CoapSecure>().Stop();
+        FreeJoinerFinalizeMessage();
         break;
     }
 
@@ -388,74 +385,99 @@ exit:
     return;
 }
 
-void Joiner::SendJoinerFinalize(void)
+otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
+                                             const char *aVendorName,
+                                             const char *aVendorModel,
+                                             const char *aVendorSwVersion,
+                                             const char *aVendorData)
 {
-    otError               error   = OT_ERROR_NONE;
-    Coap::Message *       message = NULL;
+    otError               error = OT_ERROR_NONE;
     StateTlv              stateTlv;
     VendorNameTlv         vendorNameTlv;
     VendorModelTlv        vendorModelTlv;
     VendorSwVersionTlv    vendorSwVersionTlv;
     VendorStackVersionTlv vendorStackVersionTlv;
+    ProvisioningUrlTlv    provisioningUrlTlv;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
-    message->SetPayloadMarker();
-    message->SetOffset(message->GetLength());
+    mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
+    mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
+    mFinalizeMessage->SetPayloadMarker();
+    mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
     stateTlv.Init();
     stateTlv.SetState(MeshCoP::StateTlv::kAccept);
-    SuccessOrExit(error = message->Append(&stateTlv, sizeof(stateTlv)));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(stateTlv));
 
     vendorNameTlv.Init();
-    vendorNameTlv.SetVendorName(mVendorName);
-    SuccessOrExit(error = message->Append(&vendorNameTlv, vendorNameTlv.GetSize()));
+    vendorNameTlv.SetVendorName(aVendorName);
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorNameTlv));
 
     vendorModelTlv.Init();
-    vendorModelTlv.SetVendorModel(mVendorModel);
-    SuccessOrExit(error = message->Append(&vendorModelTlv, vendorModelTlv.GetSize()));
+    vendorModelTlv.SetVendorModel(aVendorModel);
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorModelTlv));
 
     vendorSwVersionTlv.Init();
-    vendorSwVersionTlv.SetVendorSwVersion(mVendorSwVersion);
-    SuccessOrExit(error = message->Append(&vendorSwVersionTlv, vendorSwVersionTlv.GetSize()));
+    vendorSwVersionTlv.SetVendorSwVersion(aVendorSwVersion);
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorSwVersionTlv));
 
     vendorStackVersionTlv.Init();
     vendorStackVersionTlv.SetOui(OPENTHREAD_CONFIG_STACK_VENDOR_OUI);
     vendorStackVersionTlv.SetMajor(OPENTHREAD_CONFIG_STACK_VERSION_MAJOR);
     vendorStackVersionTlv.SetMinor(OPENTHREAD_CONFIG_STACK_VERSION_MINOR);
     vendorStackVersionTlv.SetRevision(OPENTHREAD_CONFIG_STACK_VERSION_REV);
-    SuccessOrExit(error = message->Append(&vendorStackVersionTlv, vendorStackVersionTlv.GetSize()));
+    SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorStackVersionTlv));
 
-    if (mVendorData != NULL)
+    if (aVendorData != NULL)
     {
         VendorDataTlv vendorDataTlv;
         vendorDataTlv.Init();
-        vendorDataTlv.SetVendorData(mVendorData);
-        SuccessOrExit(error = message->Append(&vendorDataTlv, vendorDataTlv.GetSize()));
+        vendorDataTlv.SetVendorData(aVendorData);
+        SuccessOrExit(error = mFinalizeMessage->AppendTlv(vendorDataTlv));
     }
 
-    if (Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl.GetLength() > 0)
+    provisioningUrlTlv.Init();
+    provisioningUrlTlv.SetProvisioningUrl(aProvisioningUrl);
+
+    if (provisioningUrlTlv.GetLength() > 0)
     {
-        SuccessOrExit(error = message->Append(&Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl,
-                                              Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl.GetSize()));
+        SuccessOrExit(error = mFinalizeMessage->AppendTlv(provisioningUrlTlv));
     }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        FreeJoinerFinalizeMessage();
+    }
+
+    return error;
+}
+
+void Joiner::FreeJoinerFinalizeMessage(void)
+{
+    if (mFinalizeMessage != NULL)
+    {
+        mFinalizeMessage->Free();
+        mFinalizeMessage = NULL;
+    }
+}
+
+void Joiner::SendJoinerFinalize(void)
+{
+    assert(mFinalizeMessage != NULL);
 
 #if OPENTHREAD_ENABLE_CERT_LOG
-    LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *message);
+    LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
 #endif
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this));
+    SuccessOrExit(Get<Coap::CoapSecure>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
+    mFinalizeMessage = NULL;
 
     otLogInfoMeshCoP("Joiner sent finalize");
 
 exit:
-
-    if (error != OT_ERROR_NONE && message != NULL)
-    {
-        message->Free();
-    }
+    return;
 }
 
 void Joiner::HandleJoinerFinalizeResponse(void *               aContext,

@@ -1441,29 +1441,102 @@ exit:
 #if OPENTHREAD_ENABLE_JOINER
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>(void)
 {
-    return mEncoder.WriteUint8(static_cast<uint8_t>(otJoinerGetState(mInstance)));
+    spinel_meshcop_joiner_state_t state = SPINEL_MESHCOP_JOINER_STATE_IDLE;
+
+    switch (otJoinerGetState(mInstance))
+    {
+    case OT_JOINER_STATE_IDLE:
+        state = SPINEL_MESHCOP_JOINER_STATE_IDLE;
+        break;
+    case OT_JOINER_STATE_DISCOVER:
+        state = SPINEL_MESHCOP_JOINER_STATE_DISCOVER;
+        break;
+    case OT_JOINER_STATE_CONNECT:
+        state = SPINEL_MESHCOP_JOINER_STATE_CONNECTING;
+        break;
+    case OT_JOINER_STATE_CONNECTED:
+        state = SPINEL_MESHCOP_JOINER_STATE_CONNECTED;
+        break;
+    case OT_JOINER_STATE_ENTRUST:
+        state = SPINEL_MESHCOP_JOINER_STATE_ENTRUST;
+        break;
+    case OT_JOINER_STATE_JOINED:
+        state = SPINEL_MESHCOP_JOINER_STATE_JOINED;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>(void)
 {
+    otError     error           = OT_ERROR_NONE;
     bool        action          = false;
     const char *psk             = NULL;
     const char *provisioningUrl = NULL;
-    otError     error           = OT_ERROR_NONE;
+    const char *vendorName      = NULL;
+    const char *vendorModel     = NULL;
+    const char *vendorSwVersion = NULL;
+    const char *vendorData      = NULL;
 
     SuccessOrExit(error = mDecoder.ReadBool(action));
-    SuccessOrExit(error = mDecoder.ReadUtf8(psk));
-    SuccessOrExit(error = mDecoder.ReadUtf8(provisioningUrl));
 
-    if (action)
-    {
-        error = otJoinerStart(mInstance, psk, provisioningUrl, PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO,
-                              PACKAGE_VERSION, NULL, &NcpBase::HandleJoinerCallback_Jump, this);
-    }
-    else
+    if (action == false)
     {
         error = otJoinerStop(mInstance);
+        ExitNow();
     }
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(psk));
+
+    // Parse optional fields
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUtf8(provisioningUrl));
+    }
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUtf8(vendorName));
+    }
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUtf8(vendorModel));
+    }
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUtf8(vendorSwVersion));
+    }
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadUtf8(vendorData));
+    }
+
+    // Use OpenThread default values for vendor name, mode, sw version if
+    // not specified or an empty string is given.
+
+    if ((vendorName == NULL) || (vendorName[0] == 0))
+    {
+        vendorName = PACKAGE_NAME;
+    }
+
+    if ((vendorModel == NULL) || (vendorModel[0] == 0))
+    {
+        vendorModel = OPENTHREAD_CONFIG_PLATFORM_INFO;
+    }
+
+    if ((vendorSwVersion == NULL) || (vendorSwVersion[0] == 0))
+    {
+        vendorSwVersion = PACKAGE_VERSION;
+    }
+
+    error = otJoinerStart(mInstance, psk, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData,
+                          &NcpBase::HandleJoinerCallback_Jump, this);
+
 exit:
     return error;
 }

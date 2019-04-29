@@ -55,6 +55,10 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
+#ifndef TX_WAIT_US
+#define TX_WAIT_US (5 * US_PER_S)
+#endif
+
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
 namespace ot {
@@ -176,6 +180,7 @@ RadioSpinel::RadioSpinel(void)
     , mDiagOutput(NULL)
     , mDiagOutputMaxLen(0)
 #endif
+    , mTxRadioEndUs(UINT64_MAX)
 {
     mVersion[0] = '\0';
 }
@@ -704,6 +709,26 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
     {
         FD_SET(sockFd, &aWriteFdSet);
     }
+    else if (mState == kStateTransmitting)
+    {
+        uint64_t now = otSysGetTime();
+
+        if (now < mTxRadioEndUs)
+        {
+            uint64_t remain = mTxRadioEndUs - now;
+
+            if (remain < static_cast<uint64_t>(aTimeout.tv_sec * US_PER_S + aTimeout.tv_usec))
+            {
+                aTimeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+                aTimeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            }
+        }
+        else
+        {
+            aTimeout.tv_sec  = 0;
+            aTimeout.tv_usec = 0;
+        }
+    }
 
     if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame() || (mState == kStateTransmitDone))
     {
@@ -730,7 +755,8 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 
     if (mState == kStateTransmitDone)
     {
-        mState = kStateReceive;
+        mState        = kStateReceive;
+        mTxRadioEndUs = UINT64_MAX;
 
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
@@ -743,6 +769,11 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
             otPlatRadioTxDone(mInstance, mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL,
                               mTxError);
         }
+    }
+    else if (mState == kStateTransmitting && otSysGetTime() >= mTxRadioEndUs)
+    {
+        otLogCritPlat("radio tx timeout, exit");
+        exit(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(mHdlcInterface.GetSocket(), &aWriteFdSet))
@@ -1075,7 +1106,8 @@ void RadioSpinel::RadioTransmit(void)
 
     if (error == OT_ERROR_NONE)
     {
-        mState = kStateTransmitting;
+        mTxRadioEndUs = otSysGetTime() + TX_WAIT_US;
+        mState        = kStateTransmitting;
     }
     else
     {
@@ -1369,8 +1401,8 @@ uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
     const uint8_t *maskData    = maskBuffer;
     spinel_size_t  maskLength  = sizeof(maskBuffer);
 
-    SuccessOrExit(error = Get(aPreferred ? SPINEL_PROP_PHY_CHAN_PREFERRED : SPINEL_PROP_PHY_CHAN_SUPPORTED,
-                              SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength));
+    SuccessOrDie(Get(aPreferred ? SPINEL_PROP_PHY_CHAN_PREFERRED : SPINEL_PROP_PHY_CHAN_SUPPORTED,
+                     SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength));
 
     while (maskLength > 0)
     {

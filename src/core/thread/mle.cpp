@@ -539,7 +539,7 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
-    SuccessOrExit(error = message->Append(&discoveryRequest, sizeof(discoveryRequest)));
+    SuccessOrExit(error = message->AppendTlv(discoveryRequest));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
@@ -1131,7 +1131,7 @@ otError Mle::AppendSourceAddress(Message &aMessage)
     tlv.Init();
     tlv.SetRloc16(GetRloc16());
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
@@ -1141,7 +1141,7 @@ otError Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
     tlv.Init();
     tlv.SetStatus(aStatus);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendMode(Message &aMessage, uint8_t aMode)
@@ -1151,7 +1151,7 @@ otError Mle::AppendMode(Message &aMessage, uint8_t aMode)
     tlv.Init();
     tlv.SetMode(aMode);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendTimeout(Message &aMessage, uint32_t aTimeout)
@@ -1161,7 +1161,7 @@ otError Mle::AppendTimeout(Message &aMessage, uint32_t aTimeout)
     tlv.Init();
     tlv.SetTimeout(aTimeout);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength)
@@ -1200,7 +1200,7 @@ otError Mle::AppendLinkFrameCounter(Message &aMessage)
     tlv.Init();
     tlv.SetFrameCounter(Get<KeyManager>().GetMacFrameCounter());
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendMleFrameCounter(Message &aMessage)
@@ -1210,7 +1210,7 @@ otError Mle::AppendMleFrameCounter(Message &aMessage)
     tlv.Init();
     tlv.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
@@ -1220,7 +1220,7 @@ otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
     tlv.Init();
     tlv.SetRloc16(aRloc16);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendLeaderData(Message &aMessage)
@@ -1229,7 +1229,7 @@ otError Mle::AppendLeaderData(Message &aMessage)
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
     mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
 
-    return aMessage.Append(&mLeaderData, sizeof(mLeaderData));
+    return aMessage.AppendTlv(mLeaderData);
 }
 
 void Mle::FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly)
@@ -1251,7 +1251,7 @@ otError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
     tlv.Init();
     FillNetworkDataTlv(tlv, aStableOnly);
 
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
+    error = aMessage.AppendTlv(tlv);
 
 exit:
     return error;
@@ -1279,7 +1279,7 @@ otError Mle::AppendScanMask(Message &aMessage, uint8_t aScanMask)
     tlv.Init();
     tlv.SetMask(aScanMask);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin)
@@ -1289,7 +1289,7 @@ otError Mle::AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin)
     tlv.Init();
     tlv.SetLinkMargin(aLinkMargin);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendVersion(Message &aMessage)
@@ -1299,7 +1299,7 @@ otError Mle::AppendVersion(Message &aMessage)
     tlv.Init();
     tlv.SetVersion(kThreadVersion);
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendAddressRegistration(Message &aMessage)
@@ -1382,7 +1382,7 @@ otError Mle::AppendTimeRequest(Message &aMessage)
 
     tlv.Init();
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendTimeParameter(Message &aMessage)
@@ -1393,7 +1393,7 @@ otError Mle::AppendTimeParameter(Message &aMessage)
     tlv.SetTimeSyncPeriod(Get<TimeSync>().GetTimeSyncPeriod());
     tlv.SetXtalThreshold(Get<TimeSync>().GetXtalThreshold());
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 
 otError Mle::AppendXtalAccuracy(Message &aMessage)
@@ -1403,7 +1403,7 @@ otError Mle::AppendXtalAccuracy(Message &aMessage)
     tlv.Init();
     tlv.SetXtalAccuracy(otPlatTimeGetXtalAccuracy());
 
-    return aMessage.Append(&tlv, sizeof(tlv));
+    return aMessage.AppendTlv(tlv);
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
@@ -1418,7 +1418,7 @@ otError Mle::AppendActiveTimestamp(Message &aMessage)
 
     timestampTlv.Init();
     *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+    error                                             = aMessage.AppendTlv(timestampTlv);
 
 exit:
     return error;
@@ -1435,7 +1435,7 @@ otError Mle::AppendPendingTimestamp(Message &aMessage)
 
     timestampTlv.Init();
     *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+    error                                             = aMessage.AppendTlv(timestampTlv);
 
 exit:
     return error;
@@ -1713,9 +1713,13 @@ bool Mle::PrepareAnnounceState(void)
     bool             shouldAnnounce = false;
     Mac::ChannelMask channelMask;
 
-    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && !IsFullThreadDevice() && (mReattachState == kReattachStop));
+    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && (mReattachState == kReattachStop) &&
+                 (Get<MeshCoP::ActiveDataset>().IsPartiallyComplete() || !IsFullThreadDevice()));
 
-    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
 
     mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
 
@@ -1840,6 +1844,16 @@ void Mle::HandleDelayedResponseTimer(void)
             if (SendMessage(*message, delayedResponse.GetDestination()) == OT_ERROR_NONE)
             {
                 LogMleMessage("Send delayed message", delayedResponse.GetDestination());
+
+                // Here enters fast poll mode, as for Rx-Off-when-idle device, the enqueued msg should
+                // be Mle Data Reqeuest.
+                // Note: Finer-grade check (e.g. message subtype) might be required when deciding whether
+                // or not enters fast poll mode fast poll mode if there are other type of delayed message
+                // for Rx-Off-when-idle device.
+                if (!IsRxOnWhenIdle())
+                {
+                    Get<DataPollManager>().SendFastPolls(DataPollManager::kDefaultFastPolls);
+                }
             }
             else
             {
@@ -2326,7 +2340,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
 
     channel.Init();
     channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
-    SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
+    SuccessOrExit(error = message->AppendTlv(channel));
 
     if (aOrphanAnnounce)
     {
@@ -2335,7 +2349,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
         activeTimestamp.SetTicks(0);
         activeTimestamp.SetAuthoritative(true);
 
-        SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
+        SuccessOrExit(error = message->AppendTlv(activeTimestamp));
     }
     else
     {
@@ -2344,7 +2358,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
 
     panid.Init();
     panid.SetPanId(Get<Mac::Mac>().GetPanId());
-    SuccessOrExit(error = message->Append(&panid, sizeof(panid)));
+    SuccessOrExit(error = message->AppendTlv(panid));
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
     otLogInfoMle("Send Announce on channel %d", aChannel);
@@ -2364,7 +2378,11 @@ otError Mle::SendOrphanAnnounce(void)
     otError          error;
     Mac::ChannelMask channelMask;
 
-    SuccessOrExit(error = Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
+
     SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
     SendAnnounce(mAnnounceChannel, true);
@@ -2833,6 +2851,16 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMleErr(error, "Failed to process Data Response");
+    }
+
+    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    {
+        // Here simply stops fast data poll request by Mle Data Request.
+        // Note that in some cases fast data poll may continue after below stop operation until
+        // running out the specified number. E.g. other component also trigger fast poll, and
+        // is waiting for response; or the corner case where multiple Mle Data Request attempts
+        // happened due to the retransmission mechanism.
+        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
     }
 
     return error;
@@ -3359,8 +3387,6 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 
     Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                               !IsFullNetworkData(), aMessage, networkDataOffset);
-
-    Get<MeshCoP::ActiveDataset>().ApplyConfiguration();
 
     SetStateChild(shortAddress.GetRloc16());
 

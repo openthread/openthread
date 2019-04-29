@@ -112,7 +112,7 @@ struct otMeshLocalPrefix
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a Mesh Local Prefix
+ * This structure represents a Mesh Local Prefix.
  *
  */
 typedef struct otMeshLocalPrefix otMeshLocalPrefix;
@@ -123,10 +123,17 @@ typedef struct otMeshLocalPrefix otMeshLocalPrefix;
  * This structure represents PSKc.
  *
  */
-typedef struct otPSKc
+OT_TOOL_PACKED_BEGIN
+struct otPSKc
 {
     uint8_t m8[OT_PSKC_MAX_SIZE]; ///< Byte values
-} otPSKc;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a PSKc.
+ *
+ */
+typedef struct otPSKc otPSKc;
 
 /**
  * This structure represent Security Policy.
@@ -298,6 +305,19 @@ OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalData
 
 /**
  * This function sets the Active Operational Dataset.
+ *
+ * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
+ *
+ * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
+ * an existing Thread network using any existing information in the dataset. The minimum set of information needed to
+ * attach is the PAN ID and Thread Master Key.
+ *
+ * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to
+ * find neighbors on other channels.
+ *
+ * If the device successfully attaches to a Thread network, the device will then retrieve the full Active Dataset from
+ * its Parent. Note that a router-capable device will not transition to the Router or Leader roles until it has a
+ * complete Active Dataset.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.

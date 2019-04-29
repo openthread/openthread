@@ -303,7 +303,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = message->AppendTlv(state));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
@@ -403,8 +403,22 @@ otError ActiveDataset::GenerateLocal(void)
     if (dataset.Get(Tlv::kPSKc) == NULL)
     {
         PSKcTlv tlv;
+
         tlv.Init();
-        tlv.SetPSKc(Get<KeyManager>().GetPSKc());
+
+        if (Get<KeyManager>().IsPSKcSet())
+        {
+            // use configured PSKc
+            tlv.SetPSKc(Get<KeyManager>().GetPSKc());
+        }
+        else
+        {
+            // PSKc has not yet been configured, generate new PSKc at random
+            otPSKc pskc;
+            SuccessOrExit(error = otPlatRandomGetTrue(pskc.m8, sizeof(pskc)));
+            tlv.SetPSKc(pskc);
+        }
+
         dataset.Set(tlv);
     }
 

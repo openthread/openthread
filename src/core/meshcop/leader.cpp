@@ -134,19 +134,18 @@ otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = message->AppendTlv(state));
 
     if (mTimer.IsRunning())
     {
-        uint16_t len = sizeof(Tlv) + mCommissionerId.GetLength();
-        SuccessOrExit(error = message->Append(&mCommissionerId, len));
+        SuccessOrExit(error = message->AppendTlv(mCommissionerId));
     }
 
     if (aState == StateTlv::kAccept)
     {
         sessionId.Init();
         sessionId.SetCommissionerSessionId(mSessionId);
-        SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+        SuccessOrExit(error = message->AppendTlv(sessionId));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
@@ -231,7 +230,7 @@ otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = message->AppendTlv(state));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 

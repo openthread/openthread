@@ -84,15 +84,15 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    SuccessOrExit(error = message->AppendTlv(sessionId));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, channelMask.GetSize()));
+    SuccessOrExit(error = message->AppendTlv(channelMask));
 
     panId.Init();
     panId.SetPanId(aPanId);
-    SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
+    SuccessOrExit(error = message->AppendTlv(panId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);

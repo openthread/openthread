@@ -354,7 +354,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
             {
                 if (cur->GetType() == aTlvs[index])
                 {
-                    SuccessOrExit(error = message->Append(cur, sizeof(NetworkDataTlv) + cur->GetLength()));
+                    SuccessOrExit(error = message->AppendTlv(*cur));
                     break;
                 }
             }
@@ -394,7 +394,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = message->AppendTlv(state));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
@@ -693,6 +693,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             while (curServerBase <= endServerBase)
                             {
                                 ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
+
+                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end);
 
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
