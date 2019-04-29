@@ -284,23 +284,29 @@ void Client::HandleRetransmissionTimer(void)
 
         if (queryMetadata.IsLater(now))
         {
+            uint32_t diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
+
             // Calculate the next delay and choose the lowest.
-            if (queryMetadata.mTransmissionTime - now < nextDelta)
+            if (diff < nextDelta)
             {
-                nextDelta = queryMetadata.mTransmissionTime - now;
+                nextDelta = diff;
             }
         }
         else if (queryMetadata.mRetransmissionCount < kMaxRetransmit)
         {
+            uint32_t diff;
+
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
             queryMetadata.UpdateIn(*message);
 
+            diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
+
             // Check if retransmission time is lower than current lowest.
-            if (queryMetadata.mTransmissionTime - now < nextDelta)
+            if (diff < nextDelta)
             {
-                nextDelta = queryMetadata.mTransmissionTime - now;
+                nextDelta = diff;
             }
 
             // Retransmit

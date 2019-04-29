@@ -276,10 +276,11 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (coapMetadata.IsLater(now))
         {
+            uint32_t diff = TimerMilli::Elapsed(now, coapMetadata.mNextTimerShot);
             // Calculate the next delay and choose the lowest.
-            if (coapMetadata.mNextTimerShot - now < nextDelta)
+            if (diff < nextDelta)
             {
-                nextDelta = coapMetadata.mNextTimerShot - now;
+                nextDelta = diff;
             }
         }
         else if ((coapMetadata.mConfirmable) && (coapMetadata.mRetransmissionCount < kMaxRetransmit))

@@ -393,16 +393,21 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
     // Check if timer should be set for next Joiner.
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
-        {
-            if (!mJoiners[i].mValid)
-            {
-                continue;
-            }
+        int32_t diff;
 
-            if (mJoiners[i].mExpirationTime - now < nextTimeout)
-            {
-                nextTimeout = mJoiners[i].mExpirationTime - now;
-            }
+        if (!mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        diff = TimerMilli::Diff(now, mJoiners[i].mExpirationTime);
+        if (diff <= 0)
+        {
+            nextTimeout = 0;
+        }
+        else if (static_cast<uint32_t>(diff) < nextTimeout)
+        {
+            nextTimeout = static_cast<uint32_t>(diff);
         }
     }
 

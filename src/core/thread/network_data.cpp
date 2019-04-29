@@ -1000,8 +1000,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Coap::Message *  message = NULL;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(TimerMilli::GetNow() - mLastAttempt) < kDataResubmitDelay,
-                 error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mLastAttemptWait || TimerMilli::Elapsed(mLastAttempt) < kDataResubmitDelay, error = OT_ERROR_ALREADY);
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 

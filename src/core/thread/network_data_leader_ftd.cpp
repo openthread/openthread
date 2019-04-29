@@ -1573,7 +1573,7 @@ void Leader::HandleTimer(void)
             continue;
         }
 
-        if ((TimerMilli::GetNow() - mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
+        if (TimerMilli::Elapsed(mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }

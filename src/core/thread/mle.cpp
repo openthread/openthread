@@ -3935,7 +3935,7 @@ void Mle::HandleParentSearchTimer(void)
         // from `UpdateParentSearchState()`. We want to limit this to happen
         // only once within a backoff interval.
 
-        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
+        if (TimerMilli::Elapsed(mParentSearchBackoffCancelTime) >= kParentSearchBackoffInterval)
         {
             mParentSearchBackoffWasCanceled = false;
             otLogInfoMle("PeriodicParentSearch: Backoff cancellation is allowed on parent switch");

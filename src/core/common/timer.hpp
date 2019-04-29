@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <stddef.h>
+
 #include "utils/wrap_stdint.h"
 
 #include <openthread/platform/alarm-micro.h>
@@ -71,7 +72,8 @@ class Timer : public InstanceLocator, public OwnerLocator
 public:
     enum
     {
-        kMaxDt = (1UL << 31) - 1, //< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+        kMaxDt     = (1UL << 31) - 1, ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+        kForeverDt = 0xffffffff,      ///< The special forever `aDt` value.
     };
 
     /**
@@ -180,6 +182,47 @@ public:
      *
      */
     void Stop(void);
+
+    /**
+     * This static method returns the time diff in milliseconds between @p aTime1 and @p aTime2.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The time diff in milliseconds.
+     *
+     */
+    static int32_t Diff(uint32_t aStart, uint32_t aEnd) { return static_cast<int32_t>(aEnd - aStart); }
+
+    /**
+     * This static method returns the time elapsed in milliseconds from @p aStart to @p aEnd.
+     *
+     * @note This method asserts @p aEnd is after @p aTime.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The elapsed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart, uint32_t aEnd)
+    {
+        int32_t elapsed = Diff(aStart, aEnd);
+        assert(elapsed >= 0);
+        return static_cast<uint32_t>(elapsed);
+    }
+
+    /**
+     * This static method returns the time passed in milliseconds since @p aStart.
+     *
+     * @note This method asserts now is after @p aTime.
+     *
+     * @param[in]   aTime   The start time.
+     *
+     * @returns The passed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart) { return Elapsed(aStart, GetNow()); }
 
     /**
      * This static method returns the current time in milliseconds.
