@@ -66,6 +66,7 @@ TimeSync::TimeSync(Instance &aInstance)
     , mTimer(aInstance, HandleTimeout, this)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
+    mLastTimeSyncReceived = TimerMilli::GetNow();
     CheckAndHandleChanges(false);
 }
 
