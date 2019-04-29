@@ -70,11 +70,9 @@ class Timer : public InstanceLocator, public OwnerLocator
     friend class TimerScheduler;
 
 public:
-    enum
-    {
-        kMaxDt     = (1UL << 31) - 1, ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
-        kForeverDt = 0xffffffff,      ///< The special forever `aDt` value.
-    };
+    static const uint32_t kMaxDt =
+        (1UL << 31) - 1; ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+    static const uint32_t kForeverDt = 0xffffffff; ///< The special forever `aDt` value.
 
     /**
      * This function pointer is called when the timer expires.
