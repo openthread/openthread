@@ -40,13 +40,12 @@ libopenthread_platform_utils_a_CPPFLAGS                 = \
 libopenthread_platform_utils_a_SOURCES  = \
     debug_uart.c                          \
     logging_rtt.c                         \
-    settings_flash.c                      \
     soft_source_match_table.c             \
     $(NULL)
 
-if OPENTHREAD_SETTINGS_STUB
+if OPENTHREAD_SETTINGS_RAM
     libopenthread_platform_utils_a_SOURCES += \
-        settings_stub.c \
+        settings_ram.c \
         $(NULL)
 else
     libopenthread_platform_utils_a_SOURCES += \
