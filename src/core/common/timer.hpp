@@ -182,7 +182,7 @@ public:
     void Stop(void);
 
     /**
-     * This static method returns the time diff in milliseconds between @p aTime1 and @p aTime2.
+     * This static method returns the time diff in milliseconds between @p aStart and @p aEnd.
      *
      * @param[in]   aStart  The start time.
      * @param[in]   aEnd    The end time.
@@ -199,7 +199,7 @@ public:
     /**
      * This static method returns the time elapsed in milliseconds from @p aStart to @p aEnd.
      *
-     * @note This method asserts @p aEnd is after @p aTime.
+     * @note This method assumes @p aEnd is after @p aStart.
      *
      * @param[in]   aStart  The start time.
      * @param[in]   aEnd    The end time.
@@ -212,11 +212,11 @@ public:
     /**
      * This static method returns the time passed in milliseconds since @p aStart.
      *
-     * @note This method asserts now is after @p aTime.
+     * @note This method assumes now is after @p aStart.
      *
-     * @param[in]   aTime   The start time.
+     * @param[in]   aStart  The start time.
      *
-     * @returns The passed time in milliseconds.
+     * @returns The elapsed time in milliseconds.
      *
      */
     static uint32_t Elapsed(uint32_t aStart) { return Elapsed(aStart, GetNow()); }
