@@ -694,6 +694,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             {
                                 ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
 
+                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end);
+
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
                                     (memcmp(server->GetServerData(), serverBase->GetServerData(),

@@ -323,7 +323,18 @@ const char *Commissioner::GetProvisioningUrl(uint16_t &aLength) const
 
 otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
-    return Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
+    otError error = OT_ERROR_NONE;
+
+    if (aProvisioningUrl != NULL)
+    {
+        size_t len = strnlen(aProvisioningUrl, MeshCoP::ProvisioningUrlTlv::kMaxLength + 1);
+        VerifyOrExit(len <= MeshCoP::ProvisioningUrlTlv::kMaxLength, error = OT_ERROR_INVALID_ARGS);
+    }
+
+    Get<Coap::CoapSecure>().GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
+
+exit:
+    return error;
 }
 
 uint16_t Commissioner::GetSessionId(void) const

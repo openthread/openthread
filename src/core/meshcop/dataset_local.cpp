@@ -61,9 +61,10 @@ DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType)
 
 void DatasetLocal::Clear(void)
 {
+    Get<Settings>().DeleteOperationalDataset(IsActive());
     mTimestamp.Init();
     mTimestampPresent = false;
-    Get<Settings>().DeleteOperationalDataset(IsActive());
+    mSaved            = false;
 }
 
 otError DatasetLocal::Restore(Dataset &aDataset)
@@ -71,19 +72,18 @@ otError DatasetLocal::Restore(Dataset &aDataset)
     const Timestamp *timestamp;
     otError          error;
 
+    mTimestampPresent = false;
+
     error = Read(aDataset);
     SuccessOrExit(error);
 
+    mSaved    = true;
     timestamp = aDataset.GetTimestamp();
 
     if (timestamp != NULL)
     {
         mTimestamp        = *timestamp;
         mTimestampPresent = true;
-    }
-    else
-    {
-        mTimestampPresent = false;
     }
 
 exit:
@@ -161,20 +161,21 @@ exit:
 otError DatasetLocal::Save(const Dataset &aDataset)
 {
     const Timestamp *timestamp;
-    otError          error;
+    otError          error = OT_ERROR_NONE;
 
     if (aDataset.GetSize() == 0)
     {
-        error = Get<Settings>().DeleteOperationalDataset(IsActive());
+        // do not propagate error back
+        Get<Settings>().DeleteOperationalDataset(IsActive());
+        mSaved = false;
         otLogInfoMeshCoP("%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
     else
     {
-        error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset);
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
+        mSaved = true;
         otLogInfoMeshCoP("%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
     }
-
-    SuccessOrExit(error);
 
     timestamp = aDataset.GetTimestamp();
 

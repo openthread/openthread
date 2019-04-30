@@ -72,6 +72,15 @@ public:
     void Clear(void);
 
     /**
+     * This method indicates whether an Active or Pending Dataset is saved in non-volatile memory.
+     *
+     * @retval TRUE  if an Active or Pending Dataset is saved in non-volatile memory.
+     * @retval FALSE if an Active or Pending Dataset is not saved in non-volatile memory.
+     *
+     */
+    bool IsSaved(void) const { return mSaved; }
+
+    /**
      * This method restores and retrieves the dataset from non-volatile memory.
      *
      * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
@@ -149,7 +158,8 @@ private:
     Timestamp mTimestamp;            ///< Active or Pending Timestamp
     uint32_t  mUpdateTime;           ///< Local time last updated
     Tlv::Type mType;                 ///< Active or Pending
-    bool      mTimestampPresent : 1; ///< Whether or not timestamp is present
+    bool      mTimestampPresent : 1; ///< Whether a timestamp is present
+    bool      mSaved : 1;            ///< Whether a dataset is saved in non-volatile
 };
 
 } // namespace MeshCoP

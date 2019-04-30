@@ -53,8 +53,9 @@ namespace ot {
 DataPollManager::DataPollManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimerStartTime(0)
-    , mExternalPollPeriod(0)
     , mPollPeriod(0)
+    , mExternalPollPeriod(0)
+    , mFastPollsUsers(0)
     , mTimer(aInstance, &DataPollManager::HandlePollTimer, this)
     , mEnabled(false)
     , mAttachMode(false)
@@ -89,6 +90,7 @@ void DataPollManager::StopPolling(void)
     mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
     mRemainingFastPolls   = 0;
+    mFastPollsUsers       = 0;
     mEnabled              = false;
 }
 
@@ -164,9 +166,15 @@ otError DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
 {
     otError error = OT_ERROR_NONE;
 
-    if (aPeriod != 0 && aPeriod < OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD)
+    if (aPeriod != 0)
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD, error = OT_ERROR_INVALID_ARGS);
+
+        // Clipped by the maximal value.
+        if (aPeriod > kMaxExternalPeriod)
+        {
+            aPeriod = kMaxExternalPeriod;
+        }
     }
 
     if (mExternalPollPeriod != aPeriod)
@@ -212,7 +220,12 @@ void DataPollManager::HandlePollSent(otError aError)
         if (mRemainingFastPolls != 0)
         {
             mRemainingFastPolls--;
-            shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
+
+            if (mRemainingFastPolls == 0)
+            {
+                shouldRecalculatePollPeriod = true;
+                mFastPollsUsers             = 0;
+            }
         }
 
         if (mRetxMode == true)
@@ -330,6 +343,11 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
 {
     bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
 
+    if (mFastPollsUsers < kMaxFastPollsUsers)
+    {
+        mFastPollsUsers++;
+    }
+
     if (aNumFastPolls == 0)
     {
         aNumFastPolls = kDefaultFastPolls;
@@ -351,20 +369,65 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
     }
 }
 
+otError DataPollManager::StopFastPolls(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mFastPollsUsers != 0);
+
+    // If `mFastPollsUsers` hits the max, let it be cleared
+    // from `HandlePollSent()` (after all fast polls are sent).
+    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
+
+    mFastPollsUsers--;
+
+    VerifyOrExit(mFastPollsUsers == 0, error = OT_ERROR_BUSY);
+
+    mRemainingFastPolls = 0;
+    ScheduleNextPoll(kRecalculatePollPeriod);
+
+exit:
+    return error;
+}
+
 void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
+    uint32_t now;
+    uint32_t oldPeriod = mPollPeriod;
+
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
         mPollPeriod = CalculatePollPeriod();
     }
 
+    now = TimerMilli::GetNow();
+
     if (mTimer.IsRunning())
     {
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        if (oldPeriod != mPollPeriod)
+        {
+            // If poll interval did change and re-starting the timer from
+            // last start time with new poll interval would fire quickly
+            // (i.e., fires within window `[now, now + kMinPollPeriod]`)
+            // add an extra minimum delay of `kMinPollPeriod`. This
+            // ensures that when an internal or external request triggers
+            // a switch to a shorter poll interval, the first data poll
+            // will not be sent too quickly (and possibly before the
+            // response is available/prepared on the parent node).
+            if (TimerScheduler::IsStrictlyBefore(mTimerStartTime + mPollPeriod, now + kMinPollPeriod))
+            {
+                mTimer.StartAt(now, kMinPollPeriod);
+            }
+            else
+            {
+                mTimer.StartAt(mTimerStartTime, mPollPeriod);
+            }
+        }
+        // Do nothing on the running poll timer if the poll interval doesn't change
     }
     else
     {
-        mTimerStartTime = TimerMilli::GetNow();
+        mTimerStartTime = now;
         mTimer.StartAt(mTimerStartTime, mPollPeriod);
     }
 }

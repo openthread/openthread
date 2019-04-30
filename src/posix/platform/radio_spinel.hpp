@@ -622,6 +622,8 @@ private:
     char * mDiagOutput;
     size_t mDiagOutputMaxLen;
 #endif
+
+    uint64_t mTxRadioEndUs;
 };
 
 } // namespace PosixApp

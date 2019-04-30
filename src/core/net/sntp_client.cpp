@@ -234,12 +234,10 @@ Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &
     while (message != NULL)
     {
         // Read originate timestamp.
-        uint16_t count = aQueryMetadata.ReadFrom(*message);
-        assert(count == sizeof(aQueryMetadata));
+        aQueryMetadata.ReadFrom(*message);
 
         if (aQueryMetadata.mTransmitTimestamp == aResponseHeader.GetOriginateTimestampSeconds())
         {
-            aQueryMetadata.ReadFrom(*message);
             ExitNow();
         }
 

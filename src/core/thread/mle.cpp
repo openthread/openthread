@@ -1713,9 +1713,13 @@ bool Mle::PrepareAnnounceState(void)
     bool             shouldAnnounce = false;
     Mac::ChannelMask channelMask;
 
-    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && !IsFullThreadDevice() && (mReattachState == kReattachStop));
+    VerifyOrExit((mRole != OT_DEVICE_ROLE_CHILD) && (mReattachState == kReattachStop) &&
+                 (Get<MeshCoP::ActiveDataset>().IsPartiallyComplete() || !IsFullThreadDevice()));
 
-    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
 
     mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
 
@@ -2374,7 +2378,11 @@ otError Mle::SendOrphanAnnounce(void)
     otError          error;
     Mac::ChannelMask channelMask;
 
-    SuccessOrExit(error = Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != OT_ERROR_NONE)
+    {
+        channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+    }
+
     SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
     SendAnnounce(mAnnounceChannel, true);
@@ -2843,6 +2851,16 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMleErr(error, "Failed to process Data Response");
+    }
+
+    if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
+    {
+        // Here simply stops fast data poll request by Mle Data Request.
+        // Note that in some cases fast data poll may continue after below stop operation until
+        // running out the specified number. E.g. other component also trigger fast poll, and
+        // is waiting for response; or the corner case where multiple Mle Data Request attempts
+        // happened due to the retransmission mechanism.
+        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
     }
 
     return error;
