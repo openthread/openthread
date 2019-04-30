@@ -555,8 +555,6 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
                                       const Mac::Address &    aMacSource,
                                       const otThreadLinkInfo &aLinkInfo)
 {
-    OT_UNUSED_VARIABLE(aFrame);
-
     Child *  child;
     uint16_t indirectMsgCount;
 
