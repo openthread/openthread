@@ -11,6 +11,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
+* [childip](#childip)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
 * [coap](#coap-start)
@@ -183,6 +184,16 @@ RSSI: -20
 Done
 ```
 
+### childip
+
+Get the list of IP addresses stored for MTD children.
+
+```bash
+> childip
+3401: fdde:ad00:beef:0:3037:3e03:8c5f:bc0c
+Done
+```
+
 ### childmax
 
 Get the Thread maximum number of allowed children.
@@ -298,7 +309,7 @@ Coap Secure service stopped:  Done
 
 ### coaps set psk \<preSharedKey\> \<keyIdentity\>
 
-Set a pre-shared key with his identifier and the ciphersuite 
+Set a pre-shared key with his identifier and the ciphersuite
 "DTLS_PSK_WITH_AES_128_CCM_8" for the dtls session.
 
 * preSharedKey: The pre-shared key (PSK) for dtls session.
@@ -1315,7 +1326,7 @@ Done
 
 ### networkidtimeout
 
-Get the NETWORK_ID_TIMEOUT parameter used in the Router role.  
+Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
 
 ```bash
 > networkidtimeout
@@ -1325,7 +1336,7 @@ Done
 
 ### networkidtimeout \<timeout\>
 
-Set the NETWORK_ID_TIMEOUT parameter used in the Router role.  
+Set the NETWORK_ID_TIMEOUT parameter used in the Router role.
 
 ```bash
 > networkidtimeout 120
@@ -1334,7 +1345,7 @@ Done
 
 ### networkname
 
-Get the Thread Network Name.  
+Get the Thread Network Name.
 
 ```bash
 > networkname
@@ -1344,7 +1355,7 @@ Done
 
 ### networkname \<name\>
 
-Set the Thread Network Name.  
+Set the Thread Network Name.
 
 ```bash
 > networkname OpenThread

@@ -113,6 +113,7 @@ const struct Command Interpreter::sCommands[] = {
     {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
     {"child", &Interpreter::ProcessChild},
+    {"childip", &Interpreter::ProcessChildIp},
     {"childmax", &Interpreter::ProcessChildMax},
 #endif
     {"childtimeout", &Interpreter::ProcessChildTimeout},
@@ -780,6 +781,44 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     mServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessChildIp(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t maxChildren;
+
+    VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
+
+    maxChildren = otThreadGetMaxAllowedChildren(mInstance);
+
+    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    {
+        otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+        otIp6Address              ip6Address;
+        otChildInfo               childInfo;
+
+        if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
+            childInfo.mIsStateRestoring)
+        {
+            continue;
+        }
+
+        iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+
+        while (otThreadGetChildNextIp6Address(mInstance, childIndex, &iterator, &ip6Address) == OT_ERROR_NONE)
+        {
+            mServer->OutputFormat("%04x: %x:%x:%x:%x:%x:%x:%x:%x\r\n", childInfo.mRloc16,
+                                  HostSwap16(ip6Address.mFields.m16[0]), HostSwap16(ip6Address.mFields.m16[1]),
+                                  HostSwap16(ip6Address.mFields.m16[2]), HostSwap16(ip6Address.mFields.m16[3]),
+                                  HostSwap16(ip6Address.mFields.m16[4]), HostSwap16(ip6Address.mFields.m16[5]),
+                                  HostSwap16(ip6Address.mFields.m16[6]), HostSwap16(ip6Address.mFields.m16[7]));
+        }
+    }
+
+exit:
+    OT_UNUSED_VARIABLE(argv);
     AppendResult(error);
 }
 
