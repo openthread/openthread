@@ -398,26 +398,26 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
      * This method removes delayed response header from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the header.
-     *
      */
-    static otError RemoveFrom(Message &aMessage)
+    static void RemoveFrom(Message &aMessage)
     {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-    };
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
+    }
 
     /**
      * This method returns a time when the message shall be sent.

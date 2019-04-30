@@ -393,7 +393,7 @@ void Mpl::HandleRetransmissionTimer(void)
                     }
 
                     // Remove the extra metadata from the MPL Data Message.
-                    messageMetadata.RemoveFrom(*message);
+                    MplBufferedMessageMetadata::RemoveFrom(*message);
                     Get<Ip6>().EnqueueDatagram(*message);
                 }
                 else

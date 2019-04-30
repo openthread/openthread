@@ -8,13 +8,20 @@ RUN apt-get install -y git software-properties-common sudo
 RUN apt-get install -y iproute2 psmisc rsyslog
 
 # setup openthread
-RUN git clone https://github.com/openthread/openthread.git
-RUN cd openthread && ./script/bootstrap && cd ..
+WORKDIR /
+COPY . openthread
+WORKDIR /openthread
+RUN git reset --hard && git clean -xfd
+RUN ./script/bootstrap
 
 # setup wpantund
+WORKDIR /
 RUN git clone https://github.com/openthread/wpantund.git
-RUN cd wpantund && ./script/bootstrap && ./bootstrap.sh && ./configure && sudo make -j8 && sudo make install && cd ..
+WORKDIR /wpantund
+RUN ./script/bootstrap && ./bootstrap.sh && ./configure && sudo make -j8 && sudo make install
 
-COPY ./docker-entrypoint.sh /
+# entrypoint
+WORKDIR /
+COPY etc/docker/environment/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["bash"]

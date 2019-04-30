@@ -463,13 +463,13 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(const Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
      * This method updates request data in the message.

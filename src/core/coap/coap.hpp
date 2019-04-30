@@ -131,20 +131,20 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads request data from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(const Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
      * This method updates request data in the message.
@@ -167,7 +167,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) >= 0); };
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) >= 0); }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -177,7 +177,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); }
 
 private:
     Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
@@ -288,25 +288,12 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(const Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    }
-
-    /**
-     * This method removes metadata from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    static void RemoveFrom(Message &aMessage)
-    {
-        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader));
-        assert(error == OT_ERROR_NONE);
-        OT_UNUSED_VARIABLE(error);
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
     }
 
     /**
