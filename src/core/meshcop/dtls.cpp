@@ -648,12 +648,12 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsTransmit");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
+        otLogDebgCoap("Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -692,12 +692,12 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsReceive");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
+        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -727,12 +727,12 @@ int Dtls::HandleMbedtlsGetTimer(void)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsGetTimer");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
+        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -765,12 +765,12 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::SetTimer");
+        otLogDebgMeshCoP("Dtls::SetTimer");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls::ApplicationCoapSecure SetTimer");
+        otLogDebgCoap("Dtls::ApplicationCoapSecure SetTimer");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -817,12 +817,12 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Generated KEK");
+        otLogDebgMeshCoP("Generated KEK");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("ApplicationCoapSecure Generated KEK");
+        otLogDebgCoap("ApplicationCoapSecure Generated KEK");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     return 0;
