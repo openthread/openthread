@@ -552,6 +552,10 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
+            // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+            // See https://github.com/openthread/openthread/pull/3785
+            sReceiveFrame[i].mInfo.mRxInfo.mAckedWithFramePending = true;
+
 #if OPENTHREAD_ENABLE_DIAG
 
             if (otPlatDiagModeGet())

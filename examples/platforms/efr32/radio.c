@@ -680,6 +680,10 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
 
         sReceiveError = OT_ERROR_NONE;
 
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())

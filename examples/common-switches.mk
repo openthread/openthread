@@ -60,10 +60,6 @@ TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
 
 
-ifeq ($(ACK_FP),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_VERIFY_ACK_FP_FLAG=1
-endif
-
 ifeq ($(BORDER_AGENT),1)
 configure_OPTIONS              += --enable-border-agent
 endif

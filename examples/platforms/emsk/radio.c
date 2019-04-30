@@ -564,6 +564,9 @@ void emskRadioProcess(otInstance *aInstance)
 
     if ((sState == OT_RADIO_STATE_RECEIVE) && (sReceiveFrame.mLength > 0))
     {
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
         otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
     }
 
