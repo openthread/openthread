@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,9 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.5
 
+$(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a:
+	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32.a )
+
 bin_PROGRAMS                                                           = \
     $(NULL)
 
@@ -42,7 +45,6 @@ CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
-    \
     -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
@@ -88,9 +90,6 @@ CPPFLAGS_COMMON                                                       += \
     -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal                                   \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \
-    $(NULL)
-
-SOURCES_GECKO_SDK                                                            =  \
     $(NULL)
 
 LDADD_COMMON                                                          += \

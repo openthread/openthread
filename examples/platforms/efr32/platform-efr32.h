@@ -126,11 +126,11 @@ void efr32LogDeinit(void);
  * @param[in]  aCallback  Callback function.
  *
  */
-void efr32SetSleepCallback(bool (*callback)(void));
+void efr32SetSleepCallback(bool (*aCallback)(void));
 
 /**
  * Put the EFR32 into a low power mode.  Before sleeping it will call a callback
- * in the application registered with efr32SetSleeCallback to ensure that there
+ * in the application registered with efr32SetSleepCallback to ensure that there
  * is no outstanding work in the application to do.
  */
 void efr32Sleep(void);

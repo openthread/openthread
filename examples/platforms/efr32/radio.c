@@ -181,12 +181,11 @@ static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 
     handle = RAIL_Init(&aBandConfig->mRailConfig, NULL);
     assert(handle != NULL);
-    gRailHandle = handle;
 
-    CMU_ClockEnable(cmuClock_PRS, true);
-    RTCDRV_Init();
-    status = RAIL_ConfigSleep(handle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
-    assert(status == RAIL_STATUS_NO_ERROR);
+    if (gRailHandle == NULL)
+    {
+        gRailHandle = handle;
+    }
 
     status = RAIL_ConfigData(handle, &railDataConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -298,7 +297,14 @@ static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle,
 
 void efr32RadioInit(void)
 {
+    RAIL_Status_t status;
+
     efr32BandConfigInit(RAILCb_Generic);
+
+    CMU_ClockEnable(cmuClock_PRS, true);
+    RTCDRV_Init();
+    status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
+    assert(status == RAIL_STATUS_NO_ERROR);
 
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;

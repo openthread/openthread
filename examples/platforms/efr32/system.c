@@ -46,10 +46,11 @@
 #include "em_system.h"
 #include "hal-config.h"
 #include "hal_common.h"
-#include "openthread-core-efr32-config.h"
-#include "platform-efr32.h"
 #include "rail.h"
 #include "rtcdriver.h"
+
+#include "openthread-core-efr32-config.h"
+#include "platform-efr32.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -103,9 +104,9 @@ void otSysDeinit(void)
 #endif
 }
 
-void efr32SetSleepCallback(bool (*callback)(void))
+void efr32SetSleepCallback(bool (*aCallback)(void))
 {
-    sCanSleepCallback = callback;
+    sCanSleepCallback = aCallback;
 }
 
 void efr32Sleep(void)

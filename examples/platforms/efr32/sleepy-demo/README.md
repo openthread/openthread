@@ -5,7 +5,7 @@ The EFR32 Sleepy applications demonstrates Sleepy End Device behaviour using
 the EFR32's low power EM2 mode. The steps below will take you through the
 process of building and running the demo
 
-For setting up the build environment refer to [examples/platforms/efr32/README.md](../../platforms/efr32/README.md).
+For setting up the build environment refer to [examples/platforms/efr32/README.md](../README.md).
 
 
 ## 1. Build
@@ -27,6 +27,8 @@ $ arm-none-eabi-objcopy -O srec efr32-sleepy-demo-ftd efr32-sleepy-demo-ftd.s37
 In Silicon Labs Simplicity Studio flash one device with the efr32-sleepy-demo-mtd.s37
 image and the other device with the efr32-sleepy-demo-ftd.s37 image.
 
+For instructions on flashing firmware see [examples/platforms/efr32/README.md](../README.md#flash-binaries)
+
 
 ## 2. Starting nodes
 
@@ -37,7 +39,7 @@ a network and add devices.
 
 When the efr32-sleepy-demo-ftd device is started in the CLI the user shall see:
 
-```CLI
+```
 efr32-sleepy-demo-ftd started
 efr32-sleepy-demo-ftd changed to leader
 ```
@@ -47,14 +49,14 @@ before disabling Rx-On-Idle to become a Sleepy-End-Device.
 
 Use the command "child table" in the FTD console and observe the R flag of the child is 0.
 
-'''CLI
+```
 > child table
 | ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |
 +-----+--------+------------+------------+-------+------+-+-+-+-+------------------+
 |   1 | 0x8401 |        240 |          3 |     3 |    3 |0|1|0|0| 8e8582dbd78c243c |
 
 Done
-'''
+```
 
 
 ## 3. Buttons on the MTD
