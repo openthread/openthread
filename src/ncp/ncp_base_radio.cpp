@@ -81,7 +81,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 
     if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
     {
-        flags |= SPINEL_MD_FLAG_ACK_FP;
+        flags |= SPINEL_MD_FLAG_ACKED_FP;
     }
 
     SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
