@@ -271,7 +271,7 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 void Client::HandleRetransmissionTimer(void)
 {
     uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = 0xffffffff;
+    uint32_t         nextDelta = TimerMilli::kForeverDt;
     QueryMetadata    queryMetadata;
     Message *        message     = mPendingQueries.GetHead();
     Message *        nextMessage = NULL;
@@ -325,7 +325,7 @@ void Client::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != 0xffffffff)
+    if (nextDelta != TimerMilli::kForeverDt)
     {
         mRetransmissionTimer.Start(nextDelta);
     }

@@ -263,7 +263,7 @@ void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 void CoapBase::HandleRetransmissionTimer(void)
 {
     uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = 0xffffffff;
+    uint32_t         nextDelta = TimerMilli::kForeverDt;
     CoapMetadata     coapMetadata;
     Message *        message     = static_cast<Message *>(mPendingRequests.GetHead());
     Message *        nextMessage = NULL;
@@ -317,7 +317,7 @@ void CoapBase::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != 0xffffffff)
+    if (nextDelta != TimerMilli::kForeverDt)
     {
         mRetransmissionTimer.Start(nextDelta);
     }
