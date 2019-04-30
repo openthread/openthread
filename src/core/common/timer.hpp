@@ -207,12 +207,7 @@ public:
      * @returns The elapsed time in milliseconds.
      *
      */
-    static uint32_t Elapsed(uint32_t aStart, uint32_t aEnd)
-    {
-        int32_t elapsed = Diff(aStart, aEnd);
-        assert(elapsed >= 0);
-        return static_cast<uint32_t>(elapsed);
-    }
+    static uint32_t Elapsed(uint32_t aStart, uint32_t aEnd) { return aEnd - aStart; }
 
     /**
      * This static method returns the time passed in milliseconds since @p aStart.
