@@ -190,7 +190,11 @@ public:
      * @returns The time diff in milliseconds.
      *
      */
-    static int32_t Diff(uint32_t aStart, uint32_t aEnd) { return static_cast<int32_t>(aEnd - aStart); }
+    static int32_t Diff(uint32_t aStart, uint32_t aEnd)
+    {
+        uint32_t diff = aEnd - aStart;
+        return reinterpret_cast<int32_t &>(diff);
+    }
 
     /**
      * This static method returns the time elapsed in milliseconds from @p aStart to @p aEnd.
