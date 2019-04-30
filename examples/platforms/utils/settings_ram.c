@@ -86,10 +86,12 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    uint16_t              i            = 0;
-    int                   currentIndex = 0;
-    struct settingsBlock *currentBlock;
-    otError               error = OT_ERROR_NOT_FOUND;
+    uint16_t                    i           = 0;
+    uint16_t                    valueLength = 0;
+    uint16_t                    readLength;
+    int                         currentIndex = 0;
+    const struct settingsBlock *currentBlock;
+    otError                     error = OT_ERROR_NOT_FOUND;
 
     while (i < sSettingsBufLength)
     {
@@ -99,23 +101,34 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
         {
             if (currentIndex == aIndex)
             {
-                if (*aValueLength > currentBlock->length)
+                readLength = currentBlock->length;
+
+                // Perform read only if an input buffer was passed in
+                if (aValue != NULL && aValueLength != NULL)
                 {
-                    *aValueLength = currentBlock->length;
+                    // Adjust read length if input buffer size is smaller
+                    if (readLength > *aValueLength)
+                    {
+                        readLength = *aValueLength;
+                    }
+
+                    memcpy(aValue, &sSettingsBuf[i + sizeof(struct settingsBlock)], readLength);
                 }
 
-                memcpy(aValue, &sSettingsBuf[i + sizeof(struct settingsBlock)], *aValueLength);
-                error = OT_ERROR_NONE;
-
+                valueLength = currentBlock->length;
+                error       = OT_ERROR_NONE;
                 break;
             }
-            else
-            {
-                currentIndex++;
-            }
+
+            currentIndex++;
         }
 
         i += sizeof(struct settingsBlock) + currentBlock->length;
+    }
+
+    if (aValueLength != NULL)
+    {
+        *aValueLength = valueLength;
     }
 
     return error;
