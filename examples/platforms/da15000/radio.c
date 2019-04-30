@@ -510,7 +510,7 @@ void da15000RadioProcess(otInstance *aInstance)
 
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.
         // See https://github.com/openthread/openthread/pull/3785
-        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+        sReceiveFrame[sReadFrame].mInfo.mRxInfo.mAckedWithFramePending = true;
 
         otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrame[sReadFrame], OT_ERROR_NONE);
 
