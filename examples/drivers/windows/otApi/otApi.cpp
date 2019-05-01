@@ -3089,6 +3089,22 @@ otThreadGetChildInfoByIndex(
 OTAPI
 otError
 OTCALL
+otThreadGetChildNextIp6Address(
+    _In_ otInstance *aInstance,
+    uint8_t aChildIndex,
+    _Inout_ otChildIp6AddressIterator *aIterator,
+    _Out_ otIp6Address *aAddress)
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    UNREFERENCED_PARAMETER(aChildIndex);
+    UNREFERENCED_PARAMETER(aIterator);
+    UNREFERENCED_PARAMETER(aAddress);
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
+}
+
+OTAPI
+otError
+OTCALL
 otThreadGetNextNeighborInfo(
     _In_ otInstance *aInstance,
     _Inout_ otNeighborInfoIterator *aIterator,

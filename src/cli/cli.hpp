@@ -195,6 +195,7 @@ private:
     void    ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
+    void ProcessChildIp(int argc, char *argv[]);
     void ProcessChildMax(int argc, char *argv[]);
 #endif
     void ProcessChildTimeout(int argc, char *argv[]);

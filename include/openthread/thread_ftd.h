@@ -462,10 +462,10 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @sa otThreadGetChildInfoByIndex
  *
  */
-otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                       uint8_t                    aChildIndex,
-                                       otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *             aAddress);
+OTAPI otError OTCALL otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                                    uint8_t                    aChildIndex,
+                                                    otChildIp6AddressIterator *aIterator,
+                                                    otIp6Address *             aAddress);
 
 /**
  * Get the current Router ID Sequence.
