@@ -217,11 +217,18 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel TLV generation and parsing.
+ * This template class defines a CRTP style base TLV class implementing common methods of TLVs.
+ *
+ * This class implements the `Init()` method which initializes a TLV by setting the TLV type and length.
+ * It also defines `IsValid()` which verifies whether the TLV appears to be well-formed. The implementation in this
+ * class simply checks the TLV length against the expected length of the TLV.
+
+ * In cases where more complicated version of `Init()` or `IsValid()` is required, a sub-class TLV can chose to
+ * override the base class method by defining its own version of these methods.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelTlv : public Tlv
+template <typename SubTlv, Tlv::Type kType> class TlvBase : public Tlv
 {
 public:
     /**
@@ -230,10 +237,28 @@ public:
      */
     void Init(void)
     {
-        SetType(kChannel);
-        SetLength(sizeof(*this) - sizeof(Tlv));
+        SetType(kType);
+        SetLength(sizeof(SubTlv) - sizeof(Tlv));
     }
 
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(SubTlv) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Channel TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChannelTlv : public TlvBase<ChannelTlv, Tlv::kChannel>
+{
+public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
@@ -286,28 +311,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PanIdTlv : public Tlv
+class PanIdTlv : public TlvBase<PanIdTlv, Tlv::kPanId>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPanId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the PAN ID value.
      *
@@ -333,28 +339,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv
+class ExtendedPanIdTlv : public TlvBase<ExtendedPanIdTlv, Tlv::kExtendedPanId>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kExtendedPanId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Extended PAN ID value.
      *
@@ -380,19 +367,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkNameTlv : public Tlv
+class NetworkNameTlv : public TlvBase<NetworkNameTlv, Tlv::kNetworkName>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkName);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
@@ -432,28 +409,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PSKcTlv : public Tlv
+class PSKcTlv : public TlvBase<PSKcTlv, Tlv::kPSKc>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPSKc);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the PSKc value.
      *
@@ -479,28 +437,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkMasterKeyTlv : public Tlv
+class NetworkMasterKeyTlv : public TlvBase<NetworkMasterKeyTlv, Tlv::kNetworkMasterKey>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkMasterKey);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Network Master Key value.
      *
@@ -526,28 +465,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkKeySequenceTlv : public Tlv
+class NetworkKeySequenceTlv : public TlvBase<NetworkKeySequenceTlv, Tlv::kNetworkKeySequence>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkKeySequence);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Network Key Sequence value.
      *
@@ -573,28 +493,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefixTlv : public Tlv
+class MeshLocalPrefixTlv : public TlvBase<MeshLocalPrefixTlv, Tlv::kMeshLocalPrefix>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kMeshLocalPrefix);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Mesh Local Prefix value.
      *
@@ -739,28 +640,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class BorderAgentLocatorTlv : public Tlv
+class BorderAgentLocatorTlv : public TlvBase<BorderAgentLocatorTlv, Tlv::kBorderAgentLocator>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kBorderAgentLocator);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Border Agent Locator value.
      *
@@ -786,19 +668,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class CommissionerIdTlv : public Tlv
+class CommissionerIdTlv : public TlvBase<CommissionerIdTlv, Tlv::kCommissionerId>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
@@ -843,28 +715,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class CommissionerSessionIdTlv : public Tlv
+class CommissionerSessionIdTlv : public TlvBase<CommissionerSessionIdTlv, Tlv::kCommissionerSessionId>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerSessionId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Commissioner Session ID value.
      *
@@ -890,28 +743,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class SecurityPolicyTlv : public Tlv
+class SecurityPolicyTlv : public TlvBase<SecurityPolicyTlv, Tlv::kSecurityPolicy>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kSecurityPolicy);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Rotation Time value.
      *
@@ -963,7 +797,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv, public Timestamp
+class ActiveTimestampTlv : public TlvBase<ActiveTimestampTlv, Tlv::kActiveTimestamp>, public Timestamp
 {
 public:
     /**
@@ -972,19 +806,9 @@ public:
      */
     void Init(void)
     {
-        SetType(kActiveTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
+        TlvBase::Init();
         Timestamp::Init();
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -992,28 +816,9 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class CommissionerUdpPortTlv : public Tlv
+class CommissionerUdpPortTlv : public TlvBase<CommissionerUdpPortTlv, Tlv::kCommissionerUdpPort>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerUdpPort);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the UDP Port value.
      *
@@ -1039,28 +844,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class StateTlv : public Tlv
+class StateTlv : public TlvBase<StateTlv, Tlv::kState>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kState);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * State values.
      *
@@ -1097,28 +883,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class JoinerUdpPortTlv : public Tlv
+class JoinerUdpPortTlv : public TlvBase<JoinerUdpPortTlv, Tlv::kJoinerUdpPort>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerUdpPort);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the UDP Port value.
      *
@@ -1144,28 +911,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class JoinerIidTlv : public Tlv
+class JoinerIidTlv : public TlvBase<JoinerIidTlv, Tlv::kJoinerIid>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerIid);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns a pointer to the Joiner IID.
      *
@@ -1191,28 +939,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class JoinerRouterLocatorTlv : public Tlv
+class JoinerRouterLocatorTlv : public TlvBase<JoinerRouterLocatorTlv, Tlv::kJoinerRouterLocator>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterLocator);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Joiner Router Locator value.
      *
@@ -1238,28 +967,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class JoinerRouterKekTlv : public Tlv
+class JoinerRouterKekTlv : public TlvBase<JoinerRouterKekTlv, Tlv::kJoinerRouterKek>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterKek);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns a pointer to the Joiner Router KEK.
      *
@@ -1285,7 +995,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv, public Timestamp
+class PendingTimestampTlv : public TlvBase<PendingTimestampTlv, Tlv::kPendingTimestamp>, public Timestamp
 {
 public:
     /**
@@ -1294,19 +1004,9 @@ public:
      */
     void Init(void)
     {
-        SetType(kPendingTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
+        TlvBase::Init();
         Timestamp::Init();
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1314,28 +1014,9 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class DelayTimerTlv : public Tlv
+class DelayTimerTlv : public TlvBase<DelayTimerTlv, Tlv::kDelayTimer>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kDelayTimer);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Delay Timer value.
      *
@@ -1539,19 +1220,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMaskBaseTlv : public Tlv
+class ChannelMaskBaseTlv : public TlvBase<ChannelMaskBaseTlv, Tlv::kChannelMask>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kChannelMask);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
@@ -1637,28 +1308,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class CountTlv : public Tlv
+class CountTlv : public TlvBase<CountTlv, Tlv::kCount>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCount);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Count value.
      *
@@ -1684,28 +1336,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PeriodTlv : public Tlv
+class PeriodTlv : public TlvBase<PeriodTlv, Tlv::kPeriod>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPeriod);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Period value.
      *
@@ -1731,28 +1364,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ScanDurationTlv : public Tlv
+class ScanDurationTlv : public TlvBase<ScanDurationTlv, Tlv::kScanDuration>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kScanDuration);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * This method returns the Scan Duration value.
      *
@@ -1778,19 +1392,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class EnergyListTlv : public Tlv
+class EnergyListTlv : public TlvBase<EnergyListTlv, Tlv::kEnergyList>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kEnergyList);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
@@ -2116,7 +1720,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class VendorStackVersionTlv : public Tlv
+class VendorStackVersionTlv : public TlvBase<VendorStackVersionTlv, Tlv::kVendorStackVersion>
 {
 public:
     /**
@@ -2128,25 +1732,6 @@ public:
         , mMinorMajor(0)
     {
     }
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVendorStackVersion);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Stack Vendor OUI value.
@@ -2277,19 +1862,9 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IPv6AddressTlv : public Tlv
+class IPv6AddressTlv : public TlvBase<IPv6AddressTlv, Tlv::kIPv6Address>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kIPv6Address);
-        SetLength(sizeof(mAddress));
-    }
-
     /**
      * This method returns the IPv6 Address.
      *
@@ -2395,7 +1970,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class DiscoveryRequestTlv : public Tlv
+class DiscoveryRequestTlv : public TlvBase<DiscoveryRequestTlv, Tlv::kDiscoveryRequest>
 {
 public:
     /**
@@ -2404,20 +1979,10 @@ public:
      */
     void Init(void)
     {
-        SetType(kDiscoveryRequest);
-        SetLength(sizeof(*this) - sizeof(Tlv));
+        TlvBase::Init();
         mFlags    = 0;
         mReserved = 0;
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Version value.
@@ -2482,7 +2047,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class DiscoveryResponseTlv : public Tlv
+class DiscoveryResponseTlv : public TlvBase<DiscoveryResponseTlv, Tlv::kDiscoveryResponse>
 {
 public:
     /**
@@ -2491,20 +2056,10 @@ public:
      */
     void Init(void)
     {
-        SetType(kDiscoveryResponse);
-        SetLength(sizeof(*this) - sizeof(Tlv));
+        TlvBase::Init();
         mFlags    = 0;
         mReserved = 0;
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Version value.
