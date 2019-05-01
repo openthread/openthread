@@ -496,6 +496,18 @@ class Node(object):
                             (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
                             (' -p {}'.format(priority) if priority is not None else ''))
 
+    def commissioner_start(self):
+        return self.wpanctl('commissioner start')
+
+    def commissioner_add_joiner(self, eui64, pskd, timeout = '100'):
+        return self.wpanctl('commissioner joiner-add {} {} {}'.format(eui64, timeout, pskd))
+
+    def joiner_join(self, pskd):
+        return self.wpanctl('joiner --join {}'.format(pskd))
+
+    def joiner_attach(self):
+        return self.wpanctl('joiner --attach')
+
     #------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
