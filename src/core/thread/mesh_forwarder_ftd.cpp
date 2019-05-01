@@ -551,7 +551,9 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
     mMessageNextOffset = aMessage.GetLength();
 }
 
-void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo)
+void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
+                                      const Mac::Address &    aMacSource,
+                                      const otThreadLinkInfo &aLinkInfo)
 {
     Child *  child;
     uint16_t indirectMsgCount;
@@ -568,14 +570,16 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const otTh
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d ack-fp:%d", child->GetRloc16(), indirectMsgCount,
+                 aLinkInfo.mRss, aFrame.IsAckedWithFramePending());
+    VerifyOrExit(aFrame.IsAckedWithFramePending());
+
     if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))
     {
         child->SetDataRequestPending(true);
     }
 
     mScheduleTransmissionTask.Post();
-
-    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d", child->GetRloc16(), indirectMsgCount, aLinkInfo.mRss);
 
 exit:
     return;

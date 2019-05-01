@@ -78,7 +78,13 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     // Append metadata (rssi, etc)
     SuccessOrExit(mEncoder.WriteInt8(aFrame->mInfo.mRxInfo.mRssi)); // RSSI
     SuccessOrExit(mEncoder.WriteInt8(-128));                        // Noise Floor (Currently unused)
-    SuccessOrExit(mEncoder.WriteUint16(flags));                     // Flags
+
+    if (aFrame->mInfo.mRxInfo.mAckedWithFramePending)
+    {
+        flags |= SPINEL_MD_FLAG_ACKED_FP;
+    }
+
+    SuccessOrExit(mEncoder.WriteUint16(flags)); // Flags
 
     SuccessOrExit(mEncoder.OpenStruct());                             // PHY-data
     SuccessOrExit(mEncoder.WriteUint8(aFrame->mChannel));             // 802.15.4 channel (Receive channel)

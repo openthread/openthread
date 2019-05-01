@@ -1269,7 +1269,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
         if (commandId == Mac::Frame::kMacCmdDataRequest)
         {
-            HandleDataRequest(macSource, linkInfo);
+            HandleDataRequest(aFrame, macSource, linkInfo);
         }
         else
         {

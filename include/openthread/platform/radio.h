@@ -202,8 +202,12 @@ typedef struct otRadioFrame
          */
         struct
         {
-            int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
-            uint8_t mLqi;  ///< Link Quality Indicator for received frames.
+            /**
+             * The timestamp when the frame was received (milliseconds).
+             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
+             *
+             */
+            uint32_t mMsec;
 
             /**
              * The timestamp when the frame was received (microseconds, the offset to mMsec).
@@ -211,13 +215,11 @@ typedef struct otRadioFrame
              *
              */
             uint16_t mUsec;
+            int8_t   mRssi; ///< Received signal strength indicator in dBm for received frames.
+            uint8_t  mLqi;  ///< Link Quality Indicator for received frames.
 
-            /**
-             * The timestamp when the frame was received (milliseconds).
-             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
-             *
-             */
-            uint32_t mMsec;
+            // Flags
+            bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
         } mRxInfo;
     } mInfo;
 } otRadioFrame;

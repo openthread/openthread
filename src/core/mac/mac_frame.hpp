@@ -1018,6 +1018,15 @@ public:
     bool IsARetransmission(void) const { return mInfo.mTxInfo.mIsARetx; }
 
     /**
+     * This method indicates whether or not the received frame is acknowledged with frame pending set.
+     *
+     * @retval TRUE   This frame is acknowledged with frame pending set.
+     * @retval FALSE  This frame is acknowledged with frame pending not set.
+     *
+     */
+    bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
+
+    /**
      * This method sets the retransmission flag attribute.
      *
      * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
