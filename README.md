@@ -2,6 +2,7 @@
 [![Build Status][ot-travis-svg]][ot-travis]
 [![Build Status][ot-appveyor-svg]][ot-appveyor]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
+[![Build Status][ot-docker-dev-svg]][ot-docker-dev]
 
 ---
 
@@ -29,6 +30,8 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [ot-appveyor-svg]: https://ci.appveyor.com/api/projects/status/r5qwyhn9p26nmfk3?svg=true
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
+[ot-docker-dev]: https://hub.docker.com/r/openthread/environment
+[ot-docker-dev-svg]: https://img.shields.io/docker/cloud/build/openthread/environment.svg?label=docker%20%7C%20dev
 
 # Who supports OpenThread?
 
