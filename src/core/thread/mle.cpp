@@ -1816,7 +1816,7 @@ void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
     uint32_t              now         = TimerMilli::GetNow();
-    uint32_t              nextDelay   = 0xffffffff;
+    uint32_t              nextDelay   = TimerMilli::kForeverDt;
     Message *             message     = mDelayedResponses.GetHead();
     Message *             nextMessage = NULL;
 
@@ -1864,7 +1864,7 @@ void Mle::HandleDelayedResponseTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelay != 0xffffffff)
+    if (nextDelay != TimerMilli::kForeverDt)
     {
         mDelayedResponseTimer.Start(nextDelay);
     }
@@ -3953,7 +3953,7 @@ void Mle::HandleParentSearchTimer(void)
         // from `UpdateParentSearchState()`. We want to limit this to happen
         // only once within a backoff interval.
 
-        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
+        if (TimerMilli::Elapsed(mParentSearchBackoffCancelTime) >= kParentSearchBackoffInterval)
         {
             mParentSearchBackoffWasCanceled = false;
             otLogInfoMle("PeriodicParentSearch: Backoff cancellation is allowed on parent switch");

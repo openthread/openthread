@@ -1649,7 +1649,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         }
 #endif
     }
-    else if ((TimerMilli::GetNow() - child->GetLastHeard()) < kParentRequestRouterTimeout)
+    else if (TimerMilli::Elapsed(child->GetLastHeard()) < kParentRequestRouterTimeout)
     {
         ExitNow(error = OT_ERROR_DUPLICATED);
     }
@@ -1790,7 +1790,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             break;
         }
 
-        if ((TimerMilli::GetNow() - child.GetLastHeard()) >= timeout)
+        if (TimerMilli::Elapsed(child.GetLastHeard()) >= timeout)
         {
             otLogInfoMle("Child timeout expired");
             RemoveNeighbor(child);
@@ -1814,7 +1814,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             continue;
         }
 
-        age = TimerMilli::GetNow() - router.GetLastHeard();
+        age = TimerMilli::Elapsed(router.GetLastHeard());
 
         if (router.GetState() == Neighbor::kStateValid)
         {
@@ -3609,7 +3609,7 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mRloc16             = aChild.GetRloc16();
     aChildInfo.mChildId            = GetChildId(aChild.GetRloc16());
     aChildInfo.mNetworkDataVersion = aChild.GetNetworkDataVersion();
-    aChildInfo.mAge                = TimerMilli::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
+    aChildInfo.mAge                = TimerMilli::MsecToSec(TimerMilli::Elapsed(aChild.GetLastHeard()));
     aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
     aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
@@ -3687,7 +3687,7 @@ exit:
     if (neighbor != NULL)
     {
         aNeighInfo.mExtAddress       = neighbor->GetExtAddress();
-        aNeighInfo.mAge              = TimerMilli::MsecToSec(TimerMilli::GetNow() - neighbor->GetLastHeard());
+        aNeighInfo.mAge              = TimerMilli::MsecToSec(TimerMilli::Elapsed(neighbor->GetLastHeard()));
         aNeighInfo.mRloc16           = neighbor->GetRloc16();
         aNeighInfo.mLinkFrameCounter = neighbor->GetLinkFrameCounter();
         aNeighInfo.mMleFrameCounter  = neighbor->GetMleFrameCounter();

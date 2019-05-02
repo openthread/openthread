@@ -479,7 +479,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t      elapsed = TimerMilli::GetNow() - mUpdateTime;
+            uint32_t      elapsed = TimerMilli::Elapsed(mUpdateTime);
             DelayTimerTlv delayTimer(static_cast<const DelayTimerTlv &>(*cur));
 
             if (delayTimer.GetDelayTimer() > elapsed)

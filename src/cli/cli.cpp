@@ -2011,7 +2011,7 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 
     if (aMessage.Read(aMessage.GetOffset(), sizeof(uint32_t), &timestamp) >= static_cast<int>(sizeof(uint32_t)))
     {
-        mServer->OutputFormat(" time=%dms", TimerMilli::GetNow() - HostSwap32(timestamp));
+        mServer->OutputFormat(" time=%dms", TimerMilli::Elapsed(HostSwap32(timestamp)));
     }
 
     mServer->OutputFormat("\r\n");

@@ -399,25 +399,31 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 void Commissioner::UpdateJoinerExpirationTimer(void)
 {
     uint32_t now         = TimerMilli::GetNow();
-    uint32_t nextTimeout = 0xffffffff;
+    uint32_t nextTimeout = TimerMilli::kForeverDt;
 
     // Check if timer should be set for next Joiner.
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
-        {
-            if (!mJoiners[i].mValid)
-            {
-                continue;
-            }
+        int32_t diff;
 
-            if (mJoiners[i].mExpirationTime - now < nextTimeout)
-            {
-                nextTimeout = mJoiners[i].mExpirationTime - now;
-            }
+        if (!mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        diff = TimerMilli::Diff(now, mJoiners[i].mExpirationTime);
+        if (diff <= 0)
+        {
+            nextTimeout = 0;
+            break;
+        }
+        else if (static_cast<uint32_t>(diff) < nextTimeout)
+        {
+            nextTimeout = static_cast<uint32_t>(diff);
         }
     }
 
-    if (nextTimeout != 0xffffffff)
+    if (nextTimeout != TimerMilli::kForeverDt)
     {
         // Update the timer to the timeout of the next Joiner.
         mJoinerExpirationTimer.Start(nextTimeout);

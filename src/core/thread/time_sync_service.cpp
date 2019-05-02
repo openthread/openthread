@@ -66,6 +66,7 @@ TimeSync::TimeSync(Instance &aInstance)
     , mTimer(aInstance, HandleTimeout, this)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
+    mLastTimeSyncReceived = TimerMilli::GetNow();
     CheckAndHandleChanges(false);
 }
 
@@ -133,7 +134,7 @@ void TimeSync::NotifyTimeSyncCallback(void)
 void TimeSync::ProcessTimeSync(void)
 {
     if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER &&
-        TimerMilli::GetNow() - mLastTimeSyncSent > TimerMilli::SecToMsec(mTimeSyncPeriod))
+        TimerMilli::Elapsed(mLastTimeSyncSent) > TimerMilli::SecToMsec(mTimeSyncPeriod))
     {
         IncrementTimeSyncSeq();
         mTimeSyncRequired = true;
@@ -180,7 +181,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
     otNetworkTimeStatus networkTimeStatus       = OT_NETWORK_TIME_SYNCHRONIZED;
     const otDeviceRole  role                    = Get<Mle::MleRouter>().GetRole();
     const uint32_t      resyncNeededThresholdMs = 2 * TimerMilli::SecToMsec(mTimeSyncPeriod);
-    const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
+    const uint32_t      timeSyncLastSyncMs      = TimerMilli::Elapsed(mLastTimeSyncReceived);
 
     mTimer.Stop();
 
