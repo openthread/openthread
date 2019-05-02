@@ -854,7 +854,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_psk(self, psk, pskIdentity):
-        cmd = 'coaps set psk ' + psk + ' ' + pskIdentity
+        cmd = 'coaps psk ' + psk + ' ' + pskIdentity
         self.send_command(cmd)
         self._expect('Done')
 
@@ -863,7 +863,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_x509(self):
-        cmd = 'coaps set x509'
+        cmd = 'coaps x509'
         self.send_command(cmd)
         self._expect('Done')
 
@@ -898,7 +898,7 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('CoAP Secure connected!', timeout=timeout)
+        self._expect('coaps connected', timeout=timeout)
 
     def coaps_disconnect(self):
         cmd = 'coaps disconnect'
@@ -916,7 +916,7 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('Received coap secure response', timeout=timeout)
+        self._expect('coaps response', timeout=timeout)
 
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset binary ' + tlvs_binary
