@@ -13,6 +13,9 @@ has rich memory and peripheral resources which can support all OpenThread
 capabilities. See the "Run the example with EFR32 boards" section below
 for an example using basic OpenThread capabilities.
 
+See [sleepy-demo/README.md](sleepy-demo/README.md) for instructions for an example that uses the low-energy
+modes of the EFR32 when running as a Sleepy End Device.
+
 [efr32mg12p]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc/device.EFR32MG12P432F1024GL125
 
 ## Toolchain
