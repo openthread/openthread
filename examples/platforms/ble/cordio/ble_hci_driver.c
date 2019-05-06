@@ -42,8 +42,8 @@
 #include "hci_drv.h"
 #include "hci_mbed_os_adaptation.h"
 
-#include "ble/ble_hci_driver.h"
-#include "ble/ble_utils.h"
+#include "cordio/ble_hci_driver.h"
+#include "cordio/ble_utils.h"
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
@@ -61,9 +61,9 @@
 #include "chci_tr_serial.h"
 #include "lhci_api.h"
 #include "ll_math.h"
-#endif
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 enum
 {
@@ -378,4 +378,4 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
         }
     }
 }
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST

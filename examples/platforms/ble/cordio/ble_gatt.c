@@ -42,15 +42,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ble/ble_gap.h"
-#include "ble/ble_mgmt.h"
-#include "ble/ble_utils.h"
+#include "cordio/ble_gap.h"
+#include "cordio/ble_init.h"
+#include "cordio/ble_utils.h"
 #include "utils/code_utils.h"
 
 #include <openthread/platform/ble.h>
 #include <openthread/platform/toolchain.h>
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 enum
 {
@@ -234,7 +234,7 @@ static otError AttToOtError(uint8_t aError)
 
 static void gattProcessMtuUpdateInd(attEvt_t *aEvent)
 {
-    otPlatBleGattClientOnMtuExchangeResponse(bleMgmtGetThreadInstance(), aEvent->mtu, AttToOtError(aEvent->hdr.status));
+    otPlatBleGattClientOnMtuExchangeResponse(bleGetThreadInstance(), aEvent->mtu, AttToOtError(aEvent->hdr.status));
 }
 
 static void gattProcessClientReadRsp(attEvt_t *aEvent)
@@ -246,7 +246,7 @@ static void gattProcessClientReadRsp(attEvt_t *aEvent)
         packet.mValue  = aEvent->pValue;
         packet.mLength = aEvent->valueLen;
 
-        otPlatBleGattClientOnReadResponse(bleMgmtGetThreadInstance(), &packet);
+        otPlatBleGattClientOnReadResponse(bleGetThreadInstance(), &packet);
     }
 }
 
@@ -256,12 +256,12 @@ static void gattProcessClientWriteRsp(attEvt_t *aEvent)
     {
         sCccdWriteHandle = 0;
         otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
-        otPlatBleGattClientOnSubscribeResponse(bleMgmtGetThreadInstance(), aEvent->handle);
+        otPlatBleGattClientOnSubscribeResponse(bleGetThreadInstance(), aEvent->handle);
     }
     else
     {
         otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
-        otPlatBleGattClientOnWriteResponse(bleMgmtGetThreadInstance(), aEvent->handle);
+        otPlatBleGattClientOnWriteResponse(bleGetThreadInstance(), aEvent->handle);
     }
 
 exit:
@@ -296,7 +296,7 @@ static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
             sServicesDiscovered = true;
 
             BYTES_TO_UINT16(uuid, p);
-            otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), attHandle, endGroupHandle, uuid,
+            otPlatBleGattClientOnServiceDiscovered(bleGetThreadInstance(), attHandle, endGroupHandle, uuid,
                                                    OT_ERROR_NONE);
         }
         else
@@ -317,7 +317,7 @@ static void gattProcessClientReadByGroupRsp(attEvt_t *aEvent)
 exit:
     if ((!sServicesDiscovered) && (error != OT_ERROR_NONE))
     {
-        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0, error);
+        otPlatBleGattClientOnServiceDiscovered(bleGetThreadInstance(), 0, 0, 0, error);
     }
 
     return;
@@ -340,7 +340,7 @@ static void gattProcessClientFindByTypeValueRsp(attEvt_t *aEvent)
         BYTES_TO_UINT16(groupEndHandle, p);
 
         sServiceDiscovered = true;
-        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), attrHandle, groupEndHandle,
+        otPlatBleGattClientOnServiceDiscovered(bleGetThreadInstance(), attrHandle, groupEndHandle,
                                                sServiceDiscoverUuid.mValue.mUuid16, OT_ERROR_NONE);
     }
 
@@ -355,7 +355,7 @@ static void gattProcessClientFindByTypeValueRsp(attEvt_t *aEvent)
 exit:
     if (!sServiceDiscovered && (error != OT_ERROR_NONE))
     {
-        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0, error);
+        otPlatBleGattClientOnServiceDiscovered(bleGetThreadInstance(), 0, 0, 0, error);
     }
 
     return;
@@ -409,7 +409,7 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
     }
 
     sCharacteristicDiscovered = true;
-    otPlatBleGattClientOnCharacteristicsDiscoverDone(bleMgmtGetThreadInstance(), gattChars, i, OT_ERROR_NONE);
+    otPlatBleGattClientOnCharacteristicsDiscoverDone(bleGetThreadInstance(), gattChars, i, OT_ERROR_NONE);
 
     if (attrHandle + 1 <= sCharDiscoverEndHandle)
     {
@@ -424,7 +424,7 @@ exit:
 
     if (!sCharacteristicDiscovered && (error != OT_ERROR_NONE))
     {
-        otPlatBleGattClientOnCharacteristicsDiscoverDone(bleMgmtGetThreadInstance(), NULL, 0, error);
+        otPlatBleGattClientOnCharacteristicsDiscoverDone(bleGetThreadInstance(), NULL, 0, error);
     }
 
     return;
@@ -469,7 +469,7 @@ static void gattProcessClientFindInfoRsp(attEvt_t *aEvent)
     }
 
     sDescriptorDiscovered = true;
-    otPlatBleGattClientOnDescriptorsDiscoverDone(bleMgmtGetThreadInstance(), gattDescriptors, i, OT_ERROR_NONE);
+    otPlatBleGattClientOnDescriptorsDiscoverDone(bleGetThreadInstance(), gattDescriptors, i, OT_ERROR_NONE);
 
     if (gattDescriptors[i - 1].mHandle + 1 <= sDescDiscoverEndHandle)
     {
@@ -480,7 +480,7 @@ static void gattProcessClientFindInfoRsp(attEvt_t *aEvent)
 exit:
     if (!sDescriptorDiscovered && (error != OT_ERROR_NONE))
     {
-        otPlatBleGattClientOnDescriptorsDiscoverDone(bleMgmtGetThreadInstance(), NULL, 0, error);
+        otPlatBleGattClientOnDescriptorsDiscoverDone(bleGetThreadInstance(), NULL, 0, error);
     }
 
     return;
@@ -495,7 +495,7 @@ static void gattProcessClientHandleValueInd(attEvt_t *aEvent)
     packet.mValue  = aEvent->pValue;
     packet.mLength = aEvent->valueLen;
 
-    otPlatBleGattClientOnIndication(bleMgmtGetThreadInstance(), aEvent->handle, &packet);
+    otPlatBleGattClientOnIndication(bleGetThreadInstance(), aEvent->handle, &packet);
 
 exit:
     return;
@@ -505,7 +505,7 @@ static void gattProcessClientHandleValueConf(attEvt_t *aEvent)
 {
     otEXPECT(aEvent->hdr.status == ATT_SUCCESS);
 
-    otPlatBleGattServerOnIndicationConfirmation(bleMgmtGetThreadInstance(), aEvent->handle);
+    otPlatBleGattServerOnIndicationConfirmation(bleGetThreadInstance(), aEvent->handle);
 
 exit:
     return;
@@ -635,7 +635,7 @@ static uint8_t GattServerReadCallback(dmConnId_t  aConnectionId,
     {
         otBleRadioPacket packet;
 
-        otPlatBleGattServerOnReadRequest(bleMgmtGetThreadInstance(), aHandle, &packet);
+        otPlatBleGattServerOnReadRequest(bleGetThreadInstance(), aHandle, &packet);
 
         aAttr->pValue = packet.mValue;
         *aAttr->pLen  = packet.mLength;
@@ -663,7 +663,7 @@ static uint8_t GattServerWriteCallback(dmConnId_t  aConnectionId,
         packet.mValue  = aValue;
         packet.mLength = aLength;
 
-        otPlatBleGattServerOnWriteRequest(bleMgmtGetThreadInstance(), aHandle, &packet);
+        otPlatBleGattServerOnWriteRequest(bleGetThreadInstance(), aHandle, &packet);
         error = ATT_SUCCESS;
     }
 
@@ -899,7 +899,7 @@ static void GattServerCccdCallback(attsCccEvt_t *aEvent)
     if (aEvent->hdr.event == ATTS_CCC_STATE_IND)
     {
         subscribing = (aEvent->value & ATT_CLIENT_CFG_INDICATE) ? true : false;
-        otPlatBleGattServerOnSubscribeRequest(bleMgmtGetThreadInstance(), aEvent->handle, subscribing);
+        otPlatBleGattServerOnSubscribeRequest(bleGetThreadInstance(), aEvent->handle, subscribing);
     }
 }
 
@@ -1125,4 +1125,4 @@ OT_TOOL_WEAK void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, u
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aSubscribing);
 }
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST

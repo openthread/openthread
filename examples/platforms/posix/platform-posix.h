@@ -105,7 +105,7 @@ struct Event
 enum
 {
     WELLKNOWN_NODE_ID     = 34, ///< Well-known Unique ID used by a simulated 154 radio that supports promiscuous mode.
-    WELLKNOWN_BLE_NODE_ID = 12, ///< Well-known Unique ID used by a simulated BLE radio that supports promiscuous mode.
+    WELLKNOWN_BLE_NODE_ID = 5,  ///< Well-known Unique ID used by a simulated BLE radio that supports promiscuous mode.
 };
 
 /**
@@ -253,7 +253,7 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 /**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
@@ -342,6 +342,6 @@ void platformBleHciUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMa
 void platformBleHciProcess(otInstance *aInstance);
 
 #endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST
 
 #endif // PLATFORM_POSIX_H_

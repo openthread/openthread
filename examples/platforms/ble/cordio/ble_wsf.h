@@ -29,42 +29,27 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack HCI interfaces.
+ *   This file defines the Wireless Software Foundation (WSF) interfaces.
  */
 
-#ifndef BLE_HCI_DRIVER_H
-#define BLE_HCI_DRIVER_H
+#ifndef BLE_WSF_H
+#define BLE_WSF_H
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-
 /**
- * This method enables the BLE HCI interface.
+ * This method initializes the BLE WSF.
  *
  */
-void bleHciEnable(void);
-
-/**
- * This method disables the BLE HCI interface.
- *
- */
-void bleHciDisable(void);
-
-/**
- * This method processes received HCI raw data.
- * @note This method is implemented by Cordio stack.
- *
- */
-void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
+void bleWsfInit(void);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-#endif // BLE_HCI_DRIVER_H
+#endif // OPENTHREAD_ENABLE_BLE_HOST
+#endif // BLE_WSF_H

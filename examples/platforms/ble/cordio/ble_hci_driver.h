@@ -29,12 +29,42 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack Base Band driver interfaces.
+ *   This file defines the Cordio BLE stack HCI interfaces.
  */
 
-#ifndef BLE_BB_DRIVER_H
-#define BLE_BB_DRIVER_H
+#ifndef BLE_HCI_DRIVER_H
+#define BLE_HCI_DRIVER_H
 
-void bleControllerInit(void);
+#if OPENTHREAD_ENABLE_BLE_HOST
 
-#endif // BLE_BB_DRIVER_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+
+/**
+ * This method enables the BLE HCI interface.
+ *
+ */
+void bleHciEnable(void);
+
+/**
+ * This method disables the BLE HCI interface.
+ *
+ */
+void bleHciDisable(void);
+
+/**
+ * This method processes received HCI raw data.
+ * @note This method is implemented by Cordio stack.
+ *
+ */
+void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_ENABLE_BLE_HOST
+#endif // BLE_HCI_DRIVER_H

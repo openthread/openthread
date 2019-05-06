@@ -41,13 +41,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ble/ble_l2cap.h"
-#include "ble/ble_mgmt.h"
+#include "cordio/ble_init.h"
+#include "cordio/ble_l2cap.h"
 #include "utils/code_utils.h"
 
 #include <openthread/platform/ble.h>
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #if OPENTHREAD_ENABLE_L2CAP
 enum
 {
@@ -167,12 +167,12 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         if (aIsInitiator)
         {
             otEXPECT(conn->mLocalCid == connInd->cid);
-            otPlatBleL2capOnConnectionResponse(bleMgmtGetThreadInstance(), l2capHandle, connInd->peerMtu);
+            otPlatBleL2capOnConnectionResponse(bleGetThreadInstance(), l2capHandle, connInd->peerMtu);
         }
         else
         {
             conn->mLocalCid = connInd->cid;
-            otPlatBleL2capOnConnectionRequest(bleMgmtGetThreadInstance(), l2capHandle, connInd->peerMtu);
+            otPlatBleL2capOnConnectionRequest(bleGetThreadInstance(), l2capHandle, connInd->peerMtu);
         }
 
         break;
@@ -186,7 +186,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
         error = dataCnf->hdr.status == L2C_COC_DATA_SUCCESS ? OT_ERROR_NONE : OT_ERROR_FAILED;
-        otPlatBleL2capOnSduSent(bleMgmtGetThreadInstance(), l2capHandle, error);
+        otPlatBleL2capOnSduSent(bleGetThreadInstance(), l2capHandle, error);
 
         break;
     }
@@ -201,7 +201,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         l2capHandle = l2capFindHandleByCid(gapConnId, dataInd->cid);
         otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
 
-        otPlatBleL2capOnSduReceived(bleMgmtGetThreadInstance(), l2capHandle, &packet);
+        otPlatBleL2capOnSduReceived(bleGetThreadInstance(), l2capHandle, &packet);
         break;
     }
     case L2C_COC_DISCONNECT_IND:
@@ -215,7 +215,7 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         otEXPECT((conn = l2capGetConnection(l2capHandle)) != NULL);
         conn->mConnected = false;
 
-        otPlatBleL2capOnDisconnect(bleMgmtGetThreadInstance(), l2capHandle);
+        otPlatBleL2capOnDisconnect(bleGetThreadInstance(), l2capHandle);
         break;
     }
     }
@@ -453,4 +453,4 @@ OT_TOOL_WEAK void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint8_t aL2c
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aL2capHandle);
 }
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST

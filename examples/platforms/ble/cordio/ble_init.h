@@ -29,12 +29,46 @@
 /**
  * @file
  * @brief
- *   This file defines the BLE Controller initialization interfaces.
+ *   This file defines the Cordio BLE stack initialization interfaces.
  */
 
-#ifndef BLE_CONTROLLER_INIT_H
-#define BLE_CONTROLLER_INIT_H
+#ifndef BLE_INIT_H
+#define BLE_INIT_H
 
-void bleControllerInit(void);
+#if OPENTHREAD_ENABLE_BLE_HOST
 
-#endif // BLE_CONTROLLER_INIT_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <openthread/instance.h>
+
+/**
+ * This enumeration represents the state of the BLE stack.
+ */
+enum
+{
+    kStateDisabled       = 0, ///< The BLE stack is disabled.
+    kStateInitializing   = 1, ///< The BLE stack is initializing.
+    kStateInitialized    = 2, ///< The BLE stack is initialized.
+    kStateDeinitializing = 3, ///< The BLE stack is deinitializing.
+};
+
+/**
+ * This method returns the OpenThread instance.
+ *
+ */
+otInstance *bleGetThreadInstance(void);
+
+/**
+ * This method returns the state of the BLE stack.
+ *
+ */
+uint8_t bleGetState(void);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_ENABLE_BLE_HOST
+#endif // BLE_INIT_H

@@ -39,8 +39,7 @@
 #include "bb_ble_drv.h"
 #include "bb_drv.h"
 
-#include "ble/ble_bb_driver.h"
-#include "ble/ble_mgmt.h"
+#include "cordio/ble_init.h"
 #include "utils/code_utils.h"
 
 #include <string.h>
@@ -69,7 +68,7 @@ void BbDrvDisable(void)
 
 uint32_t BbDrvGetCurrentTime(void)
 {
-    return otPlatRadioBleGetTickNow(bleMgmtGetThreadInstance());
+    return otPlatRadioBleGetTickNow(bleGetThreadInstance());
 }
 
 bool_t BbDrvGetTimestamp(uint32_t *pTime)
@@ -84,12 +83,12 @@ void BbBleDrvInit(void)
 
 void BbBleDrvEnable(void)
 {
-    otPlatRadioBleEnable(bleMgmtGetThreadInstance());
+    otPlatRadioBleEnable(bleGetThreadInstance());
 }
 
 void BbBleDrvDisable(void)
 {
-    otPlatRadioBleDisable(bleMgmtGetThreadInstance());
+    otPlatRadioBleDisable(bleGetThreadInstance());
 }
 
 void BbBleDrvSetChannelParam(BbBleDrvChan_t *pChan)
@@ -105,7 +104,7 @@ int8_t BbBleRfGetActualTxPower(int8_t txPwr, bool_t compFlag)
     OT_UNUSED_VARIABLE(txPwr);
     OT_UNUSED_VARIABLE(compFlag);
 
-    return otPlatRadioBleGetTransmitPower(bleMgmtGetThreadInstance());
+    return otPlatRadioBleGetTransmitPower(bleGetThreadInstance());
 }
 
 void BbBleDrvSetDataParams(const BbBleDrvDataParam_t *pParam)
@@ -122,11 +121,11 @@ void BbBleDrvSetOpParams(const BbBleDrvOpParam_t *pOpParam)
 
     if (pOpParam->ifsSetup)
     {
-        otPlatRadioBleEnableTifs(bleMgmtGetThreadInstance());
+        otPlatRadioBleEnableTifs(bleGetThreadInstance());
     }
     else
     {
-        otPlatRadioBleDisableTifs(bleMgmtGetThreadInstance());
+        otPlatRadioBleDisableTifs(bleGetThreadInstance());
     }
 
 exit:
@@ -155,7 +154,7 @@ void BbBleDrvTxData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
 
     otEXPECT(sChannelParams != NULL);
     otEXPECT(sDataParams != NULL);
-    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleMgmtGetThreadInstance())) != NULL);
+    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleGetThreadInstance())) != NULL);
 
     for (i = 0, offset = 0; i < cnt; i++)
     {
@@ -173,8 +172,8 @@ void BbBleDrvTxData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
     settings.mAccessAddress = sChannelParams->accAddr;
     settings.mCrcInit       = sChannelParams->crcInit;
 
-    otEXPECT(otPlatRadioBleSetTransmitPower(bleMgmtGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
-    otPlatRadioBleTransmitAtTime(bleMgmtGetThreadInstance(), &settings, &time);
+    otEXPECT(otPlatRadioBleSetTransmitPower(bleGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
+    otPlatRadioBleTransmitAtTime(bleGetThreadInstance(), &settings, &time);
 
 exit:
     return;
@@ -188,7 +187,7 @@ void BbBleDrvTxTifsData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
     uint16_t           i;
 
     otEXPECT(sChannelParams != NULL);
-    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleMgmtGetThreadInstance())) != NULL);
+    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleGetThreadInstance())) != NULL);
 
     for (i = 0, offset = 0; i < cnt; i++)
     {
@@ -203,8 +202,8 @@ void BbBleDrvTxTifsData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
     settings.mAccessAddress = sChannelParams->accAddr;
     settings.mCrcInit       = sChannelParams->crcInit;
 
-    otEXPECT(otPlatRadioBleSetTransmitPower(bleMgmtGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
-    otPlatRadioBleTransmitAtTifs(bleMgmtGetThreadInstance(), &settings);
+    otEXPECT(otPlatRadioBleSetTransmitPower(bleGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
+    otPlatRadioBleTransmitAtTifs(bleGetThreadInstance(), &settings);
 
 exit:
     return;
@@ -229,7 +228,7 @@ void BbBleDrvRxData(uint8_t *pBuf, uint16_t len)
     settings.mAccessAddress = sChannelParams->accAddr;
     settings.mCrcInit       = sChannelParams->crcInit;
 
-    otPlatRadioBleReceiveAtTime(bleMgmtGetThreadInstance(), &settings, &time);
+    otPlatRadioBleReceiveAtTime(bleGetThreadInstance(), &settings, &time);
 
 exit:
     return;
@@ -248,7 +247,7 @@ void BbBleDrvRxTifsData(uint8_t *pBuf, uint16_t len)
     settings.mAccessAddress = sChannelParams->accAddr;
     settings.mCrcInit       = sChannelParams->crcInit;
 
-    otPlatRadioBleReceiveAtTifs(bleMgmtGetThreadInstance(), &settings);
+    otPlatRadioBleReceiveAtTifs(bleGetThreadInstance(), &settings);
 
 exit:
     return;
@@ -283,12 +282,12 @@ exit:
 
 void BbBleDrvCancelTifs(void)
 {
-    otPlatRadioBleCancelTifs(bleMgmtGetThreadInstance());
+    otPlatRadioBleCancelTifs(bleGetThreadInstance());
 }
 
 void BbBleDrvCancelData(void)
 {
-    otPlatRadioBleCancelData(bleMgmtGetThreadInstance());
+    otPlatRadioBleCancelData(bleGetThreadInstance());
 }
 
 void BbBleDrvRand(uint8_t *pBuf, uint8_t len)
@@ -302,7 +301,7 @@ void BbBleDrvRand(uint8_t *pBuf, uint8_t len)
 }
 
 /**
- * Define unused functions.
+ * Unused BLE module functions definition.
  *
  */
 

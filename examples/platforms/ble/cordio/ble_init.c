@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the BLE management interfaces for Cordio BLE stack.
+ *   This file implements Cordio BLE stack initialization.
  *
  */
 #include <openthread-core-config.h>
@@ -47,36 +47,30 @@
 #include "smp_handler.h"
 #include "wsf_buf.h"
 #include "wsf_mbed_os_adaptation.h"
-#include "wsf_msg.h"
-#include "wsf_os.h"
-#include "wsf_timer.h"
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "lctr_int_conn.h"
 #include "ll_defs.h"
+#include "cordio/ble_cfg.h"
+#include "cordio/ble_controller_init.h"
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#include "ble/ble_cfg.h"
-#include "ble/ble_controller_init.h"
-#endif
-
-#include "ble/ble_gap.h"
-#include "ble/ble_gatt.h"
-#include "ble/ble_hci_driver.h"
-#include "ble/ble_l2cap.h"
-#include "ble/ble_mgmt.h"
-#include "common/logging.hpp"
+#include "cordio/ble_gap.h"
+#include "cordio/ble_gatt.h"
+#include "cordio/ble_hci_driver.h"
+#include "cordio/ble_init.h"
+#include "cordio/ble_l2cap.h"
+#include "cordio/ble_wsf.h"
 #include "utils/code_utils.h"
 
 #include <assert.h>
 #include <openthread/error.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/ble.h>
-#include <openthread/platform/logging.h>
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include <openthread/platform/radio-ble.h>
-#endif
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 #define WSF_MSG_HEADROOM_LENGTH 20
@@ -91,27 +85,20 @@ enum
     kStackBufferSize = 9592,
 };
 
-static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16 + 8},
-                                       {32, 16 + 4},
-                                       {64, 8},
-                                       {128, 4 + BLE_STACK_MAX_ADV_REPORTS},
-                                       {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
-                                       {272, 1},
-                                       {1300, 2}};
-#else
+static wsfBufPoolDesc_t sPoolDesc[] = {
+    {16, 16 + 8}, {32, 16 + 4}, {64, 8}, {128, 4 + BLE_STACK_MAX_ADV_REPORTS}, {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
+    {272, 1},     {1300, 2}};
+#else  // OPENTHREAD_ENABLE_L2CAP
 enum
 {
     kStackBufferSize = 6944,
 };
 
-static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16 + 8},
-                                       {32, 16 + 4},
-                                       {64, 8},
-                                       {128, 4 + BLE_STACK_MAX_ADV_REPORTS},
-                                       {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
-                                       {272, 1}};
-#endif
-#else
+static wsfBufPoolDesc_t sPoolDesc[] = {
+    {16, 16 + 8}, {32, 16 + 4}, {64, 8}, {128, 4 + BLE_STACK_MAX_ADV_REPORTS}, {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
+    {272, 1}};
+#endif // !OPENTHREAD_ENABLE_L2CAP
+#else  // OPENTHREAD_ENABLE_BLE_CONTROLLER
 #if OPENTHREAD_ENABLE_L2CAP
 enum
 {
@@ -119,27 +106,19 @@ enum
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}, {1300, 2}};
-#else
+#else  // OPENTHREAD_ENABLE_L2CAP
 enum
 {
     kStackBufferSize = 2250,
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
-#endif
-#endif
+#endif // !OPENTHREAD_ENABLE_L2CAP
+#endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 /* WSF heap allocation */
 uint8_t *SystemHeapStart;
 uint32_t SystemHeapSize;
-
-enum
-{
-    kStateIdle           = 0,
-    kStateInitializing   = 1,
-    kStateInitialized    = 2,
-    kStateDeinitializing = 3,
-};
 
 enum
 {
@@ -148,41 +127,24 @@ enum
 
 __attribute__((aligned(4))) static uint8_t sStackBuffer[kStackBufferSize];
 
-static uint8_t     sState            = kStateIdle;
+static uint8_t     sState            = kStateDisabled;
 static otInstance *sInstance         = NULL;
 static bool        sStackInitialized = false;
-static bool        sTaskletsPending  = false;
-static uint32_t    sLastUpdateMs;
 static wsfTimer_t  sTimer;
 
 static void bleHostInit(void);
-
-// This function is called by the ble stack to signal to user code to run wsfOsDispatcher().
-void wsf_mbed_ble_signal_event(void)
-{
-    sTaskletsPending = true;
-}
-
-void wsf_mbed_os_critical_section_enter(void)
-{
-    // Intentionally empty.
-}
-
-void wsf_mbed_os_critical_section_exit(void)
-{
-    // Intentionally empty.
-}
 
 otError otPlatBleEnable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION((sInstance == NULL) && (aInstance != NULL), error = OT_ERROR_FAILED);
-    otEXPECT_ACTION(sState == kStateIdle, error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(sState == kStateDisabled, error = OT_ERROR_FAILED);
 
-    sInstance     = aInstance;
-    sState        = kStateInitializing;
-    sLastUpdateMs = otPlatAlarmMilliGetNow();
+    sInstance = aInstance;
+    sState    = kStateInitializing;
+
+    bleWsfInit();
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
     bleControllerInit();
@@ -225,58 +187,12 @@ exit:
     return ret;
 }
 
-bool otPlatBleTaskletsArePending(otInstance *aInstance)
+uint8_t bleGetState(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    return sTaskletsPending;
+    return sState;
 }
 
-void otPlatBleTaskletsProcess(otInstance *aInstance)
-{
-    uint32_t        now;
-    uint32_t        delta;
-    uint32_t        nextTimestamp;
-    bool_t          timerRunning;
-    wsfTimerTicks_t ticks;
-
-    otEXPECT(sState != kStateIdle);
-
-    sTaskletsPending = false;
-
-    now   = otPlatBleAlarmMilliGetNow();
-    delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
-    ticks = delta / WSF_MS_PER_TICK;
-
-    if (ticks > 0)
-    {
-        WsfTimerUpdate(ticks);
-        sLastUpdateMs = now;
-    }
-
-    wsfOsDispatcher();
-
-    if (wsfOsReadyToSleep())
-    {
-        nextTimestamp = (uint32_t)(WsfTimerNextExpiration(&timerRunning) * WSF_MS_PER_TICK);
-
-        if (timerRunning)
-        {
-            otPlatBleAlarmMilliStartAt(aInstance, now, nextTimestamp);
-        }
-    }
-
-    OT_UNUSED_VARIABLE(aInstance);
-
-exit:
-    return;
-}
-
-void otPlatBleAlarmMilliFired(otInstance *aInstance)
-{
-    otPlatBleTaskletsProcess(aInstance);
-}
-
-otInstance *bleMgmtGetThreadInstance(void)
+otInstance *bleGetThreadInstance(void)
 {
     return sInstance;
 }
@@ -298,7 +214,7 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
         }
         else if (sState == kStateDeinitializing)
         {
-            sState = kStateIdle;
+            sState = kStateDisabled;
 
             WsfTimerStop(&sTimer);
             bleGattReset();
@@ -360,7 +276,7 @@ static void bleTimerHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
         bleHciDisable();
     }
 
-    sState    = kStateIdle;
+    sState    = kStateDisabled;
     sInstance = NULL;
 
     OT_UNUSED_VARIABLE(event);
@@ -388,7 +304,6 @@ static void bleHostInit(void)
     SystemHeapSize  = sizeof(sStackBuffer);
 
     bytesUsed = WsfBufInit(sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
-    printf("bytes used=%d\r\n", bytesUsed);
     assert(bytesUsed != 0);
     SystemHeapStart += bytesUsed;
     SystemHeapSize -= bytesUsed;
@@ -457,67 +372,6 @@ exit:
 }
 
 /**
- * The WSF adaptation functions definition.
- *
- */
-
-/* LED */
-
-void PalLedOn(uint8_t id)
-{
-    OT_UNUSED_VARIABLE(id);
-}
-
-void PalLedOff(uint8_t id)
-{
-    OT_UNUSED_VARIABLE(id);
-}
-
-/* RTC */
-
-void PalRtcInit(void)
-{
-}
-
-void PalRtcEnableCompareIrq(void)
-{
-}
-
-void PalRtcDisableCompareIrq(void)
-{
-}
-
-uint32_t PalRtcCounterGet(void)
-{
-    return 0;
-}
-
-void PalRtcCompareSet(uint32_t value)
-{
-    OT_UNUSED_VARIABLE(value);
-}
-
-uint32_t PalRtcCompareGet(void)
-{
-    return 0;
-}
-
-/* SYS */
-
-bool_t PalSysIsBusy(void)
-{
-    return 0;
-}
-
-void PalSysAssertTrap(void)
-{
-}
-
-void PalSysSleep(void)
-{
-}
-
-/**
  * The BLE Management module weak functions definition.
  *
  */
@@ -526,4 +380,4 @@ OT_TOOL_WEAK void otPlatBleOnEnabled(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST

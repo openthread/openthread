@@ -39,14 +39,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ble/ble_gap.h"
-#include "ble/ble_hci_driver.h"
-#include "ble/ble_mgmt.h"
+#include "cordio/ble_gap.h"
+#include "cordio/ble_hci_driver.h"
+#include "cordio/ble_init.h"
 #include "utils/code_utils.h"
 
 #include <openthread/platform/ble.h>
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 enum
 {
@@ -164,7 +164,7 @@ static void bleGapConnectedHandler(const wsfMsgHdr_t *aMsg)
     otEXPECT(connEvent->status == kHciErrorNone);
 
     sConnectionId = (dmConnId_t)connEvent->hdr.param;
-    otPlatBleGapOnConnected(bleMgmtGetThreadInstance(), sConnectionId);
+    otPlatBleGapOnConnected(bleGetThreadInstance(), sConnectionId);
 
 exit:
     return;
@@ -175,7 +175,7 @@ static void bleGapDisconnectedHandler(const wsfMsgHdr_t *aMsg)
     const hciDisconnectCmplEvt_t *disconnectEvent = (const hciDisconnectCmplEvt_t *)aMsg;
 
     sConnectionId = DM_CONN_ID_NONE;
-    otPlatBleGapOnDisconnected(bleMgmtGetThreadInstance(), disconnectEvent->hdr.param);
+    otPlatBleGapOnDisconnected(bleGetThreadInstance(), disconnectEvent->hdr.param);
 }
 
 enum
@@ -209,11 +209,11 @@ static void bleGapScanReportHandler(const wsfMsgHdr_t *aMsg)
     case kAdvReportEnentTypeAdvDirectInd:
     case kAdvReportEnentTypeAdvScanInd:
     case kAdvReportEnentTypeAdvNonConnInd:
-        otPlatBleGapOnAdvReceived(bleMgmtGetThreadInstance(), &devAddr, &packet);
+        otPlatBleGapOnAdvReceived(bleGetThreadInstance(), &devAddr, &packet);
         break;
 
     case kAdvReportEnentTypeScanResponse:
-        otPlatBleGapOnScanRespReceived(bleMgmtGetThreadInstance(), &devAddr, &packet);
+        otPlatBleGapOnScanRespReceived(bleGetThreadInstance(), &devAddr, &packet);
         break;
     }
 
@@ -272,7 +272,7 @@ otError otPlatBleGapAddressGet(otInstance *aInstance, otPlatBleDeviceAddr *aAddr
 {
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aInstance == bleGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
 
     aAddress->mAddrType = OT_BLE_ADDRESS_TYPE_PUBLIC;
@@ -365,7 +365,7 @@ otError otPlatBleGapScanResponseSet(otInstance *aInstance, const uint8_t *aScanR
     const uint8_t kMaxScanRspDataSize = 31;
     uint8_t       buf[kMaxScanRspDataSize];
 
-    otEXPECT_ACTION(aInstance == bleMgmtGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aInstance == bleGetThreadInstance(), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION((aScanResponse != NULL) && (aScanResponseLength != 0), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(aScanResponseLength <= sizeof(buf), error = OT_ERROR_INVALID_ARGS);
 
@@ -512,4 +512,4 @@ OT_TOOL_WEAK void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
     OT_UNUSED_VARIABLE(aAddress);
     OT_UNUSED_VARIABLE(aPacket);
 }
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST

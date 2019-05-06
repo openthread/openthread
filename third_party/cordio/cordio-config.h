@@ -26,28 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file defines the Cordio BLE stack GATT interfaces.
- */
+#ifndef CORDIO_CONFIG_H
+#define CORDIO_CONFIG_H
 
-#ifndef BLE_GATT_H
-#define BLE_GATT_H
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#include <openthread/config.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define INIT_BROADCASTER
+#define INIT_OBSERVER
+#define INIT_CENTRAL
+#define INIT_PERIPHERAL
 
-#include "att_api.h"
+#define MBED_CONF_CORDIO_DESIRED_ATT_MTU 23
 
-void bleAttHandler(attEvt_t *aEvent);
-void bleGattReset(void);
+#define MBED_CONF_CORDIO_MAX_PREPARED_WRITES 4
 
-#ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+#define LHCI_ENABLE_VS 0
 
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-#endif // BLE_GATT_H
+#define BB_CLK_RATE_HZ 1000000
+
+#endif /* CORDIO_CONFIG_H */

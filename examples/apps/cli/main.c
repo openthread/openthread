@@ -34,7 +34,7 @@
 #include <openthread/diag.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/logging.h>
-#if OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #include <openthread/platform/ble.h>
 #endif
 
@@ -115,7 +115,7 @@ pseudo_reset:
     {
         otTaskletsProcess(instance);
         otSysProcessDrivers(instance);
-#if OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
         otPlatBleTaskletsProcess(instance);
 #endif
     }

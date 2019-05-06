@@ -28,58 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                        = libopenthread-platform-ble.a
-
-CORDIO_BLE_HOST_SRCDIR               = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
-
-libopenthread_platform_ble_a_CPPFLAGS                               = \
-    -I$(top_srcdir)/include                                           \
-    -I$(top_srcdir)/examples/platforms                                \
-    -I$(top_srcdir)/src/core                                          \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip  \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/cfg      \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/platform/include                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                     \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include/util                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack_adaptation                      \
+EXTRA_DIST                              = \
+    cordio                                \
     $(NULL)
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+# Always package (e.g. for 'make dist') these subdirectories.
 
-CORDIO_BLE_CONTROLLER_SRCDIR         = $(top_srcdir)/third_party/cordio/TARGET_CORDIO_LL/
-
-CORDIO_BLE_CONTROLLER_CPPFLAGS                                            = \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/ble/         \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/common/      \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/sources/ble/include/ \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/ble/include/         \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/sources/ble/lctr/    \
-    -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/platform/common/include/        \
+DIST_SUBDIRS                            = \
+    cordio                                \
     $(NULL)
 
-libopenthread_platform_ble_a_CPPFLAGS += $(CORDIO_BLE_CONTROLLER_CPPFLAGS)
-#endif
-
-libopenthread_platform_ble_a_SOURCES  = \
-    ble_bb_driver.c                     \
-    ble_controller_init.c               \
-    ble_gap.c                           \
-    ble_gatt.c                          \
-    ble_hci_driver.c                    \
-    ble_l2cap.c                         \
-    ble_mgmt.c                          \
+SUBDIRS                                 = \
+    cordio                                \
     $(NULL)
 
-noinst_HEADERS                        = \
-    ble_bb_driver.h                     \
-    ble_controller_init.h               \
-    ble_gap.h                           \
-    ble_gatt.h                          \
-    ble_hci_driver.h                    \
-    ble_l2cap.h                         \
-    ble_mgmt.h                          \
-    ble_utils.h                         \
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    cordio                                \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

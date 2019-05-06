@@ -42,7 +42,7 @@
 
 #include "common/instance.hpp"
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 namespace ot {
 namespace Cli {
@@ -140,5 +140,5 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_CLI_BLE
 #endif // CLI_BLE_HPP_

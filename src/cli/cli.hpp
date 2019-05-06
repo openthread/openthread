@@ -55,7 +55,7 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 #include "cli/cli_ble.hpp"
 #endif
 
@@ -185,7 +185,7 @@ public:
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
     /**
      * This method returns a reference to the ble object.
      *
@@ -193,7 +193,7 @@ public:
      *
      */
     Ble &GetBle(void) { return mBle; }
-#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 private:
     enum
@@ -220,9 +220,9 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
     void ProcessBle(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -463,9 +463,9 @@ private:
 
     Dataset mDataset;
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
     Ble mBle;
-#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

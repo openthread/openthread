@@ -21,22 +21,28 @@ lib_LIBRARIES                                += libcordio-ble-controller.a
 
 # Disable -Wconversion for cordio
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXFLAGS))
 
 # Disable -Wunused-parameter for cordio
 CFLAGS                                       += -Wno-unused-parameter
+CXXFLAGS                                     += -Wno-unused-parameter
 
 # Disable -Wpedantic for cordio
 CFLAGS                                       += -Wno-pedantic
+CXXFLAGS                                     += -Wno-pedantic
 
 # Disable -Wpointer-to-int-cast for cordio
 CFLAGS                                       += -Wno-pointer-to-int-cast
+CXXFLAGS                                     += -Wno-pointer-to-int-cast
 
 # Disable -Wimplicit-fallthrough for cordio
 CFLAGS                                       +=-Wno-implicit-fallthrough
+CXXFLAGS                                     +=-Wno-implicit-fallthrough
 
 CORDIO_BLE_HOST_SRCDIR                        = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
 
 libcordio_ble_host_a_CPPFLAGS                                        = \
+    -I$(top_srcdir)/include                                            \
     -I$(CORDIO_BLE_HOST_SRCDIR)/                                       \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                 \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip   \
@@ -53,8 +59,7 @@ libcordio_ble_host_a_CPPFLAGS                                        = \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/port/baremetal        \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/util                  \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack_adaptation                       \
-    -DMBED_CONF_CORDIO_DESIRED_ATT_MTU=23                              \
-    -DMBED_CONF_CORDIO_MAX_PREPARED_WRITES=4                           \
+    -include cordio-config.h                                           \
     $(NULL)
 
 libcordio_ble_host_a_SOURCES                                         = \
@@ -158,6 +163,7 @@ libcordio_ble_host_a_SOURCES                                         = \
 CORDIO_BLE_CONTROLLER_SRCDIR = $(top_srcdir)/third_party/cordio/TARGET_CORDIO_LL/
 
 libcordio_ble_controller_a_CPPFLAGS                                             = \
+    -I$(top_srcdir)/include                                                       \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                                 \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/ble/               \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/common/            \
@@ -165,11 +171,7 @@ libcordio_ble_controller_a_CPPFLAGS                                             
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/ble/include/               \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/platform/common/include/              \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/thirdparty/uecc/                      \
-    -DINIT_BROADCASTER                                                            \
-    -DINIT_OBSERVER                                                               \
-    -DINIT_CENTRAL                                                                \
-    -DINIT_PERIPHERAL                                                             \
-    -DLHCI_ENABLE_VS=0                                                            \
+    -include cordio-config.h                                                      \
     $(NULL)
 
 libcordio_ble_controller_a_SOURCES                                              = \

@@ -69,11 +69,11 @@ LDADD_DIAG                                                            += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_CLI_BLE
+if OPENTHREAD_ENABLE_BLE_HOST
 LDADD_COMMON                                                          += \
     $(top_builddir)/third_party/cordio/libcordio-ble-host.a              \
     $(NULL)
-endif # OPENTHREAD_ENABLE_CLI_BLE
+endif # OPENTHREAD_ENABLE_BLE_HOST
 
 if OPENTHREAD_ENABLE_BLE_CONTROLLER
 LDADD_COMMON                                                          += \

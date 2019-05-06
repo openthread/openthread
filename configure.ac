@@ -1686,68 +1686,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
 #
-# Support for Thread Over BLE
+# Support for BLE Host
 #
 
-AC_MSG_CHECKING([whether to build with ToBLE support])
-AC_ARG_ENABLE(toble,
-    [AS_HELP_STRING([--enable-toble], [Enable ToBLE support @<:@default=no@:>@.])],
+AC_MSG_CHECKING([whether to build with BLE Host support])
+AC_ARG_ENABLE(ble_host,
+    [AS_HELP_STRING([--enable-ble-host], [Enable BLE Host support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_toble=${enableval}
+            enable_ble_host=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_toble} for --enable-toble])
+            AC_MSG_ERROR([Invalid value ${enable_ble_host} for --enable-ble-host])
             ;;
         esac
     ],
-    [enable_toble=no])
+    [enable_ble_host=no])
 
-if test "$enable_toble" = "yes"; then
-    OPENTHREAD_ENABLE_TOBLE=1
+if test "$enable_ble_host" = "yes"; then
+    OPENTHREAD_ENABLE_BLE_HOST=1
 else
-    OPENTHREAD_ENABLE_TOBLE=0
+    OPENTHREAD_ENABLE_BLE_HOST=0
 fi
 
-AC_MSG_RESULT(${enable_toble})
-AC_SUBST(OPENTHREAD_ENABLE_TOBLE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_TOBLE], [test "${enable_toble}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_TOBLE], [${OPENTHREAD_ENABLE_TOBLE}], [Define to 1 if you want to enable ToBLE support])
-
-#
-# Support for BLE CLI
-#
-
-AC_MSG_CHECKING([whether to build with CLI BLE support])
-AC_ARG_ENABLE(cli_ble,
-    [AS_HELP_STRING([--enable-cli-ble], [Enable BLE cli support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_cli_ble=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_cli_ble} for --enable-cli-ble])
-            ;;
-        esac
-    ],
-    [enable_cli_ble=no])
-
-if test "$enable_cli_ble" = "yes"; then
-    OPENTHREAD_ENABLE_CLI_BLE=1
-else
-    OPENTHREAD_ENABLE_CLI_BLE=0
-fi
-
-AC_MSG_RESULT(${enable_cli_ble})
-AC_SUBST(OPENTHREAD_ENABLE_CLI_BLE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_BLE], [test "${enable_cli_ble}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_BLE], [${OPENTHREAD_ENABLE_CLI_BLE}], [Define to 1 if you want to enable BLE cli support])
+AC_MSG_RESULT(${enable_ble_host})
+AC_SUBST(OPENTHREAD_ENABLE_BLE_HOST)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_HOST], [test "${enable_ble_host}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_HOST], [${OPENTHREAD_ENABLE_BLE_HOST}], [Define to 1 if you want to enable BLE Host support])
 
 #
 # Support for BLE Controller
@@ -1764,7 +1732,7 @@ AC_ARG_ENABLE(ble_controller,
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_ble_controller} for --enable-cli-ble])
+            AC_MSG_ERROR([Invalid value ${enable_ble_controller} for --enable-ble-controller])
             ;;
         esac
     ],
@@ -1780,6 +1748,7 @@ AC_MSG_RESULT(${enable_ble_controller})
 AC_SUBST(OPENTHREAD_ENABLE_BLE_CONTROLLER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_CONTROLLER], [test "${enable_ble_controller}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_CONTROLLER], [${OPENTHREAD_ENABLE_BLE_CONTROLLER}], [Define to 1 if you want to enable BLE Controller support])
+
 #
 # Support for L2CAP
 #
@@ -2099,6 +2068,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/ble/Makefile
+examples/platforms/ble/cordio/Makefile
 examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
@@ -2189,6 +2159,8 @@ AC_MSG_NOTICE([
   OpenThread FTD support                    : ${enable_ftd}
   OpenThread MTD support                    : ${enable_mtd}
   OpenThread Radio Only support             : ${enable_radio_only}
+  OpenThread BLE Host support               : ${enable_ble_host}
+  OpenThread BLE Controller support         : ${enable_ble_controller}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
@@ -2221,7 +2193,6 @@ AC_MSG_NOTICE([
   OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
-  OpenThread ToBLE support                  : ${enable_toble}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

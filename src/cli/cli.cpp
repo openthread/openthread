@@ -241,7 +241,7 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
     {"ble", &Interpreter::ProcessBle},
 #endif
 #ifndef OTDLL
@@ -303,7 +303,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mUdp(*this)
 #endif
     , mDataset(*this)
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
     , mBle(*this)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -884,7 +884,7 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 void Interpreter::ProcessBle(int argc, char *argv[])
 {
@@ -894,7 +894,7 @@ void Interpreter::ProcessBle(int argc, char *argv[])
     AppendResult(error);
 }
 
-#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

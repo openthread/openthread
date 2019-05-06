@@ -173,7 +173,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     else
     {
         int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
-#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_BLE_HOST
         int64_t bleRemaining    = ((int64_t)bleMsRemaining) * US_PER_MS;
         int64_t bleUsRemaining1 = ((int64_t)bleUsRemaining);
 #endif
@@ -182,7 +182,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = usRemaining;
         }
 
-#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_BLE_HOST
         if (bleRemaining < remaining)
         {
             remaining = bleRemaining;
@@ -265,7 +265,7 @@ void platformAlarmProcess(otInstance *aInstance)
     }
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
     if (sIsBleMsRunning)
     {
@@ -278,7 +278,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -313,7 +313,7 @@ uint32_t platformBleAlarmMicroGetNow(void)
 }
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -335,6 +335,6 @@ uint32_t otPlatBleAlarmMilliGetNow(void)
     return otPlatAlarmMilliGetNow();
 }
 
-#endif // OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+#endif // OPENTHREAD_ENABLE_BLE_HOST
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

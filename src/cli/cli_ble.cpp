@@ -42,7 +42,7 @@
 
 #include <string.h>
 
-#if OPENTHREAD_ENABLE_CLI_BLE && !OPENTHREAD_ENABLE_TOBLE
+#if OPENTHREAD_CONFIG_ENABLE_CLI_BLE
 
 namespace ot {
 namespace Cli {
@@ -943,4 +943,4 @@ extern "C" void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstanc
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_CLI_BLE

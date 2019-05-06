@@ -28,36 +28,28 @@
 
 /**
  * @file
- *   This file includes the compile-time configuration constants
- *   for BLE stack.
+ * @brief
+ *   This file defines the BLE Controller initialization interfaces.
  */
 
-#ifndef BLE_CFG__H
-#define BLE_CFG__H
+#ifndef BLE_CONTROLLER_INIT_H
+#define BLE_CONTROLLER_INIT_H
+
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * Maximum number of pending legacy advertising reports.
+ * This method initializes the BLE controller.
+ *
  */
-#define BLE_STACK_MAX_ADV_REPORTS 8
+void bleControllerInit(void);
 
-/**
- * Maximum number of BLE connections.
- */
-#define BLE_STACK_MAX_BLE_CONNECTIONS 4
+#ifdef __cplusplus
+} // extern "C"
+#endif // __cplusplus
 
-/**
- * The number of HCI ACL transmit buffers.
- */
-#define BLE_STACK_NUM_ACL_TRANSMIT_BUFFERS 6
-
-/**
- * The number of HCI ACL receive buffers.
- */
-#define BLE_STACK_NUM_ACL_RECEIVE_BUFFERS 6
-
-/**
- * Maximum HCI ACL data length (exclude MIC).
- */
-#define BLE_STACK_MAX_ACL_DATA_LENGTH 251
-
-#endif // BLE_CFG__H
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
+#endif // BLE_CONTROLLER_INIT_H

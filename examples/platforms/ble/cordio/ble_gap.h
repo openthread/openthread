@@ -29,29 +29,49 @@
 /**
  * @file
  * @brief
- *   This file defines the Cordio BLE stack management interfaces.
+ *   This file defines the Cordio BLE stack GAP interfaces.
  */
 
-#ifndef BLE_MGMT_H
-#define BLE_MGMT_H
+#ifndef BLE_GAP_H
+#define BLE_GAP_H
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <openthread/instance.h>
+#include "wsf_types.h"
+
+#include "dm_api.h"
+#include "wsf_os.h"
 
 /**
- * This method returns the OpenThread instance.
+ * This method resets the BLE GAP module.
  *
  */
-otInstance *bleMgmtGetThreadInstance(void);
+void bleGapReset(void);
+
+/**
+ * This method handles the event for BLE GAP module.
+ *
+ * @param[in] aMsg  A pointer to an WSF event message structure.
+ *
+ */
+void bleGapEventHandler(const wsfMsgHdr_t *aMsg);
+
+/**
+ * This method returns the BLE GAP connection ID.
+ *
+ * @retval The BLE GAP connection ID value.
+ *
+ */
+dmConnId_t bleGapGetConnectionId(void);
 
 #ifdef __cplusplus
 } // extern "C"
-#endif
+#endif // __cplusplus
 
-#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-#endif // BLE_MGMT_H
+#endif // OPENTHREAD_ENABLE_BLE_HOST
+
+#endif // BLE_GAP_H

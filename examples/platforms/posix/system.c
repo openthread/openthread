@@ -50,7 +50,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #include <openthread/platform/ble.h>
 #endif
 
@@ -102,8 +102,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         exit(EXIT_FAILURE);
     }
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-#if !OPENTHREAD_ENABLE_BLE_CONTROLLER
+#if OPENTHREAD_ENABLE_BLE_HOST && !OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (aArgCount > 2)
     {
         /*
@@ -122,16 +121,13 @@ void otSysInit(int aArgCount, char *aArgVector[])
         fprintf(stderr, "Please specify the BLE HCI device file name\n");
         exit(EXIT_FAILURE);
     }
-#endif
-#endif
+#endif // OPENTHREAD_ENABLE_BLE_HOST && !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
     platformRandomInit();
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     platformBleRadioInit();
-#endif
 #endif
 }
 
@@ -162,7 +158,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
     platformBleRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
 #else
@@ -170,7 +166,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 #endif
 #endif
 
-#if (OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE)
+#if OPENTHREAD_ENABLE_BLE_HOST
     if (!otTaskletsArePending(aInstance) && !otPlatBleTaskletsArePending(aInstance))
 #else
     if (!otTaskletsArePending(aInstance))
@@ -193,7 +189,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartProcess();
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_HOST
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
     platformBleRadioProcess(aInstance);
 #else

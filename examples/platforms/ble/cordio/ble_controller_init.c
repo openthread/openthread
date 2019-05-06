@@ -39,9 +39,8 @@
 #include "lctr_int_conn.h"
 #include "ll_init_api.h"
 
-#include "ble/ble_bb_driver.h"
-#include "ble/ble_cfg.h"
-#include "ble/ble_mgmt.h"
+#include "cordio/ble_cfg.h"
+#include "cordio/ble_init.h"
 #include "utils/code_utils.h"
 
 #include <assert.h>
@@ -104,6 +103,7 @@ static LlInitRtCfg_t sLlInitRtCfg = {.pBbRtCfg     = &sBbRtCfg,
                                      .pLlRtCfg     = &sLlRtCfg,
                                      .pFreeMem     = sCtrlPoolBuffer,
                                      .freeMemAvail = kCtrlPoolBufferSize};
+
 void bleControllerInit(void)
 {
     static bool         initialized = false;
@@ -112,11 +112,11 @@ void bleControllerInit(void)
     otEXPECT(!initialized);
 
     initialized     = true;
-    sBbRtCfg.clkPpm = otPlatRadioBleGetXtalAccuracy(bleMgmtGetThreadInstance());
+    sBbRtCfg.clkPpm = otPlatRadioBleGetXtalAccuracy(bleGetThreadInstance());
 
     assert(LlInitControllerInit(&sLlInitRtCfg) != 0);
 
-    otPlatRadioBleGetPublicAddress(bleMgmtGetThreadInstance(), &bdaddr);
+    otPlatRadioBleGetPublicAddress(bleGetThreadInstance(), &bdaddr);
     LlSetBdAddr(bdaddr.mAddr);
 
 exit:
