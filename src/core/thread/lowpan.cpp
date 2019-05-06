@@ -1210,13 +1210,13 @@ otError MeshHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_FAILED);
+    VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_PARSE);
     mDispatchHopsLeft = *aFrame++;
     aFrameLength--;
 
     if (IsDeepHopsLeftField())
     {
-        VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_FAILED);
+        VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_PARSE);
         mDeepHopsLeft = *aFrame++;
         aFrameLength--;
     }
@@ -1225,7 +1225,7 @@ otError MeshHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
         mDeepHopsLeft = 0;
     }
 
-    VerifyOrExit(aFrameLength >= sizeof(mAddress), error = OT_ERROR_FAILED);
+    VerifyOrExit(aFrameLength >= sizeof(mAddress), error = OT_ERROR_PARSE);
     memcpy(&mAddress, aFrame, sizeof(mAddress));
 
 exit:
@@ -1239,13 +1239,13 @@ otError MeshHeader::Init(const Message &aMessage)
     uint16_t bytesRead;
 
     bytesRead = aMessage.Read(offset, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
-    VerifyOrExit(bytesRead == sizeof(mDispatchHopsLeft), error = OT_ERROR_FAILED);
+    VerifyOrExit(bytesRead == sizeof(mDispatchHopsLeft), error = OT_ERROR_PARSE);
     offset += bytesRead;
 
     if (IsDeepHopsLeftField())
     {
         bytesRead = aMessage.Read(offset, sizeof(mDeepHopsLeft), &mDeepHopsLeft);
-        VerifyOrExit(bytesRead == sizeof(mDeepHopsLeft), error = OT_ERROR_FAILED);
+        VerifyOrExit(bytesRead == sizeof(mDeepHopsLeft), error = OT_ERROR_PARSE);
         offset += bytesRead;
     }
     else
@@ -1254,7 +1254,7 @@ otError MeshHeader::Init(const Message &aMessage)
     }
 
     bytesRead = aMessage.Read(offset, sizeof(mAddress), &mAddress);
-    VerifyOrExit(bytesRead == sizeof(mAddress), error = OT_ERROR_FAILED);
+    VerifyOrExit(bytesRead == sizeof(mAddress), error = OT_ERROR_PARSE);
 
 exit:
     return error;

@@ -417,7 +417,7 @@ public:
      * @param[in]  aFrameLength  The length of the frame.
      *
      * @retval OT_ERROR_NONE     Mesh Header initialized successfully.
-     * @retval OT_ERROR_FAILED   Mesh header could not be initialized from @p aFrame (e.g., frame not long enough).
+     * @retval OT_ERROR_PARSE    Mesh Header could not be parsed from @p aFrame.
      *
      */
     otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
@@ -427,8 +427,8 @@ public:
      *
      * @param[in]  aMessage  The message object.
      *
-     * @retval OT_ERROR_NONE     Mesh Header initialized successfully.
-     * @retval OT_ERROR_FAILED   Mesh header could not be initialized from @ aMessage(e.g., not long enough).
+     * @retval OT_ERROR_NONE   Mesh Header initialized successfully.
+     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed from @p aMessage.
      *
      */
     otError Init(const Message &aMessage);
@@ -606,7 +606,7 @@ public:
      * @param[in]  aFrameLength  The length of the frame.
      *
      * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be initialized from @p aFrame (e.g., frame not long enough).
+     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
      *
      */
     otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
@@ -618,7 +618,7 @@ public:
      * @param[in]  aOffset       An offset into the message to read the header.
      *
      * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be initialized (e.g., no frag header or message too short).
+     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aMessage.
      *
      */
     otError Init(const Message &aMessage, uint16_t aOffset);
