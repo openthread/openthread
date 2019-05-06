@@ -34,25 +34,25 @@ CFLAGS                                       += -Wno-pointer-to-int-cast
 # Disable -Wimplicit-fallthrough for cordio
 CFLAGS                                       +=-Wno-implicit-fallthrough
 
-CORDIO_BLE_HOST_SRCDIR                                = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
+CORDIO_BLE_HOST_SRCDIR                        = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
 
 libcordio_ble_host_a_CPPFLAGS                                        = \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/                                                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                          \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip            \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/sec/common               \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/att                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/cfg                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/dm                 \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/hci                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/l2c                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/smp                \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/platform/include                          \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                               \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include/util                          \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/port/baremetal                 \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/util                           \
-    -I$(CORDIO_BLE_HOST_SRCDIR)/stack_adaptation                                \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/                                       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                 \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip   \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/sec/common      \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/att       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/cfg       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/dm        \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/hci       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/l2c       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/stack/smp       \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/platform/include                 \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                      \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include/util                 \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/port/baremetal        \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/source/util                  \
+    -I$(CORDIO_BLE_HOST_SRCDIR)/stack_adaptation                       \
     -DMBED_CONF_CORDIO_DESIRED_ATT_MTU=23                              \
     -DMBED_CONF_CORDIO_MAX_PREPARED_WRITES=4                           \
     $(NULL)
@@ -60,13 +60,11 @@ libcordio_ble_host_a_CPPFLAGS                                        = \
 libcordio_ble_host_a_SOURCES                                         = \
     TARGET_CORDIO/stack/ble-host/sources/hci/common/hci_core.c         \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_cmd.c       \
-    TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_cmd_ae.c    \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_cmd_cte.c   \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_cmd_past.c  \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_cmd_phy.c   \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_core_ps.c   \
     TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_evt.c       \
-    TARGET_CORDIO/stack/ble-host/sources/hci/dual_chip/hci_vs_ae.c     \
     TARGET_CORDIO/stack/ble-host/sources/sec/common/sec_aes.c          \
     TARGET_CORDIO/stack/ble-host/sources/sec/common/sec_ccm_hci.c      \
     TARGET_CORDIO/stack/ble-host/sources/sec/common/sec_cmac_hci.c     \
@@ -91,15 +89,12 @@ libcordio_ble_host_a_SOURCES                                         = \
     TARGET_CORDIO/stack/ble-host/sources/stack/att/atts_write.c        \
     TARGET_CORDIO/stack/ble-host/sources/stack/cfg/cfg_stack.c         \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_adv.c             \
-    TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_adv_ae.c          \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_adv_leg.c         \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn.c            \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_cte.c        \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_master.c     \
-    TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_master_ae.c  \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_master_leg.c \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_slave.c      \
-    TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_slave_ae.c   \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_slave_leg.c  \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_conn_sm.c         \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_dev.c             \
@@ -109,13 +104,11 @@ libcordio_ble_host_a_SOURCES                                         = \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_phy.c             \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_priv.c            \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_scan.c            \
-    TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_scan_ae.c         \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_scan_leg.c        \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_sec.c             \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_sec_lesc.c        \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_sec_master.c      \
     TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_sec_slave.c       \
-    TARGET_CORDIO/stack/ble-host/sources/stack/dm/dm_sync_ae.c         \
     TARGET_CORDIO/stack/ble-host/sources/stack/hci/hci_main.c          \
     TARGET_CORDIO/stack/ble-host/sources/stack/l2c/l2c_coc.c           \
     TARGET_CORDIO/stack/ble-host/sources/stack/l2c/l2c_main.c          \
@@ -172,12 +165,15 @@ libcordio_ble_controller_a_CPPFLAGS                                             
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/ble/include/               \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/platform/common/include/              \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/thirdparty/uecc/                      \
+    -DINIT_BROADCASTER                                                            \
+    -DINIT_OBSERVER                                                               \
+    -DINIT_CENTRAL                                                                \
+    -DINIT_PERIPHERAL                                                             \
+    -DLHCI_ENABLE_VS=0                                                            \
     $(NULL)
 
 libcordio_ble_controller_a_SOURCES                                              = \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_adv_master_ae.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_adv_master.c          \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_adv_slave_ae.c        \
     TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_adv_slave.c           \
     TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_conn.c                \
     TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_conn_master.c         \
@@ -186,32 +182,21 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/bb/bb_ble_test.c                \
     TARGET_CORDIO_LL/stack/controller/sources/ble/init/init.c                     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/init/init_ctr.c                 \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/init/init_ctr_ext.c             \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/init/init_ext.c                 \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_adv_master_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_adv_master.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_adv_slave_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_adv_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_conn.c            \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_conn_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_conn_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_enc.c             \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_enc_master.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_init_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_init_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_act_phy.c             \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_adv_master_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_adv_master.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_adv_slave_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_adv_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_conn.c            \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_conn_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_conn_slave.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_init_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_isr_init_master.c     \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_adv_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_adv_master.c     \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_adv_slave_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_adv_slave.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main.c                \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_conn.c           \
@@ -221,24 +206,18 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_conn_slave.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_enc_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_enc_slave.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_init_master_ae.c \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_init_master.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_master_phy.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_priv.c           \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_sc.c             \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_main_slave_phy.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_pdu_adv_master_ae.c   \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_pdu_adv_slave_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_pdu_adv_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_pdu_conn.c            \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_pdu_enc.c             \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_adv_master_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_adv_master.c       \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_adv_slave_ae.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_adv_slave.c        \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_conn_master.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_conn_slave.c       \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_init_master_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_init_master.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_llcp_conn.c        \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_llcp_conn_master.c \
@@ -247,23 +226,18 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_llcp_enc_slave.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_llcp_master_phy.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lctr/lctr_sm_llcp_slave_phy.c   \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_adv_master_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_adv_master.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_adv_priv.c        \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_adv_slave_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_adv_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd.c                 \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_conn.c            \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_conn_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_conn_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_conn_priv.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_enc_master.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_enc_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_phy.c             \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_cmd_sc.c              \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_adv_master_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_adv_master.c      \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_adv_slave_ae.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_adv_slave.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt.c                 \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_conn.c            \
@@ -275,15 +249,12 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_phy.c             \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_sc.c              \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_evt_vs.c              \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_adv_master_ae.c  \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_adv_master.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_adv_priv.c       \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_adv_slave_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_adv_slave.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init.c                \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_conn.c           \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_conn_cs2.c       \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_conn_master_ae.c \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_conn_master.c    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_conn_priv.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_enc_master.c     \
@@ -291,9 +262,7 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_phy.c            \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_init_sc.c             \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lhci/lhci_main.c                \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_adv_master_ae.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_adv_master.c         \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_adv_slave_ae.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_adv_slave.c          \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init.c                    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_conn_cs2.c           \
@@ -301,19 +270,15 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_conn_slave.c         \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_enc_master.c         \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_enc_slave.c          \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_init_master_ae.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_init_master.c        \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_master_phy.c         \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_priv.c               \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_sc.c                 \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_init_slave_phy.c          \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_adv_master_ae.c      \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_adv_master.c         \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_adv_slave_ae.c       \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_adv_slave.c          \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main.c                    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_conn.c               \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_conn_master_ae.c     \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_conn_master.c        \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_conn_slave.c         \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_diag.c               \
@@ -325,8 +290,6 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_main_sc.c                 \
     TARGET_CORDIO_LL/stack/controller/sources/ble/ll/ll_math.c                    \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_events.c              \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_main_adv_master_ae.c  \
-    TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_main_adv_slave_ae.c   \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_main.c                \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_main_conn.c           \
     TARGET_CORDIO_LL/stack/controller/sources/ble/lmgr/lmgr_main_master.c         \

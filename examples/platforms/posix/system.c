@@ -102,6 +102,8 @@ void otSysInit(int aArgCount, char *aArgVector[])
         exit(EXIT_FAILURE);
     }
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if !OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (aArgCount > 2)
     {
         /*
@@ -120,10 +122,17 @@ void otSysInit(int aArgCount, char *aArgVector[])
         fprintf(stderr, "Please specify the BLE HCI device file name\n");
         exit(EXIT_FAILURE);
     }
+#endif
+#endif
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
     platformRandomInit();
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    platformBleRadioInit();
+#endif
+#endif
 }
 
 bool otSysPseudoResetWasRequested(void)
@@ -154,10 +163,14 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformAlarmUpdateTimeout(&timeout);
 
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    platformBleRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
+#else
     platformBleHciUpdateFdSet(&read_fds, &write_fds, &max_fd);
 #endif
+#endif
 
-#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if (OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE)
     if (!otTaskletsArePending(aInstance) && !otPlatBleTaskletsArePending(aInstance))
 #else
     if (!otTaskletsArePending(aInstance))
@@ -181,7 +194,11 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    platformBleRadioProcess(aInstance);
+#else
     platformBleHciProcess(aInstance);
+#endif
 #endif
 }
 

@@ -355,7 +355,7 @@ static void gattProcessClientFindByTypeValueRsp(attEvt_t *aEvent)
 exit:
     if (!sServiceDiscovered && (error != OT_ERROR_NONE))
     {
-        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0 , error);
+        otPlatBleGattClientOnServiceDiscovered(bleMgmtGetThreadInstance(), 0, 0, 0, error);
     }
 
     return;
@@ -416,8 +416,8 @@ static void gattProcessClientReadByTypeRsp(attEvt_t *aEvent)
         uint16_t uuid = ATT_UUID_CHARACTERISTIC;
 
         otEXPECT(bleGapGetConnectionId() != DM_CONN_ID_NONE);
-        AttcReadByTypeReq(bleGapGetConnectionId(), attrHandle + 1, sCharDiscoverEndHandle,
-                          sizeof(uuid), (uint8_t *)&uuid, false);
+        AttcReadByTypeReq(bleGapGetConnectionId(), attrHandle + 1, sCharDiscoverEndHandle, sizeof(uuid),
+                          (uint8_t *)&uuid, false);
     }
 
 exit:

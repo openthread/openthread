@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,13 @@
 
 /**
  * @file
- *   This file includes the platform-specific configuration.
- *
+ * @brief
+ *   This file defines the BLE Controller initialization interfaces.
  */
 
-/**
- * @def OPENTHREAD_POSIX_UART_BAUDRATE
- *
- * This setting configures the baudrate of the UART.
- *
- */
-#ifndef OPENTHREAD_POSIX_UART_BAUDRATE
-#define OPENTHREAD_POSIX_UART_BAUDRATE B115200
-#endif
+#ifndef BLE_CONTROLLER_INIT_H
+#define BLE_CONTROLLER_INIT_H
 
-/**
- * @def OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
- *
- * This settinng configures the clock rate of the BLE Baseband.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
-#define OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ 1000000
-#endif
+void bleControllerInit(void);
+
+#endif // BLE_CONTROLLER_INIT_H

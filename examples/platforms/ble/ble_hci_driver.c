@@ -52,35 +52,26 @@
 #include <openthread/platform/ble-hci.h>
 #include <openthread/platform/logging.h>
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#include "bb_ble_api.h"
+#include "bb_ble_drv.h"
+#include "bb_drv.h"
+#include "chci_api.h"
+#include "chci_drv.h"
+#include "chci_tr_serial.h"
+#include "lhci_api.h"
+#include "ll_math.h"
+#endif
+
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
 
 enum
 {
-    kTxBufferSize    = 258,
     kHciResetRandCnt = 4,
 };
 
-enum
-{
-    kStateIdle,
-    kStateRxHeader,
-    kStateRxData,
-};
-
-static uint8_t  sTxBuffer[kTxBufferSize];
-static uint16_t sTxHead     = 0;
-static uint16_t sTxLength   = 0;
-static uint16_t sSendLength = 0;
-
-static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
-static void     bleHciHandleSendDone(void);
-static void     bleHciHandleResetSequence(uint8_t *pMsg);
-static void     bleHciResetSequenceDone();
-
-uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
-{
-    return bleHciOutput(type, pData, len);
-}
+static void bleHciHandleResetSequence(uint8_t *pMsg);
+static void bleHciResetSequenceDone();
 
 void hci_mbed_os_start_reset_sequence(void)
 {
@@ -92,9 +83,67 @@ void hci_mbed_os_handle_reset_sequence(uint8_t *msg)
     bleHciHandleResetSequence(msg);
 }
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+void bleHciEnable(void)
+{
+}
+
+void bleHciDisable(void)
+{
+}
+
+void chciDrvInit(void)
+{
+}
+
+bool_t chciDrvService(void)
+{
+    return false;
+}
+
+// BLE Controller sends HCI packet to BLE Host
+uint16_t chciDrvWrite(uint8_t prot, uint8_t type, uint16_t len, uint8_t *pData)
+{
+    uint8_t ctype = (type == CHCI_TR_TYPE_EVT) ? HCI_EVT_TYPE : HCI_ACL_TYPE;
+
+    OT_UNUSED_VARIABLE(prot);
+
+    hciTrSerialRxIncoming(&ctype, 1);
+    hciTrSerialRxIncoming(pData, len);
+
+    return len;
+}
+
+// BLE Host sends HCI packet to BLE Controller
+uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
+{
+    chciTrSerialRxIncoming(&type, 1);
+    chciTrSerialRxIncoming(pData, len);
+
+    return len;
+}
+#else  // OPENTHREAD_ENABLE_BLE_CONTROLLER
+enum
+{
+    kTxBufferSize = 258,
+};
+
+static uint8_t  sTxBuffer[kTxBufferSize];
+static uint16_t sTxHead     = 0;
+static uint16_t sTxLength   = 0;
+static uint16_t sSendLength = 0;
+
+static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
+static void     bleHciHandleSendDone(void);
+
 void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 {
     hciTrSerialRxIncoming(aBuf, aBufLength);
+}
+
+uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
+{
+    return bleHciOutput(type, pData, len);
 }
 
 void otPlatBleHciSendDone(void)
@@ -166,6 +215,7 @@ static void bleHciHandleSendDone(void)
 
     bleHciSend();
 }
+#endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 static void bleHciCoreReadMaxDataLen(void)
 {
@@ -231,13 +281,7 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
             break;
 
         case HCI_OPCODE_READ_BD_ADDR:
-        {
             BdaCpy(hciCoreCb.bdAddr, pMsg);
-            HciLeReadBufSizeCmd();
-            break;
-        }
-
-        case HCI_OPCODE_LE_SET_RAND_ADDR:
             HciLeReadBufSizeCmd();
             break;
 

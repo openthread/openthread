@@ -28,6 +28,7 @@
 
 # OpenThread Features (Makefile default configuration).
 
+BLE_CONTROLLER      ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
 CERT_LOG            ?= 0
@@ -62,6 +63,10 @@ TIME_SYNC           ?= 0
 TOBLE               ?= 0
 UDP_FORWARD         ?= 0
 
+
+ifeq ($(BLE_CONTROLLER),1)
+configure_OPTIONS              += --enable-ble-controller
+endif
 
 ifeq ($(BORDER_AGENT),1)
 configure_OPTIONS              += --enable-border-agent

@@ -46,6 +46,7 @@
 #include "utils/code_utils.h"
 
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 #define BLE_HCI_BUF_SIZE 255
 
@@ -319,4 +320,5 @@ OT_TOOL_WEAK void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
     OT_UNUSED_VARIABLE(aBufLength);
 }
 
+#endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
 #endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE

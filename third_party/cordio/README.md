@@ -2,11 +2,12 @@
 
 ## URL
 
-https://github.com/ARMmbed/mbed-os/tree/tools-release-5.11.4/features/FEATURE_BLE/targets/TARGET_CORDIO/stack
+https://github.com/ARMmbed/mbed-os/tree/mbed-os-5.12/features/FEATURE_BLE/targets/TARGET_CORDIO/
+https://github.com/ARMmbed/mbed-os/tree/mbed-os-5.12/features/FEATURE_BLE/targets/TARGET_CORDIO_LL/
 
 ## Version
 
-5.11.4
+5.12
 
 ## License
 

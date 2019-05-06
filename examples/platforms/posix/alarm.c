@@ -53,6 +53,8 @@ static uint32_t sUsAlarm     = 0;
 
 static bool     sIsBleMsRunning = false;
 static uint32_t sBleMsAlarm     = 0;
+static bool     sIsBleUsRunning = false;
+static uint32_t sBleUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
@@ -135,6 +137,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int32_t usRemaining    = DEFAULT_TIMEOUT * US_PER_S;
     int32_t msRemaining    = DEFAULT_TIMEOUT * MS_PER_S;
+    int32_t bleUsRemaining = DEFAULT_TIMEOUT * MS_PER_S;
     int32_t bleMsRemaining = DEFAULT_TIMEOUT * MS_PER_S;
 
     if (aTimeout == NULL)
@@ -152,12 +155,17 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
         msRemaining = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
     }
 
+    if (sIsBleUsRunning)
+    {
+        bleUsRemaining = (int32_t)(sBleUsAlarm - otPlatAlarmMicroGetNow());
+    }
+
     if (sIsBleMsRunning)
     {
         bleMsRemaining = (int32_t)(sBleMsAlarm - otPlatBleAlarmMilliGetNow());
     }
 
-    if (usRemaining <= 0 || msRemaining <= 0 || bleMsRemaining <=0 )
+    if (usRemaining <= 0 || msRemaining <= 0 || bleMsRemaining <= 0)
     {
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
@@ -165,17 +173,26 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     else
     {
         int64_t remaining = ((int64_t)msRemaining) * US_PER_MS;
-        int64_t bleRemaining = ((int64_t)bleMsRemaining) * US_PER_MS;
-
+#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
+        int64_t bleRemaining    = ((int64_t)bleMsRemaining) * US_PER_MS;
+        int64_t bleUsRemaining1 = ((int64_t)bleUsRemaining);
+#endif
         if (usRemaining < remaining)
         {
             remaining = usRemaining;
         }
 
+#if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
         if (bleRemaining < remaining)
         {
             remaining = bleRemaining;
         }
+
+        if (bleUsRemaining1 < remaining)
+        {
+            remaining = bleUsRemaining1;
+        }
+#endif
 
         remaining /= sSpeedUpFactor;
 
@@ -235,6 +252,19 @@ void platformAlarmProcess(otInstance *aInstance)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    if (sIsBleUsRunning)
+    {
+        remaining = (int32_t)(sBleUsAlarm - platformBleAlarmMicroGetNow());
+
+        if (remaining <= 0)
+        {
+            sIsBleUsRunning = false;
+            platformBleAlarmMicroFired(aInstance);
+        }
+    }
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
+
 #if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
 
     if (sIsBleMsRunning)
@@ -263,13 +293,31 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+void platformBleAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    sBleUsAlarm     = aT0 + aDt;
+    sIsBleUsRunning = true;
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+void platformBleAlarmMicroStop(otInstance *aInstance)
+{
+    sIsBleUsRunning = false;
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+uint32_t platformBleAlarmMicroGetNow(void)
+{
+    return (uint32_t)platformGetNow();
+}
+#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
+
 #if OPENTHREAD_ENABLE_CLI_BLE || OPENTHREAD_ENABLE_TOBLE
 
 void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aT0);
-    OT_UNUSED_VARIABLE(aDt);
 
     sBleMsAlarm     = aT0 + aDt;
     sIsBleMsRunning = true;

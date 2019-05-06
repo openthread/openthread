@@ -1750,6 +1750,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_BLE], [test "${enable_cli_ble}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_BLE], [${OPENTHREAD_ENABLE_CLI_BLE}], [Define to 1 if you want to enable BLE cli support])
 
 #
+# Support for BLE Controller
+#
+
+AC_MSG_CHECKING([whether to build with BLE Controller support])
+AC_ARG_ENABLE(ble_controller,
+    [AS_HELP_STRING([--enable-ble-controller], [Enable BLE Controller support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ble_controller=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ble_controller} for --enable-cli-ble])
+            ;;
+        esac
+    ],
+    [enable_ble_controller=no])
+
+if test "$enable_ble_controller" = "yes"; then
+    OPENTHREAD_ENABLE_BLE_CONTROLLER=1
+else
+    OPENTHREAD_ENABLE_BLE_CONTROLLER=0
+fi
+
+AC_MSG_RESULT(${enable_ble_controller})
+AC_SUBST(OPENTHREAD_ENABLE_BLE_CONTROLLER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_CONTROLLER], [test "${enable_ble_controller}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_CONTROLLER], [${OPENTHREAD_ENABLE_BLE_CONTROLLER}], [Define to 1 if you want to enable BLE Controller support])
+#
 # Support for L2CAP
 #
 

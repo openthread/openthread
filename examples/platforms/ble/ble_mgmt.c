@@ -51,6 +51,14 @@
 #include "wsf_os.h"
 #include "wsf_timer.h"
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#include "lctr_int_conn.h"
+#include "ll_defs.h"
+
+#include "ble/ble_cfg.h"
+#include "ble/ble_controller_init.h"
+#endif
+
 #include "ble/ble_gap.h"
 #include "ble/ble_gatt.h"
 #include "ble/ble_hci_driver.h"
@@ -64,9 +72,46 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/ble.h>
 #include <openthread/platform/logging.h>
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#include <openthread/platform/radio-ble.h>
+#endif
 
 #if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
 
+#define WSF_MSG_HEADROOM_LENGTH 20
+#define ACL_NUM_BUFFERS (BLE_STACK_NUM_ACL_TRANSMIT_BUFFERS + BLE_STACK_NUM_ACL_RECEIVE_BUFFERS)
+#define ACL_BUFFER_SIZE                                                                         \
+    (WSF_MSG_HEADROOM_LENGTH + LCTR_DATA_PDU_START_OFFSET + HCI_ACL_HDR_LEN + LL_DATA_HDR_LEN + \
+     BLE_STACK_MAX_ACL_DATA_LENGTH + LL_DATA_MIC_LEN)
+
+#if OPENTHREAD_ENABLE_L2CAP
+enum
+{
+    kStackBufferSize = 9592,
+};
+
+static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16 + 8},
+                                       {32, 16 + 4},
+                                       {64, 8},
+                                       {128, 4 + BLE_STACK_MAX_ADV_REPORTS},
+                                       {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
+                                       {272, 1},
+                                       {1300, 2}};
+#else
+enum
+{
+    kStackBufferSize = 6944,
+};
+
+static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16 + 8},
+                                       {32, 16 + 4},
+                                       {64, 8},
+                                       {128, 4 + BLE_STACK_MAX_ADV_REPORTS},
+                                       {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
+                                       {272, 1}};
+#endif
+#else
 #if OPENTHREAD_ENABLE_L2CAP
 enum
 {
@@ -81,6 +126,7 @@ enum
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
+#endif
 #endif
 
 /* WSF heap allocation */
@@ -109,7 +155,7 @@ static bool        sTaskletsPending  = false;
 static uint32_t    sLastUpdateMs;
 static wsfTimer_t  sTimer;
 
-static void bleStackInit(void);
+static void bleHostInit(void);
 
 // This function is called by the ble stack to signal to user code to run wsfOsDispatcher().
 void wsf_mbed_ble_signal_event(void)
@@ -138,7 +184,10 @@ otError otPlatBleEnable(otInstance *aInstance)
     sState        = kStateInitializing;
     sLastUpdateMs = otPlatAlarmMilliGetNow();
 
-    bleStackInit();
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    bleControllerInit();
+#endif
+    bleHostInit();
     bleHciEnable();
     DmDevReset();
 
@@ -206,8 +255,9 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
     wsfOsDispatcher();
 
-    if (wsfOsReadyToSleep()) {
-        nextTimestamp = (uint32_t) (WsfTimerNextExpiration(&timerRunning) * WSF_MS_PER_TICK);
+    if (wsfOsReadyToSleep())
+    {
+        nextTimestamp = (uint32_t)(WsfTimerNextExpiration(&timerRunning) * WSF_MS_PER_TICK);
 
         if (timerRunning)
         {
@@ -239,15 +289,6 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
     {
     case DM_RESET_CMPL_IND:
     {
-        // initialize extended module if supported
-        if (HciGetLeSupFeat() & HCI_LE_SUP_FEAT_LE_EXT_ADV)
-        {
-            DmExtAdvInit();
-            DmExtScanInit();
-            DmExtConnMasterInit();
-            DmExtConnSlaveInit();
-        }
-
         if (sState == kStateInitializing)
         {
             sState = kStateInitialized;
@@ -335,7 +376,7 @@ static uint8_t bleGattServerAttsAuthHandler(dmConnId_t aConnId, uint8_t aPermit,
     return 0;
 }
 
-static void bleStackInit(void)
+static void bleHostInit(void)
 {
     uint32_t       bytesUsed;
     wsfHandlerId_t handlerId;
@@ -347,8 +388,8 @@ static void bleStackInit(void)
     SystemHeapSize  = sizeof(sStackBuffer);
 
     bytesUsed = WsfBufInit(sizeof(sPoolDesc) / sizeof(wsfBufPoolDesc_t), sPoolDesc);
+    printf("bytes used=%d\r\n", bytesUsed);
     assert(bytesUsed != 0);
-
     SystemHeapStart += bytesUsed;
     SystemHeapSize -= bytesUsed;
 

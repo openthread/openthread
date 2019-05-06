@@ -104,7 +104,8 @@ struct Event
 
 enum
 {
-    WELLKNOWN_NODE_ID = 34, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+    WELLKNOWN_NODE_ID     = 34, ///< Well-known Unique ID used by a simulated 154 radio that supports promiscuous mode.
+    WELLKNOWN_BLE_NODE_ID = 12, ///< Well-known Unique ID used by a simulated BLE radio that supports promiscuous mode.
 };
 
 /**
@@ -252,8 +253,95 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
+#if OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+/**
+ * Set the alarm to fire at @p aDt microseconds after @p aT0.
+ *
+ * @param[in]  aT0        The reference time.
+ * @param[in]  aDt        The time delay in microseconds from @p aT0.
+ *
+ */
+void platformBleAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+
+/**
+ * Stop the alarm.
+ *
+ */
+void platformBleAlarmMicroStop(otInstance *aInstance);
+
+/**
+ * Get the current time.
+ *
+ * @returns  The current time in microseconds.
+ *
+ */
+uint32_t platformBleAlarmMicroGetNow(void);
+
+/**
+ * Signal that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void platformBleAlarmMicroFired(otInstance *aInstance);
+
+/**
+ * This function initializes the BLE radio service used by OpenThread.
+ *
+ */
+void platformBleRadioInit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the BLE radio driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformBleRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * This function performs BLE radio driver processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void platformBleRadioProcess(otInstance *aInstance);
+
+#else // OPENTHREAD_ENABLE_BLE_CONTROLLER
+
+/**
+ * This function initializes the BLE HCI device.
+ *
+ * @param[in] aDeviceName  A pointer to the device name.
+ *
+ */
 void platformBleHciInit(char *aDeviceFile);
+
+/**
+ * This function de-initializes the BLE HCI device.
+ *
+ */
 void platformBleHciDeinit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the BLE HCI driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
 void platformBleHciUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * This function performs BLE HCI driver processing.
+ *
+ */
 void platformBleHciProcess(otInstance *aInstance);
+
+#endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
+#endif // OPENTHREAD_ENABLE_TOBLE || OPENTHREAD_ENABLE_CLI_BLE
+
 #endif // PLATFORM_POSIX_H_

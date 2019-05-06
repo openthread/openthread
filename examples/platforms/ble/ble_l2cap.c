@@ -88,7 +88,8 @@ static uint8_t l2capGetFreeConnection(void)
 
 static void l2capFreeConnection(uint8_t aL2capHandle)
 {
-    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
+    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) &&
+        sL2capConnections[aL2capHandle - 1].mIsValid)
     {
         sL2capConnections[aL2capHandle - 1].mIsValid = false;
     }
@@ -98,7 +99,8 @@ static L2capConnnection *l2capGetConnection(uint8_t aL2capHandle)
 {
     L2capConnnection *conn = NULL;
 
-    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) && sL2capConnections[aL2capHandle - 1].mIsValid)
+    if ((0 < aL2capHandle) && (aL2capHandle < kL2capMaxNumConnections + 1) &&
+        sL2capConnections[aL2capHandle - 1].mIsValid)
     {
         conn = &sL2capConnections[aL2capHandle - 1];
     }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,36 @@
 
 /**
  * @file
- *   This file includes the platform-specific configuration.
- *
+ *   This file includes the compile-time configuration constants
+ *   for BLE stack.
  */
 
-/**
- * @def OPENTHREAD_POSIX_UART_BAUDRATE
- *
- * This setting configures the baudrate of the UART.
- *
- */
-#ifndef OPENTHREAD_POSIX_UART_BAUDRATE
-#define OPENTHREAD_POSIX_UART_BAUDRATE B115200
-#endif
+#ifndef BLE_CFG__H
+#define BLE_CFG__H
 
 /**
- * @def OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
- *
- * This settinng configures the clock rate of the BLE Baseband.
- *
+ * Maximum number of pending legacy advertising reports.
  */
-#ifndef OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
-#define OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ 1000000
-#endif
+#define BLE_STACK_MAX_ADV_REPORTS 8
+
+/**
+ * Maximum number of BLE connections.
+ */
+#define BLE_STACK_MAX_BLE_CONNECTIONS 4
+
+/**
+ * The number of HCI ACL transmit buffers.
+ */
+#define BLE_STACK_NUM_ACL_TRANSMIT_BUFFERS 6
+
+/**
+ * The number of HCI ACL receive buffers.
+ */
+#define BLE_STACK_NUM_ACL_RECEIVE_BUFFERS 6
+
+/**
+ * Maximum HCI ACL data length (exclude MIC).
+ */
+#define BLE_STACK_MAX_ACL_DATA_LENGTH 251
+
+#endif // BLE_CFG__H

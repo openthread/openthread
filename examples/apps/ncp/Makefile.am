@@ -75,6 +75,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_CLI_BLE
 
+if OPENTHREAD_ENABLE_BLE_CONTROLLER
+LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/cordio/libcordio-ble-controller.a        \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BLE_CONTROLLER
+
 if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 LDADD_COMMON                                                          += \
     $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                              \

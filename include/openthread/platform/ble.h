@@ -368,11 +368,11 @@ typedef struct otPlatBleUuid
  */
 typedef struct otPlatBleGattCharacteristic
 {
-    otPlatBleUuid mUuid;           ///< [in]  A UUID value of a characteristic.
-    uint16_t      mHandleValue;    ///< [out] Characteristic value handle.
-    uint16_t      mHandleCccd;     ///< [out] CCCD handle or OT_BLE_INVALID_HANDLE if CCCD is not present.
-    uint8_t       mProperties;     ///< [in]  Characteristic properties.
-    uint8_t       mMaxAttrLength;  ///< [in]  Maximum length of attribute's value.
+    otPlatBleUuid mUuid;          ///< [in]  A UUID value of a characteristic.
+    uint16_t      mHandleValue;   ///< [out] Characteristic value handle.
+    uint16_t      mHandleCccd;    ///< [out] CCCD handle or OT_BLE_INVALID_HANDLE if CCCD is not present.
+    uint8_t       mProperties;    ///< [in]  Characteristic properties.
+    uint8_t       mMaxAttrLength; ///< [in]  Maximum length of attribute's value.
 } otPlatBleGattCharacteristic;
 
 /**

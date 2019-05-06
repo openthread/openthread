@@ -48,16 +48,17 @@ namespace ot {
 namespace Cli {
 
 #define BLE_FILTER_ADV_RSSI_THRESHOLD -50
-#define MAX_RD_WR_BUFFER_SIZE          20
-static uint8_t sRdWrBuffer[MAX_RD_WR_BUFFER_SIZE] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa,
-                                                     0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55};
-static uint8_t sRdWrBufferLength = MAX_RD_WR_BUFFER_SIZE;
+#define BLE_MAX_GATT_BUFFER_SIZE 20
 
-const struct Ble::Command Ble::sCommands[] = {{"help", &Ble::ProcessHelp},       {"bdaddr", &Ble::ProcessBdAddr},
-                                              {"enable", &Ble::ProcessEnable},   {"disable", &Ble::ProcessDisable},
-                                              {"adv", &Ble::ProcessAdvertise},   {"scan", &Ble::ProcessScan},
-                                              {"connect", &Ble::ProcessConnect}, {"disconnect", &Ble::ProcessDisconnect},
-                                              {"l2cap", &Ble::ProcessL2cap},     {"gatt", &Ble::ProcessGatt}};
+static uint8_t sRdWrBufferLength                     = BLE_MAX_GATT_BUFFER_SIZE;
+static uint8_t sRdWrBuffer[BLE_MAX_GATT_BUFFER_SIZE] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa,
+                                                        0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55};
+
+const struct Ble::Command Ble::sCommands[] = {
+    {"help", &Ble::ProcessHelp},       {"bdaddr", &Ble::ProcessBdAddr},         {"enable", &Ble::ProcessEnable},
+    {"disable", &Ble::ProcessDisable}, {"adv", &Ble::ProcessAdvertise},         {"scan", &Ble::ProcessScan},
+    {"connect", &Ble::ProcessConnect}, {"disconnect", &Ble::ProcessDisconnect}, {"l2cap", &Ble::ProcessL2cap},
+    {"gatt", &Ble::ProcessGatt}};
 
 Ble::Ble(Interpreter &aInterpreter)
     : mScanTimer(*aInterpreter.mInstance, &Ble::s_HandleScanTimer, this)
@@ -189,8 +190,10 @@ otError Ble::ProcessScan(int argc, char *argv[])
         error = otPlatBleGapScanStart(mInterpreter.mInstance, kScanInterval, kScanWindow);
         if (error == OT_ERROR_NONE)
         {
-            mInterpreter.mServer->OutputFormat("\r\n| advType | addrType |   address    | rssi | AD or Scan Rsp Data |\r\n");
-            mInterpreter.mServer->OutputFormat("+---------+----------+--------------+------+---------------------|\r\n");
+            mInterpreter.mServer->OutputFormat(
+                "\r\n| advType | addrType |   address    | rssi | AD or Scan Rsp Data |\r\n");
+            mInterpreter.mServer->OutputFormat(
+                "+---------+----------+--------------+------+---------------------|\r\n");
         }
 
         if (interval != 0)
@@ -225,8 +228,8 @@ otError Ble::ProcessBdAddr(int argc, char *argv[])
 
     if ((error = otPlatBleGapAddressGet(mInterpreter.mInstance, &addr)) == OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("%d %02x%02x%02x%02x%02x%02x\r\n", addr.mAddrType, addr.mAddr[5], addr.mAddr[4],
-                                           addr.mAddr[3], addr.mAddr[2], addr.mAddr[1], addr.mAddr[0]);
+        mInterpreter.mServer->OutputFormat("%d %02x%02x%02x%02x%02x%02x\r\n", addr.mAddrType, addr.mAddr[5],
+                                           addr.mAddr[4], addr.mAddr[3], addr.mAddr[2], addr.mAddr[1], addr.mAddr[0]);
     }
 
     OT_UNUSED_VARIABLE(argv);
@@ -245,8 +248,7 @@ otError Ble::ProcessConnect(int argc, char *argv[])
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     devAddr.mAddrType = static_cast<uint8_t>(value);
-    VerifyOrExit(devAddr.mAddrType <= OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE,
-                 error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(devAddr.mAddrType <= OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(Interpreter::Hex2Bin(argv[1], devAddr.mAddr, OT_BLE_ADDRESS_LENGTH) == OT_BLE_ADDRESS_LENGTH,
                  error = OT_ERROR_INVALID_ARGS);
     ReverseBuf(devAddr.mAddr, OT_BLE_ADDRESS_LENGTH);
@@ -344,7 +346,7 @@ otError Ble::ProcessL2cap(int argc, char *argv[])
         uint8_t          data[kL2capMaxMtu] = {0};
 
         SuccessOrExit(error = Interpreter::ParseLong(argv[1], value));
-        l2capHandle    = static_cast<uint8_t>(value);
+        l2capHandle = static_cast<uint8_t>(value);
 
         SuccessOrExit(error = Interpreter::ParseLong(argv[2], value));
         packet.mLength = static_cast<uint16_t>(value);
@@ -377,6 +379,7 @@ otError Ble::ProcessGatt(int argc, char *argv[])
             const uint8_t                kGattCharsSize = 3;
             char                         deviceName[]   = "ThreadBLE";
             otPlatBleGattCharacteristic *characteristic;
+
             static uint8_t sRxBufUuid[] = {0x11, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
                                            0x59, 0x45, 0x3D, 0x26, 0xF5, 0x2E, 0xEE, 0x18};
             static uint8_t sTxBufUuid[] = {0x12, 0x9D, 0x9F, 0x42, 0x9C, 0x4F, 0x9F, 0x95,
@@ -718,7 +721,7 @@ extern "C" void otPlatBleGapOnAdvReceived(otInstance *         aInstance,
                                           otPlatBleDeviceAddr *aAddress,
                                           otBleRadioPacket *   aPacket)
 {
-    // avoid displaying too many packets
+    // avoid displaying too many messages
     if (aPacket->mPower > BLE_FILTER_ADV_RSSI_THRESHOLD)
     {
         Server::sServer->OutputFormat("| %-8s|    %d     | %02x%02x%02x%02x%02x%02x | %3d  | ", "ADV",
@@ -735,7 +738,7 @@ extern "C" void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
                                                otPlatBleDeviceAddr *aAddress,
                                                otBleRadioPacket *   aPacket)
 {
-    // avoid displaying too many packets
+    // avoid displaying too many messages
     if (aPacket->mPower > BLE_FILTER_ADV_RSSI_THRESHOLD)
     {
         Server::sServer->OutputFormat("| %-8s|    %d     | %02x%02x%02x%02x%02x%02x | %3d  | ", "SCAN_RSP",
