@@ -1,4 +1,4 @@
-# mbed BLE
+# Cordio BLE Stack
 
 ## URL
 

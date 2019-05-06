@@ -39,7 +39,6 @@
 #include "att_api.h"
 #include "att_handler.h"
 #include "dm_handler.h"
-#include "hci_drv.h"
 #include "hci_handler.h"
 #include "l2c_api.h"
 #include "l2c_handler.h"

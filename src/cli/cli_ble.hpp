@@ -105,7 +105,7 @@ private:
         kScanWindow     = 80,   ///< Scan window (unit: 0.625ms)
         kConnInterval   = 160,  ///< Connection interval (unit: 0.625ms).
         kConnSupTimeout = 60,   ///< Connection establishment supervision timeout (unit: 10ms).
-        kAttMtu         = 23,   ///< The ATT_MTU value.
+        kAttMtu         = 131,  ///< The ATT_MTU value.
         kL2capMaxMtu    = 1280, ///< The maxmim L2CAP MTU value.
         kL2capPsm       = 0x80, ///< The L2CAP PSM value.
     };

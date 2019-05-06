@@ -47,7 +47,11 @@
 
 #if OPENTHREAD_ENABLE_BLE_HOST && !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
-#define BLE_HCI_BUF_SIZE 255
+#define BLE_HCI_TYPE_SIZE       1
+#define BLE_HCI_ACL_HEADER_SIZE 4
+#define BLE_HCI_ACL_MAX_LENGTH  255
+#define BLE_HCI_BUF_SIZE        (BLE_HCI_TYPE_SIZE + BLE_HCI_ACL_HEADER_SIZE + BLE_HCI_ACL_MAX_LENGTH)
+#define BLE_HCI_FRAGMENT_LENGTH 30
 
 static uint8_t        sRxBuffer[BLE_HCI_BUF_SIZE];
 static const uint8_t *sTxBuffer;
@@ -284,7 +288,10 @@ void platformBleHciProcess(otInstance *aInstance)
 
     if ((sTxLength != 0) && (pollfd.revents & POLLOUT))
     {
-        otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, sTxLength)) > 0, errStr = "write");
+        // divide the frame into small fragments to avoid missing bytes in the BLE Controller side.
+        uint16_t txLength = (sTxLength < BLE_HCI_FRAGMENT_LENGTH) ? sTxLength : BLE_HCI_FRAGMENT_LENGTH;
+
+        otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, txLength)) > 0, errStr = "write");
 
         sTxBuffer += (uint16_t)rval;
         sTxLength -= (uint16_t)rval;

@@ -125,7 +125,10 @@ uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
 #else  // OPENTHREAD_ENABLE_BLE_CONTROLLER
 enum
 {
-    kTxBufferSize = 258,
+    kHciTypeSize      = 1,
+    kHciAclHeaderSize = 4,
+    kHciAclMaxLength  = 255,
+    kTxBufferSize     = kHciTypeSize + kHciAclHeaderSize + kHciAclMaxLength,
 };
 
 static uint8_t  sTxBuffer[kTxBufferSize];
@@ -153,6 +156,7 @@ void otPlatBleHciSendDone(void)
 
 void bleHciEnable(void)
 {
+    HciSetMaxRxAclLen(kHciAclMaxLength);
     otPlatBleHciEnable();
 }
 
