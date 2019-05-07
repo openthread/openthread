@@ -103,7 +103,7 @@ private:
         kAdvInterval    = 320,  ///< Advertising interval (unit: 0.625ms).
         kScanInterval   = 320,  ///< Scan interval (unit: 0.625ms).
         kScanWindow     = 80,   ///< Scan window (unit: 0.625ms)
-        kConnInterval   = 160,  ///< Connection interval (unit: 0.625ms).
+        kConnInterval   = 160,  ///< Connection interval (unit: 1.25ms).
         kConnSupTimeout = 60,   ///< Connection establishment supervision timeout (unit: 10ms).
         kAttMtu         = 131,  ///< The ATT_MTU value.
         kL2capMaxMtu    = 1280, ///< The maxmim L2CAP MTU value.

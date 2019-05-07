@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes the compile-time configuration constants for BLE stack.
+ *   This file includes the constants for BLE stack.
  */
 
 #ifndef BLE_CFG__H

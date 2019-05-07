@@ -30,6 +30,7 @@
 #define CORDIO_CONFIG_H
 
 #include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #define INIT_BROADCASTER
 #define INIT_OBSERVER
@@ -42,6 +43,6 @@
 
 #define LHCI_ENABLE_VS 0
 
-#define BB_CLK_RATE_HZ 1000000
+#define BB_CLK_RATE_HZ OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
 
 #endif /* CORDIO_CONFIG_H */

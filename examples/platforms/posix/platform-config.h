@@ -41,13 +41,3 @@
 #ifndef OPENTHREAD_POSIX_UART_BAUDRATE
 #define OPENTHREAD_POSIX_UART_BAUDRATE B115200
 #endif
-
-/**
- * @def OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
- *
- * This settinng configures the clock rate of the BLE Baseband.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
-#define OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ 1000000
-#endif

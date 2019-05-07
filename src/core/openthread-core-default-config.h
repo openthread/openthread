@@ -1985,6 +1985,16 @@
 #endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 /**
+ * @def OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
+ *
+ * This settinng configures the clock rate of the BLE Base Band.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
+#define OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ 1000000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_CLI_BLE
  *
  * Define as 1 to enable the BLE cli.

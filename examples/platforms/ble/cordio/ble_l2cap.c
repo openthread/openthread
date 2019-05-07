@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "cordio/ble_cfg.h"
 #include "cordio/ble_init.h"
 #include "cordio/ble_l2cap.h"
 #include "utils/code_utils.h"
@@ -51,9 +52,9 @@
 #if OPENTHREAD_ENABLE_L2CAP
 enum
 {
-    kL2capMaxNumConnections       = 1, //< Maximum number of L2CAP connections.
-    kL2capInvalidConnectionHandle = 0, //< Invalid L2CAP connection handle.
-    kL2capMaxCredits              = 1, //< Maximum credits for L2CAP flow control.
+    kL2capMaxNumConnections       = BLE_STACK_MAX_BLE_CONNECTIONS, //< Maximum number of L2CAP connections.
+    kL2capInvalidConnectionHandle = 0,                             //< Invalid L2CAP connection handle.
+    kL2capMaxCredits              = 1,                             //< Maximum credits for L2CAP flow control.
 };
 
 typedef struct L2capConnnection

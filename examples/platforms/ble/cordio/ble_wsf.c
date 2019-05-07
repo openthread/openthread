@@ -185,5 +185,4 @@ void PalSysAssertTrap(void)
 void PalSysSleep(void)
 {
 }
-
 #endif // OPENTHREAD_ENABLE_BLE_HOST

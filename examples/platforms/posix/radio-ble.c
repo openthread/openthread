@@ -36,7 +36,7 @@
 
 /*
  * The timer accuracy of posix is less than microseconds. In order to guarantee that the sent message can hit
- * the receiving window, both the BLE_RADIO_TIFS_US and BLE_RADIO_RAMP_UP_US are set to a big value.
+ * the receiving window, BLE_RADIO_TIFS_US, BLE_RADIO_RAMP_UP_US and BLE_RADIO_PREAMBLE_ADDR_US are set to a big value.
  *
  * The BLE_RADIO_TIFS_US should be set to 150us, BLE_RADIO_PREAMBLE_ADDR_US should be set to 40us and
  * BLE_RADIO_RAMP_UP_US should be set to the radio ramp-up time in the real BLE device.

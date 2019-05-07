@@ -16,8 +16,15 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                                 = libcordio-ble-host.a
+lib_LIBRARIES                                 = $(NULL)
+
+if OPENTHREAD_ENABLE_BLE_HOST
+lib_LIBRARIES                                += libcordio-ble-host.a
+endif # OPENTHREAD_ENABLE_BLE_HOST
+
+if OPENTHREAD_ENABLE_BLE_CONTROLLER
 lib_LIBRARIES                                += libcordio-ble-controller.a
+endif # OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 # Disable -Wconversion for cordio
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
@@ -39,10 +46,12 @@ CXXFLAGS                                     += -Wno-pointer-to-int-cast
 CFLAGS                                       +=-Wno-implicit-fallthrough
 CXXFLAGS                                     +=-Wno-implicit-fallthrough
 
+if OPENTHREAD_ENABLE_BLE_HOST
 CORDIO_BLE_HOST_SRCDIR                        = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
 
 libcordio_ble_host_a_CPPFLAGS                                        = \
     -I$(top_srcdir)/include                                            \
+    -I$(top_srcdir)/src/core                                           \
     -I$(CORDIO_BLE_HOST_SRCDIR)/                                       \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                 \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip   \
@@ -159,11 +168,14 @@ libcordio_ble_host_a_SOURCES                                         = \
     TARGET_CORDIO/stack_adaptation/wsf_cs.c                            \
     TARGET_CORDIO/stack_adaptation/wsf_os.c                            \
     $(NULL)
+endif # OPENTHREAD_ENABLE_BLE_HOST
 
+if OPENTHREAD_ENABLE_BLE_CONTROLLER
 CORDIO_BLE_CONTROLLER_SRCDIR = $(top_srcdir)/third_party/cordio/TARGET_CORDIO_LL/
 
 libcordio_ble_controller_a_CPPFLAGS                                             = \
     -I$(top_srcdir)/include                                                       \
+    -I$(top_srcdir)/src/core                                                      \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                                 \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/ble/               \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/common/            \
@@ -313,5 +325,6 @@ libcordio_ble_controller_a_SOURCES                                              
     TARGET_CORDIO_LL/stack/platform/common/sources/ll/ll_math_ecc.c               \
     TARGET_CORDIO_LL/stack/thirdparty/uecc/uECC_ll.c                              \
     $(NULL)
+endif # OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
