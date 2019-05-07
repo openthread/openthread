@@ -264,6 +264,8 @@ void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleFrame *aFrame, o
         otEXPECT(aFrame->mLength <= sRxLength);
 
         memcpy(sRxBuffer, aFrame->mPdu, aFrame->mLength);
+        sRxBuffer = NULL;
+
         sDataParams->rxCback(aError == OT_ERROR_NONE ? BB_STATUS_SUCCESS : BB_STATUS_FAILED, aFrame->mRxInfo.mRssi, 0,
                              aFrame->mRxInfo.mTicks, BB_PHY_OPTIONS_DEFAULT);
     }
@@ -273,7 +275,6 @@ void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleFrame *aFrame, o
                              BB_PHY_OPTIONS_DEFAULT);
     }
 
-    sRxBuffer = NULL;
     OT_UNUSED_VARIABLE(aInstance);
 
 exit:
