@@ -1170,7 +1170,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
         otEXPECT_ACTION(rfCorePowerOn() == CMDSTA_Done, error = OT_ERROR_FAILED);
         otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = OT_ERROR_FAILED);
         sState = cc2650_stateSleep;
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
     }
 
 exit:

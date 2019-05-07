@@ -1245,7 +1245,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
         GPIO_writeDio(IOID_30, 0);
 
         sState = cc1352_stateSleep;
-        error = OT_ERROR_NONE;
+        error  = OT_ERROR_NONE;
     }
 
 exit:
