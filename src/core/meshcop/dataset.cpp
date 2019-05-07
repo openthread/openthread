@@ -48,7 +48,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Dataset::Dataset(const Tlv::Type aType)
+Dataset::Dataset(Tlv::Type aType)
     : mUpdateTime(0)
     , mLength(0)
     , mType(aType)
