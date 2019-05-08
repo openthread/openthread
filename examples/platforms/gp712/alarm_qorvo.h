@@ -36,6 +36,7 @@
 #define ALARM_QORVO_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/time.h>
 #include <unistd.h>
 
