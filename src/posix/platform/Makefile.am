@@ -30,9 +30,16 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-posix.a
 
+if OPENTHREAD_ENABLE_BLE_HOST
+SUBDIRS                                                                = \
+    ./../../../examples/platforms/ble/cordio                             \
+    $(NULL)
+endif
+
 libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/examples/platforms/ble  \
     -I$(top_srcdir)/src/ncp                 \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
@@ -41,6 +48,7 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
+    ble_hci_uart.c                          \
     entropy.c                               \
     hdlc_interface.cpp                      \
     logging.c                               \
@@ -82,6 +90,12 @@ PRETTY_FILES                              = \
     $(libopenthread_posix_a_SOURCES)        \
     $(noinst_HEADERS)                       \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BLE_HOST
+Dash                                      = -
+libopenthread_posix_a_LIBADD              = \
+    $(shell find $(top_builddir)/examples/platforms/ble $(Dash)type f $(Dash)name "*.o")
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)

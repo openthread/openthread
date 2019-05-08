@@ -47,14 +47,22 @@
 #include <openthread-core-config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#if OPENTHREAD_ENABLE_BLE_HOST
+#include <openthread/platform/ble.h>
+#endif
 #include <openthread/platform/radio.h>
 
 #include "openthread-system.h"
 
-static const struct option kOptions[] = {
-    {"dry-run", no_argument, NULL, 'n'},          {"no-reset", no_argument, NULL, 0},
-    {"radio-version", no_argument, NULL, 0},      {"help", no_argument, NULL, 'h'},
-    {"time-speed", required_argument, NULL, 's'}, {0, 0, 0, 0}};
+static const struct option kOptions[] = {{"dry-run", no_argument, NULL, 'n'},
+                                         {"radio-version", no_argument, NULL, 0},
+                                         {"help", no_argument, NULL, 'h'},
+                                         {"time-speed", required_argument, NULL, 's'},
+#if OPENTHREAD_ENABLE_BLE_HOST
+                                         {"ble-hci-device", required_argument, NULL, 'd'},
+                                         {"ble-hci-baudrate", required_argument, NULL, 'b'},
+#endif
+                                         {0, 0, 0, 0}};
 
 uint64_t gNodeId = 0;
 
@@ -64,6 +72,10 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
+#if OPENTHREAD_ENABLE_BLE_HOST
+            "    -b  --ble-hci-baudrate      The baudrate of the BLE HCI Uart.\n"
+            "    -d  --ble-hci-device        Ble HCI Uart device file.\n"
+#endif
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
@@ -77,18 +89,22 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
 {
     const char *radioFile         = NULL;
     const char *radioConfig       = "";
+    bool        printRadioVersion = false;
     otInstance *instance          = NULL;
     uint32_t    speedUpFactor     = 1;
     bool        isDryRun          = false;
     bool        reset             = true;
-    bool        printRadioVersion = false;
+#if OPENTHREAD_ENABLE_BLE_HOST
+    const char *bleHciDevice   = NULL;
+    uint32_t    bleHciBaudrate = 0;
+#endif
 
     optind = 1;
 
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "hns:", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "b:d:hns:", kOptions, &index);
 
         if (option == -1)
         {
@@ -97,6 +113,30 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
 
         switch (option)
         {
+#if OPENTHREAD_ENABLE_BLE_HOST
+        case 'b':
+        {
+            char *endptr   = NULL;
+            bleHciBaudrate = (uint32_t)strtol(optarg, &endptr, 0);
+
+            if (*endptr != '\0' || bleHciBaudrate == 0)
+            {
+                fprintf(stderr, "Invalid value for bleHciBaudrate: %s\n", optarg);
+                exit(OT_EXIT_INVALID_ARGUMENTS);
+            }
+            break;
+        }
+        case 'd':
+        {
+            bleHciDevice = optarg;
+            if (bleHciDevice == NULL)
+            {
+                fprintf(stderr, "Invalid value for bleHciDevice: %s\n", optarg);
+                exit(OT_EXIT_INVALID_ARGUMENTS);
+            }
+            break;
+        }
+#endif
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
@@ -156,6 +196,9 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
 #if OPENTHREAD_ENABLE_PLATFORM_UDP && OPENTHREAD_ENABLE_PLATFORM_NETIF == 0
     platformUdpInit(getenv("PLATFORM_NETIF"));
 #endif
+#if OPENTHREAD_ENABLE_BLE_HOST
+    platformBleHciInit(bleHciDevice, bleHciBaudrate);
+#endif
 
     instance = otInstanceInitSingle();
     assert(instance);
@@ -186,6 +229,9 @@ void otSysDeinit(void)
     otSimDeinit();
 #endif
     platformRadioDeinit();
+#if OPENTHREAD_ENABLE_BLE_HOST
+    platformBleHciDeinit();
+#endif
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -239,8 +285,16 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
 #endif
+#if OPENTHREAD_ENABLE_BLE_HOST
+    platformBleHciUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
+                              &aMainloop->mMaxFd);
+#endif
 
+#if OPENTHREAD_ENABLE_BLE_HOST
+    if (otTaskletsArePending(aInstance) || otPlatBleTaskletsArePending(aInstance))
+#else
     if (otTaskletsArePending(aInstance))
+#endif
     {
         aMainloop->mTimeout.tv_sec  = 0;
         aMainloop->mTimeout.tv_usec = 0;
@@ -304,5 +358,8 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
+#endif
+#if OPENTHREAD_ENABLE_BLE_HOST
+    platformBleHciProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #endif
 }

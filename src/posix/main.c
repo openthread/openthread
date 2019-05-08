@@ -55,6 +55,10 @@
 #else
 #error "Unknown posix app type!"
 #endif
+
+#if OPENTHREAD_ENABLE_BLE_HOST
+#include <openthread/platform/ble.h>
+#endif
 #include <openthread/platform/logging.h>
 
 #include "openthread-system.h"
@@ -111,6 +115,10 @@ int main(int argc, char *argv[])
         otSysMainloopContext mainloop;
 
         otTaskletsProcess(instance);
+
+#if OPENTHREAD_ENABLE_BLE_HOST
+        otPlatBleTaskletsProcess(instance);
+#endif
 
         FD_ZERO(&mainloop.mReadFdSet);
         FD_ZERO(&mainloop.mWriteFdSet);

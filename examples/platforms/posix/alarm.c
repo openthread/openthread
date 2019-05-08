@@ -195,6 +195,10 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     else
     {
         usRemaining /= sSpeedUpFactor;
+        if (usRemaining == 0)
+        {
+            usRemaining = 1;
+        }
 
 #ifndef _WIN32
         aTimeout->tv_sec = (time_t)usRemaining / US_PER_S;

@@ -73,6 +73,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_DIAG
 
+if OPENTHREAD_ENABLE_BLE_HOST
+LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/cordio/libcordio-ble-host.a              \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BLE_HOST
+
 bin_PROGRAMS                                                           = \
     $(NULL)
 

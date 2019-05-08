@@ -399,6 +399,41 @@ void VerifyOrDie(bool aCondition, int aExitCode);
  */
 void SuccessOrDie(otError aError);
 
+/**
+ * This function initializes platform BLE HCI driver.
+ *
+ * @param[in]   aDeviceFile   The path of BLE HCI device file.
+ * @param[in]   aBaudrate     The baudrate of BLE HCI.
+ *
+ */
+void platformBleHciInit(const char *aDeviceFile, uint32_t aBaudrate);
+
+/**
+ * This function deinitialize platform BLE HCI driver.
+ *
+ */
+void platformBleHciDeinit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by BLE HCI driver.
+ *
+ * @param[inout]  aReadFdSet    A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet   A pointer to the write file descriptors.
+ * @param[inout]  aErrorFdSet   A pointer to the error file descriptors.
+ * @param[inout]  aMaxFd        A pointer to the max file descriptor.
+ *
+ */
+void platformBleHciUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+
+/**
+ * This function performs BLE HCI processing.
+ *
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
+ *
+ */
+void platformBleHciProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 #ifdef __cplusplus
 }
 #endif

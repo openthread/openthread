@@ -4,14 +4,31 @@ The OpenThread BLE Platform APIs will be invoked via the OpenThread CLI.
 
 ## Quick Start
 
-### Build with BLE Platform API support
+### Build with BLE support
 
-Use the `CLI_BLE=1` build switch to enable BLE Platform API support.
-Use the `L2CAP=1` build switch to enable BLE Platform L2CAP API support.
+Use the `CLI_BLE=1` build switch to enable BLE Platform API and BLE cli support.
+Use the `BLE_CONTROLLER=1` build switch to enable BLE Controller support.
+Use the `BLE_L2CAP=1` build switch to enable BLE Platform L2CAP API support.
+
+#### On platform example/platform/posix
 
 ```bash
 > ./bootstrap
-> make -f examples/Makefile-posix CLI_BLE=1 L2CAP=1
+> make -f examples/Makefile-posix CLI_BLE=1 BLE_CONTROLLER=1 BLE_L2CAP=1
+> ./output/x86_64-unknown-linux-gnu/bin/ot-cli-ftd 1
+```
+
+#### On platform src/posix
+The platform src/posix only support BLE dual-chip modes. It comunicates with the BLE controller through UART.
+The hardware of BLE controller can use dev board [nRF52840DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK).The source code of BLE controller can get from [zephyr-ble-controller](https://devzone.nordicsemi.com/b/blog/posts/nrf5x-support-within-the-zephyr-project-rtos).
+
+```bash
+> ./bootstrap
+# build ot-ncp-radio for NCP radio simulation
+> make -f examples/Makefile-posix
+# build Posix app with BLE Host support
+> make -f src/posix/Makefile-posix  CLI_BLE=1 BLE_L2CAP=1
+> ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1 -d /dev/ttyACM0 -b 1000000
 ```
 
 ### Initialize BLE Connection

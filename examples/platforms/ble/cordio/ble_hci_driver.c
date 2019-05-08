@@ -42,14 +42,15 @@
 #include "hci_drv.h"
 #include "hci_mbed_os_adaptation.h"
 
+#include "common/logging.hpp"
 #include "cordio/ble_hci_driver.h"
 #include "cordio/ble_utils.h"
 #include "utils/code_utils.h"
 
 #include <assert.h>
+#include <string.h>
 #include <openthread/error.h>
 #include <openthread/platform/ble-hci.h>
-#include <string.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "bb_ble_api.h"
