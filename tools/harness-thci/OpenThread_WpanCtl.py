@@ -1201,7 +1201,7 @@ class OpenThread_WpanCtl(IThci):
                 print 'join as sleepy end device'
                 #s
                 mode = 4
-                self.setPollingRate(self.sedPollingRate)
+                self.__setPollPeriod(self.__sedPollPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 #rsn
@@ -1457,7 +1457,7 @@ class OpenThread_WpanCtl(IThci):
         self.securityPolicyFlags = "onrcb"
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
-        self.sedPollingRate = 3
+        self.__sedPollPeriod = 3 * 1000 # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
         self.hasActiveDatasetToCommit = False
@@ -1492,7 +1492,9 @@ class OpenThread_WpanCtl(IThci):
         return self.deviceConnected
 
     def getPollingRate(self):
-        """get data polling rate for sleepy end device"""
+        """get data polling rate for sleepy end device (in milliseconds)
+        note: not used for now
+        """
         print '%s call getPollingRate' % self.port
         return self.__sendCommand(WPANCTL_CMD + 'getprop -v NCP:SleepyPollInterval')[0]
 
@@ -1500,20 +1502,42 @@ class OpenThread_WpanCtl(IThci):
         """set data polling rate for sleepy end device
 
         Args:
-            iPollingRate: data poll period of sleepy end device
+            iPollingRate: data poll period of sleepy end device (in seconds)
 
         Returns:
             True: successful to set the data polling rate for sleepy end device
             False: fail to set the data polling rate for sleepy end device
         """
         print '%s call setPollingRate' % self.port
+
+        iPollingRate = int(iPollingRate * 1000)
         print iPollingRate
-        try:
-            cmd = WPANCTL_CMD + 'setprop NCP:SleepyPollInterval %s' % str(iPollingRate*1000)
-            print cmd
-            return self.__sendCommand(cmd)[0] != 'Fail'
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger('setPollingRate() Error: ' + str(e))
+
+        if self.__sedPollPeriod != iPollingRate:
+            self.__sedPollPeriod = iPollingRate
+
+            # apply immediately
+            if self.__isOpenThreadWpanRunning():
+                return self.__setPollPeriod(self.__sedPollPeriod)
+
+        return True
+
+    def __setPollPeriod(self, iPollPeriod):
+        """set data poll period for sleepy end device
+
+        Args:
+            iPollPeriod: data poll period of sleepy end device (in milliseconds)
+
+        Returns:
+            True: successful to set the data poll period for sleepy end device
+            False: fail to set the data poll period for sleepy end device
+        """
+            try:
+                cmd = WPANCTL_CMD + 'setprop NCP:SleepyPollInterval %s' % str(iPollPeriod)
+                print cmd
+                return self.__sendCommand(cmd)[0] != 'Fail'
+            except Exception, e:
+                ModuleHelper.WriteIntoDebugLogger('setPollingRate() Error: ' + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the specified EUIadr
@@ -1592,7 +1616,7 @@ class OpenThread_WpanCtl(IThci):
             time.sleep(timeout)
 
             if self.deviceRole == Thread_Device_Role.SED:
-                self.setPollingRate(self.sedPollingRate)
+                self.__setPollPeriod(self.__sedPollPeriod)
 
             if self.__sendCommand(WPANCTL_CMD + 'attach')[0] != 'Fail':
                 time.sleep(3)

@@ -1022,7 +1022,7 @@ class OpenThread(IThci):
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 mode = 's'
-                self.setPollingRate(self.sedPollingRate)
+                self.__setPollPeriod(self.__sedPollPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 mode = 'rsn'
@@ -1263,7 +1263,7 @@ class OpenThread(IThci):
         self.securityPolicyFlags = "onrcb"
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
-        self.sedPollingRate = 3
+        self.__sedPollPeriod = 3 * 1000 # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
         self.hasActiveDatasetToCommit = False
@@ -1299,36 +1299,52 @@ class OpenThread(IThci):
         return self.deviceConnected
 
     def getPollingRate(self):
-        """get data polling rate for sleepy end device"""
+        """get data polling rate for sleepy end device (in milliseconds)
+        note: not used for now
+        """
         print '%s call getPollingRate' % self.port
-        sPollingRate = self.__sendCommand('pollperiod')[0]
-        try:
-            iPollingRate = int(sPollingRate)/1000
-            fPollingRate = round(float(sPollingRate)/1000, 3)
-            return fPollingRate if fPollingRate > iPollingRate else iPollingRate
-        except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("getPollingRate() Error: " + str(e))
+        return self.__sendCommand('pollperiod')[0]
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
 
         Args:
-            iPollingRate: data poll period of sleepy end device
+            iPollingRate: data poll period of sleepy end device (in seconds)
 
         Returns:
             True: successful to set the data polling rate for sleepy end device
             False: fail to set the data polling rate for sleepy end device
         """
         print '%s call setPollingRate' % self.port
-        # convert s to ms
-        iPollingRate *= 1000
-        print int(iPollingRate)
+
+        iPollingRate = int(iPollingRate * 1000)
+        print iPollingRate
+
+        if self.__sedPollPeriod != iPollingRate:
+            self.__sedPollPeriod = iPollingRate
+
+            # apply immediately
+            if self.__isOpenThreadRunning():
+                return self.__setPollPeriod(self.__sedPollPeriod)
+
+        return True
+
+    def __setPollPeriod(self, iPollPeriod):
+        """set data poll period for sleepy end device
+
+        Args:
+            iPollPeriod: data poll period of sleepy end device (in milliseconds)
+
+        Returns:
+            True: successful to set the data poll period for sleepy end device
+            False: fail to set the data poll period for sleepy end device
+        """
         try:
-            cmd = 'pollperiod %d' % int(iPollingRate)
+            cmd = 'pollperiod %d' % iPollPeriod
             print cmd
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setPollingRate() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("__setPollPeriod() Error: " + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the specified EUIadr
@@ -1435,7 +1451,7 @@ class OpenThread(IThci):
             time.sleep(timeout)
 
             if self.deviceRole == Thread_Device_Role.SED:
-                self.setPollingRate(self.sedPollingRate)
+                self.__setPollPeriod(self.__sedPollPeriod)
 
             self.__startOpenThread()
             time.sleep(3)
