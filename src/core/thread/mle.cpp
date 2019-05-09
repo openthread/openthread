@@ -1606,6 +1606,10 @@ void Mle::HandleAttachTimer(void)
         // to which the device is attached. This ensures that the
         // new parent candidate is compared with the current parent
         // and that it is indeed preferred over the current one.
+        // If we are in kAttachStateParentRequestRouter and cannot
+        // find a parent with best link quality(3), we will keep
+        // the candidate and forward to REED stage to find a better
+        // parent.
 
         if ((mParentCandidate.GetLinkInfo().GetLinkQuality() == 3 || mAttachState != kAttachStateParentRequestRouter) &&
             mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
