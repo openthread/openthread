@@ -28,9 +28,9 @@
 
 .NOTPARALLEL:
 
-TARGET        = arm-bcm2708hardfp-linux-gnueabi
-PPREFIX       = gp712
-#CROSS_COMPILE = $(TARGET)-
+TARGET        ?= arm-bcm2708hardfp-linux-gnueabi
+PPREFIX        = gp712
+CROSS_COMPILE ?= $(TARGET)-
 
 AR                              = $(CROSS_COMPILE)ar
 AS                              = $(CROSS_COMPILE)as
