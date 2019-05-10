@@ -402,6 +402,7 @@ private:
     enum
     {
         kInterfaceIdentifierOffset = 8, ///< Interface Identifier offset in bytes.
+        kIp4AddressSize            = 4  ///< Size of the IPv4 address.
     };
 } OT_TOOL_PACKED_END;
 
