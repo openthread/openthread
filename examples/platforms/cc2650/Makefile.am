@@ -48,11 +48,11 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
 PLATFORM_SOURCES                                      = \
     alarm.c                                             \
     diag.c                                              \
+    entropy.c                                           \
     flash.c                                             \
     misc.c                                              \
     logging.c                                           \
     radio.c                                             \
-    random.c                                            \
     system.c                                            \
     uart.c                                              \
     crypto/sha256_alt.c                                 \

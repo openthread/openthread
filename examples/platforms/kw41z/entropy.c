@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,63 +28,47 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for random number generation.
+ *   This file implements an entropy source based on TRNG.
+ *
  */
 
-#ifndef OPENTHREAD_PLATFORM_RANDOM_H_
-#define OPENTHREAD_PLATFORM_RANDOM_H_
+#include <openthread/platform/entropy.h>
 
+#include "fsl_device_registers.h"
+#include "fsl_trng.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include <utils/code_utils.h>
 
-#include <openthread/error.h>
+void kw41zRandomInit(void)
+{
+    trng_config_t config;
+    uint32_t      seed;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    TRNG_GetDefaultConfig(&config);
+    config.frequencyCountLimit.minimum = 0x00000100;
+    config.frequencyCountLimit.maximum = 0x000F0000;
+    config.ringOscDiv                  = kTRNG_RingOscDiv0;
+    config.entropyDelay                = 1200;
 
-/**
- * @addtogroup plat-random
- *
- * @brief
- *   This module includes the platform abstraction for random number generation.
- *
- * @{
- *
- */
+    otEXPECT(TRNG_Init(TRNG0, &config) == kStatus_Success);
 
-/**
- * Get a 32-bit random value.
- *
- * This function may be implemented using a pseudo-random number generator.
- *
- * @returns A 32-bit random value.
- *
- */
-uint32_t otPlatRandomGet(void);
+    otEXPECT(TRNG_GetRandomData(TRNG0, &seed, sizeof(seed)) == kStatus_Success);
 
-/**
- * Get true random value sequence.
- *
- * This function MUST be implemented using a true random number generator (TRNG).
- *
- * @param[out]  aOutput              A pointer to where the true random values are placed.  Must not be NULL.
- * @param[in]   aOutputLength        Size of @p aBuffer.
- *
- * @retval OT_ERROR_NONE          Successfully filled @p aBuffer with true random values.
- * @retval OT_ERROR_FAILED         Failed to fill @p aBuffer with true random values.
- * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was set to NULL.
- *
- */
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength);
+    srand(seed);
 
-/**
- * @}
- *
- */
+exit:
+    return;
+}
 
-#ifdef __cplusplus
-} // end of extern "C"
-#endif
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
+{
+    otError status = OT_ERROR_NONE;
 
-#endif // OPENTHREAD_PLATFORM_RANDOM_H_
+    otEXPECT_ACTION((aOutput != NULL), status = OT_ERROR_INVALID_ARGS);
+
+    otEXPECT_ACTION(TRNG_GetRandomData(TRNG0, aOutput, aOutputLength) == kStatus_Success, status = OT_ERROR_FAILED);
+
+exit:
+    return status;
+}

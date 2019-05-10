@@ -28,27 +28,30 @@
 
 /**
  * @file
- *  This file includes definitions for OpenThread random number generation.
+ * @brief
+ *  This file defines the OpenThread non cryptographic random number generator API.
  */
 
-#ifndef RANDOM_HPP_
-#define RANDOM_HPP_
+#ifndef OPENTHREAD_RANDOM_H_
+#define OPENTHREAD_RANDOM_H_
 
 #include "openthread-core-config.h"
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/error.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifndef OPENTHREAD_RADIO
-
-#include <mbedtls/ctr_drbg.h>
-
-#endif // OPENTHREAD_RADIO
-
-namespace ot {
-namespace Random {
-namespace NonCrypto {
+/**
+ * @addtogroup api-random
+ *
+ * @brief
+ *   This module includes functions that generates non cryptographic random numbers.
+ *
+ * @{
+ *
+ */
 
 /**
  * This function generates and returns a random `uint32_t` value.
@@ -56,7 +59,7 @@ namespace NonCrypto {
  * @returns    A random `uint32_t` value.
  *
  */
-uint32_t GetUint32(void);
+uint32_t otRandomNonCryptoGetUint32(void);
 
 /**
  * This function generates and returns a random byte.
@@ -64,10 +67,7 @@ uint32_t GetUint32(void);
  * @returns A random `uint8_t` value.
  *
  */
-inline uint8_t GetUint8(void)
-{
-    return static_cast<uint8_t>(GetUint32() & 0xff);
-}
+uint8_t otRandomNonCryptoGetUint8(void);
 
 /**
  * This function generates and returns a random `uint16_t` value.
@@ -75,10 +75,7 @@ inline uint8_t GetUint8(void)
  * @returns A random `uint16_t` value.
  *
  */
-inline uint16_t GetUint16(void)
-{
-    return static_cast<uint16_t>(GetUint32() & 0xffff);
-}
+uint16_t otRandomNonCryptoGetUint16(void);
 
 /**
  * This function generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
@@ -88,10 +85,7 @@ inline uint16_t GetUint16(void)
  *
  * @returns    A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
  */
-inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
-{
-    return (aMin + (GetUint8() % (aMax - aMin)));
-}
+uint8_t otRandomNonCryptoGetUint8InRange(uint8_t aMin, uint8_t aMax);
 
 /**
  * This function generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
@@ -103,10 +97,7 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  *
  * @returns    A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
  */
-inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
-{
-    return (aMin + (GetUint16() % (aMax - aMin)));
-}
+uint16_t otRandomNonCryptoGetUint16InRange(uint16_t aMin, uint16_t aMax);
 
 /**
  * This function generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
@@ -119,10 +110,7 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  * @returns    A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
  *
  */
-inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
-{
-    return (aMin + (GetUint32() % (aMax - aMin)));
-}
+uint32_t otRandomNonCryptoGetUint32InRange(uint32_t aMin, uint32_t aMax);
 
 /**
  * This function fills a given buffer with random bytes.
@@ -131,13 +119,7 @@ inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
  *
  */
-inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
-{
-    while (aSize-- != 0)
-    {
-        *aBuffer++ = GetUint8();
-    }
-}
+void otRandomNonCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
  * This function adds a random jitter within a given range to a given value.
@@ -148,63 +130,15 @@ inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
  * @returns    The given value with an added random jitter.
  *
  */
-inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
-{
-    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
-
-    return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
-}
+uint32_t otRandomNonCryptoAddJitter(uint32_t aValue, uint16_t aJitter);
 
 /**
- * This function seeds a software random generator.
- *
- * @param[in]  aSeed  Seed value.
+ * @}
  *
  */
-void Seed(uint32_t aSeed);
 
-} // namespace NonCrypto
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-#ifndef OPENTHREAD_RADIO
-
-namespace Crypto {
-
-/**
- * This function initializes cryptographic random number generator.
- *
- */
-void Init(void);
-
-/**
- * This function deinitializes cryptographic random number generator.
- *
- */
-void Deinit(void);
-
-/**
- * This function fills a given buffer with cryptographically secure random bytes.
- *
- * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
- * @param[in]  aSize    Size of buffer (number of bytes to fill).
- *
- * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
- *
- */
-otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
-
-/**
- * This function returns initialized mbedtls_ctr_drbg_context.
- *
- * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
- *
- */
-mbedtls_ctr_drbg_context *MbedTlsContextGet(void);
-
-} // namespace Crypto
-
-#endif // OPENTHREAD_RADIO
-
-} // namespace Random
-} // namespace ot
-
-#endif // RANDOM_HPP_
+#endif // OPENTHREAD_RANDOM_H_

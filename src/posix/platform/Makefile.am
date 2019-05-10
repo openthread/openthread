@@ -41,12 +41,12 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
+    entropy.c                               \
     hdlc_interface.cpp                      \
     logging.c                               \
     misc.c                                  \
     netif.cpp                               \
     radio_spinel.cpp                        \
-    random.c                                \
     settings.cpp                            \
     sim.c                                   \
     system.c                                \

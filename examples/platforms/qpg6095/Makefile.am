@@ -43,10 +43,10 @@ CLEANFILES =
 
 libopenthread_qpg6095_a_SOURCES             = \
     alarm.c                                   \
+    entropy.c                                 \
     logging.c                                 \
     misc.c                                    \
     platform.c                                \
-    random.c                                  \
     radio.c                                   \
     settings.cpp                              \
     uart.c                                    \

@@ -67,11 +67,11 @@ COMMONCPPFLAGS                                                                  
 
 PLATFORM_SOURCES                                                                                  = \
     alarm.c                                                                                         \
+    entropy.c                                                                                       \
     flash.c                                                                                         \
     logging.c                                                                                       \
     misc.c                                                                                          \
     radio.c                                                                                         \
-    random.c                                                                                        \
     system.c                                                                                        \
     uart.c                                                                                          \
     platform-emsk.h                                                                                 \

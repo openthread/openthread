@@ -40,10 +40,10 @@ libopenthread_posix_a_CPPFLAGS            = \
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
+    entropy.c                               \
     misc.c                                  \
     logging.c                               \
     radio.c                                 \
-    random.c                                \
     uart-posix.c                            \
     flash.c                                 \
     spi-stubs.c                             \

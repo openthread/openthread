@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ *   This file implements an entropy source based on TRNG.
+ *
+ */
+
+#include <openthread/platform/entropy.h>
+
 #include <openthread/config.h>
 
 #include <stddef.h>
 
 #include <utils/code_utils.h>
-#include <openthread/platform/random.h>
 
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>
 
 enum
 {
-    CC1352_TRNG_MIN_SAMPLES_PER_CYCLE = (1 << 6),
-    CC1352_TRNG_MAX_SAMPLES_PER_CYCLE = (1 << 24),
-    CC1352_TRNG_CLOCKS_PER_SAMPLE     = 0,
+    CC2652_TRNG_MIN_SAMPLES_PER_CYCLE = (1 << 6),
+    CC2652_TRNG_MAX_SAMPLES_PER_CYCLE = (1 << 24),
+    CC2652_TRNG_CLOCKS_PER_SAMPLE     = 0,
 };
 
 /**
@@ -49,9 +56,9 @@ enum
  */
 
 /**
- * Function documented in platform-cc1352.h
+ * Function documented in platform-cc2652.h
  */
-void cc1352RandomInit(void)
+void cc2652RandomInit(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
 
@@ -62,19 +69,8 @@ void cc1352RandomInit(void)
     PRCMPeripheralSleepEnable(PRCM_DOMAIN_PERIPH);
     PRCMPeripheralDeepSleepEnable(PRCM_DOMAIN_PERIPH);
     PRCMLoadSet();
-    TRNGConfigure(CC1352_TRNG_MIN_SAMPLES_PER_CYCLE, CC1352_TRNG_MAX_SAMPLES_PER_CYCLE, CC1352_TRNG_CLOCKS_PER_SAMPLE);
+    TRNGConfigure(CC2652_TRNG_MIN_SAMPLES_PER_CYCLE, CC2652_TRNG_MAX_SAMPLES_PER_CYCLE, CC2652_TRNG_CLOCKS_PER_SAMPLE);
     TRNGEnable();
-}
-
-/**
- * Function documented in platform/random.h
- */
-uint32_t otPlatRandomGet(void)
-{
-    while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
-        ;
-
-    return TRNGNumberGet(TRNG_LOW_WORD);
 }
 
 /**
@@ -122,9 +118,9 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen)
 }
 
 /**
- * Function documented in platform/random.h
+ * Function documented in platform/entropy.h
  */
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error  = OT_ERROR_NONE;
     size_t  length = aOutputLength;

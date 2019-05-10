@@ -38,7 +38,6 @@
 #include <stdio.h>
 
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
@@ -46,6 +45,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/dataset_manager.hpp"
@@ -325,12 +325,12 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
 
     aDataset.mActiveTimestamp = 1;
 
-    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey)));
-    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc)));
-    SuccessOrExit(error = otPlatRandomGetTrue(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
+    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey)));
+    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc)));
+    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
 
     aDataset.mMeshLocalPrefix.m8[0] = 0xfd;
-    SuccessOrExit(error = otPlatRandomGetTrue(&aDataset.mMeshLocalPrefix.m8[1], OT_MESH_LOCAL_PREFIX_SIZE - 1));
+    SuccessOrExit(error = Random::Crypto::FillBuffer(&aDataset.mMeshLocalPrefix.m8[1], OT_MESH_LOCAL_PREFIX_SIZE - 1));
 
     aDataset.mSecurityPolicy.mFlags = Get<KeyManager>().GetSecurityPolicyFlags();
     aDataset.mChannelMask           = Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
@@ -338,7 +338,7 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
 
     do
     {
-        aDataset.mPanId = Random::GetUint16();
+        aDataset.mPanId = Random::NonCrypto::GetUint16();
     } while (aDataset.mPanId == Mac::kPanIdBroadcast);
 
     snprintf(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName), "OpenThread-%04x", aDataset.mPanId);
@@ -456,7 +456,8 @@ otError ActiveDataset::GenerateLocal(void)
         {
             // PSKc has not yet been configured, generate new PSKc at random
             otPSKc pskc;
-            SuccessOrExit(error = otPlatRandomGetTrue(pskc.m8, sizeof(pskc)));
+
+            SuccessOrExit(error = Random::Crypto::FillBuffer(pskc.m8, sizeof(pskc)));
             tlv.SetPSKc(pskc);
         }
 

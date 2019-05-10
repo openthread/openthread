@@ -22,7 +22,7 @@
     <ClCompile Include="..\..\examples\platforms\posix\misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\posix\random.c">
+    <ClCompile Include="..\..\examples\platforms\posix\entropy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\examples\platforms\posix\radio.c">

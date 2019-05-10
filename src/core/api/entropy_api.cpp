@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,18 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file implements the OpenThread entropy source management API.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#include "openthread/entropy.h"
 
-#include "openthread-core-config.h"
+#include <mbedtls/entropy.h>
 
-#include <openthread/instance.h>
+#include "common/entropy.hpp"
 
-namespace ot {
-namespace Crypto {
+using namespace ot;
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+mbedtls_entropy_context *otEntropyMbedTlsContextGet(void)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
-
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
-};
-
-/**
- * @}
- *
- */
-
-} // namespace Crypto
-} // namespace ot
-
-#endif // OT_MBEDTLS_HPP_
+    return Entropy::MbedTlsContextGet();
+}

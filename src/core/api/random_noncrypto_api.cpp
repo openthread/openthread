@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,51 @@
 
 /**
  * @file
- *   This file implements a random number generator.
- *
+ *   This file implements the OpenThread software random number generator API.
  */
 
-#include "openthread/platform/random.h"
-#include "fsl_device_registers.h"
-#include "fsl_trng.h"
-#include <stdint.h>
-#include <stdlib.h>
-#include <utils/code_utils.h>
+#include "openthread/random_noncrypto.h"
 
-void kw41zRandomInit(void)
+#include "common/random.hpp"
+
+using namespace ot;
+
+uint32_t otRandomNonCryptoGetUint32(void)
 {
-    trng_config_t config;
-    uint32_t      seed;
-
-    TRNG_GetDefaultConfig(&config);
-    config.frequencyCountLimit.minimum = 0x00000100;
-    config.frequencyCountLimit.maximum = 0x000F0000;
-    config.ringOscDiv                  = kTRNG_RingOscDiv0;
-    config.entropyDelay                = 1200;
-
-    otEXPECT(TRNG_Init(TRNG0, &config) == kStatus_Success);
-
-    otEXPECT(TRNG_GetRandomData(TRNG0, &seed, sizeof(seed)) == kStatus_Success);
-
-    srand(seed);
-
-exit:
-    return;
+    return Random::NonCrypto::GetUint32();
 }
 
-uint32_t otPlatRandomGet(void)
+uint8_t otRandomNonCryptoGetUint8(void)
 {
-    return (uint32_t)rand();
+    return Random::NonCrypto::GetUint8();
 }
 
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+uint16_t otRandomNonCryptoGetUint16(void)
 {
-    otError status = OT_ERROR_NONE;
+    return Random::NonCrypto::GetUint16();
+}
 
-    otEXPECT_ACTION((aOutput != NULL), status = OT_ERROR_INVALID_ARGS);
+uint8_t otRandomNonCryptoGetUint8InRange(uint8_t aMin, uint8_t aMax)
+{
+    return Random::NonCrypto::GetUint8InRange(aMin, aMax);
+}
 
-    otEXPECT_ACTION(TRNG_GetRandomData(TRNG0, aOutput, aOutputLength) == kStatus_Success, status = OT_ERROR_FAILED);
+uint16_t otRandomNonCryptoGetUint16InRange(uint16_t aMin, uint16_t aMax)
+{
+    return Random::NonCrypto::GetUint16InRange(aMin, aMax);
+}
 
-exit:
-    return status;
+uint32_t otRandomNonCryptoGetUint32InRange(uint32_t aMin, uint32_t aMax)
+{
+    return Random::NonCrypto::GetUint32InRange(aMin, aMax);
+}
+
+void otRandomNonCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    Random::NonCrypto::FillBuffer(aBuffer, aSize);
+}
+
+uint32_t otRandomNonCryptoAddJitter(uint32_t aValue, uint16_t aJitter)
+{
+    return Random::NonCrypto::AddJitter(aValue, aJitter);
 }

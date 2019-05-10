@@ -59,7 +59,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     , mDefaultHandlerContext(NULL)
     , mSender(aSender)
 {
-    mMessageId = Random::GetUint16();
+    mMessageId = Random::NonCrypto::GetUint16();
 }
 
 void CoapBase::ClearRequestsAndResponses(void)
@@ -676,7 +676,7 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mResponseContext       = aContext;
     mRetransmissionCount   = 0;
     mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
-    mRetransmissionTimeout += Random::GetUint32InRange(
+    mRetransmissionTimeout += Random::NonCrypto::GetUint32InRange(
         0, TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
                TimerMilli::SecToMsec(kAckTimeout) + 1);
 

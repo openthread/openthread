@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,51 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file provides an implementation of software random number generator.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#include "random.hpp"
 
-#include "openthread-core-config.h"
-
-#include <openthread/instance.h>
+#include "debug.hpp"
+#include "entropy.hpp"
 
 namespace ot {
-namespace Crypto {
+namespace Random {
+namespace NonCrypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
+static uint32_t sState;
+static bool     sSeeded;
 
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+uint32_t GetUint32(void)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+    uint32_t mlcg, p, q;
+    uint64_t tmpstate;
 
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
-};
+    assert(sSeeded);
 
-/**
- * @}
- *
- */
+    tmpstate = (uint64_t)33614 * (uint64_t)sState;
+    q        = tmpstate & 0xffffffff;
+    q        = q >> 1;
+    p        = tmpstate >> 32;
+    mlcg     = p + q;
 
-} // namespace Crypto
+    if (mlcg & 0x80000000)
+    {
+        mlcg &= 0x7fffffff;
+        mlcg++;
+    }
+
+    sState = mlcg;
+
+    return mlcg;
+}
+
+void Seed(uint32_t aSeed)
+{
+    sSeeded = true;
+    sState  = aSeed;
+}
+
+} // namespace NonCrypto
+} // namespace Random
 } // namespace ot
-
-#endif // OT_MBEDTLS_HPP_

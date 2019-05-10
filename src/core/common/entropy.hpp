@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,65 +28,61 @@
 
 /**
  * @file
- *   This file includes definitions for performing ECDSA signing.
+ *  This file includes definitions for OpenThread entropy generation.
  */
 
-#ifndef ECDSA_HPP_
-#define ECDSA_HPP_
+#ifndef ENTROPY_HPP_
+#define ENTROPY_HPP_
 
 #include "openthread-core-config.h"
 
-#include <stdlib.h>
 #include "utils/wrap_stdint.h"
 
 #include <openthread/error.h>
 
+#ifndef OPENTHREAD_RADIO
+
+#include <mbedtls/entropy.h>
+
+#endif // OPENTHREAD_RADIO
+
 namespace ot {
-namespace Crypto {
+namespace Entropy {
 
 /**
- * @addtogroup core-security
- *
- * @{
+ * This function initializes entropy source.
  *
  */
+void Init(void);
 
 /**
- * This class implements ECDSA signing.
+ * This function deinitializes entropy source.
  *
  */
-class Ecdsa
-{
-public:
-    /**
-     * This method creates ECDSA sign.
-     *
-     * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
-     * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
-     * @param[in]     aInputHash         An input hash.
-     * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
-     * @param[in]     aPrivateKey        A private key in PEM format.
-     * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
-     *
-     * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
-     * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
-     * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
-     * @retval  OT_ERROR_FAILED       Error during signing.
-     */
-    static otError Sign(uint8_t *      aOutput,
-                        uint16_t *     aOutputLength,
-                        const uint8_t *aInputHash,
-                        uint16_t       aInputHashLength,
-                        const uint8_t *aPrivateKey,
-                        uint16_t       aPrivateKeyLength);
-};
+void Deinit(void);
+
+#ifndef OPENTHREAD_RADIO
 
 /**
- * @}
+ * This function returns initialized mbedtls_entropy_context.
+ *
+ * @returns  A pointer to initialized mbedtls_entropy_context.
+ */
+mbedtls_entropy_context *MbedTlsContextGet(void);
+
+#endif // OPENTHREAD_RADIO
+
+/**
+ * This function generates and returns a 32 bit entropy.
+ *
+ * @param aVal[out]  A generated 32 bit entropy value.
+ *
+ * @retval OT_ERROR_NONE    Successfully generated 32 bit entropy.
  *
  */
+otError GetUint32(uint32_t &aVal);
 
-} // namespace Crypto
+} // namespace Entropy
 } // namespace ot
 
-#endif // ECDSA_HPP_
+#endif // ENTROPY_HPP_

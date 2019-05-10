@@ -248,12 +248,7 @@ const struct Command Interpreter::sCommands[] = {
     {"version", &Interpreter::ProcessVersion},
 };
 
-#ifdef OTDLL
-uint32_t otPlatRandomGet(void)
-{
-    return (uint32_t)rand();
-}
-#else
+#ifndef OTDLL
 void otFreeMemory(const void *)
 {
     // No-op on systems running OpenThread in-proc

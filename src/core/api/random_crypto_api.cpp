@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,23 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file implements the OpenThread cryptographic random number generator API.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#include "openthread/random_crypto.h"
 
-#include "openthread-core-config.h"
+#include <mbedtls/ctr_drbg.h>
 
-#include <openthread/instance.h>
+#include "common/random.hpp"
 
-namespace ot {
-namespace Crypto {
+using namespace ot;
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+otError otRandomCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+    return Random::Crypto::FillBuffer(aBuffer, aSize);
+}
 
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
-};
-
-/**
- * @}
- *
- */
-
-} // namespace Crypto
-} // namespace ot
-
-#endif // OT_MBEDTLS_HPP_
+mbedtls_ctr_drbg_context *otRandomCryptoMbedTlsContextGet(void)
+{
+    return Random::Crypto::MbedTlsContextGet();
+}
