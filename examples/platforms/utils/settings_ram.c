@@ -136,10 +136,10 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    uint16_t              i = 0;
-    uint16_t              currentBlockLength;
-    uint16_t              nextBlockStart;
-    struct settingsBlock *currentBlock;
+    uint16_t                    i = 0;
+    uint16_t                    currentBlockLength;
+    uint16_t                    nextBlockStart;
+    const struct settingsBlock *currentBlock;
 
     // Delete all entries of aKey
     while (i < sSettingsBufLength)
@@ -199,12 +199,12 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    uint16_t              i            = 0;
-    int                   currentIndex = 0;
-    uint16_t              nextBlockStart;
-    uint16_t              currentBlockLength;
-    struct settingsBlock *currentBlock;
-    otError               error = OT_ERROR_NOT_FOUND;
+    uint16_t                    i            = 0;
+    int                         currentIndex = 0;
+    uint16_t                    nextBlockStart;
+    uint16_t                    currentBlockLength;
+    const struct settingsBlock *currentBlock;
+    otError                     error = OT_ERROR_NOT_FOUND;
 
     while (i < sSettingsBufLength)
     {
@@ -242,7 +242,5 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    sSettingsBufLength = 0;
+    otPlatSettingsInit(aInstance);
 }
