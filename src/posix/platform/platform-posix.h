@@ -154,11 +154,15 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
 /**
  * This function initializes the radio service used by OpenThread.
  *
+ * @note Even when @p aReset is false, a reset event (i.e. a PROP_LAST_STATUS between
+ * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
+ *
  * @param[in]  aRadioFile       A pointer to the radio file.
  * @param[in]  aRadioConfig     A pointer to the radio config.
+ * @param[in]  aReset           Whether to reset RCP when initializing.
  *
  */
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig);
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset);
 
 /**
  * This function shuts down the radio service used by OpenThread.

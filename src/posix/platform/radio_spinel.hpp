@@ -56,9 +56,10 @@ public:
      *
      * @param[in]   aRadioFile    The path to either a uart device or an executable.
      * @param[in]   aRadioConfig  Parameters given to the device or executable.
+     * @param[in]   aReset        Whether to reset RCP when initializing.
      *
      */
-    void Init(const char *aRadioFile, const char *aRadioConfig);
+    void Init(const char *aRadioFile, const char *aRadioConfig, bool aReset);
 
     /**
      * Deinitialize this radio transceiver.

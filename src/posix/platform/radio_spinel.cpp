@@ -185,13 +185,17 @@ RadioSpinel::RadioSpinel(void)
     mVersion[0] = '\0';
 }
 
-void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
+void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig, bool aReset)
 {
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mHdlcInterface.Init(aRadioFile, aRadioConfig));
 
-    SuccessOrExit(error = SendReset());
+    if (aReset)
+    {
+        SuccessOrExit(error = SendReset());
+    }
+
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
@@ -1465,9 +1469,9 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig)
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset)
 {
-    sRadioSpinel.Init(aRadioFile, aRadioConfig);
+    sRadioSpinel.Init(aRadioFile, aRadioConfig, aReset);
 }
 
 void platformRadioDeinit(void)

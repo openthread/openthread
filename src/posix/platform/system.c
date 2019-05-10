@@ -51,11 +51,10 @@
 
 #include "openthread-system.h"
 
-static const struct option kOptions[] = {{"dry-run", no_argument, NULL, 'n'},
-                                         {"radio-version", no_argument, NULL, 0},
-                                         {"help", no_argument, NULL, 'h'},
-                                         {"time-speed", required_argument, NULL, 's'},
-                                         {0, 0, 0, 0}};
+static const struct option kOptions[] = {
+    {"dry-run", no_argument, NULL, 'n'},          {"no-reset", no_argument, NULL, 0},
+    {"radio-version", no_argument, NULL, 0},      {"help", no_argument, NULL, 'h'},
+    {"time-speed", required_argument, NULL, 's'}, {0, 0, 0, 0}};
 
 uint64_t gNodeId = 0;
 
@@ -66,6 +65,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
+            "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
             "    -s  --time-speed factor     Time speed up factor.\n"
             "    -h  --help                  Display this usage information.\n",
@@ -80,6 +80,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     otInstance *instance          = NULL;
     uint32_t    speedUpFactor     = 1;
     bool        isDryRun          = false;
+    bool        reset             = true;
     bool        printRadioVersion = false;
 
     optind = 1;
@@ -119,6 +120,10 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
             {
                 printRadioVersion = true;
             }
+            else if (!strcmp(kOptions[index].name, "no-reset"))
+            {
+                reset = false;
+            }
             break;
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
@@ -146,7 +151,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     otSimInit();
 #endif
     platformAlarmInit(speedUpFactor);
-    platformRadioInit(radioFile, radioConfig);
+    platformRadioInit(radioFile, radioConfig, reset);
     platformRandomInit();
 #if OPENTHREAD_ENABLE_PLATFORM_UDP && OPENTHREAD_ENABLE_PLATFORM_NETIF == 0
     platformUdpInit(getenv("PLATFORM_NETIF"));
