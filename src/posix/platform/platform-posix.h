@@ -154,7 +154,7 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
 /**
  * This function initializes the radio service used by OpenThread.
  *
- * @note Even @p aReset is false, a reset event is still expected.
+ * @note Even when @p aReset is false, a reset event is still expected.
  *
  * @param[in]  aRadioFile       A pointer to the radio file.
  * @param[in]  aRadioConfig     A pointer to the radio config.
