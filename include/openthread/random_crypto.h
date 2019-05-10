@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,57 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for random number generator.
+ * @brief
+ *  This file defines the OpenThread cryptographic random number generator API.
+ */
+
+#ifndef OPENTHREAD_RANDOM_CRYPTO_H_
+#define OPENTHREAD_RANDOM_CRYPTO_H_
+
+#include "openthread-core-config.h"
+
+#include "utils/wrap_stdint.h"
+
+#include <mbedtls/ctr_drbg.h>
+#include <openthread/error.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup api-random
+ *
+ * @brief
+ *   This module includes functions that generates cryptographic random numbers.
+ *
+ * @{
  *
  */
 
-#include "phy.h"
-#include "platform-samr21.h"
-#include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
+/**
+ * This function fills a given buffer with cryptographically secure random bytes.
+ *
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ *
+ */
+otError otRandomCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
-uint32_t otPlatRandomGet(void)
-{
-    return samr21RadioRandomGet();
-}
+/**
+ * This function returns initialized mbedtls_ctr_drbg_context.
+ *
+ * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
+ */
+mbedtls_ctr_drbg_context *otRandomCryptoMbedTlsContextGet(void);
 
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
-{
-    samr21RadioRandomGetTrue(aOutput, aOutputLength);
+/**
+ * @}
+ *
+ */
 
-    return OT_ERROR_NONE;
-}
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_RANDOM_CRYPTO_H_

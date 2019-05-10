@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,13 @@
 
 /**
  * @file
- *   This file implements a random number generator.
+ *   This file implements an entropy source based on ADC.
  *
  */
 
+#include <openthread/platform/entropy.h>
+
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 
 #include "platform-cc2538.h"
 #include "utils/code_utils.h"
@@ -79,20 +80,7 @@ void cc2538RandomInit(void)
     HWREG(SOC_ADC_RNDL) = seed & 0xff;
 }
 
-uint32_t otPlatRandomGet(void)
-{
-    uint32_t random = 0;
-
-    HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
-    random = HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8);
-
-    HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
-    random |= ((HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8)) << 16);
-
-    return random;
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error   = OT_ERROR_NONE;
     uint8_t channel = 0;

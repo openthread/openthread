@@ -84,8 +84,8 @@ Mac::Mac(Instance &aInstance)
     , mDelayingSleep(false)
 #endif
     , mOperation(kOperationIdle)
-    , mBeaconSequence(Random::GetUint8())
-    , mDataSequence(Random::GetUint8())
+    , mBeaconSequence(Random::NonCrypto::GetUint8())
+    , mDataSequence(Random::NonCrypto::GetUint8())
     , mBroadcastTransmitCount(0)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
@@ -398,7 +398,7 @@ otError Mac::AcquireRadioChannel(uint16_t *aAcquisitionId)
     VerifyOrExit(aAcquisitionId != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(!mRadioChannelAcquisitionId, error = OT_ERROR_INVALID_STATE);
 
-    mRadioChannelAcquisitionId = Random::GetUint16InRange(1, kMaxAcquisitionId);
+    mRadioChannelAcquisitionId = Random::NonCrypto::GetUint16InRange(1, kMaxAcquisitionId);
 
     *aAcquisitionId = mRadioChannelAcquisitionId;
 

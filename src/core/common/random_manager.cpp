@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,65 +28,42 @@
 
 /**
  * @file
- *   This file includes definitions for performing ECDSA signing.
+ *   This file provides an implementation of OpenThread random number generation manager class.
  */
 
-#ifndef ECDSA_HPP_
-#define ECDSA_HPP_
-
-#include "openthread-core-config.h"
-
-#include <stdlib.h>
-#include "utils/wrap_stdint.h"
+#include "random_manager.hpp"
 
 #include <openthread/error.h>
 
+#include "debug.hpp"
+#include "entropy.hpp"
+#include "random.hpp"
+
 namespace ot {
-namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements ECDSA signing.
- *
- */
-class Ecdsa
+RandomManager::RandomManager(void)
 {
-public:
-    /**
-     * This method creates ECDSA sign.
-     *
-     * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
-     * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
-     * @param[in]     aInputHash         An input hash.
-     * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
-     * @param[in]     aPrivateKey        A private key in PEM format.
-     * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
-     *
-     * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
-     * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
-     * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
-     * @retval  OT_ERROR_FAILED       Error during signing.
-     */
-    static otError Sign(uint8_t *      aOutput,
-                        uint16_t *     aOutputLength,
-                        const uint8_t *aInputHash,
-                        uint16_t       aInputHashLength,
-                        const uint8_t *aPrivateKey,
-                        uint16_t       aPrivateKeyLength);
-};
+    uint32_t seed;
+    otError  error;
 
-/**
- * @}
- *
- */
+    Entropy::Init();
 
-} // namespace Crypto
+    error = Entropy::GetUint32(seed);
+    assert(error == OT_ERROR_NONE);
+
+    Random::NonCrypto::Seed(seed);
+
+#ifndef OPENTHREAD_RADIO
+    Random::Crypto::Init();
+#endif
+}
+
+RandomManager::~RandomManager(void)
+{
+#ifndef OPENTHREAD_RADIO
+    Random::Crypto::Deinit();
+#endif
+    Entropy::Deinit();
+}
+
 } // namespace ot
-
-#endif // ECDSA_HPP_

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,32 +28,28 @@
 
 /**
  * @file
- *   This file implements a pseudo-random number generator.
+ *   This file implements an entropy source based on /dev/urandom or pseudo-random generator.
  *
  */
 
-#include "openthread-core-config.h"
 #include "platform-posix.h"
 
 #include <assert.h>
 #include <stdio.h>
 
-#include <openthread/platform/random.h>
+#include <openthread/platform/entropy.h>
 
-#include "code_utils.h"
+#include "utils/code_utils.h"
+
+#if __SANITIZE_ADDRESS__ != 0
 
 static uint32_t sState = 1;
 
+#endif // __SANITIZE_ADDRESS__
+
 void platformRandomInit(void)
 {
-#if __SANITIZE_ADDRESS__ == 0
-
-    otError error;
-
-    error = otPlatRandomGetTrue((uint8_t *)&sState, sizeof(sState));
-    assert(error == OT_ERROR_NONE);
-
-#else // __SANITIZE_ADDRESS__
+#if __SANITIZE_ADDRESS__ != 0
 
     // Multiplying gNodeId assures that no two nodes gets the same seed within an hour.
     sState = (uint32_t)time(NULL) + (3600 * gNodeId);
@@ -61,7 +57,9 @@ void platformRandomInit(void)
 #endif // __SANITIZE_ADDRESS__
 }
 
-uint32_t otPlatRandomGet(void)
+#if __SANITIZE_ADDRESS__ != 0
+
+static uint32_t randomUint32Get(void)
 {
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
@@ -83,7 +81,9 @@ uint32_t otPlatRandomGet(void)
     return mlcg;
 }
 
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+#endif // __SANITIZE_ADDRESS__
+
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -121,7 +121,7 @@ exit:
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)randomUint32Get();
     }
 
 exit:

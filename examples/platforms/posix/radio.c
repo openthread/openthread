@@ -31,11 +31,11 @@
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
 #include <openthread/dataset.h>
+#include <openthread/random_noncrypto.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 #include <openthread/platform/time.h>
 
 #include "utils/code_utils.h"
@@ -560,7 +560,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     probabilityThreshold = (channel - POSIX_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
-    if ((otPlatRandomGet() & 0xffff) < (probabilityThreshold * 0xffff / 100))
+    if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
         rssi = POSIX_HIGH_RSSI_SAMPLE;
     }

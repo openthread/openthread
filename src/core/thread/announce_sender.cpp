@@ -78,7 +78,7 @@ otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
     mJitter      = aJitter;
     mChannel     = Mac::ChannelMask::kChannelIteratorFirst;
 
-    mTimer.Start(Random::AddJitter(mPeriod, mJitter));
+    mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
 exit:
     return error;
@@ -106,7 +106,7 @@ void AnnounceSenderBase::HandleTimer(void)
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
-    mTimer.Start(Random::AddJitter(mPeriod, mJitter));
+    mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
 exit:
     return;

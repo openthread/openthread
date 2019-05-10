@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for random number generator.
+ *   This file implements an entropy source based on ADC.
  *
  */
 
-#include <openthread/platform/random.h>
+#include <openthread/platform/entropy.h>
 
 #include "utils/code_utils.h"
 
@@ -68,7 +68,7 @@ void efr32RandomInit(void)
     ADC0->SINGLEFIFOCLEAR = ADC_SINGLEFIFOCLEAR_SINGLEFIFOCLEAR;
 }
 
-uint32_t otPlatRandomGet(void)
+static uint32_t randomUint32Get(void)
 {
     uint8_t  tmp;
     uint32_t random = 0;
@@ -93,7 +93,7 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -101,7 +101,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)randomUint32Get();
     }
 
 exit:

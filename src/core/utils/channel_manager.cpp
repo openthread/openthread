@@ -34,8 +34,6 @@
 
 #include "channel_manager.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
@@ -77,7 +75,7 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
     mChannel         = aChannel;
     mActiveTimestamp = 0;
 
-    mTimer.Start(1 + Random::GetUint32InRange(0, kRequestStartJitterInterval));
+    mTimer.Start(1 + Random::NonCrypto::GetUint32InRange(0, kRequestStartJitterInterval));
 
     Get<Notifier>().Signal(OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL);
 
@@ -131,7 +129,7 @@ void ChannelManager::PreparePendingDataset(void)
         }
     }
 
-    pendingTimestamp += 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
+    pendingTimestamp += 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
 
     error = Get<MeshCoP::ActiveDataset>().Read(dataset);
 
@@ -194,7 +192,7 @@ void ChannelManager::PreparePendingDataset(void)
     }
     else
     {
-        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
+        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
     }
 
     dataset.mActiveTimestamp                       = mActiveTimestamp;

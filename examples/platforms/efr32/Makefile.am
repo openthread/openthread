@@ -92,12 +92,12 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
+    entropy.c                                                                   \
     fem-control.c                                                               \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
     radio.c                                                                     \
-    random.c                                                                    \
     startup-gcc.c                                                               \
     system.c                                                                    \
     uart.c                                                                      \

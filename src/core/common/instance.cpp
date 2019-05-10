@@ -190,6 +190,16 @@ void Instance::Finalize(void)
     IgnoreReturnValue(otLinkSetEnabled(this, false));
 #endif
 
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
+    /**
+     * Object was created on buffer, so instead of deleting
+     * the object we call destructor explicitly.
+     */
+    this->~Instance();
+
+#endif // !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+
 exit:
     return;
 }

@@ -38,8 +38,6 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap_message.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"

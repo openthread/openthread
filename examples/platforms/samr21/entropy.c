@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,19 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
- */
-
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
-
-#include "openthread-core-config.h"
-
-#include <openthread/instance.h>
-
-namespace ot {
-namespace Crypto {
-
-/**
- * @addtogroup core-security
- *
- * @{
+ *   This file implements an entropy source based on TRNG.
  *
  */
 
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+#include <openthread/platform/entropy.h>
+
+#include "phy.h"
+#include "platform-samr21.h"
+#include <openthread/platform/radio.h>
+
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+    samr21RadioRandomGetTrue(aOutput, aOutputLength);
 
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
-};
-
-/**
- * @}
- *
- */
-
-} // namespace Crypto
-} // namespace ot
-
-#endif // OT_MBEDTLS_HPP_
+    return OT_ERROR_NONE;
+}

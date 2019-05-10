@@ -64,7 +64,7 @@ void RouterTable::Iterator::Advance(void)
 RouterTable::RouterTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRouterIdSequenceLastUpdated(0)
-    , mRouterIdSequence(Random::GetUint8())
+    , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
 {
     Clear();
@@ -212,7 +212,7 @@ Router *RouterTable::Allocate(void)
     VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters && numAvailable > 0);
 
     // choose available router id at random
-    freeBit = Random::GetUint8InRange(0, numAvailable);
+    freeBit = Random::NonCrypto::GetUint8InRange(0, numAvailable);
 
     // allocate router
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)

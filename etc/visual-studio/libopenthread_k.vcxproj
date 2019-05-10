@@ -78,6 +78,8 @@
     <ClCompile Include="..\..\src\core\api\link_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
     <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\random_crypto_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\random_noncrypto_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp" />
@@ -85,11 +87,15 @@
     <ClCompile Include="..\..\src\core\coap\coap.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_message.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_secure.cpp" />
+    <ClCompile Include="..\..\src\core\common\entropy.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\instance.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\notifier.cpp" />
+    <ClCompile Include="..\..\src\core\common\random_crypto.cpp" />
+    <ClCompile Include="..\..\src\core\common\random_manager.cpp" />
+    <ClCompile Include="..\..\src\core\common\random_noncrypto.cpp" />
     <ClCompile Include="..\..\src\core\common\settings.cpp" />
     <ClCompile Include="..\..\src\core\common\string.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
@@ -99,6 +105,7 @@
     <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp" />
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp" />
     <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\mbedtls.cpp" />
     <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\core\mac\channel_mask.cpp" />
@@ -195,6 +202,7 @@
     <ClInclude Include="..\..\src\core\common\context.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
+    <ClInclude Include="..\..\src\core\common\entropy.hpp" />
     <ClInclude Include="..\..\src\core\common\encoding.hpp" />
     <ClInclude Include="..\..\src\core\common\instance.hpp" />
     <ClInclude Include="..\..\src\core\common\locator.hpp" />
@@ -203,6 +211,8 @@
     <ClInclude Include="..\..\src\core\common\message.hpp" />
     <ClInclude Include="..\..\src\core\common\notifier.hpp" />
     <ClInclude Include="..\..\src\core\common\new.hpp" />
+    <ClInclude Include="..\..\src\core\common\random.hpp" />
+    <ClInclude Include="..\..\src\core\common\random_manager.hpp" />
     <ClInclude Include="..\..\src\core\common\string.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />

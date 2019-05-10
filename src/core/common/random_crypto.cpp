@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,65 +28,69 @@
 
 /**
  * @file
- *   This file includes definitions for performing ECDSA signing.
+ *   This file provides an implementation of cryptographic random number generator.
  */
 
-#ifndef ECDSA_HPP_
-#define ECDSA_HPP_
+#include "random.hpp"
 
-#include "openthread-core-config.h"
-
-#include <stdlib.h>
 #include "utils/wrap_stdint.h"
 
-#include <openthread/error.h>
+#include "entropy.hpp"
+#include "crypto/mbedtls.hpp"
+
+#include <mbedtls/entropy.h>
+
+#include "debug.hpp"
 
 namespace ot {
+namespace Random {
 namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
+static uint32_t                 sInitCnt = 0;
+static mbedtls_ctr_drbg_context sCtrDrbg;
 
-/**
- * This class implements ECDSA signing.
- *
- */
-class Ecdsa
+void Init(void)
 {
-public:
-    /**
-     * This method creates ECDSA sign.
-     *
-     * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
-     * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
-     * @param[in]     aInputHash         An input hash.
-     * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
-     * @param[in]     aPrivateKey        A private key in PEM format.
-     * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
-     *
-     * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
-     * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
-     * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
-     * @retval  OT_ERROR_FAILED       Error during signing.
-     */
-    static otError Sign(uint8_t *      aOutput,
-                        uint16_t *     aOutputLength,
-                        const uint8_t *aInputHash,
-                        uint16_t       aInputHashLength,
-                        const uint8_t *aPrivateKey,
-                        uint16_t       aPrivateKeyLength);
-};
+    assert(sInitCnt < 0xffffffff);
 
-/**
- * @}
- *
- */
+    if (sInitCnt == 0)
+    {
+        mbedtls_ctr_drbg_init(&sCtrDrbg);
+        mbedtls_ctr_drbg_seed(&sCtrDrbg, mbedtls_entropy_func, Entropy::MbedTlsContextGet(), NULL, 0);
+    }
+
+    sInitCnt++;
+}
+
+void Deinit(void)
+{
+    assert(sInitCnt > 0);
+
+    sInitCnt--;
+
+    if (sInitCnt == 0)
+    {
+        mbedtls_ctr_drbg_free(&sCtrDrbg);
+    }
+}
+
+mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
+{
+    assert(sInitCnt > 0);
+    return &sCtrDrbg;
+}
+
+otError FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    int rval = 0;
+
+    assert(sInitCnt > 0);
+
+    rval = mbedtls_ctr_drbg_random(&sCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize));
+
+    return ot::Crypto::MbedTls::MapError(rval);
+}
 
 } // namespace Crypto
+} // namespace Random
 } // namespace ot
-
-#endif // ECDSA_HPP_

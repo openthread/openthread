@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,18 +28,19 @@
 
 /**
  * @file
- *   This file implements a pseudo-random number generator.
+ *   This file implements an entropy source based on rand().
  *
  * @warning
  *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  *
  */
 
+#include <openthread/platform/entropy.h>
+
 #include <utils/code_utils.h>
 
 #include "platform-emsk.h"
 #include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
 
 #include <stdlib.h>
 
@@ -58,12 +59,12 @@ void emskRandomInit(void)
     srand(seed);
 }
 
-uint32_t otPlatRandomGet(void)
+static uint32_t randomUint32Get(void)
 {
     return (uint32_t)rand();
 }
 
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError     error     = OT_ERROR_NONE;
     uint8_t     channel   = 0;
@@ -71,7 +72,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
-    // TODO: `otPlatRandomGet()` and `otPlatRandomGetTrue()` should include a pointer to the
+    // TODO: `otPlatEntropyGet()` should include a pointer to the
     // owning OpenThread Instance as an input argument (similar to other platform APIs).
     //
     // The platform implementation requires to know the OpenThread instance to be able to
@@ -98,7 +99,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
         /* Get random number */
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)randomUint32Get();
     }
 
     /* Enable radio*/

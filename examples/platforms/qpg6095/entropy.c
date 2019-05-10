@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,51 +28,37 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
- */
-
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
-
-#include "openthread-core-config.h"
-
-#include <openthread/instance.h>
-
-namespace ot {
-namespace Crypto {
-
-/**
- * @addtogroup core-security
- *
- * @{
+ *   This file implements an entropy source.
  *
  */
 
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+#include <openthread/platform/entropy.h>
+
+#include "assert.h"
+#include "random_qorvo.h"
+#include <common/code_utils.hpp>
+#include <openthread/platform/radio.h>
+
+#define GP_COMPONENT_ID GP_COMPONENT_ID_APP
+
+// uint8_t pseudoRandom = 0x34;
+
+void qorvoRandomInit(void)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+    // pseudoRandom += (uint8_t) (seed&0xFF);
+}
 
-    /**
-     * This method converts from MbedTls error to OpenThread error.
-     */
-    static otError MapError(int rval);
-};
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
+{
+    otError error = OT_ERROR_NONE;
+    assert(aOutputLength < 256);
+    // uint8_t i;
 
-/**
- * @}
- *
- */
-
-} // namespace Crypto
-} // namespace ot
-
-#endif // OT_MBEDTLS_HPP_
+    qorvoRandomGet((uint8_t *)aOutput, (uint8_t)aOutputLength);
+    // for(i=0; i<aOutputLength; i++)
+    // {
+    //     aOutput[i] = pseudoRandom;
+    //     pseudoRandom = (pseudoRandom * 97 + 1)%256;
+    // }
+    return error;
+}

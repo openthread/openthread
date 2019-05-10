@@ -39,10 +39,10 @@ libopenthread_cc2538_a_CPPFLAGS           = \
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
+    entropy.c                               \
     flash.c                                 \
     misc.c                                  \
     radio.c                                 \
-    random.c                                \
     startup-gcc.c                           \
     system.c                                \
     logging.c                               \

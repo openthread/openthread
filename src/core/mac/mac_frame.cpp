@@ -46,7 +46,7 @@ namespace Mac {
 
 void ExtAddress::GenerateRandom(void)
 {
-    Random::FillBuffer(m8, sizeof(ExtAddress));
+    Random::NonCrypto::FillBuffer(m8, sizeof(ExtAddress));
     SetGroup(false);
     SetLocal(true);
 }

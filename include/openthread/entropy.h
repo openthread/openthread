@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,65 +28,47 @@
 
 /**
  * @file
- *   This file includes definitions for performing ECDSA signing.
+ * @brief
+ *  This file defines the OpenThread entropy source API.
  */
 
-#ifndef ECDSA_HPP_
-#define ECDSA_HPP_
+#ifndef OPENTHREAD_ENTROPY_H_
+#define OPENTHREAD_ENTROPY_H_
 
 #include "openthread-core-config.h"
 
-#include <stdlib.h>
 #include "utils/wrap_stdint.h"
 
-#include <openthread/error.h>
+#include <mbedtls/entropy.h>
 
-namespace ot {
-namespace Crypto {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * @addtogroup core-security
+ * @addtogroup api-entropy
+ *
+ * @brief
+ *   This module includes functions that manages entropy source.
  *
  * @{
  *
  */
 
 /**
- * This class implements ECDSA signing.
+ * This function returns initialized mbedtls_entropy_context.
  *
+ * @returns  A pointer to initialized mbedtls_entropy_context.
  */
-class Ecdsa
-{
-public:
-    /**
-     * This method creates ECDSA sign.
-     *
-     * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
-     * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
-     * @param[in]     aInputHash         An input hash.
-     * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
-     * @param[in]     aPrivateKey        A private key in PEM format.
-     * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
-     *
-     * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
-     * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
-     * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
-     * @retval  OT_ERROR_FAILED       Error during signing.
-     */
-    static otError Sign(uint8_t *      aOutput,
-                        uint16_t *     aOutputLength,
-                        const uint8_t *aInputHash,
-                        uint16_t       aInputHashLength,
-                        const uint8_t *aPrivateKey,
-                        uint16_t       aPrivateKeyLength);
-};
+mbedtls_entropy_context *otEntropyMbedTlsContextGet(void);
 
 /**
  * @}
  *
  */
 
-} // namespace Crypto
-} // namespace ot
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-#endif // ECDSA_HPP_
+#endif // OPENTHREAD_ENTROPY_H_

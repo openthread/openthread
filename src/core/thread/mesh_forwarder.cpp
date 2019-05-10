@@ -86,7 +86,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #endif
     , mDataPollManager(aInstance)
 {
-    mFragTag = Random::GetUint16();
+    mFragTag = Random::NonCrypto::GetUint16();
 
     mIpCounters.mTxSuccess = 0;
     mIpCounters.mRxSuccess = 0;
@@ -553,7 +553,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
                 do
                 {
-                    panid = Random::GetUint16();
+                    panid = Random::NonCrypto::GetUint16();
                 } while (panid == Mac::kPanIdBroadcast);
 
                 Get<Mac::Mac>().SetPanId(panid);

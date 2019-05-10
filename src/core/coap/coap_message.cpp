@@ -355,7 +355,7 @@ void Message::SetToken(uint8_t aTokenLength)
 
     assert(aTokenLength <= sizeof(token));
 
-    Random::FillBuffer(token, aTokenLength);
+    Random::NonCrypto::FillBuffer(token, aTokenLength);
 
     SetToken(token, aTokenLength);
 }

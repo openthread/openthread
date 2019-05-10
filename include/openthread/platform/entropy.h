@@ -28,43 +28,53 @@
 
 /**
  * @file
- *   This file implements a random number generator.
+ * @brief
+ *   This file includes the platform abstraction for entropy generation.
+ */
+
+#ifndef OPENTHREAD_PLATFORM_ENTROPY_H_
+#define OPENTHREAD_PLATFORM_ENTROPY_H_
+
+#include <stdint.h>
+
+#include <openthread/error.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup plat-entropy
+ *
+ * @brief
+ *   This module includes the platform abstraction for entropy generation.
+ *
+ * @{
  *
  */
 
-#include "assert.h"
-#include "random_qorvo.h"
-#include <common/code_utils.hpp>
-#include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
+/**
+ * Fill buffer with entropy.
+ *
+ * This function MUST be implemented using a true random number generator (TRNG).
+ *
+ * @param[out]  aOutput              A pointer to where the true random values are placed.  Must not be NULL.
+ * @param[in]   aOutputLength        Size of @p aBuffer.
+ *
+ * @retval OT_ERROR_NONE          Successfully filled @p aBuffer with true random values.
+ * @retval OT_ERROR_FAILED        Failed to fill @p aBuffer with true random values.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was set to NULL.
+ *
+ */
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength);
 
-#define GP_COMPONENT_ID GP_COMPONENT_ID_APP
+/**
+ * @}
+ *
+ */
 
-// uint8_t pseudoRandom = 0x34;
+#ifdef __cplusplus
+} // end of extern "C"
+#endif
 
-void qorvoRandomInit(void)
-{
-    // pseudoRandom += (uint8_t) (seed&0xFF);
-}
-
-uint32_t otPlatRandomGet(void)
-{
-    uint32_t random = 0;
-    otPlatRandomGetTrue((uint8_t *)(&random), sizeof(uint32_t));
-    return random;
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
-{
-    otError error = OT_ERROR_NONE;
-    assert(aOutputLength < 256);
-    // uint8_t i;
-
-    qorvoRandomGet((uint8_t *)aOutput, (uint8_t)aOutputLength);
-    // for(i=0; i<aOutputLength; i++)
-    // {
-    //     aOutput[i] = pseudoRandom;
-    //     pseudoRandom = (pseudoRandom * 97 + 1)%256;
-    // }
-    return error;
-}
+#endif // OPENTHREAD_PLATFORM_ENTROPY_H_

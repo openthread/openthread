@@ -42,6 +42,8 @@
 #include <openthread/error.h>
 #include <openthread/platform/logging.h>
 
+#include "common/random_manager.hpp"
+
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #include "common/message.hpp"
 #include "mac/link_raw.hpp"
@@ -49,8 +51,8 @@
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "crypto/mbedtls.hpp"
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "utils/heap.hpp"
 #endif
 #include "common/notifier.hpp"
@@ -311,10 +313,14 @@ private:
     Notifier mNotifier;
     Settings mSettings;
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
     Crypto::MbedTls mMbedTls;
-#endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    RandomManager mRandomManager;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Utils::Heap mHeap;
 #endif
 
