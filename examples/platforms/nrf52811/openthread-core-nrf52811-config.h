@@ -61,6 +61,16 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "NRF52811"
 
 /**
+ * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+ *
+ * The Organizationally Unique Identifier for the vendor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+#define OPENTHREAD_CONFIG_STACK_VENDOR_OUI 0xf4ce36
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

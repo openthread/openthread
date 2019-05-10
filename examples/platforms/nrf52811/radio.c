@@ -183,10 +183,16 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
-    factoryAddress |= NRF_FICR->DEVICEID[1];
+    uint32_t index = 0;
 
-    memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
+    // Set the MAC Address Block Larger (MA-L) formerly called OUI.
+    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 16) & 0xff;
+    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 8) & 0xff;
+    aIeeeEui64[index++] = OPENTHREAD_CONFIG_STACK_VENDOR_OUI & 0xff;
+
+    // Use device identifier assigned during the production.
+    uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32 | NRF_FICR->DEVICEID[1];
+    memcpy(aIeeeEui64 + index, &factoryAddress, sizeof(factoryAddress) - index);
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 

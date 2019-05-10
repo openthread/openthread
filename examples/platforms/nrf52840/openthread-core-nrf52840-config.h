@@ -63,6 +63,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+ *
+ * The Organizationally Unique Identifier for the vendor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+#define OPENTHREAD_CONFIG_STACK_VENDOR_OUI 0xf4ce36
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_CHILDREN
  *
  * The maximum number of children.
