@@ -1606,8 +1606,13 @@ void Mle::HandleAttachTimer(void)
         // to which the device is attached. This ensures that the
         // new parent candidate is compared with the current parent
         // and that it is indeed preferred over the current one.
+        // If we are in kAttachStateParentRequestRouter and cannot
+        // find a parent with best link quality(3), we will keep
+        // the candidate and forward to REED stage to find a better
+        // parent.
 
-        if (mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
+        if ((mParentCandidate.GetLinkInfo().GetLinkQuality() == 3 || mAttachState != kAttachStateParentRequestRouter) &&
+            mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
             (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
         {
@@ -3132,8 +3137,6 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     }
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
-
-    VerifyOrExit(mAttachState != kAttachStateParentRequestRouter || linkQuality == 3);
 
     // Connectivity
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
