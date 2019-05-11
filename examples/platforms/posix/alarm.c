@@ -80,7 +80,7 @@ uint64_t platformGetNow(void)
     struct timeval tv;
     int            err;
 
-    gettimeofday(&tv, NULL);
+    err = gettimeofday(&tv, NULL);
 
     assert(err == 0);
 
