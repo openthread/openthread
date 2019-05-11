@@ -64,6 +64,8 @@ class otCli:
             else:
                 self.pexpect.logfile_read = sys.stdout.buffer
 
+        self._initialized = True
+
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
         if 'OT_CLI_PATH' in os.environ.keys():
@@ -144,7 +146,7 @@ class otCli:
         self.destroy()
 
     def destroy(self):
-        if not self.pexpect:
+        if not self._initialized:
             return
 
         if hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or \
@@ -152,7 +154,8 @@ class otCli:
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
-            self.pexpect = None
+            self.pexpect.wait()
+            self._initialized = False
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
