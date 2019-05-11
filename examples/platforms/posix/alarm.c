@@ -39,6 +39,7 @@
 #include <openthread/platform/diag.h>
 
 #define MS_PER_S 1000
+#define NS_PER_US 1000
 #define US_PER_MS 1000
 #define US_PER_S 1000000
 
@@ -52,23 +53,40 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
-static struct timeval sStart;
-
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
     sSpeedUpFactor = aSpeedUpFactor;
-    gettimeofday(&sStart, NULL);
 }
 
+#if defined(CLOCK_MONOTONIC_RAW) || defined(CLOCK_MONOTONIC)
+uint64_t platformGetNow(void)
+{
+    struct timespec now;
+    int             err;
+
+#ifdef CLOCK_MONOTONIC_RAW
+    err = clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+#else
+    err = clock_gettime(CLOCK_MONOTONIC, &now);
+#endif
+
+    assert(err == 0);
+
+    return (uint64_t)now.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)now.tv_nsec * sSpeedUpFactor / NS_PER_US;
+}
+#else
 uint64_t platformGetNow(void)
 {
     struct timeval tv;
+    int            err;
 
-    gettimeofday(&tv, NULL);
-    timersub(&tv, &sStart, &tv);
+    err = gettimeofday(&tv, NULL);
+
+    assert(err == 0);
 
     return (uint64_t)tv.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)tv.tv_usec * sSpeedUpFactor;
 }
+#endif // defined(CLOCK_MONOTONIC_RAW) || defined(CLOCK_MONOTONIC)
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
