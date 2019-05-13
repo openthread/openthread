@@ -3027,7 +3027,7 @@ typedef enum
      * Required capability: SPINEL_CAP_POSIX_APP
      *
      * This property gives the version string of RCP (NCP in radio mode) which is being controlled by the POSIX
-     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_ENABLE_POSIX_APP` is
+     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_PLATFORM_POSIX_APP` is
      * enabled).
      *
      */
