@@ -57,8 +57,8 @@ extern "C" {
 /**
  * This function requests a Thread network channel change.
  *
- * The network switches to the given channel after a specified delay (@sa otChannelManagerSetDelay). The channel change
- * is performed by updating the Pending Operational Dataset.
+ * The network switches to the given channel after a specified delay (see otChannelManagerSetDelay()). The channel
+ * change is performed by updating the Pending Operational Dataset.
  *
  * A subsequent call to this function will cancel an ongoing previously requested channel change.
  *
@@ -117,7 +117,7 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  *
  * 2) If the first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
  *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
- *    (@sa otChannelManagerSetSupportedChannels, @sa otChannelManagerSetFavoredChannels).
+ *    (see otChannelManagerSetSupportedChannels() and otChannelManagerSetFavoredChannels()).
  *
  * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
  *    channel change process (internally invoking a `RequestChannelChange()`).

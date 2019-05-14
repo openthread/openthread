@@ -117,7 +117,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
  * @retval  OT_ERROR_INVALID_STATE  If Thread isn't stopped.
  *
- * @sa otThreadGetMaxAllowedChildren, otThreadStop
+ * @sa otThreadGetMaxAllowedChildren
  *
  */
 OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
@@ -169,6 +169,7 @@ OTAPI otError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t
  * @returns The Thread Leader Weight value.
  *
  * @sa otThreadSetLeaderWeight
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
@@ -179,6 +180,7 @@ OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
  * @param[in]  aWeight   The Thread Leader Weight value.
  *
  * @sa otThreadGetLeaderWeight
+ *
  */
 OTAPI void OTCALL otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
@@ -374,6 +376,7 @@ OTAPI otError OTCALL otThreadBecomeLeader(otInstance *aInstance);
  * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otThreadSetRouterDowngradeThreshold
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
 
@@ -387,6 +390,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
  * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otThreadGetRouterDowngradeThreshold
+ *
  */
 OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
@@ -398,6 +402,7 @@ OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uin
  * @returns The ROUTER_SELECTION_JITTER value.
  *
  * @sa otThreadSetRouterSelectionJitter
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
 
@@ -411,6 +416,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
  * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
  *
  * @sa otThreadGetRouterSelectionJitter
+ *
  */
 OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
@@ -569,6 +575,7 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS   If the parent priority value is not among 1, 0, -1 and -2.
  *
  * @sa otThreadGetParentPriority
+ *
  */
 OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
