@@ -81,7 +81,7 @@ void TestIp6AddressFromString(void)
             OT_ERROR_NONE
         },
 
-        // AValid IPv6 address with unnecessary :: symbol.
+        // Valid IPv6 address with unnecessary :: symbol.
         {
             "fd11:1234:5678:abcd::abcd:e0e0:d10e:1000",
             {0xfd, 0x11, 0x12, 0x34, 0x56, 0x78, 0xab, 0xcd,
