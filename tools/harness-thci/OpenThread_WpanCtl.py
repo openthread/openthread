@@ -64,7 +64,7 @@ class OpenThread_WpanCtl(IThci):
     # Used for reference firmware version control for Test Harness.
     # This variable will be updated to match the OpenThread reference firmware
     # officially released.
-    firmwarePrefix = "OPENTHREAD/"
+    firmwarePrefix = 'OPENTHREAD/'
 
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -240,9 +240,9 @@ class OpenThread_WpanCtl(IThci):
     r'Not\s+Found|failed\s+with\s+error',
     stderr_line.strip(),
      re.M | re.I):
-                            print "Command failed:" + stderr_line
+                            print 'Command failed:' + stderr_line
                             return 'Fail'
-                        print "Got line: " + stderr_line
+                        print 'Got line: ' + stderr_line
                         logging.info(
                             '%s: the read line is[%s]', self.port, stderr_line)
                         response.append(str(stderr_line.strip()))
@@ -254,9 +254,9 @@ class OpenThread_WpanCtl(IThci):
     r'Not\s+Found|failed\s+with\s+error',
     stdout_line.strip(),
      re.M | re.I):
-                            print "Command failed"
+                            print 'Command failed'
                             return 'Fail'
-                        print "Got line: " + stdout_line
+                        print 'Got line: ' + stdout_line
                         logging.info(
                             '%s: send command[%s] done!', self.port, cmd)
                         response.append(str(stdout_line.strip()))
@@ -265,14 +265,14 @@ class OpenThread_WpanCtl(IThci):
             else:
                 while retry_times > 0:
                     line = self._readline()
-                    print "read line: %s" % line
+                    print 'read line: %s' % line
                     logging.info('%s: the read line is[%s]', self.port, line)
                     if line:
                         response.append(line)
                         if re.match(WPAN_CARRIER_PROMPT, line):
                             break
                         elif re.search(r'Not\s+Found|failed\s+with\s+error', line, re.M | re.I):
-                            print "Command failed"
+                            print 'Command failed'
                             return 'Fail'
 
                     retry_times -= 1
@@ -356,7 +356,7 @@ class OpenThread_WpanCtl(IThci):
                 print 'link local'
             elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
                 # mesh local address
-                print "mesh local"
+                print 'mesh local'
                 if fullIp.startswith('0000:00ff:fe00:', 20):
                     # rloc
                     if fullIp.startswith('fc', 35):
@@ -665,7 +665,7 @@ class OpenThread_WpanCtl(IThci):
             IPv6 address dotted-quad format
         """
         prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = prefix1.lstrip("0x")
+        prefix2 = prefix1.lstrip('0x')
         hexPrefix = str(prefix2).ljust(16, '0')
         hexIter = iter(hexPrefix)
         finalMac = ':'.join(a + b + c + d for a, b, c,
@@ -682,7 +682,7 @@ class OpenThread_WpanCtl(IThci):
             iValue: long integer in hex format
 
         Returns:
-            string of this long integer without "0x" and "L"
+            string of this long integer without '0x' and 'L'
         """
         string = ''
         strValue = str(hex(iValue))
@@ -721,7 +721,7 @@ class OpenThread_WpanCtl(IThci):
         chan_mask_range = ''
         if isinstance(channelList, list):
             if len(channelList):
-                chan_mask_range = ",".join(str(chan) for chan in channelList)
+                chan_mask_range = ','.join(str(chan) for chan in channelList)
             else:
                 print 'empty list'
         else:
@@ -860,7 +860,7 @@ class OpenThread_WpanCtl(IThci):
                     'connect to serial Error: ' + str(e))
 
         elif self.connectType == 'ip':
-            print "My IP: %s Port: %s" % (self.dutIpv4, self.dutPort)
+            print 'My IP: %s Port: %s' % (self.dutIpv4, self.dutPort)
             try:
                 import paramiko
                 self.handle = paramiko.SSHClient()
@@ -1065,12 +1065,12 @@ class OpenThread_WpanCtl(IThci):
         mlprefix = prefix.split('/')[0]
         rloc16 = self.__sendCommand(
             WPANCTL_CMD + 'getprop -v Thread:RLOC16')[0].lstrip('0x')
-        print "prefix: " + prefix
-        print "mlprefix: " + mlprefix
-        print "rloc16: " + rloc16
+        print 'prefix: ' + prefix
+        print 'mlprefix: ' + mlprefix
+        print 'rloc16: ' + rloc16
 
         rloc = self.__padIp6Addr(mlprefix + '00ff:fe00:' + rloc16)
-        print "rloc: " + rloc
+        print 'rloc: ' + rloc
         return rloc
 
     def getGlobal(self):
@@ -1561,14 +1561,14 @@ class OpenThread_WpanCtl(IThci):
         self.networkName = ModuleHelper.Default_NwkName
         self.networkKey = ModuleHelper.Default_NwkKey
         self.channel = ModuleHelper.Default_Channel
-        self.channelMask = "0x7fff800"  # (0xffff << 11)
+        self.channelMask = '0x7fff800'  # (0xffff << 11)
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
         # OT only accept hex format PSKc for now
-        self.pskc = "00000000000000000000000000000000"
+        self.pskc = '00000000000000000000000000000000'
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
-        self.securityPolicyFlags = "onrcb"
+        self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
@@ -2073,7 +2073,7 @@ class OpenThread_WpanCtl(IThci):
             else:
                 for line in globalAddrs:
                     line = self.__padIp6Addr(line)
-                    print "Padded IPv6 Address:" + line
+                    print 'Padded IPv6 Address:' + line
                     if line.startswith(filterByPrefix):
                         return line
                 print 'no global address matched'
@@ -2152,7 +2152,7 @@ class OpenThread_WpanCtl(IThci):
         print '%s call startNativeCommissioner' % self.port
         cmd = WPANCTL_CMD + 'joiner --start %s' % (strPSKc)
         print cmd
-        if self.__sendCommand(cmd)[0] != "Fail":
+        if self.__sendCommand(cmd)[0] != 'Fail':
             return True
         else:
             return False
@@ -2230,7 +2230,7 @@ class OpenThread_WpanCtl(IThci):
         if self.deviceRole == Thread_Device_Role.Commissioner:
             cmd = WPANCTL_CMD + 'setprop Commissioner:ProvisioningUrl %s' % (strURL)
             print cmd
-            return self.__sendCommand(cmd)[0] != "Fail"
+            return self.__sendCommand(cmd)[0] != 'Fail'
         return True
 
     def allowCommission(self):
@@ -2269,7 +2269,7 @@ class OpenThread_WpanCtl(IThci):
         print '%s call joinCommissioned' % self.port
         cmd = WPANCTL_CMD + 'joiner --start %s %s' % (strPSKd, self.provisioningUrl)
         print cmd
-        if self.__sendCommand(cmd)[0] != "Fail":
+        if self.__sendCommand(cmd)[0] != 'Fail':
             if self.__getJoinerState():
                 self.__sendCommand(WPANCTL_CMD + 'joiner --attach')
                 time.sleep(30)
@@ -2291,27 +2291,27 @@ class OpenThread_WpanCtl(IThci):
         while not rawLogs.empty():
             rawLogEach = rawLogs.get()
             print rawLogEach
-            if "[THCI]" not in rawLogEach:
+            if '[THCI]' not in rawLogEach:
                 continue
 
             EncryptedPacket = PlatformDiagnosticPacket()
             infoList = rawLogEach.split('[THCI]')[1].split(']')[0].split('|')
             for eachInfo in infoList:
                 print eachInfo
-                info = eachInfo.split("=")
+                info = eachInfo.split('=')
                 infoType = info[0].strip()
                 infoValue = info[1].strip()
-                if "direction" in infoType:
+                if 'direction' in infoType:
                     EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
                         else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
                         else PlatformDiagnosticPacket_Direction.UNKNOWN
-                elif "type" in infoType:
+                elif 'type' in infoType:
                     EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_req if 'JOIN_ENT.ntf' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.UNKNOWN
-                elif "len" in infoType:
+                elif 'len' in infoType:
                     bytesInEachLine = 16
                     EncryptedPacket.TLVsLength = int(infoValue)
                     payloadLineCount = (
@@ -2324,7 +2324,7 @@ class OpenThread_WpanCtl(IThci):
                             payloadBlock = payloadSplit[block]
                             payloadValues = payloadBlock.split(' ')
                             for num in range(1, 9):
-                                if ".." not in payloadValues[num]:
+                                if '..' not in payloadValues[num]:
                                     payload.append(int(payloadValues[num], 16))
 
                     EncryptedPacket.TLVs = PlatformPackets.read(
@@ -2419,7 +2419,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = WPANCTL_CMD + 'dataset mgmt-get-active'
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
@@ -2590,7 +2590,7 @@ class OpenThread_WpanCtl(IThci):
                 setRawTLVCmd += steeringData
 
             if BogusTLV != None:
-                setRawTLVCmd += "8202aa55"
+                setRawTLVCmd += '8202aa55'
 
             print setRawTLVCmd
             print cmd
@@ -2616,7 +2616,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = WPANCTL_CMD + 'dataset mgmt-get-pending'
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
@@ -2734,7 +2734,7 @@ class OpenThread_WpanCtl(IThci):
             print TLVs
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 cmd += tlvs
 
             print cmd
@@ -2756,14 +2756,14 @@ class OpenThread_WpanCtl(IThci):
         print '%s call MGMT_COMM_SET' % self.port
         try:
             cmd = WPANCTL_CMD + 'commissioner mgmt-set '
-            print "-------------------------------"
+            print '-------------------------------'
             print xCommissionerSessionID
             print xSteeringData
             print str(xSteeringData) + '   ' + str(hex(xSteeringData)[2:])
             print xBorderRouterLocator
             print xChannelTlv
             print ExceedMaxPayload
-            print "-------------------------------"
+            print '-------------------------------'
 
             if xCommissionerSessionID != None:
                 # use assigned session id
@@ -2874,7 +2874,7 @@ class OpenThread_WpanCtl(IThci):
 
     def ValidateDeviceFirmware(self):
         print '%s call ValidateDeviceFirmware' % self.port
-        if "OPENTHREAD" in self.UIStatusMsg:
+        if 'OPENTHREAD' in self.UIStatusMsg:
             return True
         else:
             return False

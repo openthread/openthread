@@ -57,7 +57,7 @@ class OpenThread(IThci):
     # Used for reference firmware version control for Test Harness.
     # This variable will be updated to match the OpenThread reference firmware
     # officially released.
-    firmwarePrefix = "OPENTHREAD/"
+    firmwarePrefix = 'OPENTHREAD/'
 
     # def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -76,17 +76,17 @@ class OpenThread(IThci):
             self.logStatus = {
                 'stop': 'stop',
                 'running': 'running',
-                "pauseReq": 'pauseReq',
+                'pauseReq': 'pauseReq',
                 'paused': 'paused'}
             self.joinStatus = {
                 'notstart': 'notstart',
                 'ongoing': 'ongoing',
                 'succeed': 'succeed',
-                "failed": 'failed'}
+                'failed': 'failed'}
             self.logThreadStatus = self.logStatus['stop']
             self.intialize()
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('initialize() Error: ' + str(e))
 
     def __del__(self):
         """close the serial port connection"""
@@ -94,7 +94,7 @@ class OpenThread(IThci):
             self.closeConnection()
             self.deviceConnected = False
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('delete() Error: ' + str(e))
 
     def _expect(self, expected, times=50):
         """Find the `expected` line within `times` trials.
@@ -234,7 +234,7 @@ class OpenThread(IThci):
             logging.info('%s: send command[%s] done!', self.port, cmd)
             return response
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("sendCommand() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
 
     def __getIp6Address(self, addressType):
@@ -272,7 +272,7 @@ class OpenThread(IThci):
                 print 'link local'
             elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
                 # mesh local address
-                print "mesh local"
+                print 'mesh local'
                 if fullIp.startswith('0000:00ff:fe00:', 20):
                     # rloc
                     if fullIp.startswith('fc', 35):
@@ -325,7 +325,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setDeviceMode() Error: " + str(e))
+                'setDeviceMode() Error: ' + str(e))
 
     def __setRouterUpgradeThreshold(self, iThreshold):
         """set router upgrade threshold
@@ -345,7 +345,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setRouterUpgradeThreshold() Error: " + str(e))
+                'setRouterUpgradeThreshold() Error: ' + str(e))
 
     def __setRouterDowngradeThreshold(self, iThreshold):
         """set router downgrade threshold
@@ -366,7 +366,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setRouterDowngradeThreshold() Error: " + str(e))
+                'setRouterDowngradeThreshold() Error: ' + str(e))
 
     def __setRouterSelectionJitter(self, iRouterJitter):
         """set ROUTER_SELECTION_JITTER parameter for REED to upgrade to Router
@@ -385,7 +385,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setRouterSelectionJitter() Error: " + str(e))
+                'setRouterSelectionJitter() Error: ' + str(e))
 
     def __setAddressfilterMode(self, mode):
         """set address filter mode
@@ -402,7 +402,7 @@ class OpenThread(IThci):
             return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "__setAddressFilterMode() Error: " + str(e))
+                '__setAddressFilterMode() Error: ' + str(e))
 
     def __startOpenThread(self):
         """start OpenThread stack
@@ -445,7 +445,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "startOpenThread() Error: " + str(e))
+                'startOpenThread() Error: ' + str(e))
 
     def __stopOpenThread(self):
         """stop OpenThread stack
@@ -462,7 +462,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "stopOpenThread() Error: " + str(e))
+                'stopOpenThread() Error: ' + str(e))
 
     def __isOpenThreadRunning(self):
         """check whether or not OpenThread is running
@@ -530,7 +530,7 @@ class OpenThread(IThci):
             IPv6 address dotted-quad format
         """
         prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = prefix1.lstrip("0x")
+        prefix2 = prefix1.lstrip('0x')
         hexPrefix = str(prefix2).ljust(16, '0')
         hexIter = iter(hexPrefix)
         finalMac = ':'.join(
@@ -554,7 +554,7 @@ class OpenThread(IThci):
             iValue: long integer in hex format
 
         Returns:
-            string of this long integer without "0x" and "L"
+            string of this long integer without '0x' and 'L'
         """
         string = ''
         strValue = str(hex(iValue))
@@ -591,10 +591,10 @@ class OpenThread(IThci):
                     print line
                     logs.put(line)
 
-                    if "Join success" in line:
+                    if 'Join success' in line:
                         self.joinCommissionedStatus = self.joinStatus['succeed']
                         break
-                    elif "Join failed" in line:
+                    elif 'Join failed' in line:
                         self.joinCommissionedStatus = self.joinStatus['failed']
                         break
 
@@ -629,7 +629,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setChannelMask() Error: " + str(e))
+                'setChannelMask() Error: ' + str(e))
 
     def __setSecurityPolicy(self, securityPolicySecs, securityPolicyFlags):
         print 'call _setSecurityPolicy'
@@ -640,7 +640,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setSecurityPolicy() Error: " + str(e))
+                'setSecurityPolicy() Error: ' + str(e))
 
     def __setKeySwitchGuardTime(self, iKeySwitchGuardTime):
         """ set the Key switch guard time
@@ -663,7 +663,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setKeySwitchGuardTime() Error; " + str(e))
+                'setKeySwitchGuardTime() Error; ' + str(e))
 
     def __getCommissionerSessionId(self):
         """ get the commissioner session id allocated from Leader """
@@ -696,7 +696,7 @@ class OpenThread(IThci):
                 self.handle = None
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "closeConnection() Error: " + str(e))
+                'closeConnection() Error: ' + str(e))
 
     def intialize(self):
         """initialize the serial port with baudrate, timeout parameters"""
@@ -710,13 +710,13 @@ class OpenThread(IThci):
             if self.firmwarePrefix in self.UIStatusMsg:
                 self.deviceConnected = True
             else:
-                self.UIStatusMsg = "Firmware Not Matching Expecting " + \
-                    self.firmwarePrefix + " Now is " + self.UIStatusMsg
+                self.UIStatusMsg = 'Firmware Not Matching Expecting ' + \
+                    self.firmwarePrefix + ' Now is ' + self.UIStatusMsg
                 ModuleHelper.WriteIntoDebugLogger(
-                    "Err: OpenThread device Firmware not matching..")
+                    'Err: OpenThread device Firmware not matching..')
 
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('intialize() Error: ' + str(e))
             self.deviceConnected = False
 
     def setNetworkName(self, networkName='GRL'):
@@ -739,7 +739,7 @@ class OpenThread(IThci):
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setNetworkName() Error: " + str(e))
+                'setNetworkName() Error: ' + str(e))
 
     def getNetworkName(self):
         """get Thread Network name"""
@@ -768,7 +768,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setChannel() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setChannel() Error: ' + str(e))
 
     def getChannel(self):
         """get current channel"""
@@ -810,7 +810,7 @@ class OpenThread(IThci):
             else:
                 return False
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setMAC() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setMAC() Error: ' + str(e))
 
     def getMAC(self, bType=MacType.RandomMac):
         """get one specific type of MAC address
@@ -901,7 +901,7 @@ class OpenThread(IThci):
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setNetworkkey() Error: " + str(e))
+                'setNetworkkey() Error: ' + str(e))
 
     def getNetworkKey(self):
         """get the current Thread Network master key"""
@@ -947,7 +947,7 @@ class OpenThread(IThci):
             return ret
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "addBlockedMAC() Error: " + str(e))
+                'addBlockedMAC() Error: ' + str(e))
 
     def addAllowMAC(self, xEUI):
         """add a given extended address to the whitelist addressfilter
@@ -982,7 +982,7 @@ class OpenThread(IThci):
             return ret
 
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("addAllowMAC() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('addAllowMAC() Error: ' + str(e))
 
     def clearBlockList(self):
         """clear all entries in blacklist table
@@ -1010,7 +1010,7 @@ class OpenThread(IThci):
             return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "clearBlockList() Error: " + str(e))
+                'clearBlockList() Error: ' + str(e))
 
     def clearAllowList(self):
         """clear all entries in whitelist table
@@ -1038,7 +1038,7 @@ class OpenThread(IThci):
             return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "clearAllowList() Error: " + str(e))
+                'clearAllowList() Error: ' + str(e))
 
     def getDeviceRole(self):
         """get current device role in Thread Network"""
@@ -1111,7 +1111,7 @@ class OpenThread(IThci):
 
             return True
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("joinNetwork() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('joinNetwork() Error: ' + str(e))
 
     def getNetworkFragmentID(self):
         """get current partition id of Thread Network Partition from LeaderData
@@ -1191,7 +1191,7 @@ class OpenThread(IThci):
             else:
                 return True
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("reboot() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('reboot() Error: ' + str(e))
 
     def ping(self, destination, length=20):
         """ send ICMPv6 echo request with a given length to a unicast destination
@@ -1211,7 +1211,7 @@ class OpenThread(IThci):
             # wait echo reply
             time.sleep(1)
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("ping() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('ping() Error: ' + str(e))
 
     def multicast_Ping(self, destination, length=20):
         """send ICMPv6 echo request with a given length to a multicast destination
@@ -1232,7 +1232,7 @@ class OpenThread(IThci):
             time.sleep(1)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "multicast_ping() Error: " + str(e))
+                'multicast_ping() Error: ' + str(e))
 
     def getVersionNumber(self):
         """get OpenThread stack firmware version number"""
@@ -1263,7 +1263,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setPANID() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
     def getPANID(self):
         """get current Thread Network PAN ID"""
@@ -1278,7 +1278,7 @@ class OpenThread(IThci):
             self._read()
 
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("reset() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('reset() Error: ' + str(e))
 
     def removeRouter(self, xRouterId):
         """kickoff router with a given router id from the Thread Network
@@ -1305,7 +1305,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "removeRouter() Error: " + str(e))
+                'removeRouter() Error: ' + str(e))
 
     def setDefaultValues(self):
         """set default mandatory Thread Network parameter value"""
@@ -1315,14 +1315,14 @@ class OpenThread(IThci):
         self.networkName = ModuleHelper.Default_NwkName
         self.networkKey = ModuleHelper.Default_NwkKey
         self.channel = ModuleHelper.Default_Channel
-        self.channelMask = "0x7fff800"  # (0xffff << 11)
+        self.channelMask = '0x7fff800'  # (0xffff << 11)
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
         # OT only accept hex format PSKc for now
-        self.pskc = "00000000000000000000000000000000"
+        self.pskc = '00000000000000000000000000000000'
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
-        self.securityPolicyFlags = "onrcb"
+        self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
@@ -1360,7 +1360,7 @@ class OpenThread(IThci):
             self.setActiveTimestamp(self.activetimestamp)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setDefaultValue() Error: " + str(e))
+                'setDefaultValue() Error: ' + str(e))
 
     def getDeviceConncetionStatus(self):
         """check if serial port connection is ready or not"""
@@ -1414,7 +1414,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "__setPollPeriod() Error: " + str(e))
+                '__setPollPeriod() Error: ' + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the specified EUIadr
@@ -1453,7 +1453,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setLinkQuality() Error: " + str(e))
+                'setLinkQuality() Error: ' + str(e))
 
     def setOutBoundLinkQuality(self, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the any address
@@ -1478,7 +1478,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setOutBoundLinkQuality() Error: " + str(e))
+                'setOutBoundLinkQuality() Error: ' + str(e))
 
     def removeRouterPrefix(self, prefixEntry):
         """remove the configured prefix on a border router
@@ -1504,7 +1504,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "removeRouterPrefix() Error: " + str(e))
+                'removeRouterPrefix() Error: ' + str(e))
 
     def resetAndRejoin(self, timeout):
         """reset and join back Thread Network with a given timeout delay
@@ -1535,7 +1535,7 @@ class OpenThread(IThci):
             return True
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "resetAndRejoin() Error: " + str(e))
+                'resetAndRejoin() Error: ' + str(e))
 
     def configBorderRouter(
             self,
@@ -1609,7 +1609,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "configBorderRouter() Error: " + str(e))
+                'configBorderRouter() Error: ' + str(e))
 
     def setNetworkIDTimeout(self, iNwkIDTimeOut):
         """set networkid timeout for Thread device
@@ -1630,7 +1630,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setNetworkIDTimeout() Error: " + str(e))
+                'setNetworkIDTimeout() Error: ' + str(e))
 
     def setKeepAliveTimeOut(self, iTimeOut):
         """set keep alive timeout for device
@@ -1652,7 +1652,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setKeepAliveTimeOut() Error: " + str(e))
+                'setKeepAliveTimeOut() Error: ' + str(e))
 
     def setKeySequenceCounter(self, iKeySequenceValue):
         """ set the Key sequence counter corresponding to Thread Network master key
@@ -1675,7 +1675,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setKeySequenceCounter() Error; " + str(e))
+                'setKeySequenceCounter() Error; ' + str(e))
 
     def getKeySequenceCounter(self):
         """get current Thread Network key sequence"""
@@ -1704,7 +1704,7 @@ class OpenThread(IThci):
             return self.setKeySequenceCounter(keySequence)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "incrementKeySequenceCounter() Error: " + str(e))
+                'incrementKeySequenceCounter() Error: ' + str(e))
 
     def setNetworkDataRequirement(self, eDataRequirement):
         """set whether the Thread device requires the full network data
@@ -1764,7 +1764,7 @@ class OpenThread(IThci):
                 return self.__sendCommand('netdataregister')[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "configExternalRouter() Error: " + str(e))
+                'configExternalRouter() Error: ' + str(e))
 
     def getNeighbouringRouters(self):
         """get neighboring routers information
@@ -1807,7 +1807,7 @@ class OpenThread(IThci):
             return routerInfo
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "getNeighbouringDevice() Error: " + str(e))
+                'getNeighbouringDevice() Error: ' + str(e))
 
     def getChildrenInfo(self):
         """get all children information
@@ -1856,7 +1856,7 @@ class OpenThread(IThci):
             return childrenInfoAll
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "getChildrenInfo() Error: " + str(e))
+                'getChildrenInfo() Error: ' + str(e))
 
     def setXpanId(self, xPanId):
         """set extended PAN ID of Thread Network
@@ -1891,7 +1891,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setXpanId() Error: ' + str(e))
 
     def getNeighbouringDevices(self):
         """gets the neighboring devices' extended address to compute the DUT
@@ -1967,7 +1967,7 @@ class OpenThread(IThci):
                 print 'no global address matched'
                 return str(globalAddrs[0])
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("getGUA() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('getGUA() Error: ' + str(e))
 
     def getShortAddress(self):
         """get Rloc16 short address of Thread device"""
@@ -1987,7 +1987,7 @@ class OpenThread(IThci):
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setMLPrefix() Error: ' + str(e))
 
     def getML16(self):
         """get mesh local 16 unicast address (Rloc)"""
@@ -2018,7 +2018,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "forceSetSlaac() Error: " + str(e))
+                'forceSetSlaac() Error: ' + str(e))
 
     def setSleepyNodePollTime(self):
         pass
@@ -2071,7 +2071,7 @@ class OpenThread(IThci):
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s' % (strPSKc)
         print cmd
-        if self.__sendCommand(cmd)[0] == "Done":
+        if self.__sendCommand(cmd)[0] == 'Done':
             return True
         else:
             return False
@@ -2148,7 +2148,7 @@ class OpenThread(IThci):
         self.provisioningUrl = strURL
         if self.deviceRole == Thread_Device_Role.Commissioner:
             cmd = 'commissioner provisioningurl %s' % (strURL)
-            return self.__sendCommand(cmd)[0] == "Done"
+            return self.__sendCommand(cmd)[0] == 'Done'
         return True
 
     def allowCommission(self):
@@ -2171,7 +2171,7 @@ class OpenThread(IThci):
                 return False
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
-                "allowcommission() error: " + str(e))
+                'allowcommission() error: ' + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -2187,7 +2187,7 @@ class OpenThread(IThci):
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s %s' % (strPSKd, self.provisioningUrl)
         print cmd
-        if self.__sendCommand(cmd)[0] == "Done":
+        if self.__sendCommand(cmd)[0] == 'Done':
             maxDuration = 150  # seconds
             self.joinCommissionedStatus = self.joinStatus['ongoing']
 
@@ -2223,27 +2223,27 @@ class OpenThread(IThci):
         while not rawLogs.empty():
             rawLogEach = rawLogs.get()
             print rawLogEach
-            if "[THCI]" not in rawLogEach:
+            if '[THCI]' not in rawLogEach:
                 continue
 
             EncryptedPacket = PlatformDiagnosticPacket()
             infoList = rawLogEach.split('[THCI]')[1].split(']')[0].split('|')
             for eachInfo in infoList:
                 print eachInfo
-                info = eachInfo.split("=")
+                info = eachInfo.split('=')
                 infoType = info[0].strip()
                 infoValue = info[1].strip()
-                if "direction" in infoType:
+                if 'direction' in infoType:
                     EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
                         else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
                         else PlatformDiagnosticPacket_Direction.UNKNOWN
-                elif "type" in infoType:
+                elif 'type' in infoType:
                     EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_req if 'JOIN_ENT.ntf' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.UNKNOWN
-                elif "len" in infoType:
+                elif 'len' in infoType:
                     bytesInEachLine = 16
                     EncryptedPacket.TLVsLength = int(infoValue)
                     payloadLineCount = (
@@ -2256,7 +2256,7 @@ class OpenThread(IThci):
                             payloadBlock = payloadSplit[block]
                             payloadValues = payloadBlock.split(' ')
                             for num in range(1, 9):
-                                if ".." not in payloadValues[num]:
+                                if '..' not in payloadValues[num]:
                                     payload.append(int(payloadValues[num], 16))
 
                     EncryptedPacket.TLVs = PlatformPackets.read(
@@ -2298,7 +2298,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
-                "MGMT_ED_SCAN() error: " + str(e))
+                'MGMT_ED_SCAN() error: ' + str(e))
 
     def MGMT_PANID_QUERY(
             self,
@@ -2330,7 +2330,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
-                "MGMT_PANID_QUERY() error: " + str(e))
+                'MGMT_PANID_QUERY() error: ' + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(
             self,
@@ -2356,7 +2356,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
-                "MGMT_ANNOUNCE_BEGIN() error: " + str(e))
+                'MGMT_ANNOUNCE_BEGIN() error: ' + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2374,7 +2374,7 @@ class OpenThread(IThci):
                 cmd += Addr
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2384,7 +2384,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_ACTIVE_GET() Error: " + str(e))
+                'MGMT_ACTIVE_GET() Error: ' + str(e))
 
     def MGMT_ACTIVE_SET(
             self,
@@ -2536,7 +2536,7 @@ class OpenThread(IThci):
                 cmd += steeringData
 
             if BogusTLV is not None:
-                cmd += "8202aa55"
+                cmd += '8202aa55'
 
             print cmd
 
@@ -2544,7 +2544,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_ACTIVE_SET() Error: " + str(e))
+                'MGMT_ACTIVE_SET() Error: ' + str(e))
 
     def MGMT_PENDING_GET(self, Addr='', TLVs=[]):
         """send MGMT_PENDING_GET command
@@ -2562,7 +2562,7 @@ class OpenThread(IThci):
                 cmd += Addr
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2572,7 +2572,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_PENDING_GET() Error: " + str(e))
+                'MGMT_PENDING_GET() Error: ' + str(e))
 
     def MGMT_PENDING_SET(
             self,
@@ -2650,7 +2650,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_PENDING_SET() Error: " + str(e))
+                'MGMT_PENDING_SET() Error: ' + str(e))
 
     def MGMT_COMM_GET(self, Addr='ff02::1', TLVs=[]):
         """send MGMT_COMM_GET command
@@ -2664,7 +2664,7 @@ class OpenThread(IThci):
             cmd = 'commissioner mgmtget'
 
             if len(TLVs) != 0:
-                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2674,7 +2674,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_COMM_GET() Error: " + str(e))
+                'MGMT_COMM_GET() Error: ' + str(e))
 
     def MGMT_COMM_SET(
             self,
@@ -2724,7 +2724,7 @@ class OpenThread(IThci):
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "MGMT_COMM_SET() Error: " + str(e))
+                'MGMT_COMM_SET() Error: ' + str(e))
 
     def setActiveDataset(self, listActiveDataset=[]):
         print '%s call setActiveDataset' % self.port
@@ -2739,7 +2739,7 @@ class OpenThread(IThci):
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger("setPSKc() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger('setPSKc() Error: ' + str(e))
 
     def setActiveTimestamp(self, xActiveTimestamp):
         print '%s call setActiveTimestamp' % self.port
@@ -2750,7 +2750,7 @@ class OpenThread(IThci):
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                "setActiveTimestamp() Error: " + str(e))
+                'setActiveTimestamp() Error: ' + str(e))
 
     def setUdpJoinerPort(self, portNumber):
         """set Joiner UDP Port
@@ -2818,7 +2818,7 @@ class OpenThread(IThci):
 
     def ValidateDeviceFirmware(self):
         print '%s call ValidateDeviceFirmware' % self.port
-        if "OPENTHREAD" in self.UIStatusMsg:
+        if 'OPENTHREAD' in self.UIStatusMsg:
             return True
         else:
             return False
