@@ -327,25 +327,33 @@ class OpenThread_WpanCtl(IThci):
                 break
             ip6AddrItem = ip6AddrItem.strip()
             ip6Addr = self.__stripValue(ip6AddrItem).split(' ')[0]
-            ip6AddrPrefix = ip6Addr.split(':')[0]
-            if ip6AddrPrefix == 'fe80':
+
+            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
+
+            if fullIp.startswith('fe80'):
                 # link local address
-                if ip6Addr.split(':')[4] != '0':
-                    linkLocal64Addr = ip6Addr
-            elif ip6Addr.startswith(self.meshLocalPrefix):
+                linkLocal64Addr = fullIp
+                print 'link local'
+            elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
                 # mesh local address
-                if ip6Addr.split(':')[4] == '0':
+                print "mesh local"
+                if fullIp.startswith('0000:00ff:fe00:', 20):
                     # rloc
-                    rlocAddr = ip6Addr
+                    if fullIp.startswith('fc', 35):
+                        alocAddr = fullIp
+                        print 'aloc'
+                    else:
+                        rlocAddr = fullIp
+                        print 'rloc'
                 else:
                     # mesh EID
-                    meshEIDAddr = ip6Addr
-                    print 'meshEIDAddr:' + meshEIDAddr
+                    meshEIDAddr = fullIp
+                    print 'mleid'
             else:
                 # global ipv6 address
-                if ip6Addr:
-                    print 'globalAddr: ' + ip6Addr
-                    globalAddr.append(ip6Addr)
+                if fullIp != None:
+                    globalAddr.append(fullIp)
+                    print 'global'
                 else:
                     pass
 

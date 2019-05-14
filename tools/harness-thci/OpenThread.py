@@ -248,24 +248,34 @@ class OpenThread(IThci):
         for ip6Addr in addrs:
             if ip6Addr == 'Done':
                 break
+            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
 
-            ip6AddrPrefix = ip6Addr.split(':')[0]
-            if ip6AddrPrefix == 'fe80':
+            print 'fullip ', fullIp
+
+            if fullIp.startswith('fe80'):
                 # link local address
-                if ip6Addr.split(':')[4] != '0':
-                    linkLocal64Addr = ip6Addr
-            elif ip6Addr.startswith(self.meshLocalPrefix):
+                linkLocal64Addr = fullIp
+                print 'link local'
+            elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
                 # mesh local address
-                if ip6Addr.split(':')[4] == '0':
+                print "mesh local"
+                if fullIp.startswith('0000:00ff:fe00:', 20):
                     # rloc
-                    rlocAddr = ip6Addr
+                    if fullIp.startswith('fc', 35):
+                        alocAddr = fullIp
+                        print 'aloc'
+                    else:
+                        rlocAddr = fullIp
+                        print 'rloc'
                 else:
                     # mesh EID
-                    meshEIDAddr = ip6Addr
+                    meshEIDAddr = fullIp
+                    print 'mleid'
             else:
                 # global ipv6 address
-                if ip6Addr != None:
-                    globalAddr.append(ip6Addr)
+                if fullIp != None:
+                    globalAddr.append(fullIp)
+                    print 'global'
                 else:
                     pass
 
