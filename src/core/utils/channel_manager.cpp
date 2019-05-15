@@ -275,41 +275,6 @@ exit:
 
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
 
-/**
- * This function randomly chooses a channel from a given channel mask.
- *
- * @param[in]  aMask  A channel mask.
- *
- * @returns A randomly chosen channel from the given mask, or `ChannelMask::kChannelIteratorFirst` if the mask is empty.
- *
- */
-static uint8_t ChooseRandomChannel(const Mac::ChannelMask &aMask)
-{
-    uint8_t channel     = Mac::ChannelMask::kChannelIteratorFirst;
-    uint8_t numChannels = 0;
-    uint8_t randomIndex;
-
-    VerifyOrExit(!aMask.IsEmpty());
-
-    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
-    {
-        numChannels++;
-    }
-
-    randomIndex = Random::GetUint8InRange(0, numChannels);
-
-    channel = Mac::ChannelMask::kChannelIteratorFirst;
-    SuccessOrExit(aMask.GetNextChannel(channel));
-
-    while (randomIndex-- != 0)
-    {
-        SuccessOrExit(aMask.GetNextChannel(channel));
-    }
-
-exit:
-    return channel;
-}
-
 otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy)
 {
     otError          error = OT_ERROR_NONE;
@@ -355,7 +320,7 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
 
     VerifyOrExit(!favoredBest.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
-    aNewChannel = ChooseRandomChannel(favoredBest);
+    aNewChannel = favoredBest.ChooseRandomChannel();
     aOccupancy  = favoredOccupancy;
 
 exit:
