@@ -126,8 +126,8 @@ $ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
 When the Thread device is configured to obtain the Thread Network security credentials with either Thread Commissioning or an out-of-band method, the extended MAC address should be constructed out of the globally unique IEEE EUI-64.
 
 The IEEE EUI-64 address consists of two parts:
- - 24-bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
- - 40-bits device unique identifier
+ - 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
+ - 40-bit device unique identifier
 
 By default, the device uses Nordic Semiconductor's MA-L (f4-ce-36). You can modify it by overwriting the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52840-config.h` file. This value must be publicly registered by the IEEE Registration Authority.
 
