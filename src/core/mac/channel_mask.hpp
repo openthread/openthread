@@ -209,6 +209,14 @@ public:
     otError GetNextChannel(uint8_t &aChannel) const;
 
     /**
+     * This method randomly chooses a channel from the channel mask.
+     *
+     * @returns A randomly chosen channel from the given mask, or `kChannelIteratorFirst` if the mask is empty.
+     *
+     */
+    uint8_t ChooseRandomChannel(void) const;
+
+    /**
      * This method overloads `==` operator to indicate whether two masks are equal.
      *
      * @param[in] aAnother   A reference to another mask to compare with the current one.
