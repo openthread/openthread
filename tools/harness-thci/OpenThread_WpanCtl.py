@@ -240,9 +240,9 @@ class OpenThread_WpanCtl(IThci):
     r'Not\s+Found|failed\s+with\s+error',
     stderr_line.strip(),
      re.M | re.I):
-                            print('Command failed:' + stderr_line)
+                            print('Command failed: %s' % stderr_line)
                             return 'Fail'
-                        print('Got line: ' + stderr_line)
+                        print('Got line: %s' % stderr_line)
                         logging.info(
                             '%s: the read line is[%s]', self.port, stderr_line)
                         response.append(str(stderr_line.strip()))
@@ -478,7 +478,7 @@ class OpenThread_WpanCtl(IThci):
             True: successful to set address filter mode.
             False: fail to set address filter mode.
         """
-        print('call setAddressFilterMode() ' + mode)
+        print('call setAddressFilterMode() %s' % mode)
         try:
             if re.match('list', mode, re.M | re.I):
                 cmd = WPANCTL_CMD + 'setprop MAC:' + mode + ':Enabled 1'
@@ -1065,12 +1065,12 @@ class OpenThread_WpanCtl(IThci):
         mlprefix = prefix.split('/')[0]
         rloc16 = self.__sendCommand(
             WPANCTL_CMD + 'getprop -v Thread:RLOC16')[0].lstrip('0x')
-        print('prefix: ' + prefix)
-        print('mlprefix: ' + mlprefix)
-        print('rloc16: ' + rloc16)
+        print('prefix: %s' % prefix)
+        print('mlprefix: %s ' % mlprefix)
+        print('rloc16: %s' % rloc16)
 
         rloc = self.__padIp6Addr(mlprefix + '00ff:fe00:' + rloc16)
-        print('rloc: ' + rloc)
+        print('rloc: %s' % rloc)
         return rloc
 
     def getGlobal(self):
