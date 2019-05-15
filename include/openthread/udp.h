@@ -98,7 +98,7 @@ otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
- * This function sends a raw UDP message.
+ * This function sends a UDP message without socket.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMessage      A pointer to a message without UDP header.
