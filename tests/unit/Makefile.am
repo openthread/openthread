@@ -108,6 +108,7 @@ check_PROGRAMS                                                     += \
     test-child-table                                                  \
     test-heap                                                         \
     test-hmac-sha256                                                  \
+    test-ip6-address                                                  \
     test-link-quality                                                 \
     test-lowpan                                                       \
     test-mac-frame                                                    \
@@ -186,6 +187,9 @@ test_heap_SOURCES            = test_platform.cpp test_heap.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp
+
+test_ip6_address_LDADD       = $(COMMON_LDADD)
+test_ip6_address_SOURCES     = test_platform.cpp test_ip6_address.cpp
 
 test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
