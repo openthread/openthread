@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DISABLE_CC310
-#define MBEDTLS_AES_ALT
-#define MBEDTLS_ECP_ALT
-#define MBEDTLS_SHA256_ALT
-#endif // DISABLE_CC310
+#ifndef THREADING_ALT_H_
+#define THREADING_ALT_H_
 
-#ifdef MBEDTLS_THREADING
-#define MBEDTLS_THREADING_C
-#define MBEDTLS_THREADING_ALT
-#endif // MBEDTLS_THREADING
+#ifdef MBEDTLS_THREADING_MUTEX_DEF
+#include MBEDTLS_THREADING_MUTEX_DEF
+#else
+typedef void * mbedtls_threading_mutex_t;
+#endif // MBEDTLS_THREADING_MUTEX_DEF
 
-#if defined(__ICCARM__)
-    _Pragma("diag_suppress=Pe550")
-#endif
-
-#if defined(__CC_ARM)
-    _Pragma("diag_suppress=550")
-    _Pragma("diag_suppress=68")
-#endif
+#endif // THREADING_ALT_H_
