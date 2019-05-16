@@ -1303,6 +1303,37 @@ otError Mle::AppendVersion(Message &aMessage)
     return aMessage.AppendTlv(tlv);
 }
 
+bool Mle::HasUnregisteredAddress(void)
+{
+    bool retval = false;
+
+    // Checks whether there are any addresses in addition to the mesh-local
+    // address that need to be registered.
+
+    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    {
+        if (!addr->GetAddress().IsLinkLocal() && !IsRoutingLocator(addr->GetAddress()) &&
+            !IsAnycastLocator(addr->GetAddress()) && addr->GetAddress() != GetMeshLocal64())
+        {
+            ExitNow(retval = true);
+        }
+    }
+
+    if (!IsRxOnWhenIdle())
+    {
+        uint8_t      iterator = 0;
+        Ip6::Address address;
+
+        // For sleepy end-device, we register any external multicast
+        // addresses.
+
+        retval = (Get<ThreadNetif>().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE);
+    }
+
+exit:
+    return retval;
+}
+
 otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode)
 {
     otError                  error = OT_ERROR_NONE;
@@ -2308,6 +2339,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     otError      error = OT_ERROR_NONE;
     Ip6::Address destination;
     Message *    message;
+    bool         checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
@@ -2325,7 +2357,13 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
         case Tlv::kAddressRegistration:
             if (!IsFullThreadDevice())
             {
-                SuccessOrExit(error = AppendAddressRegistration(*message));
+                // We only register the mesh-local address in the "Child
+                // Update Response" message and if there are additional
+                // addresses to register we follow up with a "Child Update
+                // Request".
+
+                SuccessOrExit(error = AppendAddressRegistration(*message, kAppendMeshLocalOnly));
+                checkAddress = true;
             }
 
             break;
@@ -2350,6 +2388,11 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Child Update Response to parent", destination);
+
+    if (checkAddress && HasUnregisteredAddress())
+    {
+        SendChildUpdateRequest();
+    }
 
 exit:
 

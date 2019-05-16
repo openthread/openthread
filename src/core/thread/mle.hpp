@@ -1721,6 +1721,7 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
+    bool    HasUnregisteredAddress(void);
 
     uint32_t GetAttachStartDelay(void) const;
     otError  SendParentRequest(ParentRequestType aType);
