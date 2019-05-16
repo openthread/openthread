@@ -146,7 +146,6 @@ OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *        
  *
  * @param[in]  aApiInstance     The OpenThread api instance.
  *
- * @sa otFreeMemory
  */
 OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
 
@@ -157,8 +156,6 @@ OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
  * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
  *
  * @returns  The new OpenThread device instance structure for the device.
- *
- * @sa otFreeMemory
  *
  */
 OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID *aDeviceGuid);
