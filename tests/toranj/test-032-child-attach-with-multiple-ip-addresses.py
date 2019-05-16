@@ -35,6 +35,14 @@ from wpan import verify
 #
 # This test covers the situation for SED child (re)attaching to a parent with multiple IPv6 addresses present on the
 # child.
+#
+# Network topology
+#
+#   leader ---- parent
+#                 |
+#                 |
+#              child (sleepy)
+#
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print '-' * 120
@@ -57,6 +65,7 @@ def verify_address(node_list, prefix):
 speedup = 4
 wpan.Node.set_time_speedup_factor(speedup)
 
+leader = wpan.Node()
 parent = wpan.Node()
 child = wpan.Node()
 
@@ -68,11 +77,17 @@ wpan.Node.init_all_nodes()
 #-----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
-parent.form('addr-test')
-child.join_node(parent, node_type=wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
-child.set(wpan.WPAN_POLL_INTERVAL, '200')
+leader.form('multi-addr-test')
 
-all_nodes = [parent, child]
+leader.whitelist_node(parent)
+parent.whitelist_node(leader)
+parent.join_node(leader, wpan.JOIN_TYPE_ROUTER)
+
+parent.whitelist_node(child)
+child.whitelist_node(parent)
+
+child.join_node(parent, node_type=wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
+child.set(wpan.WPAN_POLL_INTERVAL, '400')
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -86,10 +101,10 @@ prefix3 = 'fd00:3::'
 prefix4 = 'fd00:4::'
 
 # Add 4 prefixes (all with SLAAC bit set).
-parent.add_prefix(prefix1, on_mesh=True, slaac=True, configure=True)
-parent.add_prefix(prefix2, on_mesh=True, slaac=True, configure=True)
-parent.add_prefix(prefix3, on_mesh=True, slaac=True, configure=True)
-parent.add_prefix(prefix4, on_mesh=True, slaac=True, configure=True)
+leader.add_prefix(prefix1, on_mesh=True, slaac=True, configure=True)
+leader.add_prefix(prefix2, on_mesh=True, slaac=True, configure=True)
+leader.add_prefix(prefix3, on_mesh=True, slaac=True, configure=True)
+leader.add_prefix(prefix4, on_mesh=True, slaac=True, configure=True)
 
 # Verify that the sleepy child gets all 4 SLAAC addresses.
 def check_addresses_on_child():
@@ -100,8 +115,8 @@ def check_addresses_on_child():
 
 wpan.verify_within(check_addresses_on_child, WAIT_TIME)
 
-# Enable white-listing on parent.
-parent.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '1')
+# Remove child from parent's white-list
+parent.remove(wpan.WPAN_MAC_WHITELIST_ENTRIES, child.get(wpan.WPAN_EXT_ADDRESS)[1:-1])
 
 # Enable supervision check on child, this ensures that child is detached soon.
 child.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, str(CHILD_SUPERVISION_CHECK_TIMEOUT))
@@ -126,7 +141,7 @@ def check_child_is_associated():
 
 wpan.verify_within(check_child_is_associated, WAIT_TIME)
 
-# Any finally check that we see all the child addresses on the parent's child table.
+# Any finally check that we see all the child addresses in the parent's child table.
 def check_child_addressses_on_parent():
     child_addrs = parent.get(wpan.WPAN_THREAD_CHILD_TABLE_ADDRESSES)
     verify(child_addrs.find(prefix1) > 0)
@@ -135,6 +150,30 @@ def check_child_addressses_on_parent():
     verify(child_addrs.find(prefix4) > 0)
 
 wpan.verify_within(check_child_addressses_on_parent, WAIT_TIME)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Check the child recovery after a parent reset using quick re-attach ("Child Update" exchange).
+
+# Disable supervision check on the child.
+child.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, '1000')
+child.set(wpan.WPAN_POLL_INTERVAL, '10000')
+time.sleep(0.1)
+
+# We use the "stat:ncp" wpantund property to verify that child does not get detached.
+child_num_state_changes = len(wpan.parse_list(child.get("stat:ncp")))
+
+# Reset parent and wait for it to be associated.
+parent.reset()
+wpan.verify_within(check_parent_is_associated, WAIT_TIME)
+
+child.set(wpan.WPAN_POLL_INTERVAL, '100')
+
+# Verify that we again see all the child addresses in the parent's child table.
+# Note that child should register its addresses using "Child Update Request" exchange.
+wpan.verify_within(check_child_addressses_on_parent, WAIT_TIME)
+
+# Verify that there was no state change on child.
+verify(child_num_state_changes == len(wpan.parse_list(child.get("stat:ncp"))))
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Test finished
