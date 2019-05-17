@@ -39,7 +39,7 @@
 #include "lctr_int_conn.h"
 #include "ll_init_api.h"
 
-#include "cordio/ble_cfg.h"
+#include "cordio/ble_config.h"
 #include "cordio/ble_init.h"
 #include "utils/code_utils.h"
 

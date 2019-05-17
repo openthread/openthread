@@ -46,8 +46,14 @@
 #include "utils/code_utils.h"
 
 #include <openthread/error.h>
-#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/ble-alarm.h>
 #include <openthread/platform/ble.h>
+
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#include <openthread/platform/radio-ble.h>
+#else
+#include <openthread/platform/ble-hci.h>
+#endif
 
 #if OPENTHREAD_ENABLE_BLE_HOST
 static bool     sTaskletsPending = false;
@@ -61,17 +67,29 @@ void wsf_mbed_ble_signal_event(void)
 
 void wsf_mbed_os_critical_section_enter(void)
 {
-    // Intentionally empty.
+    otPlatBleAlarmDisableInterrupt();
+
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    otPlatRadioBleDisableInterrupt();
+#else
+    otPlatBleHciDisableInterrupt();
+#endif
 }
 
 void wsf_mbed_os_critical_section_exit(void)
 {
-    // Intentionally empty.
+    otPlatBleAlarmEnableInterrupt();
+
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+    otPlatRadioBleEnableInterrupt();
+#else
+    otPlatBleHciEnableInterrupt();
+#endif
 }
 
 void bleWsfInit(void)
 {
-    sLastUpdateMs = otPlatAlarmMilliGetNow();
+    sLastUpdateMs = otPlatBleAlarmMilliGetNow();
 }
 
 bool otPlatBleTaskletsArePending(otInstance *aInstance)

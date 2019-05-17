@@ -52,6 +52,7 @@ CORDIO_BLE_HOST_SRCDIR                        = $(top_srcdir)/third_party/cordio
 libcordio_ble_host_a_CPPFLAGS                                        = \
     -I$(top_srcdir)/include                                            \
     -I$(top_srcdir)/src/core                                           \
+    -I$(top_srcdir)/examples/platforms/ble/cordio                      \
     -I$(CORDIO_BLE_HOST_SRCDIR)/                                       \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/include                 \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/ble-host/sources/hci/dual_chip   \
@@ -176,6 +177,7 @@ CORDIO_BLE_CONTROLLER_SRCDIR = $(top_srcdir)/third_party/cordio/TARGET_CORDIO_LL
 libcordio_ble_controller_a_CPPFLAGS                                             = \
     -I$(top_srcdir)/include                                                       \
     -I$(top_srcdir)/src/core                                                      \
+    -I$(top_srcdir)/examples/platforms/ble/cordio                                 \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack/wsf/include                                 \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/ble/               \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/controller/include/common/            \

@@ -29,7 +29,6 @@
 #include "platform-posix.h"
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/ble.h>
 #include <openthread/platform/radio-ble.h>
 
 #include "utils/code_utils.h"
@@ -50,8 +49,10 @@
 
 enum
 {
-    kAccessAddressSize = 4,
-    kCrcSize           = 3,
+    kAccessAddressSize     = 4,
+    kPduHeaderSize         = 2,
+    kPduHeaderLengthOffset = 1,
+    kCrcSize               = 3,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -61,8 +62,6 @@ struct BleRadioMessage
     uint8_t mPdu[kAccessAddressSize + OT_RADIO_BLE_FRAME_MAX_SIZE + kCrcSize];
 } OT_TOOL_PACKED_END;
 
-static otRadioBleFrame        sReceiveFrame;
-static otRadioBleFrame        sTransmitFrame;
 static struct BleRadioMessage sReceiveMessage;
 static struct BleRadioMessage sTransmitMessage;
 
@@ -70,10 +69,10 @@ static int8_t   sTxPower    = 0;
 static uint16_t sPortOffset = 0;
 static int      sSockFd;
 
-static otRadioBleSettings sTxSettings;
-static otRadioBleTime     sTxTime;
-static otRadioBleSettings sRxSettings;
-static otRadioBleTime     sRxTime;
+static otRadioBleTime          sRxTime;
+static otRadioBleChannelParams sChannelParams;
+
+static otRadioBleBufferDescriptor sBufferDescriptor = {NULL, 0};
 
 bool sTifsEnabled = false;
 bool sTxAtTifs    = false;
@@ -123,7 +122,7 @@ static uint32_t bleRadioComputeCrc24(uint32_t aCrcInit, const uint8_t *aData, ui
 
 otError otPlatRadioBleEnable(otInstance *aInstance)
 {
-    if (sState != OT_BLE_RADIO_STATE_IDLE)
+    if (sState == OT_BLE_RADIO_STATE_DISABLED)
     {
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
@@ -134,14 +133,32 @@ otError otPlatRadioBleEnable(otInstance *aInstance)
 
 otError otPlatRadioBleDisable(otInstance *aInstance)
 {
-    if (sState != OT_BLE_RADIO_STATE_IDLE)
+    if (sState != OT_BLE_RADIO_STATE_DISABLED)
     {
-        sState = OT_BLE_RADIO_STATE_DISABLED;
         platformBleAlarmMicroStop(aInstance);
+
+        if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
+        {
+            otPlatRadioBleTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
+        }
+        if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS))
+        {
+            otPlatRadioBleReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
+        }
+
+        sState = OT_BLE_RADIO_STATE_DISABLED;
     }
 
     OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
+}
+
+void otPlatRadioBleEnableInterrupt(void)
+{
+}
+
+void otPlatRadioBleDisableInterrupt(void)
+{
 }
 
 uint32_t otPlatRadioBleGetTickNow(otInstance *aInstance)
@@ -164,6 +181,14 @@ otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NONE;
 }
 
+otError otPlatRadioBleSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
+{
+    sChannelParams = *aChannelParams;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NONE;
+}
+
 void otPlatRadioBleEnableTifs(otInstance *aInstance)
 {
     sTifsEnabled = true;
@@ -176,27 +201,26 @@ void otPlatRadioBleDisableTifs(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otRadioBleFrame *otPlatRadioBleGetTransmitBuffer(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return &sTransmitFrame;
-}
-
-uint32_t sTxTimeUs = 0;
-
-otError otPlatRadioBleTransmitAtTime(otInstance *              aInstance,
-                                     const otRadioBleSettings *aSettings,
-                                     const otRadioBleTime *    aStartTime)
+otError otPlatRadioBleTransmitAtTime(otInstance *                aInstance,
+                                     otRadioBleBufferDescriptor *aBufferDescriptors,
+                                     uint8_t                     aNumBufferDescriptors,
+                                     const otRadioBleTime *      aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t now   = platformBleAlarmMicroGetNow();
+    uint8_t *txBuf = sTransmitMessage.mPdu + kAccessAddressSize;
     int32_t  dt;
+    uint16_t offset;
+    uint8_t  i;
 
-    otEXPECT_ACTION((aSettings != NULL) && (aStartTime != NULL), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION((aBufferDescriptors != NULL) && (aStartTime != NULL), error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(sState == OT_BLE_RADIO_STATE_IDLE, error = OT_ERROR_INVALID_STATE);
 
-    sTxSettings = *aSettings;
-    sTxTime     = *aStartTime;
+    for (i = 0, offset = 0; i < aNumBufferDescriptors; i++)
+    {
+        memcpy((uint8_t *)txBuf + offset, aBufferDescriptors[i].mBuffer, aBufferDescriptors[i].mLength);
+        offset += aBufferDescriptors[i].mLength;
+    }
 
     if ((dt = timeDiff(bleTimeToUs(aStartTime), now)) <= 0)
     {
@@ -204,8 +228,6 @@ otError otPlatRadioBleTransmitAtTime(otInstance *              aInstance,
     }
     else
     {
-        sTxTimeUs = bleTimeToUs(aStartTime);
-
         sState = OT_BLE_RADIO_STATE_WAITING_TRANSMIT;
         platformBleAlarmMicroStartAt(aInstance, now, (uint32_t)(dt));
     }
@@ -214,15 +236,25 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleTransmitAtTifs(otInstance *aInstance, const otRadioBleSettings *aSettings)
+otError otPlatRadioBleTransmitAtTifs(otInstance *                aInstance,
+                                     otRadioBleBufferDescriptor *aBufferDescriptors,
+                                     uint8_t                     aNumBufferDescriptors)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
+    uint8_t *txBuf = sTransmitMessage.mPdu + kAccessAddressSize;
+    uint16_t offset;
+    uint8_t  i;
 
-    otEXPECT_ACTION(aSettings != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aBufferDescriptors != NULL, error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS, error = OT_ERROR_INVALID_STATE);
 
-    sTxAtTifs   = true;
-    sTxSettings = *aSettings;
+    sTxAtTifs = true;
+
+    for (i = 0, offset = 0; i < aNumBufferDescriptors; i++)
+    {
+        memcpy((uint8_t *)txBuf + offset, aBufferDescriptors[i].mBuffer, aBufferDescriptors[i].mLength);
+        offset += aBufferDescriptors[i].mLength;
+    }
 
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -230,9 +262,9 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTime(otInstance *              aInstance,
-                                    const otRadioBleSettings *aSettings,
-                                    const otRadioBleTime *    aStartTime)
+otError otPlatRadioBleReceiveAtTime(otInstance *                aInstance,
+                                    otRadioBleBufferDescriptor *aBufferDescriptor,
+                                    const otRadioBleTime *      aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t now   = platformBleAlarmMicroGetNow();
@@ -240,8 +272,8 @@ otError otPlatRadioBleReceiveAtTime(otInstance *              aInstance,
 
     otEXPECT_ACTION(sState == OT_BLE_RADIO_STATE_IDLE, error = OT_ERROR_INVALID_STATE);
 
-    sRxSettings = *aSettings;
-    sRxTime     = *aStartTime;
+    sBufferDescriptor = *aBufferDescriptor;
+    sRxTime           = *aStartTime;
 
     if (dt <= BLE_RADIO_RAMP_UP_US)
     {
@@ -260,14 +292,14 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, const otRadioBleSettings *aSettings)
+otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS, error = OT_ERROR_INVALID_STATE);
 
-    sRxAtTifs   = true;
-    sRxSettings = *aSettings;
+    sBufferDescriptor = *aBufferDescriptor;
+    sRxAtTifs         = true;
 
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -275,30 +307,29 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleCancelData(otInstance *aInstance)
+void otPlatRadioBleCancelData(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE))
     {
-        sState = OT_BLE_RADIO_STATE_IDLE;
         platformBleAlarmMicroStop(aInstance);
+        sState = OT_BLE_RADIO_STATE_IDLE;
     }
 
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NONE;
 }
 
-otError otPlatRadioBleCancelTifs(otInstance *aInstance)
+void otPlatRadioBleCancelTifs(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
     {
+        platformBleAlarmMicroStop(aInstance);
+
         sTxAtTifs = false;
         sRxAtTifs = false;
         sState    = OT_BLE_RADIO_STATE_IDLE;
-        platformBleAlarmMicroStop(aInstance);
     }
 
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NONE;
 }
 
 uint8_t otPlatRadioBleGetXtalAccuracy(otInstance *aInstance)
@@ -337,7 +368,6 @@ void platformBleAlarmMicroFired(otInstance *aInstance)
         }
         else
         {
-            // transmit at TIFS timeout
             sState = OT_BLE_RADIO_STATE_IDLE;
             otPlatRadioBleTransmitDone(aInstance, OT_ERROR_FAILED);
         }
@@ -354,15 +384,23 @@ void platformBleAlarmMicroFired(otInstance *aInstance)
     break;
 
     case OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS:
-        sState = OT_BLE_RADIO_STATE_RECEIVE;
-        platformBleAlarmMicroStartAt(aInstance, platformBleAlarmMicroGetNow(), BLE_RADIO_PREAMBLE_ADDR_US);
+        if (sRxAtTifs)
+        {
+            sRxAtTifs = false;
+            sState    = OT_BLE_RADIO_STATE_RECEIVE;
+            platformBleAlarmMicroStartAt(aInstance, platformBleAlarmMicroGetNow(), BLE_RADIO_PREAMBLE_ADDR_US);
+        }
+        else
+        {
+            sState = OT_BLE_RADIO_STATE_IDLE;
+            otPlatRadioBleReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_FAILED);
+        }
+
         break;
 
     case OT_BLE_RADIO_STATE_RECEIVE:
-        // receive timeout
-        sRxAtTifs = false;
-        sState    = OT_BLE_RADIO_STATE_IDLE;
-        otPlatRadioBleReceiveDone(aInstance, NULL, OT_ERROR_FAILED);
+        sState = OT_BLE_RADIO_STATE_IDLE;
+        otPlatRadioBleReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
         break;
 
     default:
@@ -412,41 +450,38 @@ void platformBleRadioInit(void)
         exit(EXIT_FAILURE);
     }
 
-    sReceiveFrame.mPdu  = sReceiveMessage.mPdu + kAccessAddressSize;
-    sTransmitFrame.mPdu = sTransmitMessage.mPdu + kAccessAddressSize;
-    sState              = OT_BLE_RADIO_STATE_DISABLED;
+    sState = OT_BLE_RADIO_STATE_DISABLED;
 }
 
-static void bleRadioTransmit(struct BleRadioMessage *aMessage, const struct otRadioBleFrame *aFrame)
+static void bleRadioTransmit(struct BleRadioMessage *aMessage)
 {
-    uint32_t           i;
     struct sockaddr_in sockaddr;
+    uint16_t           length    = kPduHeaderSize + aMessage->mPdu[kAccessAddressSize + kPduHeaderLengthOffset];
+    uint16_t           crcOffset = kAccessAddressSize + length;
     uint32_t           crc;
-    uint16_t           length;
 
-    aMessage->mChannel = sTxSettings.mChannel;
+    aMessage->mChannel = sChannelParams.mChannel;
 
     // set access address field (little endian)
-    aMessage->mPdu[0] = sTxSettings.mAccessAddress & 0x000000ff;
-    aMessage->mPdu[1] = (sTxSettings.mAccessAddress >> 8) & 0x000000ff;
-    aMessage->mPdu[2] = (sTxSettings.mAccessAddress >> 16) & 0x000000ff;
-    aMessage->mPdu[3] = (sTxSettings.mAccessAddress >> 24) & 0x000000ff;
-
-    crc = bleRadioComputeCrc24(sTxSettings.mCrcInit, aFrame->mPdu, aFrame->mLength);
+    aMessage->mPdu[0] = sChannelParams.mAccessAddress & 0x000000ff;
+    aMessage->mPdu[1] = (sChannelParams.mAccessAddress >> 8) & 0x000000ff;
+    aMessage->mPdu[2] = (sChannelParams.mAccessAddress >> 16) & 0x000000ff;
+    aMessage->mPdu[3] = (sChannelParams.mAccessAddress >> 24) & 0x000000ff;
 
     // set crc filed (little endian)
-    aMessage->mPdu[kAccessAddressSize + aFrame->mLength]     = crc & 0x000000ff;
-    aMessage->mPdu[kAccessAddressSize + aFrame->mLength + 1] = (crc >> 8) & 0x000000ff;
-    aMessage->mPdu[kAccessAddressSize + aFrame->mLength + 2] = (crc >> 16) & 0x000000ff;
+    crc = bleRadioComputeCrc24(sChannelParams.mCrcInit, &aMessage->mPdu[kAccessAddressSize], length);
+    aMessage->mPdu[crcOffset]     = crc & 0x000000ff;
+    aMessage->mPdu[crcOffset + 1] = (crc >> 8) & 0x000000ff;
+    aMessage->mPdu[crcOffset + 2] = (crc >> 16) & 0x000000ff;
 
     // +1 for the size of channel
-    length = 1 + kAccessAddressSize + aFrame->mLength + kCrcSize;
+    length = 1 + kAccessAddressSize + length + kCrcSize;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    for (i = 1; i <= WELLKNOWN_BLE_NODE_ID; i++)
+    for (uint8_t i = 1; i <= WELLKNOWN_BLE_NODE_ID; i++)
     {
         ssize_t rval;
 
@@ -470,7 +505,7 @@ static void bleRadioSendMessage(otInstance *aInstance)
 {
     bool tifs_enabled = sTifsEnabled;
 
-    bleRadioTransmit(&sTransmitMessage, &sTransmitFrame);
+    bleRadioTransmit(&sTransmitMessage);
 
     if (tifs_enabled)
     {
@@ -488,7 +523,9 @@ static void bleRadioSendMessage(otInstance *aInstance)
 
 static void bleRadioReceive(otInstance *aInstance)
 {
-    ssize_t rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    ssize_t          rval  = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    otRadioBleError  error = OT_BLE_RADIO_ERROR_NONE;
+    otRadioBleRxInfo rxInfo;
 
     if (rval < 0)
     {
@@ -496,30 +533,41 @@ static void bleRadioReceive(otInstance *aInstance)
         exit(EXIT_FAILURE);
     }
 
-    otEXPECT(rval > 1 + kAccessAddressSize + kCrcSize);
-    sReceiveFrame.mLength = (uint8_t)(rval - 1 - kAccessAddressSize - kCrcSize);
+    otEXPECT(rval >= 1 + kAccessAddressSize + kPduHeaderSize + kCrcSize);
 
-    if ((sState == OT_BLE_RADIO_STATE_RECEIVE) && (sRxSettings.mChannel == sReceiveMessage.mChannel))
+    if ((sState == OT_BLE_RADIO_STATE_RECEIVE) && (sChannelParams.mChannel == sReceiveMessage.mChannel))
     {
-        uint32_t access_address;
-        uint32_t crc;
+        uint32_t accessAddress;
+        uint16_t length    = kPduHeaderSize + sReceiveMessage.mPdu[kAccessAddressSize + kPduHeaderLengthOffset];
+        uint16_t crcOffset = kAccessAddressSize + length;
+        uint32_t rxCrc;
 
-        access_address = sReceiveMessage.mPdu[0] | (sReceiveMessage.mPdu[1] << 8) | (sReceiveMessage.mPdu[2] << 16) |
-                         (sReceiveMessage.mPdu[3] << 24);
+        accessAddress = sReceiveMessage.mPdu[0] | (sReceiveMessage.mPdu[1] << 8) | (sReceiveMessage.mPdu[2] << 16) |
+                        (sReceiveMessage.mPdu[3] << 24);
 
-        otEXPECT(sRxSettings.mAccessAddress == access_address);
+        otEXPECT(sChannelParams.mAccessAddress == accessAddress);
 
-        crc = sReceiveFrame.mPdu[sReceiveFrame.mLength] | (sReceiveFrame.mPdu[sReceiveFrame.mLength + 1] << 8) |
-              (sReceiveFrame.mPdu[sReceiveFrame.mLength + 2] << 16);
+        rxCrc = sReceiveMessage.mPdu[crcOffset] | (sReceiveMessage.mPdu[crcOffset + 1] << 8) |
+                (sReceiveMessage.mPdu[crcOffset + 2] << 16);
 
-        otEXPECT(crc == bleRadioComputeCrc24(sRxSettings.mCrcInit, sReceiveFrame.mPdu, sReceiveFrame.mLength));
+        if (rxCrc != bleRadioComputeCrc24(sChannelParams.mCrcInit, &sReceiveMessage.mPdu[kAccessAddressSize], length))
+        {
+            error = OT_BLE_RADIO_ERROR_CRC;
+        }
+
+        if (length > sBufferDescriptor.mLength)
+        {
+            error = OT_BLE_RADIO_ERROR_CRC;
+        }
+        else
+        {
+            memcpy(sBufferDescriptor.mBuffer, sReceiveMessage.mPdu + kAccessAddressSize, length);
+        }
+
+        rxInfo.mRssi  = -20;
+        rxInfo.mTicks = platformBleAlarmMicroGetNow();
 
         platformBleAlarmMicroStop(aInstance);
-
-        if (sRxAtTifs)
-        {
-            sRxAtTifs = false;
-        }
 
         if (sTifsEnabled)
         {
@@ -528,10 +576,7 @@ static void bleRadioReceive(otInstance *aInstance)
                                          BLE_RADIO_TIFS_US - BLE_RADIO_RAMP_UP_US);
         }
 
-        sReceiveFrame.mRxInfo.mRssi  = -20;
-        sReceiveFrame.mRxInfo.mTicks = platformBleAlarmMicroGetNow();
-
-        otPlatRadioBleReceiveDone(aInstance, &sReceiveFrame, OT_ERROR_NONE);
+        otPlatRadioBleReceiveDone(aInstance, &rxInfo, error);
     }
 
 exit:
@@ -571,4 +616,5 @@ void platformBleRadioProcess(otInstance *aInstance)
         bleRadioReceive(aInstance);
     }
 }
+
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER

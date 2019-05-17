@@ -28,35 +28,80 @@
 
 /**
  * @file
- *   This file includes the constants for BLE stack.
+ * @brief
+ *   This file includes the platform abstraction for the millisecond alarm service.
  */
 
-#ifndef BLE_CFG__H
-#define BLE_CFG__H
+#ifndef OPENTHREAD_PLATFORM_BLE_ALARM_H_
+#define OPENTHREAD_PLATFORM_BLE_ALARM_H_
+
+#include <stdint.h>
+
+#include <openthread/instance.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * Maximum number of pending legacy advertising reports.
+ * @addtogroup plat-ble-alarm
+ *
+ * @brief
+ *   This module includes the platform abstraction for the BLE stack alarm service.
+ *
+ * @{
+ *
  */
-#define BLE_STACK_MAX_ADV_REPORTS 8
 
 /**
- * Maximum number of BLE connections.
+ * Set the alarm for BLE stack to fire at @p aDt milliseconds after @p aT0.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aT0        The reference time.
+ * @param[in] aDt        The time delay in milliseconds from @p aT0.
  */
-#define BLE_STACK_MAX_BLE_CONNECTIONS 4
+void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
- * The number of HCI ACL transmit buffers.
+ * Stop the alarm for the BLE stack.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-#define BLE_STACK_NUM_ACL_TRANSMIT_BUFFERS 6
+void otPlatBleAlarmMilliStop(otInstance *aInstance);
 
 /**
- * The number of HCI ACL receive buffers.
+ * Signal that the alarm for the BLE stack has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-#define BLE_STACK_NUM_ACL_RECEIVE_BUFFERS 6
+uint32_t otPlatBleAlarmMilliGetNow(void);
 
 /**
- * Maximum HCI ACL data length (exclude MIC).
+ * Signal BLE stack that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-#define BLE_STACK_MAX_ACL_DATA_LENGTH 251
+extern void otPlatBleAlarmMilliFired(otInstance *aInstance);
 
-#endif // BLE_CFG__H
+/*
+ * Enable BLE alarm timer interrupt.
+ *
+ */
+void otPlatBleAlarmEnableInterrupt(void);
+
+/*
+ * Disable BLE alarm timer interrupt.
+ *
+ */
+void otPlatBleAlarmDisableInterrupt(void);
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // OPENTHREAD_PLATFORM_BLE_ALARM_H_

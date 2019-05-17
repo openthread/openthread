@@ -68,6 +68,7 @@
 enum
 {
     kHciResetRandCnt = 4,
+    kHciAclMaxLength = 255,
 };
 
 static void bleHciHandleResetSequence(uint8_t *pMsg);
@@ -81,6 +82,11 @@ void hci_mbed_os_start_reset_sequence(void)
 void hci_mbed_os_handle_reset_sequence(uint8_t *msg)
 {
     bleHciHandleResetSequence(msg);
+}
+
+void bleHciInit(void)
+{
+    HciSetMaxRxAclLen(kHciAclMaxLength);
 }
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
@@ -127,7 +133,6 @@ enum
 {
     kHciTypeSize      = 1,
     kHciAclHeaderSize = 4,
-    kHciAclMaxLength  = 255,
     kTxBufferSize     = kHciTypeSize + kHciAclHeaderSize + kHciAclMaxLength,
 };
 
@@ -156,7 +161,6 @@ void otPlatBleHciSendDone(void)
 
 void bleHciEnable(void)
 {
-    HciSetMaxRxAclLen(kHciAclMaxLength);
     otPlatBleHciEnable();
 }
 
@@ -295,7 +299,6 @@ static void bleHciHandleResetSequence(uint8_t *pMsg)
 
             // initialize ACL buffer accounting
             hciCoreCb.availBufs = hciCoreCb.numBufs;
-
             HciLeReadSupStatesCmd();
             break;
 

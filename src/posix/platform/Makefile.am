@@ -94,7 +94,7 @@ PRETTY_FILES                              = \
 if OPENTHREAD_ENABLE_BLE_HOST
 Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/ble $(Dash)type f $(Dash)name "*.o")
+    $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

@@ -1750,36 +1750,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_CONTROLLER], [test "${enable_ble_controlle
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_CONTROLLER], [${OPENTHREAD_ENABLE_BLE_CONTROLLER}], [Define to 1 if you want to enable BLE Controller support])
 
 #
-# Support for L2CAP
+# Support for BLE L2CAP
 #
 
-AC_MSG_CHECKING([whether to build with L2CAP support])
-AC_ARG_ENABLE(l2cap,
-    [AS_HELP_STRING([--enable-l2cap], [Enable L2CAP support @<:@default=no@:>@.])],
+AC_MSG_CHECKING([whether to build with BLE L2CAP support])
+AC_ARG_ENABLE(ble_l2cap,
+    [AS_HELP_STRING([--enable-ble-l2cap], [Enable BLE L2CAP support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_l2cap=${enableval}
+            enable_ble_l2cap=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_l2cap} for --enable-l2cap])
+            AC_MSG_ERROR([Invalid value ${enable_ble_l2cap} for --enable-ble-l2cap])
             ;;
         esac
     ],
-    [enable_l2cap=no])
+    [enable_ble_l2cap=no])
 
-if test "$enable_l2cap" = "yes"; then
-    OPENTHREAD_ENABLE_L2CAP=1
+if test "$enable_ble_l2cap" = "yes"; then
+    OPENTHREAD_ENABLE_BLE_L2CAP=1
 else
-    OPENTHREAD_ENABLE_L2CAP=0
+    OPENTHREAD_ENABLE_BLE_L2CAP=0
 fi
 
-AC_MSG_RESULT(${enable_l2cap})
-AC_SUBST(OPENTHREAD_ENABLE_L2CAP)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_L2CAP], [test "${enable_l2cap}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_L2CAP], [${OPENTHREAD_ENABLE_L2CAP}], [Define to 1 if you want to enable L2CAP support])
+AC_MSG_RESULT(${enable_ble_l2cap})
+AC_SUBST(OPENTHREAD_ENABLE_BLE_L2CAP)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_L2CAP], [test "${enable_ble_l2cap}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_L2CAP], [${OPENTHREAD_ENABLE_BLE_L2CAP}], [Define to 1 if you want to enable BLE L2CAP support])
 
 #
 # Examples

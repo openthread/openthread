@@ -50,7 +50,7 @@
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "lctr_int_conn.h"
 #include "ll_defs.h"
-#include "cordio/ble_cfg.h"
+#include "cordio/ble_config.h"
 #include "cordio/ble_controller_init.h"
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
@@ -78,16 +78,16 @@
     (WSF_MSG_HEADROOM_LENGTH + LCTR_DATA_PDU_START_OFFSET + HCI_ACL_HDR_LEN + LL_DATA_HDR_LEN + \
      BLE_STACK_MAX_ACL_DATA_LENGTH + LL_DATA_MIC_LEN)
 
-#if OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_L2CAP
 enum
 {
-    kStackBufferSize = 9592,
+    kStackBufferSize = 9600,
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {
     {16, 16 + 8}, {32, 16 + 4}, {64, 8}, {128, 4 + BLE_STACK_MAX_ADV_REPORTS}, {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
     {272, 1},     {1300, 2}};
-#else  // OPENTHREAD_ENABLE_L2CAP
+#else  // OPENTHREAD_ENABLE_BLE_L2CAP
 enum
 {
     kStackBufferSize = 6944,
@@ -96,23 +96,23 @@ enum
 static wsfBufPoolDesc_t sPoolDesc[] = {
     {16, 16 + 8}, {32, 16 + 4}, {64, 8}, {128, 4 + BLE_STACK_MAX_ADV_REPORTS}, {ACL_BUFFER_SIZE, ACL_NUM_BUFFERS},
     {272, 1}};
-#endif // !OPENTHREAD_ENABLE_L2CAP
+#endif // !OPENTHREAD_ENABLE_BLE_L2CAP
 #else  // OPENTHREAD_ENABLE_BLE_CONTROLLER
-#if OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_L2CAP
 enum
 {
     kStackBufferSize = 4832,
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}, {1300, 2}};
-#else  // OPENTHREAD_ENABLE_L2CAP
+#else  // OPENTHREAD_ENABLE_BLE_L2CAP
 enum
 {
     kStackBufferSize = 2250,
 };
 
 static wsfBufPoolDesc_t sPoolDesc[] = {{16, 16}, {32, 16}, {64, 8}, {128, 4}, {272, 1}};
-#endif // !OPENTHREAD_ENABLE_L2CAP
+#endif // !OPENTHREAD_ENABLE_BLE_L2CAP
 #endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 /* WSF heap allocation */
@@ -143,13 +143,13 @@ otError otPlatBleEnable(otInstance *aInstance)
     sInstance = aInstance;
     sState    = kStateInitializing;
 
+    bleHciEnable();
     bleWsfInit();
-
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
     bleControllerInit();
 #endif
     bleHostInit();
-    bleHciEnable();
+    bleHciInit();
     DmDevReset();
 
     WsfTimerStartMs(&sTimer, kBleResetTimeout);
@@ -217,7 +217,7 @@ static void bleStackHandler(wsfEventMask_t aEvent, wsfMsgHdr_t *aMsg)
 
             WsfTimerStop(&sTimer);
             bleGattReset();
-#if OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_L2CAP
             bleL2capReset();
 #endif
             bleGapReset();
@@ -268,7 +268,7 @@ static void bleTimerHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
     if (sState == kStateDeinitializing)
     {
         bleGattReset();
-#if OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_L2CAP
         bleL2capReset();
 #endif
         bleGapReset();

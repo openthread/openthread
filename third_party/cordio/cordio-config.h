@@ -31,18 +31,21 @@
 
 #include <openthread/config.h>
 #include "openthread-core-config.h"
+#include "ble_config.h"
 
 #define INIT_BROADCASTER
 #define INIT_OBSERVER
 #define INIT_CENTRAL
 #define INIT_PERIPHERAL
 
-#define MBED_CONF_CORDIO_DESIRED_ATT_MTU 131
+#define MBED_CONF_CORDIO_DESIRED_ATT_MTU BLE_STACK_ATT_MTU
 
 #define MBED_CONF_CORDIO_MAX_PREPARED_WRITES 4
 
 #define LHCI_ENABLE_VS 0
 
 #define BB_CLK_RATE_HZ OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
+
+#define LL_MAX_CONN BLE_STACK_MAX_BLE_CONNECTIONS
 
 #endif /* CORDIO_CONFIG_H */

@@ -35,7 +35,7 @@
 #ifndef BLE_L2CAP_H
 #define BLE_L2CAP_H
 
-#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_L2CAP
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,5 +51,5 @@ void bleL2capReset(void);
 } // extern "C"
 #endif // __cplusplus
 
-#endif // OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_L2CAP
+#endif // OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_L2CAP
 #endif // BLE_L2CAP_H

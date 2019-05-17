@@ -28,49 +28,40 @@
 
 /**
  * @file
- * @brief
- *   This file defines the Cordio BLE stack HCI interfaces.
+ *   This file includes the constants for BLE stack.
  */
 
-#ifndef BLE_HCI_DRIVER_H
-#define BLE_HCI_DRIVER_H
-
-#if OPENTHREAD_ENABLE_BLE_HOST
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdint.h>
+#ifndef BLE_CONFIG_H
+#define BLE_CONFIG_H
 
 /**
- * This method initializes the BLE HCI module.
- *
+ * Maximum number of pending legacy advertising reports.
  */
-void bleHciInit(void);
+#define BLE_STACK_MAX_ADV_REPORTS 8
 
 /**
- * This method enables the BLE HCI interface.
- *
+ * Maximum number of BLE connections.
  */
-void bleHciEnable(void);
+#define BLE_STACK_MAX_BLE_CONNECTIONS 4
 
 /**
- * This method disables the BLE HCI interface.
- *
+ * The number of HCI ACL transmit buffers.
  */
-void bleHciDisable(void);
+#define BLE_STACK_NUM_ACL_TRANSMIT_BUFFERS 6
 
 /**
- * This method processes received HCI raw data.
- * @note This method is implemented by Cordio stack.
- *
+ * The number of HCI ACL receive buffers.
  */
-void hciTrSerialRxIncoming(uint8_t *pBuf, uint8_t len);
+#define BLE_STACK_NUM_ACL_RECEIVE_BUFFERS 6
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+/**
+ * Maximum HCI ACL data length (exclude MIC).
+ */
+#define BLE_STACK_MAX_ACL_DATA_LENGTH 251
 
-#endif // OPENTHREAD_ENABLE_BLE_HOST
-#endif // BLE_HCI_DRIVER_H
+/**
+ * ATT MTU
+ */
+#define BLE_STACK_ATT_MTU 131
+
+#endif // BLE_CONFIG_H

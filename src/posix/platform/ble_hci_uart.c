@@ -322,6 +322,14 @@ exit:
     }
 }
 
+void otPlatBleHciEnableInterrupt(void)
+{
+}
+
+void otPlatBleHciDisableInterrupt(void)
+{
+}
+
 /**
  * The BLE HCI Uart driver weak functions definition.
  *

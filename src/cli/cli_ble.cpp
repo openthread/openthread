@@ -758,10 +758,22 @@ extern "C" void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8_t
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-extern "C" void otPlatBleL2capOnConnectionResponse(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+extern "C" void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                                   uint8_t             aL2capHandle,
+                                                   uint16_t            aMtu,
+                                                   otPlatBleL2capError aError)
 {
-    Server::sServer->OutputFormat("L2capOnConnectionResponseReceived: aL2capHandle = %d, aMtu = %d\r\n", aL2capHandle,
-                                  aMtu);
+    if (aError == OT_BLE_L2C_ERROR_NONE)
+    {
+        Server::sServer->OutputFormat("L2capOnConnectionResponseReceived: aL2capHandle = %d, aMtu = %d\r\n",
+                                      aL2capHandle, aMtu);
+    }
+    else
+    {
+        Server::sServer->OutputFormat("L2capOnConnectionResponseReceived: aL2capHandle = %d, error = %d\r\n",
+                                      aL2capHandle, static_cast<uint8_t>(aError));
+    }
+
     OT_UNUSED_VARIABLE(aInstance);
 }
 

@@ -74,6 +74,7 @@ libopenthread_platform_ble_a_SOURCES  = \
     $(NULL)
 
 noinst_HEADERS                        = \
+    ble_config.h                        \
     ble_controller_init.h               \
     ble_gap.h                           \
     ble_gatt.h                          \

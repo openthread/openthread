@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cordio/ble_cfg.h"
+#include "cordio/ble_config.h"
 #include "cordio/ble_init.h"
 #include "cordio/ble_l2cap.h"
 #include "utils/code_utils.h"
@@ -49,7 +49,7 @@
 #include <openthread/platform/ble.h>
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-#if OPENTHREAD_ENABLE_L2CAP
+#if OPENTHREAD_ENABLE_BLE_L2CAP
 enum
 {
     kL2capMaxNumConnections       = BLE_STACK_MAX_BLE_CONNECTIONS, //< Maximum number of L2CAP connections.
@@ -168,7 +168,8 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
         if (aIsInitiator)
         {
             otEXPECT(conn->mLocalCid == connInd->cid);
-            otPlatBleL2capOnConnectionResponse(bleGetThreadInstance(), l2capHandle, connInd->peerMtu);
+            otPlatBleL2capOnConnectionResponse(bleGetThreadInstance(), l2capHandle, connInd->peerMtu,
+                                               OT_BLE_L2C_ERROR_NONE);
         }
         else
         {
@@ -212,11 +213,18 @@ static void l2capCallback(l2cCocEvt_t *pMsg, bool aIsInitiator)
 
         l2capHandle = l2capFindHandleByCid(gapConnId, disconnectInd->cid);
         otEXPECT(l2capHandle != kL2capInvalidConnectionHandle);
-
         otEXPECT((conn = l2capGetConnection(l2capHandle)) != NULL);
-        conn->mConnected = false;
 
-        otPlatBleL2capOnDisconnect(bleGetThreadInstance(), l2capHandle);
+        if (disconnectInd->result == L2C_CONN_SUCCESS)
+        {
+            conn->mConnected = false;
+            otPlatBleL2capOnDisconnect(bleGetThreadInstance(), l2capHandle);
+        }
+        else
+        {
+            otPlatBleL2capOnConnectionResponse(bleGetThreadInstance(), l2capHandle, 0,
+                                               (otPlatBleL2capError)disconnectInd->result);
+        }
         break;
     }
     }
@@ -415,7 +423,7 @@ otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-#endif // OPENTHREAD_ENABLE_L2CAP
+#endif // OPENTHREAD_ENABLE_BLE_L2CAP
 
 /**
  * The BLE L2CAP module weak functions definition.
@@ -428,11 +436,15 @@ OT_TOOL_WEAK void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8
     OT_UNUSED_VARIABLE(aMtu);
 }
 
-OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *aInstance, uint8_t aL2capHandle, uint16_t aMtu)
+OT_TOOL_WEAK void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                                     uint8_t             aL2capHandle,
+                                                     uint16_t            aMtu,
+                                                     otPlatBleL2capError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aL2capHandle);
     OT_UNUSED_VARIABLE(aMtu);
+    OT_UNUSED_VARIABLE(aError);
 }
 
 OT_TOOL_WEAK void otPlatBleL2capOnSduReceived(otInstance *aInstance, uint8_t aL2capHandle, otBleRadioPacket *aPacket)

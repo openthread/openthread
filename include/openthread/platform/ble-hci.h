@@ -98,6 +98,18 @@ extern void otPlatBleHciSendDone(void);
  */
 extern void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength);
 
+/*
+ * Enable HCI driver interrupt.
+ *
+ */
+void otPlatBleHciEnableInterrupt(void);
+
+/*
+ * Disable HCI driver interrupt.
+ *
+ */
+void otPlatBleHciDisableInterrupt(void);
+
 /**
  * @}
  *

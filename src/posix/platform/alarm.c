@@ -37,6 +37,9 @@
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
+#ifdef OPENTHREAD_ENABLE_BLE_HOST
+#include <openthread/platform/ble-alarm.h>
+#endif
 #include <openthread/platform/diag.h>
 
 #include "code_utils.h"
@@ -141,6 +144,14 @@ void otPlatBleAlarmMilliStop(otInstance *aInstance)
 uint32_t otPlatBleAlarmMilliGetNow(void)
 {
     return otPlatAlarmMilliGetNow();
+}
+
+void otPlatBleAlarmEnableInterrupt(void)
+{
+}
+
+void otPlatBleAlarmDisableInterrupt(void)
+{
 }
 #endif // OPENTHREAD_ENABLE_BLE_HOST
 

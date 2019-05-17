@@ -32,6 +32,7 @@ ot_platform_headers                     = \
     alarm-micro.h                         \
     alarm-milli.h                         \
     ble.h                                 \
+    ble-alarm.h                           \
     ble-hci.h                             \
     diag.h                                \
     entropy.h                             \

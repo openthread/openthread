@@ -42,17 +42,43 @@
 #include "cordio/ble_init.h"
 #include "utils/code_utils.h"
 
+#include <assert.h>
 #include <string.h>
 #include <openthread/error.h>
 #include <openthread/platform/radio-ble.h>
 #include <openthread/platform/random.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-static uint8_t *sRxBuffer = NULL;
-static uint16_t sRxLength = 0;
 
-static const BbBleDrvChan_t *     sChannelParams = NULL;
-static const BbBleDrvDataParam_t *sDataParams    = NULL;
+#define BLE_RADIO_NUM_FRAME_DESC 3
+
+static const BbBleDrvDataParam_t *sDataParams = NULL;
+
+static uint8_t ConvertErrorCode(otRadioBleError aError)
+{
+    uint8_t error = BB_STATUS_FAILED;
+
+    switch (aError)
+    {
+    case OT_BLE_RADIO_ERROR_NONE:
+        error = BB_STATUS_SUCCESS;
+        break;
+
+    case OT_BLE_RADIO_ERROR_CRC:
+        error = BB_STATUS_CRC_FAILED;
+        break;
+
+    case OT_BLE_RADIO_ERROR_RX_TIMEOUT:
+        error = BB_STATUS_RX_TIMEOUT;
+        break;
+
+    case OT_BLE_RADIO_ERROR_FAILED:
+        error = BB_STATUS_FAILED;
+        break;
+    }
+
+    return error;
+}
 
 void BbDrvInit(void)
 {
@@ -93,10 +119,14 @@ void BbBleDrvDisable(void)
 
 void BbBleDrvSetChannelParam(BbBleDrvChan_t *pChan)
 {
-    if (pChan != NULL)
-    {
-        sChannelParams = pChan;
-    }
+    otRadioBleChannelParams channelParams;
+
+    channelParams.mChannel       = pChan->chanIdx;
+    channelParams.mAccessAddress = pChan->accAddr;
+    channelParams.mCrcInit       = pChan->crcInit;
+
+    otPlatRadioBleSetChannelParameters(bleGetThreadInstance(), &channelParams);
+    otPlatRadioBleSetTransmitPower(bleGetThreadInstance(), pChan->txPower);
 }
 
 int8_t BbBleRfGetActualTxPower(int8_t txPwr, bool_t compFlag)
@@ -109,10 +139,7 @@ int8_t BbBleRfGetActualTxPower(int8_t txPwr, bool_t compFlag)
 
 void BbBleDrvSetDataParams(const BbBleDrvDataParam_t *pParam)
 {
-    if (pParam != NULL)
-    {
-        sDataParams = pParam;
-    }
+    sDataParams = pParam;
 }
 
 void BbBleDrvSetOpParams(const BbBleDrvOpParam_t *pOpParam)
@@ -132,12 +159,12 @@ exit:
     return;
 }
 
-void otPlatRadioBleTransmitDone(otInstance *aInstance, otError aError)
+void otPlatRadioBleTransmitDone(otInstance *aInstance, otRadioBleError aError)
 {
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->txCback != NULL);
 
-    sDataParams->txCback(aError == OT_ERROR_NONE ? BB_STATUS_SUCCESS : BB_STATUS_FAILED);
+    sDataParams->txCback(ConvertErrorCode(aError));
     OT_UNUSED_VARIABLE(aInstance);
 
 exit:
@@ -146,34 +173,23 @@ exit:
 
 void BbBleDrvTxData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
 {
-    otRadioBleFrame *  frame;
-    otRadioBleSettings settings;
-    otRadioBleTime     time;
-    uint16_t           offset;
-    uint16_t           i;
+    otRadioBleBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
+    otRadioBleTime             time;
+    uint16_t                   i;
 
-    otEXPECT(sChannelParams != NULL);
     otEXPECT(sDataParams != NULL);
-    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleGetThreadInstance())) != NULL);
+    otEXPECT(cnt <= BLE_RADIO_NUM_FRAME_DESC);
 
-    for (i = 0, offset = 0; i < cnt; i++)
+    for (i = 0; i < cnt; i++)
     {
-        otEXPECT(offset + descs[i].len <= OT_RADIO_BLE_FRAME_MAX_SIZE);
-
-        memcpy(frame->mPdu + offset, descs[i].pBuf, descs[i].len);
-        offset += descs[i].len;
+        bufferDescriptors[i].mBuffer = descs[i].pBuf;
+        bufferDescriptors[i].mLength = descs[i].len;
     }
 
-    frame->mLength = offset;
     time.mTicks    = sDataParams->due;
     time.mOffsetUs = sDataParams->dueOffsetUsec;
 
-    settings.mChannel       = sChannelParams->chanIdx;
-    settings.mAccessAddress = sChannelParams->accAddr;
-    settings.mCrcInit       = sChannelParams->crcInit;
-
-    otEXPECT(otPlatRadioBleSetTransmitPower(bleGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
-    otPlatRadioBleTransmitAtTime(bleGetThreadInstance(), &settings, &time);
+    otPlatRadioBleTransmitAtTime(bleGetThreadInstance(), bufferDescriptors, cnt, &time);
 
 exit:
     return;
@@ -181,29 +197,18 @@ exit:
 
 void BbBleDrvTxTifsData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
 {
-    otRadioBleFrame *  frame;
-    otRadioBleSettings settings;
-    uint16_t           offset;
-    uint16_t           i;
+    otRadioBleBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
+    uint16_t                   i;
 
-    otEXPECT(sChannelParams != NULL);
-    otEXPECT((frame = otPlatRadioBleGetTransmitBuffer(bleGetThreadInstance())) != NULL);
+    otEXPECT(cnt <= BLE_RADIO_NUM_FRAME_DESC);
 
-    for (i = 0, offset = 0; i < cnt; i++)
+    for (i = 0; i < cnt; i++)
     {
-        otEXPECT(offset + descs[i].len <= OT_RADIO_BLE_FRAME_MAX_SIZE);
-
-        memcpy(frame->mPdu + offset, descs[i].pBuf, descs[i].len);
-        offset += descs[i].len;
+        bufferDescriptors[i].mBuffer = descs[i].pBuf;
+        bufferDescriptors[i].mLength = descs[i].len;
     }
 
-    frame->mLength          = offset;
-    settings.mChannel       = sChannelParams->chanIdx;
-    settings.mAccessAddress = sChannelParams->accAddr;
-    settings.mCrcInit       = sChannelParams->crcInit;
-
-    otEXPECT(otPlatRadioBleSetTransmitPower(bleGetThreadInstance(), sChannelParams->txPower) == OT_ERROR_NONE);
-    otPlatRadioBleTransmitAtTifs(bleGetThreadInstance(), &settings);
+    otPlatRadioBleTransmitAtTifs(bleGetThreadInstance(), bufferDescriptors, cnt);
 
 exit:
     return;
@@ -211,24 +216,19 @@ exit:
 
 void BbBleDrvRxData(uint8_t *pBuf, uint16_t len)
 {
-    otRadioBleTime     time;
-    otRadioBleSettings settings;
+    otRadioBleBufferDescriptor bufferDescriptor;
+    otRadioBleTime             time;
 
-    otEXPECT(sChannelParams != NULL);
     otEXPECT(sDataParams != NULL);
-
-    sRxBuffer = pBuf;
-    sRxLength = len;
 
     time.mTicks        = sDataParams->due;
     time.mOffsetUs     = sDataParams->dueOffsetUsec;
     time.mRxDurationUs = sDataParams->rxTimeoutUsec;
 
-    settings.mChannel       = sChannelParams->chanIdx;
-    settings.mAccessAddress = sChannelParams->accAddr;
-    settings.mCrcInit       = sChannelParams->crcInit;
+    bufferDescriptor.mBuffer = pBuf;
+    bufferDescriptor.mLength = len;
 
-    otPlatRadioBleReceiveAtTime(bleGetThreadInstance(), &settings, &time);
+    otPlatRadioBleReceiveAtTime(bleGetThreadInstance(), &bufferDescriptor, &time);
 
 exit:
     return;
@@ -236,43 +236,27 @@ exit:
 
 void BbBleDrvRxTifsData(uint8_t *pBuf, uint16_t len)
 {
-    otRadioBleSettings settings;
+    otRadioBleBufferDescriptor bufferDescriptor;
 
-    otEXPECT(sChannelParams != NULL);
+    bufferDescriptor.mBuffer = pBuf;
+    bufferDescriptor.mLength = len;
 
-    sRxBuffer = pBuf;
-    sRxLength = len;
-
-    settings.mChannel       = sChannelParams->chanIdx;
-    settings.mAccessAddress = sChannelParams->accAddr;
-    settings.mCrcInit       = sChannelParams->crcInit;
-
-    otPlatRadioBleReceiveAtTifs(bleGetThreadInstance(), &settings);
-
-exit:
-    return;
+    otPlatRadioBleReceiveAtTifs(bleGetThreadInstance(), &bufferDescriptor);
 }
 
-void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleFrame *aFrame, otError aError)
+void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
 {
-    otEXPECT(sRxBuffer != NULL);
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->rxCback != NULL);
 
-    if (aFrame != NULL)
+    if (aError == OT_BLE_RADIO_ERROR_NONE)
     {
-        otEXPECT(aFrame->mLength <= sRxLength);
-
-        memcpy(sRxBuffer, aFrame->mPdu, aFrame->mLength);
-        sRxBuffer = NULL;
-
-        sDataParams->rxCback(aError == OT_ERROR_NONE ? BB_STATUS_SUCCESS : BB_STATUS_FAILED, aFrame->mRxInfo.mRssi, 0,
-                             aFrame->mRxInfo.mTicks, BB_PHY_OPTIONS_DEFAULT);
+        assert(aRxInfo != NULL);
+        sDataParams->rxCback(ConvertErrorCode(aError), aRxInfo->mRssi, 0, aRxInfo->mTicks, BB_PHY_OPTIONS_DEFAULT);
     }
     else
     {
-        sDataParams->rxCback(aError == OT_ERROR_NONE ? BB_STATUS_SUCCESS : BB_STATUS_FAILED, 0, 0, 0,
-                             BB_PHY_OPTIONS_DEFAULT);
+        sDataParams->rxCback(ConvertErrorCode(aError), 0, 0, 0, BB_PHY_OPTIONS_DEFAULT);
     }
 
     OT_UNUSED_VARIABLE(aInstance);

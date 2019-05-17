@@ -271,6 +271,16 @@
 #define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
+ *
+ * This settinng configures the clock rate of the BLE Base Band.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ
+#define OPENTHREAD_CONFIG_BLE_BB_CLK_RATE_HZ 32768
+#endif
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.

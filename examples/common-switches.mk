@@ -30,6 +30,7 @@
 
 BLE_CONTROLLER      ?= 0
 BLE_HOST            ?= 0
+BLE_L2CAP           ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
 CERT_LOG            ?= 0
@@ -49,7 +50,6 @@ DNS_CLIENT          ?= 0
 ECDSA               ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
-L2CAP               ?= 0
 LEGACY              ?= 0
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
@@ -153,8 +153,8 @@ ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif
 
-ifeq ($(L2CAP),1)
-configure_OPTIONS              += --enable-l2cap
+ifeq ($(BLE_L2CAP),1)
+configure_OPTIONS              += --enable-ble-l2cap
 endif
 
 ifeq ($(LEGACY),1)

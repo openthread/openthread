@@ -68,36 +68,39 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_BLE_FRAME_MAX_SIZE = 257, ///< Maximum size of BLE frame (include PUD header and MIC).
+    OT_RADIO_BLE_FRAME_MAX_SIZE = 257, ///< Maximum size of BLE frame (include PUD header).
 };
 
 /**
- * This structure represents the BLE radio settings.
+ * This structure represents BLE radio channelization parameters.
  */
-typedef struct otRadioBleSettings
+typedef struct otRadioBleChannelParams
 {
     uint8_t  mChannel;       ///< Channel used to transmit/receive the frame.
-    uint32_t mAccessAddress; ///< The access address.
-    uint32_t mCrcInit;       ///< The CRC initial value.
-} otRadioBleSettings;
+    uint32_t mAccessAddress; ///< Access address.
+    uint32_t mCrcInit;       ///< CRC initial value.
+} otRadioBleChannelParams;
 
 /**
- * This structure represents a BLE radio frame.
+ * This structure represents buffer descriptor.
  */
-typedef struct otRadioBleFrame
+typedef struct otRadioBleBufferDescriptor
 {
-    uint8_t *mPdu;    ///< The PDU.
-    uint16_t mLength; ///< Length of the PDU.
-
-    struct
-    {
-        uint32_t mTicks; ///< The timestamp when the first bit of the frame was received (unit: ticks).
-        int8_t   mRssi;  ///< Received signal strength indicator in dBm for received frames.
-    } mRxInfo;
-} otRadioBleFrame;
+    uint8_t *mBuffer; ///< Pointer to buffer.
+    uint16_t mLength; ///< Length of buffer.
+} otRadioBleBufferDescriptor;
 
 /**
- * This structure represents the BLE time.
+ * This structure represents representing BLE radio frame receive information
+ */
+typedef struct otRadioBleRxInfo
+{
+    uint32_t mTicks; ///< The timestamp when the first bit of the frame was received (unit: ticks).
+    int8_t   mRssi;  ///< Received signal strength indicator in dBm for received frames.
+} otRadioBleRxInfo;
+
+/**
+ * This structure represents BLE time.
  */
 typedef struct otRadioBleTime
 {
@@ -105,6 +108,18 @@ typedef struct otRadioBleTime
     uint16_t mOffsetUs;     ///< The offset to the mTicks in microseconds.
     uint32_t mRxDurationUs; ///< Receive duration in microseconds.
 } otRadioBleTime;
+
+/**
+ * This enumeration defines the error code of the BLE radio.
+ *
+ */
+typedef enum
+{
+    OT_BLE_RADIO_ERROR_NONE,
+    OT_BLE_RADIO_ERROR_CRC,
+    OT_BLE_RADIO_ERROR_RX_TIMEOUT,
+    OT_BLE_RADIO_ERROR_FAILED,
+} otRadioBleError;
 
 /**
  * This structure represents the state of a BLE radio.
@@ -160,8 +175,8 @@ enum
 /**
  * The following diagram shows time sequence of otPlatRadioBleReceiveAtTime() and otPlatRadioBleTransmitAtTifs():
  *
- *  ReceiveAtTime()  StartTime      ReceiveDone()->TransmitAtTifs()         TransmitDone()
- *    EnableTifs()      |                   ^        |                            ^
+ *    EnableTifs()  StartTime      ReceiveDone()->TransmitAtTifs()         TransmitDone()
+ *  ReceiveAtTime()     |                   ^        |                            ^
  *       |              |                   |        |                            |
  *       V              V                   |        V                            |
  *                         +----------------+                    +----------------+
@@ -173,8 +188,8 @@ enum
 /**
  * The following diagram shows time sequence of otPlatRadioBleTransmitAtTime() and otPlatRadioBleReceiveAtTifs():
  *
- *  TransmitAtTime() StartTime    TransmitDone()->ReceiveAtTifs()         ReceiveDone()
- *    EnableTifs()      |                ^           |                         ^
+ *    EnableTifs()   StartTime    TransmitDone()->ReceiveAtTifs()         ReceiveDone()
+ *  TransmitAtTime()    |                ^           |                         ^
  *       |              |                |           |                         |
  *       V              V                |           V                         |
  *                      +----------------+                    +----------------+
@@ -184,15 +199,16 @@ enum
  */
 
 /**
- * The following diagram shows time sequence of otPlatRadioBleTransmitAtTime() and otPlatRadioBleReceiveAtTime():
+ * The following diagram shows time sequence of otPlatRadioBleTransmitAtTime() and otPlatRadioBleReceiveAtTime() when
+ * TIFS timer is disabled:
  *
- *  TransmitAtTime() StartTime    TransmitDone() ReceiveAtTime()  StartTime      ReceiveDone()
- *    DisableTifs()     |                ^        DisableTifs()      |                   ^
+ *   DisableTifs()   StartTime    TransmitDone()  DisableTifs()  StartTime          ReceiveDone()
+ *  TransmitAtTime()    |                ^       ReceiveAtTime()     |                   ^
  *       |              |                |            |              |                   |
  *       V              V                |            V              V                   |
  *                      +----------------+                              +----------------+
  *                      | Transmit Frame |      ...                     | Receive Frame  |
- * ---------------------+----------------+-----     --------------------+----------------+------->time
+ * ---------------------+----------------+-----     --------------------+----------------+-------> time
  *
  */
 
@@ -270,7 +286,19 @@ int8_t otPlatRadioBleGetTransmitPower(otInstance *aInstance);
 otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower);
 
 /**
- * Enable TIFS after the next Rx or TX operation.
+ * Set the BLE radio channelization parameters.
+ *
+ * @param[in] aInstance        The OpenThread instance structure.
+ * @param[in] aChannelParams   A pointer to the channelization parameters.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the parameters.
+ * @retval OT_ERROR_INVALID_ARGS  @p aChannelParams is not supported or @p aChannelParams is NULL.
+ *
+ */
+otError otPlatRadioBleSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams);
+
+/**
+ * Enable TIFS timer after the next receive or transmit operation.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -278,7 +306,7 @@ otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower);
 void otPlatRadioBleEnableTifs(otInstance *aInstance);
 
 /**
- * Disable TIFS after the next Rx or TX operation.
+ * Disable TIFS timer after the next receive or transmit operation.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -286,130 +314,125 @@ void otPlatRadioBleEnableTifs(otInstance *aInstance);
 void otPlatRadioBleDisableTifs(otInstance *aInstance);
 
 /**
- * Get the BLE radio transmit frame buffer.
- *
- * Ble controller forms the BLE frame in this buffer then calls `otPlatRadioBleTransmitAtTime()` or
- * `otPlatRadioBleTransmitAtTifs()` to request transmission.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- *
- * @returns A pointer to the transmit frame buffer.
- *
- */
-otRadioBleFrame *otPlatRadioBleGetTransmitBuffer(otInstance *aInstance);
-
-/**
  * Transmit frame at the given time on the BLE radio.
  *
- * The caller must form the BLE frame in the buffer provided by `otPlatRadioBleGetTransmitBuffer()` before
- * requesting transmission. The channel, access address and CRC initial value are also included in the
- * otRadioBleFrame structure.
+ * @param[in] aInstance               The OpenThread instance structure.
+ * @param[in] aBufferDescriptors      A pointer to the sending buffer descriptors.
+ * @param[in] aNumBufferDescriptors   The number of buffer descriptors.
+ * @param[in] aStartTime              A pointer to the time when the transmission started.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aSettings   A pointer to the BLE radio settings to be used.
- * @param[in] aStartTime  A pointer to the time when the transmission started.
- *
- * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
- * @retval OT_ERROR_INVALID_ARGS  @p aSettings or @p aStartTime is NULL.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the idle state.
+ * @retval OT_ERROR_NONE          Successfully set the transmission timer and wait to transmit frame.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptors or @p aStartTime is NULL.
+ * @retval OT_ERROR_INVALID_STATE The radio was not in IDLE state.
  *
  */
-otError otPlatRadioBleTransmitAtTime(otInstance *              aInstance,
-                                     const otRadioBleSettings *aSettings,
-                                     const otRadioBleTime *    aStartTime);
+otError otPlatRadioBleTransmitAtTime(otInstance *                aInstance,
+                                     otRadioBleBufferDescriptor *aBufferDescriptors,
+                                     uint8_t                     aNumBufferDescriptors,
+                                     const otRadioBleTime *      aStartTime);
 
 /*
  * Transmit frame at TIFS after the last packet received.
  *
- * The caller must form the BLE frame in the buffer provided by `otPlatRadioBleGetTransmitBuffer()` before
- * requesting transmission. The channel, access address and CRC initial value are also included in the
- * otRadioBleFrame structure.
+ * @note If possible, the transmission will occur at the TIFS timing. If not possible, function
+ *       otPlatRadioBleTransmitDone() will be called to indicate this.
  *
- * If possible, the transmit will occur at the TIFS timing.
- * If not possible, function otPlatRadioBleTransmitDone() will be called to indicate this.
+ * @param[in] aInstance               The OpenThread instance structure.
+ * @param[in] aBufferDescriptors      A pointer to the sending buffer descriptors.
+ * @param[in] aNumBufferDescriptors   The number of buffer descriptors.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aSettings   A pointer to the BLE radio settings to be used.
- *
- * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
- * @retval OT_ERROR_INVALID_ARGS  @p aSettings is NULL.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the idle state.
+ * @retval OT_ERROR_NONE          Successfully set the transmission frame and wait to transmit frame.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptors or @p aStartTime is NULL.
+ * @retval OT_ERROR_INVALID_STATE The radio was not in WAITING_TRANSMIT_TIFS state.
  */
-otError otPlatRadioBleTransmitAtTifs(otInstance *aInstance, const otRadioBleSettings *aSettings);
+otError otPlatRadioBleTransmitAtTifs(otInstance *                aInstance,
+                                     otRadioBleBufferDescriptor *aBufferDescriptors,
+                                     uint8_t                     aNumBufferDescriptors);
 
 /**
  * The BLE radio driver calls this function to notify BLE controller that the transmit operation has completed.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
- *                        OT_ERROR_FAILED when transmission was failed.
+ * @param[in]  aError     OT_BLE_RADIO_ERROR_NONE when the frame was successfully transmitted.
+ *                        OT_BLE_RADIO_ERROR_FAILED when transmission was failed.
  *
  */
-extern void otPlatRadioBleTransmitDone(otInstance *aInstance, otError aError);
+extern void otPlatRadioBleTransmitDone(otInstance *aInstance, otRadioBleError aError);
 
 /*
  * Receive frame within the given period.
  *
- * If possible, frames will be received within the period.
- * If not possible, the function otPlatRadioBleReceiveDone() will be called to indicate this.
+ * @note If possible, frames will be received within the period.  If not possible, the function
+ *       otPlatRadioBleReceiveDone() will be called to indicate this.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aSettings   A pointer to the BLE radio settings to be used.
- * @param[in] aStartTime  A pointer to the time when the reception started and stoped.
+ * @param[in] aInstance           The OpenThread instance structure.
+ * @param[in] aBufferDescriptor   A pointer to a buffer descriptor used to store the received frame.
+ * @param[in] aStartTime          A pointer to the time structure which represents the start time and end time of
+ *                                the reception.
  *
- * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
- * @retval OT_ERROR_INVALID_ARGS  @p aSettings or @p aStartTime is NULL.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the idle state.
+ * @retval OT_ERROR_NONE          Successfully set the reception timer and wait to receive frame.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptor or @p aStartTime is NULL.
+ * @retval OT_ERROR_INVALID_STATE The radio was not in IDLE state.
  */
-otError otPlatRadioBleReceiveAtTime(otInstance *              aInstance,
-                                    const otRadioBleSettings *aSettings,
-                                    const otRadioBleTime *    aStartTime);
+otError otPlatRadioBleReceiveAtTime(otInstance *                aInstance,
+                                    otRadioBleBufferDescriptor *aBufferDescriptor,
+                                    const otRadioBleTime *      aStartTime);
 
 /*
  *  Receive frame at TIFS after the last packet transmitted.
  *
- * If possible, a frame will be received on the TIFD timing.
- * If not possible, the function otPlatRadioBleReceiveDone() will be called to indicate this.
+ * @note If possible, a frame will be received on the TIFS timing. If not possible, the function
+ *       otPlatRadioBleReceiveDone() will be called to indicate this.
  *
- * @param[in] aInstance   The OpenThread instance structure.
- * @param[in] aSettings   A pointer to the BLE radio settings to be used.
+ * @param[in] aInstance           The OpenThread instance structure.
+ * @param[in] aBufferDescriptor   A pointer to a buffer descriptor used to store the received frame.
  *
- * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
- * @retval OT_ERROR_INVALID_ARGS  The radio was not in the Receive state.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the idle state.
+ * @retval OT_ERROR_NONE          Successfully set the reception frame buffer and wait to receive frame.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptor is NULL.
+ * @retval OT_ERROR_INVALID_STATE The radio was not in WAITING_RECEIVE_TIFS state.
  */
-otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, const otRadioBleSettings *aSettings);
+otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor);
 
 /**
  * The BLE radio driver calls this function to notify BLE controller that a frame has been received.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aFrame     A pointer to received frame or NULL if no frame was received.
- * @param[in]  aError     OT_ERROR_NONE when successfully received a frame,
- *                        OT_ERROR_FAILED when no frame was received or a broken frame was received,
+ * @param[in]  aRxInfo    A pointer to the received frame information or NULL if an error frame was received.
+ * @param[in]  aError     OT_BLE_RADIO_ERROR_NONE when successfully received a frame,
+ *                        OT_BLE_RADIO_ERROR_CRC when received a frame with error CRC.
+ *                        OT_BLE_RADIO_ERROR_RX_TIMEOUT when no frame was received.
+ *                        OT_BLE_RADIO_ERROR_FAILED when reception was failed.
  *
  */
-extern void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleFrame *aFrame, otError aError);
+extern void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError);
 
 /*
- * Cancel a pending transmit or receive.
+ * Cancel a pending transmit or receive when the radio is in WAIT_TRANSMIT or WAIT_RECEIVE state.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE          Successfully cancel the pending transmit or receive.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the pending state.
  */
-otError otPlatRadioBleCancelData(otInstance *aInstance);
+void otPlatRadioBleCancelData(otInstance *aInstance);
 
 /*
- * Cancel TIFS timer.
+ * Cancel TIFS timer when the radio is in WAIT_TRANSMIT_TIFS or WAIT_RECEIVE_TITS state.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE          Successfully cancel the TIFS timer.
- * @retval OT_ERROR_INVALID_STATE The radio was not in the pending state.
  */
-otError otPlatRadioBleCancelTifs(otInstance *aInstance);
+void otPlatRadioBleCancelTifs(otInstance *aInstance);
+
+/*
+ * Enable BLE radio driver interrupt.
+ *
+ */
+void otPlatRadioBleEnableInterrupt(void);
+
+/*
+ * Disable BLE radio driver interrupt.
+ *
+ */
+void otPlatRadioBleDisableInterrupt(void);
 
 /***
  * @}
