@@ -1653,14 +1653,14 @@ class OpenThread_WpanCtl(IThci):
             True: successful to set the data poll period for sleepy end device
             False: fail to set the data poll period for sleepy end device
         """
-           try:
-                cmd = WPANCTL_CMD + \
-                    'setprop NCP:SleepyPollInterval %s' % str(iPollPeriod)
-                print(cmd)
-                return self.__sendCommand(cmd)[0] != 'Fail'
-            except Exception, e:
-                ModuleHelper.WriteIntoDebugLogger(
-                    'setPollingRate() Error: ' + str(e))
+        try:
+            cmd = WPANCTL_CMD + \
+                'setprop NCP:SleepyPollInterval %s' % str(iPollPeriod)
+            print(cmd)
+            return self.__sendCommand(cmd)[0] != 'Fail'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger(
+                '__setPollingRate() Error: ' + str(e))
 
     def setLinkQuality(self, EUIadr, LinkQuality):
         """set custom LinkQualityIn for all receiving messages from the specified EUIadr
