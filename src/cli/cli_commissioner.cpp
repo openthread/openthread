@@ -317,7 +317,30 @@ otError Commissioner::ProcessStart(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    return otCommissionerStart(mInterpreter.mInstance);
+    return otCommissionerStart(mInterpreter.mInstance, &Commissioner::HandleStateChanged, this);
+}
+
+void OTCALL Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
+{
+    static_cast<Commissioner *>(aContext)->HandleStateChanged(aState);
+}
+
+void Commissioner::HandleStateChanged(otCommissionerState aState)
+{
+    mInterpreter.mServer->OutputFormat("Commissioner: ");
+
+    switch (aState)
+    {
+    case OT_COMMISSIONER_STATE_DISABLED:
+        mInterpreter.mServer->OutputFormat("disabled\r\n");
+        break;
+    case OT_COMMISSIONER_STATE_PETITION:
+        mInterpreter.mServer->OutputFormat("petitioning\r\n");
+        break;
+    case OT_COMMISSIONER_STATE_ACTIVE:
+        mInterpreter.mServer->OutputFormat("active\r\n");
+        break;
+    }
 }
 
 otError Commissioner::ProcessStop(int argc, char *argv[])

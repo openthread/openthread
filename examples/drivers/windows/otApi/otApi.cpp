@@ -3664,7 +3664,9 @@ OTAPI
 otError 
 OTCALL
 otCommissionerStart(
-    _In_ otInstance *aInstance
+    _In_ otInstance *aInstance,
+    _In_ otCommissionerStateCallback aStateCallback,
+    _In_ void *aContext
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;

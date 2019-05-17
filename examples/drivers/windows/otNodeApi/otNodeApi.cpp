@@ -998,7 +998,8 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerStart(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: commissioner start\r\n", aNode->mId);
 
-    auto error = otCommissionerStart(aNode->mInstance);
+    // TODO: handle commissioner callback
+    auto error = otCommissionerStart(aNode->mInstance, NULL, NULL);
     
     otLogFuncExit();
     return error;

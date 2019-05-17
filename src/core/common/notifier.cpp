@@ -273,10 +273,6 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "Ip6Mult-";
         break;
 
-    case OT_CHANGED_COMMISSIONER_STATE:
-        retval = "CommissionerState";
-        break;
-
     case OT_CHANGED_JOINER_STATE:
         retval = "JoinerState";
         break;
