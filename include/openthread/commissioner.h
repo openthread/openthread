@@ -98,15 +98,30 @@ typedef struct otCommissioningDataset
 } otCommissioningDataset;
 
 /**
+ * This function pointer is called whenever the commissioner state changes.
+ *
+ * @param[in]  aChannelMask       The channel mask value.
+ * @param[in]  aEnergyList        A pointer to the energy measurement list.
+ * @param[in]  aEnergyListLength  Number of entries in @p aEnergyListLength.
+ * @param[in]  aContext           A pointer to application-specific context.
+ *
+ */
+typedef void(OTCALL *otCommissionerStateCallback)(otCommissionerState aState, void *aContext);
+
+/**
  * This function enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE           Successfully started the Commissioner role.
  * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
  *
  */
-OTAPI otError OTCALL otCommissionerStart(otInstance *aInstance);
+OTAPI otError OTCALL otCommissionerStart(otInstance *                aInstance,
+                                         otCommissionerStateCallback aStateCallback,
+                                         void *                      aCallbackContext);
 
 /**
  * This function disables the Thread Commissioner role.

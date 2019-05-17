@@ -96,6 +96,9 @@ private:
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
 
+    static void OTCALL HandleStateChanged(otCommissionerState aState, void *aContext);
+    void               HandleStateChanged(otCommissionerState aState);
+
     static void OTCALL HandleEnergyReport(uint32_t       aChannelMask,
                                           const uint8_t *aEnergyList,
                                           uint8_t        aEnergyListLength,

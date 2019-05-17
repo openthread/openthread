@@ -70,6 +70,8 @@ Commissioner::Commissioner(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
+    , mStateCallback(NULL)
+    , mCallbackContext(NULL)
     , mState(OT_COMMISSIONER_STATE_DISABLED)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
@@ -80,6 +82,21 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
     mProvisioningUrl.Init();
+}
+
+void Commissioner::SetState(otCommissionerState aState)
+{
+    VerifyOrExit(mState != aState);
+
+    mState = aState;
+
+    if (mStateCallback)
+    {
+        mStateCallback(mState, mCallbackContext);
+    }
+
+exit:
+    return;
 }
 
 void Commissioner::AddCoapResources(void)
@@ -96,7 +113,7 @@ void Commissioner::RemoveCoapResources(void)
     Get<Coap::CoapSecure>().RemoveResource(mJoinerFinalize);
 }
 
-otError Commissioner::Start(void)
+otError Commissioner::Start(otCommissionerStateCallback aStateCallback, void *aCallbackContext)
 {
     otError error = OT_ERROR_NONE;
 
@@ -104,8 +121,11 @@ otError Commissioner::Start(void)
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
 
-    mState            = OT_COMMISSIONER_STATE_PETITION;
+    mStateCallback    = aStateCallback;
+    mCallbackContext  = aCallbackContext;
     mTransmitAttempts = 0;
+
+    SetState(OT_COMMISSIONER_STATE_PETITION);
 
     SendPetition();
 
@@ -121,16 +141,15 @@ otError Commissioner::Stop(void)
 
     Get<Coap::CoapSecure>().Stop();
 
-    mState = OT_COMMISSIONER_STATE_DISABLED;
     Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-    Get<Notifier>().Signal(OT_CHANGED_COMMISSIONER_STATE);
     RemoveCoapResources();
     ClearJoiners();
     mTransmitAttempts = 0;
 
     mTimer.Stop();
-
     Get<Coap::CoapSecure>().Stop();
+
+    SetState(OT_COMMISSIONER_STATE_DISABLED);
 
     SendKeepAlive();
 
@@ -655,7 +674,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     CommissionerSessionIdTlv sessionId;
     bool                     retransmit = false;
 
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_PETITION, mState = OT_COMMISSIONER_STATE_DISABLED);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_PETITION, SetState(OT_COMMISSIONER_STATE_DISABLED));
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, retransmit = true);
 
     otLogInfoMeshCoP("received Leader Petition response");
@@ -663,7 +682,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = OT_COMMISSIONER_STATE_DISABLED);
+    VerifyOrExit(state.GetState() == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
     VerifyOrExit(sessionId.IsValid());
@@ -673,7 +692,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
-    mState = OT_COMMISSIONER_STATE_ACTIVE;
+    SetState(OT_COMMISSIONER_STATE_ACTIVE);
 
     mTransmitAttempts = 0;
     mTimer.Start(TimerMilli::SecToMsec(kKeepAliveTimeout) / 2);
@@ -684,15 +703,13 @@ exit:
     {
         if (mTransmitAttempts >= kPetitionRetryCount)
         {
-            mState = OT_COMMISSIONER_STATE_DISABLED;
+            SetState(OT_COMMISSIONER_STATE_DISABLED);
         }
         else
         {
             mTimer.Start(TimerMilli::SecToMsec(kPetitionRetryDelay));
         }
     }
-
-    Get<Notifier>().Signal(OT_CHANGED_COMMISSIONER_STATE);
 }
 
 otError Commissioner::SendKeepAlive(void)
@@ -753,16 +770,16 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     StateTlv state;
 
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, mState = OT_COMMISSIONER_STATE_DISABLED);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, SetState(OT_COMMISSIONER_STATE_DISABLED));
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
-                 mState = OT_COMMISSIONER_STATE_DISABLED);
+                 SetState(OT_COMMISSIONER_STATE_DISABLED));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = OT_COMMISSIONER_STATE_DISABLED);
+    VerifyOrExit(state.GetState() == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
 
     mTimer.Start(TimerMilli::SecToMsec(kKeepAliveTimeout) / 2);
 

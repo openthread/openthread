@@ -68,11 +68,14 @@ public:
     /**
      * This method starts the Commissioner service.
      *
+     * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
      * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
      * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
      *
      */
-    otError Start(void);
+    otError Start(otCommissionerStateCallback aStateCallback, void *aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
@@ -303,6 +306,8 @@ private:
     otError SendPetition(void);
     otError SendKeepAlive(void);
 
+    void SetState(otCommissionerState aState);
+
     struct Joiner
     {
         Mac::ExtAddress mEui64;
@@ -333,6 +338,9 @@ private:
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
     ProvisioningUrlTlv mProvisioningUrl;
+
+    otCommissionerStateCallback mStateCallback;
+    void *                      mCallbackContext;
 
     otCommissionerState mState;
 };
