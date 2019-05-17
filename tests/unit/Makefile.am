@@ -134,7 +134,7 @@ check_PROGRAMS                                                     += \
     test-ncp-buffer                                                   \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
-    $(NULL)   
+    $(NULL)
 
 if OPENTHREAD_ENABLE_NCP_UART
 check_PROGRAMS                                                     += \
@@ -243,6 +243,7 @@ test_toolchain_LDADD         = $(NULL)
 test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
 
 PRETTY_FILES                                                        = \
+    $(noinst_HEADERS)                                                 \
     $(test_address_sanitizer_SOURCES)                                 \
     $(test_aes_SOURCES)                                               \
     $(test_child_SOURCES)                                             \
