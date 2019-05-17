@@ -541,6 +541,7 @@ public:
      */
     otError WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method adds a message to the current input frame.
      *
@@ -565,6 +566,7 @@ public:
      *
      */
     otError WriteMessage(otMessage *aMessage) { return mNcpBuffer.InFrameFeedMessage(aMessage); }
+#endif
 
     /**
      * This method encodes and writes a set of variables to the current input frame using a given spinel packing format
