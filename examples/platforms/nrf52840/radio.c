@@ -90,7 +90,7 @@ static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
 static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
-static bool         sAckedWithFramePending = true;
+static bool         sAckedWithFramePending;
 
 static int8_t sDefaultTxPower;
 
@@ -726,10 +726,14 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
 
+    // Inform if this frame was acknowledged with frame pending set.
     if (p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT)
     {
-        // Inform if this frame was acknowledged with frame pending set.
         receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = sAckedWithFramePending;
+    }
+    else
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
     }
 
     if (otPlatRadioGetPromiscuous(sInstance))
@@ -745,7 +749,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
 
-    sAckedWithFramePending = true;
+    sAckedWithFramePending = false;
 
     otSysEventSignalPending();
 }
@@ -779,7 +783,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
         assert(false);
     }
 
-    sAckedWithFramePending = true;
+    sAckedWithFramePending = false;
 
     setPendingEvent(kPendingEventReceiveFailed);
 }
