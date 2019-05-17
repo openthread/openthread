@@ -43,6 +43,7 @@
 #include <openthread/udp.h>
 
 #include "cli/cli_dataset.hpp"
+#include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -102,6 +103,7 @@ class Interpreter
     friend class Coap;
     friend class CoapSecure;
     friend class Dataset;
+    friend class Joiner;
     friend class UdpExample;
 
 public:
@@ -254,8 +256,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
-    void ProcessJoinerId(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
 #endif
@@ -369,7 +370,6 @@ private:
                                                      const otMessageInfo *aMessageInfo,
                                                      void *               aContext);
 #endif
-    static void OTCALL s_HandleJoinerCallback(otError aError, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     static void s_HandleDnsResponse(void *        aContext,
@@ -397,7 +397,6 @@ private:
 #ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
-    void HandleJoinerCallback(otError aError);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
@@ -453,15 +452,17 @@ private:
     Dataset mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-
     Coap mCoap;
+#endif
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
     CoapSecure mCoapSecure;
+#endif
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_ENABLE_JOINER
+    Joiner mJoiner;
+#endif
+
     Instance *mInstance;
 };
 

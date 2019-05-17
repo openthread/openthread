@@ -777,7 +777,7 @@ class OpenThread(IThci):
             if bType == MacType.FactoryMac:
                 macAddr64 = self.__sendCommand('eui64')[0]
             elif bType == MacType.HashMac:
-                macAddr64 = self.__sendCommand('joinerid')[0]
+                macAddr64 = self.__sendCommand('joiner id')[0]
             else:
                 macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
