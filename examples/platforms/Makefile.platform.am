@@ -57,10 +57,6 @@ if OPENTHREAD_EXAMPLES_CC2652
 include $(top_srcdir)/examples/platforms/cc2652/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_DA15000
-include $(top_srcdir)/examples/platforms/da15000/Makefile.platform.am
-endif
-
 if OPENTHREAD_EXAMPLES_EFR32
 include $(top_srcdir)/examples/platforms/efr32/Makefile.platform.am
 endif

@@ -128,17 +128,6 @@ build_cc2652() {
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 }
 
-build_da15000() {
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
-    arm-none-eabi-size  output/da15000/bin/ot-cli-ftd || die
-    arm-none-eabi-size  output/da15000/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/da15000/bin/ot-ncp-ftd || die
-    arm-none-eabi-size  output/da15000/bin/ot-ncp-mtd || die
-}
-
 build_emsk() {
     export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
 
@@ -265,7 +254,6 @@ build_samr21() {
     build_cc2538
     build_cc2650
     build_cc2652
-    build_da15000
     build_kw41z
     build_nrf52811
     build_nrf52840
@@ -280,7 +268,6 @@ build_samr21() {
     build_cc2538
     build_cc2650
     build_cc2652
-    build_da15000
     build_kw41z
     build_nrf52811
     build_nrf52840
@@ -295,7 +282,6 @@ build_samr21() {
     build_cc2538
     build_cc2650
     build_cc2652
-    build_da15000
     build_kw41z
     build_nrf52811
     build_nrf52840
@@ -312,7 +298,6 @@ build_samr21() {
     build_cc2538
     build_cc2650
     build_cc2652
-    build_da15000
     build_kw41z
     build_nrf52811
     build_nrf52840
@@ -332,13 +317,6 @@ build_samr21() {
     build_nrf52840
     build_qpg6095
     build_samr21
-
-    # DA15000 build failure:
-    #
-    # third_party/dialog/DialogSDK/bsp/peripherals/src/hw_aes_hash.c:399:99: \
-    #    error: bitwise comparison always evaluates to false [-Werror=tautological-compare]
-    #
-    # build_da15000
 }
 
 [ $BUILD_TARGET != posix ] || {
