@@ -121,6 +121,31 @@ By default, mbedTLS library is built with support for CryptoCell 310 hardware ac
 $ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
 ```
 
+### Optional mbedTLS threading support
+By default, mbedTLS library is built without support for multiple threads. You can enable this built-in support by building OpenThread with the following parameter:
+
+```
+$ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1
+```
+
+The simple mutex definition is used as shown below:
+
+```
+typedef void * mbedtls_threading_mutex_t;
+```
+
+However, you can modify it, by providing a path to a header file with proper definition. To do that, build OpenThread with the following parameter:
+
+```
+$ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1 MBEDTLS_THREADING_MUTEX_DEF="path_to_a_header_file_with_mutex_definition.h"
+```
+
+See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-threading] for more details.
+
+Note that as a temporary limitation CryptoCell 310 hardware acceleration is disabled when using mbedTLS threading.
+
+[mbedtls-thread-safety-and-multi-threading]: https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
+
 ### IEEE EUI-64 address
 
 When the Thread device is configured to obtain the Thread Network security credentials with either Thread Commissioning or an out-of-band method, the extended MAC address should be constructed out of the globally unique IEEE EUI-64.
