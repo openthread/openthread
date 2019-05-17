@@ -57,6 +57,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\cli\cli.cpp" />
+    <ClCompile Include="..\..\src\cli\cli_commissioner.cpp" />
     <ClCompile Include="..\..\src\cli\cli_dataset.cpp" />
     <ClCompile Include="..\..\src\cli\cli_joiner.cpp" />
     <ClCompile Include="..\..\src\cli\cli_server.cpp" />

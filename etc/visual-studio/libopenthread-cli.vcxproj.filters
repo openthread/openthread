@@ -10,6 +10,9 @@
     <ClCompile Include="..\..\src\cli\cli.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\cli\cli_commissioner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\cli\cli_dataset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -310,6 +310,7 @@ LOCAL_LDLIBS                               := \
 LOCAL_SRC_FILES                            := \
     src/cli/cli.cpp                           \
     src/cli/cli_coap.cpp                      \
+    src/cli/cli_commissioner.cpp              \
     src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \

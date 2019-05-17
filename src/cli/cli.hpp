@@ -42,6 +42,7 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
@@ -102,6 +103,7 @@ class Interpreter
 {
     friend class Coap;
     friend class CoapSecure;
+    friend class Commissioner;
     friend class Dataset;
     friend class Joiner;
     friend class UdpExample;
@@ -192,9 +194,8 @@ public:
 private:
     enum
     {
-        kMaxArgs              = 32,
-        kMaxAutoAddresses     = 8,
-        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
+        kMaxArgs          = 32,
+        kMaxAutoAddresses = 8,
     };
 
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
@@ -216,7 +217,7 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 #if OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
@@ -360,11 +361,6 @@ private:
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 #endif
-    static void OTCALL s_HandleEnergyReport(uint32_t       aChannelMask,
-                                            const uint8_t *aEnergyList,
-                                            uint8_t        aEnergyListLength,
-                                            void *         aContext);
-    static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 #ifndef OTDLL
     static void OTCALL s_HandleDiagnosticGetResponse(otMessage *          aMessage,
                                                      const otMessageInfo *aMessageInfo,
@@ -392,8 +388,6 @@ private:
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
 #endif
-    void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
-    void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
@@ -457,6 +451,10 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     CoapSecure mCoapSecure;
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Commissioner mCommissioner;
 #endif
 
 #if OPENTHREAD_ENABLE_JOINER
