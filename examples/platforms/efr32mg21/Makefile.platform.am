@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+#
+# efr32mg21 platform-specific Makefile
+#
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    efr32-sleepy-demo-mtd                 \
-    efr32-sleepy-demo-ftd                 \
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/efr32mg21/libopenthread-efr32mg21.a       \
+    $(top_builddir)/third_party/silabs/libsilabs-efr32mg21-sdk.a                 \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg21_gcc_release.a \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/efr32mg21.ld \
     $(NULL)
-
-if OPENTHREAD_ENABLE_EXECUTABLE
-SUBDIRS                                += efr32-sleepy-demo-mtd efr32-sleepy-demo-ftd
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    efr32-sleepy-demo-mtd                 \
-    efr32-sleepy-demo-ftd                 \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

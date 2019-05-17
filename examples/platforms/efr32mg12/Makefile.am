@@ -28,7 +28,7 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                                 = libopenthread-efr32.a
+lib_LIBRARIES                                 = libopenthread-efr32mg12.a
 
 # Do not enable -Wconversion for rail
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
@@ -40,12 +40,12 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.5
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
 
-libopenthread_efr32_a_CPPFLAGS                                                = \
+libopenthread_efr32mg12_a_CPPFLAGS                                            = \
     -D__START=main                                                              \
     -D__STARTUP_CLEAR_BSS                                                       \
-    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
     -DPHY=EMBER_PHY_RAIL                                                        \
@@ -54,7 +54,7 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
-    -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_BOARD_DIR)                 \
+    -I$(top_srcdir)/examples/platforms/efr32mg12/$(EFR32_BOARD_DIR)             \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     -I$(EFR32MG_SDK_SRCDIR)                                                     \
@@ -107,42 +107,12 @@ PLATFORM_SOURCES                                                              = 
     uart.c                                                                      \
     $(NULL)
 
-nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
-    @top_builddir@/third_party/silabs/rail_config/rail_config.c                                                                   \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/hardware/kit/common/bsp/bsp_bcc.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/hardware/kit/common/bsp/bsp_init.c                                     \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/hardware/kit/common/bsp/bsp_stk.c                                      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/hardware/kit/common/bsp/bsp_stk_leds.c                                 \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emdrv/dmadrv/src/dmadrv.c                                     \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                       \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emdrv/uartdrv/src/uartdrv.c                                   \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emdrv/ustimer/src/ustimer.c                                   \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_adc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_cmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_core.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_crypto.c                                         \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_emu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_gpio.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_ldma.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_leuart.c                                         \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_msc.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_rmu.c                                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_rtcc.c                                           \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_system.c                                         \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_timer.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/emlib/src/em_usart.c                                          \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/radio/rail_lib/hal/hal_common.c                               \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/util/third_party/mbedtls/library/ecp.c                                 \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c                    \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c                    \
-    @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/util/third_party/mbedtls/sl_crypto/src/crypto_management.c             \
+noinst_HEADERS                                                                = \
+    platform-efr32.h                                                            \
+    platform-band.h                                                             \
     $(NULL)
 
-libopenthread_efr32_a_SOURCES                                                 = \
+libopenthread_efr32mg12_a_SOURCES                                             = \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
@@ -151,7 +121,7 @@ PRETTY_FILES                                                                  = 
     $(NULL)
 
 Dash                                                                                                 = -
-libopenthread_efr32_a_LIBADD                                                                         = \
+libopenthread_efr32mg12_a_LIBADD                                                                     = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 

@@ -57,8 +57,12 @@ if OPENTHREAD_EXAMPLES_CC2652
 include $(top_srcdir)/examples/platforms/cc2652/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32
-include $(top_srcdir)/examples/platforms/efr32/Makefile.platform.am
+if OPENTHREAD_EXAMPLES_EFR32MG12
+include $(top_srcdir)/examples/platforms/efr32mg12/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG21
+include $(top_srcdir)/examples/platforms/efr32mg21/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_EMSK

@@ -1,11 +1,11 @@
 
-# EFR32 Sleepy Demo Example
+# EFR32MG12 Sleepy Demo Example
 
 The EFR32 Sleepy applications demonstrates Sleepy End Device behaviour using
 the EFR32's low power EM2 mode. The steps below will take you through the
 process of building and running the demo
 
-For setting up the build environment refer to [examples/platforms/efr32/README.md](../README.md).
+For setting up the build environment refer to [examples/platforms/efr32mg12/README.md](../README.md).
 
 
 ## 1. Build
@@ -13,21 +13,21 @@ For setting up the build environment refer to [examples/platforms/efr32/README.m
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-efr32 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BOARD=BRD4161A
+$ make -f examples/Makefile-efr32mg12 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BOARD=BRD4161A
 ```
 
 Convert the resulting executables into S-Record format and append a s37 suffix.
 
 ```bash
-$ cd output/efr32/bin
-$ arm-none-eabi-objcopy -O srec efr32-sleepy-demo-mtd efr32-sleepy-demo-mtd.s37
-$ arm-none-eabi-objcopy -O srec efr32-sleepy-demo-ftd efr32-sleepy-demo-ftd.s37
+$ cd output/efr32mg12/bin
+$ arm-none-eabi-objcopy -O srec sleepy-demo-mtd sleepy-demo-mtd.s37
+$ arm-none-eabi-objcopy -O srec sleepy-demo-ftd sleepy-demo-ftd.s37
 ```
 
-In Silicon Labs Simplicity Studio flash one device with the efr32-sleepy-demo-mtd.s37
-image and the other device with the efr32-sleepy-demo-ftd.s37 image.
+In Silicon Labs Simplicity Studio flash one device with the sleepy-demo-mtd.s37
+image and the other device with the sleepy-demo-ftd.s37 image.
 
-For instructions on flashing firmware see [examples/platforms/efr32/README.md](../README.md#flash-binaries)
+For instructions on flashing firmware see [examples/platforms/efr32mg12/README.md](../README.md#flash-binaries)
 
 
 ## 2. Starting nodes
@@ -37,14 +37,14 @@ The devices start Thread and form a network within a few seconds of powering on.
 application the devices should implement and go through a commissioning process to create
 a network and add devices.
 
-When the efr32-sleepy-demo-ftd device is started in the CLI the user shall see:
+When the sleepy-demo-ftd device is started in the CLI the user shall see:
 
 ```
-efr32-sleepy-demo-ftd started
-efr32-sleepy-demo-ftd changed to leader
+sleepy-demo-ftd started
+sleepy-demo-ftd changed to leader
 ```
 
-When the efr32-sleepy-demo-mtd device starts it joins the preconfigured Thread network
+When the sleepy-demo-mtd device starts it joins the preconfigured Thread network
 before disabling Rx-On-Idle to become a Sleepy-End-Device.
 
 Use the command "child table" in the FTD console and observe the R flag of the child is 0.

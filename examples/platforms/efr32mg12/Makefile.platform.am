@@ -27,14 +27,15 @@
 #
 
 #
-# efr32 platform-specific Makefile
+# efr32mg12 platform-specific Makefile
 #
 
 LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a       \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.5/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
+    $(top_builddir)/examples/platforms/efr32mg12/libopenthread-efr32mg12.a       \
+    $(top_builddir)/third_party/silabs/libsilabs-efr32mg12-sdk.a                 \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg12_gcc_release.a \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.5/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
+    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
     $(NULL)

@@ -33,10 +33,10 @@ override CFLAGS                              := $(filter-out -Wconversion,$(CFLA
 override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXFLAGS))
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.5
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
 
-$(top_builddir)/examples/platforms/efr32/libopenthread-efr32.a:
-	(cd $(top_builddir)/examples/platforms/efr32/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32.a )
+$(top_builddir)/examples/platforms/efr32mg12/libopenthread-efr32mg12.a:
+	(cd $(top_builddir)/examples/platforms/efr32mg12/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32mg12.a )
 
 bin_PROGRAMS                                                           = \
     $(NULL)
@@ -45,7 +45,7 @@ CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
-    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
     -D__START=main                                                              \
@@ -119,15 +119,15 @@ endif # OPENTHREAD_ENABLE_DIAG
 
 if OPENTHREAD_ENABLE_EXECUTABLE
 bin_PROGRAMS                                                          += \
-    efr32-sleepy-demo-ftd                                                \
+    sleepy-demo-ftd                                                      \
     $(NULL)
 endif
 
-efr32_sleepy_demo_ftd_CPPFLAGS                                         = \
+sleepy_demo_ftd_CPPFLAGS                                               = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
-efr32_sleepy_demo_ftd_LDADD                                            = \
+sleepy_demo_ftd_LDADD                                                  = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
@@ -135,20 +135,20 @@ efr32_sleepy_demo_ftd_LDADD                                            = \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
-efr32_sleepy_demo_ftd_LDFLAGS                                          = \
+sleepy_demo_ftd_LDFLAGS                                                = \
     $(LDFLAGS_COMMON)                                                    \
     $(NULL)
 
-efr32_sleepy_demo_ftd_LIBTOOLFLAGS                                     = \
+sleepy_demo_ftd_LIBTOOLFLAGS                                           = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-efr32_sleepy_demo_ftd_SOURCES                                          = \
+sleepy_demo_ftd_SOURCES                                                = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
 if OPENTHREAD_ENABLE_LINKER_MAP
-efr32_sleepy_demo_ftd_LDFLAGS                                         += -Wl,-Map=efr32-sleepy-demo-ftd.map
+sleepy_demo_ftd_LDFLAGS                                               += -Wl,-Map=sleepy-demo-ftd.map
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

@@ -125,6 +125,7 @@ void efr32Sleep(void)
                 EMU_EnterEM2(true);
             }
             CORE_EXIT_ATOMIC();
+            // TODO OT will handle an interrupt here and it mustn't call any RAIL APIs
 
             while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
             {

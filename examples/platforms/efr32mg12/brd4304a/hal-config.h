@@ -159,7 +159,7 @@
 #define HAL_PA_RAMP                           (10UL)
 #define HAL_PA_2P4_LOWPOWER                   (0)
 #define HAL_PA_POWER                          (252U)
-#define BSP_PA_VOLTAGE                        (3300U)
+#define HAL_PA_VOLTAGE                        (3300U)
 #define HAL_PA_CURVE_HEADER                    "pa_curves_efr32.h"
 // [PA]$
 

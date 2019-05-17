@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hal-config.h"
+/**
+ * @file
+ *   This file includes dev borad compile-time configuration constants for efr32.
+ *
+ */
 
-#if (HAL_FEM_ENABLE)
-#include "../../../third_party/silabs/gecko_sdk_suite/v2.5/util/plugin/plugin-common/fem-control/fem-control.c"
-#endif
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
+
+#define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1 ///< Dev board suppports OQPSK modulation in 2.4GHz band.
+
+#endif // __BOARD_CONFIG_H__

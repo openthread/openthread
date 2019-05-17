@@ -1,6 +1,6 @@
-# OpenThread on EFR32 Example
+# OpenThread on EFR32MG12 Example
 
-This directory contains example platform drivers for the [Silicon Labs EFR32][efr32mg]
+This directory contains example platform drivers for the [Silicon Labs EFR32MG12][efr32mg12]
 based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B] or [Thunderboard™ Sense 2 Sensor-to-Cloud Advanced IoT Development Kit][SLTB004A].
 
 [efr32mg]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc
@@ -10,11 +10,11 @@ based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B] or [Thunderbo
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread. [EFR32MG12P SoC][efr32mg12p]
 has rich memory and peripheral resources which can support all OpenThread
-capabilities. See the "Run the example with EFR32 boards" section below
+capabilities. See the "Run the example with EFR32MG12 boards" section below
 for an example using basic OpenThread capabilities.
 
 See [sleepy-demo/README.md](sleepy-demo/README.md) for instructions for an example that uses the low-energy
-modes of the EFR32 when running as a Sleepy End Device.
+modes of the EFR32MG12 when running as a Sleepy End Device.
 
 [efr32mg12p]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc/device.EFR32MG12P432F1024GL125
 
@@ -22,7 +22,7 @@ modes of the EFR32 when running as a Sleepy End Device.
 
 Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
-[gnu-toolchain]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
+[gnu-toolchain]: https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
 
 In a Bash terminal, follow these instructions to install the GNU toolchain and
 other dependencies.
@@ -40,14 +40,15 @@ $ ./script/bootstrap
 
 2. Install Flex (Gecko) SDK including RAIL Library from Simplicity Studio.
    - Connect EFR32MG12P Wireless Starter Kit to Simplicity Studio.
-   - Find Flex SDK v2.5 in the Software Update page and click Install.
-   - Flex SDK v2.5 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
+   - Find Flex SDK v2.6 in the Software Update page and click Install.
+   - Flex SDK v2.6 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
 
 For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32)
-portfolio using RAIL, see [Getting Started with RAIL Library quick start guide][QSG121]. For more information
+portfolio using FLEX, see [Getting Started with the Silicon Labs Flex Software Development Kit for the 
+Wireless Gecko (EFR32™) Portfolio][QSG138]. For more information
 on RAIL, see [Radio Abstraction Interface Layer][rail].
 
-[QSG121]: http://www.silabs.com/documents/public/quick-start-guides/QSG121-EFR32-RAIL.pdf
+[QSG138]: https://www.silabs.com/documents/public/quick-start-guides/qsg138-flex-efr32.pdf
 [rail]: http://www.silabs.com/products/development-tools/software/radio-abstraction-interface-layer-sdk
 
 3. Configure the path to Flex SDK source code.
@@ -70,18 +71,18 @@ $ ln -s <path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite silabs/gecko_
 $ cd <path-to-openthread>
 $ ./bootstrap
 ```
-For EFR32™ Mighty Gecko Wireless Starter Kit:
+For EFR32MG12™ Mighty Gecko Wireless Starter Kit:
 ```bash
-$ make -f examples/Makefile-efr32 BOARD=BRD4161A
+$ make -f examples/Makefile-efr32mg12 BOARD=BRD4161A
 ```
 or alternatively for the Thunderboard™ Sense 2:
 
 ```bash
-$ make -f examples/Makefile-efr32 BOARD=BRD4166A
+$ make -f examples/Makefile-efr32mg12 BOARD=BRD4166A
 ```
 
 After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/efr32/bin`.
+`<path-to-openthread>/output/efr32mg12/bin`.
 
 ## Flash Binaries
 
@@ -109,7 +110,7 @@ Compiled binaries also may be flashed onto the specified EFR32 dev board using [
 [j-link-commander]: https://www.segger.com/products/debug-probes/j-link/tools/j-link-commander/
 
 ```bash
-$ cd <path-to-openthread>/output/efr32/bin
+$ cd <path-to-openthread>/output/efr32mg12/bin
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 $ JLinkExe -device EFR32MG12PxxxF1024 -speed 4000 -if SWD -autoconnect 1 -SelectEmuBySN <SerialNo>
 $ J-Link>loadfile ot-cli-ftd.hex
@@ -126,7 +127,7 @@ $ JLinkExe
 Alternatively Simplicity Commander provides a graphical interface for J-Link Commander.
 
 ```bash
-$ cd <path-to-openthread>/output/efr32/bin
+$ cd <path-to-openthread>/output/efr32mg12/bin
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.ihex
 $ <path-to-simplicity-studio>/developer/adapter_packs/commander/commander
 ```
@@ -137,7 +138,7 @@ Click on the Flash icon on the left side of the window to switch to the flash pa
 In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button.
 Click the Flash button located under the Browse... button.
 
-## Run the example with EFR32 boards
+## Run the example with EFR32MG12 boards
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).
 2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1).
    Type `help` for a list of commands.
@@ -251,7 +252,7 @@ joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compilin
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-efr32 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1
+$ make -f examples/Makefile-efr32mg12 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1
 ```
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
@@ -264,4 +265,4 @@ The following toolchain has been used for testing and verification:
    - gcc version 7.3.1
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
-   - Flex SDK version 2.5.1.0
+   - Flex SDK version 2.6.0.0

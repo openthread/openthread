@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     assert(instance);
 
     otCliUartInit(instance);
-    otCliOutputFormat("efr32-sleepy-demo-ftd started\r\n");
+    otCliOutputFormat("sleepy-demo-ftd started\r\n");
 
     setNetworkConfiguration(instance);
     otSetStateChangedCallback(instance, handleNetifStateChanged, instance);
@@ -190,10 +190,10 @@ void handleNetifStateChanged(uint32_t aFlags, void *aContext)
         switch (changedRole)
         {
         case OT_DEVICE_ROLE_LEADER:
-            otCliOutputFormat("efr32-sleepy-demo-ftd changed to leader\r\n");
+            otCliOutputFormat("sleepy-demo-ftd changed to leader\r\n");
             break;
         case OT_DEVICE_ROLE_ROUTER:
-            otCliOutputFormat("efr32-sleepy-demo-ftd changed to router\r\n");
+            otCliOutputFormat("sleepy-demo-ftd changed to router\r\n");
             break;
 
         case OT_DEVICE_ROLE_CHILD:
