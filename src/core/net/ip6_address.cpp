@@ -328,6 +328,8 @@ otError Address::FromString(const char *aBuf)
         VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
     }
 
+    VerifyOrExit(colonp || dst == endp, error = OT_ERROR_PARSE);
+
     while (colonp && dst > colonp)
     {
         *endp-- = *dst--;
