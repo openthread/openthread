@@ -3182,7 +3182,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(
     otNetworkTimeStatus networkTimeStatus;
     uint64_t            time;
 
-    networkTimeStatus = otNetworkTimeGet(mInstance, time);
+    networkTimeStatus = otNetworkTimeGet(mInstance, &time);
 
     SuccessOrExit(error = mEncoder.WriteUint64(time));
     SuccessOrExit(error = mEncoder.WriteInt8((int8_t)networkTimeStatus));

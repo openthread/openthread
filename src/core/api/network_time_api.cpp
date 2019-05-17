@@ -42,11 +42,11 @@
 
 using namespace ot;
 
-otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t &aNetworkTime)
+otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<TimeSync>().GetTime(aNetworkTime);
+    return instance.Get<TimeSync>().GetTime(*aNetworkTime);
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
