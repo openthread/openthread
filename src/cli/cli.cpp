@@ -45,7 +45,6 @@
 
 #include <openthread/commissioner.h>
 #include <openthread/icmp6.h>
-#include <openthread/joiner.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
@@ -165,7 +164,6 @@ const struct Command Interpreter::sCommands[] = {
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     {"joiner", &Interpreter::ProcessJoiner},
-    {"joinerid", &Interpreter::ProcessJoinerId},
 #endif
 #if OPENTHREAD_FTD
     {"joinerport", &Interpreter::ProcessJoinerPort},
@@ -305,6 +303,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     , mCoapSecure(*this)
+#endif
+#if OPENTHREAD_ENABLE_JOINER
+    , mJoiner(*this)
 #endif
     , mInstance(aInstance)
 {
@@ -3461,68 +3462,12 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 
 void Interpreter::ProcessJoiner(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-
-    if (strcmp(argv[0], "start") == 0)
-    {
-        const char *provisioningUrl;
-        VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
-        provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl, PACKAGE_NAME, OPENTHREAD_CONFIG_PLATFORM_INFO,
-                      PACKAGE_VERSION, NULL, &Interpreter::s_HandleJoinerCallback, this);
-    }
-    else if (strcmp(argv[0], "stop") == 0)
-    {
-        otJoinerStop(mInstance);
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
-
-exit:
+    otError error;
+    error = mJoiner.Process(argc, argv);
     AppendResult(error);
 }
 
-void Interpreter::ProcessJoinerId(int argc, char *argv[])
-{
-    OT_UNUSED_VARIABLE(argv);
-
-    otError      error = OT_ERROR_NONE;
-    otExtAddress joinerId;
-
-    VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
-
-    otJoinerGetId(mInstance, &joinerId);
-    OutputBytes(joinerId.m8, sizeof(joinerId));
-    mServer->OutputFormat("\r\n");
-
-exit:
-    AppendResult(error);
-}
-
-#endif // OPENTHREAD_ENABLE_JOINER
-
-void OTCALL Interpreter::s_HandleJoinerCallback(otError aError, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleJoinerCallback(aError);
-}
-
-void Interpreter::HandleJoinerCallback(otError aError)
-{
-    switch (aError)
-    {
-    case OT_ERROR_NONE:
-        mServer->OutputFormat("Join success\r\n");
-        break;
-
-    default:
-        mServer->OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
-        break;
-    }
-}
+#endif
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessJoinerPort(int argc, char *argv[])

@@ -326,7 +326,7 @@ class otCli:
         return addr64
 
     def get_joiner_id(self):
-        self.send_command('joinerid')
+        self.send_command('joiner id')
         i = self._expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr = self.pexpect.match.groups()[0].decode("utf-8")
