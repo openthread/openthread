@@ -61,10 +61,13 @@
 
 // clang-format off
 
-#define SHORT_ADDRESS_SIZE    2
-#define EXTENDED_ADDRESS_SIZE 8
-#define PENDING_BIT           0x10
-#define US_PER_MS             1000ULL
+#define SHORT_ADDRESS_SIZE    2            ///< Size of MAC short address.
+#define US_PER_MS             1000ULL      ///< Microseconds in millisecond.
+
+#define ACK_REQUEST_OFFSET    1            ///< Byte containing Ack request bit (+1 for frame length byte).
+#define ACK_REQUEST_BIT       (1 << 5)     ///< Ack request bit.
+#define FRAME_PENDING_OFFSET  1            ///< Byte containing pending bit (+1 for frame length byte).
+#define FRAME_PENDING_BIT     (1 << 4)     ///< Frame Pending bit.
 
 // clang-format on
 
@@ -87,6 +90,7 @@ static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
 static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
+static bool         sAckedWithFramePending;
 
 static int8_t sDefaultTxPower;
 
@@ -560,10 +564,6 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
-            // TODO Set this flag only when the packet is really acknowledged with frame pending set.
-            // See https://github.com/openthread/openthread/pull/3785
-            sReceivedFrames[i].mInfo.mRxInfo.mAckedWithFramePending = true;
-
 #if OPENTHREAD_ENABLE_DIAG
 
             if (otPlatDiagModeGet())
@@ -725,6 +725,17 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
+
+    // Inform if this frame was acknowledged with frame pending set.
+    if (p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT)
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = sAckedWithFramePending;
+    }
+    else
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
+    }
+
     if (otPlatRadioGetPromiscuous(sInstance))
     {
         uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
@@ -737,6 +748,8 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
         (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
     receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
+
+    sAckedWithFramePending = false;
 
     otSysEventSignalPending();
 }
@@ -770,7 +783,15 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
         assert(false);
     }
 
+    sAckedWithFramePending = false;
+
     setPendingEvent(kPendingEventReceiveFailed);
+}
+
+void nrf_802154_tx_ack_started(const uint8_t *p_data)
+{
+    // Check if the frame pending bit is set in ACK frame.
+    sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
 }
 
 void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
