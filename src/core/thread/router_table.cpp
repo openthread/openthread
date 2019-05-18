@@ -101,7 +101,14 @@ void RouterTable::ClearNeighbors(void)
 {
     for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
     {
-        mRouters[index].SetState(Neighbor::kStateInvalid);
+        Router &router = mRouters[index];
+
+        if (router.GetState() == Neighbor::kStateValid)
+        {
+            Get<Mle::MleRouter>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
+        }
+
+        router.SetState(Neighbor::kStateInvalid);
     }
 }
 

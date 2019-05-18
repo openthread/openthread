@@ -276,8 +276,8 @@ protected:
     void        HandleTimeSyncUpdate(void);
 
 #if OPENTHREAD_FTD
-    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
-    void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
+    void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
     void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);

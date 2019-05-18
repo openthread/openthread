@@ -274,7 +274,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
     otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #if OPENTHREAD_FTD
-    otThreadSetChildTableCallback(mInstance, &NcpBase::HandleChildTableChanged);
+    otThreadRegisterNeighborTableCallback(mInstance, &NcpBase::HandleNeighborTableChanged);
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     memset(&mSteeringDataAddress, 0, sizeof(mSteeringDataAddress));
 #endif

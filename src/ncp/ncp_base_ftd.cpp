@@ -115,12 +115,12 @@ exit:
     return;
 }
 
-void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo)
+void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
-    GetNcpInstance()->HandleChildTableChanged(aEvent, *aChildInfo);
+    GetNcpInstance()->HandleNeighborTableChanged(aEvent, *aEntry);
 }
 
-void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo)
+void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry)
 {
     otError      error   = OT_ERROR_NONE;
     uint8_t      header  = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
@@ -128,15 +128,15 @@ void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otCh
 
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
 
-    VerifyOrExit(!aChildInfo.mIsStateRestoring);
+    VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
 
     switch (aEvent)
     {
-    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
         break;
 
-    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         command = SPINEL_CMD_PROP_VALUE_REMOVED;
         break;
 
@@ -145,7 +145,7 @@ void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otCh
     }
 
     SuccessOrExit(error = mEncoder.BeginFrame(header, command, SPINEL_PROP_THREAD_CHILD_TABLE));
-    SuccessOrExit(error = EncodeChildInfo(aChildInfo));
+    SuccessOrExit(error = EncodeChildInfo(aEntry.mInfo.mChild));
     SuccessOrExit(error = mEncoder.EndFrame());
 
 exit:

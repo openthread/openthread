@@ -597,23 +597,27 @@ public:
     otError GetMaxChildTimeout(uint32_t &aTimeout) const;
 
     /**
-     * This method sets the "child table changed" callback function.
+     * This method register the "neighbor table changed" callback function.
      *
-     * The provided callback (if non-NULL) will be invoked when a child entry is being added/remove to/from the child
-     * table. Subsequent calls to this method will overwrite the previous callback.
+     * The provided callback (if non-NULL) will be invoked when a child/router entry is being added/remove to/from the
+     * neighbor table. Subsequent calls to this method will overwrite the previous callback.
      *
      * @param[in] aCallback    A pointer to callback handler function.
      *
      */
-    void SetChildTableChangedCallback(otThreadChildTableCallback aCallback) { mChildTableChangedCallback = aCallback; }
+    void RegisterNeighborTableChangedCallback(otNeighborTableCallback aCallback)
+    {
+        mNeighborTableChangedCallback = aCallback;
+    }
 
     /**
-     * This method gets the "child table changed" callback function.
+     * This method signals a "neighbor table changed" events (invoking the registered callback function).
      *
-     * @returns  The callback function pointer.
+     * @param[in] aEvent     The event to emit (child/router added/removed).
+     * @param[in] aNeighbor  The neighbor that is being added/removed.
      *
      */
-    otThreadChildTableCallback GetChildTableChangedCallback(void) const { return mChildTableChangedCallback; }
+    void Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor);
 
     /**
      * This method returns whether the device has any sleepy children subscribed the address.
@@ -679,6 +683,7 @@ private:
     otError AppendActiveDataset(Message &aMessage);
     otError AppendPendingDataset(Message &aMessage);
     otError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
+    void    GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo);
     otError RefreshStoredChildren(void);
     void    HandleDetachStart(void);
     otError HandleChildStart(AttachMode aMode);
@@ -766,8 +771,6 @@ private:
     static void HandleStateUpdateTimer(Timer &aTimer);
     void        HandleStateUpdateTimer(void);
 
-    void SignalChildUpdated(otThreadChildTableEvent aEvent, Child &aChild);
-
     TrickleTimer mAdvertiseTimer;
     TimerMilli   mStateUpdateTimer;
 
@@ -777,7 +780,7 @@ private:
     ChildTable  mChildTable;
     RouterTable mRouterTable;
 
-    otThreadChildTableCallback mChildTableChangedCallback;
+    otNeighborTableCallback mNeighborTableChangedCallback;
 
     uint8_t  mChallengeTimeout;
     uint8_t  mChallenge[8];
