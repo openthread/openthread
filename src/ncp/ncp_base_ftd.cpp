@@ -87,27 +87,27 @@ void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *
 {
     VerifyOrExit(aInfo && aContext);
 
-    static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(aInfo);
+    static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(*aInfo);
 
 exit:
     return;
 }
 
-void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo)
+void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 {
-    VerifyOrExit(aInfo);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_PARENT_RESPONSE_INFO));
 
-    SuccessOrExit(mEncoder.WriteEui64(aInfo->mExtAddr));
-    SuccessOrExit(mEncoder.WriteUint16(aInfo->mRloc16));
-    SuccessOrExit(mEncoder.WriteInt8(aInfo->mRssi));
-    SuccessOrExit(mEncoder.WriteInt8(aInfo->mPriority));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality3));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality2));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality1));
-    SuccessOrExit(mEncoder.WriteBool(aInfo->mIsAttached));
+    SuccessOrExit(mEncoder.WriteEui64(aInfo.mExtAddr));
+    SuccessOrExit(mEncoder.WriteUint16(aInfo.mRloc16));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo.mRssi));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo.mPriority));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality3));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality2));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality1));
+    SuccessOrExit(mEncoder.WriteBool(aInfo.mIsAttached));
 
     SuccessOrExit(mEncoder.EndFrame());
 
