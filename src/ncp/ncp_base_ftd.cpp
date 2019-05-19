@@ -122,30 +122,44 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
 
 void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry)
 {
-    otError      error   = OT_ERROR_NONE;
-    uint8_t      header  = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-    unsigned int command = 0;
-
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
-
-    VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
+    otError           error   = OT_ERROR_NONE;
+    unsigned int      command = SPINEL_CMD_PROP_VALUE_REMOVED;
+    spinel_prop_key_t property;
 
     switch (aEvent)
     {
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
+        // Fall through
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+        property = SPINEL_PROP_THREAD_CHILD_TABLE;
+        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
         break;
 
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-        command = SPINEL_CMD_PROP_VALUE_REMOVED;
+    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
+        command = SPINEL_CMD_PROP_VALUE_INSERTED;
+        // Fall through
+    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
+        property = SPINEL_PROP_THREAD_NEIGHBOR_TABLE;
         break;
 
     default:
         ExitNow();
     }
 
-    SuccessOrExit(error = mEncoder.BeginFrame(header, command, SPINEL_PROP_THREAD_CHILD_TABLE));
-    SuccessOrExit(error = EncodeChildInfo(aEntry.mInfo.mChild));
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property));
+
+    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, command, property));
+
+    if (property == SPINEL_PROP_THREAD_CHILD_TABLE)
+    {
+        SuccessOrExit(error = EncodeChildInfo(aEntry.mInfo.mChild));
+    }
+    else
+    {
+        SuccessOrExit(error = EncodeNeighborInfo(aEntry.mInfo.mRouter));
+    }
+
     SuccessOrExit(error = mEncoder.EndFrame());
 
 exit:
@@ -158,7 +172,10 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        mShouldEmitChildTableUpdate = true;
+        if (property == SPINEL_PROP_THREAD_CHILD_TABLE)
+        {
+            mShouldEmitChildTableUpdate = true;
+        }
 
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
         mUpdateChangedPropsTask.Post();
