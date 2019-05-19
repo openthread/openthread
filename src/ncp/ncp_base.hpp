@@ -322,6 +322,8 @@ protected:
                                      const otIp6Address ** aDestIpAddress    = NULL,
                                      bool                  aAllowEmptyValues = false);
 
+    otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
+
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
