@@ -83,7 +83,6 @@ void Joiner::SetState(otJoinerState aState)
 
     otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(mState), JoinerStateToString(aState));
     mState = aState;
-    Get<Notifier>().Signal(OT_CHANGED_JOINER_STATE);
 
 exit:
     return;

@@ -5367,7 +5367,7 @@ otLwfIoCtl_otCommissionerStart(
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
 
-    return ThreadErrorToNtstatus(otCommissionerStart(pFilter->otCtx, NULL, NULL));
+    return ThreadErrorToNtstatus(otCommissionerStart(pFilter->otCtx, NULL, NULL, NULL));
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

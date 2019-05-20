@@ -999,7 +999,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerStart(otNode* aNode)
     printf("%d: commissioner start\r\n", aNode->mId);
 
     // TODO: handle commissioner callback
-    auto error = otCommissionerStart(aNode->mInstance, NULL, NULL);
+    auto error = otCommissionerStart(aNode->mInstance, NULL, NULL, NULL);
     
     otLogFuncExit();
     return error;

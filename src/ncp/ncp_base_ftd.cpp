@@ -476,7 +476,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_
         break;
 
     case SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE:
-        error = otCommissionerStart(mInstance, NULL, NULL);
+        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
         break;
 
     default:
@@ -742,7 +742,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
     }
     else
     {
-        error = otCommissionerStart(mInstance, NULL, NULL);
+        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
     }
 
 exit:

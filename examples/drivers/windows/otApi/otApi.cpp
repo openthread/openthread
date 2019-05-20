@@ -3666,6 +3666,7 @@ OTCALL
 otCommissionerStart(
     _In_ otInstance *aInstance,
     _In_ otCommissionerStateCallback aStateCallback,
+    _In_ otCommissionerJoinerCallback aJoinerCallback,
     _In_ void *aContext
     )
 {

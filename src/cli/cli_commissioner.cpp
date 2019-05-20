@@ -317,7 +317,8 @@ otError Commissioner::ProcessStart(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    return otCommissionerStart(mInterpreter.mInstance, &Commissioner::HandleStateChanged, this);
+    return otCommissionerStart(mInterpreter.mInstance, &Commissioner::HandleStateChanged,
+                               &Commissioner::HandleJoinerEvent, this);
 }
 
 void OTCALL Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
@@ -341,6 +342,41 @@ void Commissioner::HandleStateChanged(otCommissionerState aState)
         mInterpreter.mServer->OutputFormat("active\r\n");
         break;
     }
+}
+
+void OTCALL Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
+                                            const otExtAddress *      aJoinerId,
+                                            void *                    aContext)
+{
+    static_cast<Commissioner *>(aContext)->HandleJoinerEvent(aEvent, aJoinerId);
+}
+
+void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent, const otExtAddress *aJoinerId)
+{
+    mInterpreter.mServer->OutputFormat("Commissioner: Joiner ");
+
+    switch (aEvent)
+    {
+    case OT_COMMISSIONER_JOINER_START:
+        mInterpreter.mServer->OutputFormat("start ");
+        break;
+    case OT_COMMISSIONER_JOINER_CONNECTED:
+        mInterpreter.mServer->OutputFormat("connect ");
+        break;
+    case OT_COMMISSIONER_JOINER_FINALIZE:
+        mInterpreter.mServer->OutputFormat("finalize ");
+        break;
+    case OT_COMMISSIONER_JOINER_END:
+        mInterpreter.mServer->OutputFormat("end ");
+        break;
+    case OT_COMMISSIONER_JOINER_REMOVED:
+        mInterpreter.mServer->OutputFormat("remove ");
+        break;
+    }
+
+    mInterpreter.OutputBytes(aJoinerId->m8, sizeof(*aJoinerId));
+
+    mInterpreter.mServer->OutputFormat("\r\n");
 }
 
 otError Commissioner::ProcessStop(int argc, char *argv[])

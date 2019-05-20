@@ -40,7 +40,10 @@
 
 using namespace ot;
 
-otError otCommissionerStart(otInstance *aInstance, otCommissionerStateCallback aStateCallback, void *aCallbackContext)
+otError otCommissionerStart(otInstance *                 aInstance,
+                            otCommissionerStateCallback  aStateCallback,
+                            otCommissionerJoinerCallback aJoinerCallback,
+                            void *                       aCallbackContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
@@ -50,11 +53,13 @@ otError otCommissionerStart(otInstance *aInstance, otCommissionerStateCallback a
 #if OPENTHREAD_ENABLE_BORDER_AGENT
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
 #endif
-    SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aCallbackContext));
+    SuccessOrExit(error =
+                      instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext));
 exit:
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aStateCallback);
+    OT_UNUSED_VARIABLE(aJoinerCallback);
     OT_UNUSED_VARIABLE(aCallbackContext);
 #endif
 
