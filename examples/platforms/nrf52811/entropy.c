@@ -37,6 +37,7 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +51,7 @@
 static uint8_t           sBuffer[RNG_BUFFER_SIZE];
 static volatile uint32_t sReadPosition;
 static volatile uint32_t sWritePosition;
+static volatile bool     sEntropyGetEntered;
 
 static inline uint32_t bufferCount(void)
 {
@@ -176,6 +178,9 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     uint8_t  copyLength;
     uint16_t index = 0;
 
+    assert(!sEntropyGetEntered);
+    sEntropyGetEntered = true;
+
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     do
@@ -201,5 +206,7 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     } while (index < aOutputLength);
 
 exit:
+    sEntropyGetEntered = false;
+
     return error;
 }
