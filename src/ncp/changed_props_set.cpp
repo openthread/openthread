@@ -94,6 +94,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     {SPINEL_PROP_THREAD_NETWORK_TIME, SPINEL_STATUS_OK, false}, // 34
 #endif
+    {SPINEL_PROP_PARENT_RESPONSE_INFO, SPINEL_STATUS_OK, true}, // 35
 };
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
