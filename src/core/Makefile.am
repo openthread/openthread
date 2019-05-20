@@ -240,13 +240,11 @@ libopenthread_radio_a_SOURCES       = \
     api/instance_api.cpp              \
     api/link_raw_api.cpp              \
     api/logging_api.cpp               \
-    api/message_api.cpp               \
     api/random_noncrypto_api.cpp      \
     api/tasklet_api.cpp               \
     common/entropy.cpp                \
     common/instance.cpp               \
     common/logging.cpp                \
-    common/message.cpp                \
     common/random_manager.cpp         \
     common/random_noncrypto.cpp       \
     common/string.cpp                 \

@@ -46,12 +46,15 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
     , mBufferEnd(aBuffer + aBufferLength)
     , mBufferLength(aBufferLength)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
         otMessageQueueInit(&mMessageQueue[priority]);
     }
 
     otMessageQueueInit(&mWriteFrameMessageQueue);
+#endif
+
     SetFrameAddedCallback(NULL, NULL);
     SetFrameRemovedCallback(NULL, NULL);
     Clear();
@@ -59,7 +62,9 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
 
 void NcpFrameBuffer::Clear(void)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessage *message;
+#endif
 
     // Write (InFrame) related variables
     mWriteFrameStart[kPriorityLow]  = mBuffer;
@@ -80,6 +85,7 @@ void NcpFrameBuffer::Clear(void)
     mReadSegmentTail               = mBuffer;
     mReadPointer                   = mBuffer;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     mReadMessage       = NULL;
     mReadMessageOffset = 0;
     mReadMessageTail   = mMessageBuffer;
@@ -103,6 +109,7 @@ void NcpFrameBuffer::Clear(void)
             otMessageFree(message);
         }
     }
+#endif
 }
 
 void NcpFrameBuffer::SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext)
@@ -299,13 +306,16 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 // This method discards the current frame being written.
 void NcpFrameBuffer::InFrameDiscard(void)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessage *message;
+#endif
 
     VerifyOrExit(mWriteDirection != kUnknown);
 
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
@@ -314,6 +324,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
         // being discarded, are not yet owned by the `NcpFrameBuffer` and
         // therefore should not be freed.
     }
+#endif
 
     mWriteDirection = kUnknown;
 
@@ -381,6 +392,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 otError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
     otError error = OT_ERROR_NONE;
@@ -400,6 +412,7 @@ otError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 exit:
     return error;
 }
+#endif
 
 otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition)
 {
@@ -490,8 +503,10 @@ exit:
 
 otError NcpFrameBuffer::InFrameEnd(void)
 {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessage *message;
-    otError    error = OT_ERROR_NONE;
+#endif
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mWriteDirection != kUnknown, error = OT_ERROR_INVALID_STATE);
 
@@ -504,12 +519,14 @@ otError NcpFrameBuffer::InFrameEnd(void)
     // Update the frame start pointer to current segment head to be ready for next frame.
     mWriteFrameStart[mWriteDirection] = mWriteSegmentHead;
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Move all the messages from the frame queue to the main queue.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
         otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message);
     }
+#endif
 
     if (mFrameAddedCallback != NULL)
     {
@@ -585,6 +602,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
             ExitNow();
         }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
         // No data in this segment,  prepare any appended/associated message of this segment.
         if (OutFramePrepareMessage() == OT_ERROR_NONE)
         {
@@ -592,6 +610,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
         }
 
         // If there is no message (`PrepareMessage()` returned an error), loop back to prepare the next segment.
+#endif
     }
 
 exit:
@@ -604,6 +623,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 // This method prepares an associated message in current segment and fills the message buffer. It returns
 // ThreadError_NotFound if there is no message or if the message has no content.
 otError NcpFrameBuffer::OutFramePrepareMessage(void)
@@ -663,6 +683,7 @@ otError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 exit:
     return error;
 }
+#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
 otError NcpFrameBuffer::OutFrameBegin(void)
 {
@@ -675,7 +696,9 @@ otError NcpFrameBuffer::OutFrameBegin(void)
     // Move the segment head and tail to start of frame.
     mReadSegmentHead = mReadSegmentTail = mReadFrameStart[mReadDirection];
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     mReadMessage = NULL;
+#endif
 
     // Prepare the current segment for reading.
     error = OutFramePrepareSegment();
@@ -715,8 +738,12 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at end of current segment.
         if (mReadPointer == mReadSegmentTail)
         {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
             // Prepare any message associated with this segment.
             error = OutFramePrepareMessage();
+#else
+            error = OT_ERROR_NOT_FOUND;
+#endif
 
             // If there is no message, move to next segment (if any).
             if (error != OT_ERROR_NONE)
@@ -728,7 +755,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         break;
 
     case kReadStateInMessage:
-
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
         // Read a byte from current read pointer and move the read pointer by 1 byte.
         retval = *mReadPointer;
         mReadPointer++;
@@ -745,7 +772,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
                 OutFramePrepareSegment();
             }
         }
-
+#endif
         break;
     }
 
@@ -766,12 +793,11 @@ uint16_t NcpFrameBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer
 
 otError NcpFrameBuffer::OutFrameRemove(void)
 {
-    otError    error = OT_ERROR_NONE;
-    uint8_t *  bufPtr;
-    otMessage *message;
-    uint16_t   header;
-    uint8_t    numSegments;
-    FrameTag   tag;
+    otError  error = OT_ERROR_NONE;
+    uint8_t *bufPtr;
+    uint16_t header;
+    uint8_t  numSegments;
+    FrameTag tag;
 
     VerifyOrExit(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
@@ -800,15 +826,19 @@ otError NcpFrameBuffer::OutFrameRemove(void)
             }
         }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
         // If current segment has an appended message, remove it from message queue and free it.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
+            otMessage *message;
+
             if ((message = otMessageQueueGetHead(&mMessageQueue[mReadDirection])) != NULL)
             {
                 otMessageQueueDequeue(&mMessageQueue[mReadDirection], message);
                 otMessageFree(message);
             }
         }
+#endif
 
         // Move the pointer to next segment.
         bufPtr = GetUpdatedBufPtr(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask), mReadDirection);
@@ -861,11 +891,13 @@ exit:
 
 uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 {
-    uint16_t   frameLength = 0;
-    uint16_t   header;
-    uint8_t *  bufPtr;
-    uint8_t    numSegments;
+    uint16_t frameLength = 0;
+    uint16_t header;
+    uint8_t *bufPtr;
+    uint8_t  numSegments;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessage *message = NULL;
+#endif
 
     // If the frame length was calculated before, return the previously calculated length.
     VerifyOrExit(mReadFrameLength == kUnknownFrameLength, frameLength = mReadFrameLength);
@@ -894,6 +926,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
             }
         }
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
@@ -905,6 +938,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
                 frameLength += otMessageGetLength(message);
             }
         }
+#endif
 
         // Add the length of current segment to the frame length.
         frameLength += (header & kSegmentHeaderLengthMask);
