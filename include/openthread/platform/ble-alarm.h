@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the millisecond alarm service.
+ *   This file includes the platform abstraction for the tick alarm service.
  */
 
 #ifndef OPENTHREAD_PLATFORM_BLE_ALARM_H_
@@ -54,34 +54,36 @@ extern "C" {
  */
 
 /**
- * Set the alarm for BLE stack to fire at @p aDt milliseconds after @p aT0.
+ * Set the alarm for BLE stack to fire at @p aDt ticks after @p aT0.
+ *
+ * @note The clock should increment at the rate OPENTHREAD_CONFIG_BLE_MS_PER_TICKS (wrapping as appropriate).
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aT0        The reference time.
- * @param[in] aDt        The time delay in milliseconds from @p aT0.
+ * @param[in] aDt        The time delay in ticks from @p aT0.
  */
-void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm for the BLE stack.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-void otPlatBleAlarmMilliStop(otInstance *aInstance);
+void otPlatBleAlarmTickStop(otInstance *aInstance);
 
 /**
  * Signal that the alarm for the BLE stack has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-uint32_t otPlatBleAlarmMilliGetNow(void);
+uint32_t otPlatBleAlarmTickGetNow(void);
 
 /**
  * Signal BLE stack that the alarm has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatBleAlarmMilliFired(otInstance *aInstance);
+extern void otPlatBleAlarmTickFired(otInstance *aInstance);
 
 /*
  * Enable BLE alarm timer interrupt.

@@ -126,7 +126,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -134,14 +134,14 @@ void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aD
     sIsBleMsRunning = true;
 }
 
-void otPlatBleAlarmMilliStop(otInstance *aInstance)
+void otPlatBleAlarmTickStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     sIsBleMsRunning = false;
 }
 
-uint32_t otPlatBleAlarmMilliGetNow(void)
+uint32_t otPlatBleAlarmTickGetNow(void)
 {
     return otPlatAlarmMilliGetNow();
 }
@@ -262,12 +262,12 @@ void platformAlarmProcess(otInstance *aInstance)
 
     if (sIsBleMsRunning)
     {
-        remaining = (int32_t)(sBleMsAlarm - otPlatBleAlarmMilliGetNow());
+        remaining = (int32_t)(sBleMsAlarm - otPlatBleAlarmTickGetNow());
 
         if (remaining <= 0)
         {
             sIsBleMsRunning = false;
-            otPlatBleAlarmMilliFired(aInstance);
+            otPlatBleAlarmTickFired(aInstance);
         }
     }
 

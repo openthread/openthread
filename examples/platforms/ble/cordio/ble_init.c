@@ -364,6 +364,7 @@ static void bleHostInit(void)
     AttConnRegister(bleConnectionHandler);
     AttRegister(bleAttHandler);
 
+    bleGattInit();
     sTimer.handlerId = WsfOsSetNextHandler(bleTimerHandler);
 
 exit:

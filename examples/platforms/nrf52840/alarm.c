@@ -578,7 +578,7 @@ void MsTimerFired(otInstance *aInstance)
         if ((firedTime <= now) && (now - firedTime < (UINT32_MAX / 2)))
         {
             sSoftTimers[kBleMsTimer].mState = kStateStopped;
-            otPlatBleAlarmMilliFired(aInstance);
+            otPlatBleAlarmTickFired(aInstance);
         }
     }
 #endif
@@ -650,7 +650,7 @@ exit:
 }
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -661,14 +661,14 @@ void otPlatBleAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aD
     LoadSoftTimer();
 }
 
-void otPlatBleAlarmMilliStop(otInstance *aInstance)
+void otPlatBleAlarmTickStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     sSoftTimers[kBleMsTimer].mState = kStateStopped;
 }
 
-uint32_t otPlatBleAlarmMilliGetNow(void)
+uint32_t otPlatBleAlarmTickGetNow(void)
 {
     return (uint32_t)(nrf5AlarmGetCurrentTime() / US_PER_MS);
 }

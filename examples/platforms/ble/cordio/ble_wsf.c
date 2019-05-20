@@ -89,7 +89,7 @@ void wsf_mbed_os_critical_section_exit(void)
 
 void bleWsfInit(void)
 {
-    sLastUpdateMs = otPlatBleAlarmMilliGetNow();
+    sLastUpdateMs = otPlatBleAlarmTickGetNow();
 }
 
 bool otPlatBleTaskletsArePending(otInstance *aInstance)
@@ -110,7 +110,7 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
     sTaskletsPending = false;
 
-    now   = otPlatBleAlarmMilliGetNow();
+    now   = otPlatBleAlarmTickGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
 
@@ -128,7 +128,7 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
         if (timerRunning)
         {
-            otPlatBleAlarmMilliStartAt(aInstance, now, nextTimestamp);
+            otPlatBleAlarmTickStartAt(aInstance, now, nextTimestamp);
         }
     }
 
@@ -138,7 +138,7 @@ exit:
     return;
 }
 
-void otPlatBleAlarmMilliFired(otInstance *aInstance)
+void otPlatBleAlarmTickFired(otInstance *aInstance)
 {
     otPlatBleTaskletsProcess(aInstance);
 }

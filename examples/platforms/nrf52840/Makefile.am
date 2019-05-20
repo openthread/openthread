@@ -43,8 +43,6 @@ COMMONCPPFLAGS                                                                  
     -DNRF52840_XXAA                                                                                          \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
-    -I$(top_srcdir)/examples/platforms/ble                                                                   \
-    -I$(top_srcdir)/examples/platforms/ble/cordio                                                            \
     -I$(top_srcdir)/src/core                                                                                 \
     -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \

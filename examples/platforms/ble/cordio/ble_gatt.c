@@ -38,11 +38,13 @@
 
 #include "att_api.h"
 #include "dm_api.h"
+#include "l2c_defs.h"
+#include "wsf_math.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "cordio/ble_gap.h"
+#include "cordio/ble_config.h"
 #include "cordio/ble_init.h"
 #include "cordio/ble_utils.h"
 #include "utils/code_utils.h"
@@ -60,17 +62,30 @@ enum
 
 enum
 {
+    kMtuStateIdle                = 0,
+    kMtuStateSentMtuRequest      = 1,
+    kMtuStateReceivedMtuResponse = 2,
+    kMtuStateTimeout             = 3,
+};
+
+enum
+{
+    kExchangeMtuTimeout = 5000
+};
+
+enum
+{
     kGattSubscribeValue   = 0x0002,
     kGattUnsubscribeValue = 0x0000,
 };
 
 enum
 {
-    kGapAttrNum             = 5,
-    kMaxToBleCharsNum       = 2,
-    kMaxToBleAttrNum        = (kMaxToBleCharsNum << 2) + 1,
-    kMaxToBleLengthArrayNum = kMaxToBleCharsNum,
-    kMaxToBleCccdNum        = kMaxToBleCharsNum,
+    kMaxGattGapAttrNum     = 5,
+    kMaxGattCharsNum       = 2,
+    kMaxGattAttrNum        = (kMaxGattCharsNum << 2) + 1,
+    kMaxGattLengthArrayNum = kMaxGattCharsNum,
+    kMaxGattCccdNum        = kMaxGattCharsNum,
 };
 
 OT_TOOL_PACKED_BEGIN struct Characteristic
@@ -91,15 +106,15 @@ typedef struct GapService
     uint16_t       mDeviceNameLength;
     Characteristic mAppearanceChar;
     uint16_t       mAppearance;
-    attsAttr_t     mAttributes[kGapAttrNum];
+    attsAttr_t     mAttributes[kMaxGattGapAttrNum];
 } GapService;
 
 typedef struct GattService
 {
     attsGroup_t    mService;
-    Characteristic mCharacteristics[kMaxToBleCharsNum];
-    attsAttr_t     mAttributes[kMaxToBleAttrNum];
-    uint16_t       mLengthArrays[kMaxToBleLengthArrayNum];
+    Characteristic mCharacteristics[kMaxGattCharsNum];
+    attsAttr_t     mAttributes[kMaxGattAttrNum];
+    uint16_t       mLengthArrays[kMaxGattLengthArrayNum];
     uint8_t        mCharacteristicIndex;
     uint8_t        mAttributeIndex;
     uint8_t        mLengthArrayIndex;
@@ -107,8 +122,8 @@ typedef struct GattService
 
 typedef struct Cccd
 {
-    uint16_t     mValues[kMaxToBleCccdNum];
-    attsCccSet_t mCccds[kMaxToBleCccdNum];
+    uint16_t     mValues[kMaxGattCccdNum];
+    attsCccSet_t mCccds[kMaxGattCccdNum];
     uint8_t      mCccdIndex;
 } Cccd;
 
@@ -117,7 +132,7 @@ uint16_t sGattHandle = 0;
 static GapService sGapService = {
     .mService.startHandle = 0,
 };
-static GattService sToBleService = {.mService.startHandle = 0,
+static GattService sGattService = {.mService.startHandle = 0,
                                     .mCharacteristicIndex = 0,
                                     .mAttributeIndex      = 0,
                                     .mLengthArrayIndex    = 0};
@@ -134,39 +149,24 @@ static bool sServiceDiscovered;
 static bool sCharacteristicDiscovered;
 static bool sDescriptorDiscovered;
 
-void bleGattReset(void)
-{
-    if (sGapService.mService.startHandle != 0)
-    {
-        AttsRemoveGroup(sGapService.mService.startHandle);
-    }
+static wsfTimer_t sTimer;
+static uint8_t    sMtuState            = kMtuStateIdle;
+static uint8_t    sMtu                 = 0;
+static bool       sWaittingMtuResponse = false;
 
-    if (sToBleService.mService.startHandle != 0)
-    {
-        AttsRemoveGroup(sToBleService.mService.startHandle);
-    }
-
-    memset(&sGapService, 0, sizeof(sGapService));
-    memset(&sToBleService, 0, sizeof(sToBleService));
-
-    sCccd.mCccdIndex = 0;
-    sGattHandle      = 0;
-    sCccdWriteHandle = 0;
-}
-
-void SetUuid16(otPlatBleUuid *aUuid, const uint8_t *aUuid16)
+static void SetUuid16(otPlatBleUuid *aUuid, const uint8_t *aUuid16)
 {
     aUuid->mType          = OT_BLE_UUID_TYPE_16;
     aUuid->mValue.mUuid16 = *(uint16_t *)(aUuid16);
 }
 
-void SetUuid128(otPlatBleUuid *aUuid, uint8_t *aUuid128)
+static void SetUuid128(otPlatBleUuid *aUuid, uint8_t *aUuid128)
 {
     aUuid->mType           = OT_BLE_UUID_TYPE_128;
     aUuid->mValue.mUuid128 = aUuid128;
 }
 
-uint8_t GetUuidLength(const otPlatBleUuid *aUuid)
+static uint8_t GetUuidLength(const otPlatBleUuid *aUuid)
 {
     uint8_t len = 0;
 
@@ -182,7 +182,7 @@ uint8_t GetUuidLength(const otPlatBleUuid *aUuid)
     return len;
 }
 
-uint8_t *GetUuid(const otPlatBleUuid *aUuid)
+static uint8_t *GetUuid(const otPlatBleUuid *aUuid)
 {
     uint8_t *uuid = NULL;
 
@@ -232,9 +232,90 @@ static otError AttToOtError(uint8_t aError)
     return error;
 }
 
+static void gattTimerHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
+{
+    OT_UNUSED_VARIABLE(event);
+    OT_UNUSED_VARIABLE(pMsg);
+
+    sMtuState = kMtuStateTimeout;
+}
+
+void bleGattInit(void)
+{
+    sTimer.handlerId = WsfOsSetNextHandler(gattTimerHandler);
+}
+
+void bleGattReset(void)
+{
+    if (sGapService.mService.startHandle != 0)
+    {
+        AttsRemoveGroup(sGapService.mService.startHandle);
+    }
+
+    if (sGattService.mService.startHandle != 0)
+    {
+        AttsRemoveGroup(sGattService.mService.startHandle);
+    }
+
+    memset(&sGapService, 0, sizeof(sGapService));
+    memset(&sGattService, 0, sizeof(sGattService));
+
+    sCccd.mCccdIndex = 0;
+    sGattHandle      = 0;
+    sCccdWriteHandle = 0;
+    sMtuState        = kMtuStateIdle;
+
+    WsfTimerStop(&sTimer);
+}
+
+void bleGattGapConnectedHandler(const wsfMsgHdr_t *aMsg)
+{
+    const hciLeConnCmplEvt_t *connEvent = (const hciLeConnCmplEvt_t *)aMsg;
+    dmConnId_t                connId;
+    uint8_t                   localMtu;
+
+    otEXPECT(connEvent->status == 0);
+
+    // Note:
+    // <1> If the device is master and localMtu unequals to ATT_DEFAULT_MTU, the Cordio stack
+    //     automatically send MTU Exchange Request packet to the peer when the BLE connection is connected.
+    // <2> If no MTU Exchange Response packet is received after a MTU Exchange Request packet is sent, the
+    //     Cordio stack won't generate an event to notify user.
+    // <3> If the Cordio stack has previously sent an MTU Exchange Request packet, the Cordio stack won't
+    //     send MTU Exchange Request packet again even if user calls function AttcMtuReq().
+
+    localMtu = WSF_MIN(BLE_STACK_ATT_MTU, (HciGetMaxRxAclLen() - L2C_HDR_LEN));
+    connId   = (dmConnId_t)connEvent->hdr.param;
+
+    otEXPECT((DmConnRole(connId) == DM_ROLE_MASTER) && (localMtu != ATT_DEFAULT_MTU));
+
+    sMtuState = kMtuStateSentMtuRequest;
+    WsfTimerStartMs(&sTimer, kExchangeMtuTimeout);
+
+exit:
+    return;
+}
+
+void bleGattGapDisconnectedHandler(const wsfMsgHdr_t *aMsg)
+{
+    sMtuState = kMtuStateIdle;
+    OT_UNUSED_VARIABLE(aMsg);
+}
+
 static void gattProcessMtuUpdateInd(attEvt_t *aEvent)
 {
-    otPlatBleGattClientOnMtuExchangeResponse(bleGetThreadInstance(), aEvent->mtu, AttToOtError(aEvent->hdr.status));
+    if (aEvent->hdr.status == ATT_SUCCESS)
+    {
+        sMtu      = aEvent->mtu;
+        sMtuState = kMtuStateReceivedMtuResponse;
+        WsfTimerStop(&sTimer);
+    }
+
+    if (sWaittingMtuResponse)
+    {
+        sWaittingMtuResponse = false;
+        otPlatBleGattClientOnMtuExchangeResponse(bleGetThreadInstance(), aEvent->mtu, AttToOtError(aEvent->hdr.status));
+    }
 }
 
 static void gattProcessClientReadRsp(attEvt_t *aEvent)
@@ -560,7 +641,26 @@ otError otPlatBleGattClientMtuExchangeRequest(otInstance *aInstance, uint16_t aM
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_INVALID_STATE);
 
-    AttcMtuReq(bleGapGetConnectionId(), aMtu);
+    if (sMtuState == kMtuStateReceivedMtuResponse)
+    {
+        otPlatBleGattClientOnMtuExchangeResponse(bleGetThreadInstance(), sMtu, OT_ERROR_NONE);
+    }
+    else if (sMtuState == kMtuStateTimeout)
+    {
+        error = OT_ERROR_FAILED;
+    }
+    else if (sMtuState == kMtuStateSentMtuRequest)
+    {
+        sWaittingMtuResponse = true;
+    }
+    else
+    {
+        sWaittingMtuResponse = true;
+        sMtuState            = kMtuStateSentMtuRequest;
+
+        AttcMtuReq(bleGapGetConnectionId(), aMtu);
+        WsfTimerStartMs(&sTimer, kExchangeMtuTimeout);
+    }
 
 exit:
     return error;
@@ -572,6 +672,7 @@ otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
 
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_FAILED);
     otEXPECT_ACTION(bleGapGetConnectionId() != DM_CONN_ID_NONE, error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(sMtuState == kMtuStateReceivedMtuResponse, error = OT_ERROR_FAILED);
 
     *aMtu = AttGetMtu(bleGapGetConnectionId());
 
@@ -755,12 +856,12 @@ exit:
 static otError AddPrimaryServiceAttribute(const otPlatBleUuid *aUuid, uint16_t *aHandle)
 {
     otError     error = OT_ERROR_NONE;
-    attsAttr_t *attr  = &sToBleService.mAttributes[sToBleService.mAttributeIndex];
+    attsAttr_t *attr  = &sGattService.mAttributes[sGattService.mAttributeIndex];
 
-    otEXPECT_ACTION(sToBleService.mAttributeIndex < kMaxToBleAttrNum, error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(sGattService.mAttributeIndex < kMaxGattAttrNum, error = OT_ERROR_NO_BUFS);
 
     sGattHandle++;
-    sToBleService.mAttributeIndex++;
+    sGattService.mAttributeIndex++;
 
     attr->pUuid       = attPrimSvcUuid;
     attr->pValue      = GetUuid(aUuid);
@@ -803,17 +904,17 @@ static void SetAttributeSetting(attsAttr_t *aAttr, otPlatBleGattCharacteristic *
 static otError AddCharacteristicAttribute(otPlatBleGattCharacteristic *aChar)
 {
     otError         error = OT_ERROR_NONE;
-    attsAttr_t *    attr  = &sToBleService.mAttributes[sToBleService.mAttributeIndex];
+    attsAttr_t *    attr  = &sGattService.mAttributes[sGattService.mAttributeIndex];
     Characteristic *characteristic;
 
-    otEXPECT_ACTION(sToBleService.mAttributeIndex + 1 < kMaxToBleAttrNum, error = OT_ERROR_NO_BUFS);
-    otEXPECT_ACTION(sToBleService.mCharacteristicIndex < kMaxToBleCharsNum, error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(sGattService.mAttributeIndex + 1 < kMaxGattAttrNum, error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(sGattService.mCharacteristicIndex < kMaxGattCharsNum, error = OT_ERROR_NO_BUFS);
 
     // incremented by two to get a pointer to the value handle
     sGattHandle += 2;
-    sToBleService.mAttributeIndex += 2;
+    sGattService.mAttributeIndex += 2;
 
-    characteristic = &sToBleService.mCharacteristics[sToBleService.mCharacteristicIndex++];
+    characteristic = &sGattService.mCharacteristics[sGattService.mCharacteristicIndex++];
     SetCharacteristic(characteristic, aChar->mProperties, sGattHandle, &aChar->mUuid);
 
     // create characteristic declaration attribute
@@ -835,10 +936,10 @@ static otError AddCharacteristicAttribute(otPlatBleGattCharacteristic *aChar)
 
     if (aChar->mProperties & OT_BLE_CHAR_PROP_WRITE)
     {
-        otEXPECT_ACTION(sToBleService.mLengthArrayIndex < kMaxToBleLengthArrayNum, error = OT_ERROR_NO_BUFS);
+        otEXPECT_ACTION(sGattService.mLengthArrayIndex < kMaxGattLengthArrayNum, error = OT_ERROR_NO_BUFS);
 
         attr->settings = ATTS_SET_VARIABLE_LEN;
-        attr->pLen     = &sToBleService.mLengthArrays[sToBleService.mLengthArrayIndex++];
+        attr->pLen     = &sGattService.mLengthArrays[sGattService.mLengthArrayIndex++];
     }
 
     SetAttributeSetting(attr, aChar);
@@ -848,12 +949,12 @@ static otError AddCharacteristicAttribute(otPlatBleGattCharacteristic *aChar)
 
     if ((aChar->mProperties & OT_BLE_CHAR_PROP_NOTIFY) || (aChar->mProperties & OT_BLE_CHAR_PROP_INDICATE))
     {
-        otEXPECT_ACTION(sToBleService.mAttributeIndex < kMaxToBleAttrNum, error = OT_ERROR_NO_BUFS);
-        otEXPECT_ACTION(sCccd.mCccdIndex < kMaxToBleCccdNum, error = OT_ERROR_NO_BUFS);
+        otEXPECT_ACTION(sGattService.mAttributeIndex < kMaxGattAttrNum, error = OT_ERROR_NO_BUFS);
+        otEXPECT_ACTION(sCccd.mCccdIndex < kMaxGattCccdNum, error = OT_ERROR_NO_BUFS);
 
         // create client characteristic configuration descriptor
         sGattHandle++;
-        sToBleService.mAttributeIndex++;
+        sGattService.mAttributeIndex++;
 
         attr++;
         attr->pUuid       = attCliChCfgUuid;
@@ -903,12 +1004,12 @@ static void GattServerCccdCallback(attsCccEvt_t *aEvent)
     }
 }
 
-static void resetToBleService(void)
+static void resetGattService(void)
 {
-    sToBleService.mCharacteristicIndex = 0;
-    sToBleService.mAttributeIndex      = 0;
-    sToBleService.mLengthArrayIndex    = 0;
-    sCccd.mCccdIndex                   = 0;
+    sGattService.mCharacteristicIndex = 0;
+    sGattService.mAttributeIndex      = 0;
+    sGattService.mLengthArrayIndex    = 0;
+    sCccd.mCccdIndex                  = 0;
 }
 
 otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices)
@@ -919,11 +1020,11 @@ otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGatt
 
     otEXPECT_ACTION(aServices != NULL, error = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(otPlatBleIsEnabled(aInstance), error = OT_ERROR_INVALID_STATE);
-    otEXPECT_ACTION(sToBleService.mAttributeIndex == 0, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sGattService.mAttributeIndex == 0, error = OT_ERROR_INVALID_STATE);
 
     otEXPECT((error = AddPrimaryServiceAttribute(&aServices->mUuid, &aServices->mHandle)) == OT_ERROR_NONE);
 
-    sToBleService.mService.startHandle = sGattHandle;
+    sGattService.mService.startHandle = sGattHandle;
     characteristic                     = aServices->mCharacteristics;
 
     while (characteristic->mUuid.mType != OT_BLE_UUID_TYPE_NONE)
@@ -932,20 +1033,20 @@ otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGatt
         characteristic++;
     }
 
-    sToBleService.mService.pNext      = NULL;
-    sToBleService.mService.pAttr      = sToBleService.mAttributes;
-    sToBleService.mService.readCback  = GattServerReadCallback;
-    sToBleService.mService.writeCback = GattServerWriteCallback;
-    sToBleService.mService.endHandle  = sGattHandle;
+    sGattService.mService.pNext      = NULL;
+    sGattService.mService.pAttr      = sGattService.mAttributes;
+    sGattService.mService.readCback  = GattServerReadCallback;
+    sGattService.mService.writeCback = GattServerWriteCallback;
+    sGattService.mService.endHandle  = sGattHandle;
 
-    AttsAddGroup(&sToBleService.mService);
+    AttsAddGroup(&sGattService.mService);
     AttsCccRegister(sCccd.mCccdIndex, (attsCccSet_t *)sCccd.mCccds, GattServerCccdCallback);
 
 exit:
     if (error == OT_ERROR_NO_BUFS)
     {
         sGattHandle = handle;
-        resetToBleService();
+        resetGattService();
     }
 
     return error;

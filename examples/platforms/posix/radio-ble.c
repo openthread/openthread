@@ -136,16 +136,6 @@ otError otPlatRadioBleDisable(otInstance *aInstance)
     if (sState != OT_BLE_RADIO_STATE_DISABLED)
     {
         platformBleAlarmMicroStop(aInstance);
-
-        if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
-        {
-            otPlatRadioBleTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
-        }
-        if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS))
-        {
-            otPlatRadioBleReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
-        }
-
         sState = OT_BLE_RADIO_STATE_DISABLED;
     }
 

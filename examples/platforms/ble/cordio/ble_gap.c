@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include "cordio/ble_gap.h"
+#include "cordio/ble_gatt.h"
 #include "cordio/ble_hci_driver.h"
 #include "cordio/ble_init.h"
 #include "utils/code_utils.h"
@@ -228,10 +229,12 @@ void bleGapEventHandler(const wsfMsgHdr_t *aMsg)
     switch (aMsg->event)
     {
     case DM_CONN_OPEN_IND:
+        bleGattGapConnectedHandler(aMsg);
         bleGapConnectedHandler(aMsg);
         break;
 
     case DM_CONN_CLOSE_IND:
+        bleGattGapDisconnectedHandler(aMsg);
         bleGapDisconnectedHandler(aMsg);
         break;
 

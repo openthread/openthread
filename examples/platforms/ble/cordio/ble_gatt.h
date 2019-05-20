@@ -42,8 +42,37 @@ extern "C" {
 
 #include "att_api.h"
 
-void bleAttHandler(attEvt_t *aEvent);
+/**
+ * This method initializes the BLE GAP module.
+ *
+ */
+void bleGattInit(void);
+
+/**
+ * This method resets the BLE GAP module.
+ *
+ */
 void bleGattReset(void);
+
+/**
+ * This method processes the ATT events.
+ *
+ */
+void bleAttHandler(attEvt_t *aEvent);
+
+/**
+ * This method notifies the GATT module that the BLE GAP connection is opened.
+ *
+ * @param[in] aMsg  A pointer to a WSF message.
+ */
+void bleGattGapConnectedHandler(const wsfMsgHdr_t *aMsg);
+
+/**
+ * This method notifies the GATT module that the BLE GAP connection is closed.
+ *
+ * @param[in] aMsg  A pointer to a WSF message.
+ */
+void bleGattGapDisconnectedHandler(const wsfMsgHdr_t *aMsg);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -1995,6 +1995,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BLE_MS_PER_TICKS
+ *
+ * This settinng configures the milliseconds per tick rate for the BLE tick timer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BLE_MS_PER_TICKS
+#define OPENTHREAD_CONFIG_BLE_MS_PER_TICKS 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_CLI_BLE
  *
  * Define as 1 to enable the BLE cli.
