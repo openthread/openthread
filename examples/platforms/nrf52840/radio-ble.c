@@ -26,12 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "platform-nrf5.h"
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/radio-ble.h>
-
-#include <openthread/platform/ble-hci.h>
+#include <openthread/platform/cordio/radio-ble.h>
 
 #include "common/logging.hpp"
 #include "utils/code_utils.h"

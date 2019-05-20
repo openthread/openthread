@@ -46,13 +46,13 @@
 #include "utils/code_utils.h"
 
 #include <openthread/error.h>
-#include <openthread/platform/ble-alarm.h>
 #include <openthread/platform/ble.h>
+#include <openthread/platform/cordio/ble-alarm.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/radio-ble.h>
+#include <openthread/platform/cordio/radio-ble.h>
 #else
-#include <openthread/platform/ble-hci.h>
+#include <openthread/platform/cordio/ble-hci.h>
 #endif
 
 #if OPENTHREAD_ENABLE_BLE_HOST

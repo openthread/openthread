@@ -50,7 +50,7 @@
 #include <assert.h>
 #include <string.h>
 #include <openthread/error.h>
-#include <openthread/platform/ble-hci.h>
+#include <openthread/platform/cordio/ble-hci.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "bb_ble_api.h"

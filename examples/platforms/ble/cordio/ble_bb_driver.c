@@ -45,7 +45,7 @@
 #include <assert.h>
 #include <string.h>
 #include <openthread/error.h>
-#include <openthread/platform/radio-ble.h>
+#include <openthread/platform/cordio/radio-ble.h>
 #include <openthread/platform/random.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER

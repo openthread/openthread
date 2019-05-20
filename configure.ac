@@ -2050,6 +2050,7 @@ Makefile
 include/Makefile
 include/openthread/Makefile
 include/openthread/platform/Makefile
+include/openthread/platform/cordio/Makefile
 src/Makefile
 src/cli/Makefile
 src/ncp/Makefile

@@ -28,49 +28,14 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cordio                                \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cordio                                \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cordio                                \
-    $(NULL)
-
-ot_platform_headers                     = \
-    alarm-micro.h                         \
-    alarm-milli.h                         \
-    ble.h                                 \
-    diag.h                                \
-    entropy.h                             \
-    memory.h                              \
-    misc.h                                \
-    logging.h                             \
-    radio.h                               \
+ot_platform_cordio_headers              = \
+    ble-alarm.h                           \
+    ble-hci.h                             \
     radio-ble.h                           \
-    time.h                                \
-    uart.h                                \
-    udp.h                                 \
-    spi-slave.h                           \
-    settings.h                            \
-    messagepool.h                         \
-    toolchain.h                           \
     $(NULL)
 
-noinst_HEADERS                          = \
-    debug_uart.h
-
-ot_platformdir = $(includedir)/openthread/platform
-dist_ot_platform_HEADERS = $(ot_platform_headers)
+ot_platform_cordiodir = $(includedir)/openthread/platform/cordio
+dist_ot_platform_cordio_HEADERS = $(ot_platform_cordio_headers)
 
 install-headers: install-includeHEADERS
 

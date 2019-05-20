@@ -66,7 +66,7 @@
 #include <openthread/error.h>
 #include <openthread/platform/ble.h>
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/radio-ble.h>
+#include <openthread/platform/cordio/radio-ble.h>
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 #if OPENTHREAD_ENABLE_BLE_HOST

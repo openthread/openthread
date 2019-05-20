@@ -37,7 +37,7 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #ifdef OPENTHREAD_ENABLE_BLE_HOST
-#include <openthread/platform/ble-alarm.h>
+#include <openthread/platform/cordio/ble-alarm.h>
 #endif
 #include <openthread/platform/diag.h>
 

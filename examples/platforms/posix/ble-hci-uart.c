@@ -41,7 +41,7 @@
 #include <unistd.h>
 
 #include <openthread/instance.h>
-#include <openthread/platform/ble-hci.h>
+#include <openthread/platform/cordio/ble-hci.h>
 
 #include "utils/code_utils.h"
 

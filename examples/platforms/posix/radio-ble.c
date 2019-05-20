@@ -29,7 +29,7 @@
 #include "platform-posix.h"
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/radio-ble.h>
+#include <openthread/platform/cordio/radio-ble.h>
 
 #include "utils/code_utils.h"
 
