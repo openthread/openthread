@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for Cordio BLE HCI communication.
  */
 
-#ifndef OPENTHREAD_PLATFORM_BLE_HCI_H_
-#define OPENTHREAD_PLATFORM_BLE_HCI_H_
+#ifndef OPENTHREAD_PLATFORM_CORDIO_BLE_HCI_H_
+#define OPENTHREAD_PLATFORM_CORDIO_BLE_HCI_H_
 
 #include <stdint.h>
 
@@ -57,7 +57,7 @@ extern "C" {
  * Enable the BLE HCI.
  *
  * @retval OT_ERROR_NONE    Successfully enabled the BLE HCI.
- * @retval OT_ERROR_FAILED  Failed to enabled the BLE HCI.
+ * @retval OT_ERROR_FAILED  Failed to enable the BLE HCI.
  *
  */
 otError otCordioPlatHciEnable(void);
@@ -119,4 +119,4 @@ void otCordioPlatHciDisableInterrupt(void);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_PLATFORM_BLE_HCI_H_
+#endif // OPENTHREAD_PLATFORM_CORDIO_BLE_HCI_H_

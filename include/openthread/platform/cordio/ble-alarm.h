@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the tick alarm service.
  */
 
-#ifndef OPENTHREAD_PLATFORM_BLE_ALARM_H_
-#define OPENTHREAD_PLATFORM_BLE_ALARM_H_
+#ifndef OPENTHREAD_PLATFORM_CORDIO_BLE_ALARM_H_
+#define OPENTHREAD_PLATFORM_CORDIO_BLE_ALARM_H_
 
 #include <stdint.h>
 
@@ -58,18 +58,16 @@ extern "C" {
  *
  * @note The clock should increment at the rate OPENTHREAD_CONFIG_BLE_MS_PER_TICKS (wrapping as appropriate).
  *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aT0        The reference time.
- * @param[in] aDt        The time delay in ticks from @p aT0.
+ * @param[in] aT0  The reference time.
+ * @param[in] aDt  The time delay in ticks from @p aT0.
  */
-void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm for the BLE stack.
  *
- * @param[in] aInstance  The OpenThread instance structure.
  */
-void otCordioPlatAlarmTickStop(otInstance *aInstance);
+void otCordioPlatAlarmTickStop(void);
 
 /**
  * Signal that the alarm for the BLE stack has fired.
@@ -83,7 +81,7 @@ uint32_t otCordioPlatAlarmTickGetNow(void);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otCordioPlatAlarmTickFired(otInstance *aInstance);
+extern void otCordioPlatAlarmTickFired(void);
 
 /*
  * Enable BLE alarm timer interrupt.
@@ -106,4 +104,4 @@ void otCordioPlatAlarmDisableInterrupt(void);
 } // extern "C"
 #endif
 
-#endif // OPENTHREAD_PLATFORM_BLE_ALARM_H_
+#endif // OPENTHREAD_PLATFORM_CORDIO_BLE_ALARM_H_

@@ -98,7 +98,7 @@ bool otPlatBleTaskletsArePending(otInstance *aInstance)
     return sTaskletsPending;
 }
 
-void otPlatBleTaskletsProcess(otInstance *aInstance)
+void bleWsfTaskletsProcess(void)
 {
     uint32_t        now;
     uint32_t        delta;
@@ -128,19 +128,23 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
         if (timerRunning)
         {
-            otCordioPlatAlarmTickStartAt(aInstance, now, nextTimestamp);
+            otCordioPlatAlarmTickStartAt(now, nextTimestamp);
         }
     }
-
-    OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return;
 }
 
-void otCordioPlatAlarmTickFired(otInstance *aInstance)
+void otPlatBleTaskletsProcess(otInstance *aInstance)
 {
-    otPlatBleTaskletsProcess(aInstance);
+    bleWsfTaskletsProcess();
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otCordioPlatAlarmTickFired(void)
+{
+    bleWsfTaskletsProcess();
 }
 
 /**

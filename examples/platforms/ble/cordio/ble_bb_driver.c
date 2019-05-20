@@ -94,7 +94,7 @@ void BbDrvDisable(void)
 
 uint32_t BbDrvGetCurrentTime(void)
 {
-    return otCordioPlatRadioGetTickNow(bleGetThreadInstance());
+    return otCordioPlatRadioGetTickNow();
 }
 
 bool_t BbDrvGetTimestamp(uint32_t *pTime)
@@ -109,12 +109,12 @@ void BbBleDrvInit(void)
 
 void BbBleDrvEnable(void)
 {
-    otCordioPlatRadioEnable(bleGetThreadInstance());
+    otCordioPlatRadioEnable();
 }
 
 void BbBleDrvDisable(void)
 {
-    otCordioPlatRadioDisable(bleGetThreadInstance());
+    otCordioPlatRadioDisable();
 }
 
 void BbBleDrvSetChannelParam(BbBleDrvChan_t *pChan)
@@ -125,8 +125,8 @@ void BbBleDrvSetChannelParam(BbBleDrvChan_t *pChan)
     channelParams.mAccessAddress = pChan->accAddr;
     channelParams.mCrcInit       = pChan->crcInit;
 
-    otCordioPlatRadioSetChannelParameters(bleGetThreadInstance(), &channelParams);
-    otCordioPlatRadioSetTransmitPower(bleGetThreadInstance(), pChan->txPower);
+    otCordioPlatRadioSetChannelParameters(&channelParams);
+    otCordioPlatRadioSetTransmitPower(pChan->txPower);
 }
 
 int8_t BbBleRfGetActualTxPower(int8_t txPwr, bool_t compFlag)
@@ -134,7 +134,7 @@ int8_t BbBleRfGetActualTxPower(int8_t txPwr, bool_t compFlag)
     OT_UNUSED_VARIABLE(txPwr);
     OT_UNUSED_VARIABLE(compFlag);
 
-    return otCordioPlatRadioGetTransmitPower(bleGetThreadInstance());
+    return otCordioPlatRadioGetTransmitPower();
 }
 
 void BbBleDrvSetDataParams(const BbBleDrvDataParam_t *pParam)
@@ -148,24 +148,23 @@ void BbBleDrvSetOpParams(const BbBleDrvOpParam_t *pOpParam)
 
     if (pOpParam->ifsSetup)
     {
-        otCordioPlatRadioEnableTifs(bleGetThreadInstance());
+        otCordioPlatRadioEnableTifs();
     }
     else
     {
-        otCordioPlatRadioDisableTifs(bleGetThreadInstance());
+        otCordioPlatRadioDisableTifs();
     }
 
 exit:
     return;
 }
 
-void otCordioPlatRadioTransmitDone(otInstance *aInstance, otRadioBleError aError)
+void otCordioPlatRadioTransmitDone(otRadioBleError aError)
 {
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->txCback != NULL);
 
     sDataParams->txCback(ConvertErrorCode(aError));
-    OT_UNUSED_VARIABLE(aInstance);
 
 exit:
     return;
@@ -189,7 +188,7 @@ void BbBleDrvTxData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
     time.mTicks    = sDataParams->due;
     time.mOffsetUs = sDataParams->dueOffsetUsec;
 
-    otCordioPlatRadioTransmitAtTime(bleGetThreadInstance(), bufferDescriptors, cnt, &time);
+    otCordioPlatRadioTransmitAtTime(bufferDescriptors, cnt, &time);
 
 exit:
     return;
@@ -208,7 +207,7 @@ void BbBleDrvTxTifsData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
         bufferDescriptors[i].mLength = descs[i].len;
     }
 
-    otCordioPlatRadioTransmitAtTifs(bleGetThreadInstance(), bufferDescriptors, cnt);
+    otCordioPlatRadioTransmitAtTifs(bufferDescriptors, cnt);
 
 exit:
     return;
@@ -228,7 +227,7 @@ void BbBleDrvRxData(uint8_t *pBuf, uint16_t len)
     bufferDescriptor.mBuffer = pBuf;
     bufferDescriptor.mLength = len;
 
-    otCordioPlatRadioReceiveAtTime(bleGetThreadInstance(), &bufferDescriptor, &time);
+    otCordioPlatRadioReceiveAtTime(&bufferDescriptor, &time);
 
 exit:
     return;
@@ -241,10 +240,10 @@ void BbBleDrvRxTifsData(uint8_t *pBuf, uint16_t len)
     bufferDescriptor.mBuffer = pBuf;
     bufferDescriptor.mLength = len;
 
-    otCordioPlatRadioReceiveAtTifs(bleGetThreadInstance(), &bufferDescriptor);
+    otCordioPlatRadioReceiveAtTifs(&bufferDescriptor);
 }
 
-void otCordioPlatRadioReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
+void otCordioPlatRadioReceiveDone(otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
 {
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->rxCback != NULL);
@@ -259,20 +258,18 @@ void otCordioPlatRadioReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxIn
         sDataParams->rxCback(ConvertErrorCode(aError), 0, 0, 0, BB_PHY_OPTIONS_DEFAULT);
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return;
 }
 
 void BbBleDrvCancelTifs(void)
 {
-    otCordioPlatRadioCancelTifs(bleGetThreadInstance());
+    otCordioPlatRadioCancelTifs();
 }
 
 void BbBleDrvCancelData(void)
 {
-    otCordioPlatRadioCancelData(bleGetThreadInstance());
+    otCordioPlatRadioCancelData();
 }
 
 void BbBleDrvRand(uint8_t *pBuf, uint8_t len)

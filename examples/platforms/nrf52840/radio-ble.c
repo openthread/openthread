@@ -240,7 +240,7 @@ void TIMER0_IRQ_HANDLER(void)
                 NRF_PPI->CHENCLR = PPI_CHEN_CH21_Msk;
                 sState           = OT_BLE_RADIO_STATE_IDLE;
 
-                otCordioPlatRadioTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
+                otCordioPlatRadioTransmitDone(OT_BLE_RADIO_ERROR_FAILED);
             }
 
             break;
@@ -260,7 +260,7 @@ void TIMER0_IRQ_HANDLER(void)
                 NRF_PPI->CHENCLR = PPI_CHEN_CH20_Msk;
                 sState           = OT_BLE_RADIO_STATE_IDLE;
 
-                otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
+                otCordioPlatRadioReceiveDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
             }
             break;
 
@@ -315,7 +315,7 @@ void BLE_RADIO_IRQ_HANDLER(void)
 
             sState = OT_BLE_RADIO_STATE_IDLE;
 
-            otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
+            otCordioPlatRadioReceiveDone(NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
         }
         else if (sState == OT_BLE_RADIO_STATE_TRANSMIT)
         {
@@ -394,7 +394,7 @@ static void ble_phy_tx_end_isr(void)
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
 
-    otCordioPlatRadioTransmitDone(NULL, OT_ERROR_NONE);
+    otCordioPlatRadioTransmitDone(OT_ERROR_NONE);
 }
 
 static bool ble_phy_rx_start_isr(void)
@@ -523,7 +523,7 @@ static void ble_phy_rx_end_isr(void)
         error = OT_BLE_RADIO_ERROR_CRC;
     }
 
-    otCordioPlatRadioReceiveDone(NULL, &sReceiveInfo, error);
+    otCordioPlatRadioReceiveDone(&sReceiveInfo, error);
 }
 
 /**
@@ -993,7 +993,7 @@ void ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
     NRF_RADIO->DATAWHITEIV = chan;
 }
 
-otError otCordioPlatRadioSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
+otError otCordioPlatRadioSetChannelParameters(const otRadioBleChannelParams *aChannelParams)
 {
     ble_phy_setchan(aChannelParams->mChannel, aChannelParams->mAccessAddress, aChannelParams->mCrcInit);
 
@@ -1005,10 +1005,9 @@ otError SetRadioTxStartTime(const otRadioBleTime *aStartTime)
     return ble_phy_tx_set_start_time(aStartTime->mTicks, aStartTime->mOffsetUs);
 }
 
-otError otCordioPlatRadioTransmitAtTime(otInstance *                aInstance,
-                                     otRadioBleBufferDescriptor *aBufferDescriptors,
-                                     uint8_t                     aNumBufferDescriptors,
-                                     const otRadioBleTime *      aStartTime)
+otError otCordioPlatRadioTransmitAtTime(otRadioBleBufferDescriptor *aBufferDescriptors,
+                                        uint8_t                     aNumBufferDescriptors,
+                                        const otRadioBleTime *      aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t offset;
@@ -1032,9 +1031,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioTransmitAtTifs(otInstance *                aInstance,
-                                     otRadioBleBufferDescriptor *aBufferDescriptors,
-                                     uint8_t                     aNumBufferDescriptors)
+otError otCordioPlatRadioTransmitAtTifs(otRadioBleBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t offset;
@@ -1063,8 +1060,6 @@ otError otCordioPlatRadioTransmitAtTifs(otInstance *                aInstance,
     /* CH20: TIMER0->EVENTS_COMPARE[0] --> RADIO->TASKS_TXEN */
     // NRF_PPI->CHENSET = PPI_CHEN_CH20_Msk;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
@@ -1081,9 +1076,7 @@ otError SetRadioRxStartTime(const otRadioBleTime *aStartTime)
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTime(otInstance *                aInstance,
-                                    otRadioBleBufferDescriptor *aBufferDescriptor,
-                                    const otRadioBleTime *      aStartTime)
+otError otCordioPlatRadioReceiveAtTime(otRadioBleBufferDescriptor *aBufferDescriptor, const otRadioBleTime *aStartTime)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1099,7 +1092,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
+otError otCordioPlatRadioReceiveAtTifs(otRadioBleBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1113,24 +1106,21 @@ otError otCordioPlatRadioReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDe
     /* CH21: TIMER0->EVENTS_COMPARE[0] --> RADIO->TASKS_RXEN */
     // NRF_PPI->CHENSET = PPI_CHEN_CH21_Msk;
 
-    OT_UNUSED_VARIABLE(aInstance);
-
 exit:
     return error;
 }
 
-otError otCordioPlatRadioEnable(otInstance *aInstance)
+otError otCordioPlatRadioEnable(void)
 {
     if (sState == OT_BLE_RADIO_STATE_DISABLED)
     {
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
-otError otCordioPlatRadioDisable(otInstance *aInstance)
+otError otCordioPlatRadioDisable(void)
 {
     if (sState != OT_BLE_RADIO_STATE_DISABLED)
     {
@@ -1138,46 +1128,40 @@ otError otCordioPlatRadioDisable(otInstance *aInstance)
 
         if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
         {
-            otCordioPlatRadioTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
+            otCordioPlatRadioTransmitDone(OT_BLE_RADIO_ERROR_FAILED);
         }
 
         if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS))
         {
-            otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
+            otCordioPlatRadioReceiveDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
         }
 
         sState = OT_BLE_RADIO_STATE_DISABLED;
     }
 
-    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
-void otCordioPlatRadioEnableTifs(otInstance *aInstance)
+void otCordioPlatRadioEnableTifs(void)
 {
     sTifsEnabled = true;
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otCordioPlatRadioDisableTifs(otInstance *aInstance)
+void otCordioPlatRadioDisableTifs(void)
 {
     sTifsEnabled = false;
-
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otCordioPlatRadioCancelData(otInstance *aInstance)
+void otCordioPlatRadioCancelData(void)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE))
     {
         ble_phy_disable();
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
-
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otCordioPlatRadioCancelTifs(otInstance *aInstance)
+void otCordioPlatRadioCancelTifs(void)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
     {
@@ -1187,13 +1171,10 @@ void otCordioPlatRadioCancelTifs(otInstance *aInstance)
         sRxAtTifs = false;
         sState    = OT_BLE_RADIO_STATE_IDLE;
     }
-
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint32_t otCordioPlatRadioGetTickNow(otInstance *aInstance)
+uint32_t otCordioPlatRadioGetTickNow(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     return NRF_RTC0->COUNTER;
 }
 
@@ -1238,34 +1219,29 @@ int8_t ble_phy_txpower_round(int dbm)
     return (int8_t)RADIO_TXPOWER_TXPOWER_Neg40dBm;
 }
 
-int8_t otCordioPlatRadioGetTransmitPower(otInstance *aInstance)
+int8_t otCordioPlatRadioGetTransmitPower(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     return sTxPower;
 }
 
-otError otCordioPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
+otError otCordioPlatRadioSetTransmitPower(int8_t aPower)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sTxPower           = ble_phy_txpower_round(aPower);
     NRF_RADIO->TXPOWER = sTxPower;
     return OT_ERROR_NONE;
 }
 
-uint8_t otCordioPlatRadioGetXtalAccuracy(otInstance *aInstance)
+uint8_t otCordioPlatRadioGetXtalAccuracy(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     return 20;
 }
 
-void otCordioPlatRadioGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
+void otCordioPlatRadioGetPublicAddress(otPlatBleDeviceAddr *aAddress)
 {
     memset(aAddress, 0, sizeof(otPlatBleDeviceAddr));
     aAddress->mAddrType            = OT_BLE_ADDRESS_TYPE_PUBLIC;
     *(uint64_t *)(aAddress->mAddr) = NRF_FICR->DEVICEID[1] | ((uint64_t)NRF_FICR->DEVICEID[0]) << 32;
 
-    OT_UNUSED_VARIABLE(aInstance);
     return;
 }
 
@@ -1279,15 +1255,13 @@ void otCordioPlatRadioDisableInterrupt(void)
     NVIC_DisableIRQ(RADIO_IRQn);
 }
 
-OT_TOOL_WEAK void otCordioPlatRadioTransmitDone(otInstance *aInstance, otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioTransmitDone(otRadioBleError aError)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aError);
 }
 
-OT_TOOL_WEAK void otCordioPlatRadioReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioReceiveDone(otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRxInfo);
     OT_UNUSED_VARIABLE(aError);
 }

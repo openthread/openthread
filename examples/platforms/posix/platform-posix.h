@@ -258,17 +258,17 @@ bool platformRadioIsTransmitPending(void);
 /**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
- * @param[in]  aT0        The reference time.
- * @param[in]  aDt        The time delay in microseconds from @p aT0.
+ * @param[in]  aT0  The reference time.
+ * @param[in]  aDt  The time delay in microseconds from @p aT0.
  *
  */
-void platformBleAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void platformBleAlarmMicroStartAt(uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
  *
  */
-void platformBleAlarmMicroStop(otInstance *aInstance);
+void platformBleAlarmMicroStop(void);
 
 /**
  * Get the current time.
@@ -280,10 +280,8 @@ uint32_t platformBleAlarmMicroGetNow(void);
 
 /**
  * Signal that the alarm has fired.
- *
- * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void platformBleAlarmMicroFired(otInstance *aInstance);
+extern void platformBleAlarmMicroFired(void);
 
 /**
  * This function initializes the BLE radio service used by OpenThread.

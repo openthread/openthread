@@ -126,18 +126,14 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sBleMsAlarm     = aT0 + aDt;
     sIsBleMsRunning = true;
 }
 
-void otCordioPlatAlarmTickStop(otInstance *aInstance)
+void otCordioPlatAlarmTickStop(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sIsBleMsRunning = false;
 }
 
@@ -267,7 +263,7 @@ void platformAlarmProcess(otInstance *aInstance)
         if (remaining <= 0)
         {
             sIsBleMsRunning = false;
-            otCordioPlatAlarmTickFired(aInstance);
+            otCordioPlatAlarmTickFired();
         }
     }
 

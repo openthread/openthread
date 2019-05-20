@@ -578,7 +578,7 @@ void MsTimerFired(otInstance *aInstance)
         if ((firedTime <= now) && (now - firedTime < (UINT32_MAX / 2)))
         {
             sSoftTimers[kBleMsTimer].mState = kStateStopped;
-            otCordioPlatAlarmTickFired(aInstance);
+            otCordioPlatAlarmTickFired();
         }
     }
 #endif
@@ -650,10 +650,8 @@ exit:
 }
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sSoftTimers[kBleMsTimer].mT0    = aT0;
     sSoftTimers[kBleMsTimer].mDt    = aDt;
     sSoftTimers[kBleMsTimer].mState = kStatePending;
@@ -661,10 +659,8 @@ void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t 
     LoadSoftTimer();
 }
 
-void otCordioPlatAlarmTickStop(otInstance *aInstance)
+void otCordioPlatAlarmTickStop(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sSoftTimers[kBleMsTimer].mState = kStateStopped;
 }
 

@@ -262,7 +262,7 @@ void platformAlarmProcess(otInstance *aInstance)
         if (remaining <= 0)
         {
             sIsBleMsRunning = false;
-            otCordioPlatAlarmTickFired(aInstance);
+            otCordioPlatAlarmTickFired();
         }
     }
 #endif // OPENTHREAD_ENABLE_BLE_HOST
@@ -275,7 +275,7 @@ void platformAlarmProcess(otInstance *aInstance)
         if (remaining <= 0)
         {
             sIsBleUsRunning = false;
-            platformBleAlarmMicroFired(aInstance);
+            platformBleAlarmMicroFired();
         }
     }
 #endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
@@ -294,18 +294,14 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sBleMsAlarm     = aT0 + aDt;
     sIsBleMsRunning = true;
 }
 
-void otCordioPlatAlarmTickStop(otInstance *aInstance)
+void otCordioPlatAlarmTickStop(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     sIsBleMsRunning = false;
 }
 
@@ -324,17 +320,15 @@ void otCordioPlatAlarmDisableInterrupt(void)
 #endif // OPENTHREAD_ENABLE_BLE_HOST
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-void platformBleAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void platformBleAlarmMicroStartAt(uint32_t aT0, uint32_t aDt)
 {
     sBleUsAlarm     = aT0 + aDt;
     sIsBleUsRunning = true;
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void platformBleAlarmMicroStop(otInstance *aInstance)
+void platformBleAlarmMicroStop(void)
 {
     sIsBleUsRunning = false;
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
 uint32_t platformBleAlarmMicroGetNow(void)

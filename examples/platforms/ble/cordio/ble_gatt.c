@@ -43,8 +43,8 @@
 
 #include <string.h>
 
-#include "cordio/ble_gap.h"
 #include "cordio/ble_config.h"
+#include "cordio/ble_gap.h"
 #include "cordio/ble_init.h"
 #include "cordio/ble_utils.h"
 #include "utils/code_utils.h"
@@ -133,10 +133,10 @@ static GapService sGapService = {
     .mService.startHandle = 0,
 };
 static GattService sGattService = {.mService.startHandle = 0,
-                                    .mCharacteristicIndex = 0,
-                                    .mAttributeIndex      = 0,
-                                    .mLengthArrayIndex    = 0};
-static Cccd        sCccd         = {.mCccdIndex = 0};
+                                   .mCharacteristicIndex = 0,
+                                   .mAttributeIndex      = 0,
+                                   .mLengthArrayIndex    = 0};
+static Cccd        sCccd        = {.mCccdIndex = 0};
 
 static otPlatBleUuid sServiceDiscoverUuid;
 
@@ -1025,7 +1025,7 @@ otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGatt
     otEXPECT((error = AddPrimaryServiceAttribute(&aServices->mUuid, &aServices->mHandle)) == OT_ERROR_NONE);
 
     sGattService.mService.startHandle = sGattHandle;
-    characteristic                     = aServices->mCharacteristics;
+    characteristic                    = aServices->mCharacteristics;
 
     while (characteristic->mUuid.mType != OT_BLE_UUID_TYPE_NONE)
     {

@@ -112,11 +112,11 @@ void bleControllerInit(void)
     otEXPECT(!initialized);
 
     initialized     = true;
-    sBbRtCfg.clkPpm = otCordioPlatRadioGetXtalAccuracy(bleGetThreadInstance());
+    sBbRtCfg.clkPpm = otCordioPlatRadioGetXtalAccuracy();
 
     assert(LlInitControllerInit(&sLlInitRtCfg) != 0);
 
-    otCordioPlatRadioGetPublicAddress(bleGetThreadInstance(), &bdaddr);
+    otCordioPlatRadioGetPublicAddress(&bdaddr);
     LlSetBdAddr(bdaddr.mAddr);
 
 exit:
