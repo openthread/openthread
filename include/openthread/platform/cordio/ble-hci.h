@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for BLE HCI communication.
+ *   This file includes the platform abstraction for Cordio BLE HCI communication.
  */
 
 #ifndef OPENTHREAD_PLATFORM_BLE_HCI_H_
@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup plat-ble-hci
+ * @addtogroup plat-cordio-hci
  *
  * @brief
  *   This module includes the platform abstraction for BLE HCI communication.
@@ -60,7 +60,7 @@ extern "C" {
  * @retval OT_ERROR_FAILED  Failed to enabled the BLE HCI.
  *
  */
-otError otPlatBleHciEnable(void);
+otError otCordioPlatHciEnable(void);
 
 /**
  * Disable the BLE HCI.
@@ -69,7 +69,7 @@ otError otPlatBleHciEnable(void);
  * @retval OT_ERROR_FAILED  Failed to disable the BLE HCI.
  *
  */
-otError otPlatBleHciDisable(void);
+otError otCordioPlatHciDisable(void);
 
 /**
  * Send bytes over the BLE HCI.
@@ -81,13 +81,13 @@ otError otPlatBleHciDisable(void);
  * @retval OT_ERROR_FAILED  Failed to start the transmission.
  *
  */
-otError otPlatBleHciSend(const uint8_t *aBuf, uint16_t aBufLength);
+otError otCordioPlatHciSend(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * The BLE HCI driver calls this method to notify OpenThread that the requested bytes have been sent.
  *
  */
-extern void otPlatBleHciSendDone(void);
+extern void otCordioPlatHciSendDone(void);
 
 /**
  * The BLE HCI driver calls this method to notify OpenThread that bytes have been received.
@@ -96,19 +96,19 @@ extern void otPlatBleHciSendDone(void);
  * @param[in]  aBufLength  The number of bytes received.
  *
  */
-extern void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength);
+extern void otCordioPlatHciReceived(uint8_t *aBuf, uint8_t aBufLength);
 
 /*
  * Enable HCI driver interrupt.
  *
  */
-void otPlatBleHciEnableInterrupt(void);
+void otCordioPlatHciEnableInterrupt(void);
 
 /*
  * Disable HCI driver interrupt.
  *
  */
-void otPlatBleHciDisableInterrupt(void);
+void otCordioPlatHciDisableInterrupt(void);
 
 /**
  * @}

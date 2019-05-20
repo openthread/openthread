@@ -120,7 +120,7 @@ static uint32_t bleRadioComputeCrc24(uint32_t aCrcInit, const uint8_t *aData, ui
     return crc;
 }
 
-otError otPlatRadioBleEnable(otInstance *aInstance)
+otError otCordioPlatRadioEnable(otInstance *aInstance)
 {
     if (sState == OT_BLE_RADIO_STATE_DISABLED)
     {
@@ -131,7 +131,7 @@ otError otPlatRadioBleEnable(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioBleDisable(otInstance *aInstance)
+otError otCordioPlatRadioDisable(otInstance *aInstance)
 {
     if (sState != OT_BLE_RADIO_STATE_DISABLED)
     {
@@ -143,27 +143,27 @@ otError otPlatRadioBleDisable(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioBleEnableInterrupt(void)
+void otCordioPlatRadioEnableInterrupt(void)
 {
 }
 
-void otPlatRadioBleDisableInterrupt(void)
+void otCordioPlatRadioDisableInterrupt(void)
 {
 }
 
-uint32_t otPlatRadioBleGetTickNow(otInstance *aInstance)
+uint32_t otCordioPlatRadioGetTickNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return platformBleAlarmMicroGetNow();
 }
 
-int8_t otPlatRadioBleGetTransmitPower(otInstance *aInstance)
+int8_t otCordioPlatRadioGetTransmitPower(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sTxPower;
 }
 
-otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower)
+otError otCordioPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -171,7 +171,7 @@ otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioBleSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
+otError otCordioPlatRadioSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
 {
     sChannelParams = *aChannelParams;
 
@@ -179,19 +179,19 @@ otError otPlatRadioBleSetChannelParameters(otInstance *aInstance, const otRadioB
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioBleEnableTifs(otInstance *aInstance)
+void otCordioPlatRadioEnableTifs(otInstance *aInstance)
 {
     sTifsEnabled = true;
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioBleDisableTifs(otInstance *aInstance)
+void otCordioPlatRadioDisableTifs(otInstance *aInstance)
 {
     sTifsEnabled = false;
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatRadioBleTransmitAtTime(otInstance *                aInstance,
+otError otCordioPlatRadioTransmitAtTime(otInstance *                aInstance,
                                      otRadioBleBufferDescriptor *aBufferDescriptors,
                                      uint8_t                     aNumBufferDescriptors,
                                      const otRadioBleTime *      aStartTime)
@@ -226,7 +226,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleTransmitAtTifs(otInstance *                aInstance,
+otError otCordioPlatRadioTransmitAtTifs(otInstance *                aInstance,
                                      otRadioBleBufferDescriptor *aBufferDescriptors,
                                      uint8_t                     aNumBufferDescriptors)
 {
@@ -252,7 +252,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTime(otInstance *                aInstance,
+otError otCordioPlatRadioReceiveAtTime(otInstance *                aInstance,
                                     otRadioBleBufferDescriptor *aBufferDescriptor,
                                     const otRadioBleTime *      aStartTime)
 {
@@ -282,7 +282,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
+otError otCordioPlatRadioReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
@@ -297,7 +297,7 @@ exit:
     return error;
 }
 
-void otPlatRadioBleCancelData(otInstance *aInstance)
+void otCordioPlatRadioCancelData(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE))
     {
@@ -308,7 +308,7 @@ void otPlatRadioBleCancelData(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioBleCancelTifs(otInstance *aInstance)
+void otCordioPlatRadioCancelTifs(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
     {
@@ -322,13 +322,13 @@ void otPlatRadioBleCancelTifs(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint8_t otPlatRadioBleGetXtalAccuracy(otInstance *aInstance)
+uint8_t otCordioPlatRadioGetXtalAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return 100;
 }
 
-void otPlatRadioBleGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
+void otCordioPlatRadioGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
 {
     memset(aAddress, 0, sizeof(otPlatBleDeviceAddr));
 
@@ -359,7 +359,7 @@ void platformBleAlarmMicroFired(otInstance *aInstance)
         else
         {
             sState = OT_BLE_RADIO_STATE_IDLE;
-            otPlatRadioBleTransmitDone(aInstance, OT_ERROR_FAILED);
+            otCordioPlatRadioTransmitDone(aInstance, OT_ERROR_FAILED);
         }
 
         break;
@@ -383,14 +383,14 @@ void platformBleAlarmMicroFired(otInstance *aInstance)
         else
         {
             sState = OT_BLE_RADIO_STATE_IDLE;
-            otPlatRadioBleReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_FAILED);
+            otCordioPlatRadioReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_FAILED);
         }
 
         break;
 
     case OT_BLE_RADIO_STATE_RECEIVE:
         sState = OT_BLE_RADIO_STATE_IDLE;
-        otPlatRadioBleReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
+        otCordioPlatRadioReceiveDone(aInstance, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
         break;
 
     default:
@@ -508,7 +508,7 @@ static void bleRadioSendMessage(otInstance *aInstance)
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
 
-    otPlatRadioBleTransmitDone(aInstance, OT_ERROR_NONE);
+    otCordioPlatRadioTransmitDone(aInstance, OT_ERROR_NONE);
 }
 
 static void bleRadioReceive(otInstance *aInstance)
@@ -566,7 +566,7 @@ static void bleRadioReceive(otInstance *aInstance)
                                          BLE_RADIO_TIFS_US - BLE_RADIO_RAMP_UP_US);
         }
 
-        otPlatRadioBleReceiveDone(aInstance, &rxInfo, error);
+        otCordioPlatRadioReceiveDone(aInstance, &rxInfo, error);
     }
 
 exit:

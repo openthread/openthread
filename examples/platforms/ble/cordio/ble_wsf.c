@@ -67,29 +67,29 @@ void wsf_mbed_ble_signal_event(void)
 
 void wsf_mbed_os_critical_section_enter(void)
 {
-    otPlatBleAlarmDisableInterrupt();
+    otCordioPlatAlarmDisableInterrupt();
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-    otPlatRadioBleDisableInterrupt();
+    otCordioPlatRadioDisableInterrupt();
 #else
-    otPlatBleHciDisableInterrupt();
+    otCordioPlatHciDisableInterrupt();
 #endif
 }
 
 void wsf_mbed_os_critical_section_exit(void)
 {
-    otPlatBleAlarmEnableInterrupt();
+    otCordioPlatAlarmEnableInterrupt();
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-    otPlatRadioBleEnableInterrupt();
+    otCordioPlatRadioEnableInterrupt();
 #else
-    otPlatBleHciEnableInterrupt();
+    otCordioPlatHciEnableInterrupt();
 #endif
 }
 
 void bleWsfInit(void)
 {
-    sLastUpdateMs = otPlatBleAlarmTickGetNow();
+    sLastUpdateMs = otCordioPlatAlarmTickGetNow();
 }
 
 bool otPlatBleTaskletsArePending(otInstance *aInstance)
@@ -110,7 +110,7 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
     sTaskletsPending = false;
 
-    now   = otPlatBleAlarmTickGetNow();
+    now   = otCordioPlatAlarmTickGetNow();
     delta = (now > sLastUpdateMs) ? (now - sLastUpdateMs) : (sLastUpdateMs - now);
     ticks = delta / WSF_MS_PER_TICK;
 
@@ -128,7 +128,7 @@ void otPlatBleTaskletsProcess(otInstance *aInstance)
 
         if (timerRunning)
         {
-            otPlatBleAlarmTickStartAt(aInstance, now, nextTimestamp);
+            otCordioPlatAlarmTickStartAt(aInstance, now, nextTimestamp);
         }
     }
 
@@ -138,7 +138,7 @@ exit:
     return;
 }
 
-void otPlatBleAlarmTickFired(otInstance *aInstance)
+void otCordioPlatAlarmTickFired(otInstance *aInstance)
 {
     otPlatBleTaskletsProcess(aInstance);
 }

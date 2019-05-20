@@ -205,24 +205,24 @@ void platformBleHciDeinit(void)
     sBleSerialFd = -1;
 }
 
-bool otPlatBleHciIsEnabled(void)
+bool otCordioPlatHciIsEnabled(void)
 {
     return sBleSerialEnabled;
 }
 
-otError otPlatBleHciEnable(void)
+otError otCordioPlatHciEnable(void)
 {
     sBleSerialEnabled = true;
     return OT_ERROR_NONE;
 }
 
-otError otPlatBleHciDisable(void)
+otError otCordioPlatHciDisable(void)
 {
     sBleSerialEnabled = true;
     return OT_ERROR_NONE;
 }
 
-otError otPlatBleHciSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otCordioPlatHciSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -282,7 +282,7 @@ void platformBleHciProcess(otInstance *aInstance)
         otEXPECT_ACTION((rval = read(sBleSerialFd, sRxBuffer, sizeof(sRxBuffer))) > 0, errStr = "read");
         if (sBleSerialEnabled)
         {
-            otPlatBleHciReceived(sRxBuffer, (uint8_t)rval);
+            otCordioPlatHciReceived(sRxBuffer, (uint8_t)rval);
         }
     }
 
@@ -298,7 +298,7 @@ void platformBleHciProcess(otInstance *aInstance)
 
         if (sTxLength == 0 && sBleSerialEnabled)
         {
-            otPlatBleHciSendDone();
+            otCordioPlatHciSendDone();
         }
     }
 
@@ -312,11 +312,11 @@ exit:
     }
 }
 
-void otPlatBleHciEnableInterrupt(void)
+void otCordioPlatHciEnableInterrupt(void)
 {
 }
 
-void otPlatBleHciDisableInterrupt(void)
+void otCordioPlatHciDisableInterrupt(void)
 {
 }
 
@@ -324,11 +324,11 @@ void otPlatBleHciDisableInterrupt(void)
  * The BLE HCI Uart driver weak functions definition.
  *
  */
-OT_TOOL_WEAK void otPlatBleHciSendDone(void)
+OT_TOOL_WEAK void otCordioPlatHciSendDone(void)
 {
 }
 
-OT_TOOL_WEAK void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
+OT_TOOL_WEAK void otCordioPlatHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 {
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);

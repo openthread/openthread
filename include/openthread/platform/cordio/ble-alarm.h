@@ -44,17 +44,17 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup plat-ble-alarm
+ * @addtogroup plat-cordio-alarm
  *
  * @brief
- *   This module includes the platform abstraction for the BLE stack alarm service.
+ *   This module includes the platform abstraction for the Cordio BLE stack alarm service.
  *
  * @{
  *
  */
 
 /**
- * Set the alarm for BLE stack to fire at @p aDt ticks after @p aT0.
+ * Set the alarm for Cordio BLE stack to fire at @p aDt ticks after @p aT0.
  *
  * @note The clock should increment at the rate OPENTHREAD_CONFIG_BLE_MS_PER_TICKS (wrapping as appropriate).
  *
@@ -62,40 +62,40 @@ extern "C" {
  * @param[in] aT0        The reference time.
  * @param[in] aDt        The time delay in ticks from @p aT0.
  */
-void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm for the BLE stack.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-void otPlatBleAlarmTickStop(otInstance *aInstance);
+void otCordioPlatAlarmTickStop(otInstance *aInstance);
 
 /**
  * Signal that the alarm for the BLE stack has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-uint32_t otPlatBleAlarmTickGetNow(void);
+uint32_t otCordioPlatAlarmTickGetNow(void);
 
 /**
  * Signal BLE stack that the alarm has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatBleAlarmTickFired(otInstance *aInstance);
+extern void otCordioPlatAlarmTickFired(otInstance *aInstance);
 
 /*
  * Enable BLE alarm timer interrupt.
  *
  */
-void otPlatBleAlarmEnableInterrupt(void);
+void otCordioPlatAlarmEnableInterrupt(void);
 
 /*
  * Disable BLE alarm timer interrupt.
  *
  */
-void otPlatBleAlarmDisableInterrupt(void);
+void otCordioPlatAlarmDisableInterrupt(void);
 
 /**
  * @}

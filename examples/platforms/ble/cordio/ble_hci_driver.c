@@ -144,7 +144,7 @@ static uint16_t sSendLength = 0;
 static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
 static void     bleHciHandleSendDone(void);
 
-void otPlatBleHciReceived(uint8_t *aBuf, uint8_t aBufLength)
+void otCordioPlatHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 {
     hciTrSerialRxIncoming(aBuf, aBufLength);
 }
@@ -154,19 +154,19 @@ uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
     return bleHciOutput(type, pData, len);
 }
 
-void otPlatBleHciSendDone(void)
+void otCordioPlatHciSendDone(void)
 {
     bleHciHandleSendDone();
 }
 
 void bleHciEnable(void)
 {
-    otPlatBleHciEnable();
+    otCordioPlatHciEnable();
 }
 
 void bleHciDisable(void)
 {
-    otPlatBleHciDisable();
+    otCordioPlatHciDisable();
 }
 
 static void bleHciSend(void)
@@ -184,7 +184,7 @@ static void bleHciSend(void)
 
     if (sSendLength > 0)
     {
-        otPlatBleHciSend((uint8_t *)(sTxBuffer + sTxHead), sSendLength);
+        otCordioPlatHciSend((uint8_t *)(sTxBuffer + sTxHead), sSendLength);
     }
 
 exit:

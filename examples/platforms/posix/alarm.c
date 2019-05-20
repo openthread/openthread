@@ -165,7 +165,7 @@ static int64_t getMinUsRemaining(void)
 #if OPENTHREAD_ENABLE_BLE_HOST
     if (sIsBleMsRunning)
     {
-        usRemaining    = (int64_t)(sBleMsAlarm - otPlatBleAlarmTickGetNow()) * US_PER_MS;
+        usRemaining    = (int64_t)(sBleMsAlarm - otCordioPlatAlarmTickGetNow()) * US_PER_MS;
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 #endif
@@ -257,12 +257,12 @@ void platformAlarmProcess(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_BLE_HOST
     if (sIsBleMsRunning)
     {
-        remaining = (int32_t)(sBleMsAlarm - otPlatBleAlarmTickGetNow());
+        remaining = (int32_t)(sBleMsAlarm - otCordioPlatAlarmTickGetNow());
 
         if (remaining <= 0)
         {
             sIsBleMsRunning = false;
-            otPlatBleAlarmTickFired(aInstance);
+            otCordioPlatAlarmTickFired(aInstance);
         }
     }
 #endif // OPENTHREAD_ENABLE_BLE_HOST
@@ -294,7 +294,7 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 #if OPENTHREAD_ENABLE_BLE_HOST
-void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otCordioPlatAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -302,23 +302,23 @@ void otPlatBleAlarmTickStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt
     sIsBleMsRunning = true;
 }
 
-void otPlatBleAlarmTickStop(otInstance *aInstance)
+void otCordioPlatAlarmTickStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     sIsBleMsRunning = false;
 }
 
-uint32_t otPlatBleAlarmTickGetNow(void)
+uint32_t otCordioPlatAlarmTickGetNow(void)
 {
     return otPlatAlarmMilliGetNow();
 }
 
-void otPlatBleAlarmEnableInterrupt(void)
+void otCordioPlatAlarmEnableInterrupt(void)
 {
 }
 
-void otPlatBleAlarmDisableInterrupt(void)
+void otCordioPlatAlarmDisableInterrupt(void)
 {
 }
 #endif // OPENTHREAD_ENABLE_BLE_HOST

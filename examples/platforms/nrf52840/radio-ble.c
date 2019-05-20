@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+#include <openthread/config.h>
+
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "platform-nrf5.h"
 
@@ -237,7 +240,7 @@ void TIMER0_IRQ_HANDLER(void)
                 NRF_PPI->CHENCLR = PPI_CHEN_CH21_Msk;
                 sState           = OT_BLE_RADIO_STATE_IDLE;
 
-                otPlatRadioBleTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
+                otCordioPlatRadioTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
             }
 
             break;
@@ -257,7 +260,7 @@ void TIMER0_IRQ_HANDLER(void)
                 NRF_PPI->CHENCLR = PPI_CHEN_CH20_Msk;
                 sState           = OT_BLE_RADIO_STATE_IDLE;
 
-                otPlatRadioBleReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
+                otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
             }
             break;
 
@@ -312,7 +315,7 @@ void BLE_RADIO_IRQ_HANDLER(void)
 
             sState = OT_BLE_RADIO_STATE_IDLE;
 
-            otPlatRadioBleReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
+            otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_RX_TIMEOUT);
         }
         else if (sState == OT_BLE_RADIO_STATE_TRANSMIT)
         {
@@ -391,7 +394,7 @@ static void ble_phy_tx_end_isr(void)
         sState = OT_BLE_RADIO_STATE_IDLE;
     }
 
-    otPlatRadioBleTransmitDone(NULL, OT_ERROR_NONE);
+    otCordioPlatRadioTransmitDone(NULL, OT_ERROR_NONE);
 }
 
 static bool ble_phy_rx_start_isr(void)
@@ -520,7 +523,7 @@ static void ble_phy_rx_end_isr(void)
         error = OT_BLE_RADIO_ERROR_CRC;
     }
 
-    otPlatRadioBleReceiveDone(NULL, &sReceiveInfo, error);
+    otCordioPlatRadioReceiveDone(NULL, &sReceiveInfo, error);
 }
 
 /**
@@ -990,7 +993,7 @@ void ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
     NRF_RADIO->DATAWHITEIV = chan;
 }
 
-otError otPlatRadioBleSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
+otError otCordioPlatRadioSetChannelParameters(otInstance *aInstance, const otRadioBleChannelParams *aChannelParams)
 {
     ble_phy_setchan(aChannelParams->mChannel, aChannelParams->mAccessAddress, aChannelParams->mCrcInit);
 
@@ -1002,7 +1005,7 @@ otError SetRadioTxStartTime(const otRadioBleTime *aStartTime)
     return ble_phy_tx_set_start_time(aStartTime->mTicks, aStartTime->mOffsetUs);
 }
 
-otError otPlatRadioBleTransmitAtTime(otInstance *                aInstance,
+otError otCordioPlatRadioTransmitAtTime(otInstance *                aInstance,
                                      otRadioBleBufferDescriptor *aBufferDescriptors,
                                      uint8_t                     aNumBufferDescriptors,
                                      const otRadioBleTime *      aStartTime)
@@ -1029,7 +1032,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleTransmitAtTifs(otInstance *                aInstance,
+otError otCordioPlatRadioTransmitAtTifs(otInstance *                aInstance,
                                      otRadioBleBufferDescriptor *aBufferDescriptors,
                                      uint8_t                     aNumBufferDescriptors)
 {
@@ -1078,7 +1081,7 @@ otError SetRadioRxStartTime(const otRadioBleTime *aStartTime)
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTime(otInstance *                aInstance,
+otError otCordioPlatRadioReceiveAtTime(otInstance *                aInstance,
                                     otRadioBleBufferDescriptor *aBufferDescriptor,
                                     const otRadioBleTime *      aStartTime)
 {
@@ -1096,7 +1099,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
+otError otCordioPlatRadioReceiveAtTifs(otInstance *aInstance, otRadioBleBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1116,7 +1119,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioBleEnable(otInstance *aInstance)
+otError otCordioPlatRadioEnable(otInstance *aInstance)
 {
     if (sState == OT_BLE_RADIO_STATE_DISABLED)
     {
@@ -1127,7 +1130,7 @@ otError otPlatRadioBleEnable(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioBleDisable(otInstance *aInstance)
+otError otCordioPlatRadioDisable(otInstance *aInstance)
 {
     if (sState != OT_BLE_RADIO_STATE_DISABLED)
     {
@@ -1135,12 +1138,12 @@ otError otPlatRadioBleDisable(otInstance *aInstance)
 
         if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
         {
-            otPlatRadioBleTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
+            otCordioPlatRadioTransmitDone(NULL, OT_BLE_RADIO_ERROR_FAILED);
         }
 
         if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS))
         {
-            otPlatRadioBleReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
+            otCordioPlatRadioReceiveDone(NULL, NULL, OT_BLE_RADIO_ERROR_FAILED);
         }
 
         sState = OT_BLE_RADIO_STATE_DISABLED;
@@ -1150,20 +1153,20 @@ otError otPlatRadioBleDisable(otInstance *aInstance)
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioBleEnableTifs(otInstance *aInstance)
+void otCordioPlatRadioEnableTifs(otInstance *aInstance)
 {
     sTifsEnabled = true;
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioBleDisableTifs(otInstance *aInstance)
+void otCordioPlatRadioDisableTifs(otInstance *aInstance)
 {
     sTifsEnabled = false;
 
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioBleCancelData(otInstance *aInstance)
+void otCordioPlatRadioCancelData(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT) || (sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE))
     {
@@ -1174,7 +1177,7 @@ void otPlatRadioBleCancelData(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioBleCancelTifs(otInstance *aInstance)
+void otCordioPlatRadioCancelTifs(otInstance *aInstance)
 {
     if ((sState == OT_BLE_RADIO_STATE_WAITING_RECEIVE_TIFS) || (sState == OT_BLE_RADIO_STATE_WAITING_TRANSMIT_TIFS))
     {
@@ -1188,7 +1191,7 @@ void otPlatRadioBleCancelTifs(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint32_t otPlatRadioBleGetTickNow(otInstance *aInstance)
+uint32_t otCordioPlatRadioGetTickNow(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return NRF_RTC0->COUNTER;
@@ -1235,13 +1238,13 @@ int8_t ble_phy_txpower_round(int dbm)
     return (int8_t)RADIO_TXPOWER_TXPOWER_Neg40dBm;
 }
 
-int8_t otPlatRadioBleGetTransmitPower(otInstance *aInstance)
+int8_t otCordioPlatRadioGetTransmitPower(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sTxPower;
 }
 
-otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower)
+otError otCordioPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -1250,13 +1253,13 @@ otError otPlatRadioBleSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NONE;
 }
 
-uint8_t otPlatRadioBleGetXtalAccuracy(otInstance *aInstance)
+uint8_t otCordioPlatRadioGetXtalAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return 20;
 }
 
-void otPlatRadioBleGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
+void otCordioPlatRadioGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *aAddress)
 {
     memset(aAddress, 0, sizeof(otPlatBleDeviceAddr));
     aAddress->mAddrType            = OT_BLE_ADDRESS_TYPE_PUBLIC;
@@ -1266,23 +1269,23 @@ void otPlatRadioBleGetPublicAddress(otInstance *aInstance, otPlatBleDeviceAddr *
     return;
 }
 
-void otPlatRadioBleEnableInterrupt(void)
+void otCordioPlatRadioEnableInterrupt(void)
 {
     NVIC_EnableIRQ(RADIO_IRQn);
 }
 
-void otPlatRadioBleDisableInterrupt(void)
+void otCordioPlatRadioDisableInterrupt(void)
 {
     NVIC_DisableIRQ(RADIO_IRQn);
 }
 
-OT_TOOL_WEAK void otPlatRadioBleTransmitDone(otInstance *aInstance, otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioTransmitDone(otInstance *aInstance, otRadioBleError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aError);
 }
 
-OT_TOOL_WEAK void otPlatRadioBleReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioReceiveDone(otInstance *aInstance, otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRxInfo);
