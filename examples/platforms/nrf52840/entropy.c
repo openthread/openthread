@@ -37,6 +37,7 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,8 @@
 #include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
+
+static volatile bool sEntropyGetEntered;
 
 #if SOFTDEVICE_PRESENT
 #include "softdevice.h"
@@ -193,6 +196,9 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     uint8_t  copyLength;
     uint16_t index = 0;
 
+    assert(!sEntropyGetEntered);
+    sEntropyGetEntered = true;
+
     otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     do
@@ -228,5 +234,7 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     } while (index < aOutputLength);
 
 exit:
+    sEntropyGetEntered = false;
+
     return error;
 }
