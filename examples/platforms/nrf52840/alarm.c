@@ -42,13 +42,8 @@
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
-#ifdef OPENTHREAD_ENABLE_BLE_HOST
-#include <openthread/platform/cordio/ble-alarm.h>
-#endif
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
-
-#include "utils/code_utils.h"
 
 #include "openthread-system.h"
 
@@ -109,8 +104,6 @@ static volatile uint8_t  sMutex;           ///< Mutex for write access to @ref s
 static volatile uint64_t sTimeOffset = 0;  ///< Time overflowCounter to keep track of current time (in millisecond).
 static volatile bool     sEventPending;    ///< Timer fired and upper layer should be notified.
 static AlarmData         sTimerData[kNumTimers]; ///< Data of the timers.
-
-void MsTimerFired(otInstance *aInstance);
 
 static const AlarmChannelData sChannelData[kNumTimers] = //
     {                                                    //
@@ -512,7 +505,7 @@ void nrf5AlarmProcess(otInstance *aInstance)
             else
 #endif
             {
-                MsTimerFired(aInstance);
+                otPlatAlarmMilliFired(aInstance);
             }
         }
 
@@ -530,175 +523,23 @@ inline uint64_t nrf5AlarmGetCurrentTime(void)
     return GetCurrentTime(kUsTimer);
 }
 
-enum
-{
-    kOtMsTimer,
-#ifdef OPENTHREAD_ENABLE_BLE_HOST
-    kBleMsTimer,
-#endif
-    kNumSoftTimers,
-    kInvalidTimer,
-};
-
-enum
-{
-    kStateStopped = 0,
-    kStatePending = 1,
-    kStateRuning  = 2,
-};
-
-typedef struct SoftTimer
-{
-    uint8_t  mState;
-    uint32_t mT0;
-    uint32_t mDt;
-} SoftTimer;
-
-static SoftTimer sSoftTimers[kNumSoftTimers];
-
-void MsTimerFired(otInstance *aInstance)
-{
-    uint64_t now = GetCurrentTime(kMsTimer);
-    uint64_t firedTime;
-
-    if (sSoftTimers[kOtMsTimer].mState != kStateStopped)
-    {
-        firedTime = ConvertT0AndDtTo64BitTime(sSoftTimers[kOtMsTimer].mT0, sSoftTimers[kOtMsTimer].mDt, &now);
-        if ((firedTime <= now) && (now - firedTime < (UINT32_MAX / 2)))
-        {
-            sSoftTimers[kOtMsTimer].mState = kStateStopped;
-            otPlatAlarmMilliFired(aInstance);
-        }
-    }
-
-#if OPENTHREAD_ENABLE_BLE_HOST
-    if (sSoftTimers[kBleMsTimer].mState != kStateStopped)
-    {
-        firedTime = ConvertT0AndDtTo64BitTime(sSoftTimers[kBleMsTimer].mT0, sSoftTimers[kBleMsTimer].mDt, &now);
-        if ((firedTime <= now) && (now - firedTime < (UINT32_MAX / 2)))
-        {
-            sSoftTimers[kBleMsTimer].mState = kStateStopped;
-            otCordioPlatAlarmTickFired();
-        }
-    }
-#endif
-}
-
-uint8_t GetRunningTimer(void)
-{
-    uint8_t timer = kInvalidTimer;
-
-    for (uint8_t i = 0; i < kNumSoftTimers; i++)
-    {
-        if (sSoftTimers[i].mState == kStateRuning)
-        {
-            timer = i;
-            break;
-        }
-    }
-
-    return timer;
-}
-
-uint8_t GetFirstFiredTimer(void)
-{
-    uint64_t now          = GetCurrentTime(kMsTimer);
-    uint8_t  timer        = kInvalidTimer;
-    uint64_t minFiredTime = UINT64_MAX;
-    uint64_t firedTime;
-
-    for (uint8_t i = 0; i < kNumSoftTimers; i++)
-    {
-        if (sSoftTimers[i].mState != kStateStopped)
-        {
-            firedTime = ConvertT0AndDtTo64BitTime(sSoftTimers[i].mT0, sSoftTimers[i].mDt, &now);
-
-            if (firedTime < minFiredTime)
-            {
-                minFiredTime = firedTime;
-                timer        = i;
-            }
-        }
-    }
-
-    return timer;
-}
-
-void LoadSoftTimer(void)
-{
-    uint8_t runningTimer = GetRunningTimer();
-    uint8_t pendingTimer = GetFirstFiredTimer();
-
-    otEXPECT(pendingTimer != kInvalidTimer);
-
-    if (runningTimer == kInvalidTimer)
-    {
-        sSoftTimers[pendingTimer].mState = kStateRuning;
-        AlarmStartAt(sSoftTimers[pendingTimer].mT0, sSoftTimers[pendingTimer].mDt, kMsTimer);
-    }
-    else if (runningTimer != pendingTimer)
-    {
-        sSoftTimers[runningTimer].mState = kStatePending;
-        sSoftTimers[pendingTimer].mState = kStateRuning;
-
-        AlarmStop(kMsTimer);
-        AlarmStartAt(sSoftTimers[pendingTimer].mT0, sSoftTimers[pendingTimer].mDt, kMsTimer);
-    }
-
-exit:
-    return;
-}
-
-#if OPENTHREAD_ENABLE_BLE_HOST
-void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt)
-{
-    sSoftTimers[kBleMsTimer].mT0    = aT0;
-    sSoftTimers[kBleMsTimer].mDt    = aDt;
-    sSoftTimers[kBleMsTimer].mState = kStatePending;
-
-    LoadSoftTimer();
-}
-
-void otCordioPlatAlarmTickStop(void)
-{
-    sSoftTimers[kBleMsTimer].mState = kStateStopped;
-}
-
-uint32_t otCordioPlatAlarmTickGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return (uint32_t)(nrf5AlarmGetCurrentTime() / US_PER_MS);
 }
-
-void otCordioPlatAlarmEnableInterrupt(void)
-{
-}
-
-void otCordioPlatAlarmDisableInterrupt(void)
-{
-}
-#endif // OPENTHREAD_ENABLE_BLE_HOST
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sSoftTimers[kOtMsTimer].mT0    = aT0;
-    sSoftTimers[kOtMsTimer].mDt    = aDt;
-    sSoftTimers[kOtMsTimer].mState = kStatePending;
-
-    LoadSoftTimer();
+    AlarmStartAt(aT0, aDt, kMsTimer);
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sSoftTimers[kOtMsTimer].mState = kStateStopped;
-}
-
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return (uint32_t)(nrf5AlarmGetCurrentTime() / US_PER_MS);
+    AlarmStop(kMsTimer);
 }
 
 uint32_t otPlatAlarmMicroGetNow(void)

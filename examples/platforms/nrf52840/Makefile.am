@@ -187,16 +187,4 @@ libopenthread_nrf52840_sdk_a_LIBADD                                             
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
-
-if OPENTHREAD_ENABLE_BLE
-libopenthread_nrf52840_a_LIBADD                                                                           += \
-    $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")
-
-libopenthread_nrf52840_sdk_a_LIBADD                                                                       += \
-    $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")
-
-libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                            += \
-    $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")
-endif
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

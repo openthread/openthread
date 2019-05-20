@@ -224,46 +224,6 @@
 #define RTC_IRQ_PRIORITY 6
 #endif
 
-/**
- * @def RTC0_IRQ_HANDLER
- *
- * RTC0 interrupt handler name
- *
- */
-#ifndef RTC0_IRQ_HANDLER
-#define RTC0_IRQ_HANDLER RTC0_IRQHandler
-#endif
-
-/**
- * @def TIMER0_IRQ_HANDLER
- *
- * TIMER0 interrupt handler name
- *
- */
-#ifndef TIMER0_IRQ_HANDLER
-#define TIMER0_IRQ_HANDLER TIMER0_IRQHandler
-#endif
-
-/**
- * @def TIMER0_IRQN
- *
- * TIMER0 Interrupt number.
- *
- */
-#ifndef TIMER0_IRQN
-#define TIMER0_IRQN TIMER0_IRQn
-#endif
-
-/**
- * @def BLE_RADIO_IRQ_HANDLER
- *
- * RADIO interrupt handler name
- *
- */
-#ifndef BLE_RADIO_IRQ_HANDLER
-#define BLE_RADIO_IRQ_HANDLER BLE_RADIO_IRQHandler
-#endif
-
 /*******************************************************************************
  * @section Random Number Generator Driver Configuration.
  ******************************************************************************/

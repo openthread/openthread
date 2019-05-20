@@ -232,13 +232,13 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 void nrf5RadioInit(void)
 {
     dataInit();
-    // nrf_802154_init();
+    nrf_802154_init();
 }
 
 void nrf5RadioDeinit(void)
 {
-    // nrf_802154_sleep();
-    // nrf_802154_deinit();
+    nrf_802154_sleep();
+    nrf_802154_deinit();
     sPendingEvents = 0;
 }
 
