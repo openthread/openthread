@@ -45,14 +45,12 @@ DIST_SUBDIRS                            = \
     qpg6095                               \
     samr21                                \
     utils                                 \
-    ble                                   \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     utils                                 \
-    ble                                   \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_CC1352
@@ -128,7 +126,6 @@ PRETTY_SUBDIRS                          = \
     qpg6095                               \
     samr21                                \
     utils                                 \
-    ble                                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

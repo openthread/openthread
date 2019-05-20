@@ -73,7 +73,7 @@ Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
-if OPENTHREAD_ENABLE_BLE_HOST
+if OPENTHREAD_ENABLE_BLE
 libopenthread_posix_a_LIBADD             += \
     $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")
 endif

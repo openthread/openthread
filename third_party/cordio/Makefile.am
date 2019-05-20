@@ -16,6 +16,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Always package (e.g. for 'make dist') these subdirectories.
+
+DIST_SUBDIRS                            = \
+    ./../../examples/platforms/ble/cordio \
+    $(NULL)
+
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
+    ./../../examples/platforms/ble/cordio \
+    $(NULL)
+
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    ./../../examples/platforms/ble/cordio \
+    $(NULL)
+
 lib_LIBRARIES                                 = $(NULL)
 
 if OPENTHREAD_ENABLE_BLE_HOST

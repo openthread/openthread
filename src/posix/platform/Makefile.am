@@ -30,12 +30,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-posix.a
 
-if OPENTHREAD_ENABLE_BLE_HOST
-SUBDIRS                                                                = \
-    ./../../../examples/platforms/ble/cordio                             \
-    $(NULL)
-endif
-
 libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/src/core                \
@@ -90,7 +84,7 @@ PRETTY_FILES                              = \
     $(noinst_HEADERS)                       \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BLE_HOST
+if OPENTHREAD_ENABLE_BLE
 Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/ble/cordio $(Dash)type f $(Dash)name "*.o")

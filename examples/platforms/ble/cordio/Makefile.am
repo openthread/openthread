@@ -28,11 +28,11 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                        = libopenthread-platform-ble.a
+lib_LIBRARIES                        = libopenthread-platform-ble-cordio.a
 
 CORDIO_BLE_HOST_SRCDIR               = $(top_srcdir)/third_party/cordio/TARGET_CORDIO/
 
-libopenthread_platform_ble_a_CPPFLAGS                               = \
+libopenthread_platform_ble_cordio_a_CPPFLAGS                        = \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/examples/platforms                                \
     -I$(top_srcdir)/examples/platforms/ble                            \
@@ -46,8 +46,6 @@ libopenthread_platform_ble_a_CPPFLAGS                               = \
     -I$(CORDIO_BLE_HOST_SRCDIR)/stack_adaptation                      \
     $(NULL)
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
-
 CORDIO_BLE_CONTROLLER_SRCDIR         = $(top_srcdir)/third_party/cordio/TARGET_CORDIO_LL/
 
 CORDIO_BLE_CONTROLLER_CPPFLAGS                                            = \
@@ -59,29 +57,28 @@ CORDIO_BLE_CONTROLLER_CPPFLAGS                                            = \
     -I$(CORDIO_BLE_CONTROLLER_SRCDIR)/stack/platform/common/include/        \
     $(NULL)
 
-libopenthread_platform_ble_a_CPPFLAGS += $(CORDIO_BLE_CONTROLLER_CPPFLAGS)
-#endif
+libopenthread_platform_ble_cordio_a_CPPFLAGS += $(CORDIO_BLE_CONTROLLER_CPPFLAGS)
 
-libopenthread_platform_ble_a_SOURCES  = \
-    ble_bb_driver.c                     \
-    ble_controller_init.c               \
-    ble_gap.c                           \
-    ble_gatt.c                          \
-    ble_hci_driver.c                    \
-    ble_l2cap.c                         \
-    ble_wsf.c                           \
-    ble_init.c                          \
+libopenthread_platform_ble_cordio_a_SOURCES  = \
+    ble_bb_driver.c                            \
+    ble_controller_init.c                      \
+    ble_gap.c                                  \
+    ble_gatt.c                                 \
+    ble_hci_driver.c                           \
+    ble_l2cap.c                                \
+    ble_wsf.c                                  \
+    ble_init.c                                 \
     $(NULL)
 
-noinst_HEADERS                        = \
-    ble_config.h                        \
-    ble_controller_init.h               \
-    ble_gap.h                           \
-    ble_gatt.h                          \
-    ble_hci_driver.h                    \
-    ble_l2cap.h                         \
-    ble_init.h                          \
-    ble_utils.h                         \
+noinst_HEADERS                               = \
+    ble_config.h                               \
+    ble_controller_init.h                      \
+    ble_gap.h                                  \
+    ble_gatt.h                                 \
+    ble_hci_driver.h                           \
+    ble_l2cap.h                                \
+    ble_init.h                                 \
+    ble_utils.h                                \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

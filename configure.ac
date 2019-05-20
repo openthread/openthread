@@ -1750,6 +1750,24 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE_CONTROLLER], [test "${enable_ble_controlle
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE_CONTROLLER], [${OPENTHREAD_ENABLE_BLE_CONTROLLER}], [Define to 1 if you want to enable BLE Controller support])
 
 #
+# Support for BLE
+#
+
+if [test "${enable_ble_controller}" = "yes" || test "${enable_ble_host}" = "yes"]; then
+    enable_ble=yes
+    OPENTHREAD_ENABLE_BLE=1
+else
+    enable_ble=no
+    OPENTHREAD_ENABLE_BLE=0
+fi
+
+AC_MSG_CHECKING([whether to build with BLE support])
+AC_MSG_RESULT(${enable_ble})
+AC_SUBST(OPENTHREAD_ENABLE_BLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE], [test "${enable_ble}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE], [${OPENTHREAD_ENABLE_BLE}], [The value of this macro is determined by OPENTHREAD_ENABLE_BLE_HOST and OPENTHREAD_ENABLE_BLE_CONTROLLER. You should not directly change its value])
+
+#
 # Support for BLE L2CAP
 #
 
@@ -2068,7 +2086,6 @@ examples/apps/Makefile
 examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
-examples/platforms/ble/Makefile
 examples/platforms/ble/cordio/Makefile
 examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile

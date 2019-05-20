@@ -78,8 +78,10 @@ SUBDIRS                                += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
+if OPENTHREAD_ENABLE_BLE
 SUBDIRS                                += \
     cordio                                \
     $(NULL)
+endif # OPENTHREAD_ENABLE_BLE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
