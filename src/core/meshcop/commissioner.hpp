@@ -69,13 +69,16 @@ public:
      * This method starts the Commissioner service.
      *
      * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
+     * @param[in]  aJoinerCallback   A pointer to a function that is called when a joiner event occurs.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
      * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
      *
      */
-    otError Start(otCommissionerStateCallback aStateCallback, void *aCallbackContext);
+    otError Start(otCommissionerStateCallback  aStateCallback,
+                  otCommissionerJoinerCallback aJoinerCallback,
+                  void *                       aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
@@ -288,6 +291,9 @@ private:
                                               otError              aResult);
     void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
+    static void HandleCoapsConnected(bool aConnected, void *aContext);
+    void        HandleCoapsConnected(bool aConnected);
+
     static void HandleRelayReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -307,6 +313,7 @@ private:
     otError SendKeepAlive(void);
 
     void SetState(otCommissionerState aState);
+    void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);
 
     struct Joiner
     {
@@ -321,6 +328,7 @@ private:
     uint8_t    mJoinerIid[8];
     uint16_t   mJoinerPort;
     uint16_t   mJoinerRloc;
+    uint8_t    mJoinerIndex;
     TimerMilli mJoinerExpirationTimer;
 
     TimerMilli mTimer;
@@ -339,8 +347,9 @@ private:
 
     ProvisioningUrlTlv mProvisioningUrl;
 
-    otCommissionerStateCallback mStateCallback;
-    void *                      mCallbackContext;
+    otCommissionerStateCallback  mStateCallback;
+    otCommissionerJoinerCallback mJoinerCallback;
+    void *                       mCallbackContext;
 
     otCommissionerState mState;
 };

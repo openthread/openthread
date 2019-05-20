@@ -71,6 +71,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
     , mStateCallback(NULL)
+    , mJoinerCallback(NULL)
     , mCallbackContext(NULL)
     , mState(OT_COMMISSIONER_STATE_DISABLED)
 {
@@ -99,6 +100,14 @@ exit:
     return;
 }
 
+void Commissioner::SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId)
+{
+    if (mJoinerCallback)
+    {
+        mJoinerCallback(aEvent, &aJoinerId, mCallbackContext);
+    }
+}
+
 void Commissioner::AddCoapResources(void)
 {
     Get<Coap::Coap>().AddResource(mRelayReceive);
@@ -113,15 +122,37 @@ void Commissioner::RemoveCoapResources(void)
     Get<Coap::CoapSecure>().RemoveResource(mJoinerFinalize);
 }
 
-otError Commissioner::Start(otCommissionerStateCallback aStateCallback, void *aCallbackContext)
+void Commissioner::HandleCoapsConnected(bool aConnected, void *aContext)
+{
+    static_cast<Commissioner *>(aContext)->HandleCoapsConnected(aConnected);
+}
+
+void Commissioner::HandleCoapsConnected(bool aConnected)
+{
+    otCommissionerJoinerEvent event;
+    Mac::ExtAddress           joinerId;
+
+    event = aConnected ? OT_COMMISSIONER_JOINER_CONNECTED : OT_COMMISSIONER_JOINER_END;
+
+    memcpy(&joinerId, mJoinerIid, sizeof(joinerId));
+    joinerId.m8[0] ^= 0x2;
+
+    SignalJoinerEvent(event, joinerId);
+}
+
+otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
+                            otCommissionerJoinerCallback aJoinerCallback,
+                            void *                       aCallbackContext)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
+    Get<Coap::CoapSecure>().SetConnectedCallback(&Commissioner::HandleCoapsConnected, this);
 
     mStateCallback    = aStateCallback;
+    mJoinerCallback   = aJoinerCallback;
     mCallbackContext  = aCallbackContext;
     mTransmitAttempts = 0;
 
@@ -276,6 +307,8 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
     {
+        Mac::ExtAddress joinerId;
+
         if (!mJoiners[i].mValid)
         {
             continue;
@@ -309,24 +342,24 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
             mJoiners[i].mValid = false;
             UpdateJoinerExpirationTimer();
             SendCommissionerSet();
+
+            if (aEui64)
+            {
+                otLogInfoMeshCoP("Removed Joiner (%s)", aEui64->ToString().AsCString());
+            }
+            else
+            {
+                otLogInfoMeshCoP("Removed Joiner (*)");
+            }
+
+            ComputeJoinerId(mJoiners[i].mEui64, joinerId);
+            SignalJoinerEvent(OT_COMMISSIONER_JOINER_REMOVED, joinerId);
         }
 
         ExitNow(error = OT_ERROR_NONE);
     }
 
 exit:
-    if (error == OT_ERROR_NONE)
-    {
-        if (aEui64)
-        {
-            otLogInfoMeshCoP("Removed Joiner (%s)", aEui64->ToString().AsCString());
-        }
-        else
-        {
-            otLogInfoMeshCoP("Removed Joiner (*)");
-        }
-    }
-
     return error;
 }
 
@@ -833,7 +866,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
         mJoinerIid[0] ^= 0x2;
 
-        for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
+        for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
         {
             if (!mJoiners[i].mValid)
             {
@@ -847,8 +880,12 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
                 error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
                                                        static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
                 SuccessOrExit(error);
-                otLogInfoMeshCoP("found joiner, starting new session");
+                mJoinerIndex = i;
                 enableJoiner = true;
+
+                otLogInfoMeshCoP("found joiner, starting new session");
+                SignalJoinerEvent(OT_COMMISSIONER_JOINER_START, joinerId);
+
                 break;
             }
         }
@@ -947,7 +984,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Ip6::MessageInfo  joinerMessageInfo;
     MeshCoP::StateTlv stateTlv;
     Coap::Message *   message;
-    Mac::ExtAddress   extAddr;
+    Mac::ExtAddress   joinerId;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -974,9 +1011,15 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, joinerMessageInfo));
 
-    memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
-    extAddr.SetLocal(!extAddr.IsLocal());
-    RemoveJoiner(&extAddr, kRemoveJoinerDelay); // remove after kRemoveJoinerDelay (seconds)
+    memcpy(&joinerId, mJoinerIid, sizeof(joinerId));
+    joinerId.m8[0] ^= 0x2;
+    SignalJoinerEvent(OT_COMMISSIONER_JOINER_FINALIZE, joinerId);
+
+    if (!mJoiners[mJoinerIndex].mAny)
+    {
+        // remove after kRemoveJoinerDelay (seconds)
+        RemoveJoiner(&mJoiners[mJoinerIndex].mEui64, kRemoveJoinerDelay);
+    }
 
     otLogInfoMeshCoP("sent joiner finalize response");
 
