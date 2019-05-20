@@ -35,10 +35,6 @@
 #ifndef OPENTHREAD_ENTROPY_H_
 #define OPENTHREAD_ENTROPY_H_
 
-#include "openthread-core-config.h"
-
-#include "utils/wrap_stdint.h"
-
 #include <mbedtls/entropy.h>
 
 #ifdef __cplusplus

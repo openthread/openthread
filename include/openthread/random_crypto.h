@@ -35,9 +35,7 @@
 #ifndef OPENTHREAD_RANDOM_CRYPTO_H_
 #define OPENTHREAD_RANDOM_CRYPTO_H_
 
-#include "openthread-core-config.h"
-
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include <mbedtls/ctr_drbg.h>
 #include <openthread/error.h>
