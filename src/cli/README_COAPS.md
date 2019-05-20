@@ -57,10 +57,10 @@ Done
 coaps connected
 > coaps get test-resource
 Done
-coaps response from [fdde:ad00:beef:0:9903:14b:27e0:5744] with payload: 68656c6c6f576f726c6400
+coaps response from fdde:ad00:beef:0:9903:14b:27e0:5744 with payload: 68656c6c6f576f726c6400
 > coaps put test-resource con payload
 Done
-coaps response from [fdde:ad00:beef:0:9903:14b:27e0:5744]
+coaps response from fdde:ad00:beef:0:9903:14b:27e0:5744
 ```
 
 ### Result
@@ -68,9 +68,9 @@ coaps response from [fdde:ad00:beef:0:9903:14b:27e0:5744]
 On node 1, you should see output similar to below:
 
 ```bash
-coaps request from [fdde:ad00:beef:0:9e68:576f:714c:f395] GET
+coaps request from fdde:ad00:beef:0:9e68:576f:714c:f395 GET
 coaps response sent
-coaps request from [fdde:ad00:beef:0:9e68:576f:714c:f395] PUT with payload: 7061796c6f6164
+coaps request from fdde:ad00:beef:0:9e68:576f:714c:f395 PUT with payload: 7061796c6f6164
 coaps response sent
 ```
 
