@@ -46,7 +46,7 @@
 #include <assert.h>
 #include <openthread/error.h>
 #include <openthread/platform/ble.h>
-#include <openthread/platform/cordio/radio-ble.h>
+#include <openthread/platform/cordio/ble-radio.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #define LL_IMPL_REV 0x2303 // Typical implementation revision number

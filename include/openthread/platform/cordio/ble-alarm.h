@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the tick alarm service.
+ *   This file includes the platform abstraction for Cordio BLE stack tick alarm service.
  */
 
 #ifndef OPENTHREAD_PLATFORM_CORDIO_BLE_ALARM_H_

@@ -31,7 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 ot_platform_cordio_headers              = \
     ble-alarm.h                           \
     ble-hci.h                             \
-    radio-ble.h                           \
+    ble-radio.h                           \
     $(NULL)
 
 ot_platform_cordiodir = $(includedir)/openthread/platform/cordio

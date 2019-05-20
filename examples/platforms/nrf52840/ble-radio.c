@@ -32,7 +32,7 @@
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include "platform-nrf5.h"
 
-#include <openthread/platform/cordio/radio-ble.h>
+#include <openthread/platform/cordio/ble-radio.h>
 
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
@@ -114,10 +114,10 @@ static const uint8_t cBleChannelFrequency[BLE_PHY_NUM_CHANS] = {
 
 enum
 {
-    kPhyMaxPduLen = OT_RADIO_BLE_FRAME_MAX_SIZE,
+    kPhyMaxPduLen = OT_BLE_RADIO_FRAME_MAX_SIZE,
 };
 
-static otRadioBleRxInfo sReceiveInfo;
+static otBleRadioRxInfo sReceiveInfo;
 
 uint32_t sRxBuffer[(kPhyMaxPduLen + 3) / 4];
 uint32_t sTxBuffer[(kPhyMaxPduLen + 3) / 4];
@@ -450,7 +450,7 @@ static bool ble_phy_rx_start_isr(void)
 
 static void ble_phy_rx_end_isr(void)
 {
-    otRadioBleError error;
+    otBleRadioError error;
     uint8_t         crcok;
     uint32_t        tx_time;
 
@@ -993,21 +993,21 @@ void ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
     NRF_RADIO->DATAWHITEIV = chan;
 }
 
-otError otCordioPlatRadioSetChannelParameters(const otRadioBleChannelParams *aChannelParams)
+otError otCordioPlatRadioSetChannelParameters(const otBleRadioChannelParams *aChannelParams)
 {
     ble_phy_setchan(aChannelParams->mChannel, aChannelParams->mAccessAddress, aChannelParams->mCrcInit);
 
     return OT_ERROR_NONE;
 }
 
-otError SetRadioTxStartTime(const otRadioBleTime *aStartTime)
+otError SetRadioTxStartTime(const otBleRadioTime *aStartTime)
 {
     return ble_phy_tx_set_start_time(aStartTime->mTicks, aStartTime->mOffsetUs);
 }
 
-otError otCordioPlatRadioTransmitAtTime(otRadioBleBufferDescriptor *aBufferDescriptors,
+otError otCordioPlatRadioTransmitAtTime(otBleRadioBufferDescriptor *aBufferDescriptors,
                                         uint8_t                     aNumBufferDescriptors,
-                                        const otRadioBleTime *      aStartTime)
+                                        const otBleRadioTime *      aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t offset;
@@ -1031,7 +1031,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioTransmitAtTifs(otRadioBleBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors)
+otError otCordioPlatRadioTransmitAtTifs(otBleRadioBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t offset;
@@ -1064,7 +1064,7 @@ exit:
     return error;
 }
 
-otError SetRadioRxStartTime(const otRadioBleTime *aStartTime)
+otError SetRadioRxStartTime(const otBleRadioTime *aStartTime)
 {
     otError error = ble_phy_rx_set_start_time(aStartTime->mTicks - BLE_GUARD_TICKS, aStartTime->mOffsetUs);
 
@@ -1076,7 +1076,7 @@ otError SetRadioRxStartTime(const otRadioBleTime *aStartTime)
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTime(otRadioBleBufferDescriptor *aBufferDescriptor, const otRadioBleTime *aStartTime)
+otError otCordioPlatRadioReceiveAtTime(otBleRadioBufferDescriptor *aBufferDescriptor, const otBleRadioTime *aStartTime)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1092,7 +1092,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTifs(otRadioBleBufferDescriptor *aBufferDescriptor)
+otError otCordioPlatRadioReceiveAtTifs(otBleRadioBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1255,12 +1255,12 @@ void otCordioPlatRadioDisableInterrupt(void)
     NVIC_DisableIRQ(RADIO_IRQn);
 }
 
-OT_TOOL_WEAK void otCordioPlatRadioTransmitDone(otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioTransmitDone(otBleRadioError aError)
 {
     OT_UNUSED_VARIABLE(aError);
 }
 
-OT_TOOL_WEAK void otCordioPlatRadioReceiveDone(otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
+OT_TOOL_WEAK void otCordioPlatRadioReceiveDone(otBleRadioRxInfo *aRxInfo, otBleRadioError aError)
 {
     OT_UNUSED_VARIABLE(aRxInfo);
     OT_UNUSED_VARIABLE(aError);

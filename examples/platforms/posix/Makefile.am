@@ -39,7 +39,8 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
-	ble-hci-uart.c                          \
+    ble-hci-uart.c                          \
+    ble-radio.c                             \
     diag.c                                  \
     entropy.c                               \
     misc.c                                  \

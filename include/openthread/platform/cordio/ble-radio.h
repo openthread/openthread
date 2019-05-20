@@ -29,12 +29,12 @@
 /**
  * @file
  * @brief
- *   This file defines the BLE radio interface for OpenThread.
+ *   This file defines the BLE radio interface for Cordio BLE stack.
  *
  */
 
-#ifndef OPENTHREAD_PLATFORM_CORDIO_RADIO_BLE_H_
-#define OPENTHREAD_PLATFORM_CORDIO_RADIO_BLE_H_
+#ifndef OPENTHREAD_PLATFORM_CORDIO_BLE_RADIO_H_
+#define OPENTHREAD_PLATFORM_CORDIO_BLE_RADIO_H_
 
 #include <stdint.h>
 
@@ -68,46 +68,46 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_BLE_FRAME_MAX_SIZE = 257, ///< Maximum size of BLE frame (include PUD header).
+    OT_BLE_RADIO_FRAME_MAX_SIZE = 257, ///< Maximum size of BLE frame (include PUD header).
 };
 
 /**
  * This structure represents BLE radio channelization parameters.
  */
-typedef struct otRadioBleChannelParams
+typedef struct otBleRadioChannelParams
 {
     uint8_t  mChannel;       ///< Channel used to transmit/receive the frame.
     uint32_t mAccessAddress; ///< Access address.
     uint32_t mCrcInit;       ///< CRC initial value.
-} otRadioBleChannelParams;
+} otBleRadioChannelParams;
 
 /**
  * This structure represents buffer descriptor.
  */
-typedef struct otRadioBleBufferDescriptor
+typedef struct otBleRadioBufferDescriptor
 {
     uint8_t *mBuffer; ///< Pointer to buffer.
     uint16_t mLength; ///< Length of buffer.
-} otRadioBleBufferDescriptor;
+} otBleRadioBufferDescriptor;
 
 /**
  * This structure represents representing BLE radio frame receive information
  */
-typedef struct otRadioBleRxInfo
+typedef struct otBleRadioRxInfo
 {
     uint32_t mTicks; ///< The timestamp when the first bit of the frame was received (unit: ticks).
     int8_t   mRssi;  ///< Received signal strength indicator in dBm for received frames.
-} otRadioBleRxInfo;
+} otBleRadioRxInfo;
 
 /**
  * This structure represents BLE time.
  */
-typedef struct otRadioBleTime
+typedef struct otBleRadioTime
 {
     uint32_t mTicks;        ///< Transmit/receive tick time of the packet (unit: ticks).
     uint16_t mOffsetUs;     ///< The offset to the mTicks in microseconds.
     uint32_t mRxDurationUs; ///< Receive duration in microseconds.
-} otRadioBleTime;
+} otBleRadioTime;
 
 /**
  * This enumeration defines the error code of the BLE radio.
@@ -119,7 +119,7 @@ typedef enum
     OT_BLE_RADIO_ERROR_CRC,
     OT_BLE_RADIO_ERROR_RX_TIMEOUT,
     OT_BLE_RADIO_ERROR_FAILED,
-} otRadioBleError;
+} otBleRadioError;
 
 /**
  * This structure represents the state of a BLE radio.
@@ -285,7 +285,7 @@ otError otCordioPlatRadioSetTransmitPower(int8_t aPower);
  * @retval OT_ERROR_INVALID_ARGS  @p aChannelParams is not supported or @p aChannelParams is NULL.
  *
  */
-otError otCordioPlatRadioSetChannelParameters(const otRadioBleChannelParams *aChannelParams);
+otError otCordioPlatRadioSetChannelParameters(const otBleRadioChannelParams *aChannelParams);
 
 /**
  * Enable TIFS timer after the next receive or transmit operation.
@@ -311,9 +311,9 @@ void otCordioPlatRadioDisableTifs(void);
  * @retval OT_ERROR_INVALID_STATE The radio was not in IDLE state.
  *
  */
-otError otCordioPlatRadioTransmitAtTime(otRadioBleBufferDescriptor *aBufferDescriptors,
+otError otCordioPlatRadioTransmitAtTime(otBleRadioBufferDescriptor *aBufferDescriptors,
                                         uint8_t                     aNumBufferDescriptors,
-                                        const otRadioBleTime *      aStartTime);
+                                        const otBleRadioTime *      aStartTime);
 
 /*
  * Transmit frame at TIFS after the last packet received.
@@ -328,7 +328,7 @@ otError otCordioPlatRadioTransmitAtTime(otRadioBleBufferDescriptor *aBufferDescr
  * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptors or @p aStartTime is NULL.
  * @retval OT_ERROR_INVALID_STATE The radio was not in WAITING_TRANSMIT_TIFS state.
  */
-otError otCordioPlatRadioTransmitAtTifs(otRadioBleBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors);
+otError otCordioPlatRadioTransmitAtTifs(otBleRadioBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors);
 
 /**
  * The BLE radio driver calls this function to notify BLE controller that the transmit operation has completed.
@@ -337,7 +337,7 @@ otError otCordioPlatRadioTransmitAtTifs(otRadioBleBufferDescriptor *aBufferDescr
  *                    OT_BLE_RADIO_ERROR_FAILED when transmission was failed.
  *
  */
-extern void otCordioPlatRadioTransmitDone(otRadioBleError aError);
+extern void otCordioPlatRadioTransmitDone(otBleRadioError aError);
 
 /*
  * Receive frame within the given period.
@@ -353,7 +353,7 @@ extern void otCordioPlatRadioTransmitDone(otRadioBleError aError);
  * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptor or @p aStartTime is NULL.
  * @retval OT_ERROR_INVALID_STATE The radio was not in IDLE state.
  */
-otError otCordioPlatRadioReceiveAtTime(otRadioBleBufferDescriptor *aBufferDescriptor, const otRadioBleTime *aStartTime);
+otError otCordioPlatRadioReceiveAtTime(otBleRadioBufferDescriptor *aBufferDescriptor, const otBleRadioTime *aStartTime);
 
 /*
  *  Receive frame at TIFS after the last packet transmitted.
@@ -367,7 +367,7 @@ otError otCordioPlatRadioReceiveAtTime(otRadioBleBufferDescriptor *aBufferDescri
  * @retval OT_ERROR_INVALID_ARGS  @p aBufferDescriptor is NULL.
  * @retval OT_ERROR_INVALID_STATE The radio was not in WAITING_RECEIVE_TIFS state.
  */
-otError otCordioPlatRadioReceiveAtTifs(otRadioBleBufferDescriptor *aBufferDescriptor);
+otError otCordioPlatRadioReceiveAtTifs(otBleRadioBufferDescriptor *aBufferDescriptor);
 
 /**
  * The BLE radio driver calls this function to notify BLE controller that a frame has been received.
@@ -379,7 +379,7 @@ otError otCordioPlatRadioReceiveAtTifs(otRadioBleBufferDescriptor *aBufferDescri
  *                      OT_BLE_RADIO_ERROR_FAILED when reception was failed.
  *
  */
-extern void otCordioPlatRadioReceiveDone(otRadioBleRxInfo *aRxInfo, otRadioBleError aError);
+extern void otCordioPlatRadioReceiveDone(otBleRadioRxInfo *aRxInfo, otBleRadioError aError);
 
 /*
  * Cancel a pending transmit or receive when the radio is in WAIT_TRANSMIT or WAIT_RECEIVE state.
@@ -419,4 +419,4 @@ void otCordioPlatRadioDisableInterrupt(void);
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_PLATFORM_CORDIO_RADIO_BLE_H_
+#endif // OPENTHREAD_PLATFORM_CORDIO_BLE_RADIO_H_

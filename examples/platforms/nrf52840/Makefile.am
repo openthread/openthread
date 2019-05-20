@@ -81,6 +81,7 @@ COMMONCPPFLAGS                                                                  
 PLATFORM_COMMON_SOURCES                                                                                    = \
     alarm.c                                                                                                  \
     entropy.c                                                                                                \
+    ble-radio.c                                                                                              \
     fem.c                                                                                                    \
     flash.c                                                                                                  \
     logging.c                                                                                                \
@@ -89,7 +90,6 @@ PLATFORM_COMMON_SOURCES                                                         
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
     radio.c                                                                                                  \
-    radio-ble.c                                                                                              \
     temp.c                                                                                                   \
     spi-slave.c                                                                                              \
     system.c                                                                                                 \

@@ -28,11 +28,11 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/cordio/radio-ble.h>
+#include <openthread/platform/cordio/ble-radio.h>
 
 #include "utils/code_utils.h"
 
+#if OPENTHREAD_ENABLE_BLE_CONTROLLER
 /*
  * The timer accuracy of posix is less than microseconds. In order to guarantee that the sent message can hit
  * the receiving window, BLE_RADIO_TIFS_US, BLE_RADIO_RAMP_UP_US and BLE_RADIO_PREAMBLE_ADDR_US are set to a big value.
@@ -59,7 +59,7 @@ OT_TOOL_PACKED_BEGIN
 struct BleRadioMessage
 {
     uint8_t mChannel;
-    uint8_t mPdu[kAccessAddressSize + OT_RADIO_BLE_FRAME_MAX_SIZE + kCrcSize];
+    uint8_t mPdu[kAccessAddressSize + OT_BLE_RADIO_FRAME_MAX_SIZE + kCrcSize];
 } OT_TOOL_PACKED_END;
 
 static struct BleRadioMessage sReceiveMessage;
@@ -69,10 +69,10 @@ static int8_t   sTxPower    = 0;
 static uint16_t sPortOffset = 0;
 static int      sSockFd;
 
-static otRadioBleTime          sRxTime;
-static otRadioBleChannelParams sChannelParams;
+static otBleRadioTime          sRxTime;
+static otBleRadioChannelParams sChannelParams;
 
-static otRadioBleBufferDescriptor sBufferDescriptor = {NULL, 0};
+static otBleRadioBufferDescriptor sBufferDescriptor = {NULL, 0};
 
 bool sTifsEnabled = false;
 bool sTxAtTifs    = false;
@@ -82,7 +82,7 @@ static uint8_t sState = OT_BLE_RADIO_STATE_IDLE;
 
 static void bleRadioSendMessage(void);
 
-static uint32_t bleTimeToUs(const otRadioBleTime *aTime)
+static uint32_t bleTimeToUs(const otBleRadioTime *aTime)
 {
     return BLE_RADIO_TICKS_TO_US(aTime->mTicks) + aTime->mOffsetUs;
 }
@@ -165,7 +165,7 @@ otError otCordioPlatRadioSetTransmitPower(int8_t aPower)
     return OT_ERROR_NONE;
 }
 
-otError otCordioPlatRadioSetChannelParameters(const otRadioBleChannelParams *aChannelParams)
+otError otCordioPlatRadioSetChannelParameters(const otBleRadioChannelParams *aChannelParams)
 {
     sChannelParams = *aChannelParams;
     return OT_ERROR_NONE;
@@ -181,9 +181,9 @@ void otCordioPlatRadioDisableTifs(void)
     sTifsEnabled = false;
 }
 
-otError otCordioPlatRadioTransmitAtTime(otRadioBleBufferDescriptor *aBufferDescriptors,
+otError otCordioPlatRadioTransmitAtTime(otBleRadioBufferDescriptor *aBufferDescriptors,
                                         uint8_t                     aNumBufferDescriptors,
-                                        const otRadioBleTime *      aStartTime)
+                                        const otBleRadioTime *      aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t now   = platformBleAlarmMicroGetNow();
@@ -215,7 +215,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioTransmitAtTifs(otRadioBleBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors)
+otError otCordioPlatRadioTransmitAtTifs(otBleRadioBufferDescriptor *aBufferDescriptors, uint8_t aNumBufferDescriptors)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t *txBuf = sTransmitMessage.mPdu + kAccessAddressSize;
@@ -237,7 +237,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTime(otRadioBleBufferDescriptor *aBufferDescriptor, const otRadioBleTime *aStartTime)
+otError otCordioPlatRadioReceiveAtTime(otBleRadioBufferDescriptor *aBufferDescriptor, const otBleRadioTime *aStartTime)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t now   = platformBleAlarmMicroGetNow();
@@ -265,7 +265,7 @@ exit:
     return error;
 }
 
-otError otCordioPlatRadioReceiveAtTifs(otRadioBleBufferDescriptor *aBufferDescriptor)
+otError otCordioPlatRadioReceiveAtTifs(otBleRadioBufferDescriptor *aBufferDescriptor)
 {
     otError error = OT_ERROR_NONE;
 
@@ -487,8 +487,8 @@ static void bleRadioSendMessage(void)
 static void bleRadioReceive(void)
 {
     ssize_t          rval  = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
-    otRadioBleError  error = OT_BLE_RADIO_ERROR_NONE;
-    otRadioBleRxInfo rxInfo;
+    otBleRadioError  error = OT_BLE_RADIO_ERROR_NONE;
+    otBleRadioRxInfo rxInfo;
 
     if (rval < 0)
     {

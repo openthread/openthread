@@ -6,7 +6,7 @@ The OpenThread BLE Platform APIs will be invoked via the OpenThread CLI.
 
 ### Build with BLE support
 
-Use the `CLI_BLE=1` build switch to enable BLE Platform API and BLE cli support.
+Use the `CLI_BLE=1` build switch to enable BLE Host and BLE cli support.
 Use the `BLE_CONTROLLER=1` build switch to enable BLE Controller support.
 Use the `BLE_L2CAP=1` build switch to enable BLE Platform L2CAP API support.
 
@@ -393,7 +393,7 @@ Done
 Register parameters to initialize a L2CAP connection oriented channel.
 
 * connection-id: BLE connection ID.
-* role: L2CAP connection oriented channel role. 0 for channel initiator or 1 for channel acceptor.
+* role: L2CAP connection oriented channel role. 0 for Coc initiator or 1 for Coc acceptor.
 * mtu: Maximum Transmission Unit (default: 1280).
 * psm: LE Protocol/Service Multiplexer (default: 0x0080).
 
@@ -420,7 +420,7 @@ Done
 
 Initiate a connection for thr given L2CAP handle.
 
-* l2cap-handle: The handle of connection oriented channel.
+* l2cap-handle: The handle of connection oriented channel initiator.
 
 ```bash
 > ble l2cap connect 1
@@ -489,7 +489,7 @@ Exchange GATT MTU.
 * mtu: GATT MTU.
 
 ```bash
-> ble gatt client mtu exchange 23
+> ble gatt client mtu exchange 131
 Done
 ```
 
@@ -499,7 +499,7 @@ Show GATT MTU.
 
 ```bash
 > ble gatt client mtu
-mtu: 23
+mtu: 131
 Done
 ```
 

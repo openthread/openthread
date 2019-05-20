@@ -50,7 +50,7 @@
 #include <openthread/platform/cordio/ble-alarm.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
-#include <openthread/platform/cordio/radio-ble.h>
+#include <openthread/platform/cordio/ble-radio.h>
 #else
 #include <openthread/platform/cordio/ble-hci.h>
 #endif

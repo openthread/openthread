@@ -45,7 +45,7 @@
 #include <assert.h>
 #include <string.h>
 #include <openthread/error.h>
-#include <openthread/platform/cordio/radio-ble.h>
+#include <openthread/platform/cordio/ble-radio.h>
 #include <openthread/platform/random.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
@@ -54,7 +54,7 @@
 
 static const BbBleDrvDataParam_t *sDataParams = NULL;
 
-static uint8_t ConvertErrorCode(otRadioBleError aError)
+static uint8_t ConvertErrorCode(otBleRadioError aError)
 {
     uint8_t error = BB_STATUS_FAILED;
 
@@ -119,7 +119,7 @@ void BbBleDrvDisable(void)
 
 void BbBleDrvSetChannelParam(BbBleDrvChan_t *pChan)
 {
-    otRadioBleChannelParams channelParams;
+    otBleRadioChannelParams channelParams;
 
     channelParams.mChannel       = pChan->chanIdx;
     channelParams.mAccessAddress = pChan->accAddr;
@@ -159,7 +159,7 @@ exit:
     return;
 }
 
-void otCordioPlatRadioTransmitDone(otRadioBleError aError)
+void otCordioPlatRadioTransmitDone(otBleRadioError aError)
 {
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->txCback != NULL);
@@ -172,8 +172,8 @@ exit:
 
 void BbBleDrvTxData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
 {
-    otRadioBleBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
-    otRadioBleTime             time;
+    otBleRadioBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
+    otBleRadioTime             time;
     uint16_t                   i;
 
     otEXPECT(sDataParams != NULL);
@@ -196,7 +196,7 @@ exit:
 
 void BbBleDrvTxTifsData(BbBleDrvTxBufDesc_t descs[], uint8_t cnt)
 {
-    otRadioBleBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
+    otBleRadioBufferDescriptor bufferDescriptors[BLE_RADIO_NUM_FRAME_DESC];
     uint16_t                   i;
 
     otEXPECT(cnt <= BLE_RADIO_NUM_FRAME_DESC);
@@ -215,8 +215,8 @@ exit:
 
 void BbBleDrvRxData(uint8_t *pBuf, uint16_t len)
 {
-    otRadioBleBufferDescriptor bufferDescriptor;
-    otRadioBleTime             time;
+    otBleRadioBufferDescriptor bufferDescriptor;
+    otBleRadioTime             time;
 
     otEXPECT(sDataParams != NULL);
 
@@ -235,7 +235,7 @@ exit:
 
 void BbBleDrvRxTifsData(uint8_t *pBuf, uint16_t len)
 {
-    otRadioBleBufferDescriptor bufferDescriptor;
+    otBleRadioBufferDescriptor bufferDescriptor;
 
     bufferDescriptor.mBuffer = pBuf;
     bufferDescriptor.mLength = len;
@@ -243,7 +243,7 @@ void BbBleDrvRxTifsData(uint8_t *pBuf, uint16_t len)
     otCordioPlatRadioReceiveAtTifs(&bufferDescriptor);
 }
 
-void otCordioPlatRadioReceiveDone(otRadioBleRxInfo *aRxInfo, otRadioBleError aError)
+void otCordioPlatRadioReceiveDone(otBleRadioRxInfo *aRxInfo, otBleRadioError aError)
 {
     otEXPECT(sDataParams != NULL);
     otEXPECT(sDataParams->rxCback != NULL);
