@@ -35,9 +35,7 @@
 #ifndef OPENTHREAD_RANDOM_H_
 #define OPENTHREAD_RANDOM_H_
 
-#include "openthread-core-config.h"
-
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
