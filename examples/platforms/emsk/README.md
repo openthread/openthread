@@ -67,80 +67,99 @@ Modify the file name `arc-elf32-ot-cli-ftd.bin` to `boot.bin`. Copy `boot.bin` t
 
 3. Open a terminal connection on the first board. The `boot.bin` in the SD card will be loaded to the EMSK after a few seconds.
 
- ```bash
- MRF24J40 Init started.
- MRF24J40 Init finished.
- Node No. :
- ```
+  ```bash
+  MRF24J40 Init started.
+  MRF24J40 Init finished.
+  Node No. :
+  ```
 
 4. Set the node number manually. Input `1` and press the `Enter` key in the terminal emulator.
 
- ```bash
- Node No. :1
- OpenThread Init Finished
- ```
+  ```bash
+  Node No. :1
+  OpenThread Init Finished
+```
 
 4. Start a new Thread network.
 
- ```bash
- > panid 0x1234
- Done
- > ifconfig up
- Done
- > thread start
- Done
- ```
+  ```bash
+  > dataset init new
+  Done
+  > dataset
+  Active Timestamp: 1
+  Channel: 13
+  Channel Mask: 07fff800
+  Ext PAN ID: d63e8e3e495ebbc3
+  Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+  Master Key: dfd34f0f05cad978ec4e32b0413038ff
+  Network Name: OpenThread-8f28
+  PAN ID: 0x8f28
+  PSKc: c23a76e98f1a6483639b1ac1271e2e27
+  Security Policy: 0, onrcb
+  Done
+  > dataset commit active
+  Done
+  > ifconfig up
+  Done
+  > thread start
+  Done
+  ```
 
 4. After a couple of seconds the node will become a Leader of the network.
 
- ```bash
- > state
- Leader
- ```
+  ```bash
+  > state
+  leader
+  ```
 
 5. Open a terminal connection and reset the second board. After a few seconds, input `2` and press the `Enter` key in the terminal emulator.
 
- ```bash
- MRF24J40 Init started.
- MRF24J40 Init finished.
- Node No. :2
- OpenThread Init Finished
- ```
+  ```bash
+  MRF24J40 Init started.
+  MRF24J40 Init finished.
+  Node No. :2
+  OpenThread Init Finished
+  ```
 
 6. Attach the second node to the network.
 
- ```bash
- > panid 0x1234
- Done
- > ifconfig up
- Done
- > thread start
- Done
- ```
+  ```bash
+  > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+  Done
+  > dataset panid 0x8f28
+  Done
+  > dataset commit active
+  Done
+  > ifconfig up
+  Done
+  > thread start
+  Done
+  ```
 
 6. After a couple of seconds the second node will attach and become a Child.
 
- ```bash
- > state
- Child
- ```
+  ```bash
+  > state
+  child
+  ```
 
 7. List all IPv6 addresses of the first board.
 
- ```bash
- > ipaddr
- fdde:ad00:beef:0:0:ff:fe00:fc00
- fdde:ad00:beef:0:0:ff:fe00:ec00
- fdde:ad00:beef:0:4f6e:7e53:67c8:f5b0
- fe80:0:0:0:c462:f165:44eb:ef9f
- ```
+  ```bash
+  > ipaddr
+  fd3d:b50b:f96d:722d:0:ff:fe00:fc00
+  fd3d:b50b:f96d:722d:0:ff:fe00:c00
+  fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+  fe80:0:0:0:6c41:9001:f3d6:4148
+  Done
+  ```
 
 8. Choose one of them and send an ICMPv6 ping from the second board.
 
- ```bash
- > ping fdde:ad00:beef:0:0:ff:fe00:ec00
- 8 bytes from fdde:ad00:beef:0:0:ff:fe00:ec00: icmp_seq=1 hlim=64 time=30ms
- ```
+  ```bash
+  > ping fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+  16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
+  ```
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
 

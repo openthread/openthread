@@ -90,90 +90,109 @@ $ (gdb) c
 2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1).
    Type `help` for a list of commands.
 
-```bash
-> help
-help
-channel
-childtimeout
-contextreusedelay
-extaddr
-extpanid
-ipaddr
-keysequence
-leaderweight
-masterkey
-mode
-netdataregister
-networkidtimeout
-networkname
-panid
-ping
-prefix
-releaserouterid
-rloc16
-route
-routerupgradethreshold
-scan
-start
-state
-stop
-whitelist
-```
+   ```bash
+   > help
+   help
+   channel
+   childtimeout
+   contextreusedelay
+   extaddr
+   extpanid
+   ipaddr
+   keysequence
+   leaderweight
+   masterkey
+   mode
+   netdataregister
+   networkidtimeout
+   networkname
+   panid
+   ping
+   prefix
+   releaserouterid
+   rloc16
+   route
+   routerupgradethreshold
+   scan
+   start
+   state
+   stop
+   whitelist
+   ```
 
 3. Start a Thread network as Leader.
 
-```bash
-> panid 0xface
-Done
-> ifconfig up
-Done
-> thread start
-Done
+   ```bash
+   > dataset init new
+   Done
+   > dataset
+   Active Timestamp: 1
+   Channel: 13
+   Channel Mask: 07fff800
+   Ext PAN ID: d63e8e3e495ebbc3
+   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Name: OpenThread-8f28
+   PAN ID: 0x8f28
+   PSKc: c23a76e98f1a6483639b1ac1271e2e27
+   Security Policy: 0, onrcb
+   Done
+   > dataset commit active
+   Done
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
 
-wait a couple of seconds...
+   wait a couple of seconds...
 
-> state
-leader
-Done
-```
+   > state
+   leader
+   Done
+   ```
 
 4. Open terminal to second device `/dev/ttyACM1` (serial port settings: 115200 8-N-1)
    and attach it to the Thread network as a Router.
 
-```bash
-> panid 0xface
-Done
-> routerselectionjitter 1
-Done
-> ifconfig up
-Done
-> thread start
-Done
+   ```bash
+   > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+   Done
+   > dataset panid 0x8f28
+   Done
+   > dataset commit active
+   Done
+   > routerselectionjitter 1
+   Done
+   > ifconfig up
+   Done
+   > thread start
+   Done
 
-wait a couple of seconds...
+   wait a couple of seconds...
 
-> state
-router
-Done
-```
+   > state
+   router
+   Done
+   ```
 
 5. List all IPv6 addresses of Leader.
 
-```bash
-> ipaddr
-fdde:ad00:beef:0:0:ff:fe00:fc00
-fdde:ad00:beef:0:0:ff:fe00:800
-fdde:ad00:beef:0:5b:3bcd:deff:7786
-fe80:0:0:0:6447:6e10:cf7:ee29
-Done
-```
+   ```bash
+   > ipaddr
+   fd3d:b50b:f96d:722d:0:ff:fe00:fc00
+   fd3d:b50b:f96d:722d:0:ff:fe00:c00
+   fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+   fe80:0:0:0:6c41:9001:f3d6:4148
+   Done
+   ```
 
 6. Send an ICMPv6 ping to Leader's Mesh-EID IPv6 address.
 
-```bash
-> ping fdde:ad00:beef:0:5b:3bcd:deff:7786
-8 bytes from fdde:ad00:beef:0:5b:3bcd:deff:7786: icmp_seq=1 hlim=64 time=24ms
-```
+   ```bash
+   > ping fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+   16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
+   ```
 
 The above example demonstrates basic OpenThread capabilities. Enable more features/roles (e.g. commissioner,
 joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compiling.
