@@ -42,11 +42,24 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
     $(NULL)
 
+# Enable required features for on-device tests.
 ifeq ($(TARGET_BUILD_VARIANT),eng)
 OPENTHREAD_COMMON_FLAGS                                          += \
-    -DOPENTHREAD_ENABLE_CERT_LOG=1                                  \
     -DOPENTHREAD_ENABLE_DIAG=1                                      \
     -DOPENTHREAD_ENABLE_MAC_FILTER=1                                \
+    $(NULL)
+endif
+
+# Enable all optional features for CI tests.
+ifeq ($(TARGET_PRODUCT),generic)
+OPENTHREAD_COMMON_FLAGS                                          += \
+    -DOPENTHREAD_ENABLE_APPLICATION_COAP=1                          \
+    -DOPENTHREAD_ENABLE_CERT_LOG=1                                  \
+    -DOPENTHREAD_ENABLE_COMMISSIONER=1                              \
+    -DOPENTHREAD_ENABLE_DHCP6_CLIENT=1                              \
+    -DOPENTHREAD_ENABLE_DHCP6_SERVER=1                              \
+    -DOPENTHREAD_ENABLE_DNS_CLIENT=1                                \
+    -DOPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1                    \
     $(NULL)
 endif
 
