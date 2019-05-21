@@ -159,7 +159,7 @@ static int64_t getMinUsRemaining(void)
 
     if (sIsMsRunning)
     {
-        usRemaining = (int64_t)(sMsAlarm - (uint32_t)(now / US_PER_MS));
+        usRemaining = (int64_t)sMsAlarm - (int64_t)(now / US_PER_MS);
         usRemaining *= US_PER_MS;
         usRemaining -= (now % US_PER_MS);
 
@@ -169,7 +169,7 @@ static int64_t getMinUsRemaining(void)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     if (sIsUsRunning)
     {
-        usRemaining    = (int64_t)(sUsAlarm - now);
+        usRemaining    = (int64_t)sUsAlarm - now;
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 #endif
@@ -177,7 +177,7 @@ static int64_t getMinUsRemaining(void)
 #if OPENTHREAD_ENABLE_BLE_HOST
     if (sIsBleMsRunning)
     {
-        usRemaining = (int64_t)(sBleMsAlarm - (uint32_t)(now / US_PER_MS));
+        usRemaining = (int64_t)sBleMsAlarm - (int64_t)(now / US_PER_MS);
         usRemaining *= US_PER_MS;
         usRemaining -= (now % US_PER_MS);
 

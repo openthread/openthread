@@ -152,14 +152,14 @@ static int64_t getMinUsRemaining(void)
 
     if (sIsMsRunning)
     {
-        usRemaining    = (int64_t)(sMsAlarm - otPlatAlarmMilliGetNow()) * US_PER_MS;
+        usRemaining    = ((int64_t)(sMsAlarm) - (int64_t)otPlatAlarmMilliGetNow()) * US_PER_MS;
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     if (sIsUsRunning)
     {
-        usRemaining    = (int64_t)(sUsAlarm - otPlatAlarmMicroGetNow());
+        usRemaining    = (int64_t)(sUsAlarm) - (int64_t)otPlatAlarmMicroGetNow();
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 #endif
@@ -167,13 +167,13 @@ static int64_t getMinUsRemaining(void)
 #if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (sIsBleMsRunning)
     {
-        usRemaining    = (int64_t)(sBleMsAlarm - otCordioPlatAlarmTickGetNow()) * US_PER_MS;
+        usRemaining    = ((int64_t)sBleMsAlarm - (int64_t)otCordioPlatAlarmTickGetNow()) * US_PER_MS;
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 
     if (sIsBleUsRunning)
     {
-        usRemaining    = (int64_t)(sBleUsAlarm - otPlatAlarmMicroGetNow());
+        usRemaining    = (int64_t)(sBleUsAlarm) - (int64_t)otPlatAlarmMicroGetNow();
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
 #endif
