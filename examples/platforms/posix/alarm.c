@@ -123,6 +123,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     sIsMsRunning = false;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 uint32_t otPlatAlarmMicroGetNow(void)
 {
     return (uint32_t)platformGetNow();
@@ -142,6 +143,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
     sIsUsRunning = false;
 }
+#endif
 
 static int64_t getMinUsRemaining(void)
 {
