@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -35,46 +35,44 @@ import mle
 import node
 
 LEADER = 1
-ROUTER1 = 2
+REED = 2
 ROUTER2 = 3
-ROUTER3 = 4
+SED = 4
 
-
-class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
-
+class Cert_6_1_6_REEDAttachLinkQuality_SED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
+        for i in range(1,5):
+            self.nodes[i] = node.Node(i, (i == SED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
+        self.nodes[REED].set_panid(0xface)
+        self.nodes[REED].set_mode('rsdn')
+        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[REED].add_whitelist(self.nodes[SED].get_addr64())
+        self.nodes[REED].set_router_upgrade_threshold(0)
+        self.nodes[REED].enable_whitelist()
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64(), rssi=-85)
+        self.nodes[ROUTER2].add_whitelist(self.nodes[SED].get_addr64(), rssi=-85)
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
+        self.nodes[SED].set_panid(0xface)
+        self.nodes[SED].set_mode('s')
+        self.nodes[SED].add_whitelist(self.nodes[REED].get_addr64())
+        self.nodes[SED].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[SED].enable_whitelist()
+        self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -87,36 +85,32 @@ class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER1].start()
+        self.nodes[REED].start()
         self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.nodes[ROUTER3].start()
-        self.simulator.go(5)
-        self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+        self.nodes[SED].start()
+        self.simulator.go(10)
+        self.assertEqual(self.nodes[SED].get_state(), 'child')
+        self.assertEqual(self.nodes[REED].get_state(), 'router')
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
-        router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
+        reed_messages = self.simulator.get_messages_sent_by(REED)
+        sed_messages = self.simulator.get_messages_sent_by(SED)
         router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
-        router3_messages = self.simulator.get_messages_sent_by(ROUTER3)
 
-        # 1 - Leader, Router1, Router2
+        # 1 - Leader. REED1, Router2
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        reed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        reed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
-
-        msg = leader_messages.next_coap_message("2.04")
 
         router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
@@ -129,11 +123,10 @@ class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
 
         msg = leader_messages.next_coap_message("2.04")
 
-        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 
-        # 3 - Router3
-        msg = router3_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        # 3 - SED
+        msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         msg.assertSentWithHopLimit(255)
         msg.assertSentToDestinationAddress("ff02::2")
         msg.assertMleMessageContainsTlv(mle.Mode)
@@ -141,25 +134,48 @@ class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.ScanMask)
         msg.assertMleMessageContainsTlv(mle.Version)
 
-        # 4 - Router1, Router2
-        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER3])
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(0, scan_mask_tlv.end_device)
 
+        # 4 - Router2
         msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER3])
+        msg.assertSentToNode(self.nodes[SED])
 
-        # 5 - Router3
-        msg = router3_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        msg.assertSentToNode(self.nodes[ROUTER1])
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        # 5 - SED
+        msg = sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
         msg.assertMleMessageContainsTlv(mle.Mode)
-        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
         msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.TlvRequest)
-        msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
 
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(1, scan_mask_tlv.end_device)
+
+        # 6 - REED
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[SED])
+
+        msg = reed_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[SED])
+
+        # 7 - SED
+        msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertSentToNode(self.nodes[REED])
+
+        msg = reed_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg.assertSentToNode(self.nodes[SED])
 
 if __name__ == '__main__':
     unittest.main()

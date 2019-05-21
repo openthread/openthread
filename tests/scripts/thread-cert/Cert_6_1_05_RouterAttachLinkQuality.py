@@ -69,7 +69,7 @@ class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64(), rssi=-85)
+        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
