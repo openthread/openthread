@@ -31,6 +31,7 @@ import time
 import unittest
 
 import config
+import mle
 import node
 
 LEADER = 1
@@ -38,7 +39,7 @@ REED = 2
 ROUTER2 = 3
 ED = 4
 
-class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
+class Cert_6_1_6_REEDAttachLinkQuality_ED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -69,7 +70,7 @@ class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64(), rssi=-85)
+        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
@@ -95,6 +96,85 @@ class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
         self.simulator.go(10)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
+
+        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        reed_messages = self.simulator.get_messages_sent_by(REED)
+        ed_messages = self.simulator.get_messages_sent_by(ED)
+        router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
+
+        # 1 - Leader. REED1, Router2
+        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        reed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        reed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = router2_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
+        router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        # 3 - ED
+        msg = ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(0, scan_mask_tlv.end_device)
+
+        # 4 - Router2
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
+
+        # 5 - ED
+        msg = ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(1, scan_mask_tlv.end_device)
+
+        # 6 - REED
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
+
+        msg = reed_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
+
+        # 7 - ED
+        msg = ed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg.assertMleMessageContainsTlv(mle.AddressRegistration)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertSentToNode(self.nodes[REED])
+
+        msg = reed_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg.assertSentToNode(self.nodes[ED])
 
 if __name__ == '__main__':
     unittest.main()
