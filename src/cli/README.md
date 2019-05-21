@@ -16,7 +16,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childtimeout](#childtimeout)
 * [coap](README_COAP.md)
 * [coaps](README_COAPS.md)
-* [commissioner](#commissioner-start-provisioningurl)
+* [commissioner](README_COMMISSIONER.md)
 * [contextreusedelay](#contextreusedelay)
 * [counters](#counters)
 * [dataset](README_DATASET.md)
@@ -31,8 +31,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
-* [joiner](#joiner-start-pskd-provisioningurl)
-* [joinerid](#joinerid)
+* [joiner](README_JOINER.md)
 * [joinerport](#joinerport-port)
 * [keysequence](#keysequence-counter)
 * [leaderdata](#leaderdata)
@@ -229,108 +228,6 @@ Set the Thread Child Timeout value.
 
 ```bash
 > childtimeout 300
-Done
-```
-
-### commissioner start \<provisioningUrl\>
-
-Start the Commissioner role.
-
-* provisioningUrl: Provisioning URL for the Joiner (optional).
-
-This command will cause the device to send LEAD_PET and LEAD_KA messages.
-
-```bash
-> commissioner start
-Done
-```
-
-### commissioner stop
-
-Stop the Commissioner role.
-
-This command will cause the device to send LEAD_KA[Reject] messages.
-
-```bash
-> commissioner stop
-Done
-```
-
-### commissioner joiner add \<eui64\> \<psdk\>
-
-Add a Joiner entry.
-
-* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
-* pskd: Pre-Shared Key for the Joiner.
-
-```bash
-> commissioner joiner add d45e64fa83f81cf7 PSK
-Done
-```
-
-### commissioner joiner remove \<eui64\>
-
-Remove a Joiner entry.
-
-* eui64: The IEEE EUI-64 of the Joiner or '*' to match any Joiner.
-
-```bash
-> commissioner joiner remove d45e64fa83f81cf7
-Done
-```
-
-### commissioner provisioningurl \<provisioningUrl\>
-
-Set the Provisioning URL.
-
-```bash
-> commissioner provisioningurl http://github.com/openthread/openthread
-Done
-```
-
-### commissioner energy \<mask\> \<count\> \<period\> \<scanDuration\> \<destination\>
-
-Send a MGMT_ED_SCAN message.
-
-* mask: Bitmask identifying channsl to perform IEEE 802.15.4 ED Scans.
-* count: Number of IEEE 802.15.4 ED Scans per channel.
-* period: Period between successive IEEE 802.15.4 ED Scans (milliseconds).
-* scanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds).
-* destination: IPv6 destination for the message (may be multicast).
-
-The contents of MGMT_ED_REPORT messages (i.e. Channel Mask and Energy
-List) are printed as they are received.
-
-```bash
-> commissioner energy 0x00050000 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
-Done
-Energy: 00050000 0 0 0 0
-```
-
-### commissioner panid \<panid\> \<mask\> \<destination\>
-
-Send a MGMT_PANID_QUERY message.
-
-* panid: PAN ID to check for conflicts.
-* mask: Bitmask identifying channels to perform IEEE 802.15.4 Active Scans.
-* destination: IPv6 destination for the message (may be multicast).
-
-The contents of MGMT_PANID_CONFLICT messages (i.e. PAN ID and Channel
-Mask) are printed as they are received.
-
-```bash
-> commissioner panid 0xdead 0x7fff800 fdde:ad00:beef:0:0:ff:fe00:c00
-Done
-Conflict: dead, 00000800
-```
-
-### commissioner sessionid
-
-Get current commissioner session id.
-
-```bash
-> commissioner sessionid
-0
 Done
 ```
 
@@ -664,40 +561,6 @@ Disable multicast promiscuous mode.
 
 ```bash
 > ipmaddr promiscuous disable
-Done
-```
-
-### joiner start \<pskd\> \<provisioningUrl\>
-
-Start the Joiner role.
-
-* pskd: Pre-Shared Key for the Joiner.
-* provisioningUrl: Provisioning URL for the Joiner (optional).
-
-This command will cause the device to perform an MLE Discovery and
-initiate the Thread Commissioning process.
-
-```bash
-> joiner start PSK
-Done
-```
-
-### joiner stop
-
-Stop the Joiner role.
-
-```bash
-> joiner stop
-Done
-```
-
-### joinerid
-
-Get the Joiner ID.
-
-```bash
-> joinerid
-e0b220eb7d8dda7e
 Done
 ```
 
