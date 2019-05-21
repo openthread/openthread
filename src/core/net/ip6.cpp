@@ -364,6 +364,8 @@ otError Ip6::RemoveMplOption(Message &aMessage)
             mplOffset = offset;
             mplLength = option.GetLength();
 
+            VerifyOrExit(mplLength <= sizeof(OptionMpl) - sizeof(OptionHeader), error = OT_ERROR_PARSE);
+
             if (mplOffset == sizeof(ip6Header) + sizeof(hbh) && hbh.GetLength() == 0)
             {
                 // first and only IPv6 Option, remove IPv6 HBH Option header
