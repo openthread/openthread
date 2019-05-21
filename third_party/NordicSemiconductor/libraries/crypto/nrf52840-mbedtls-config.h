@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef NRF52840_MBEDTLS_CONFIG_H_
+#define NRF52840_MBEDTLS_CONFIG_H_
+
 #ifndef DISABLE_CC310
 #define MBEDTLS_AES_ALT
 #define MBEDTLS_ECP_ALT
@@ -45,3 +48,5 @@
     _Pragma("diag_suppress=550")
     _Pragma("diag_suppress=68")
 #endif
+
+#endif // NRF52840_MBEDTLS_CONFIG_H_
