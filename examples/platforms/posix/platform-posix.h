@@ -253,8 +253,7 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
-#if OPENTHREAD_ENABLE_BLE_HOST
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 /**
  * Set the alarm to fire at @p aDt microseconds after @p aT0.
  *
@@ -306,40 +305,5 @@ void platformBleRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *a
  *
  */
 void platformBleRadioProcess(otInstance *aInstance);
-
-#else // OPENTHREAD_ENABLE_BLE_CONTROLLER
-
-/**
- * This function initializes the BLE HCI device.
- *
- * @param[in] aDeviceName  A pointer to the device name.
- *
- */
-void platformBleHciInit(char *aDeviceFile);
-
-/**
- * This function de-initializes the BLE HCI device.
- *
- */
-void platformBleHciDeinit(void);
-
-/**
- * This function updates the file descriptor sets with file descriptors used by the BLE HCI driver.
- *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
- *
- */
-void platformBleHciUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
-
-/**
- * This function performs BLE HCI driver processing.
- *
- */
-void platformBleHciProcess(otInstance *aInstance);
-
-#endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
-#endif // OPENTHREAD_ENABLE_BLE_HOST
-
+#endif // OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 #endif // PLATFORM_POSIX_H_

@@ -50,7 +50,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include <openthread/platform/ble.h>
 #endif
 
@@ -102,26 +102,16 @@ void otSysInit(int aArgCount, char *aArgVector[])
         exit(EXIT_FAILURE);
     }
 
-#if OPENTHREAD_ENABLE_BLE_HOST && !OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (aArgCount > 2)
     {
-        /*
-            speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
+        speedUpFactor = (uint32_t)strtol(aArgVector[2], &endptr, 0);
 
-            if (*endptr != '\0' || speedUpFactor == 0)
-            {
-                fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
-                exit(EXIT_FAILURE);
-            }
-        */
-        platformBleHciInit(aArgVector[2]);
+        if (*endptr != '\0' || speedUpFactor == 0)
+        {
+            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[2]);
+            exit(EXIT_FAILURE);
+        }
     }
-    else
-    {
-        fprintf(stderr, "Please specify the BLE HCI device file name\n");
-        exit(EXIT_FAILURE);
-    }
-#endif // OPENTHREAD_ENABLE_BLE_HOST && !OPENTHREAD_ENABLE_BLE_CONTROLLER
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
@@ -158,15 +148,11 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-#if OPENTHREAD_ENABLE_BLE_HOST
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     platformBleRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
-#else
-    platformBleHciUpdateFdSet(&read_fds, &write_fds, &max_fd);
-#endif
 #endif
 
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (!otTaskletsArePending(aInstance) && !otPlatBleTaskletsArePending(aInstance))
 #else
     if (!otTaskletsArePending(aInstance))
@@ -189,12 +175,8 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartProcess();
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
-#if OPENTHREAD_ENABLE_BLE_HOST
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     platformBleRadioProcess(aInstance);
-#else
-    platformBleHciProcess(aInstance);
-#endif
 #endif
 }
 

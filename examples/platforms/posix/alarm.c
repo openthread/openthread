@@ -36,7 +36,7 @@
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
-#ifdef OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 #include <openthread/platform/cordio/ble-alarm.h>
 #endif
 #include <openthread/platform/diag.h>
@@ -56,7 +56,7 @@ static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 #endif
 
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 static bool     sIsBleMsRunning = false;
 static uint32_t sBleMsAlarm     = 0;
 #endif
@@ -164,15 +164,13 @@ static int64_t getMinUsRemaining(void)
     }
 #endif
 
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (sIsBleMsRunning)
     {
         usRemaining    = (int64_t)(sBleMsAlarm - otCordioPlatAlarmTickGetNow()) * US_PER_MS;
         minUsRemaining = (usRemaining < minUsRemaining) ? usRemaining : minUsRemaining;
     }
-#endif
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (sIsBleUsRunning)
     {
         usRemaining    = (int64_t)(sBleUsAlarm - otPlatAlarmMicroGetNow());
@@ -256,7 +254,7 @@ void platformAlarmProcess(otInstance *aInstance)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (sIsBleMsRunning)
     {
         remaining = (int32_t)(sBleMsAlarm - otCordioPlatAlarmTickGetNow());
@@ -267,9 +265,6 @@ void platformAlarmProcess(otInstance *aInstance)
             otCordioPlatAlarmTickFired();
         }
     }
-#endif // OPENTHREAD_ENABLE_BLE_HOST
-
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
     if (sIsBleUsRunning)
     {
         remaining = (int32_t)(sBleUsAlarm - platformBleAlarmMicroGetNow());
@@ -280,7 +275,7 @@ void platformAlarmProcess(otInstance *aInstance)
             platformBleAlarmMicroFired();
         }
     }
-#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
+#endif // OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -295,7 +290,7 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
-#if OPENTHREAD_ENABLE_BLE_HOST
+#if OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 void otCordioPlatAlarmTickStartAt(uint32_t aT0, uint32_t aDt)
 {
     sBleMsAlarm     = aT0 + aDt;
@@ -319,9 +314,7 @@ void otCordioPlatAlarmEnableInterrupt(void)
 void otCordioPlatAlarmDisableInterrupt(void)
 {
 }
-#endif // OPENTHREAD_ENABLE_BLE_HOST
 
-#if OPENTHREAD_ENABLE_BLE_CONTROLLER
 void platformBleAlarmMicroStartAt(uint32_t aT0, uint32_t aDt)
 {
     sBleUsAlarm     = aT0 + aDt;
@@ -337,6 +330,6 @@ uint32_t platformBleAlarmMicroGetNow(void)
 {
     return (uint32_t)platformGetNow();
 }
-#endif // OPENTHREAD_ENABLE_BLE_CONTROLLER
+#endif // OPENTHREAD_ENABLE_BLE_HOST && OPENTHREAD_ENABLE_BLE_CONTROLLER
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
