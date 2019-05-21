@@ -1132,11 +1132,11 @@ extern void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_
 /**
  * Register parameters for creating a L2CAP connection oriented channel.
  *
- * @note If registring as an Coc acceptor, the BLE stack or platform layer is responsible for
+ * @note If registering as a Coc acceptor, the BLE stack or platform layer is responsible for
  *       sending LE Credit Based Connection Response based on the configured parameters.
  *
  * @param[in]  aInstance       The OpenThread instance structure.
- * @param[in]  aConnectionId   The indentifier of GAP connection.
+ * @param[in]  aConnectionId   The identifier of GAP connection.
  * @param[in]  aPsm            The value of LE Protocol/Service Multiplexer.
  * @param[in]  aMtu            The value specifies the maximum SDU size (in octets) that the L2CAP
  *                             layer entity sending the LE Credit Based Connection Request can receive
@@ -1190,8 +1190,8 @@ otError otPlatBleL2capConnectionDeregister(otInstance *aInstance, uint8_t aL2cap
 otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint8_t aL2capHandle);
 
 /**
- * The BLE stack calls this method to notify OpenThread that an valid LE Credit Based Connection
- * Request packet has been received.
+ * The BLE stack calls this method to notify OpenThread that a valid LE Credit Based Connection
+ * Request packet has been received and the Coc was successfully established on Coc acceptor side.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aL2capHandle  The L2CAP connection handle.
@@ -1206,12 +1206,15 @@ extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint8_t aL2
  * The BLE stack calls this method to notify OpenThread that an LE Credit Based Connection
  * Response packet has been received.
  *
+ * @note If the @p aError is OT_BLE_L2C_ERROR_NONE, it means the Coc was successfully established on
+ *       the Coc initiator side.
+ *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aL2capHandle  The L2CAP connection handle.
  * @param[in]  aMtu          The value specifies the maximum SDU size (in octets) that the L2CAP
  *                           layer entity sending the LE Credit Based Connection Response can receive
  *                           on this channel.
- * @param[in]  aError        The value of OT_BLE_L2C_ERROR_NONE indicates that an valid LE Credit Based
+ * @param[in]  aError        The value of OT_BLE_L2C_ERROR_NONE indicates that a valid LE Credit Based
  *                           Connection Response has been received. Otherwise error indicates the reason
  *                           of failure.
  *
@@ -1277,7 +1280,7 @@ otError otPlatBleL2capDisconnect(otInstance *aInstance, uint8_t aL2capHandle);
  * The BLE stack calls this method to notify OpenThread that an L2CAP Disconnection Request has been
  * received.
  *
- * @note BLE satck or platform layer is responsible for sending L2CAP Disconnection Response internally.
+ * @note BLE stack or platform layer is responsible for sending L2CAP Disconnection Response internally.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aL2capHandle  The L2CAP connection handle.

@@ -288,7 +288,7 @@ void platformBleHciProcess(otInstance *aInstance)
 
     if ((sTxLength != 0) && (pollfd.revents & POLLOUT))
     {
-        // divide the frame into small fragments to avoid missing bytes in the BLE Controller side.
+        // divide the frame into small fragments to avoid missing bytes on the BLE Controller side.
         uint16_t txLength = (sTxLength < BLE_HCI_FRAGMENT_LENGTH) ? sTxLength : BLE_HCI_FRAGMENT_LENGTH;
 
         otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, txLength)) > 0, errStr = "write");

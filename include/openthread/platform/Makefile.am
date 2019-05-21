@@ -56,7 +56,6 @@ ot_platform_headers                     = \
     misc.h                                \
     logging.h                             \
     radio.h                               \
-    radio-ble.h                           \
     time.h                                \
     uart.h                                \
     udp.h                                 \

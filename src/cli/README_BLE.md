@@ -19,14 +19,27 @@ Use the `BLE_L2CAP=1` build switch to enable BLE Platform L2CAP API support.
 ```
 
 #### On platform src/posix
-The platform src/posix only support BLE dual-chip modes. It comunicates with the BLE controller through UART.
-The hardware of BLE controller can use dev board [nRF52840DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK).The source code of BLE controller can get from [zephyr-ble-controller](https://devzone.nordicsemi.com/b/blog/posts/nrf5x-support-within-the-zephyr-project-rtos).
+The platform src/posix only support BLE dual-chip modes. The BEL Host comunicates with the BLE controller through HCI UART interface.
+The hardware of BLE controller can use dev board [nRF52840DK](https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK).
+The source code of BLE controller can get from [zephyr](https://github.com/zephyrproject-rtos/zephyr) and you can follow the guide [zephyr-ble-controller](https://devzone.nordicsemi.com/b/blog/posts/nrf5x-support-within-the-zephyr-project-rtos) to learn how to compile BLE Controller code and donwload the binary to dev borad.The default bluetooth public address of the BLE Controller is zero. You need to add the following code to [samples/bluetooth/hci_uart/src/main.c](https://github.com/zephyrproject-rtos/zephyr/blob/master/samples/bluetooth/hci_uart/src/main.c#L355) to set the bluetooth public address:
+```bash
+#include <bluetooth/controller.h>
 
+void main(void)
+{
+    ...
+    uint8_t ble_public_addr[6] = {0x01, 0x00, 0x00, 0x00, 0x79, 0x2b};
+    bt_ctlr_set_public_addr(ble_public_addr);
+    ...
+}
+```
+
+Compile and run ot-cli:
 ```bash
 > ./bootstrap
 # build ot-ncp-radio for NCP radio simulation
 > make -f examples/Makefile-posix
-# build Posix app with BLE Host support
+# build ot-cli with BLE Host support
 > make -f src/posix/Makefile-posix  CLI_BLE=1 BLE_L2CAP=1
 > ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1 -d /dev/ttyACM0 -b 1000000
 ```

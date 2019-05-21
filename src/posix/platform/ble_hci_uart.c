@@ -303,7 +303,10 @@ void platformBleHciProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, 
 
     if ((sTxLength > 0) && FD_ISSET(sBleSerialFd, aWriteFdSet))
     {
-        otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, sTxLength)) > 0, errStr = "write");
+        // divide the frame into small fragments to avoid missing bytes on the BLE Controller side.
+        uint16_t txLength = (sTxLength < BLE_HCI_FRAGMENT_LENGTH) ? sTxLength : BLE_HCI_FRAGMENT_LENGTH;
+
+        otEXPECT_ACTION((rval = write(sBleSerialFd, sTxBuffer, txLength)) > 0, errStr = "write");
 
         sTxBuffer += (uint16_t)rval;
         sTxLength -= (uint16_t)rval;

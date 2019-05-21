@@ -46,7 +46,6 @@ PLATFORM_SOURCES                          = \
     misc.c                                  \
     logging.c                               \
     radio.c                                 \
-    radio-ble.c                             \
     uart-posix.c                            \
     flash.c                                 \
     spi-stubs.c                             \

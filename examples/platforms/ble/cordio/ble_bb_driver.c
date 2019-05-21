@@ -46,7 +46,7 @@
 #include <string.h>
 #include <openthread/error.h>
 #include <openthread/platform/cordio/ble-radio.h>
-#include <openthread/platform/random.h>
+#include <openthread/platform/entropy.h>
 
 #if OPENTHREAD_ENABLE_BLE_CONTROLLER
 
@@ -274,12 +274,7 @@ void BbBleDrvCancelData(void)
 
 void BbBleDrvRand(uint8_t *pBuf, uint8_t len)
 {
-    uint8_t i;
-
-    for (i = 0; i < len; i++)
-    {
-        pBuf[i] = (uint8_t)(otPlatRandomGet());
-    }
+    otPlatEntropyGet(pBuf, len);
 }
 
 /**
