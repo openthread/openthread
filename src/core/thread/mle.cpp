@@ -1627,6 +1627,15 @@ void Mle::HandleAttachTimer(void)
     if (mAttachState == kAttachStateParentRequestRouter || mAttachState == kAttachStateParentRequestReed ||
         mAttachState == kAttachStateAnnounce)
     {
+        uint8_t linkQuality;
+
+        linkQuality = mParentCandidate.GetLinkInfo().GetLinkQuality();
+
+        if (linkQuality > mParentCandidate.GetLinkQualityOut())
+        {
+            linkQuality = mParentCandidate.GetLinkQualityOut();
+        }
+
         // If already attached, accept the parent candidate if
         // we are trying to attach to a better partition or if a
         // Parent Response was also received from the current parent
@@ -1638,7 +1647,7 @@ void Mle::HandleAttachTimer(void)
         // the candidate and forward to REED stage to find a better
         // parent.
 
-        if ((mParentCandidate.GetLinkInfo().GetLinkQuality() == 3 || mAttachState != kAttachStateParentRequestRouter) &&
+        if ((linkQuality == 3 || mAttachState != kAttachStateParentRequestRouter) &&
             mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
             (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
