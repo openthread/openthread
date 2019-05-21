@@ -137,26 +137,38 @@ enum
 };
 
 static uint8_t  sTxBuffer[kTxBufferSize];
-static uint16_t sTxHead     = 0;
-static uint16_t sTxLength   = 0;
-static uint16_t sSendLength = 0;
+static bool     sTxBusy     = false;
 
-static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength);
-static void     bleHciHandleSendDone(void);
-
+// BLE Controller sends HCI packet to BLE Host
 void otCordioPlatHciReceived(uint8_t *aBuf, uint8_t aBufLength)
 {
     hciTrSerialRxIncoming(aBuf, aBufLength);
 }
 
+// BLE Host sends HCI packet to BLE Controller
 uint16_t hci_mbed_os_drv_write(uint8_t type, uint16_t len, uint8_t *pData)
 {
-    return bleHciOutput(type, pData, len);
+    otEXPECT_ACTION(!sTxBusy, len =0);
+    otEXPECT_ACTION(sizeof(type) + len <= sizeof(sTxBuffer), len = 0);
+
+    sTxBuffer[0] = type;
+    memcpy(sTxBuffer + 1, pData, len + 1);
+
+    otEXPECT_ACTION(otCordioPlatHciSend(sTxBuffer, len + 1) == OT_ERROR_NONE, len = 0);
+    sTxBusy = true;
+
+exit:
+    if (len == 0)
+    {
+        otLogNotePlat("Ble Hci send packet failed: HciType = %02x\r\n", type);
+    }
+
+    return len;
 }
 
 void otCordioPlatHciSendDone(void)
 {
-    bleHciHandleSendDone();
+    sTxBusy = false;
 }
 
 void bleHciEnable(void)
@@ -167,61 +179,6 @@ void bleHciEnable(void)
 void bleHciDisable(void)
 {
     otCordioPlatHciDisable();
-}
-
-static void bleHciSend(void)
-{
-    otEXPECT(sSendLength == 0);
-
-    if (sTxLength > sizeof(sTxBuffer) - sTxHead)
-    {
-        sSendLength = sizeof(sTxBuffer) - sTxHead;
-    }
-    else
-    {
-        sSendLength = sTxLength;
-    }
-
-    if (sSendLength > 0)
-    {
-        otCordioPlatHciSend((uint8_t *)(sTxBuffer + sTxHead), sSendLength);
-    }
-
-exit:
-    return;
-}
-
-static uint16_t bleHciOutput(uint8_t aType, const uint8_t *aBuf, uint16_t aBufLength)
-{
-    uint16_t tail;
-
-    otEXPECT_ACTION(sTxLength + sizeof(aType) + aBufLength <= sizeof(sTxBuffer), aBufLength = 0);
-
-    for (int i = 0; i < (int)(sizeof(aType) + aBufLength); i++)
-    {
-        tail            = (sTxHead + sTxLength) % sizeof(sTxBuffer);
-        sTxBuffer[tail] = (i == 0) ? aType : *aBuf++;
-        sTxLength++;
-    }
-
-    bleHciSend();
-
-exit:
-    if (aBufLength == 0)
-    {
-        otLogNotePlat("Ble Hci send packet failed: HciType = %02x\r\n", aType);
-    }
-
-    return aBufLength;
-}
-
-static void bleHciHandleSendDone(void)
-{
-    sTxHead = (sTxHead + sSendLength) % sizeof(sTxBuffer);
-    sTxLength -= sSendLength;
-    sSendLength = 0;
-
-    bleHciSend();
 }
 #endif // !OPENTHREAD_ENABLE_BLE_CONTROLLER
 

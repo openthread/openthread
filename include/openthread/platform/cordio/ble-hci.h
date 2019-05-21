@@ -72,9 +72,9 @@ otError otCordioPlatHciEnable(void);
 otError otCordioPlatHciDisable(void);
 
 /**
- * Send bytes over the BLE HCI.
+ * Send HCI frame over the BLE HCI.
  *
- * @param[in] aBuf        A pointer to the data buffer.
+ * @param[in] aBuf        A pointer to the HCI frame buffer.
  * @param[in] aBufLength  Number of bytes to transmit.
  *
  * @retval OT_ERROR_NONE    Successfully started transmission.
