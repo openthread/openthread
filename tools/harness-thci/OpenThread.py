@@ -500,7 +500,7 @@ class OpenThread(IThci):
         finalMac = ':'.join(a + b + c + d for a,b,c,d in zip(hexIter, hexIter,hexIter,hexIter))
         prefix = str(finalMac)
         strIp6Prefix = prefix[:20]
-        return strIp6Prefix +':'
+        return strIp6Prefix +'::'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
