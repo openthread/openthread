@@ -183,6 +183,13 @@ exit:
     return error;
 }
 
+const otIp6Address *OTCALL otThreadGetRloc(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<Mle::MleRouter>().GetMeshLocal16();
+}
+
 const otIp6Address *otThreadGetMeshLocalEid(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

@@ -400,11 +400,21 @@ OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 OTAPI otError OTCALL otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
 
 /**
- * This function returns a pointer to the Mesh Local EID.
+ * This function returns a pointer to the Thread Routing Locator (RLOC) address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns A pointer to the Mesh Local EID.
+ * @returns A pointer to the Thread Routing Locator (RLOC) address.
+ *
+ */
+OTAPI const otIp6Address *OTCALL otThreadGetRloc(otInstance *aInstance);
+
+/**
+ * This function returns a pointer to the Mesh Local EID address.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Mesh Local EID address.
  *
  */
 OTAPI const otIp6Address *OTCALL otThreadGetMeshLocalEid(otInstance *aInstance);
