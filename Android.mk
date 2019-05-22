@@ -42,6 +42,27 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
     $(NULL)
 
+# Enable required features for on-device tests.
+ifeq ($(TARGET_BUILD_VARIANT),eng)
+OPENTHREAD_COMMON_FLAGS                                          += \
+    -DOPENTHREAD_ENABLE_DIAG=1                                      \
+    -DOPENTHREAD_ENABLE_MAC_FILTER=1                                \
+    $(NULL)
+endif
+
+# Enable all optional features for CI tests.
+ifeq ($(TARGET_PRODUCT),generic)
+OPENTHREAD_COMMON_FLAGS                                          += \
+    -DOPENTHREAD_ENABLE_APPLICATION_COAP=1                          \
+    -DOPENTHREAD_ENABLE_CERT_LOG=1                                  \
+    -DOPENTHREAD_ENABLE_COMMISSIONER=1                              \
+    -DOPENTHREAD_ENABLE_DHCP6_CLIENT=1                              \
+    -DOPENTHREAD_ENABLE_DHCP6_SERVER=1                              \
+    -DOPENTHREAD_ENABLE_DNS_CLIENT=1                                \
+    -DOPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1                    \
+    $(NULL)
+endif
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := spi-hdlc-adapter
@@ -68,14 +89,12 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(NULL)
 
@@ -246,6 +265,12 @@ LOCAL_SRC_FILES                                          := \
 
 include $(OT_EXTRA_BUILD_CONFIG)
 
+ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
+LOCAL_CFLAGS                                                                += \
+    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
+    $(NULL)
+endif
+
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -264,7 +289,6 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
@@ -273,7 +297,6 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(NULL)
 
@@ -297,6 +320,12 @@ LOCAL_SRC_FILES                            := \
 
 include $(OT_EXTRA_BUILD_CONFIG)
 
+ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
+LOCAL_CFLAGS                                                                += \
+    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
+    $(NULL)
+endif
+
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
 
@@ -316,7 +345,6 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    -D_GNU_SOURCE                                                              \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                                 \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                   \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
@@ -324,7 +352,6 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(NULL)
 
@@ -347,6 +374,12 @@ LOCAL_SRC_FILES                            := \
     $(NULL)
 
 include $(OT_EXTRA_BUILD_CONFIG)
+
+ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
+LOCAL_CFLAGS                                                                += \
+    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
+    $(NULL)
+endif
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
