@@ -481,7 +481,7 @@ The latter two parameters have following default values:
 
 ```bash
 > dns resolve ipv6.google.com
-> DNS response for ipv6.google.com - [2a00:1450:401b:801:0:0:0:200e] TTL: 300
+> DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
 ### eidcache
