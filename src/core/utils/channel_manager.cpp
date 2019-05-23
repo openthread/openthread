@@ -428,13 +428,14 @@ otError ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
     otError  error        = OT_ERROR_NONE;
     uint32_t prevInterval = mAutoSelectInterval;
 
-    VerifyOrExit((aInterval != 0) && (aInterval < TimerMilli::MsecToSec(Timer::kMaxDt)), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aInterval != 0) && (aInterval <= TimerMilli::MsecToSec(Timer::kMaxDt)),
+                 error = OT_ERROR_INVALID_ARGS);
 
     mAutoSelectInterval = aInterval;
 
     if (mAutoSelectEnabled && (mState == kStateIdle) && mTimer.IsRunning() && (prevInterval != aInterval))
     {
-        mTimer.StartAt(mTimer.GetFireTime() - prevInterval, aInterval);
+        mTimer.StartAt(mTimer.GetFireTime() - TimerMilli::SecToMsec(prevInterval), TimerMilli::SecToMsec(aInterval));
     }
 
 exit:
