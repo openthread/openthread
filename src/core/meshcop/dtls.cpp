@@ -109,8 +109,6 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 #ifdef MBEDTLS_SSL_COOKIE_C
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
 #endif
-
-    mProvisioningUrl.Init();
 }
 
 void Dtls::FreeMbedtls(void)

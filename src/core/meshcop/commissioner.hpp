@@ -332,6 +332,8 @@ private:
 
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
+    ProvisioningUrlTlv mProvisioningUrl;
+
     otCommissionerState mState;
 };
 

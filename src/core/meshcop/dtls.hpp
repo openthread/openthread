@@ -387,12 +387,6 @@ public:
      */
     const Ip6::MessageInfo &GetPeerAddress(void) const { return mPeerAddress; }
 
-    /**
-     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
-     *
-     */
-    ProvisioningUrlTlv mProvisioningUrl;
-
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
