@@ -51,8 +51,6 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <openthread-core-config.h>
-
 #include <stddef.h>
 #include <stdint.h>
 
