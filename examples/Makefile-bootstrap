@@ -1,4 +1,5 @@
 #
+#    Copyright 2019 Google LLC. All Rights Reserved.
 #    Copyright 2017-2018 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,6 +57,15 @@ abs_top_nlbuild_autotools_dir    ?= $(abs_top_srcdir)/$(nlbuild_autotools_stem)
 
 include $(abs_top_nlbuild_autotools_dir)/make/pre.mak
 include $(abs_top_nlbuild_autotools_dir)/make/host/tools/bootstrap.mak
+
+# If repos have been defined, create them as the default target goal;
+# otherwise, default to help.
+
+ifneq ($(REPOS),)
+.DEFAULT_GOAL                    := repos
+else
+.DEFAULT_GOAL                    := help
+endif # REPOS
 
 #
 # Add any project-specific bootstrap help commands to this
