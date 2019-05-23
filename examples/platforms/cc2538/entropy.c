@@ -87,7 +87,7 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
     otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
-    if (otPlatRadioIsEnabled(sInstance))
+    if (sInstance && otPlatRadioIsEnabled(sInstance))
     {
         channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
         otPlatRadioSleep(sInstance);
