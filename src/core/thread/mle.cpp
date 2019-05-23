@@ -1905,7 +1905,7 @@ void Mle::HandleDelayedResponseTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelay != TimerMilli::kForeverDt)
+    if (nextDelay < TimerMilli::kForeverDt)
     {
         mDelayedResponseTimer.Start(nextDelay);
     }

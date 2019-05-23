@@ -284,7 +284,7 @@ void KeyManager::HandleKeyRotationTimer(void)
     // rotation timer (and the `mHoursSinceKeyRotation`) if it updates the key
     // sequence.
 
-    mKeyRotationTimer.StartAt(mKeyRotationTimer.GetFireTime(), kOneHourIntervalInMsec);
+    mKeyRotationTimer.StartAt(mKeyRotationTimer.GetFireTime(), static_cast<int32_t>(kOneHourIntervalInMsec));
 
     if (mHoursSinceKeyRotation >= mKeyRotationTime)
     {

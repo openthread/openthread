@@ -805,13 +805,7 @@ void PendingDataset::StartDelayTimer(void)
 
     if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.Get(Tlv::kDelayTimer))) != NULL)
     {
-        uint32_t delay = delayTimer->GetDelayTimer();
-
-        // the Timer implementation does not support the full 32 bit range
-        if (delay > Timer::kMaxDt)
-        {
-            delay = Timer::kMaxDt;
-        }
+        int32_t delay = Timer::NormalizeDt(delayTimer->GetDelayTimer());
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
         otLogInfoMeshCoP("delay timer started %d", delay);
@@ -839,7 +833,7 @@ void PendingDataset::HandleDelayTimer(void)
 
         if (elapsed < delay)
         {
-            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
+            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), Timer::NormalizeDt(delay - elapsed));
             ExitNow();
         }
     }

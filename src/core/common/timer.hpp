@@ -70,9 +70,9 @@ class Timer : public InstanceLocator, public OwnerLocator
     friend class TimerScheduler;
 
 public:
-    static const uint32_t kMaxDt =
+    static const int32_t kMaxDt =
         (1UL << 31) - 1; ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
-    static const uint32_t kForeverDt = 0xffffffff; ///< The special forever `aDt` value.
+    static const uint32_t kForeverDt = (1UL << 31); ///< The special forever `aDt` value.
 
     /**
      * This function pointer is called when the timer expires.
@@ -115,6 +115,24 @@ public:
      *
      */
     bool IsRunning(void) const { return (mNext != this); }
+
+    /**
+     * This method converts the @p aDt to a valid value.
+     *
+     * @note If @p aDt is bigger than kMaxDt, it will be reset to kMaxtDt.
+     *
+     * @param[in]   aDt     The diff time.
+     *
+     */
+    static int32_t NormalizeDt(uint32_t aDt)
+    {
+        if (aDt > Timer::kMaxDt)
+        {
+            aDt = Timer::kMaxDt;
+        }
+
+        return reinterpret_cast<const int32_t &>(aDt);
+    }
 
 protected:
     /**
@@ -163,7 +181,11 @@ public:
      *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
+    void Start(uint32_t aDt)
+    {
+        assert(aDt <= kMaxDt);
+        StartAt(GetNow(), reinterpret_cast<const int32_t &>(aDt));
+    }
 
     /**
      * This method schedules the timer to fire at @p aDt milliseconds from @p aT0.
@@ -173,7 +195,21 @@ public:
      *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    void StartAt(uint32_t aT0, uint32_t aDt);
+    void StartAt(uint32_t aT0, uint32_t aDt)
+    {
+        assert(aDt <= Timer::kMaxDt);
+        StartAt(aT0, reinterpret_cast<const int32_t &>(aDt));
+    }
+
+    /**
+     * This method schedules the timer to fire at @p aDt milliseconds from @p aT0.
+     *
+     * @param[in]  aT0  The start time in milliseconds.
+     * @param[in]  aDt  The expire time in milliseconds from @p aT0.
+     *                  (aDt must not be equal to kForeverDt).
+     *
+     */
+    void StartAt(uint32_t aT0, int32_t aDt);
 
     /**
      * This method stops the timer.
@@ -193,7 +229,8 @@ public:
     static int32_t Diff(uint32_t aStart, uint32_t aEnd)
     {
         uint32_t diff = aEnd - aStart;
-        return reinterpret_cast<int32_t &>(diff);
+
+        return reinterpret_cast<const int32_t &>(diff);
     }
 
     /**
@@ -443,7 +480,11 @@ public:
      *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    void Start(uint32_t aDt) { StartAt(GetNow(), aDt); }
+    void Start(uint32_t aDt)
+    {
+        assert(aDt <= kMaxDt);
+        StartAt(GetNow(), reinterpret_cast<const int32_t &>(aDt));
+    }
 
     /**
      * This method schedules the timer to fire at @p aDt microseconds from @p aT0.
@@ -453,7 +494,21 @@ public:
      *                  (aDt must be smaller than or equal to kMaxDt).
      *
      */
-    void StartAt(uint32_t aT0, uint32_t aDt);
+    void StartAt(uint32_t aT0, uint32_t aDt)
+    {
+        assert(aDt <= Timer::kMaxDt);
+        StartAt(aT0, reinterpret_cast<const int32_t &>(aDt));
+    }
+
+    /**
+     * This method schedules the timer to fire at @p aDt microseconds from @p aT0.
+     *
+     * @param[in]  aT0  The start time in microseconds.
+     * @param[in]  aDt  The expire time in microseconds from @p aT0.
+     *                  (aDt must not be equal to kForeverDt).
+     *
+     */
+    void StartAt(uint32_t aT0, int32_t aDt);
 
     /**
      * This method stops the timer.

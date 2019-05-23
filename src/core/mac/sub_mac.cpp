@@ -447,7 +447,7 @@ void SubMac::SampleRssi(void)
 
     if (TimerMilliScheduler::IsStrictlyBefore(TimerMilli::GetNow(), mEnergyScanEndTime))
     {
-        mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
+        mTimer.StartAt(mTimer.GetFireTime(), static_cast<int32_t>(kEnergyScanRssiSampleInterval));
     }
     else
     {

@@ -421,7 +421,7 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
         }
     }
 
-    if (nextTimeout != TimerMilli::kForeverDt)
+    if (nextTimeout < TimerMilli::kForeverDt)
     {
         // Update the timer to the timeout of the next Joiner.
         mJoinerExpirationTimer.Start(nextTimeout);

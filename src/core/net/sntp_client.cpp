@@ -323,7 +323,7 @@ void Client::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != TimerMilli::kForeverDt)
+    if (nextDelta < TimerMilli::kForeverDt)
     {
         mRetransmissionTimer.Start(nextDelta);
     }

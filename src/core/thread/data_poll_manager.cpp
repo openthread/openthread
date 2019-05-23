@@ -414,11 +414,11 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
             // response is available/prepared on the parent node).
             if (TimerScheduler::IsStrictlyBefore(mTimerStartTime + mPollPeriod, now + kMinPollPeriod))
             {
-                mTimer.StartAt(now, kMinPollPeriod);
+                mTimer.StartAt(now, static_cast<int32_t>(kMinPollPeriod));
             }
             else
             {
-                mTimer.StartAt(mTimerStartTime, mPollPeriod);
+                mTimer.StartAt(mTimerStartTime, Timer::NormalizeDt(mPollPeriod));
             }
         }
         // Do nothing on the running poll timer if the poll interval doesn't change
@@ -426,7 +426,7 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     else
     {
         mTimerStartTime = now;
-        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+        mTimer.StartAt(mTimerStartTime, Timer::NormalizeDt(mPollPeriod));
     }
 }
 

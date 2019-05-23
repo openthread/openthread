@@ -70,10 +70,10 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow)
     return retval;
 }
 
-void TimerMilli::StartAt(uint32_t aT0, uint32_t aDt)
+void TimerMilli::StartAt(uint32_t aT0, int32_t aDt)
 {
-    assert(aDt <= kMaxDt);
-    mFireTime = aT0 + aDt;
+    assert(reinterpret_cast<const uint32_t &>(aDt) != kForeverDt);
+    mFireTime = aT0 + reinterpret_cast<const uint32_t &>(aDt);
     Get<TimerMilliScheduler>().Add(*this);
 }
 
@@ -218,10 +218,10 @@ exit:
 const TimerScheduler::AlarmApi TimerMicroScheduler::sAlarmMicroApi = {&otPlatAlarmMicroStartAt, &otPlatAlarmMicroStop,
                                                                       &otPlatAlarmMicroGetNow};
 
-void TimerMicro::StartAt(uint32_t aT0, uint32_t aDt)
+void TimerMicro::StartAt(uint32_t aT0, int32_t aDt)
 {
-    assert(aDt <= kMaxDt);
-    mFireTime = aT0 + aDt;
+    assert(reinterpret_cast<const uint32_t &>(aDt) != kForeverDt);
+    mFireTime = aT0 + reinterpret_cast<const uint32_t &>(aDt);
     Get<TimerMicroScheduler>().Add(*this);
 }
 

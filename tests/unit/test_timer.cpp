@@ -317,7 +317,8 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval;
 
-    timer2.StartAt(kTimeT0, kTimerInterval - 2); // Timer 2 is even before timer 1
+    // Test negative aDt support.
+    timer2.StartAt(timer1.GetFireTime(), -2); // Timer 2 is even before timer 1
 
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == true, "TestTwoTimers: Timer running Failed.\n");
