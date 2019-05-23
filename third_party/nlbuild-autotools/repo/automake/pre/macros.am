@@ -1,4 +1,5 @@
 #
+#    Copyright 2019 Google LLC. All Rights Reserved.
 #    Copyright 2014-2016 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +34,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/subdirs.am
 # Create the directory with the name of the $(@) variable.
 #
 define create-directory
-$(AM_V_MKDIR_P)$(MKDIR_P) $(@)
+$(call nl-create-dir,$(@))
 endef # create-directory
 
 #
@@ -43,7 +44,7 @@ endef # create-directory
 # the destination of the $(@) variable.
 #
 define create-link
-$(AM_V_LN_S)$(LN_S) $(<) $(@)
+$(call nl-create-link)
 endef # create-link
 
 #
@@ -68,16 +69,7 @@ endef # create-link
 #
 #
 define check-file
-$(AM_V_at)set -e;                                   \
-echo '  CHECK    $(@)';                             \
-$(MKDIR_P) $(dir $(@));                             \
-$(call check-file-$(1),$(<),$(@).N);                \
-if [ -r "$(@)" ] && $(CMP) -s "$(@)" "$(@).N"; then \
-    rm -f "$(@).N";                                 \
-else                                                \
-    echo '  GEN      $(@)';                         \
-    mv -f "$(@).N" "$(@)";                          \
-fi
+$(call nl-check-file-with-subroutine,check-file,$(1))
 endef # check-file
 
 

@@ -120,7 +120,8 @@ $$($(2)_repo_GIT): $(REPOS_PACKAGE_GIT_PATH) | repos-warning
 endef # REPOS_template
 
 $(REPOS_PACKAGE_GIT_PATH):
-	$(NL_V_GIT_INIT)$(GIT) -C $(top_srcdir) init -q $(top_srcdir)
+	$(NL_V_PROGRESS_GIT_INIT)
+	$(GIT) -C $(top_srcdir) init -q $(top_srcdir)
 	$(NL_V_AT)touch $(REPOS_GIT_INIT_SENTINEL)
 
 define PrintReposWarning
@@ -201,13 +202,11 @@ $(NL_V_AT)echo "    this package regards as required or optional."
 $(NL_V_AT)echo
 endef # MaybePrintReposHelp
 
-.DEFAULT_GOAL                    := repos
 else
 
 define MaybePrintReposHelp
 endef # MaybePrintReposHelp
 
-.DEFAULT_GOAL                    := help
 endif # REPOS
 
 define PrintReposHelp

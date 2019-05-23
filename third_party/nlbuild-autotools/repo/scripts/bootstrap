@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 #
+#    Copyright 2019 Google LLC. All Rights Reserved.
 #    Copyright 2014-2017 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +53,75 @@ usage() {
 }
 
 #
+# check_required_executable <path variable> <executable name>
+#
+# Check to ensure that the named executable with the path in the
+# provided variable exists and is executable by the current user.
+#
+check_required_executable() {
+    variable="${1}"
+    path="${!variable}"
+    name="${2}"
+    output="${3}"
+    stem="The required executable '${name}'"
+
+    if [ -z "${path}" ]; then
+        echo "${stem} could not be found."
+
+        eval "${output}"="no"
+
+        return 1
+    elif [ ! -e "${path}" ] || [ ! -x "${path}" ]; then
+        stem="${stem} at '${path}'"
+
+        if [ ! -e ${path} ]; then
+            echo "${stem} does not exist."
+        elif [ ! -x ${path} ]; then
+            echo "${stem} is not executable."
+        fi
+
+        echo "Please ensure '${name}' is available in PATH."
+
+	eval "${output}"="no"
+
+        return 1
+    fi
+
+    eval "${output}"="yes"
+
+    return 0
+}
+
+check_required_executables()
+{
+    check_required_executable ACLOCAL aclocal have_aclocal
+    check_required_executable AUTOCONF autoconf have_autoconf
+    check_required_executable AUTOHEADER autoheader have_autoheader
+    check_required_executable AUTOMAKE automake have_automake
+    check_required_executable LIBTOOLIZE libtoolize have_libtoolize
+    check_required_executable M4 m4 have_m4
+
+    if [ "${have_aclocal}" = "no" ] || [ "${have_autoconf}" = "no" ] || [ "${have_autoheader}" = "no" ] || [ "${have_automake}" = "no" ] || [ "${have_libtoolize}" = "no" ] || [ "${have_m4}" = "no" ]; then
+	cat << EOF
+--------------------------------------------------------------------------------
+Your build host system is missing one or more of the above executables required
+for bootstrapping this nlbuild-autotools-based package. You can either install
+these yourself using package management tools available and appropriate for your
+build host platform or you can build preselected versions of these executables
+from source for this package on this build host by invoking:
+
+    make -C ${nlbuild_autotools_dir} tools
+
+and then re-running this script which will use those executables.
+--------------------------------------------------------------------------------
+EOF
+    
+      exit 1
+    
+    fi
+}
+
+#
 # removetmp
 #
 # Remove temporary files and directories used during the run of this
@@ -93,13 +163,14 @@ while [ ${#} -gt 0 ]; do
 
     -w|--what)
         case "${2}" in
+
         all|make*|conf*|none)
             what="${2}"
             shift 2
             ;;
 
         *)
-	    echo "Unknown what value '${2}'."
+	    echo "Unknown what value '${2}'." >&2
             usage 1
             ;;
 
@@ -117,11 +188,11 @@ done
 # is sane.
 
 if [ -z "${nlbuild_autotools_dir}" ]; then
-    echo "$0: No -I option specified. Please provide the location of the nlbuild-autotools directory."
+    echo "$0: No -I option specified. Please provide the location of the nlbuild-autotools directory." >&2
     exit 1
 
 elif [ ! -d "${nlbuild_autotools_dir}" ]; then
-    echo "$0: No such directory: ${nlbuild_autotools_dir}. Please provide a valid path to the nlbuild-autotools directory."
+    echo "$0: No such directory: ${nlbuild_autotools_dir}. Please provide a valid path to the nlbuild-autotools directory." >&2
     exit 1
 
 fi
@@ -216,6 +287,12 @@ if [ -r "${abs_top_hostdir}/${host}/bin/libtoolize" ]; then
     chmod 775 "${LIBTOOLIZE}"
 fi
 
+# Before we get much further, check to ensure that the required
+# executables are available and, if not, provide some actionable
+# guidance.
+
+check_required_executables
+ 
 if [ -n "${verbose}" ]; then
     echo PATH="${PATH}"
 

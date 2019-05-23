@@ -1,3 +1,43 @@
+1.6.11 (2019-05-23)
+
+        * Changed the bootstrap shebang from sh to bash to address a
+          bashism that arrived at 1.6.10.
+
+1.6.10 (2019-05-02)
+
+        * Added additional up-front checks to the bootstrap script to
+          ensure required executables are available.
+
+1.6.9 (2019-04-30)
+
+        * Now that both automake and pure make headers and footers are
+          co-mingled, address an issues in which the .DEFAULT_GOAL
+          specifications in the repos.mak footer were conflicting with
+          makefiles that wanted a different default goal by moving
+          those .DEFAULT_GOAL specifications to Makefile-bootstrap.
+
+1.6.8 (2019-04-29)
+
+        * Downgraded m4 from 1.4.17 to 1.4.5 since 1.4.5 seems to be the
+          last version of m4 that does not abort on invocation in the m4
+          *rintf and friends compatibility and portability library.
+
+        * Leverage both automake and pure make headers and footers by
+          including the latter in the former.
+
+        * Reworked how verbose progress is handled to simplify
+          specification of progress macros.
+
+        * Rebased several automake header macros implementations on their
+          pure make equivalents.
+
+1.6.7 (2019-04-26)
+
+        * Addressed issues with NL_FILTERED_CANONICAL in which the desired
+          content to be filtered was not filtering correctly and in which
+          the desired filtered canonical variables were not emitted in
+          makefiles.
+
 1.6.6 (2019-04-09)
 
         * Added code coverage support for clang, which uses a link flag
