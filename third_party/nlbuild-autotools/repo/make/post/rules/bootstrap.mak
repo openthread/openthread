@@ -24,28 +24,35 @@
 # the GNU autotools-based build system used by this package.
 
 all check coverage dist distcheck doc docdist install install-headers pretty pretty-check: Makefile
-	$(NL_V_MAKE)$(MAKE) -f $(<) --no-print-directory $(@)
+	$(NL_V_PROGRESS_MAKE)
+	$(MAKE) -f $(<) --no-print-directory $(@)
 
 Makefile: $(top_srcdir)/Makefile.in $(top_srcdir)/configure
-	$(NL_V_CONFIGURE)$(top_srcdir)/configure
+	$(NL_V_PROGRESS_CONFIGURE)
+	$(top_srcdir)/configure
 
 $(top_srcdir)/configure: $(top_srcdir)/configure.ac
-	$(NL_V_BOOTSTRAP_CONFIG)$(BOOTSTRAP) -w config
+	$(NL_V_PROGRESS_BOOTSTRAP_CONFIG)
+	$(BOOTSTRAP) -w config
 
 Makefile.in: Makefile.am
-	$(NL_V_BOOTSTRAP_MAKE)$(BOOTSTRAP) -w make
+	$(NL_V_PROGRESS_BOOTSTRAP_MAKE)
+	$(BOOTSTRAP) -w make
 
 .PHONY: bootstrap
 bootstrap:
-	$(NL_V_BOOTSTRAP_ALL)$(BOOTSTRAP) -w all
+	$(NL_V_PROGRESS_BOOTSTRAP_ALL)
+	$(BOOTSTRAP) -w all
 
 .PHONY: bootstrap-config
 bootstrap-config:
-	$(NL_V_BOOTSTRAP_CONFIG)$(BOOTSTRAP) -w config
+	$(NL_V_PROGRESS_BOOTSTRAP_CONFIG)
+	$(BOOTSTRAP) -w config
 
 .PHONY: bootstrap-make
 bootstrap-make:
-	$(NL_V_BOOTSTRAP_MAKE)$(BOOTSTRAP) -w make
+	$(NL_V_PROGRESS_BOOTSTRAP_MAKE)
+	$(BOOTSTRAP) -w make
 
 define PrintBootstrapHelp
 $(NL_V_AT)echo "  all"
