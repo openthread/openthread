@@ -8,12 +8,12 @@
 
 # What is OpenThread?
 
-OpenThread is...
+OpenThread released by Google is...
 <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
 <img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right">
 </a>
 
-**...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
+**...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Google Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
 
 **...OS and platform agnostic**, with a narrow platform abstraction layer and a small memory footprint, making it highly portable. It supports both system-on-chip (SoC) and network co-processor (NCP) designs.
 
@@ -35,7 +35,7 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 
 # Who supports OpenThread?
 
-<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="https://www.cascoda.com/"><img src="doc/images/ot-contrib-cascoda.png" alt="Cascoda" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="200px"></a><a href="https://www.particle.io/"><img src="doc/images/ot-contrib-particle.png" alt="Particle" width="200px"></a><a href="http://www.qorvo.com/"><img src="doc/images/ot-contrib-qorvo.png" alt="Qorvo" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.st.com/"><img src="doc/images/ot-contrib-stm.png" alt="STMicroelectronics" width="200px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a><a href="https://www.zephyrproject.org/"><img src="doc/images/ot-contrib-zephyr.png" alt="Zephyr Project" width="200px"></a>
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="https://www.cascoda.com/"><img src="doc/images/ot-contrib-cascoda.png" alt="Cascoda" width="200px"></a><a href="https://www.google.com/"><img src="doc/images/ot-contrib-google.png" alt="Google" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="200px"></a><a href="https://www.particle.io/"><img src="doc/images/ot-contrib-particle.png" alt="Particle" width="200px"></a><a href="http://www.qorvo.com/"><img src="doc/images/ot-contrib-qorvo.png" alt="Qorvo" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.st.com/"><img src="doc/images/ot-contrib-stm.png" alt="STMicroelectronics" width="200px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a><a href="https://www.zephyrproject.org/"><img src="doc/images/ot-contrib-zephyr.png" alt="Zephyr Project" width="200px"></a>
 
 # Getting started
 
