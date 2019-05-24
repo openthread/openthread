@@ -1667,6 +1667,38 @@ otThreadSetPSKc(
 OTAPI
 const otIp6Address *
 OTCALL
+otThreadGetLinkLocalIp6Address(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_LINK_LOCAL_ADDRESS, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
+otThreadGetRloc(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_RLOC, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
 otThreadGetMeshLocalEid(
     _In_ otInstance *aInstance
     )
