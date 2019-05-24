@@ -86,6 +86,7 @@ struct MessageInfo
         MessageQueue * mMessage;  ///< Identifies the message queue (if any) where this message is queued.
         PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
     } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
+    otMessageCallback mCallback;  ///< The message callback to indicate final status of an outbound message.
 
     uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
     uint16_t    mLength;      ///< Number of bytes within the message.
@@ -456,7 +457,8 @@ public:
      *
      * It allocates the new message from the same message pool as the original one and copies @p aLength octets
      * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
+     * cloned message are also copied from the original one. A registered callback handler from the original message
+     * is not copied onto the cloned message.
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
@@ -470,7 +472,8 @@ public:
      *
      * It allocates the new message from the same message pool as the original one and copies the entire payload. The
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * copied from the original one. A registered callback handler from the original message is not copied onto the
+     * cloned message.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
@@ -705,6 +708,27 @@ public:
      *
      */
     const RssAverager &GetRssAverager(void) const { return mBuffer.mHead.mInfo.mRssAverager; }
+
+    /**
+     * This method registers a callback handler.
+     *
+     * A subsequent call to this method will overwrite the previous callback handler.
+     *
+     * @note When a message is cloned using `Clone() method, the registered callback from the original message is NOT
+     * copied onto the cloned message. The cloned message will start with no callback handler.
+     *
+     * @pram[in] aCallback   The message callback handler (can be NULL).
+     *
+     */
+    void RegisterCallback(otMessageCallback aCallback) { mBuffer.mHead.mInfo.mCallback = aCallback; }
+
+    /**
+     * This method invokes the callback handler associated with the `Message` with a given error
+     *
+     * @param[in] aError  The error to pass from the callback handler.
+     *
+     */
+    void InvokeCallback(otError aError);
 
     /**
      * This static method updates a checksum.

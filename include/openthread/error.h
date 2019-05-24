@@ -350,6 +350,14 @@ typedef enum otError
     OT_ERROR_LINK_MARGIN_LOW = 34,
 
     /**
+     * Message was evicted.
+     *
+     * This error indicates that message was dropped to make memory/buffer available for a higher priority message.
+     *
+     */
+    OT_ERROR_EVICTED = 35,
+
+    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,

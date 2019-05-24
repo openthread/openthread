@@ -158,7 +158,8 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
     }
 
     mSendQueue.Dequeue(aMessage);
-    LogMessage(kMessageEvict, aMessage, NULL, OT_ERROR_NO_BUFS);
+    aMessage.InvokeCallback(OT_ERROR_EVICTED);
+    LogMessage(kMessageEvict, aMessage, NULL, OT_ERROR_EVICTED);
     aMessage.Free();
 }
 
@@ -285,6 +286,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
         default:
             mSendQueue.Dequeue(*curMessage);
+            curMessage->InvokeCallback(error);
             LogMessage(kMessageDrop, *curMessage, NULL, error);
             curMessage->Free();
             continue;
@@ -1103,6 +1105,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
             }
 #endif
 
+            mSendMessage->InvokeCallback(txError);
             LogMessage(kMessageTransmit, *mSendMessage, &macDest, txError);
 
             if (mSendMessage->GetType() == Message::kTypeIp6)

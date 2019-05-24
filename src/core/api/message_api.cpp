@@ -113,6 +113,12 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
     return message.Write(aOffset, aLength, aBuf);
 }
 
+void otMessageRegisterCallback(otMessage *aMessage, otMessageCallback aCallback)
+{
+    Message &message = *static_cast<Message *>(aMessage);
+    message.RegisterCallback(aCallback);
+}
+
 void otMessageQueueInit(otMessageQueue *aQueue)
 {
     aQueue->mData = NULL;

@@ -176,6 +176,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
             }
             else
             {
+                cur->InvokeCallback(aError);
                 LogMessage(kMessageDrop, *cur, NULL, aError);
                 cur->Free();
             }
@@ -378,6 +379,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
         }
 
         mSendQueue.Dequeue(*message);
+        message->InvokeCallback(OT_ERROR_DROP);
         LogMessage(kMessageDrop, *message, NULL, OT_ERROR_NONE);
         message->Free();
     }
@@ -722,6 +724,7 @@ void MeshForwarder::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aEr
 
         if (!mSendMessage->GetDirectTransmission())
         {
+            mSendMessage->InvokeCallback(txError);
             LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
 
             if (mSendMessage->GetType() == Message::kTypeIp6)

@@ -110,6 +110,19 @@ typedef struct otMessageSettings
 } otMessageSettings;
 
 /**
+ * This type defines the callback for a message.
+ *
+ * The callback is invoked to indicate the status of an outbound message, whether it is sent successfully, dropped, or
+ * any failures during transmission over the air (e.g. no ACK is received or CSMA-CA failure).
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ * @param[in] aMessage   A pointer to the message.
+ * @param[in] aError     The error related to message transmission.
+ *
+ */
+typedef void (*otMessageCallback)(otInstance *aInstance, const otMessage *aMessage, otError aError);
+
+/**
  * Free an allocated message buffer.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
@@ -294,6 +307,18 @@ uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, 
  *
  */
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+/**
+ * This function registers a callback on message. The callback is invoked to indicate the final status of message
+ * transmission.
+ *
+ * A subsequent call to this function will overwrite the previous callback handler.
+ *
+ * @param[in] aMessage   A pointer to a message buffer.
+ * @param[in] aCallback  A callback handler (can be NULL).
+ *
+ */
+void otMessageRegisterCallback(otMessage *aMessage, otMessageCallback aCallback);
 
 /**
  * This structure represents an OpenThread message queue.

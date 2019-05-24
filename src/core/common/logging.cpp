@@ -302,6 +302,10 @@ const char *otThreadErrorToString(otError aError)
         retval = "LinkMarginLow";
         break;
 
+    case OT_ERROR_EVICTED:
+        retval = "Evicted";
+        break;
+
     default:
         retval = "UnknownErrorType";
         break;

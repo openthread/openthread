@@ -691,6 +691,14 @@ exit:
     return rval;
 }
 
+void Message::InvokeCallback(otError aError)
+{
+    if (mBuffer.mHead.mInfo.mCallback != NULL)
+    {
+        mBuffer.mHead.mInfo.mCallback(&GetMessagePool()->GetInstance(), this, aError);
+    }
+}
+
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aValue)
 {
     uint16_t result = aChecksum + aValue;
