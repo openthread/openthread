@@ -421,8 +421,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
         mEnergyScanEndTime = TimerMilli::GetNow() + aScanDuration;
-        mTimer.Start(kEnergyScanRssiSampleInterval);
-        SampleRssi();
+        mTimer.Start(0);
     }
     else
     {
