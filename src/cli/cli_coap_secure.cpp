@@ -384,7 +384,7 @@ otError CoapSecure::ProcessX509(int argc, char *argv[])
 exit:
     return error;
 #else
-    return OT_ERROR_DISABLED_FEATURE
+    return OT_ERROR_DISABLED_FEATURE;
 #endif
 }
 
