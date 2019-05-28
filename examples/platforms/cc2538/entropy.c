@@ -41,7 +41,7 @@
 
 static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    uint32_t OLD_RFCORE_XREG_FRMCTRL0;
+    uint32_t frmctrl0;
 
     HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
@@ -49,7 +49,7 @@ static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
     while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0)
         ;
 
-    OLD_RFCORE_XREG_FRMCTRL0    = HWREG(RFCORE_XREG_FRMCTRL0);
+    frmctrl0                    = HWREG(RFCORE_XREG_FRMCTRL0);
     HWREG(RFCORE_XREG_FRMCTRL0) = RFCORE_XREG_FRMCTRL0_INFINITY_RX;
     HWREG(RFCORE_SFR_RFST)      = RFCORE_SFR_RFST_INSTR_RXON;
 
@@ -68,7 +68,7 @@ static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
     }
 
     HWREG(RFCORE_SFR_RFST)      = RFCORE_SFR_RFST_INSTR_RFOFF;
-    HWREG(RFCORE_XREG_FRMCTRL0) = OLD_RFCORE_XREG_FRMCTRL0;
+    HWREG(RFCORE_XREG_FRMCTRL0) = frmctrl0;
 }
 
 void cc2538RandomInit(void)
