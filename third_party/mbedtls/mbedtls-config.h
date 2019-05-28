@@ -36,15 +36,6 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/memory.h>
 
-#if defined(_WIN32)
-#include <stdarg.h>
-#include <stdio.h>
-// Temporary, until the warnings can get fixed in the mbed library
-#pragma warning(disable:4242)  // conversion from '*' to '*', possible loss of data
-#pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
-#pragma warning(disable:4267)  // conversion from '*' to '*', possible loss of data
-#endif
-
 #if defined(_KERNEL_MODE)
 #define MBEDTLS_PLATFORM_EXIT_MACRO
 __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ...)
@@ -68,9 +59,7 @@ __inline void mbedtls_platform_zeroize( void *buf, size_t len)
 }
 #endif
 
-#ifndef _WIN32
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
-#endif
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(_KERNEL_MODE)
 #define _CRT_SECURE_NO_DEPRECATE 1

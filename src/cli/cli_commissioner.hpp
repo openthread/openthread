@@ -96,22 +96,22 @@ private:
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
 
-    static void OTCALL HandleStateChanged(otCommissionerState aState, void *aContext);
-    void               HandleStateChanged(otCommissionerState aState);
+    static void HandleStateChanged(otCommissionerState aState, void *aContext);
+    void        HandleStateChanged(otCommissionerState aState);
 
-    static void OTCALL HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
-                                         const otExtAddress *      aJoinerId,
-                                         void *                    aContext);
-    void               HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent, const otExtAddress *aJoinerId);
+    static void HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent,
+                                  const otExtAddress *      aJoinerId,
+                                  void *                    aContext);
+    void        HandleJoinerEvent(otCommissionerJoinerEvent aJoinerEvent, const otExtAddress *aJoinerId);
 
-    static void OTCALL HandleEnergyReport(uint32_t       aChannelMask,
-                                          const uint8_t *aEnergyList,
-                                          uint8_t        aEnergyListLength,
-                                          void *         aContext);
-    void               HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
+    static void HandleEnergyReport(uint32_t       aChannelMask,
+                                   const uint8_t *aEnergyList,
+                                   uint8_t        aEnergyListLength,
+                                   void *         aContext);
+    void        HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
 
-    static void OTCALL HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
-    void               HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+    static void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+    void        HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;

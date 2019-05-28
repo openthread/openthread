@@ -31,8 +31,6 @@
  *   This file implements the callbacks from `SubMac` layer into `Mac` or `LinkRaw`.
  */
 
-#define WPP_NAME "sub_mac_callbacks.tmh"
-
 #include "sub_mac.hpp"
 
 #include "common/code_utils.hpp"

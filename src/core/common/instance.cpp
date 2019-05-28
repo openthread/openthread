@@ -31,8 +31,6 @@
  *   This file implements the OpenThread Instance class.
  */
 
-#define WPP_NAME "instance.tmh"
-
 #include "instance.hpp"
 
 #include <openthread/platform/misc.h>

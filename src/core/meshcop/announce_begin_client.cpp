@@ -31,8 +31,6 @@
  *   This file implements the Announce Begin Client.
  */
 
-#define WPP_NAME "announce_begin_client.tmh"
-
 #include "announce_begin_client.hpp"
 
 #include "coap/coap_message.hpp"

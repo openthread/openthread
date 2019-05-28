@@ -31,8 +31,6 @@
  *   This file implements MeshCoP Datasets manager to process commands.
  *
  */
-#define WPP_NAME "dataset_manager_ftd.tmh"
-
 #if OPENTHREAD_FTD
 
 #include <stdio.h>

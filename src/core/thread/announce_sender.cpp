@@ -31,8 +31,6 @@
  *   This file implements the AnnounceSender.
  */
 
-#define WPP_NAME "announce_sender.tmh"
-
 #include "announce_sender.hpp"
 
 #include <openthread/platform/radio.h>

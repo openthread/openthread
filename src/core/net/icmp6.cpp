@@ -31,8 +31,6 @@
  *   This file implements ICMPv6.
  */
 
-#define WPP_NAME "icmp6.tmh"
-
 #include "icmp6.hpp"
 
 #include "utils/wrap_string.h"

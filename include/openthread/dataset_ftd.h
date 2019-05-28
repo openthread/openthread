@@ -59,7 +59,7 @@ extern "C" {
  * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
  *
  */
-OTAPI otError OTCALL otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset);
+otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * Get minimal delay timer.
@@ -69,7 +69,7 @@ OTAPI otError OTCALL otDatasetCreateNewNetwork(otInstance *aInstance, otOperatio
  * @retval the value of minimal delay timer (in ms).
  *
  */
-OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
+uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance);
 
 /**
  * Set minimal delay timer.
@@ -84,7 +84,7 @@ OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_ARGS  If @p aDelayTimerMinimal is not valid.
  *
  */
-OTAPI otError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
+otError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
 
 /**
  * @}

@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define WPP_NAME "coap.tmh"
-
 #include "coap.hpp"
 
 #include "common/code_utils.hpp"

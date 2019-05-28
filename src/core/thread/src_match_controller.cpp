@@ -31,8 +31,6 @@
  *   This file implements source address match controller.
  */
 
-#define WPP_NAME "src_match_controller.tmh"
-
 #include "src_match_controller.hpp"
 
 #include "common/code_utils.hpp"

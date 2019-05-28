@@ -380,7 +380,7 @@ otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessa
  * @param[out]  aBufferInfo  A pointer where the message buffer information is written.
  *
  */
-OTAPI void OTCALL otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
+void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
 
 /**
  * @}

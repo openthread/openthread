@@ -289,7 +289,7 @@ typedef enum otMeshcopTlvType
  * @returns TRUE if a valid network is present in the Active Operational Dataset, FALSE otherwise.
  *
  */
-OTAPI bool OTCALL otDatasetIsCommissioned(otInstance *aInstance);
+bool otDatasetIsCommissioned(otInstance *aInstance);
 
 /**
  * This function gets the Active Operational Dataset.
@@ -301,7 +301,7 @@ OTAPI bool OTCALL otDatasetIsCommissioned(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
+otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function sets the Active Operational Dataset.
@@ -327,7 +327,7 @@ OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalData
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI otError OTCALL otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
+otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function gets the Pending Operational Dataset.
@@ -339,7 +339,7 @@ OTAPI otError OTCALL otDatasetSetActive(otInstance *aInstance, const otOperation
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI otError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
+otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function sets the Pending Operational Dataset.
@@ -352,7 +352,7 @@ OTAPI otError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDat
  * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI otError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
+otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function sends MGMT_ACTIVE_GET.
@@ -367,11 +367,11 @@ OTAPI otError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperatio
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
-                                                const otOperationalDatasetComponents *aDatasetComponents,
-                                                const uint8_t *                       aTlvTypes,
-                                                uint8_t                               aLength,
-                                                const otIp6Address *                  aAddress);
+otError otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
+                                   const otOperationalDatasetComponents *aDatasetComponents,
+                                   const uint8_t *                       aTlvTypes,
+                                   uint8_t                               aLength,
+                                   const otIp6Address *                  aAddress);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
@@ -385,10 +385,10 @@ OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *                    
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtActiveSet(otInstance *                aInstance,
-                                                const otOperationalDataset *aDataset,
-                                                const uint8_t *             aTlvs,
-                                                uint8_t                     aLength);
+otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
+                                   const otOperationalDataset *aDataset,
+                                   const uint8_t *             aTlvs,
+                                   uint8_t                     aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -403,11 +403,11 @@ OTAPI otError OTCALL otDatasetSendMgmtActiveSet(otInstance *                aIns
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
-                                                 const otOperationalDatasetComponents *aDatasetComponents,
-                                                 const uint8_t *                       aTlvTypes,
-                                                 uint8_t                               aLength,
-                                                 const otIp6Address *                  aAddress);
+otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
+                                    const otOperationalDatasetComponents *aDatasetComponents,
+                                    const uint8_t *                       aTlvTypes,
+                                    uint8_t                               aLength,
+                                    const otIp6Address *                  aAddress);
 
 /**
  * This function sends MGMT_PENDING_SET.
@@ -421,10 +421,10 @@ OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *                   
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI otError OTCALL otDatasetSendMgmtPendingSet(otInstance *                aInstance,
-                                                 const otOperationalDataset *aDataset,
-                                                 const uint8_t *             aTlvs,
-                                                 uint8_t                     aLength);
+otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
+                                    const otOperationalDataset *aDataset,
+                                    const uint8_t *             aTlvs,
+                                    uint8_t                     aLength);
 
 /**
  * @}

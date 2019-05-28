@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "joiner_router.tmh"
-
 #include "joiner_router.hpp"
 
 #include <stdio.h>

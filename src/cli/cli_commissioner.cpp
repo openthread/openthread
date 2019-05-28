@@ -321,7 +321,7 @@ otError Commissioner::ProcessStart(int argc, char *argv[])
                                &Commissioner::HandleJoinerEvent, this);
 }
 
-void OTCALL Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
+void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleStateChanged(aState);
 }
@@ -344,9 +344,7 @@ void Commissioner::HandleStateChanged(otCommissionerState aState)
     }
 }
 
-void OTCALL Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                            const otExtAddress *      aJoinerId,
-                                            void *                    aContext)
+void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent, const otExtAddress *aJoinerId, void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleJoinerEvent(aEvent, aJoinerId);
 }
@@ -410,10 +408,10 @@ otError Commissioner::Process(int argc, char *argv[])
     return error;
 }
 
-void OTCALL Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
-                                             const uint8_t *aEnergyList,
-                                             uint8_t        aEnergyListLength,
-                                             void *         aContext)
+void Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
+                                      const uint8_t *aEnergyList,
+                                      uint8_t        aEnergyListLength,
+                                      void *         aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleEnergyReport(aChannelMask, aEnergyList, aEnergyListLength);
 }
@@ -430,7 +428,7 @@ void Commissioner::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEne
     mInterpreter.mServer->OutputFormat("\r\n");
 }
 
-void OTCALL Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
+void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandlePanIdConflict(aPanId, aChannelMask);
 }

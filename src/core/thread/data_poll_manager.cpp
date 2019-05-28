@@ -31,8 +31,6 @@
  *   This file implements data poll (mac data request command) manager class.
  */
 
-#define WPP_NAME "data_poll_manager.tmh"
-
 #include "data_poll_manager.hpp"
 
 #include "common/code_utils.hpp"

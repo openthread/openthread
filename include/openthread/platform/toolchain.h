@@ -63,15 +63,6 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
-#pragma warning(disable : 4214) // nonstandard extension used: bit field types other than int
-#ifdef _KERNEL_MODE
-#include <ntdef.h>
-#else
-#include <windows.h>
-#endif
-#endif /* _WIN32 */
-
 /**
  * @def OT_TOOL_PACKED_BEGIN
  *
@@ -185,45 +176,6 @@ extern "C" {
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
-
-/**
- * @def OTAPI
- *
- * Compiler-specific modifier for public API declarations.
- *
- */
-
-/**
- * @def OTCALL
- *
- * Compiler-specific modifier to export functions in a DLL.
- *
- */
-
-#ifdef _MSC_VER
-
-#ifdef _WIN64
-#define OT_CDECL
-#else
-#define OT_CDECL __cdecl
-#endif
-
-#else
-
-#define OT_CALL
-#define OT_CDECL
-
-#endif
-
-#ifdef OTDLL
-#ifndef OTAPI
-#define OTAPI __declspec(dllimport)
-#endif
-#define OTCALL WINAPI
-#else
-#define OTAPI
-#define OTCALL
-#endif
 
 /**
  * @def OT_UNUSED_VARIABLE

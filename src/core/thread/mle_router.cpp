@@ -32,8 +32,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "mle_router.tmh"
-
 #include "mle_router.hpp"
 
 #include "common/code_utils.hpp"

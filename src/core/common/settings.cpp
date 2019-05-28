@@ -31,8 +31,6 @@
  *   This file includes definitions for non-volatile storage of settings.
  */
 
-#define WPP_NAME "settings.tmh"
-
 #include "settings.hpp"
 
 #include <openthread/platform/settings.h>

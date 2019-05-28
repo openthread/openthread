@@ -31,8 +31,6 @@
  *   This file implements the OpenThread Thread API (for both FTD and MTD).
  */
 
-#define WPP_NAME "thread_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/thread.h>
@@ -183,7 +181,7 @@ exit:
     return error;
 }
 
-const otIp6Address *OTCALL otThreadGetRloc(otInstance *aInstance)
+const otIp6Address *otThreadGetRloc(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

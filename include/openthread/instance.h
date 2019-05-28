@@ -36,9 +36,6 @@
 #define OPENTHREAD_INSTANCE_H_
 
 #include <stdlib.h>
-#ifdef OTDLL
-#include <guiddef.h>
-#endif
 
 #include <openthread/error.h>
 #include <openthread/platform/logging.h>
@@ -62,135 +59,6 @@ extern "C" {
  * This structure represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
-
-#ifdef OTDLL
-
-/**
- * This structure represents the handle to the OpenThread API.
- *
- */
-typedef struct otApiInstance otApiInstance;
-
-/**
- * This structure represents a list of device GUIDs.
- *
- */
-typedef struct otDeviceList
-{
-    uint16_t aDevicesLength;
-    GUID     aDevices[1];
-} otDeviceList;
-
-/**
- * This function pointer is called to notify addition and removal of OpenThread devices.
- *
- * @param[in]  aAdded       A flag indicating if the device was added or removed.
- * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
- * @param[in]  aContext     A pointer to application-specific context.
- *
- */
-typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
-
-/**
- * This function initializes a new instance of the OpenThread library.
- *
- * @retval otApiInstance*  The new OpenThread context structure.
- *
- * @sa otApiFinalize
- *
- */
-OTAPI otApiInstance *OTCALL otApiInit(void);
-
-/**
- * This function uninitializes the OpenThread library.
- *
- * Call this function when OpenThread is no longer in use.
- *
- * @param[in]  aApiInstance  The OpenThread api instance.
- *
- */
-OTAPI void OTCALL otApiFinalize(otApiInstance *aApiInstance);
-
-/**
- * This function frees any memory returned/allocated by the library.
- *
- * @param[in] aMem  The memory to free.
- *
- */
-OTAPI void OTCALL otFreeMemory(const void *aMem);
-
-/**
- * This function pointer is called to notify addition and removal of OpenThread devices.
- *
- * @param[in]  aAdded       A flag indicating if the device was added or removed.
- * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
- * @param[in]  aContext     A pointer to application-specific context.
- *
- */
-typedef void(OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
-
-/**
- * This function registers a callback to indicate OpenThread devices come and go.
- *
- * @param[in]  aApiInstance     The OpenThread api instance.
- * @param[in]  aCallback        A pointer to a function that is called with the state changes.
- * @param[in]  aContextContext  A pointer to application-specific context.
- *
- */
-OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *                     aApiInstance,
-                                                         otDeviceAvailabilityChangedCallback aCallback,
-                                                         void *                              aCallbackContext);
-
-/**
- * This function querys the list of OpenThread device contexts on the system.
- *
- * @param[in]  aApiInstance     The OpenThread api instance.
- *
- */
-OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
-
-/**
- * This function initializes an OpenThread context for a device.
- *
- * @param[in]  aApiInstance  The OpenThread api instance.
- * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
- *
- * @returns  The new OpenThread device instance structure for the device.
- *
- */
-OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID *aDeviceGuid);
-
-/**
- * This queries the Windows device/interface GUID for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @returns  The device GUID.
- *
- */
-OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
-
-/**
- * This queries the Windows device/interface IfIndex for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @returns The device IfIndex.
- *
- */
-OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
-
-/**
- * This queries the Windows Compartment ID for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @returns  The compartment ID.
- *
- */
-OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
-
-#else // OTDLL
 
 /**
  * This function initializes the OpenThread library.
@@ -248,8 +116,6 @@ bool otInstanceIsInitialized(otInstance *aInstance);
  */
 void otInstanceFinalize(otInstance *aInstance);
 
-#endif // OTDLL
-
 /**
  * This enumeration defines flags that are passed as part of `otStateChangedCallback`.
  *
@@ -297,7 +163,7 @@ typedef uint32_t otChangedFlags;
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
+typedef void (*otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
@@ -311,7 +177,7 @@ typedef void(OTCALL *otStateChangedCallback)(otChangedFlags aFlags, void *aConte
  * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
  *
  */
-OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
@@ -321,7 +187,7 @@ OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateCha
  * @param[in]  aContext    A pointer to application-specific context.
  *
  */
-OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This method triggers a platform reset.
@@ -331,14 +197,14 @@ OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChan
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
-OTAPI void OTCALL otInstanceReset(otInstance *aInstance);
+void otInstanceReset(otInstance *aInstance);
 
 /**
  * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
-OTAPI void OTCALL otInstanceFactoryReset(otInstance *aInstance);
+void otInstanceFactoryReset(otInstance *aInstance);
 
 /**
  * This function erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
@@ -358,7 +224,7 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance);
  * @returns A pointer to the OpenThread version.
  *
  */
-OTAPI const char *OTCALL otGetVersionString(void);
+const char *otGetVersionString(void);
 
 /**
  * This function gets the OpenThread radio version string.

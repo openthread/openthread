@@ -128,7 +128,7 @@ otError Joiner::Process(int argc, char *argv[])
     return error;
 }
 
-void OTCALL Joiner::HandleCallback(otError aError, void *aContext)
+void Joiner::HandleCallback(otError aError, void *aContext)
 {
     static_cast<Joiner *>(aContext)->HandleCallback(aError);
 }

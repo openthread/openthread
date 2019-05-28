@@ -368,7 +368,7 @@ typedef enum otError
  * @returns  A string representation of an otError.
  *
  */
-OTAPI const char *OTCALL otThreadErrorToString(otError aError);
+const char *otThreadErrorToString(otError aError);
 
 /**
  * @}

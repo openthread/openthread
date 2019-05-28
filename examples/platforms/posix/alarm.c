@@ -169,11 +169,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-#ifndef _WIN32
-        aTimeout->tv_sec = (time_t)remaining / US_PER_S;
-#else
-        aTimeout->tv_sec = (long)remaining / US_PER_S;
-#endif
+        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
         aTimeout->tv_usec = remaining % US_PER_S;
     }
 }

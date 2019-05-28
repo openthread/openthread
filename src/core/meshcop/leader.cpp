@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "leader.tmh"
-
 #include "leader.hpp"
 
 #include <stdio.h>

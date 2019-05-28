@@ -31,8 +31,6 @@
  *   This file implements the BorderAgent service.
  */
 
-#define WPP_NAME "border_agent.tmh"
-
 #include "border_agent.hpp"
 
 #include "coap/coap_message.hpp"

@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "address_resolver.tmh"
-
 #include "address_resolver.hpp"
 
 #include "coap/coap_message.hpp"

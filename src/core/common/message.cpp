@@ -31,8 +31,6 @@
  *   This file implements the message buffer pool and message buffers.
  */
 
-#define WPP_NAME "message.tmh"
-
 #include "message.hpp"
 
 #include "common/code_utils.hpp"

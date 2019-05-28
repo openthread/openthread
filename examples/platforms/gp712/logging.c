@@ -36,10 +36,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-#ifndef _WIN32
 #include <syslog.h>
-#endif
 
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>

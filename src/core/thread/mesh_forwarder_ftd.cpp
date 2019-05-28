@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "mesh_forwarder_ftd.tmh"
-
 #include "mesh_forwarder.hpp"
 
 #include "common/locator-getters.hpp"

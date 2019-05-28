@@ -177,7 +177,7 @@ typedef struct otMessageInfo
  *                                  (applicable only when `OPENTHREAD_ENABLE_RAW_LINK_API` feature is enabled).
  *
  */
-OTAPI otError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
+otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * This function indicates whether or not the IPv6 interface is up.
@@ -188,7 +188,7 @@ OTAPI otError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
  * @retval FALSE  The IPv6 interface is disabled.
  *
  */
-OTAPI bool OTCALL otIp6IsEnabled(otInstance *aInstance);
+bool otIp6IsEnabled(otInstance *aInstance);
 
 /**
  * Add a Network Interface Address to the Thread interface.
@@ -203,7 +203,7 @@ OTAPI bool OTCALL otIp6IsEnabled(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external addresses.
  */
-OTAPI otError OTCALL otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
+otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
 /**
  * Remove a Network Interface Address from the Thread interface.
@@ -215,7 +215,7 @@ OTAPI otError OTCALL otIp6AddUnicastAddress(otInstance *aInstance, const otNetif
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
  */
-OTAPI otError OTCALL otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * Get the list of IPv6 addresses assigned to the Thread interface.
@@ -224,7 +224,7 @@ OTAPI otError OTCALL otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp
  *
  * @returns A pointer to the first Network Interface Address.
  */
-OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstance);
+const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
 
 /**
  * Subscribe the Thread interface to a Network Interface Multicast Address.
@@ -483,7 +483,7 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
  * @retval FALSE  The two IPv6 addresses are not the same.
  *
  */
-OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
+bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * Convert a human-readable IPv6 address string into a binary representation.
@@ -495,7 +495,7 @@ OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Add
  * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
  *
  */
-OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
+otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
 
 /**
  * This function returns the prefix match length (bits) for two IPv6 addresses.
@@ -506,7 +506,7 @@ OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *a
  * @returns  The prefix match length in bits.
  *
  */
-OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * This function indicates whether or not a given IPv6 address is the Unspecified Address.

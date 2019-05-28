@@ -31,8 +31,6 @@
  *   This file implements the tasklet scheduler.
  */
 
-#define WPP_NAME "logging.tmh"
-
 #include "logging.hpp"
 
 #include "common/instance.hpp"

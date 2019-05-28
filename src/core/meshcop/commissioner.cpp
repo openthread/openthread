@@ -31,8 +31,6 @@
  *   This file implements a Commissioner role.
  */
 
-#define WPP_NAME "commissioner.tmh"
-
 #include "commissioner.hpp"
 
 #include <stdio.h>

@@ -32,8 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef _WIN32
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -74,24 +72,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
-
-#else
-
-typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
-extern utAssertTrue s_AssertTrue;
-
-typedef void (*utLogMessage)(const char *format, ...);
-extern utLogMessage s_LogMessage;
-
-#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == OT_ERROR_NONE, L##MSG)
-
-#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
-
-#define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
-
-#define Log(aFormat, ...) s_LogMessage(aFormat, ##__VA_ARGS__)
-
 #endif
 
 #endif

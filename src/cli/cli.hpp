@@ -60,16 +60,10 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
-#ifndef OTDLL
 #include <openthread/dns.h>
 #include <openthread/sntp.h>
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
-#endif
-
-#ifdef OTDLL
-#define MAX_CLI_OT_INSTANCES 64
-#endif
 
 namespace ot {
 
@@ -250,11 +244,9 @@ private:
     otError ProcessIpAddrAdd(int argc, char *argv[]);
     otError ProcessIpAddrDel(int argc, char *argv[]);
     void    ProcessIpMulticastAddr(int argc, char *argv[]);
-#ifndef OTDLL
     otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
     otError ProcessMulticastPromiscuous(int argc, char *argv[]);
-#endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif
@@ -330,42 +322,25 @@ private:
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
-#ifndef OTDLL
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
-#endif
     void ProcessVersion(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_MAC_FILTER
     void    ProcessMacFilter(int argc, char *argv[]);
     void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(int argc, char *argv[]);
-#ifndef OTDLL
     otError ProcessMacFilterRss(int argc, char *argv[]);
-#endif // OTDLL
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-#ifdef OTDLL
-    void ProcessInstanceList(int argc, char *argv[]);
-    void ProcessInstance(int argc, char *argv[]);
-#endif
-
-#ifndef OTDLL
     static void s_HandleIcmpReceive(void *               aContext,
                                     otMessage *          aMessage,
                                     const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(Timer &aTimer);
-#endif
-    static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
-    static void OTCALL s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
-#ifndef OTDLL
+    static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
+    static void s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
-#endif
-#ifndef OTDLL
-    static void OTCALL s_HandleDiagnosticGetResponse(otMessage *          aMessage,
-                                                     const otMessageInfo *aMessageInfo,
-                                                     void *               aContext);
-#endif
+    static void s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     static void s_HandleDnsResponse(void *        aContext,
@@ -379,18 +354,12 @@ private:
     static void s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
-#ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const otIcmp6Header &aIcmpHeader);
     void HandlePingTimer();
-#endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
-#ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
-#endif
-#ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#endif
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
@@ -402,48 +371,24 @@ private:
     static const struct Command sCommands[];
     const otCliCommand *        mUserCommands;
     uint8_t                     mUserCommandsLength;
-
-    Server *mServer;
-
-#ifdef OTDLL
-
-    void CacheInstances();
-
-    otApiInstance *mApiInstance;
-
-    struct otCliContext
-    {
-        Interpreter *mInterpreter;
-        Instance *   mInstance;
-    };
-    otCliContext mInstances[MAX_CLI_OT_INSTANCES];
-    uint8_t      mInstancesLength;
-    uint8_t      mInstanceIndex;
-
-#else
-
-    Ip6::MessageInfo mMessageInfo;
-
-    uint16_t   mLength;
-    uint16_t   mCount;
-    uint32_t   mInterval;
-    TimerMilli mPingTimer;
-
-    otIcmp6Handler mIcmpHandler;
+    Server *                    mServer;
+    Ip6::MessageInfo            mMessageInfo;
+    uint16_t                    mLength;
+    uint16_t                    mCount;
+    uint32_t                    mInterval;
+    TimerMilli                  mPingTimer;
+    otIcmp6Handler              mIcmpHandler;
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    bool           mResolvingInProgress;
-    char           mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
+    bool mResolvingInProgress;
+    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
-    bool           mSntpQueryingInProgress;
+    bool mSntpQueryingInProgress;
 #endif
 
     UdpExample mUdp;
-
-#endif
-
-    Dataset mDataset;
+    Dataset    mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap mCoap;

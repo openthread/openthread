@@ -33,10 +33,6 @@
 
 #include "cli.hpp"
 
-#ifdef OTDLL
-#include <assert.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "mac/channel_mask.hpp"
@@ -63,14 +59,12 @@
 #include <openthread/server.h>
 #endif
 
-#ifndef OTDLL
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/platform/uart.h>
 
 #include "common/new.hpp"
 #include "net/ip6.hpp"
-#endif
 
 #include "cli_dataset.hpp"
 
@@ -153,14 +147,8 @@ const struct Command Interpreter::sCommands[] = {
     {"extpanid", &Interpreter::ProcessExtPanId},
     {"factoryreset", &Interpreter::ProcessFactoryReset},
     {"ifconfig", &Interpreter::ProcessIfconfig},
-#ifdef OTDLL
-    {"instance", &Interpreter::ProcessInstance},
-    {"instancelist", &Interpreter::ProcessInstanceList},
-#endif
     {"ipaddr", &Interpreter::ProcessIpAddr},
-#ifndef OTDLL
     {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
-#endif
 #if OPENTHREAD_ENABLE_JOINER
     {"joiner", &Interpreter::ProcessJoiner},
 #endif
@@ -202,13 +190,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"parentpriority", &Interpreter::ProcessParentPriority},
 #endif
-#ifndef OTDLL
     {"ping", &Interpreter::ProcessPing},
-#endif
     {"pollperiod", &Interpreter::ProcessPollPeriod},
-#ifndef OTDLL
     {"promiscuous", &Interpreter::ProcessPromiscuous},
-#endif
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     {"prefix", &Interpreter::ProcessPrefix},
 #endif
@@ -238,19 +222,15 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"state", &Interpreter::ProcessState},
     {"thread", &Interpreter::ProcessThread},
-#ifndef OTDLL
     {"txpower", &Interpreter::ProcessTxPower},
     {"udp", &Interpreter::ProcessUdp},
-#endif
     {"version", &Interpreter::ProcessVersion},
 };
 
-#ifndef OTDLL
 void otFreeMemory(const void *)
 {
     // No-op on systems running OpenThread in-proc
 }
-#endif
 
 template <class T> class otPtr
 {
@@ -283,10 +263,6 @@ Interpreter::Interpreter(Instance *aInstance)
     : mUserCommands(NULL)
     , mUserCommandsLength(0)
     , mServer(NULL)
-#ifdef OTDLL
-    , mApiInstance(otApiInit())
-    , mInstanceIndex(0)
-#else
     , mLength(8)
     , mCount(1)
     , mInterval(1000)
@@ -295,7 +271,6 @@ Interpreter::Interpreter(Instance *aInstance)
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
-#endif
     , mDataset(*this)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mCoap(*this)
@@ -311,13 +286,6 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
     , mInstance(aInstance)
 {
-#ifdef OTDLL
-    // On Windows, mInstance represents the current selected otInstance
-    // which should be NULL now.
-    assert(aInstance = NULL);
-    assert(mApiInstance);
-    CacheInstances();
-#else
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 #endif
@@ -329,8 +297,6 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
-
-#endif
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -1353,7 +1319,6 @@ exit:
     AppendResult(error);
 }
 
-#ifndef OTDLL
 otError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
 {
     otError             error;
@@ -1452,7 +1417,6 @@ void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif
 
 void Interpreter::ProcessKeySequence(int argc, char *argv[])
 {
@@ -1987,7 +1951,6 @@ exit:
 }
 #endif
 
-#ifndef OTDLL
 void Interpreter::s_HandleIcmpReceive(void *               aContext,
                                       otMessage *          aMessage,
                                       const otMessageInfo *aMessageInfo,
@@ -2120,7 +2083,6 @@ exit:
         mPingTimer.Start(mInterval);
     }
 }
-#endif
 
 void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 {
@@ -2141,7 +2103,6 @@ exit:
     AppendResult(error);
 }
 
-#ifndef OTDLL
 void Interpreter::ProcessPromiscuous(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -2251,7 +2212,6 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 
     mServer->OutputFormat("\r\n");
 }
-#endif
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
@@ -2903,7 +2863,7 @@ exit:
     AppendResult(error);
 }
 
-void OTCALL Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
+void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
@@ -2934,7 +2894,7 @@ exit:
     return;
 }
 
-void OTCALL Interpreter::s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext)
+void Interpreter::s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleEnergyScanResult(aResult);
 }
@@ -3147,7 +3107,6 @@ void Interpreter::ProcessDataset(int argc, char *argv[])
     AppendResult(error);
 }
 
-#ifndef OTDLL
 void Interpreter::ProcessTxPower(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -3177,7 +3136,6 @@ void Interpreter::ProcessUdp(int argc, char *argv[])
     error = mUdp.Process(argc, argv);
     AppendResult(error);
 }
-#endif
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
@@ -3247,14 +3205,10 @@ void Interpreter::ProcessMacFilter(int argc, char *argv[])
         {
             error = ProcessMacFilterAddress(argc - 1, argv + 1);
         }
-
-#ifndef OTDLL
         else if (strcmp(argv[0], "rss") == 0)
         {
             error = ProcessMacFilterRss(argc - 1, argv + 1);
         }
-
-#endif
         else
         {
             error = OT_ERROR_INVALID_ARGS;
@@ -3289,22 +3243,12 @@ void Interpreter::PrintMacFilter(void)
 
         if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-#ifndef OTDLL
-
             mServer->OutputFormat(" : rss %d (lqi %d)", entry.mRssIn,
                                   otLinkConvertRssToLinkQuality(mInstance, entry.mRssIn));
-
-#else
-
-            mServer->OutputFormat(" : rss %d", entry.mRssIn);
-
-#endif // OTDLL
         }
 
         mServer->OutputFormat("\r\n");
     }
-
-#ifndef OTDLL
 
     iterator = OT_MAC_FILTER_ITERATOR_INIT;
     mServer->OutputFormat("RssIn List:\r\n");
@@ -3333,8 +3277,6 @@ void Interpreter::PrintMacFilter(void)
                                   otLinkConvertRssToLinkQuality(mInstance, entry.mRssIn));
         }
     }
-
-#endif // OTDLL
 }
 
 otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
@@ -3367,16 +3309,8 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
 
             if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
             {
-#ifndef OTDLL
-
                 mServer->OutputFormat(" : rss %d (lqi %d)", entry.mRssIn,
                                       otLinkConvertRssToLinkQuality(mInstance, entry.mRssIn));
-
-#else
-
-                mServer->OutputFormat(" : rss %d", entry.mRssIn);
-
-#endif // OTDLL
             }
 
             mServer->OutputFormat("\r\n");
@@ -3439,8 +3373,6 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
 exit:
     return error;
 }
-
-#ifndef OTDLL
 
 otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
 {
@@ -3548,8 +3480,6 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
 exit:
     return error;
 }
-
-#endif // OTDLL
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
@@ -3665,7 +3595,6 @@ exit:
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
-#ifndef OTDLL
 void Interpreter::s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(
@@ -3694,7 +3623,6 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
 
     mServer->OutputFormat("\r\n");
 }
-#endif
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
 {

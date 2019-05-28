@@ -31,8 +31,6 @@
  *   This file implements the subset of IEEE 802.15.4 primitives required for Thread.
  */
 
-#define WPP_NAME "mac.tmh"
-
 #include "mac.hpp"
 
 #include <stdio.h>

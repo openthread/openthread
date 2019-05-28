@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "network_data_leader_ftd.tmh"
-
 #include "network_data_leader.hpp"
 
 #include "coap/coap_message.hpp"

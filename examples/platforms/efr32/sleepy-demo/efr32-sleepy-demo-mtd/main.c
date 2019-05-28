@@ -70,12 +70,12 @@ typedef struct ButtonArray
 // Prototypes
 bool sleepCb(void);
 void setNetworkConfiguration(otInstance *aInstance);
-void OTCALL handleNetifStateChanged(uint32_t aFlags, void *aContext);
-void        gpioInit(void (*gpioCallback)(uint8_t pin));
-void        buttonCallback(uint8_t pin);
-void        initUdp(void);
-void        applicationTick(void);
-void        mtdReceiveCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+void handleNetifStateChanged(uint32_t aFlags, void *aContext);
+void gpioInit(void (*gpioCallback)(uint8_t pin));
+void buttonCallback(uint8_t pin);
+void initUdp(void);
+void applicationTick(void);
+void mtdReceiveCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 // Variables
 static otInstance *        instance;
@@ -197,7 +197,7 @@ void setNetworkConfiguration(otInstance *aInstance)
     otDatasetSetActive(aInstance, &aDataset);
 }
 
-void OTCALL handleNetifStateChanged(uint32_t aFlags, void *aContext)
+void handleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
     otLinkModeConfig config;
 

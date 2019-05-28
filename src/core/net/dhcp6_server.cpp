@@ -31,8 +31,6 @@
  *   This file implements DHCPv6 Server.
  */
 
-#define WPP_NAME "dhcp6_server.tmh"
-
 #include "dhcp6_server.hpp"
 
 #include "common/code_utils.hpp"

@@ -31,8 +31,6 @@
  *   This file implements the subset of IEEE 802.15.4 MAC primitives.
  */
 
-#define WPP_NAME "sub_mac.tmh"
-
 #include "sub_mac.hpp"
 
 #include <stdio.h>

@@ -31,8 +31,6 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
-#define WPP_NAME "network_data_leader.tmh"
-
 #include "network_data_leader.hpp"
 
 #include "coap/coap_message.hpp"
