@@ -39,6 +39,8 @@
 #include <stdlib.h>
 
 #include <openthread/error.h>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "utils/wrap_string.h"
 
@@ -67,7 +69,7 @@ namespace Hdlc {
  * the frame buffer management scheme.
  *
  * Two template sub-class `FrameBuffer` and `MultiFrameBuffer` are defined which respectively allow storing a single
- * frame or multiple frames (FIFO queue of frame) in a buffer of given size
+ * frame or multiple frames (FIFO queue of frame) in a buffer of a given size.
  *
  */
 class FrameWritePointer
@@ -100,9 +102,9 @@ public:
     /**
      * This method undoes the last @p aUndoLength writes, removing them from frame.
      *
-     * @note Caller should ensure that @p aUndoLength is less than or equal number of previously written bytes into
-     * the frame. This method does not perform any checks and its behavior is undefined if @p aUndoLength is larger
-     * than bytes previously written into frame.
+     * @note Caller should ensure that @p aUndoLength is less than or equal to the number of previously written bytes
+     * into the frame. This method does not perform any checks and its behavior is undefined if @p aUndoLength is
+     * larger than the number of bytes previously written into the frame.
      *
      * @param[in]  aUndoLength   Number of bytes to remove (number of last `WriteByte()` calls to undo).
      *
@@ -144,7 +146,7 @@ public:
     }
 
     /**
-     * This method clears the buffer, moving the write pointer to beginning of buffer.
+     * This method clears the buffer, moving the write pointer to the beginning of the buffer.
      *
      */
     void Clear(void)
@@ -207,12 +209,11 @@ public:
     /**
      * This method clears the buffer, removing current frame and all previously saved frames.
      *
-     * It moves the write pointer to beginning of buffer.
+     * It moves the write pointer to the beginning of the buffer.
      *
      */
     void Clear(void)
     {
-        mSavedFrameStart = mBuffer;
         mWriteFrameStart = mBuffer;
         mWritePointer    = mBuffer + kHeaderSize;
         mRemainingLength = kSize - kHeaderSize;
@@ -228,7 +229,7 @@ public:
     bool HasFrame(void) const { return (mWritePointer != mWriteFrameStart + kHeaderSize); }
 
     /**
-     * This method gets the length (number of bytes) in the current frame written into the buffer.
+     * This method gets the length (number of bytes) in the current frame being written into the buffer.
      *
      * @returns The length (number of bytes) in the frame.
      *
@@ -236,9 +237,9 @@ public:
     uint16_t GetLength(void) const { return static_cast<uint16_t>(mWritePointer - mWriteFrameStart - kHeaderSize); }
 
     /**
-     * This method gets a pointer to start of the current frame.
+     * This method gets a pointer to the start of the current frame.
      *
-     * @returns A pointer to start of the frame.
+     * @returns A pointer to the start of the frame.
      *
      */
     uint8_t *GetFrame(void) { return mWriteFrameStart + kHeaderSize; }
@@ -247,7 +248,7 @@ public:
      * This method saves the current frame and prepares the write pointer for a next frame to be written into the
      * buffer.
      *
-     * Saved frame can be read later using `ReadSavedFrame()`.
+     * Saved frame can be retrieved later using `GetNextSavedFrame()`.
      *
      */
     void SaveFrame(void)
@@ -259,83 +260,77 @@ public:
     }
 
     /**
-     * This method discards the current frame and resets the write pointer for a next frame.
-     *
-     * @note If all previously saved frames are already read, this method clears the buffer and moves the write pointer
-     * to start of the buffer.
+     * This method discards the current frame and prepares the write pointer for a next frame to be written into the
+     * buffer.
      *
      */
     void DiscardFrame(void)
     {
-        if (!HasSavedFrame())
-        {
-            Clear();
-        }
-        else
-        {
-            mWritePointer    = mWriteFrameStart + kHeaderSize;
-            mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
-        }
+        mWritePointer    = mWriteFrameStart + kHeaderSize;
+        mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
     }
 
     /**
-     * This method indicates whether there are unread saved frames in the buffer.
+     * This method indicates whether there are any saved frames in the buffer.
      *
-     * @retval TRUE  There is at least one unread saved frame in buffer.
-     * @retval FALSE There is no unread saved frame in buffer.
+     * @retval TRUE  There is at least one saved frame in the buffer.
+     * @retval FALSE There is no saved frame in the buffer.
      *
      */
-    bool HasSavedFrame(void) const { return (mSavedFrameStart != mWriteFrameStart); }
+    bool HasSavedFrame(void) const { return (mWriteFrameStart != mBuffer); }
 
     /**
-     * This method reads a previously saved frame from the buffer.
+     * This method iterates through previously saved frames in the buffer, getting a next frame in the queue.
      *
-     * Subsequent call to this method reads the next saved frame in the buffer (if any).
+     * @param[inout] aFrame   On entry, should point to a previous saved frame or NULL to get the first frame.
+     *                        On exit, the pointer variable is updated to next frame or set to NULL if there are none.
+     * @param[out]   aLength  A reference to a variable to return the frame length (number of bytes).
      *
-     * @param[out] aFrame   A reference to a pointer variable to return start of the frame.
-     * @param[out] aLength  A reference to a variable to return the frame length (number of bytes).
-     *
-     * @retval OT_ERROR_NONE       Frame was read successfully, @p aFrame and @p aLength updated.
-     * @retval OT_ERROR_NOT_FOUND  No more saved frame in buffer.
+     * @retval OT_ERROR_NONE       Updated @aFrame and @aLength successfully with the next saved frame.
+     * @retval OT_ERROR_NOT_FOUND  No more saved frame in the buffer.
      *
      */
-    otError ReadSavedFrame(uint8_t *&aFrame, uint16_t &aLength)
+    otError GetNextSavedFrame(uint8_t *&aFrame, uint16_t &aLength)
     {
         otError error = OT_ERROR_NONE;
 
-        if (mSavedFrameStart != mWriteFrameStart)
+        assert(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
+
+        aFrame = (aFrame == NULL) ? mBuffer : aFrame + Encoding::LittleEndian::ReadUint16(aFrame - kHeaderSize);
+
+        if (aFrame != mWriteFrameStart)
         {
-            aLength = Encoding::LittleEndian::ReadUint16(mSavedFrameStart);
-            aFrame  = mSavedFrameStart + kHeaderSize;
-            mSavedFrameStart += aLength + kHeaderSize;
+            aLength = Encoding::LittleEndian::ReadUint16(aFrame);
+            aFrame += kHeaderSize;
         }
         else
         {
-            error = OT_ERROR_NOT_FOUND;
+            aLength = 0;
+            aFrame  = NULL;
+            error   = OT_ERROR_NOT_FOUND;
         }
 
         return error;
     }
 
     /**
-     * This method clears the read saved frames from buffer and adjusts all the pointers.
+     * This method clears all saved frames from the buffer and adjusts all the pointers.
      *
      * @note This method moves the pointers into the buffer and also copies the content. Any previously retrieved
-     * pointer to buffer (from `GetFrame()` or `ReadSavedFrame()`) should be considered invalid after calling this
+     * pointer to buffer (from `GetFrame()` or `GetNextSavedFrame()`) should be considered invalid after calling this
      * method.
      *
      */
-    void ClearReadFrames(void)
+    void ClearSavedFrames(void)
     {
-        uint16_t readLen = static_cast<uint16_t>(mSavedFrameStart - mBuffer);
+        uint16_t len = static_cast<uint16_t>(mWriteFrameStart - mBuffer);
 
-        if (readLen > 0)
+        if (len > 0)
         {
-            memmove(mBuffer, mSavedFrameStart, static_cast<uint16_t>(mWritePointer - mSavedFrameStart));
-            mWritePointer -= readLen;
-            mWriteFrameStart -= readLen;
-            mSavedFrameStart -= readLen;
-            mRemainingLength += readLen;
+            memmove(mBuffer, mWriteFrameStart, static_cast<uint16_t>(mWritePointer - mWriteFrameStart));
+            mWritePointer -= len;
+            mWriteFrameStart -= len;
+            mRemainingLength += len;
         }
     }
 
@@ -347,21 +342,19 @@ private:
      * include the header itself). The frame length is stored in header bytes as a `uint16_t` value using little-endian
      * encoding.
      *
-     * The diagram shows `mBuffer` and different pointers into the buffer. It represent buffer state when there are two
-     * saved frames in the buffer and the first saved frame is already read (`mSavedFrameStart` is pointing to header
-     * of the second frame).
+     * The diagram shows `mBuffer` and different pointers into the buffer. It represents buffer state when there are
+     * two saved frames in the buffer.
      *
      *          Saved frame #1           Saved frame #2       Current frame being written
      *   /                        \ /                      \ /                           \
      *   +-----------+-------------+-----------+------------+---------+--------------------------------------------+
      *   | header #1 |   ...       | header #2 |  ...       | header  |  ...             | ...                     |
      *   +-----------+-------------+-----------+------------+---------+--------------------------------------------+
-     *   ^                         ^                        ^                            ^\                       /^
-     *   |                         |                        |                            |   mRemainingLength      |
-     *  mBuffer[0]                mSavedFrameStart          mWriteFrameStart             |                         |
+     *   ^                                                  ^                            ^\                       /^
+     *   |                                                  |                            |   mRemainingLength      |
+     *  mBuffer[0]                                          mWriteFrameStart             |                         |
      *                                                                                   |              mBuffer[kSize]
      *                                                                                 mWritePointer
-     *
      */
 
     enum
@@ -370,7 +363,6 @@ private:
     };
 
     uint8_t  mBuffer[kSize];
-    uint8_t *mSavedFrameStart; // Pointer to start of next saved frame (for `ReadSavedFrame()`).
     uint8_t *mWriteFrameStart; // Pointer to start of current frame being written.
 };
 

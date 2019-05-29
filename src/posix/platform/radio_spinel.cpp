@@ -658,13 +658,15 @@ exit:
 
 void RadioSpinel::ProcessFrameQueue(void)
 {
-    uint8_t *frame;
+    uint8_t *frame = NULL;
     uint16_t length;
 
-    while (mHdlcInterface.GetRxFrameBuffer().ReadSavedFrame(frame, length) == OT_ERROR_NONE)
+    while (mHdlcInterface.GetRxFrameBuffer().GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
     {
         HandleNotification(frame, length);
     }
+
+    mHdlcInterface.GetRxFrameBuffer().ClearSavedFrames();
 }
 
 void RadioSpinel::RadioReceive(void)
@@ -756,8 +758,6 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
         mHdlcInterface.Read();
         ProcessFrameQueue();
     }
-
-    mHdlcInterface.GetRxFrameBuffer().ClearReadFrames();
 
     if (mState == kStateTransmitDone)
     {
@@ -1650,8 +1650,6 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
         mHdlcInterface.ProcessReadData(aEvent.mData, aEvent.mDataLength);
         ProcessFrameQueue();
     }
-
-    mHdlcInterface.GetRxFrameBuffer().ClearReadFrames();
 
     if (mState == kStateTransmitDone)
     {
