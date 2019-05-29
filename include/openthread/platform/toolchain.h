@@ -140,15 +140,6 @@ extern "C" {
 
 #define OT_TOOL_ALIGN(X)
 
-#elif defined(_MSC_VER)
-
-#define OT_TOOL_PACKED_BEGIN __pragma(pack(push, 1))
-#define OT_TOOL_PACKED_FIELD
-#define OT_TOOL_PACKED_END __pragma(pack(pop))
-#define OT_TOOL_WEAK
-
-#define OT_TOOL_ALIGN(X) __declspec(align(4))
-
 #elif defined(__SDCC)
 
 // Structures are packed by default in sdcc, as it primarily targets 8-bit MCUs.

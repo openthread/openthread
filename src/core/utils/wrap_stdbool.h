@@ -51,11 +51,7 @@
 #define false 0
 #define true 1
 
-#if defined(_MSC_VER)
-#define bool _Bool
-#else
 typedef _Bool bool;
-#endif // visual studio has a bool
 
 #endif // bool defined
 

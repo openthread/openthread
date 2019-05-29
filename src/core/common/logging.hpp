@@ -43,16 +43,6 @@
 #include <openthread/logging.h>
 #include <openthread/platform/logging.h>
 
-#ifdef WINDOWS_LOGGING
-#ifdef _KERNEL_MODE
-#include <wdm.h>
-#endif
-#include "openthread/platform/logging-windows.h"
-#ifdef WPP_NAME
-#include WPP_NAME
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -203,8 +193,6 @@ extern "C" {
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
-
-#ifndef WINDOWS_LOGGING
 
 /**
  * @def otLogCritApi
@@ -1235,8 +1223,6 @@ extern "C" {
 #define otLogInfoPlat(aFormat, ...)
 #define otLogDebgPlat(aFormat, ...)
 #endif
-
-#endif // WINDOWS_LOGGING
 
 /**
  * @def otDumpCrit

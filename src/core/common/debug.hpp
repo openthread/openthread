@@ -44,12 +44,6 @@
 
 #include <assert.h>
 
-#elif defined(_KERNEL_MODE)
-
-#include <wdm.h>
-
-#define assert(exp) ((!(exp)) ? (RtlAssert(#exp, __FILE__, __LINE__, NULL), FALSE) : TRUE)
-
 #elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #include "openthread/platform/misc.h"

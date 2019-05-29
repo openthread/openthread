@@ -65,8 +65,6 @@ exit:
     return retval;
 }
 
-#ifndef _MSC_VER
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
-#endif
