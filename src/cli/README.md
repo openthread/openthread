@@ -506,6 +506,36 @@ Delete an IPv6 address from the Thread interface.
 Done
 ```
 
+### ipaddr linklocal
+
+Print Thread link-local IPv6 address.
+
+```bash
+> ipaddr linklocal
+fe80:0:0:0:f3d9:2a82:c8d8:fe43
+Done
+```
+
+### ipaddr mleid
+
+Print Thread Mesh Local EID address.
+
+```bash
+> ipaddr mleid
+fdde:ad00:beef:0:558:f56b:d688:799
+Done
+```
+
+### ipaddr rloc
+
+Print Thread Routing Locator (RLOC) address.
+
+```bash
+> ipaddr rloc
+fdde:ad00:beef:0:0:ff:fe00:0
+Done
+```
+
 ### ipmaddr
 
 List all IPv6 multicast addresses subscribed to the Thread interface.

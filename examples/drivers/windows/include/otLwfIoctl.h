@@ -733,8 +733,16 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // otMleCounters - aCounters
 
+#define IOCTL_OTLWF_OT_LINK_LOCAL_ADDRESS \
+    OTLWF_CTL_CODE(204, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+
+#define IOCTL_OTLWF_OT_RLOC \
+    OTLWF_CTL_CODE(205, METHOD_BUFFERED, FILE_READ_DATA)
+    // GUID - InterfaceGuid
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 203
+#define MAX_OTLWF_IOCTL_FUNC_CODE 205
 
 #endif //__OTLWFIOCTL_H__
