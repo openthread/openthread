@@ -1325,29 +1325,20 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         {
             SuccessOrExit(error = ProcessIpAddrDel(argc - 1, argv + 1));
         }
-        else if (strcmp(argv[0], "thread") == 0)
+        else if (strcmp(argv[0], "linklocal") == 0)
         {
-            VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
-
-            if (strcmp(argv[1], "linklocal") == 0)
-            {
-                OutputIp6Address(*otThreadGetLinkLocalIp6Address(mInstance));
-                mServer->OutputFormat("\r\n");
-            }
-            else if (strcmp(argv[1], "rloc") == 0)
-            {
-                OutputIp6Address(*otThreadGetRloc(mInstance));
-                mServer->OutputFormat("\r\n");
-            }
-            else if (strcmp(argv[1], "mleid") == 0)
-            {
-                OutputIp6Address(*otThreadGetMeshLocalEid(mInstance));
-                mServer->OutputFormat("\r\n");
-            }
-            else
-            {
-                ExitNow(error = OT_ERROR_INVALID_ARGS);
-            }
+            OutputIp6Address(*otThreadGetLinkLocalIp6Address(mInstance));
+            mServer->OutputFormat("\r\n");
+        }
+        else if (strcmp(argv[0], "rloc") == 0)
+        {
+            OutputIp6Address(*otThreadGetRloc(mInstance));
+            mServer->OutputFormat("\r\n");
+        }
+        else if (strcmp(argv[0], "mleid") == 0)
+        {
+            OutputIp6Address(*otThreadGetMeshLocalEid(mInstance));
+            mServer->OutputFormat("\r\n");
         }
         else
         {
