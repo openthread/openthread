@@ -101,7 +101,7 @@ struct settingsBlock
 #error "Invalid value for `SETTINGS_CONFIG_PAGE_NUM` (should be >= 2)"
 #endif
 
-#ifndef OPENTHREAD_SETTINGS_RAM
+#if !OPENTHREAD_SETTINGS_RAM
 
 static uint32_t sSettingsBaseAddress;
 static uint32_t sSettingsUsedSize;

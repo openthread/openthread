@@ -46,10 +46,10 @@ libopenthread_qpg6095_a_SOURCES             = \
     logging.c                                 \
     misc.c                                    \
     platform.c                                \
-    random.c                                  \
     radio.c                                   \
-    uart.c                                    \
+    random.c                                  \
     settings.cpp                              \
+    uart.c                                    \
     $(NULL)
 
 libopenthread_qpg6095_a_LIBADD              = \

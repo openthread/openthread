@@ -42,7 +42,7 @@
 
 #include "settings_qorvo.h"
 
-#ifndef OPENTHREAD_SETTINGS_RAM
+#if !OPENTHREAD_SETTINGS_RAM
 
 /*****************************************************************************
  *                    Public Function Definitions

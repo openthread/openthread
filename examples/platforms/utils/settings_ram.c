@@ -32,19 +32,19 @@
  *
  */
 
+#include <openthread-core-config.h>
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <openthread-core-config.h>
 
 #include <openthread/instance.h>
 #include <openthread/platform/settings.h>
 
 #define SETTINGS_BUFFER_SIZE 1024
 
-#ifdef OPENTHREAD_SETTINGS_RAM
+#if OPENTHREAD_SETTINGS_RAM
 
 static uint8_t  sSettingsBuf[SETTINGS_BUFFER_SIZE];
 static uint16_t sSettingsBufLength;

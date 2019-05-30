@@ -52,8 +52,8 @@ LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
-SETTINGS_RAM        ?= 0
 SERVICE             ?= 0
+SETTINGS_RAM        ?= 0
 # SLAAC is enabled by default
 SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
