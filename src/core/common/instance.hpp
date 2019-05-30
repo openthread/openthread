@@ -298,31 +298,41 @@ private:
     Instance(void);
     void AfterInit(void);
 
+    // Order of variables (their initialization in `Instance`)
+    // is important.
+    //
+    // Tasklet and Timer Schedulers are first to ensure other
+    // objects/classes can use them from their constructors.
+
+    TaskletScheduler    mTaskletScheduler;
     TimerMilliScheduler mTimerMilliScheduler;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     TimerMicroScheduler mTimerMicroScheduler;
 #endif
-    TaskletScheduler mTaskletScheduler;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otHandleActiveScanResult mActiveScanCallback;
-    void *                   mActiveScanCallbackContext;
-    otHandleEnergyScanResult mEnergyScanCallback;
-    void *                   mEnergyScanCallbackContext;
-
-    Notifier mNotifier;
-    Settings mSettings;
-
+    // RandomManager is initialized before other objects. Note that it
+    // requires MbedTls which itself may use Heap.
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    Utils::Heap mHeap;
+#endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     RandomManager mRandomManager;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    // Notifier, Settings, and MessagePool are initialized  before
+    // other member variables since other classes/objects from their
+    // constructor may use them.
+    Notifier    mNotifier;
+    Settings    mSettings;
+    MessagePool mMessagePool;
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-    Utils::Heap mHeap;
-#endif
+    otHandleActiveScanResult mActiveScanCallback;
+    void *                   mActiveScanCallbackContext;
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *                   mEnergyScanCallbackContext;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
@@ -347,7 +357,6 @@ private:
     AnnounceSender mAnnounceSender;
 #endif
 
-    MessagePool mMessagePool;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     Mac::LinkRaw mLinkRaw;

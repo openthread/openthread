@@ -51,17 +51,26 @@ otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 #endif
 
 Instance::Instance(void)
-    : mTimerMilliScheduler(*this)
+    : mTaskletScheduler()
+    , mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    , mHeap()
+#endif
+    , mMbedTls()
+#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
+    , mRandomManager()
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    , mNotifier(*this)
+    , mSettings(*this)
+    , mMessagePool(*this)
     , mActiveScanCallback(NULL)
     , mActiveScanCallbackContext(NULL)
     , mEnergyScanCallback(NULL)
     , mEnergyScanCallbackContext(NULL)
-    , mNotifier(*this)
-    , mSettings(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -79,11 +88,10 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
     , mAnnounceSender(*this)
 #endif
-    , mMessagePool(*this)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
     , mLinkRaw(*this)
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL))
 #endif
