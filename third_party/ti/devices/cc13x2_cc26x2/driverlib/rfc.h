@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rfc.h
-*  Revised:        2018-04-25 22:52:33 +0200 (Wed, 25 Apr 2018)
-*  Revision:       51935
+*  Revised:        2018-08-08 14:03:25 +0200 (Wed, 08 Aug 2018)
+*  Revision:       52338
 *
 *  Description:    Defines and prototypes for the RF Core.
 *
@@ -63,12 +63,12 @@ extern "C"
 #include "../inc/hw_memmap.h"
 #include "../inc/hw_rfc_pwr.h"
 #include "../inc/hw_rfc_dbell.h"
-#include "rf_common_cmd.h"
-#include "rf_prop_cmd.h"
-#include "rf_ble_cmd.h"
 #include "../inc/hw_fcfg1.h"
 #include "../inc/hw_adi_3_refsys.h"
 #include "../inc/hw_adi.h"
+#include "rf_common_cmd.h"
+#include "rf_prop_cmd.h"
+#include "rf_ble_cmd.h"
 
 // Definition of RFTRIM container
 typedef struct {
@@ -79,11 +79,14 @@ typedef struct {
 } rfTrim_t;
 
 // Definition of maximum search depth used by the RFCOverrideUpdate function
-#define RFC_MAX_SEARCH_DEPTH    5
-#define RFC_PA_TYPE_ADDRESS		0x21000345
-#define RFC_PA_TYPE_MASK 		0x04
-#define RFC_PA_GAIN_ADDRESS		0x2100034C
-#define RFC_PA_GAIN_MASK		0x003FFFFF
+#define RFC_MAX_SEARCH_DEPTH     5
+#define RFC_PA_TYPE_ADDRESS		 0x21000345
+#define RFC_PA_TYPE_MASK 		 0x04
+#define RFC_PA_GAIN_ADDRESS		 0x2100034C
+#define RFC_PA_GAIN_MASK		 0x003FFFFF
+#define RFC_FE_MODE_ESCAPE_VALUE 0xFF
+#define RFC_FE_OVERRIDE_ADDRESS  0x0703
+#define RFC_FE_OVERRIDE_MASK     0x0000FFFF
 
 //*****************************************************************************
 //
@@ -106,6 +109,7 @@ typedef struct {
     #define RFCOverrideSearch               NOROM_RFCOverrideSearch
     #define RFCOverrideUpdate               NOROM_RFCOverrideUpdate
     #define RFCHwIntGetAndClear             NOROM_RFCHwIntGetAndClear
+    #define RFCAnaDivTxOverride             NOROM_RFCAnaDivTxOverride
 #endif
 
 //*****************************************************************************
@@ -394,6 +398,14 @@ RFCGetPaGain(void)
 
 //*****************************************************************************
 //
+//! Function to calculate the proper override run-time for the High Gain PA.
+//
+//*****************************************************************************
+extern uint32_t RFCAnaDivTxOverride(uint8_t loDivider, uint8_t frontEndMode);
+
+
+//*****************************************************************************
+//
 // Support for DriverLib in ROM:
 // Redirect to implementation in ROM when available.
 //
@@ -427,6 +439,10 @@ RFCGetPaGain(void)
     #ifdef ROM_RFCHwIntGetAndClear
         #undef  RFCHwIntGetAndClear
         #define RFCHwIntGetAndClear             ROM_RFCHwIntGetAndClear
+    #endif
+    #ifdef ROM_RFCAnaDivTxOverride
+        #undef  RFCAnaDivTxOverride
+        #define RFCAnaDivTxOverride             ROM_RFCAnaDivTxOverride
     #endif
 #endif
 

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_prcm_h
-*  Revised:        2017-09-14 10:33:07 +0200 (Thu, 14 Sep 2017)
-*  Revision:       49733
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

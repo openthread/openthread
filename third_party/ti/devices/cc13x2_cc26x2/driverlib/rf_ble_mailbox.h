@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_ble_mailbox.h
-*  Revised:        2018-01-23 19:51:42 +0100 (Tue, 23 Jan 2018)
-*  Revision:       18189
+*  Revised:        2018-01-15 15:58:36 +0100 (Mon, 15 Jan 2018)
+*  Revision:       18171
 *
 *  Description:    Definitions for BLE interface
 *
@@ -54,6 +54,7 @@
 #define BLE_DONE_STOPPED        0x1408  ///< Operation stopped after stop command
 #define BLE_DONE_AUX            0x1409  ///< Operation ended after following aux pointer pointing far ahead
 #define BLE_DONE_CONNECT_CHSEL0 0x140A  ///< CONNECT_IND received or transmitted; peer does not support channel selection algorithm #2
+#define BLE_DONE_SCAN_RSP       0x140B  ///< SCAN_RSP or AUX_SCAN_RSP transmitted
 ///@}
 /// \name Operation finished with error
 ///@{

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_prop_cmd.h
-*  Revised:        2018-05-07 15:02:01 +0200 (Mon, 07 May 2018)
-*  Revision:       18438
+*  Revised:        2018-07-31 20:13:42 +0200 (Tue, 31 Jul 2018)
+*  Revision:       18572
 *
 *  Description:    CC13x2/CC26x2 API for Proprietary mode commands
 *

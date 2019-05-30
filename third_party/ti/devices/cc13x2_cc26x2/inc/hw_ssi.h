@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ssi_h
-*  Revised:        2017-01-10 11:54:43 +0100 (Tue, 10 Jan 2017)
-*  Revision:       48190
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

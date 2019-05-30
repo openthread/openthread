@@ -1,9 +1,9 @@
 //*****************************************************************************
 //! @file       cc26x2r1f.cmd
-//! @brief      CC26x2R1F linker file for Code Composer Studio.
+//! @brief      CC26x2R1F rev2 linker file for Code Composer Studio.
 //!
-//! Revised     $Date: 2017-03-28 15:32:09 +0200 (ti, 28 mar 2017) $
-//! Revision    $Revision: 17730 $
+//! Revised     $Date$
+//! Revision    $Revision$
 //
 //  This file is auto-generated.
 //

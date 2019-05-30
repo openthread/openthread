@@ -1,12 +1,12 @@
 /******************************************************************************
 *  Filename:       ccfg.c
-*  Revised:        $Date: 2017-11-02 11:36:28 +0100 (to, 02 nov 2017) $
+*  Revised:        $Date: 2017-11-02 11:36:28 +0100 (Thu, 02 Nov 2017) $
 *  Revision:       $Revision: 18030 $
 *
 *  Description:    Customer Configuration for:
-*                  CC13x2, CC13x4, CC26x2, CC26x4 device family (HW rev 1).
+*                  CC13x2, CC13x4, CC26x2, CC26x4 device family (HW rev 2).
 *
-*  Copyright (C) 2014 Texas Instruments Incorporated - http://www.ti.com/
+*  Copyright (C) 2018 Texas Instruments Incorporated - http://www.ti.com/
 *
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -118,7 +118,7 @@
 #endif
 
 #ifndef SET_CCFG_MODE_CONF_1_ALT_DCDC_IPEAK
-#define SET_CCFG_MODE_CONF_1_ALT_DCDC_IPEAK             0x4        // Peak current
+#define SET_CCFG_MODE_CONF_1_ALT_DCDC_IPEAK             0x0        // Peak current
 #endif
 
 //#####################################

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       ddi.h
-*  Revised:        2016-10-06 17:21:09 +0200 (Thu, 06 Oct 2016)
-*  Revision:       47343
+*  Revised:        2018-06-04 16:10:13 +0200 (Mon, 04 Jun 2018)
+*  Revision:       52111
 *
 *  Description:    Defines and prototypes for the DDI master interface.
 *
@@ -151,9 +151,6 @@ DDIBaseValid(uint32_t ui32Base)
 //! This function will read a register in the analog domain and return
 //! the value as an \c uint32_t.
 //!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
-//!
 //! \param ui32Base is DDI base address.
 //! \param ui32Reg is the 32 bit register to read.
 //!
@@ -181,9 +178,6 @@ DDI32RegRead(uint32_t ui32Base, uint32_t ui32Reg)
 //! This function is used to set bits in specific register in the
 //! DDI slave. Only bits in the selected register are affected by the
 //! operation.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
 //!
 //! \param ui32Base is DDI base address.
 //! \param ui32Reg is the base register to assert the bits in.
@@ -215,9 +209,6 @@ DDI32BitsSet(uint32_t ui32Base, uint32_t ui32Reg, uint32_t ui32Val)
 //! \brief Clear specific bits in a 32 bit DDI register.
 //!
 //! This function will clear bits in a register in the analog domain.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
 //!
 //! \param ui32Base is DDI base address.
 //! \param ui32Reg is the base registers to clear the bits in.
@@ -252,13 +243,10 @@ DDI32BitsClear(uint32_t ui32Base, uint32_t ui32Reg,
 //! This function allows byte (8 bit access) to the DDI slave registers.
 //!
 //! Use this function to write any value in the range 0-7 bits aligned on a
-//! byte boundary. Fx. for writing the value 0b101 to bits 1-3 set
+//! byte boundary. For example, for writing the value 0b101 to bits 1-3 set
 //! <tt>ui16Val = 0x0A</tt> and <tt>ui16Mask = 0x0E</tt>. Bits 0 and 5-7 will
 //! not be affected by the operation, as long as the corresponding bits are
 //! not set in the \c ui16Mask.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
 //!
 //! \param ui32Base is the base address of the DDI port.
 //! \param ui32Reg is the Least Significant Register in the DDI slave that
@@ -300,13 +288,10 @@ DDI8SetValBit(uint32_t ui32Base, uint32_t ui32Reg, uint32_t ui32Byte,
 //! This function allows 16 bit masked access to the DDI slave registers.
 //!
 //! Use this function to write any value in the range 0-15 bits aligned on a
-//! half-word boundary. Fx. for writing the value 0b101 to bits 1-3 set
+//! half-word boundary. For example, for writing the value 0b101 to bits 1-3 set
 //! <tt>ui32Val = 0x000A</tt> and <tt>ui32Mask = 0x000E</tt>. Bits 0 and 5-15 will not be
 //! affected by the operation, as long as the corresponding bits are not set
 //! in the \c ui32Mask.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
 //!
 //! \param ui32Base is the base address of the DDI port.
 //! \param ui32Reg is register to access.
@@ -350,9 +335,6 @@ DDI16SetValBit(uint32_t ui32Base, uint32_t ui32Reg, bool bWriteHigh,
 //! conservation of the previous value of the register will be kept (i.e. this
 //! is NOT read-modify-write on the register).
 //!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
-//!
 //! \param ui32Base is DDI base address.
 //! \param ui32Reg is the register to write.
 //! \param ui32Val is the 32 bit value to write to the register.
@@ -368,15 +350,10 @@ extern void DDI32RegWrite(uint32_t ui32Base, uint32_t ui32Reg, uint32_t ui32Val)
 //!
 //! A '1' is written to the bit if \c ui32WrData is non-zero, else a '0' is written.
 //!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
-//!
 //! \param ui32Base is the base address of the DDI port.
 //! \param ui32Reg is register to access.
-//! \param ui32Mask is the mask defining which of the 16 bit that should be
-//! overwritten. The mask must be defined in the lower half of the 32 bits.
-//! \param ui32WrData is the value to write. The value must be defined in the lower
-//! half of the 32 bits.
+//! \param ui32Mask is the mask defining which of the 16 bit that should be overwritten.
+//! \param ui32WrData is the value to write. The value must be defined in the lower half of the 32 bits.
 //!
 //! \return None
 //
@@ -389,17 +366,13 @@ extern void DDI16BitWrite(uint32_t ui32Base, uint32_t ui32Reg,
 //
 //! \brief Write a bit field via the DDI using 16-bit maskable write.
 //!
-//! Requires that bitfields not space the low/high word boundary.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
+//! Requires that entire bit field is within the half word boundary.
 //!
 //! \param ui32Base is the base address of the DDI port.
 //! \param ui32Reg is register to access.
-//! \param ui32Mask is the mask defining which of the 16 bits that should be
-//! overwritten. The mask must be defined in the lower half of the 32 bits.
-//! \param ui32Shift
-//! \param ui32Data
+//! \param ui32Mask is the mask defining which of the 16 bits that should be overwritten.
+//! \param ui32Shift is the shift value for the bit field.
+//! \param ui32Data is the data aligned to bit 0.
 //!
 //! \return None
 //
@@ -411,9 +384,6 @@ extern void DDI16BitfieldWrite(uint32_t ui32Base, uint32_t ui32Reg,
 //*****************************************************************************
 //
 //! \brief Read a bit via the DDI using 16-bit read.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
 //!
 //! \param ui32Base is the base address of the DDI module.
 //! \param ui32Reg is the register to read.
@@ -427,17 +397,13 @@ extern uint16_t DDI16BitRead(uint32_t ui32Base, uint32_t ui32Reg,
 
 //*****************************************************************************
 //
-//! \brief Read a bitfield via the DDI using 16-bit read.
+//! \brief Read a bit field via the DDI using 16-bit read.
 //!
-//! Requires that bit fields do not space the low/high word boundary.
-//!
-//! \note Both the AUX module and the clock for the AUX SMPH module must be
-//! enabled before calling this function.
+//! Requires that entire bit field is within the half word boundary.
 //!
 //! \param ui32Base is the base address of the DDI port.
 //! \param ui32Reg is register to access.
-//! \param ui32Mask is the mask defining which of the 16 bits that should be
-//! overwritten. The mask must be defined in the lower half of the 32 bits.
+//! \param ui32Mask is the mask defining which of the 16 bits that should be overwritten.
 //! \param ui32Shift defines the required shift of the data to align with bit 0.
 //!
 //! \return Returns data aligned to bit 0.

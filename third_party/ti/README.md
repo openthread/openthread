@@ -1,11 +1,10 @@
 #CC26XXware
 
 ## URL
-<!-- TODO: UPDATE THIS for CC2650 / CC1352 / CC2652 --!>
-http://www.ti.com/tool/simplelink-cc26x2-sdk
+http://www.ti.com/tool/simplelink-cc13x2-26x2-sdk
 
 ## Version
-`driverlib_cc13xx_cc26xx_3_30_03_00`
+`driverlib_cc13xx_cc26xx_3_05_06_18894`
 
 ## License
 
@@ -18,7 +17,7 @@ BSD-3-Clause
 ## Documentation
 
 This version of cc26xxware is copied from the [SimpleLink CC26x2 Software
-Development Kit](http://www.ti.com/tool/simplelink-cc26x2-sdk). Modifications
+Development Kit](http://www.ti.com/tool/simplelink-cc13x2-26x2-sdk). Modifications
 were made to the software package to support the GCC Automake pedantic build.
 
 Also see:  release_notes_driverlib_cc13xx_cc26xx.html
@@ -31,9 +30,7 @@ Also see:  release_notes_driverlib_cc13xx_cc26xx.html
 | `device/cc13x52_cc26x2/linker_files/cc26x2r1f.lds`    | `end` symbol added for GCC stdlib                                            |
 
 Documentation can be found within the [SimpleLink CC26x2 Software Development
-Kit](http://www.ti.com/tool/simplelink-cc26x2-sdk).
-
-**TODO** Update above link
+Kit](http://www.ti.com/tool/simplelink-cc13x2-26x2-sdk).
 
 ## Description
 

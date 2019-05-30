@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       osc.c
-*  Revised:        2017-09-01 10:21:01 +0200 (Fri, 01 Sep 2017)
-*  Revision:       49677
+*  Revised:        2019-02-14 09:35:31 +0100 (Thu, 14 Feb 2019)
+*  Revision:       54539
 *
 *  Description:    Driver for setting up the system Oscillators
 *
@@ -67,13 +67,31 @@
     #define OSCHF_DebugGetCrystalAmplitude  NOROM_OSCHF_DebugGetCrystalAmplitude
     #undef  OSCHF_DebugGetExpectedAverageCrystalAmplitude
     #define OSCHF_DebugGetExpectedAverageCrystalAmplitude NOROM_OSCHF_DebugGetExpectedAverageCrystalAmplitude
+    #undef  OSC_HPOSC_Debug_InitFreqOffsetParams
+    #define OSC_HPOSC_Debug_InitFreqOffsetParams NOROM_OSC_HPOSC_Debug_InitFreqOffsetParams
+    #undef  OSC_HPOSCInitializeFrequencyOffsetParameters
+    #define OSC_HPOSCInitializeFrequencyOffsetParameters NOROM_OSC_HPOSCInitializeFrequencyOffsetParameters
     #undef  OSC_HPOSCRelativeFrequencyOffsetGet
     #define OSC_HPOSCRelativeFrequencyOffsetGet NOROM_OSC_HPOSCRelativeFrequencyOffsetGet
     #undef  OSC_AdjustXoscHfCapArray
     #define OSC_AdjustXoscHfCapArray        NOROM_OSC_AdjustXoscHfCapArray
     #undef  OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert
     #define OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert NOROM_OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert
+    #undef  OSC_HPOSCRtcCompensate
+    #define OSC_HPOSCRtcCompensate          NOROM_OSC_HPOSCRtcCompensate
 #endif
+
+//*****************************************************************************
+//
+// Global HPOSC curve fitting polynomials
+// Parameters found/calculated when calling function
+// OSC_HPOSCInitializeFrequencyOffsetParameters()
+// (or OSC_HPOSC_Debug_InitFreqOffsetParams() used for debugging only)
+// These global variables must be updated before using HPOSC
+//
+//*****************************************************************************
+
+static   int16_t  _hpOscPolynomials[ 4 ];
 
 //*****************************************************************************
 //
@@ -313,6 +331,132 @@ OSC_AdjustXoscHfCapArray( int32_t capArrDelta )
 
 //*****************************************************************************
 //
+// Initialize the frequency offset curve fitting parameters
+// These are either picked diretly from FCFG1:FREQ_OFFSET & FCFG1:MISC_CONF_2 or
+// calculated based on the FCFG1:HPOSC_MEAS_x parameters.
+//
+//*****************************************************************************
+
+// Using the following hardcoded constants (Using temporary constants for now)
+#define  D1OFFSET_p25C    -24
+#define  D2OFFSET_p85C    -36
+#define  D3OFFSET_m40C     18
+#define  P3_POLYNOMIAL    -47
+#define  N_INSERTIONS       3
+
+typedef struct {
+   int32_t  dFreq    ;
+   int32_t  temp     ;
+} insertion_t ;
+
+static void
+InitializeMeasurmentSet( insertion_t * pInsertion, uint32_t registerAddress, int32_t deltaOffset, int32_t p3PolOffset )
+{
+   // Doing the following adjustment to the deltaFrequence before finding the polynomials P0, P1, P2
+   // Dx = Dx + DxOFFSET - ((P3*Tx^3)/2^18)
+   uint32_t insertionData  = HWREG( registerAddress );
+   pInsertion->dFreq = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W - FCFG1_HPOSC_MEAS_1_HPOSC_D1_S )))
+                                                  >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W ));
+   pInsertion->temp  = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W - FCFG1_HPOSC_MEAS_1_HPOSC_T1_S )))
+                                                  >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W ));
+   pInsertion->dFreq = pInsertion->dFreq + deltaOffset - (( p3PolOffset * pInsertion->temp * pInsertion->temp * pInsertion->temp ) >> 18 );
+}
+
+static void
+FindPolynomialsAndUpdateGlobals( insertion_t * pMeasurment )
+{
+   uint32_t loopCount      ;
+   int32_t  polynomial_0   ;
+   int32_t  polynomial_1   ;
+   int32_t  polynomial_2   ;
+
+   int32_t  Syi_     = 0   ;
+   int32_t  Sxi_     = 0   ;
+   int32_t  Sxi2_    = 0   ;
+   int32_t  Sxiyi_   = 0   ;
+   int32_t  Sxi2yi_  = 0   ;
+   int32_t  Sxi3_    = 0   ;
+   int32_t  Sxi4_    = 0   ;
+
+   for ( loopCount = 0 ; loopCount < N_INSERTIONS ; loopCount++ ) {
+      int32_t  x     ;
+      int32_t  x2    ;
+      int32_t  y     ;
+
+      x  = pMeasurment[ loopCount ].temp   ;
+      x2 = ( x * x );
+      y  = pMeasurment[ loopCount ].dFreq  ;
+
+      Syi_     += ( y         );
+      Sxi_     += ( x         );
+      Sxi2_    += ( x2        );
+      Sxiyi_   += ( x  * y    );
+      Sxi2yi_  += ( x2 * y    );
+      Sxi3_    += ( x2 * x    );
+      Sxi4_    += ( x2 * x2   );
+   }
+
+   int32_t  Sxx_     = ( Sxi2_   * N_INSERTIONS ) - ( Sxi_  * Sxi_  );
+   int32_t  Sxy_     = ( Sxiyi_  * N_INSERTIONS ) - ( Sxi_  * Syi_  );
+   int32_t  Sxx2_    = ( Sxi3_   * N_INSERTIONS ) - ( Sxi_  * Sxi2_ );
+   int32_t  Sx2y_    = ( Sxi2yi_ * N_INSERTIONS ) - ( Sxi2_ * Syi_  );
+   int32_t  Sx2x2_   = ( Sxi4_   * N_INSERTIONS ) - ( Sxi2_ * Sxi2_ );
+
+   int32_t  divisor = ((((int64_t) Sxx_ * Sx2x2_ ) - ((int64_t) Sxx2_ * Sxx2_ )) + (1<<9)) >> 10 ;
+   if ( divisor == 0 ) {
+      polynomial_2 = 0 ;
+      polynomial_1 = 0 ;
+   } else {
+      polynomial_2 = (((int64_t) Sx2y_ * Sxx_   ) - ((int64_t) Sxy_  * Sxx2_ )) / divisor ;
+      polynomial_1 = (((int64_t) Sxy_  * Sx2x2_ ) - ((int64_t) Sx2y_ * Sxx2_ )) / divisor ;
+   }
+   polynomial_0 = ( Syi_ - (((( polynomial_1 * Sxi_ ) + ( polynomial_2 * Sxi2_ )) + (1<<9)) >> 10 )) / N_INSERTIONS ;
+   polynomial_1 = ( polynomial_1 + (1<<6)) >> 7 ;
+
+   _hpOscPolynomials[ 0 ] = polynomial_0  ;
+   _hpOscPolynomials[ 1 ] = polynomial_1  ;
+   _hpOscPolynomials[ 2 ] = polynomial_2  ;
+   _hpOscPolynomials[ 3 ] = P3_POLYNOMIAL ;
+}
+
+//*****************************************************************************
+// Degub function to calculate the HPOSC polynomials for experimental data sets.
+//*****************************************************************************
+void
+OSC_HPOSC_Debug_InitFreqOffsetParams( HposcDebugData_t * pDebugData )
+{
+   // Calculate the curve fitting parameters from temp insertion measurements
+   // But first adjust the measurements with constants found in characterization
+   insertion_t  pMeasurment[ 3 ];
+
+   InitializeMeasurmentSet( &pMeasurment[ 0 ], (uint32_t)&pDebugData->meas_1, pDebugData->offsetD1, pDebugData->polyP3 );
+   InitializeMeasurmentSet( &pMeasurment[ 1 ], (uint32_t)&pDebugData->meas_2, pDebugData->offsetD2, pDebugData->polyP3 );
+   InitializeMeasurmentSet( &pMeasurment[ 2 ], (uint32_t)&pDebugData->meas_3, pDebugData->offsetD3, pDebugData->polyP3 );
+
+   FindPolynomialsAndUpdateGlobals( pMeasurment );
+}
+
+//*****************************************************************************
+// The general HPOSC initialization function - Must always be called before using HPOSC
+//*****************************************************************************
+void
+OSC_HPOSCInitializeFrequencyOffsetParameters( void )
+{
+   {
+      // Calculate the curve fitting parameters from temp insertion measurements
+      // But first adjust the measurements with constants found in characterization
+      insertion_t  pMeasurment[ 3 ];
+
+      InitializeMeasurmentSet( &pMeasurment[ 0 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_1, D1OFFSET_p25C, P3_POLYNOMIAL );
+      InitializeMeasurmentSet( &pMeasurment[ 1 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_2, D2OFFSET_p85C, P3_POLYNOMIAL );
+      InitializeMeasurmentSet( &pMeasurment[ 2 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_3, D3OFFSET_m40C, P3_POLYNOMIAL );
+
+      FindPolynomialsAndUpdateGlobals( pMeasurment );
+   }
+}
+
+//*****************************************************************************
+//
 // Calculate the temperature dependent relative frequency offset of HPOSC
 //
 //*****************************************************************************
@@ -320,17 +464,11 @@ int32_t
 OSC_HPOSCRelativeFrequencyOffsetGet( int32_t tempDegC )
 {
    // Estimate HPOSC frequency, using temperature and curve fitting parameters
-   uint32_t fitParams = HWREG(FCFG1_BASE + FCFG1_O_FREQ_OFFSET);
-   // Extract the P0,P1,P2 params, and sign extend them via shifting up/down
-   int32_t paramP0 = ((((int32_t) fitParams) << (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P0_W - FCFG1_FREQ_OFFSET_HPOSC_COMP_P0_S))
-                                             >> (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P0_W));
-   int32_t paramP1 = ((((int32_t) fitParams) << (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P1_W - FCFG1_FREQ_OFFSET_HPOSC_COMP_P1_S))
-                                             >> (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P1_W));
-   int32_t paramP2 = ((((int32_t) fitParams) << (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P2_W - FCFG1_FREQ_OFFSET_HPOSC_COMP_P2_S))
-                                             >> (32 - FCFG1_FREQ_OFFSET_HPOSC_COMP_P2_W));
-   int32_t paramP3 = ((((int32_t) HWREG(FCFG1_BASE + FCFG1_O_MISC_CONF_2))
-                                             << (32 - FCFG1_MISC_CONF_2_HPOSC_COMP_P3_W - FCFG1_MISC_CONF_2_HPOSC_COMP_P3_S))
-                                             >> (32 - FCFG1_MISC_CONF_2_HPOSC_COMP_P3_W));
+
+   int32_t paramP0 = _hpOscPolynomials[ 0 ];
+   int32_t paramP1 = _hpOscPolynomials[ 1 ];
+   int32_t paramP2 = _hpOscPolynomials[ 2 ];
+   int32_t paramP3 = _hpOscPolynomials[ 3 ];
 
    // Now we can find the HPOSC freq offset, given as a signed variable d, expressed by:
    //
@@ -393,6 +531,41 @@ OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert( int32_t HPOSC_RelFreqOffs
    int32_t rfCoreFreqOffset = -HPOSC_RelFreqOffset + (( HPOSC_RelFreqOffset * HPOSC_RelFreqOffset ) >> 22 );
 
    return ( rfCoreFreqOffset );
+}
+
+//*****************************************************************************
+//
+// Compensate the RTC increment based on the relative frequency offset of HPOSC
+//
+//*****************************************************************************
+void
+OSC_HPOSCRtcCompensate( int32_t relFreqOffset )
+{
+    uint32_t rtcSubSecInc;
+    uint32_t lfClkFrequency;
+    uint32_t hfFreq;
+    int64_t  calcFactor;
+
+    // Calculate SCLK_HF frequency, defined as:
+    // hfFreq = 48000000 * (1 + relFreqOffset/(2^22))
+    if( relFreqOffset >= 0 )
+    {
+        calcFactor = ( ( 48000000 * (int64_t)relFreqOffset ) + 0x200000 ) / 0x400000;
+    }
+    else
+    {
+        calcFactor = ( ( 48000000 * (int64_t)relFreqOffset ) - 0x200000 ) / 0x400000;
+    }
+    hfFreq = 48000000 + calcFactor;
+
+    // Calculate SCLK_LF frequency, defined as SCLK_LF_FREQ = SCLK_HF_FREQ / 1536
+    lfClkFrequency = ( hfFreq + 768 ) / 1536;
+
+    // Calculate SUBSECINC, defined as: SUBSECINC = 2^38 / SCLK_LF_FREQ
+    rtcSubSecInc = 0x4000000000 / lfClkFrequency;
+
+    /* Update SUBSECINC value */
+    SetupSetAonRtcSubSecInc(rtcSubSecInc);
 }
 
 //*****************************************************************************

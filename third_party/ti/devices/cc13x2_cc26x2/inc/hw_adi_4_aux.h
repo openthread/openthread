@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_adi_4_aux_h
-*  Revised:        2017-05-04 11:51:48 +0200 (Thu, 04 May 2017)
-*  Revision:       48895
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -75,6 +75,9 @@
 
 // ADC Reference 1
 #define ADI_4_AUX_O_ADCREF1                                         0x0000000B
+
+// Internal
+#define ADI_4_AUX_O_LPMBIAS                                         0x0000000E
 
 //*****************************************************************************
 //
@@ -272,6 +275,13 @@
 #define ADI_4_AUX_COMP_COMPA_REF_CURR_EN_M                          0x00000040
 #define ADI_4_AUX_COMP_COMPA_REF_CURR_EN_S                                   6
 
+// Field:   [5:3] LPM_BIAS_WIDTH_TRIM
+//
+// Internal. Only to be used through TI provided API.
+#define ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_W                                 3
+#define ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_M                        0x00000038
+#define ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_S                                 3
+
 // Field:     [2] COMPB_EN
 //
 // COMPB enable
@@ -421,9 +431,14 @@
 //*****************************************************************************
 // Field:     [6] REF_ON_IDLE
 //
-// Keep ADCREF powered up in IDLE state when ADC0.SMPL_MODE = 0.
+// Enable ADCREF in IDLE state.
 //
-// Set to 1 if ADC0.SMPL_CYCLE_EXP is less than 6 (21.3us sampling time)
+// 0: Disabled in IDLE state
+// 1: Enabled in IDLE state
+//
+// Keep ADCREF enabled when ADC0.SMPL_MODE = 0.
+// Recommendation: Enable ADCREF always when ADC0.SMPL_CYCLE_EXP is less than
+// 0x6 (21.3us sampling time).
 #define ADI_4_AUX_ADCREF0_REF_ON_IDLE                               0x00000040
 #define ADI_4_AUX_ADCREF0_REF_ON_IDLE_M                             0x00000040
 #define ADI_4_AUX_ADCREF0_REF_ON_IDLE_S                                      6
@@ -481,6 +496,18 @@
 #define ADI_4_AUX_ADCREF1_VTRIM_W                                            6
 #define ADI_4_AUX_ADCREF1_VTRIM_M                                   0x0000003F
 #define ADI_4_AUX_ADCREF1_VTRIM_S                                            0
+
+//*****************************************************************************
+//
+// Register: ADI_4_AUX_O_LPMBIAS
+//
+//*****************************************************************************
+// Field:   [5:0] LPM_TRIM_IOUT
+//
+// Internal. Only to be used through TI provided API.
+#define ADI_4_AUX_LPMBIAS_LPM_TRIM_IOUT_W                                    6
+#define ADI_4_AUX_LPMBIAS_LPM_TRIM_IOUT_M                           0x0000003F
+#define ADI_4_AUX_LPMBIAS_LPM_TRIM_IOUT_S                                    0
 
 
 #endif // __ADI_4_AUX__

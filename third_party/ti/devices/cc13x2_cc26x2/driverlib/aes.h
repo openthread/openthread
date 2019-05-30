@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aes.h
-*  Revised:        2018-04-17 14:54:06 +0200 (Tue, 17 Apr 2018)
-*  Revision:       51890
+*  Revised:        2019-01-25 14:45:16 +0100 (Fri, 25 Jan 2019)
+*  Revision:       54287
 *
 *  Description:    AES header file.
 *
@@ -581,6 +581,19 @@ __STATIC_INLINE void AESSetDataLength(uint32_t length)
 __STATIC_INLINE void AESSetAuthLength(uint32_t length)
 {
     HWREG(CRYPTO_BASE + CRYPTO_O_AESAUTHLEN) = length;
+}
+
+//*****************************************************************************
+//
+//! \brief Reset the accelerator and cancel ongoing operations
+//!
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void AESReset(void)
+{
+    HWREG(CRYPTO_BASE + CRYPTO_O_SWRESET) = 0x00000001;
 }
 
 //*****************************************************************************

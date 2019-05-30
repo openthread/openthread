@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aux_timer01_h
-*  Revised:        2017-05-22 18:50:33 +0200 (Mon, 22 May 2017)
-*  Revision:       49040
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

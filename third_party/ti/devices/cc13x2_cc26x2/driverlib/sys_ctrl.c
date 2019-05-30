@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.c
-*  Revised:        2017-11-07 11:56:04 +0100 (Tue, 07 Nov 2017)
-*  Revision:       50203
+*  Revised:        2018-06-26 15:19:11 +0200 (Tue, 26 Jun 2018)
+*  Revision:       52220
 *
 *  Description:    Driver for the System Control.
 *
@@ -199,13 +199,8 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
        // adaptive recharge mode and fixed parameter values
        if(rechargeMode == SYSCTRL_PREFERRED_RECHARGE_MODE)
        {
-           if (( HWREG( FCFG1_BASE + FCFG1_O_TFW_FT ) % 10000 ) >= 683 ) {
-               // Enable the Recharge Comparator
-               HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = AON_PMCTL_RECHARGECFG_MODE_COMPARATOR;
-           } else {
-               // Set conservative recharge mode
-               HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = 0x80A4E708;
-           }
+           // Enable the Recharge Comparator
+           HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = AON_PMCTL_RECHARGECFG_MODE_COMPARATOR;
        }
        else
        {

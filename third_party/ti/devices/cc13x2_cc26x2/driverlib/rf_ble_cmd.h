@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_ble_cmd.h
-*  Revised:        2018-05-07 15:02:01 +0200 (Mon, 07 May 2018)
-*  Revision:       18438
+*  Revised:        2018-07-31 20:13:42 +0200 (Tue, 31 Jul 2018)
+*  Revision:       18572
 *
 *  Description:    CC13x2/CC26x2 API for Bluetooth Low Energy commands
 *
@@ -203,9 +203,8 @@ struct __RFC_STRUCT rfc_ble5RadioOp_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    uint8_t* pParams;                    //!<        Pointer to command specific parameter structure
    uint8_t* pOutput;                    //!<        Pointer to command specific output structure
 } __RFC_STRUCT_ATTR;
@@ -258,12 +257,11 @@ struct __RFC_STRUCT rfc_ble5Tx20RadioOp_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    uint8_t* pParams;                    //!<        Pointer to command specific parameter structure
    uint8_t* pOutput;                    //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -812,12 +810,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_SLAVE_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5SlavePar_t *pParams;         //!<        Pointer to command specific parameter structure
    rfc_bleMasterSlaveOutput_t *pOutput; //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -875,12 +872,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_MASTER_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5MasterPar_t *pParams;        //!<        Pointer to command specific parameter structure
    rfc_bleMasterSlaveOutput_t *pOutput; //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -938,12 +934,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_EXT_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5AdvExtPar_t *pParams;        //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1001,12 +996,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_AUX_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5AdvAuxPar_t *pParams;        //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1064,12 +1058,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_SCANNER_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5ScannerPar_t *pParams;       //!<        Pointer to command specific parameter structure
    rfc_ble5ScanInitOutput_t *pOutput;   //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1127,12 +1120,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_INITIATOR_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_ble5InitiatorPar_t *pParams;     //!<        Pointer to command specific parameter structure
    rfc_ble5ScanInitOutput_t *pOutput;   //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1190,12 +1182,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_GENERIC_RX_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleGenericRxPar_t *pParams;      //!<        Pointer to command specific parameter structure
    rfc_bleGenericRxOutput_t *pOutput;   //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1253,12 +1244,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_TX_TEST_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleTxTestPar_t *pParams;         //!<        Pointer to command specific parameter structure
    rfc_bleTxTestOutput_t *pOutput;      //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1316,12 +1306,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleAdvPar_t *pParams;            //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1379,12 +1368,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_DIR_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleAdvPar_t *pParams;            //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1442,12 +1430,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_NC_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleAdvPar_t *pParams;            //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1505,12 +1492,11 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_SCAN_s {
    uint8_t rangeDelay;                  //!<        Number of RAT ticks to add to the listening time after T_IFS
    uint16_t txPower;                    //!< \brief Transmit power to use (overrides the one given in radio setup) <br>
                                         //!<        0x0000: Use default TX power<br>
-                                        //!<        0xFFFF: Use field <code>tx20Power</code> to set power for 20-dBm PA or to switch PA
-                                        //!<        (command structure that includes <code>tx20Power</code> must be used; patch
-                                        //!<        required)
+                                        //!<        0xFFFF: 20-dBm PA only: Use TX power from <code>tx20Power</code> field (command
+                                        //!<        structure that includes <code>tx20Power</code> must be used)
    rfc_bleAdvPar_t *pParams;            //!<        Pointer to command specific parameter structure
    rfc_bleAdvOutput_t *pOutput;         //!<        Pointer to command specific output structure
-   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF (patch required):<br>
+   uint32_t tx20Power;                  //!< \brief If <code>txPower</code> = 0xFFFF:<br>
                                         //!<        If <code>tx20Power</code> < 0x10000000: Transmit power to use for the 20-dBm PA;
                                         //!<        overrides the one given in radio setup for the duration of the command. <br>
                                         //!<        If <code>tx20Power</code> >= 0x10000000: Pointer to PA change override structure
@@ -1760,9 +1746,9 @@ struct __RFC_STRUCT rfc_bleAdvPar_s {
       uint8_t bStrictLenFilter:1;       //!< \brief 0: Accept any packet with a valid advertising packet length<br>
                                         //!<        1: Discard messages with illegal length for the given packet type
       uint8_t chSel:1;                  //!< \brief 0: Do not report support of Channel Selection Algorithm #2<br>
-                                        //!<        1: Report support of Channel Selection Algorithm #2 (patch required)
-      uint8_t privIgnMode:1;            //!< \brief 0: Filter on bPrivIgn only when white list is used (if patch is used)
-                                        //!<        1: Filter on bPrivIgn always (patch required)
+                                        //!<        1: Report support of Channel Selection Algorithm #2
+      uint8_t privIgnMode:1;            //!< \brief 0: Filter on bPrivIgn only when white list is used
+                                        //!<        1: Filter on bPrivIgn always
       uint8_t rpaMode:1;                //!< \brief Resolvable private address mode<br>
                                         //!<        0: Normal operation<br>
                                         //!<        1: Use white list for a received RPA regardless of filter policy
@@ -1777,7 +1763,12 @@ struct __RFC_STRUCT rfc_bleAdvPar_s {
    rfc_bleWhiteListEntry_t *pWhiteList; //!< \brief Pointer (with least significant bit set to 0)  to white list or peer address (directed
                                         //!<        advertiser). If least significant bit is 1, the address type given by
                                         //!<        <code>advConfig.peerAddrType</code> is inverted.
-   uint16_t __dummy0;
+   struct {
+      uint8_t scanRspEndType:1;         //!< \brief Command status at end if SCAN_RSP was sent:<br>
+                                        //!<        0: End with BLE_DONE_OK and result True<br>
+                                        //!<        1: End with BLE_DONE_SCAN_RSP and result False
+   } behConfig;
+   uint8_t __dummy0;
    uint8_t __dummy1;
    struct {
       uint8_t triggerType:4;            //!<        The type of trigger
@@ -1897,7 +1888,7 @@ struct __RFC_STRUCT rfc_bleInitiatorPar_s {
       uint8_t bStrictLenFilter:1;       //!< \brief 0: Accept any packet with a valid advertising packet length<br>
                                         //!<        1: Discard messages with illegal length for the given packet type
       uint8_t chSel:1;                  //!< \brief 0: Do not report support of Channel Selection Algorithm #2<br>
-                                        //!<        1: Report support of Channel Selection Algorithm #2 (patch required)
+                                        //!<        1: Report support of Channel Selection Algorithm #2
    } initConfig;
    uint8_t __dummy0;
    uint8_t connectReqLen;               //!<        Size of connect request data
@@ -2171,13 +2162,17 @@ struct __RFC_STRUCT rfc_ble5AdvAuxPar_s {
                                         //!<        1: Discard messages with illegal length for the given packet type
       uint8_t bDirected:1;              //!< \brief 0: Advertiser is undirected: pWhiteList points to a white list
                                         //!<        1: Advertiser is directed: pWhiteList points to a single device address
-      uint8_t privIgnMode:1;            //!< \brief 0: Filter on bPrivIgn only when white list is used (if patch is used)
-                                        //!<        1: Filter on bPrivIgn always (patch required)
+      uint8_t privIgnMode:1;            //!< \brief 0: Filter on bPrivIgn only when white list is used
+                                        //!<        1: Filter on bPrivIgn always
       uint8_t rpaMode:1;                //!< \brief Resolvable private address mode<br>
                                         //!<        0: Normal operation<br>
                                         //!<        1: Use white list for a received RPA regardless of filter policy
    } advConfig;
-   uint8_t __dummy0;
+   struct {
+      uint8_t scanRspEndType:1;         //!< \brief Command status at end if AUX_SCAN_RSP was sent:<br>
+                                        //!<        0: End with BLE_DONE_OK and result True<br>
+                                        //!<        1: End with BLE_DONE_SCAN_RSP and result False
+   } behConfig;
    uint8_t auxPtrTargetType;            //!< \brief Number indicating reference for auxPtrTargetTime. Takes same values as trigger types,
                                         //!<        but only TRIG_ABSTIME and TRIG_REL_* are allowed
    ratmr_t auxPtrTargetTime;            //!<        Time of start of packet to which auxPtr points
@@ -2258,14 +2253,41 @@ struct __RFC_STRUCT rfc_ble5ScannerPar_s {
    struct {
       uint8_t bCheckAdi:1;              //!< \brief 0: Do not perform ADI filtering<br>
                                         //!<        1: Perform ADI filtering on packets where ADI is present
-      uint8_t bAutoAdiUpdate:1;         //!< \brief 0: Do not update ADI entries in radio CPU<br>
-                                        //!<        1: Automatically update ADI entry for received packets with AuxPtr
-      uint8_t bApplyDuplicateFiltering:1;//!< \brief 0: Do not apply duplicate filtering based on device address for extended advertiser packets<br>
-                                        //!<        1: Apply duplicate filtering based on device address for extended advertiser packets with no ADI field
+      uint8_t bAutoAdiUpdate:1;         //!< \brief 0: Do not update ADI entries in radio CPU using legacy mode (recommended)<br>
+                                        //!<        1: Legacy mode: Automatically update ADI entry for received packets with
+                                        //!<        AdvDataInfo after first occurrence
+      uint8_t bApplyDuplicateFiltering:1;//!< \brief 0: Do not apply duplicate filtering based on device address for extended
+                                        //!<        advertiser packets (recommended)<br>
+                                        //!<        1: Apply duplicate filtering based on device address for extended advertiser
+                                        //!<        packets with no ADI field
       uint8_t bAutoWlIgnore:1;          //!< \brief 0: Do not set ignore bit in white list from radio CPU for extended advertising packets<br>
                                         //!<        1: Automatically set ignore bit in white list for extended advertising packets
+      uint8_t bAutoAdiProcess:1;        //!< \brief 0: Do not use automatic ADI processing<br>
+                                        //!<        1: Automatically update ADI entry for received packets so that only the same
+                                        //!<        ADI is accepted for the rest of the chain and the SID/DID combination is
+                                        //!<        ignored after the entire chain is received.
+      uint8_t bExclusiveSid:1;          //!< \brief 0: Set <code>adiStatus.state</code> to 0 when command starts so that all
+                                        //!<        valid SIDs are accepted<br>
+                                        //!<        1: Do not modify adiStatus.state when command starts<br>
    } extFilterConfig;
-   uint32_t __dummy0;
+   struct {
+      uint8_t lastAcceptedSid:4;        //!<        Indication of SID of last successfully received packet that was not ignored
+      uint8_t state:3;                  //!< \brief 0: No extended packet received, or last extended packet didn't have an ADI;
+                                        //!<        <code>lastAcceptedSid</code> field is not valid<br>
+                                        //!<        1: A message with ADI has been received, but no chain is under reception;
+                                        //!<        ADI filtering to be performed normally<br>
+                                        //!<        2: A message with SID as given in <code>lastAcceptedSid</code> has been
+                                        //!<        received, and chained messages are still pending. Messages without this
+                                        //!<        SID will be ignored<br>
+                                        //!<        3: An AUX_SCAN_RSP message has been received after receiving messages with SID
+                                        //!<        as given in <code>lastAcceptedSid</code>, and chained messages are
+                                        //!<        pending. Messages with an ADI field will be ignored.<br>
+                                        //!<        4: A message with no ADI has been received, and chained messages are still
+                                        //!<        pending. Messages with an ADI field will be ignored.<br>
+                                        //!<        Others: <i>Reserved</i>
+   } adiStatus;
+   uint8_t __dummy0;
+   uint16_t __dummy1;
    uint16_t* pDeviceAddress;            //!< \brief Pointer (with least significant bit set to 0) to device address used for this device.
                                         //!<        If least significant bit is 1, the address type given by
                                         //!<        <code>scanConfig.deviceAddrType</code> is inverted.
@@ -2332,7 +2354,7 @@ struct __RFC_STRUCT rfc_ble5InitiatorPar_s {
       uint8_t bStrictLenFilter:1;       //!< \brief 0: Accept any packet with a valid advertising packet length<br>
                                         //!<        1: Discard messages with illegal length for the given packet type
       uint8_t chSel:1;                  //!< \brief 0: Do not report support of Channel Selection Algorithm #2 in CONNECT_IND<br>
-                                        //!<        1: Report support of Channel Selection Algorithm #2 in CONNECT_IND (patch required)
+                                        //!<        1: Report support of Channel Selection Algorithm #2 in CONNECT_IND
    } initConfig;
    uint16_t randomState;                //!<        State for pseudo-random number generation used in backoff procedure
    uint16_t backoffCount;               //!<        Parameter <i>backoffCount</i> used in backoff procedure, cf. Bluetooth spec

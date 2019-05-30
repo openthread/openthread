@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       chipinfo.c
-*  Revised:        2018-01-29 18:45:34 +0100 (Mon, 29 Jan 2018)
-*  Revision:       51355
+*  Revised:        2018-08-17 09:28:06 +0200 (Fri, 17 Aug 2018)
+*  Revision:       52354
 *
 *  Description:    Collection of functions returning chip information.
 *
@@ -55,8 +55,8 @@
     #define ChipInfo_GetChipFamily          NOROM_ChipInfo_GetChipFamily
     #undef  ChipInfo_GetHwRevision
     #define ChipInfo_GetHwRevision          NOROM_ChipInfo_GetHwRevision
-    #undef  ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
-    #define ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated NOROM_ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
+    #undef  ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
+    #define ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated NOROM_ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
 #endif
 
 //*****************************************************************************
@@ -183,6 +183,9 @@ ChipInfo_GetHwRevision( void )
       case 2 : // CC13x2, CC26x2 - PG1.1 (or later)
          hwRev = (HwRevision_t)(((uint32_t)HWREV_1_1 ) + minorHwRev );
          break;
+      case 3 : // CC13x2, CC26x2 - PG2.1 (or later)
+         hwRev = (HwRevision_t)(((uint32_t)HWREV_2_1 ) + minorHwRev );
+         break;
       }
    }
 
@@ -190,16 +193,17 @@ ChipInfo_GetHwRevision( void )
 }
 
 //*****************************************************************************
-// ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated()
+// ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated()
 //*****************************************************************************
 void
-ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated( void )
+ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated( void )
 {
-   if ( ! ChipInfo_ChipFamilyIs_CC13x2_CC26x2() )
+   if (( ! ChipInfo_ChipFamilyIs_CC13x2_CC26x2() ) ||
+       ( ! ChipInfo_HwRevisionIs_GTEQ_2_0()      )    )
    {
       while(1)
       {
-         // This driverlib version is for the CC13x2/CC26x2 chips.
+         // This driverlib version is for the CC13x2/CC26x2 PG2.0 and later chips.
          // Do nothing - stay here forever
       }
    }
