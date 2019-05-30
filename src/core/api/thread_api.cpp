@@ -183,6 +183,13 @@ exit:
     return error;
 }
 
+const otIp6Address *OTCALL otThreadGetRloc(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<Mle::MleRouter>().GetMeshLocal16();
+}
+
 const otIp6Address *otThreadGetMeshLocalEid(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -360,8 +367,8 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mPathCost       = parent->GetCost();
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
     aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
-    aParentInfo->mAge = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
-    aParentInfo->mAllocated       = true;
+    aParentInfo->mAge       = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::Elapsed(parent->GetLastHeard())));
+    aParentInfo->mAllocated = true;
     aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 
 exit:

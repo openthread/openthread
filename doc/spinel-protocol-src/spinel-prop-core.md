@@ -529,7 +529,8 @@ The bit values in `MD_FLAG` are defined as follows:
 15       | 0x0001 | MD_FLAG_TX        | Packet was transmitted, not received.
 13       | 0x0004 | MD_FLAG_BAD_FCS   | Packet was received with bad FCS
 12       | 0x0008 | MD_FLAG_DUPE      | Packet seems to be a duplicate
-0-11, 14 | 0xFFF2 | MD_FLAG_RESERVED  | Flags reserved for future use.
+11       | 0x0010 | MD_FLAG_ACKED_FP  | Packet was acknowledged with frame pending set
+0-10, 14 | 0xFFE2 | MD_FLAG_RESERVED  | Flags reserved for future use.
 
 The format of `MD_PHY` is specified by the PHY layer currently in use,
 and may contain information such as the channel, LQI, antenna, or other

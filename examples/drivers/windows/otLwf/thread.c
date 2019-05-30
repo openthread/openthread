@@ -424,13 +424,7 @@ uint16_t otPlatMessagePoolNumFreeBuffers(_In_ otInstance *otCtx)
 
 #endif
 
-uint32_t otPlatRandomGet()
-{
-    LARGE_INTEGER Counter = KeQueryPerformanceCounter(NULL);
-    return (uint32_t)RtlRandomEx(&Counter.LowPart);
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     // Just use the system-preferred random number generator algorithm
     NTSTATUS status = 

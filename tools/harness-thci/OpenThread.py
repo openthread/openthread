@@ -500,7 +500,7 @@ class OpenThread(IThci):
         finalMac = ':'.join(a + b + c + d for a,b,c,d in zip(hexIter, hexIter,hexIter,hexIter))
         prefix = str(finalMac)
         strIp6Prefix = prefix[:20]
-        return strIp6Prefix +':'
+        return strIp6Prefix +'::'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
@@ -777,7 +777,7 @@ class OpenThread(IThci):
             if bType == MacType.FactoryMac:
                 macAddr64 = self.__sendCommand('eui64')[0]
             elif bType == MacType.HashMac:
-                macAddr64 = self.__sendCommand('joinerid')[0]
+                macAddr64 = self.__sendCommand('joiner id')[0]
             else:
                 macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64

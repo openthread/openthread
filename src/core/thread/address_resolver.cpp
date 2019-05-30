@@ -37,8 +37,6 @@
 
 #include "address_resolver.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -622,7 +620,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         if (child.HasIp6Address(GetInstance(), targetTlv.GetTarget()))
         {
             mlIidTlv.SetIid(child.GetExtAddress());
-            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());
+            lastTransactionTimeTlv.SetTime(TimerMilli::Elapsed(child.GetLastHeard()));
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

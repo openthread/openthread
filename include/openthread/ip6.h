@@ -158,7 +158,7 @@ typedef struct otMessageInfo
 
     /**
      * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
-     * @p mLinkInfo points to @sa otThreadLinkInfo. This field is only valid for messages received from the
+     * @p mLinkInfo points to otThreadLinkInfo(). This field is only valid for messages received from the
      * Thread radio and is ignored on transmission.
      */
     const void *mLinkInfo;
@@ -331,7 +331,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
- *                       freed by the receiver of the callback after it is processed (@sa otMessageFree).
+ *                       freed by the receiver of the callback after it is processed (see otMessageFree()).
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */

@@ -50,7 +50,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType)
+DatasetLocal::DatasetLocal(Instance &aInstance, Tlv::Type aType)
     : InstanceLocator(aInstance)
     , mUpdateTime(0)
     , mType(aType)
@@ -109,7 +109,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
         delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
         VerifyOrExit(delayTimer);
 
-        elapsed = TimerMilli::GetNow() - mUpdateTime;
+        elapsed = TimerMilli::Elapsed(mUpdateTime);
 
         if (delayTimer->GetDelayTimer() > elapsed)
         {

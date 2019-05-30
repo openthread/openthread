@@ -60,6 +60,7 @@ enum
     kThreadVersion                  = 2,     ///< Thread Version
     kUdpPort                        = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout     = 750,   ///< Router Parent Request timeout
+    kParentRequestDuplicateMargin   = 50,    ///< Margin for duplicate parent request
     kParentRequestReedTimeout       = 1250,  ///< Router and REEDs Parent Request timeout
     kAttachStartJitter              = 50,    ///< Maximum jitter time added to start of attach.
     kAnnounceProcessTimeout         = 250,   ///< Timeout after receiving Announcement before channel/pan-id change

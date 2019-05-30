@@ -63,6 +63,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+ *
+ * The Organizationally Unique Identifier for the vendor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+#define OPENTHREAD_CONFIG_STACK_VENDOR_OUI 0xf4ce36
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_CHILDREN
  *
  * The maximum number of children.
@@ -244,21 +254,6 @@
  */
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 #define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
-#endif
-
-/**
- * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
- *
- * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
- *
- * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt context
- *       used by Header IE related features.
- *
- */
-#if OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER || OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 1
-#else
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
 #endif
 
 /*

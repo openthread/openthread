@@ -1983,6 +1983,9 @@ int main(int argc, char *argv[])
 bail:
     syslog(LOG_NOTICE, "Shutdown. (sRet = %d)", sRet);
 
+    syslog(LOG_NOTICE, "Reset NCP/RCP");
+    trigger_reset();
+
     if (sRet == EXIT_QUIT)
     {
         sRet = EXIT_SUCCESS;

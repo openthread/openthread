@@ -133,6 +133,9 @@ run test-027-child-mode-change.py
 run test-028-router-leader-reset-recovery.py
 run test-029-data-poll-interval.py
 run test-030-slaac-address-ncp.py
+run test-031-meshcop-joiner-commissioner.py
+run test-032-child-attach-with-multiple-ip-addresses.py
+run test-033-mesh-local-prefix-change.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py

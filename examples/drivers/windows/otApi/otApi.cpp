@@ -1415,6 +1415,20 @@ otDatasetSetDelayTimerMinimal(
 }
 
 OTAPI
+otError
+OTCALL
+otDatasetCreateNewNetwork(
+    _In_ otInstance *aInstance,
+    _Out_ otOperationalDataset *aDataset
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    // TODO
+    UNREFERENCED_PARAMETER(aDataset);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OTAPI
 uint32_t
 OTCALL
 otDatasetGetDelayTimerMinimal(
@@ -1648,6 +1662,38 @@ otThreadSetPSKc(
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PSKC, aPSKc));
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
+otThreadGetLinkLocalIp6Address(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_LINK_LOCAL_ADDRESS, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
+otThreadGetRloc(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_RLOC, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
 }
 
 OTAPI
@@ -3089,6 +3135,22 @@ otThreadGetChildInfoByIndex(
 OTAPI
 otError
 OTCALL
+otThreadGetChildNextIp6Address(
+    _In_ otInstance *aInstance,
+    uint8_t aChildIndex,
+    _Inout_ otChildIp6AddressIterator *aIterator,
+    _Out_ otIp6Address *aAddress)
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    UNREFERENCED_PARAMETER(aChildIndex);
+    UNREFERENCED_PARAMETER(aIterator);
+    UNREFERENCED_PARAMETER(aAddress);
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
+}
+
+OTAPI
+otError
+OTCALL
 otThreadGetNextNeighborInfo(
     _In_ otInstance *aInstance,
     _Inout_ otNeighborInfoIterator *aIterator,
@@ -3634,7 +3696,10 @@ OTAPI
 otError 
 OTCALL
 otCommissionerStart(
-    _In_ otInstance *aInstance
+    _In_ otInstance *aInstance,
+    _In_ otCommissionerStateCallback aStateCallback,
+    _In_ otCommissionerJoinerCallback aJoinerCallback,
+    _In_ void *aContext
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;

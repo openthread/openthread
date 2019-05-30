@@ -163,6 +163,33 @@ uint8_t NcpBase::LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aSecureDataRequest
     return flags;
 }
 
+otError NcpBase::EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo)
+{
+    otError error;
+    uint8_t modeFlags;
+
+    modeFlags = LinkFlagsToFlagByte(aNeighborInfo.mRxOnWhenIdle, aNeighborInfo.mSecureDataRequest,
+                                    aNeighborInfo.mFullThreadDevice, aNeighborInfo.mFullNetworkData);
+
+    SuccessOrExit(error = mEncoder.OpenStruct());
+
+    SuccessOrExit(error = mEncoder.WriteEui64(aNeighborInfo.mExtAddress));
+    SuccessOrExit(error = mEncoder.WriteUint16(aNeighborInfo.mRloc16));
+    SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mAge));
+    SuccessOrExit(error = mEncoder.WriteUint8(aNeighborInfo.mLinkQualityIn));
+    SuccessOrExit(error = mEncoder.WriteInt8(aNeighborInfo.mAverageRssi));
+    SuccessOrExit(error = mEncoder.WriteUint8(modeFlags));
+    SuccessOrExit(error = mEncoder.WriteBool(aNeighborInfo.mIsChild));
+    SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mLinkFrameCounter));
+    SuccessOrExit(error = mEncoder.WriteUint32(aNeighborInfo.mMleFrameCounter));
+    SuccessOrExit(error = mEncoder.WriteInt8(aNeighborInfo.mLastRssi));
+
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>(void)
 {
     return mEncoder.WriteUint32(otLinkGetPollPeriod(mInstance));
@@ -577,27 +604,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEIGHBOR_TABLE
     otError                error = OT_ERROR_NONE;
     otNeighborInfoIterator iter  = OT_NEIGHBOR_INFO_ITERATOR_INIT;
     otNeighborInfo         neighInfo;
-    uint8_t                modeFlags;
 
     while (otThreadGetNextNeighborInfo(mInstance, &iter, &neighInfo) == OT_ERROR_NONE)
     {
-        modeFlags = LinkFlagsToFlagByte(neighInfo.mRxOnWhenIdle, neighInfo.mSecureDataRequest,
-                                        neighInfo.mFullThreadDevice, neighInfo.mFullNetworkData);
-
-        SuccessOrExit(error = mEncoder.OpenStruct());
-
-        SuccessOrExit(error = mEncoder.WriteEui64(neighInfo.mExtAddress));
-        SuccessOrExit(error = mEncoder.WriteUint16(neighInfo.mRloc16));
-        SuccessOrExit(error = mEncoder.WriteUint32(neighInfo.mAge));
-        SuccessOrExit(error = mEncoder.WriteUint8(neighInfo.mLinkQualityIn));
-        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mAverageRssi));
-        SuccessOrExit(error = mEncoder.WriteUint8(modeFlags));
-        SuccessOrExit(error = mEncoder.WriteBool(neighInfo.mIsChild));
-        SuccessOrExit(error = mEncoder.WriteUint32(neighInfo.mLinkFrameCounter));
-        SuccessOrExit(error = mEncoder.WriteUint32(neighInfo.mMleFrameCounter));
-        SuccessOrExit(error = mEncoder.WriteInt8(neighInfo.mLastRssi));
-
-        SuccessOrExit(error = mEncoder.CloseStruct());
+        SuccessOrExit(error = EncodeNeighborInfo(neighInfo));
     }
 
 exit:
@@ -3182,7 +3192,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(
     otNetworkTimeStatus networkTimeStatus;
     uint64_t            time;
 
-    networkTimeStatus = otNetworkTimeGet(mInstance, time);
+    networkTimeStatus = otNetworkTimeGet(mInstance, &time);
 
     SuccessOrExit(error = mEncoder.WriteUint64(time));
     SuccessOrExit(error = mEncoder.WriteInt8((int8_t)networkTimeStatus));

@@ -246,7 +246,7 @@ void SubMac::StartCsmaBackoff(void)
         backoffExponent = kMaxBE;
     }
 
-    backoff = Random::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
+    backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
     if (mRxOnWhenBackoff)
@@ -421,8 +421,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
         mEnergyScanEndTime = TimerMilli::GetNow() + aScanDuration;
-        mTimer.Start(kEnergyScanRssiSampleInterval);
-        SampleRssi();
+        mTimer.Start(0);
     }
     else
     {

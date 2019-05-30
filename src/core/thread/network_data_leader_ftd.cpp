@@ -37,8 +37,6 @@
 
 #include "network_data_leader.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1575,7 +1573,7 @@ void Leader::HandleTimer(void)
             continue;
         }
 
-        if ((TimerMilli::GetNow() - mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
+        if (TimerMilli::Elapsed(mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }

@@ -146,7 +146,6 @@ OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *        
  *
  * @param[in]  aApiInstance     The OpenThread api instance.
  *
- * @sa otFreeMemory
  */
 OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
 
@@ -157,8 +156,6 @@ OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
  * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
  *
  * @returns  The new OpenThread device instance structure for the device.
- *
- * @sa otFreeMemory
  *
  */
 OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID *aDeviceGuid);
@@ -273,19 +270,17 @@ enum
     OT_CHANGED_THREAD_CHILD_REMOVED        = 1 << 11, ///< Child was removed
     OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED   = 1 << 12, ///< Subscribed to a IPv6 multicast address
     OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED = 1 << 13, ///< Unsubscribed from a IPv6 multicast address
-    OT_CHANGED_COMMISSIONER_STATE          = 1 << 14, ///< Commissioner state changed
-    OT_CHANGED_JOINER_STATE                = 1 << 15, ///< Joiner state changed
-    OT_CHANGED_THREAD_CHANNEL              = 1 << 16, ///< Thread network channel changed
-    OT_CHANGED_THREAD_PANID                = 1 << 17, ///< Thread network PAN Id changed
-    OT_CHANGED_THREAD_NETWORK_NAME         = 1 << 18, ///< Thread network name changed
-    OT_CHANGED_THREAD_EXT_PANID            = 1 << 19, ///< Thread network extended PAN ID changed
-    OT_CHANGED_MASTER_KEY                  = 1 << 20, ///< Master key changed
-    OT_CHANGED_PSKC                        = 1 << 21, ///< PSKc changed
-    OT_CHANGED_SECURITY_POLICY             = 1 << 22, ///< Security Policy changed
-    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 23, ///< Channel Manager new pending Thread channel changed
-    OT_CHANGED_SUPPORTED_CHANNEL_MASK      = 1 << 24, ///< Supported channel mask changed
-    OT_CHANGED_BORDER_AGENT_STATE          = 1 << 25, ///< Border agent state changed
-    OT_CHANGED_THREAD_NETIF_STATE          = 1 << 26, ///< Thread network interface state changed
+    OT_CHANGED_THREAD_CHANNEL              = 1 << 14, ///< Thread network channel changed
+    OT_CHANGED_THREAD_PANID                = 1 << 15, ///< Thread network PAN Id changed
+    OT_CHANGED_THREAD_NETWORK_NAME         = 1 << 16, ///< Thread network name changed
+    OT_CHANGED_THREAD_EXT_PANID            = 1 << 17, ///< Thread network extended PAN ID changed
+    OT_CHANGED_MASTER_KEY                  = 1 << 18, ///< Master key changed
+    OT_CHANGED_PSKC                        = 1 << 19, ///< PSKc changed
+    OT_CHANGED_SECURITY_POLICY             = 1 << 20, ///< Security Policy changed
+    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL = 1 << 21, ///< Channel Manager new pending Thread channel changed
+    OT_CHANGED_SUPPORTED_CHANNEL_MASK      = 1 << 22, ///< Supported channel mask changed
+    OT_CHANGED_BORDER_AGENT_STATE          = 1 << 23, ///< Border agent state changed
+    OT_CHANGED_THREAD_NETIF_STATE          = 1 << 24, ///< Thread network interface state changed
 };
 
 /**

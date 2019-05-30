@@ -1072,6 +1072,16 @@ public:
      */
     void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
 
+    /**
+     * This method requests MLE layer to prepare and send a shorter version of Child ID Request message by only
+     * including the mesh-local IPv6 address in the Address Registration TLV.
+     *
+     * This method should be called when a previous MLE Child ID Request message would require fragmentation at 6LoWPAN
+     * layer.
+     *
+     */
+    void RequestShorterChildIdRequest(void);
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1103,6 +1113,17 @@ protected:
     enum
     {
         kMleMaxResponseDelay = 1000u, ///< Maximum delay before responding to a multicast request.
+    };
+
+    /**
+     * This enumeration type is used in `AppendAddressRegistration()` to determine which addresses to include in the
+     * appended Address Registration TLV.
+     *
+     */
+    enum AddressRegistrationMode
+    {
+        kAppendAllAddresses,  ///< Append all addresses (unicast/multicast) in Address Registration TLV.
+        kAppendMeshLocalOnly, ///< Only append the Mesh Local (ML-EID) address in Address Registration TLV.
     };
 
     /**
@@ -1323,12 +1344,13 @@ protected:
      * This method appends an Address Registration TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aMode     Determines which addresses to include in the TLV (see `AddressRegistrationMode`).
      *
      * @retval OT_ERROR_NONE     Successfully appended the Address Registration TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
      *
      */
-    otError AppendAddressRegistration(Message &aMessage);
+    otError AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     /**
@@ -1699,6 +1721,7 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
+    bool    HasUnregisteredAddress(void);
 
     uint32_t GetAttachStartDelay(void) const;
     otError  SendParentRequest(ParentRequestType aType);
@@ -1754,6 +1777,8 @@ private:
     ChildUpdateRequestState mChildUpdateRequestState;
     uint8_t                 mDataRequestAttempts;
     DataRequestState        mDataRequestState;
+
+    AddressRegistrationMode mAddressRegistrationMode;
 
     uint8_t       mParentLinkMargin;
     bool          mParentIsSingleton;

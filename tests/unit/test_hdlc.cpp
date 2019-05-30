@@ -39,10 +39,9 @@ namespace Ncp {
 
 enum
 {
-    kBufferSize                   = 1500,  // Frame buffer size
-    kMaxFrameLength               = 500,   // Maximum allowed frame length (used when randomly generating frames)
-    kFuzzTestIteration            = 50000, // Number of iteration during fuzz test (randomly generating frames)
-    kUseTrueRandomNumberGenerator = 1,     // To use true random number generator or not.
+    kBufferSize        = 1500,  // Frame buffer size
+    kMaxFrameLength    = 500,   // Maximum allowed frame length (used when randomly generating frames)
+    kFuzzTestIteration = 50000, // Number of iteration during fuzz test (randomly generating frames)
 
     kFlagXOn        = 0x11,
     kFlagXOff       = 0x13,
@@ -497,18 +496,7 @@ void TestEncoderDecoder(void)
 
 uint32_t GetRandom(uint32_t max)
 {
-    uint32_t value;
-
-    if (kUseTrueRandomNumberGenerator)
-    {
-        otPlatRandomGetTrue(reinterpret_cast<uint8_t *>(&value), sizeof(value));
-    }
-    else
-    {
-        value = otPlatRandomGet();
-    }
-
-    return value % max;
+    return rand() % max;
 }
 
 void TestFuzzEncoderDecoder(void)

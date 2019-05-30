@@ -408,16 +408,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 // Random
 //
 
-uint32_t otPlatRandomGet(void)
-{
-#if _WIN32
-    return (uint32_t)rand();
-#else
-    return (uint32_t)random();
-#endif
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -425,7 +416,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)rand();
     }
 
 exit:

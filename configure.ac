@@ -1691,12 +1691,12 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Def
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, da15000, efr32, emsk, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32, emsk, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
         none)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32|emsk|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
             fi
@@ -1735,11 +1735,6 @@ case ${with_examples} in
     cc2652)
         OPENTHREAD_EXAMPLES_CC2652=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2652],[${OPENTHREAD_EXAMPLES_CC2652}],[Define to 1 if you want to use cc2652 examples])
-        ;;
-
-    da15000)
-        OPENTHREAD_EXAMPLES_DA15000=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
     efr32)
@@ -1805,9 +1800,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${with_examples}" = "cc2650"
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2652)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652], [test "${with_examples}" = "cc2652"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${with_examples}" = "da15000"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_EFR32)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${with_examples}" = "efr32"])
@@ -1982,8 +1974,10 @@ examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/cc2652/Makefile
-examples/platforms/da15000/Makefile
 examples/platforms/efr32/Makefile
+examples/platforms/efr32/sleepy-demo/Makefile
+examples/platforms/efr32/sleepy-demo/efr32-sleepy-demo-ftd/Makefile
+examples/platforms/efr32/sleepy-demo/efr32-sleepy-demo-mtd/Makefile
 examples/platforms/emsk/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile

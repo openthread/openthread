@@ -45,6 +45,13 @@ EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs
 libopenthread_efr32_a_CPPFLAGS                                                = \
     -D__START=main                                                              \
     -D__STARTUP_CLEAR_BSS                                                       \
+    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -Wno-sign-compare                                                           \
+    -DCORTEXM3                                                                  \
+    -DPHY=EMBER_PHY_RAIL                                                        \
+    -DMICRO=EMBER_MICRO_CORTEXM3_EFR32                                          \
+    -DCORTEXM3_EFM32_MICRO                                                      \
+    -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(EFR32_BOARD_DIR)                 \
@@ -60,6 +67,11 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/plugin/pa-conversions       \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/bsp                             \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG12_$(BOARD)/config              \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/                                      \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal                                   \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32              \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32/config       \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/plugin                            \
     -I$(EFR32MG_SDK_SRCDIR)/platform/CMSIS/Include                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG12P/Include      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/common/inc                           \
@@ -80,12 +92,12 @@ libopenthread_efr32_a_CPPFLAGS                                                = 
 PLATFORM_SOURCES                                                              = \
     alarm.c                                                                     \
     diag.c                                                                      \
+    entropy.c                                                                   \
     fem-control.c                                                               \
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
     radio.c                                                                     \
-    random.c                                                                    \
     startup-gcc.c                                                               \
     system.c                                                                    \
     uart.c                                                                      \
@@ -145,4 +157,16 @@ libopenthread_efr32_a_LIBADD                                                    
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
 
+DIST_SUBDIRS                                                                  = \
+    sleepy-demo                                                                 \
+    $(NULL)
+    
+SUBDIRS                                                                       = \
+    sleepy-demo                                                                 \
+    $(NULL)
+
+PRETTY_SUBDIRS                                                                = \
+    sleepy-demo                                                                 \
+    $(NULL)
+    
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

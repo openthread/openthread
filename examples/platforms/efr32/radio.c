@@ -45,6 +45,7 @@
 #include "utils/soft_source_match_table.h"
 
 #include "board_config.h"
+#include "em_cmu.h"
 #include "em_core.h"
 #include "em_system.h"
 #include "openthread-core-efr32-config.h"
@@ -53,6 +54,7 @@
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
+#include "rtcdriver.h"
 
 enum
 {
@@ -101,6 +103,8 @@ typedef enum
     ENERGY_SCAN_MODE_SYNC,
     ENERGY_SCAN_MODE_ASYNC
 } energyScanMode;
+
+RAIL_Handle_t gRailHandle;
 
 static volatile bool sTransmitBusy      = false;
 static bool          sPromiscuous       = false;
@@ -177,6 +181,11 @@ static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 
     handle = RAIL_Init(&aBandConfig->mRailConfig, NULL);
     assert(handle != NULL);
+
+    if (gRailHandle == NULL)
+    {
+        gRailHandle = handle;
+    }
 
     status = RAIL_ConfigData(handle, &railDataConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -288,7 +297,14 @@ static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle,
 
 void efr32RadioInit(void)
 {
+    RAIL_Status_t status;
+
     efr32BandConfigInit(RAILCb_Generic);
+
+    CMU_ClockEnable(cmuClock_PRS, true);
+    RTCDRV_Init();
+    status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
+    assert(status == RAIL_STATUS_NO_ERROR);
 
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
@@ -679,6 +695,10 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
         otEXPECT(length != IEEE802154_ACK_LENGTH);
 
         sReceiveError = OT_ERROR_NONE;
+
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
 #if OPENTHREAD_ENABLE_DIAG
 

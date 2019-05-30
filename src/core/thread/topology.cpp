@@ -45,7 +45,7 @@ namespace ot {
 
 void Neighbor::GenerateChallenge(void)
 {
-    Random::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
+    Random::NonCrypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
 }
 
 bool Child::IsStateValidOrAttaching(void) const
@@ -239,7 +239,7 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    Random::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
+    Random::NonCrypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
 }
 
 const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const

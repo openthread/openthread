@@ -287,12 +287,9 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
     char       responseContent = '0';
 
-    mInterpreter.mServer->OutputFormat(
-        "coap request from [%x:%x:%x:%x:%x:%x:%x:%x] ", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
+    mInterpreter.mServer->OutputFormat("coap request from ");
+    mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
+    mInterpreter.mServer->OutputFormat(" ");
 
     switch (otCoapMessageGetCode(aMessage))
     {
@@ -378,12 +375,8 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
     }
     else
     {
-        mInterpreter.mServer->OutputFormat(
-            "coap response from [%x:%x:%x:%x:%x:%x:%x:%x]", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
+        mInterpreter.mServer->OutputFormat("coap response from ");
+        mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
 
         PrintPayload(aMessage);
     }

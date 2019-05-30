@@ -1,10 +1,6 @@
 # OpenThread CLI Example
 
-This example application demonstrates a minimal OpenThread application
-that exposes the OpenThread configuration and management interfaces
-via a basic command-line interface. The steps below take you through
-the minimal steps required to ping one emulated Thread device from
-another emulated Thread device.
+This example application exposes OpenThread configuration and management APIs via a simple command-line interface. The steps below take you through the minimal steps required to ping one emulated Thread device from another emulated Thread device.
 
 ## 1. Build
 
@@ -23,10 +19,25 @@ $ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli-ftd 1
 ```
 
-Set the PAN ID:
+Generate, view, and commit a new Active Operational Dataset:
 
 ```bash
-> panid 0x1234
+> dataset init new
+Done
+> dataset
+Active Timestamp: 1
+Channel: 13
+Channel Mask: 07fff800
+Ext PAN ID: d63e8e3e495ebbc3
+Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+Master Key: dfd34f0f05cad978ec4e32b0413038ff
+Network Name: OpenThread-8f28
+PAN ID: 0x8f28
+PSKc: c23a76e98f1a6483639b1ac1271e2e27
+Security Policy: 0, onrcb
+Done
+> dataset commit active
+Done
 ```
 
 Bring up the IPv6 interface:
@@ -55,9 +66,10 @@ View IPv6 addresses assigned to Node 1's Thread interface:
 
 ```bash
 > ipaddr
-fdde:ad00:beef:0:0:ff:fe00:0
-fdde:ad00:beef:0:558:f56b:d688:799
-fe80:0:0:0:f3d9:2a82:c8d8:fe43
+fd3d:b50b:f96d:722d:0:ff:fe00:fc00
+fd3d:b50b:f96d:722d:0:ff:fe00:c00
+fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+fe80:0:0:0:6c41:9001:f3d6:4148
 Done
 ```
 
@@ -70,10 +82,15 @@ $ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli-ftd 2
 ```
 
-Set the PAN ID:
+Configure Thread Master Key and PAN ID from Node 1's Active Operational Dataset:
 
 ```bash
-> panid 0x1234
+> dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+Done
+> dataset panid 0x8f28
+Done
+> dataset commit active
+Done
 ```
 
 Bring up the IPv6 interface:
@@ -90,23 +107,21 @@ Start Thread protocol operation:
 Done
 ```
 
-Wait a few seconds and verify that the device has become a Thread Router:
+Wait a few seconds and verify that the device has become a Thread Child or Router:
 
 ```bash
 > state
-router
+child
 Done
 ```
 
 ## 3. Ping Node 1 from Node 2
 
 ```bash
-> ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
+> ping fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
 ```
 
-## 4. Want more?
-
-You may note that the example above did not include any network parameter configuration, such as the IEEE 802.15.4 PAN ID or the Thread Master Key. OpenThread currently implements default values for network parameters, however, you may use the CLI to change network parameters, other configurations, and perform other operations.
+## 4. Explore More
 
 See the [OpenThread CLI Reference README.md](../../../src/cli/README.md) to explore more.

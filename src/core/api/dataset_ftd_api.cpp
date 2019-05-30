@@ -42,6 +42,13 @@
 
 using namespace ot;
 
+otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<MeshCoP::ActiveDataset>().CreateNewNetwork(*aDataset);
+}
+
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

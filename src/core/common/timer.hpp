@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <stddef.h>
+
 #include "utils/wrap_stdint.h"
 
 #include <openthread/platform/alarm-micro.h>
@@ -69,10 +70,9 @@ class Timer : public InstanceLocator, public OwnerLocator
     friend class TimerScheduler;
 
 public:
-    enum
-    {
-        kMaxDt = (1UL << 31) - 1, //< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
-    };
+    static const uint32_t kMaxDt =
+        (1UL << 31) - 1; ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+    static const uint32_t kForeverDt = 0xffffffff; ///< The special forever `aDt` value.
 
     /**
      * This function pointer is called when the timer expires.
@@ -180,6 +180,46 @@ public:
      *
      */
     void Stop(void);
+
+    /**
+     * This static method returns the time diff in milliseconds between @p aStart and @p aEnd.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The time diff in milliseconds.
+     *
+     */
+    static int32_t Diff(uint32_t aStart, uint32_t aEnd)
+    {
+        uint32_t diff = aEnd - aStart;
+        return reinterpret_cast<int32_t &>(diff);
+    }
+
+    /**
+     * This static method returns the time elapsed in milliseconds from @p aStart to @p aEnd.
+     *
+     * @note This method assumes @p aEnd is after @p aStart.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The elapsed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart, uint32_t aEnd) { return aEnd - aStart; }
+
+    /**
+     * This static method returns the time passed in milliseconds since @p aStart.
+     *
+     * @note This method assumes now is after @p aStart.
+     *
+     * @param[in]   aStart  The start time.
+     *
+     * @returns The elapsed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart) { return Elapsed(aStart, GetNow()); }
 
     /**
      * This static method returns the current time in milliseconds.

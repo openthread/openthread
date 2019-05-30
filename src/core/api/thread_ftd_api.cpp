@@ -380,18 +380,11 @@ otError otThreadSetParentPriority(otInstance *aInstance, const int8_t aParentPri
     return instance.Get<Mle::MleRouter>().SetAssignParentPriority(aParentPriority);
 }
 
-otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance)
+void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTableCallback aCallback)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetChildTableChangedCallback();
-}
-
-void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Mle::MleRouter>().SetChildTableChangedCallback(aCallback);
+    instance.Get<Mle::MleRouter>().RegisterNeighborTableChangedCallback(aCallback);
 }
 
 #endif // OPENTHREAD_FTD

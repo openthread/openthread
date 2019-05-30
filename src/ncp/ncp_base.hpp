@@ -276,11 +276,11 @@ protected:
     void        HandleTimeSyncUpdate(void);
 
 #if OPENTHREAD_FTD
-    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
-    void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
+    void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
-    void        HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo);
+    void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -321,6 +321,8 @@ protected:
                                      uint8_t *             aTlvsLength       = NULL,
                                      const otIp6Address ** aDestIpAddress    = NULL,
                                      bool                  aAllowEmptyValues = false);
+
+    otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);

@@ -393,15 +393,23 @@ exit:
 
 bool Message::IsSubTypeMle(void) const
 {
-    bool rval = false;
+    bool rval;
 
-    if (mBuffer.mHead.mInfo.mSubType == kSubTypeMleAnnounce ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverRequest ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDiscoverResponse ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleChildUpdateRequest ||
-        mBuffer.mHead.mInfo.mSubType == kSubTypeMleDataResponse || mBuffer.mHead.mInfo.mSubType == kSubTypeMleGeneral)
+    switch (mBuffer.mHead.mInfo.mSubType)
     {
+    case kSubTypeMleGeneral:
+    case kSubTypeMleAnnounce:
+    case kSubTypeMleDiscoverRequest:
+    case kSubTypeMleDiscoverResponse:
+    case kSubTypeMleChildUpdateRequest:
+    case kSubTypeMleDataResponse:
+    case kSubTypeMleChildIdRequest:
         rval = true;
+        break;
+
+    default:
+        rval = false;
+        break;
     }
 
     return rval;

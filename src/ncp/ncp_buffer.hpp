@@ -201,6 +201,7 @@ public:
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method adds a message to the current input frame.
      *
@@ -225,6 +226,7 @@ public:
      *
      */
     otError InFrameFeedMessage(otMessage *aMessage);
+#endif
 
     /**
      * This method gets the current write position in the input frame.
@@ -612,8 +614,11 @@ private:
     void    OutFrameSelectReadDirection(void);
     otError OutFramePrepareSegment(void);
     void    OutFrameMoveToNextSegment(void);
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     otError OutFramePrepareMessage(void);
     otError OutFrameFillMessageBuffer(void);
+#endif
 
     uint8_t *const mBuffer;       // Pointer to the buffer used to store the data.
     uint8_t *const mBufferEnd;    // Points to after the end of buffer.
@@ -624,14 +629,11 @@ private:
     BufferCallback mFrameRemovedCallback; // Callback to signal when a frame is removed.
     void *         mFrameRemovedContext;  // Context passed to `mFrameRemovedCallback`.
 
-    otMessageQueue mMessageQueue[kNumPrios]; // Main message queues.
-
-    Direction      mWriteDirection;             // Direction (priority) for current frame being read.
-    otMessageQueue mWriteFrameMessageQueue;     // Message queue for the current frame being written.
-    uint8_t *      mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
-    uint8_t *      mWriteSegmentHead;           // Pointer to start of current segment in the frame being written.
-    uint8_t *      mWriteSegmentTail;           // Pointer to end of current segment in the frame being written.
-    FrameTag       mWriteFrameTag;              // Tag associated with last successfully written frame.
+    Direction mWriteDirection;             // Direction (priority) for current frame being read.
+    uint8_t * mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
+    uint8_t * mWriteSegmentHead;           // Pointer to start of current segment in the frame being written.
+    uint8_t * mWriteSegmentTail;           // Pointer to end of current segment in the frame being written.
+    FrameTag  mWriteFrameTag;              // Tag associated with last successfully written frame.
 
     Direction mReadDirection;   // Direction (priority) for current frame being read.
     ReadState mReadState;       // Read state.
@@ -642,11 +644,14 @@ private:
     uint8_t *mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    otMessage *mReadMessage;       // Current Message in the frame being read.
-    uint16_t   mReadMessageOffset; // Offset within current message being read.
-
-    uint8_t  mMessageBuffer[kMessageReadBufferSize]; // Buffer to hold part of current message being read.
-    uint8_t *mReadMessageTail;                       // Pointer to end of current part in mMessageBuffer.
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    otMessageQueue mWriteFrameMessageQueue;                // Message queue for the current frame being written.
+    otMessageQueue mMessageQueue[kNumPrios];               // Main message queues.
+    otMessage *    mReadMessage;                           // Current Message in the frame being read.
+    uint16_t       mReadMessageOffset;                     // Offset within current message being read.
+    uint8_t        mMessageBuffer[kMessageReadBufferSize]; // Buffer to hold part of current message being read.
+    uint8_t *      mReadMessageTail;                       // Pointer to end of current part in mMessageBuffer.
+#endif
 };
 
 } // namespace Ncp

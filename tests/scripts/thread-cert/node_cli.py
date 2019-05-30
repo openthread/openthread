@@ -64,6 +64,8 @@ class otCli:
             else:
                 self.pexpect.logfile_read = sys.stdout.buffer
 
+        self._initialized = True
+
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
         if 'OT_CLI_PATH' in os.environ.keys():
@@ -144,7 +146,7 @@ class otCli:
         self.destroy()
 
     def destroy(self):
-        if not self.pexpect:
+        if not self._initialized:
             return
 
         if hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or \
@@ -152,7 +154,8 @@ class otCli:
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
-            self.pexpect = None
+            self.pexpect.wait()
+            self._initialized = False
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
@@ -323,7 +326,7 @@ class otCli:
         return addr64
 
     def get_joiner_id(self):
-        self.send_command('joinerid')
+        self.send_command('joiner id')
         i = self._expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr = self.pexpect.match.groups()[0].decode("utf-8")
@@ -854,7 +857,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_psk(self, psk, pskIdentity):
-        cmd = 'coaps set psk ' + psk + ' ' + pskIdentity
+        cmd = 'coaps psk ' + psk + ' ' + pskIdentity
         self.send_command(cmd)
         self._expect('Done')
 
@@ -863,7 +866,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_x509(self):
-        cmd = 'coaps set x509'
+        cmd = 'coaps x509'
         self.send_command(cmd)
         self._expect('Done')
 
@@ -898,7 +901,7 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('CoAP Secure connected!', timeout=timeout)
+        self._expect('coaps connected', timeout=timeout)
 
     def coaps_disconnect(self):
         cmd = 'coaps disconnect'
@@ -916,7 +919,7 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('Received coap secure response', timeout=timeout)
+        self._expect('coaps response', timeout=timeout)
 
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset binary ' + tlvs_binary

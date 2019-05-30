@@ -56,7 +56,11 @@ uint64_t otSysGetTime(void)
 {
     struct timespec now;
 
+#ifdef CLOCK_MONOTONIC_RAW
+    VerifyOrDie(clock_gettime(CLOCK_MONOTONIC_RAW, &now) == 0, OT_EXIT_FAILURE);
+#else
     VerifyOrDie(clock_gettime(CLOCK_MONOTONIC, &now) == 0, OT_EXIT_FAILURE);
+#endif
 
     return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
 }

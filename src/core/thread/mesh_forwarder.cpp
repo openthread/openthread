@@ -86,7 +86,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #endif
     , mDataPollManager(aInstance)
 {
-    mFragTag = Random::GetUint16();
+    mFragTag = Random::NonCrypto::GetUint16();
 
     mIpCounters.mTxSuccess = 0;
     mIpCounters.mRxSuccess = 0;
@@ -553,7 +553,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
                 do
                 {
-                    panid = Random::GetUint16();
+                    panid = Random::NonCrypto::GetUint16();
                 } while (panid == Mac::kPanIdBroadcast);
 
                 Get<Mac::Mac>().SetPanId(panid);
@@ -568,6 +568,15 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         {
             // Enable security and try again.
             mSendMessage->SetLinkSecurityEnabled(true);
+
+            if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest)
+            {
+                otLogNoteMac("Child ID Request requires fragmentation, aborting tx");
+                mMessageNextOffset = mSendMessage->GetLength();
+                error              = OT_ERROR_ABORT;
+                ExitNow();
+            }
+
             error = SendFragment(*mSendMessage, aFrame);
         }
 
@@ -1136,6 +1145,18 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 
     if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
     {
+        if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest && mSendMessage->IsLinkSecurityEnabled())
+        {
+            // If the Child ID Request requires fragmentation and therefore
+            // link layer security, the frame transmission will be aborted.
+            // When the message is being freed, we signal to MLE to prepare a
+            // shorter Child ID Request message (by only including mesh-local
+            // address in the Address Registration TLV).
+
+            otLogInfoMac("Requesting shorter `Child ID Request`");
+            Get<Mle::Mle>().RequestShorterChildIdRequest();
+        }
+
         mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
         mSendMessage       = NULL;
@@ -1269,7 +1290,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
         if (commandId == Mac::Frame::kMacCmdDataRequest)
         {
-            HandleDataRequest(macSource, linkInfo);
+            HandleDataRequest(aFrame, macSource, linkInfo);
         }
         else
         {

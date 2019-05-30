@@ -51,8 +51,6 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <openthread-core-config.h>
-
 #include <stddef.h>
 #include <stdint.h>
 
@@ -87,13 +85,13 @@ typedef struct
             uint8_t              key_buffer[32];    ///< Buffer for an encryption key.
             SaSiAesUserKeyData_t key;               ///< CC310 AES key structure.
             SaSiAesEncryptMode_t mode;              ///< Current context operation mode (encrypt/decrypt).
-        };
+        } hardware;
         struct
         {
             int       nr;                           ///<  number of rounds  */
             uint32_t *rk;                           ///<  AES round keys    */
             uint32_t  buf[68];                      ///<  unaligned data    */
-       };
+       } software;
 #if !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
     };
 #endif // !NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT

@@ -89,13 +89,13 @@ libopenthread_samr21_a_CPPFLAGS                                                 
 PLATFORM_SOURCES                                                                                             = \
     crypto/aes_alt.c                                                                                           \
     alarm.c                                                                                                    \
-    diag.c                                                                                                     \
     cxx_helpers.c                                                                                              \
+    diag.c                                                                                                     \
+    entropy.c                                                                                                  \
     flash.c                                                                                                    \
     logging.c                                                                                                  \
     misc.c                                                                                                     \
     radio.c                                                                                                    \
-    random.c                                                                                                   \
     system.c                                                                                                   \
     uart.c                                                                                                     \
     $(NULL)

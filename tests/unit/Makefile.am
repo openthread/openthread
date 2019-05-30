@@ -108,6 +108,7 @@ check_PROGRAMS                                                     += \
     test-child-table                                                  \
     test-heap                                                         \
     test-hmac-sha256                                                  \
+    test-ip6-address                                                  \
     test-link-quality                                                 \
     test-lowpan                                                       \
     test-mac-frame                                                    \
@@ -133,7 +134,7 @@ check_PROGRAMS                                                     += \
     test-ncp-buffer                                                   \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
-    $(NULL)   
+    $(NULL)
 
 if OPENTHREAD_ENABLE_NCP_UART
 check_PROGRAMS                                                     += \
@@ -187,6 +188,9 @@ test_heap_SOURCES            = test_platform.cpp test_heap.cpp
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp
 
+test_ip6_address_LDADD       = $(COMMON_LDADD)
+test_ip6_address_SOURCES     = test_platform.cpp test_ip6_address.cpp
+
 test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
 
@@ -239,6 +243,7 @@ test_toolchain_LDADD         = $(NULL)
 test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
 
 PRETTY_FILES                                                        = \
+    $(noinst_HEADERS)                                                 \
     $(test_address_sanitizer_SOURCES)                                 \
     $(test_aes_SOURCES)                                               \
     $(test_child_SOURCES)                                             \

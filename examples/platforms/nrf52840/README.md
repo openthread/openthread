@@ -121,6 +121,45 @@ By default, mbedTLS library is built with support for CryptoCell 310 hardware ac
 $ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
 ```
 
+### Optional mbedTLS threading support
+By default, mbedTLS library is built without support for multiple threads. You can enable this built-in support by building OpenThread with the following parameter:
+
+```
+$ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1
+```
+
+The simple mutex definition is used as shown below:
+
+```
+typedef void * mbedtls_threading_mutex_t;
+```
+
+However, you can modify it, by providing a path to a header file with proper definition. To do that, build OpenThread with the following parameter:
+
+```
+$ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1 MBEDTLS_THREADING_MUTEX_DEF="path_to_a_header_file_with_mutex_definition.h"
+```
+
+See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-threading] for more details.
+
+Note that as a temporary limitation CryptoCell 310 hardware acceleration is disabled when using mbedTLS threading.
+
+[mbedtls-thread-safety-and-multi-threading]: https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
+
+### IEEE EUI-64 address
+
+When the Thread device is configured to obtain the Thread Network security credentials with either Thread Commissioning or an out-of-band method, the extended MAC address should be constructed out of the globally unique IEEE EUI-64.
+
+The IEEE EUI-64 address consists of two parts:
+ - 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
+ - 40-bit device unique identifier
+
+By default, the device uses Nordic Semiconductor's MA-L (f4-ce-36). You can modify it by overwriting the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52840-config.h` file. This value must be publicly registered by the IEEE Registration Authority.
+
+You can also provide the full IEEE EUI-64 address by providing a custom `otPlatRadioGetIeeeEui64` function. To do this, define the flag `OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE`.
+
+After the Thread Network security credentials have been successfully obtained, the device uses randomly generated extended MAC address.
+
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is
@@ -162,7 +201,21 @@ To test the example:
 3. Use the following commands to form a network on the first board.
 
    ```bash
-   > panid 0xabcd
+   > dataset init new
+   Done
+   > dataset
+   Active Timestamp: 1
+   Channel: 13
+   Channel Mask: 07fff800
+   Ext PAN ID: d63e8e3e495ebbc3
+   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Name: OpenThread-8f28
+   PAN ID: 0x8f28
+   PSKc: c23a76e98f1a6483639b1ac1271e2e27
+   Security Policy: 0, onrcb
+   Done
+   > dataset commit active
    Done
    > ifconfig up
    Done
@@ -174,13 +227,17 @@ To test the example:
 
    ```bash
    > state
-   Leader
+   leader
    ```
 
 4. Use the following commands to attach to the network on the second board.
 
    ```bash
-   > panid 0xabcd
+   > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+   Done
+   > dataset panid 0x8f28
+   Done
+   > dataset commit active
    Done
    > ifconfig up
    Done
@@ -192,24 +249,25 @@ To test the example:
 
    ```bash
    > state
-   Child
+   child
    ```
 
 5. List all IPv6 addresses of the first board.
 
    ```bash
    > ipaddr
-   fdde:ad00:beef:0:0:ff:fe00:fc00
-   fdde:ad00:beef:0:0:ff:fe00:9c00
-   fdde:ad00:beef:0:4bcb:73a5:7c28:318e
-   fe80:0:0:0:5c91:c61:b67c:271c
+   fd3d:b50b:f96d:722d:0:ff:fe00:fc00
+   fd3d:b50b:f96d:722d:0:ff:fe00:c00
+   fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+   fe80:0:0:0:6c41:9001:f3d6:4148
+   Done
    ```
 
 6. Choose one of them and send an ICMPv6 ping from the second board.
 
    ```bash
-   > ping fdde:ad00:beef:0:0:ff:fe00:fc00
-   16 bytes from fdde:ad00:beef:0:0:ff:fe00:fc00: icmp_seq=1 hlim=64 time=8ms
+   > ping fd3d:b50b:f96d:722d:7a73:bff6:9093:9117
+   16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
    ```
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].

@@ -1,4 +1,5 @@
 #
+#    Copyright 2019 Google LLC. All Rights Reserved.
 #    Copyright 2015-2016 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +26,59 @@
 #
 
 #
+# _NL_FILTERED_CANONICAL_SPLIT(name)
+#
+#   name - The existing autoconf variable to split
+#
+#   This splits, by CPU architecture, vendor, and OS, the filtered
+#   tuples otherwise created by autotools, creating:
+#
+#     nl_filtered_<name>
+#     nl_filtered_<name>_cpu
+#     nl_filtered_<name>_os
+#     nl_filtered_<name>_vendor
+#
+#   filtered of the versioning cruft on the vendor component that most
+#   users of these variables rarely care about.
+#
+#   The resulting values are available both in configure.ac as well
+#   as in makefiles.
+#
+_NL_FILTERED_CANONICAL_SPLIT(name)
+AC_DEFUN([_NL_FILTERED_CANONICAL_SPLIT],
+[
+    case ${nl_cv_filtered_$1} in
+    
+    *-*-*) ;;
+    *) AC_MSG_ERROR([invalid value of canonical $1]);;
+    
+    esac
+    
+    AC_SUBST([nl_filtered_$1], [$nl_cv_filtered_$1])
+    
+    nl_save_IFS=$IFS; IFS='-'
+    set x $nl_cv_filtered_$1
+    shift
+    
+    AC_SUBST([nl_filtered_$1_cpu], [$[1]])
+    AC_SUBST([nl_filtered_$1_vendor], [$[2]])
+    
+    shift; shift
+    [# Remember, the first character of IFS is used to create $]*,
+    # except with old shells:
+    nl_filtered_$1_os=$[*]
+    IFS=$nl_save_IFS
+    
+    case nl_filtered_$$1_os in
+    
+    *\ *) nl_filtered_$1_os=`echo "$$1_os" | sed 's/ /-/g'`;;
+    
+    esac
+    
+    AC_SUBST([nl_filtered_$1_os])
+])
+
+#
 # _NL_FILTERED_CANONICAL(name)
 #
 #   name - The existing autoconf variable to filter
@@ -40,9 +94,11 @@ _NL_FILTERED_CANONICAL(name)
 AC_DEFUN([_NL_FILTERED_CANONICAL],
 [
     AC_CACHE_CHECK([filtered $1 system type],
-        nl_cv_filtered_$1,
-        nl_cv_filtered_$1=`echo ${$1} | sed -e 's/[[[[:digit:].]]]*$//g'`
-        nl_filtered_$1=${nl_cv_filtered_$1})
+        [nl_cv_filtered_$1],
+        [nl_cv_filtered_$1=`echo ${$1} | sed -e 's/[[[:digit:].]]*$//g'`
+        nl_filtered_$1=${nl_cv_filtered_$1}])
+
+    _NL_FILTERED_CANONICAL_SPLIT($1)
 ])
 
 #

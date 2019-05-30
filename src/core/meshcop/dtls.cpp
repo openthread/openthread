@@ -49,6 +49,7 @@
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/timer.hpp"
+#include "crypto/mbedtls.hpp"
 #include "crypto/sha256.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -102,41 +103,12 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 
     memset(mCipherSuites, 0, sizeof(mCipherSuites));
     memset(mPsk, 0, sizeof(mPsk));
-    memset(&mEntropy, 0, sizeof(mEntropy));
-    memset(&mCtrDrbg, 0, sizeof(mCtrDrbg));
     memset(&mSsl, 0, sizeof(mSsl));
     memset(&mConf, 0, sizeof(mConf));
 
 #ifdef MBEDTLS_SSL_COOKIE_C
     memset(&mCookieCtx, 0, sizeof(mCookieCtx));
 #endif
-
-    mProvisioningUrl.Init();
-}
-
-int Dtls::HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen)
-{
-    OT_UNUSED_VARIABLE(aData);
-
-    otError error;
-    int     rval = 0;
-
-    error = otPlatRandomGetTrue(static_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen));
-    SuccessOrExit(error);
-
-    if (aOutLen != NULL)
-    {
-        *aOutLen = aInLen;
-    }
-
-exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        rval = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
-    }
-
-    return rval;
 }
 
 void Dtls::FreeMbedtls(void)
@@ -151,8 +123,6 @@ void Dtls::FreeMbedtls(void)
     mbedtls_pk_free(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-    mbedtls_entropy_free(&mEntropy);
-    mbedtls_ctr_drbg_free(&mCtrDrbg);
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ssl_free(&mSsl);
 }
@@ -295,8 +265,6 @@ otError Dtls::Setup(bool aClient)
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
-    mbedtls_ctr_drbg_init(&mCtrDrbg);
-    mbedtls_entropy_init(&mEntropy);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     mbedtls_x509_crt_init(&mCaChain);
@@ -304,17 +272,6 @@ otError Dtls::Setup(bool aClient)
     mbedtls_pk_init(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
-    rval = mbedtls_entropy_add_source(&mEntropy, &Dtls::HandleMbedtlsEntropyPoll, NULL, MBEDTLS_ENTROPY_MIN_PLATFORM,
-                                      MBEDTLS_ENTROPY_SOURCE_STRONG);
-    VerifyOrExit(rval == 0);
-
-    {
-        otExtAddress eui64;
-        otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
-        rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
-        VerifyOrExit(rval == 0);
-    }
 
     rval = mbedtls_ssl_config_defaults(&mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
@@ -333,9 +290,11 @@ otError Dtls::Setup(bool aClient)
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
-    mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
+    mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+
+    assert(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
@@ -346,7 +305,7 @@ otError Dtls::Setup(bool aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
 
-        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, &mCtrDrbg);
+        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
         VerifyOrExit(rval == 0);
 
         mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
@@ -397,15 +356,13 @@ exit:
         FreeMbedtls();
     }
 
-    return MapError(rval);
+    return Crypto::MbedTls::MapError(rval);
 }
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 int Dtls::SetApplicationCoapSecureKeys(void)
 {
     int rval = 0;
-
-    VerifyOrExit(&mCipherSuites[0] != NULL, rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA);
 
     switch (mCipherSuites[0])
     {
@@ -600,7 +557,7 @@ exit:
 otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
 {
     int rval = mbedtls_ssl_set_client_transport_id(&mSsl, aClientId, aLength);
-    return MapError(rval);
+    return Crypto::MbedTls::MapError(rval);
 }
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -619,7 +576,7 @@ otError Dtls::Send(Message &aMessage, uint16_t aLength)
 
     aMessage.Read(0, aLength, buffer);
 
-    SuccessOrExit(error = MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
+    SuccessOrExit(error = Crypto::MbedTls::MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
 
     aMessage.Free();
 
@@ -648,12 +605,12 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsTransmit");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
+        otLogDebgCoap("Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -692,12 +649,12 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsReceive");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
+        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -727,12 +684,12 @@ int Dtls::HandleMbedtlsGetTimer(void)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer");
+        otLogDebgMeshCoP("Dtls::HandleMbedtlsGetTimer");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
+        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -765,12 +722,12 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Dtls::SetTimer");
+        otLogDebgMeshCoP("Dtls::SetTimer");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("Dtls::ApplicationCoapSecure SetTimer");
+        otLogDebgCoap("Dtls::ApplicationCoapSecure SetTimer");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
@@ -817,12 +774,12 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("Generated KEK");
+        otLogDebgMeshCoP("Generated KEK");
     }
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     else
     {
-        otLogInfoCoap("ApplicationCoapSecure Generated KEK");
+        otLogDebgCoap("ApplicationCoapSecure Generated KEK");
     }
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     return 0;
@@ -941,85 +898,6 @@ exit:
     {
         Disconnect();
     }
-}
-
-otError Dtls::MapError(int rval)
-{
-    otError error = OT_ERROR_NONE;
-
-    switch (rval)
-    {
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_PK_TYPE_MISMATCH:
-    case MBEDTLS_ERR_PK_FILE_IO_ERROR:
-    case MBEDTLS_ERR_PK_KEY_INVALID_VERSION:
-    case MBEDTLS_ERR_PK_KEY_INVALID_FORMAT:
-    case MBEDTLS_ERR_PK_UNKNOWN_PK_ALG:
-    case MBEDTLS_ERR_PK_PASSWORD_REQUIRED:
-    case MBEDTLS_ERR_PK_PASSWORD_MISMATCH:
-    case MBEDTLS_ERR_PK_INVALID_PUBKEY:
-    case MBEDTLS_ERR_PK_INVALID_ALG:
-    case MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE:
-    case MBEDTLS_ERR_PK_BAD_INPUT_DATA:
-    case MBEDTLS_ERR_X509_SIG_MISMATCH:
-    case MBEDTLS_ERR_X509_BAD_INPUT_DATA:
-    case MBEDTLS_ERR_X509_FILE_IO_ERROR:
-    case MBEDTLS_ERR_X509_CERT_UNKNOWN_FORMAT:
-    case MBEDTLS_ERR_X509_INVALID_VERSION:
-    case MBEDTLS_ERR_X509_UNKNOWN_SIG_ALG:
-    case MBEDTLS_ERR_X509_INVALID_SERIAL:
-    case MBEDTLS_ERR_X509_UNKNOWN_OID:
-    case MBEDTLS_ERR_X509_INVALID_FORMAT:
-    case MBEDTLS_ERR_X509_INVALID_ALG:
-    case MBEDTLS_ERR_X509_INVALID_NAME:
-    case MBEDTLS_ERR_X509_INVALID_DATE:
-    case MBEDTLS_ERR_X509_INVALID_SIGNATURE:
-    case MBEDTLS_ERR_X509_INVALID_EXTENSIONS:
-    case MBEDTLS_ERR_X509_UNKNOWN_VERSION:
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_SSL_BAD_INPUT_DATA:
-        error = OT_ERROR_INVALID_ARGS;
-        break;
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_PEM_ALLOC_FAILED:
-    case MBEDTLS_ERR_PK_ALLOC_FAILED:
-    case MBEDTLS_ERR_X509_BUFFER_TOO_SMALL:
-    case MBEDTLS_ERR_X509_ALLOC_FAILED:
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_SSL_ALLOC_FAILED:
-    case MBEDTLS_ERR_SSL_WANT_WRITE:
-        error = OT_ERROR_NO_BUFS;
-        break;
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE:
-    case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH:
-    case MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE:
-    case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED:
-    case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
-        error = OT_ERROR_SECURITY;
-        break;
-
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    case MBEDTLS_ERR_X509_FATAL_ERROR:
-        error = OT_ERROR_FAILED;
-        break;
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
-    case MBEDTLS_ERR_SSL_TIMEOUT:
-    case MBEDTLS_ERR_SSL_WANT_READ:
-        error = OT_ERROR_BUSY;
-        break;
-
-    default:
-        assert(rval >= 0);
-        break;
-    }
-
-    return error;
 }
 
 void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)

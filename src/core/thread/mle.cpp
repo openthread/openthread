@@ -85,6 +85,7 @@ Mle::Mle(Instance &aInstance)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
     , mDataRequestAttempts(0)
     , mDataRequestState(kDataRequestNone)
+    , mAddressRegistrationMode(kAppendAllAddresses)
     , mParentLinkMargin(0)
     , mParentIsSingleton(false)
     , mReceivedResponseFromParent(false)
@@ -167,8 +168,8 @@ Mle::Mle(Instance &aInstance)
     meshLocalPrefix.m8[7] = 0x00;
 
     // mesh-local 64
-    Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
-                       OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+    Random::NonCrypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                                  OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
     mMeshLocal64.mPrefixLength       = 64;
     mMeshLocal64.mPreferred          = true;
@@ -441,8 +442,10 @@ otError Mle::Store(void)
 
     if (IsAttached())
     {
-        // only update network information while we are attached to avoid losing information when a reboot occurs after
-        // a message is sent but before attaching
+        // Only update network information while we are attached to
+        // avoid losing/overwriting previous information when a reboot
+        // occurs after a message is sent but before attaching.
+
         networkInfo.mDeviceMode          = mDeviceMode;
         networkInfo.mRole                = mRole;
         networkInfo.mRloc16              = GetRloc16();
@@ -462,11 +465,17 @@ otError Mle::Store(void)
     }
     else
     {
-        // when not attached, read out any existing values so that we do not change them
-        IgnoreReturnValue(Get<Settings>().ReadNetworkInfo(networkInfo));
+        // When not attached, read out any previous saved `NetworkInfo`.
+        // If there is none, it indicates that device was never attached
+        // before. In that case, no need to save any info (note that on
+        // a device reset the MLE/MAC frame counters would reset but
+        // device also starts with a new randomly generated extended
+        // address. If there is a previously saved `NetworkInfo`, we
+        // just update the key sequence and MAC and MLE frame counters.
+
+        SuccessOrExit(Get<Settings>().ReadNetworkInfo(networkInfo));
     }
 
-    // update MAC and MLE Frame Counters even when we are not attached MLE messages are sent before a device attached
     networkInfo.mKeySequence     = Get<KeyManager>().GetCurrentKeySequence();
     networkInfo.mMleFrameCounter = Get<KeyManager>().GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mMacFrameCounter = Get<KeyManager>().GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
@@ -668,7 +677,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
 
     if (mAttachCounter == 0)
     {
-        delay = 1 + Random::GetUint32InRange(0, kParentRequestRouterTimeout);
+        delay = 1 + Random::NonCrypto::GetUint32InRange(0, kParentRequestRouterTimeout);
         ExitNow();
     }
 #if OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
@@ -684,12 +693,12 @@ uint32_t Mle::GetAttachStartDelay(void) const
         }
         else
         {
-            delay = Random::AddJitter(kAttachBackoffMaxInterval, kAttachBackoffJitter);
+            delay = Random::NonCrypto::AddJitter(kAttachBackoffMaxInterval, kAttachBackoffJitter);
         }
     }
 #endif // OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
 
-    jitter = Random::GetUint32InRange(0, kAttachStartJitter);
+    jitter = Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
 
     if (jitter + delay > delay) // check for overflow
     {
@@ -1302,12 +1311,44 @@ otError Mle::AppendVersion(Message &aMessage)
     return aMessage.AppendTlv(tlv);
 }
 
-otError Mle::AppendAddressRegistration(Message &aMessage)
+bool Mle::HasUnregisteredAddress(void)
+{
+    bool retval = false;
+
+    // Checks whether there are any addresses in addition to the mesh-local
+    // address that need to be registered.
+
+    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    {
+        if (!addr->GetAddress().IsLinkLocal() && !IsRoutingLocator(addr->GetAddress()) &&
+            !IsAnycastLocator(addr->GetAddress()) && addr->GetAddress() != GetMeshLocal64())
+        {
+            ExitNow(retval = true);
+        }
+    }
+
+    if (!IsRxOnWhenIdle())
+    {
+        uint8_t      iterator = 0;
+        Ip6::Address address;
+
+        // For sleepy end-device, we register any external multicast
+        // addresses.
+
+        retval = (Get<ThreadNetif>().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE);
+    }
+
+exit:
+    return retval;
+}
+
+otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode)
 {
     otError                  error = OT_ERROR_NONE;
     Tlv                      tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context          context;
+    bool                     done        = false;
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
     uint16_t                 startOffset = aMessage.GetLength();
@@ -1315,13 +1356,23 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    // write entries to message
     for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
             IsAnycastLocator(addr->GetAddress()))
         {
             continue;
+        }
+
+        if (aMode == kAppendMeshLocalOnly)
+        {
+            if (addr->GetAddress() != GetMeshLocal64())
+            {
+                continue;
+            }
+
+            // Set `done` to `true` to exit after the address is appended.
+            done = true;
         }
 
         if (Get<NetworkData::Leader>().GetContext(addr->GetAddress(), context) == OT_ERROR_NONE)
@@ -1341,7 +1392,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage)
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
+        VerifyOrExit(!done && (counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER));
     }
 
     // For sleepy end device, register external multicast addresses to the parent for indirect transmission
@@ -1450,13 +1501,28 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 {
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
+    if (aFlags & OT_CHANGED_THREAD_ROLE)
+    {
+        if (mRole == OT_DEVICE_ROLE_CHILD && !IsFullThreadDevice() && mAddressRegistrationMode == kAppendMeshLocalOnly)
+        {
+            // If only mesh-local address was registered in the "Child
+            // ID Request" message, after device is attached, trigger a
+            // "Child Update Request" to register the remaining
+            // addresses.
+
+            mAddressRegistrationMode = kAppendAllAddresses;
+            mChildUpdateRequestState = kChildUpdateRequestPending;
+            ScheduleMessageTransmissionTimer();
+        }
+    }
+
     if ((aFlags & (OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED)) != 0)
     {
         if (!Get<ThreadNetif>().IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
             // Mesh Local EID was removed, choose a new one and add it back
-            Random::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
-                               OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+            Random::NonCrypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                                          OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
             Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
             Get<Notifier>().Signal(OT_CHANGED_THREAD_ML_ADDR);
@@ -1600,14 +1666,28 @@ void Mle::HandleAttachTimer(void)
     if (mAttachState == kAttachStateParentRequestRouter || mAttachState == kAttachStateParentRequestReed ||
         mAttachState == kAttachStateAnnounce)
     {
+        uint8_t linkQuality;
+
+        linkQuality = mParentCandidate.GetLinkInfo().GetLinkQuality();
+
+        if (linkQuality > mParentCandidate.GetLinkQualityOut())
+        {
+            linkQuality = mParentCandidate.GetLinkQualityOut();
+        }
+
         // If already attached, accept the parent candidate if
         // we are trying to attach to a better partition or if a
         // Parent Response was also received from the current parent
         // to which the device is attached. This ensures that the
         // new parent candidate is compared with the current parent
         // and that it is indeed preferred over the current one.
+        // If we are in kAttachStateParentRequestRouter and cannot
+        // find a parent with best link quality(3), we will keep
+        // the candidate and forward to REED stage to find a better
+        // parent.
 
-        if (mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
+        if ((linkQuality == 3 || mAttachState != kAttachStateParentRequestRouter) &&
+            mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
             (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
         {
@@ -1745,7 +1825,7 @@ uint32_t Mle::Reattach(void)
             Get<MeshCoP::PendingDataset>().ApplyConfiguration();
             mReattachState = kReattachPending;
             SetAttachState(kAttachStateStart);
-            delay = 1 + Random::GetUint32InRange(0, kAttachStartJitter);
+            delay = 1 + Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
         }
         else
         {
@@ -1816,7 +1896,7 @@ void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
     uint32_t              now         = TimerMilli::GetNow();
-    uint32_t              nextDelay   = 0xffffffff;
+    uint32_t              nextDelay   = TimerMilli::kForeverDt;
     Message *             message     = mDelayedResponses.GetHead();
     Message *             nextMessage = NULL;
 
@@ -1864,7 +1944,7 @@ void Mle::HandleDelayedResponseTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelay != 0xffffffff)
+    if (nextDelay != TimerMilli::kForeverDt)
     {
         mDelayedResponseTimer.Start(nextDelay);
     }
@@ -1900,7 +1980,7 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     uint8_t      scanMask = 0;
     Ip6::Address destination;
 
-    Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
+    Random::NonCrypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
 
     switch (aType)
     {
@@ -1949,6 +2029,15 @@ exit:
     return error;
 }
 
+void Mle::RequestShorterChildIdRequest(void)
+{
+    if (mAttachState == kAttachStateChildIdRequest)
+    {
+        mAddressRegistrationMode = kAppendMeshLocalOnly;
+        SendChildIdRequest();
+    }
+}
+
 otError Mle::SendChildIdRequest(void)
 {
     otError      error   = OT_ERROR_NONE;
@@ -1976,6 +2065,7 @@ otError Mle::SendChildIdRequest(void)
     }
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
+    message->SetSubType(Message::kSubTypeMleChildIdRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
@@ -1986,7 +2076,7 @@ otError Mle::SendChildIdRequest(void)
 
     if (!IsFullThreadDevice())
     {
-        SuccessOrExit(error = AppendAddressRegistration(*message));
+        SuccessOrExit(error = AppendAddressRegistration(*message, mAddressRegistrationMode));
 
         // no need to request the last Route64 TLV for MTD
         tlvsLen -= 1;
@@ -2002,8 +2092,15 @@ otError Mle::SendChildIdRequest(void)
     destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(mParentCandidate.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
-    LogMleMessage("Send Child ID Request", destination);
-    ;
+
+    if (mAddressRegistrationMode == kAppendMeshLocalOnly)
+    {
+        LogMleMessage("Send Child ID Request - short", destination);
+    }
+    else
+    {
+        LogMleMessage("Send Child ID Request", destination);
+    }
 
     if (!IsRxOnWhenIdle())
     {
@@ -2210,7 +2307,7 @@ otError Mle::SendChildUpdateRequest(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
-        Random::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
+        Random::NonCrypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
         SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
         break;
 
@@ -2259,6 +2356,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     otError      error = OT_ERROR_NONE;
     Ip6::Address destination;
     Message *    message;
+    bool         checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
@@ -2276,7 +2374,13 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
         case Tlv::kAddressRegistration:
             if (!IsFullThreadDevice())
             {
-                SuccessOrExit(error = AppendAddressRegistration(*message));
+                // We only register the mesh-local address in the "Child
+                // Update Response" message and if there are additional
+                // addresses to register we follow up with a "Child Update
+                // Request".
+
+                SuccessOrExit(error = AppendAddressRegistration(*message, kAppendMeshLocalOnly));
+                checkAddress = true;
             }
 
             break;
@@ -2301,6 +2405,11 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Child Update Response to parent", destination);
+
+    if (checkAddress && HasUnregisteredAddress())
+    {
+        SendChildUpdateRequest();
+    }
 
 exit:
 
@@ -2831,7 +2940,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
         {
-            delay = Random::GetUint16InRange(0, kMleMaxResponseDelay);
+            delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
             SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
         }
     }
@@ -2999,7 +3108,7 @@ exit:
 
         if (aMessageInfo.GetSockAddr().IsMulticast())
         {
-            delay = Random::GetUint16InRange(0, kMleMaxResponseDelay);
+            delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         }
         else
         {
@@ -3132,8 +3241,6 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     }
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
-
-    VerifyOrExit(mAttachState != kAttachStateParentRequestRouter || linkQuality == 3);
 
     // Connectivity
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
@@ -3953,7 +4060,7 @@ void Mle::HandleParentSearchTimer(void)
         // from `UpdateParentSearchState()`. We want to limit this to happen
         // only once within a backoff interval.
 
-        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
+        if (TimerMilli::Elapsed(mParentSearchBackoffCancelTime) >= kParentSearchBackoffInterval)
         {
             mParentSearchBackoffWasCanceled = false;
             otLogInfoMle("PeriodicParentSearch: Backoff cancellation is allowed on parent switch");
@@ -3984,7 +4091,7 @@ void Mle::StartParentSearchTimer(void)
 {
     uint32_t interval;
 
-    interval = Random::GetUint32InRange(0, kParentSearchJitterInterval);
+    interval = Random::NonCrypto::GetUint32InRange(0, kParentSearchJitterInterval);
 
     if (mParentSearchIsInBackoff)
     {

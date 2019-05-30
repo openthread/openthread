@@ -299,6 +299,7 @@ OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRad
  * @returns The IEEE 802.15.4 channel.
  *
  * @sa otLinkSetChannel
+ *
  */
 OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 

@@ -65,6 +65,19 @@ typedef enum otCommissionerState
     OT_COMMISSIONER_STATE_ACTIVE   = 2, ///< Commissioner role is active.
 } otCommissionerState;
 
+/**
+ * This enumeration defines a Joiner Event on the Commissioner.
+ *
+ */
+typedef enum otCommissionerJoinerEvent
+{
+    OT_COMMISSIONER_JOINER_START     = 0,
+    OT_COMMISSIONER_JOINER_CONNECTED = 1,
+    OT_COMMISSIONER_JOINER_FINALIZE  = 2,
+    OT_COMMISSIONER_JOINER_END       = 3,
+    OT_COMMISSIONER_JOINER_REMOVED   = 4,
+} otCommissionerJoinerEvent;
+
 #define OT_COMMISSIONING_PASSPHRASE_MIN_SIZE 6   ///< Minimum size of the Commissioning Passphrase
 #define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE 255 ///< Maximum size of the Commissioning Passphrase
 
@@ -98,15 +111,44 @@ typedef struct otCommissioningDataset
 } otCommissioningDataset;
 
 /**
+ * This function pointer is called whenever the commissioner state changes.
+ *
+ * @param[in]  aChannelMask       The channel mask value.
+ * @param[in]  aEnergyList        A pointer to the energy measurement list.
+ * @param[in]  aEnergyListLength  Number of entries in @p aEnergyListLength.
+ * @param[in]  aContext           A pointer to application-specific context.
+ *
+ */
+typedef void(OTCALL *otCommissionerStateCallback)(otCommissionerState aState, void *aContext);
+
+/**
+ * This function pointer is called whenever the joiner state changes.
+ *
+ * @param[in]  aEvent     The joiner event type.
+ * @param[in]  aJoinerId  A pointer to the Joiner ID.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+typedef void(OTCALL *otCommissionerJoinerCallback)(otCommissionerJoinerEvent aEvent,
+                                                   const otExtAddress *      aJoinerId,
+                                                   void *                    aContext);
+
+/**
  * This function enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
+ * @param[in]  aJoinerCallback   A pointer to a function that is called with a joiner event occurs.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE           Successfully started the Commissioner role.
  * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
  *
  */
-OTAPI otError OTCALL otCommissionerStart(otInstance *aInstance);
+OTAPI otError OTCALL otCommissionerStart(otInstance *                 aInstance,
+                                         otCommissionerStateCallback  aStateCallback,
+                                         otCommissionerJoinerCallback aJoinerCallback,
+                                         void *                       aCallbackContext);
 
 /**
  * This function disables the Thread Commissioner role.

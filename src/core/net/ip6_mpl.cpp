@@ -46,7 +46,7 @@ namespace Ip6 {
 void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = aInterval == 0 ? aInterval : Random::GetUint8InRange(0, aInterval);
+    uint8_t t = aInterval == 0 ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
 
     // Set transmission time at the beginning of the next interval.
     SetTransmissionTime(aCurrentTime + GetIntervalOffset() + t);
@@ -334,7 +334,7 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 void Mpl::HandleRetransmissionTimer(void)
 {
     uint32_t                   now       = TimerMilli::GetNow();
-    uint32_t                   nextDelta = 0xffffffff;
+    uint32_t                   nextDelta = TimerMilli::kForeverDt;
     MplBufferedMessageMetadata messageMetadata;
 
     Message *message     = mBufferedMessageSet.GetHead();
@@ -347,10 +347,12 @@ void Mpl::HandleRetransmissionTimer(void)
 
         if (messageMetadata.IsLater(now))
         {
+            uint32_t diff = TimerMilli::Elapsed(now, messageMetadata.GetTransmissionTime());
+
             // Calculate the next retransmission time and choose the lowest.
-            if (messageMetadata.GetTransmissionTime() - now < nextDelta)
+            if (diff < nextDelta)
             {
-                nextDelta = messageMetadata.GetTransmissionTime() - now;
+                nextDelta = diff;
             }
         }
         else
@@ -360,6 +362,8 @@ void Mpl::HandleRetransmissionTimer(void)
 
             if (messageMetadata.GetTransmissionCount() < GetTimerExpirations())
             {
+                uint32_t diff;
+
                 Message *messageCopy = message->Clone(message->GetLength() - sizeof(MplBufferedMessageMetadata));
 
                 if (messageCopy != NULL)
@@ -375,10 +379,12 @@ void Mpl::HandleRetransmissionTimer(void)
                 messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
                 messageMetadata.UpdateIn(*message);
 
+                diff = TimerMilli::Elapsed(now, messageMetadata.GetTransmissionTime());
+
                 // Check if retransmission time is lower than the current lowest one.
-                if (messageMetadata.GetTransmissionTime() - now < nextDelta)
+                if (diff < nextDelta)
                 {
-                    nextDelta = messageMetadata.GetTransmissionTime() - now;
+                    nextDelta = diff;
                 }
             }
             else
@@ -407,7 +413,7 @@ void Mpl::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != 0xffffffff)
+    if (nextDelta != TimerMilli::kForeverDt)
     {
         mRetransmissionTimer.Start(nextDelta);
     }

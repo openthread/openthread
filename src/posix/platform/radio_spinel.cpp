@@ -185,13 +185,17 @@ RadioSpinel::RadioSpinel(void)
     mVersion[0] = '\0';
 }
 
-void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig)
+void RadioSpinel::Init(const char *aRadioFile, const char *aRadioConfig, bool aReset)
 {
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mHdlcInterface.Init(aRadioFile, aRadioConfig));
 
-    SuccessOrExit(error = SendReset());
+    if (aReset)
+    {
+        SuccessOrExit(error = SendReset());
+    }
+
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
@@ -635,6 +639,8 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     if (receiveError == OT_ERROR_NONE)
     {
         aFrame.mLength = static_cast<uint8_t>(size);
+
+        aFrame.mInfo.mRxInfo.mAckedWithFramePending = ((flags & SPINEL_MD_FLAG_ACKED_FP) != 0);
     }
     else if (receiveError < OT_NUM_ERRORS)
     {
@@ -1463,9 +1469,9 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig)
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset)
 {
-    sRadioSpinel.Init(aRadioFile, aRadioConfig);
+    sRadioSpinel.Init(aRadioFile, aRadioConfig, aReset);
 }
 
 void platformRadioDeinit(void)

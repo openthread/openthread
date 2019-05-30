@@ -35,8 +35,6 @@
 
 #include "network_data_leader.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -45,6 +43,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/lowpan.hpp"
@@ -64,8 +63,8 @@ LeaderBase::LeaderBase(Instance &aInstance)
 
 void LeaderBase::Reset(void)
 {
-    mVersion       = static_cast<uint8_t>(otPlatRandomGet());
-    mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
+    mVersion       = Random::NonCrypto::GetUint8();
+    mStableVersion = Random::NonCrypto::GetUint8();
     mLength        = 0;
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }

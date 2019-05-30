@@ -31,10 +31,10 @@
 #include "cc2650_radio.h"
 #include <assert.h>
 #include <utils/code_utils.h>
+#include <openthread/random_noncrypto.h> /* to seed the CSMA-CA funciton */
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include <driverlib/chipinfo.h>
 #include <driverlib/osc.h>
@@ -603,7 +603,7 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
     sCsmacaBackoffCmd = cCsmacaBackoffCmd;
     /* initialize the random state with a true random seed for the radio core's
      * psudo rng */
-    sCsmacaBackoffCmd.randomState = otPlatRandomGet();
+    sCsmacaBackoffCmd.randomState = otRandomNonCryptoGetUint16();
     sCsmacaBackoffCmd.pNextOp     = (rfc_radioOp_t *)&sTransmitCmd;
 
     sTransmitCmd = cTransmitCmd;
@@ -1170,6 +1170,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
         otEXPECT_ACTION(rfCorePowerOn() == CMDSTA_Done, error = OT_ERROR_FAILED);
         otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = OT_ERROR_FAILED);
         sState = cc2650_stateSleep;
+        error  = OT_ERROR_NONE;
     }
 
 exit:
@@ -1798,6 +1799,9 @@ static void cc2650RadioProcessTransmitDone(otInstance *  aInstance,
 
 static void cc2650RadioProcessReceiveDone(otInstance *aInstance, otRadioFrame *aReceiveFrame, otError aReceiveError)
 {
+    // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+    // See https://github.com/openthread/openthread/pull/3785
+    aReceiveFrame->mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_ENABLE_DIAG
 
     if (otPlatDiagModeGet())

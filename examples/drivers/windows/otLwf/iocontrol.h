@@ -234,5 +234,7 @@ DECL_IOCTL_FUNC(otNextMacFixedRss);
 DECL_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss);
 DECL_IOCTL_FUNC(otNextRoute);
 DECL_IOCTL_FUNC(otMleCounters);
+DECL_IOCTL_FUNC(otLinkLocalAddress);
+DECL_IOCTL_FUNC(otRloc);
 
 #endif // _IOCONTROL_H

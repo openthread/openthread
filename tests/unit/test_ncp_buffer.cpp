@@ -31,6 +31,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "ncp/ncp_buffer.hpp"
 
 #include "test_platform.h"
@@ -933,11 +934,11 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        otPlatRandomGetTrue(reinterpret_cast<uint8_t *>(&value), sizeof(value));
+        Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value));
     }
     else
     {
-        value = otPlatRandomGet();
+        value = Random::NonCrypto::GetUint32();
     }
 
     return value % max;

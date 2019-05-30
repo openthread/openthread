@@ -225,6 +225,10 @@ static void handleRx(void)
             sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
         }
 
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())

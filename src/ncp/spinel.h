@@ -399,7 +399,8 @@ enum
     SPINEL_MD_FLAG_TX       = 0x0001, //!< Packet was transmitted, not received.
     SPINEL_MD_FLAG_BAD_FCS  = 0x0004, //!< Packet was received with bad FCS
     SPINEL_MD_FLAG_DUPE     = 0x0008, //!< Packet seems to be a duplicate
-    SPINEL_MD_FLAG_RESERVED = 0xFFF2, //!< Flags reserved for future use.
+    SPINEL_MD_FLAG_ACKED_FP = 0x0010, //!< Packet was acknowledged with frame pending set
+    SPINEL_MD_FLAG_RESERVED = 0xFFE2, //!< Flags reserved for future use.
 };
 
 enum
@@ -3026,7 +3027,7 @@ typedef enum
      * Required capability: SPINEL_CAP_POSIX_APP
      *
      * This property gives the version string of RCP (NCP in radio mode) which is being controlled by the POSIX
-     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_ENABLE_POSIX_APP` is
+     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_PLATFORM_POSIX_APP` is
      * enabled).
      *
      */

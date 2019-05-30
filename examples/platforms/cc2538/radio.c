@@ -711,6 +711,9 @@ void cc2538RadioProcess(otInstance *aInstance)
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())

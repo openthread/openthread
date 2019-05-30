@@ -37,10 +37,6 @@
 #include "openthread-core-config.h"
 
 #include <mbedtls/certs.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/entropy_poll.h>
-#include <mbedtls/error.h>
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
@@ -57,6 +53,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -390,19 +387,11 @@ public:
      */
     const Ip6::MessageInfo &GetPeerAddress(void) const { return mPeerAddress; }
 
-    /**
-     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
-     *
-     */
-    ProvisioningUrlTlv mProvisioningUrl;
-
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     void    FreeMbedtls(void);
     otError Setup(bool aClient);
-
-    static otError MapError(int rval);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
@@ -485,10 +474,8 @@ private:
 
     bool mVerifyPeerCertificate;
 
-    mbedtls_entropy_context  mEntropy;
-    mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context      mSsl;
-    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_context mSsl;
+    mbedtls_ssl_config  mConf;
 
 #ifdef MBEDTLS_SSL_COOKIE_C
     mbedtls_ssl_cookie_ctx mCookieCtx;
