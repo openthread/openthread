@@ -49,14 +49,11 @@ libopenthread_qpg6095_a_SOURCES             = \
     random.c                                  \
     radio.c                                   \
     uart.c                                    \
+    settings.cpp                              \
     $(NULL)
 
-if OPENTHREAD_SETTINGS_RAM
 libopenthread_qpg6095_a_LIBADD              = \
-    $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o             
-else
-libopenthread_qpg6095_a_SOURCES            += settings.cpp
-endif
+    $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o
 
 if OPENTHREAD_ENABLE_DIAG
 libopenthread_qpg6095_a_SOURCES            += \

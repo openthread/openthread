@@ -44,6 +44,8 @@
 
 #define SETTINGS_BUFFER_SIZE 1024
 
+#ifdef OPENTHREAD_SETTINGS_RAM
+
 static uint8_t  sSettingsBuf[SETTINGS_BUFFER_SIZE];
 static uint16_t sSettingsBufLength;
 
@@ -223,3 +225,5 @@ void otPlatSettingsWipe(otInstance *aInstance)
 {
     otPlatSettingsInit(aInstance);
 }
+
+#endif /* OPENTHREAD_SETTINGS_RAM */

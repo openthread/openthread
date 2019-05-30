@@ -1612,36 +1612,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
-# Settings in RAM
-#
-
-AC_ARG_ENABLE(settings-ram,
-    [AS_HELP_STRING([--enable-settings-ram], [Enable storing settings in RAM rather than non-volatile storage @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_settings_ram=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_settings_ram} for --enable-settings-ram])
-            ;;
-        esac
-    ],
-    [enable_settings_ram=no])
-
-if test "$enable_settings_ram" = "yes"; then
-    OPENTHREAD_SETTINGS_RAM=1
-else
-    OPENTHREAD_SETTINGS_RAM=0
-fi
-
-AC_SUBST(OPENTHREAD_SETTINGS_RAM)
-AM_CONDITIONAL([OPENTHREAD_SETTINGS_RAM], [test "${enable_settings_ram}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_SETTINGS_RAM],[${OPENTHREAD_SETTINGS_RAM}],[Define to 1 if you want to enable storing settings in RAM])
-
-#
 # Linker Map Output
 #
 
