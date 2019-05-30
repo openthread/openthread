@@ -2100,6 +2100,5 @@ AC_MSG_NOTICE([
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
-  OpenThread Settings in RAM                : ${enable_settings_ram}
 
 ])

@@ -158,10 +158,6 @@ ifeq ($(PLATFORM_UDP),1)
 configure_OPTIONS              += --enable-platform-udp
 endif
 
-ifeq ($(SETTINGS_RAM),1)
-configure_OPTIONS              += --enable-settings-ram
-endif
-
 ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
