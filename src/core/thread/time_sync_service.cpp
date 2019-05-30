@@ -83,7 +83,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
 
     VerifyOrExit(aMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ);
 
-    timeSyncSeqDelta = (int8_t)(aMessage.GetTimeSyncSeq() - mTimeSyncSeq);
+    timeSyncSeqDelta = static_cast<int8_t>(aMessage.GetTimeSyncSeq() - mTimeSyncSeq);
 
     if (mTimeSyncSeq != OT_TIME_SYNC_INVALID_SEQ && timeSyncSeqDelta < 0)
     {
