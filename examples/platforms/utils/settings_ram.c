@@ -226,4 +226,4 @@ void otPlatSettingsWipe(otInstance *aInstance)
     otPlatSettingsInit(aInstance);
 }
 
-#endif /* OPENTHREAD_SETTINGS_RAM */
+#endif // OPENTHREAD_SETTINGS_RAM
