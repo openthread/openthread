@@ -345,7 +345,8 @@ otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
-        if (mIdentityAssociations[i].mStatus == kIaStatusSolicitReplied)
+        if (mIdentityAssociations[i].mStatus == kIaStatusInvalid ||
+            mIdentityAssociations[i].mStatus == kIaStatusSolicitReplied)
         {
             continue;
         }
@@ -381,7 +382,8 @@ otError Dhcp6Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
-        if ((mIdentityAssociations[i].mStatus != kIaStatusSolicitReplied) &&
+        if ((mIdentityAssociations[i].mStatus == kIaStatusSolicit ||
+             mIdentityAssociations[i].mStatus == kIaStatusSoliciting) &&
             (mIdentityAssociations[i].mPrefixAgentRloc == aRloc16))
         {
             option.SetAddress(mIdentityAssociations[i].mNetifAddress.mAddress);
