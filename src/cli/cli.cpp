@@ -2108,8 +2108,6 @@ void Interpreter::HandlePingTimer()
     SuccessOrExit(error = otMessageSetLength(message, mLength));
     SuccessOrExit(error = otIcmp6SendEchoRequest(mInstance, message, messageInfo, 1));
 
-    mCount--;
-
 exit:
 
     if (error != OT_ERROR_NONE && message != NULL)
@@ -2117,7 +2115,7 @@ exit:
         otMessageFree(message);
     }
 
-    if (mCount)
+    if (--mCount)
     {
         mPingTimer.Start(mInterval);
     }
