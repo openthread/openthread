@@ -37,7 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <limits.h>
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 namespace ot {
 namespace Encoding {

@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
 #include <stdlib.h>
-#include "utils/wrap_stdint.h"
 
 #include <openthread/error.h>
 

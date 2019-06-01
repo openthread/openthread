@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include "coap/coap.hpp"
 #include "common/timer.hpp"

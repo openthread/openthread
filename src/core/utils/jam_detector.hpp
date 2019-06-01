@@ -36,10 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 

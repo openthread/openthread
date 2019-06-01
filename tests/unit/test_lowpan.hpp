@@ -29,12 +29,13 @@
 #ifndef TEST_LOWPAN_HPP
 #define TEST_LOWPAN_HPP
 
+#include <stdint.h>
+
 #include "common/instance.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_headers.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/thread_netif.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 

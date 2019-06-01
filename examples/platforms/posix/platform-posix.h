@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the (posix or windows) platform-specific initializers.
+ *   This file includes the platform-specific initializers.
  */
 
 #ifndef PLATFORM_POSIX_H_

@@ -38,9 +38,9 @@
 #include "openthread-core-config.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "utils/static_assert.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 namespace Utils {

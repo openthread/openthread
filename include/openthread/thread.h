@@ -455,7 +455,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
  * @returns A pointer to Thread link-local IPv6 address.
  *
  */
-OTAPI const otIp6Address *OTCALL otThreadGetLinkLocalIp6Address(otInstance *aInstance);
+const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
 
 /**
  * Get the Thread Network Name.
