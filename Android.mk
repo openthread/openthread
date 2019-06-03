@@ -99,6 +99,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -299,6 +301,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 
@@ -356,6 +360,8 @@ LOCAL_CFLAGS                                                                := \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
+    -std=c++11                                                                 \
+    -pedantic-errors                                                           \
     -Wno-non-virtual-dtor                                                      \
     $(NULL)
 

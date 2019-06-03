@@ -18,7 +18,7 @@
 - C
   - OpenThread uses and enforces the ISO9899:1999 (aka ISO C99, C99) C language standard as the minimum.
 - C++
-  - OpenThread uses and enforces the ISO14882:2003 (aka ISO C++03, C++03) C++ language standard as the minimum.
+  - OpenThread uses and enforces the ISO14882:2011 (aka ISO C++11, C++11) C++ language standard as the minimum.
 - Extensions
   - Wherever possible, toolchain-specific (e.g GCC/GNU) extensions or the use of later standards shall be avoided or shall be leveraged through toolchain-compatibility preprocessor macros.
 
