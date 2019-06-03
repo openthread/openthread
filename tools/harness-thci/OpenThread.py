@@ -544,7 +544,7 @@ class OpenThread(IThci):
                 hexIter))
         prefix = str(finalMac)
         strIp6Prefix = prefix[:19]
-        return strIp6Prefix +'::'
+        return strIp6Prefix + '::'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string

@@ -1356,7 +1356,7 @@ class OpenThread_WpanCtl(IThci):
         print('%s call getParentAddress' % self.port)
         parentInfo = []
         parentInfo = self.__stripValue(self.__sendCommand(
-            WPANCTL_CMD + 'getporp -v Thread:Parent')).split(' ')
+            WPANCTL_CMD + 'getprop -v Thread:Parent')).split(' ')
 
         return parentInfo[0]
 
@@ -2130,7 +2130,7 @@ class OpenThread_WpanCtl(IThci):
         """get child timeout"""
         print('%s call getChildTimeoutValue' % self.port)
         childTimeout = self.__sendCommand(
-            WPANCTL_CMD + 'getporp -v Thread:ChildTimeout')[0]
+            WPANCTL_CMD + 'getprop -v Thread:ChildTimeout')[0]
         return int(childTimeout)
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
