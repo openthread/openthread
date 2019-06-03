@@ -52,6 +52,8 @@ libopenthread_qpg6095_a_SOURCES             = \
     uart.c                                    \
     $(NULL)
 
+libopenthread_qpg6095_a_LIBADD              = \
+    $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o
 
 if OPENTHREAD_ENABLE_DIAG
 libopenthread_qpg6095_a_SOURCES            += \
