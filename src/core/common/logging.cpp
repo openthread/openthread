@@ -355,5 +355,5 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 #endif
 
 #ifdef __cplusplus
-};
+} // extern "C"
 #endif
