@@ -73,8 +73,8 @@ void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFl
 
 void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
-    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
+    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice(), OT_NO_ACTION);
+    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA, OT_NO_ACTION);
 
     Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
@@ -107,7 +107,7 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
     joinerUdpPort =
         static_cast<JoinerUdpPortTlv *>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
-    VerifyOrExit(joinerUdpPort != NULL);
+    VerifyOrExit(joinerUdpPort != NULL, OT_NO_ACTION);
 
     rval = joinerUdpPort->GetUdpPort();
 
@@ -388,14 +388,15 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     uint32_t             now     = TimerMilli::GetNow();
     Ip6::MessageInfo     messageInfo;
 
-    VerifyOrExit(message != NULL);
-    VerifyOrExit(!mTimer.IsRunning());
+    VerifyOrExit(message != NULL, OT_NO_ACTION);
+    VerifyOrExit(!mTimer.IsRunning(), OT_NO_ACTION);
 
     delayedJoinEnt.ReadFrom(*message);
 
     // The message can be sent during CoAP transaction if KEK did not change (i.e. retransmission).
     VerifyOrExit(!mExpectJoinEntRsp ||
-                 memcmp(Get<KeyManager>().GetKek(), delayedJoinEnt.GetKek(), KeyManager::kMaxKeyLength) == 0);
+                     memcmp(Get<KeyManager>().GetKek(), delayedJoinEnt.GetKek(), KeyManager::kMaxKeyLength) == 0,
+                 OT_NO_ACTION);
 
     if (delayedJoinEnt.IsLater(now))
     {
@@ -462,9 +463,9 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
     mExpectJoinEntRsp = false;
     SendDelayedJoinerEntrust();
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != NULL);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != NULL, OT_NO_ACTION);
 
-    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NO_ACTION);
 
     otLogInfoMeshCoP("Receive joiner entrust response");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");

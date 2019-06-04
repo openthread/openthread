@@ -130,7 +130,7 @@ otError SubMac::Enable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mState == kStateDisabled);
+    VerifyOrExit(mState == kStateDisabled, OT_NO_ACTION);
 
     SuccessOrExit(error = otPlatRadioEnable(&GetInstance()));
     SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
@@ -270,7 +270,7 @@ void SubMac::BeginTransmit(void)
 {
     otError error;
 
-    VerifyOrExit(mState == kStateCsmaBackoff);
+    VerifyOrExit(mState == kStateCsmaBackoff, OT_NO_ACTION);
 
 #if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
@@ -493,7 +493,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NO_ACTION);
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -511,7 +511,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NO_ACTION);
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -529,7 +529,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NO_ACTION);
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -547,7 +547,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NO_ACTION);
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO

@@ -68,7 +68,7 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPrior
     otError  error   = OT_ERROR_NONE;
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != NULL, OT_NO_ACTION);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
@@ -367,7 +367,7 @@ otError Message::SetPriority(uint8_t aPriority)
     VerifyOrExit(aPriority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(IsInAQueue(), mBuffer.mHead.mInfo.mPriority = aPriority);
-    VerifyOrExit(mBuffer.mHead.mInfo.mPriority != aPriority);
+    VerifyOrExit(mBuffer.mHead.mInfo.mPriority != aPriority, OT_NO_ACTION);
 
     if (mBuffer.mHead.mInfo.mInPriorityQ)
     {

@@ -66,7 +66,7 @@ otError TaskletScheduler::Post(Tasklet &aTasklet)
 
     VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = OT_ERROR_ALREADY);
 
-    VerifyOrExit(&aTasklet.Get<TaskletScheduler>() == this);
+    VerifyOrExit(&aTasklet.Get<TaskletScheduler>() == this, error = OT_ERROR_NONE);
 
     if (mTail == NULL)
     {

@@ -74,7 +74,7 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
     otError           error          = OT_ERROR_NONE;
     ExternalCallback *unusedCallback = NULL;
 
-    VerifyOrExit(aCallback != NULL);
+    VerifyOrExit(aCallback != NULL, OT_NO_ACTION);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -104,7 +104,7 @@ exit:
 
 void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != NULL);
+    VerifyOrExit(aCallback != NULL, OT_NO_ACTION);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -145,7 +145,7 @@ void Notifier::HandleStateChanged(void)
 {
     otChangedFlags flags = mFlagsToSignal;
 
-    VerifyOrExit(flags != 0);
+    VerifyOrExit(flags != 0, OT_NO_ACTION);
 
     mFlagsToSignal = 0;
 
@@ -183,7 +183,7 @@ void Notifier::LogChangedFlags(otChangedFlags aFlags) const
 
     for (uint8_t bit = 0; bit < sizeof(otChangedFlags) * CHAR_BIT; bit++)
     {
-        VerifyOrExit(flags != 0);
+        VerifyOrExit(flags != 0, OT_NO_ACTION);
 
         if (flags & (1 << bit))
         {

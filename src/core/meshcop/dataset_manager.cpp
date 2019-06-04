@@ -225,7 +225,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0, OT_NO_ACTION);
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
@@ -237,9 +237,9 @@ exit:
 
 void DatasetManager::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NO_ACTION);
 
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0);
+    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, OT_NO_ACTION);
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {

@@ -77,14 +77,14 @@ void AnnounceBeginServer::HandleRequest(Coap::Message &aMessage, const Ip6::Mess
     MeshCoP::PeriodTlv period;
     Ip6::MessageInfo   responseInfo(aMessageInfo);
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST);
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NO_ACTION);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NO_ACTION);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid());
+    VerifyOrExit(count.IsValid(), OT_NO_ACTION);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid());
+    VerifyOrExit(period.IsValid(), OT_NO_ACTION);
 
     SendAnnounce(mask, count.GetCount(), period.GetPeriod());
 

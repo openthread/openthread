@@ -181,7 +181,7 @@ void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NO_ACTION);
 
     aFrame.GetDstAddr(macDest);
     Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
@@ -262,7 +262,7 @@ void DataPollSender::HandlePollTimeout(void)
     // a data poll indicated that a frame was pending, but no frame
     // was received after timeout interval.
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NO_ACTION);
 
     mPollTimeoutCounter++;
 
@@ -283,7 +283,7 @@ exit:
 
 void DataPollSender::CheckFramePending(Mac::Frame &aFrame)
 {
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NO_ACTION);
 
     mPollTimeoutCounter = 0;
 
@@ -351,11 +351,11 @@ otError DataPollSender::StopFastPolls(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mFastPollsUsers != 0);
+    VerifyOrExit(mFastPollsUsers != 0, OT_NO_ACTION);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
     // from `HandlePollSent()` (after all fast polls are sent).
-    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
+    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers, OT_NO_ACTION);
 
     mFastPollsUsers--;
 

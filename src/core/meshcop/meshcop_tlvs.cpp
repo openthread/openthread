@@ -119,10 +119,10 @@ bool ChannelTlv::IsValid(void) const
 {
     bool ret = false;
 
-    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
-    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX);
-    VerifyOrExit((1U << mChannelPage) & Phy::kSupportedChannelPages);
-    VerifyOrExit(Phy::kChannelMin <= GetChannel() && GetChannel() <= Phy::kChannelMax);
+    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv), OT_NO_ACTION);
+    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX, OT_NO_ACTION);
+    VerifyOrExit((1U << mChannelPage) & Phy::kSupportedChannelPages, OT_NO_ACTION);
+    VerifyOrExit(Phy::kChannelMin <= GetChannel() && GetChannel() <= Phy::kChannelMax, OT_NO_ACTION);
     ret = true;
 
 exit:
@@ -155,7 +155,7 @@ const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
     const ChannelMaskEntryBase *entry = NULL;
 
-    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase));
+    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase), OT_NO_ACTION);
 
     entry = reinterpret_cast<const ChannelMaskEntryBase *>(GetValue());
     VerifyOrExit(GetLength() >= entry->GetEntrySize(), entry = NULL);
@@ -213,7 +213,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(void) const
 
     for (; cur < end; cur = static_cast<const ChannelMaskEntry *>(cur->GetNext()))
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
@@ -248,7 +248,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
         ChannelMaskEntry entry;
 
         aMessage.Read(offset, sizeof(ChannelMaskEntryBase), &entry);
-        VerifyOrExit(offset + entry.GetEntrySize() <= end);
+        VerifyOrExit(offset + entry.GetEntrySize() <= end, OT_NO_ACTION);
 
         switch (entry.GetChannelPage())
         {

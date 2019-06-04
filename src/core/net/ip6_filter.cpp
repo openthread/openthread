@@ -67,16 +67,16 @@ bool Filter::Accept(Message &aMessage) const
     }
 
     // Read IPv6 header
-    VerifyOrExit(sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6));
+    VerifyOrExit(sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6), OT_NO_ACTION);
 
     // Allow only link-local unicast or multicast
-    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
+    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast(), OT_NO_ACTION);
 
     switch (ip6.GetNextHeader())
     {
     case kProtoUdp:
         // Read the UDP header and get the dst port
-        VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp));
+        VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp), OT_NO_ACTION);
 
         dstport = udp.GetDestinationPort();
 
@@ -95,7 +95,7 @@ bool Filter::Accept(Message &aMessage) const
 
     case kProtoTcp:
         // Read the TCP header and get the dst port
-        VerifyOrExit(sizeof(tcp) == aMessage.Read(sizeof(ip6), sizeof(tcp), &tcp));
+        VerifyOrExit(sizeof(tcp) == aMessage.Read(sizeof(ip6), sizeof(tcp), &tcp), OT_NO_ACTION);
 
         dstport = tcp.GetDestinationPort();
 

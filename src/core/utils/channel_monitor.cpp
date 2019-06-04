@@ -105,7 +105,7 @@ uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
     uint16_t occupancy = 0;
 
-    VerifyOrExit((Phy::kChannelMin <= aChannel) && (aChannel <= Phy::kChannelMax));
+    VerifyOrExit((Phy::kChannelMin <= aChannel) && (aChannel <= Phy::kChannelMax), OT_NO_ACTION);
     occupancy = mChannelOccupancy[aChannel - Phy::kChannelMin];
 
 exit:

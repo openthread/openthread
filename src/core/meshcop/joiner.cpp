@@ -77,7 +77,7 @@ void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
 
 void Joiner::SetState(otJoinerState aState)
 {
-    VerifyOrExit(aState != mState);
+    VerifyOrExit(aState != mState, OT_NO_ACTION);
 
     otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(mState), JoinerStateToString(aState));
     mState = aState;
@@ -222,7 +222,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER);
+    VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER, OT_NO_ACTION);
 
     if (aResult != NULL)
     {
@@ -272,7 +272,7 @@ void Joiner::SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult)
         }
     }
 
-    VerifyOrExit(entry < end);
+    VerifyOrExit(entry < end, OT_NO_ACTION);
 
     // Shift elements in array to make room for the new one.
     memmove(entry + 1, entry,
@@ -364,7 +364,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
 
 void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_CONNECT);
+    VerifyOrExit(mState == OT_JOINER_STATE_CONNECT, OT_NO_ACTION);
 
     if (aConnected)
     {
@@ -494,10 +494,11 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
     StateTlv state;
 
     VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE &&
-                 aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aMessage.GetCode() == OT_COAP_CODE_CHANGED);
+                     aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aMessage.GetCode() == OT_COAP_CODE_CHANGED,
+                 OT_NO_ACTION);
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
+    VerifyOrExit(state.IsValid(), OT_NO_ACTION);
 
     SetState(OT_JOINER_STATE_ENTRUST);
     mTimer.Start(kReponseTimeout);
@@ -673,7 +674,7 @@ void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) co
 {
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), OT_NO_ACTION);
     aMessage.Read(aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(), buf);
 
     otDumpCertMeshCoP(aText, buf, aMessage.GetLength() - aMessage.GetOffset());

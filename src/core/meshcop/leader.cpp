@@ -80,15 +80,15 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     otLogInfoMeshCoP("received petition");
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+    VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()), OT_NO_ACTION);
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
 
     if (mTimer.IsRunning())
     {
-        VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                               commissionerId.GetCommissionerIdLength())));
-
+        VerifyOrExit((commissionerId.GetLength() == mCommissionerId.GetLength()) &&
+                         (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
+                                   commissionerId.GetLength())),
+                     OT_NO_ACTION);
         ResignCommissioner();
     }
 
@@ -174,10 +174,10 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
     otLogInfoMeshCoP("received keep alive");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
+    VerifyOrExit(state.IsValid(), OT_NO_ACTION);
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid());
+    VerifyOrExit(sessionId.IsValid(), OT_NO_ACTION);
 
     borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
@@ -292,7 +292,7 @@ void Leader::HandleTimer(Timer &aTimer)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, OT_NO_ACTION);
 
     ResignCommissioner();
 

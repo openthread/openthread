@@ -120,7 +120,7 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0);
+    VerifyOrExit(sIpFd > 0, OT_NO_ACTION);
     memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
     mreq.ipv6mr_interface = sTunIndex;
 
@@ -148,7 +148,7 @@ static void UpdateLink(otInstance *aInstance)
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0);
+    VerifyOrExit(sIpFd > 0, OT_NO_ACTION);
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, sTunName, sizeof(ifr.ifr_name));
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
@@ -203,7 +203,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
 
     assert(sInstance == aContext);
 
-    VerifyOrExit(sTunFd > 0);
+    VerifyOrExit(sTunFd > 0, OT_NO_ACTION);
 
     VerifyOrExit(otMessageRead(aMessage, 0, packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
 
@@ -264,7 +264,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     size_t            rtaLength;
     otError           error = OT_ERROR_NONE;
 
-    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sTunIndex) && ifaddr->ifa_family == AF_INET6);
+    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sTunIndex) && ifaddr->ifa_family == AF_INET6,
+                 OT_NO_ACTION);
 
     rtaLength = IFA_PAYLOAD(aNetlinkMessage);
 
@@ -334,7 +335,7 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
     otError           error  = OT_ERROR_NONE;
 
-    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(sTunIndex));
+    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(sTunIndex), OT_NO_ACTION);
     SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
 
 exit:
@@ -356,7 +357,7 @@ static void processNetifEvent(otInstance *aInstance)
 
     length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
 
-    VerifyOrExit(length > 0);
+    VerifyOrExit(length > 0, OT_NO_ACTION);
 
     for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, length);
          msg                  = NLMSG_NEXT(msg, length))
@@ -387,10 +388,10 @@ void platformNetifInit(otInstance *aInstance)
     struct ifreq ifr;
 
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-    VerifyOrExit(sIpFd >= 0);
+    VerifyOrExit(sIpFd >= 0, OT_NO_ACTION);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    VerifyOrExit(sNetlinkFd > 0);
+    VerifyOrExit(sNetlinkFd > 0, OT_NO_ACTION);
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
@@ -400,7 +401,7 @@ void platformNetifInit(otInstance *aInstance)
         memset(&sa, 0, sizeof(sa));
         sa.nl_family = AF_NETLINK;
         sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-        VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0);
+        VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0, OT_NO_ACTION);
     }
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC);
@@ -421,7 +422,7 @@ void platformNetifInit(otInstance *aInstance)
 #endif
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrExit(sTunIndex > 0, OT_NO_ACTION);
 
     strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
@@ -462,7 +463,7 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrExit(sTunIndex > 0, OT_NO_ACTION);
 
     assert(sTunFd > 0);
     assert(sNetlinkFd > 0);
@@ -490,7 +491,7 @@ exit:
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrExit(sTunIndex > 0, OT_NO_ACTION);
 
     if (FD_ISSET(sTunFd, aErrorFdSet))
     {

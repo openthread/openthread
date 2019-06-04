@@ -149,7 +149,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NO_ACTION);
     message->Prepend(&aHeader, sizeof(aHeader));
     message->SetOffset(0);
 
@@ -474,15 +474,16 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *          message = NULL;
     uint16_t           offset;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
-                 sizeof(responseHeader));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
+                 OT_NO_ACTION);
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false);
+                     responseHeader.IsTruncationFlagSet() == false,
+                 OT_NO_ACTION);
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL, OT_NO_ACTION);
 
     VerifyOrExit(responseHeader.GetResponseCode() == Header::kResponseSuccess, error = OT_ERROR_FAILED);
 

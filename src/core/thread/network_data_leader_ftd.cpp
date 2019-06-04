@@ -123,7 +123,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     bool rlocStable = false;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, aMatchMode);
-    VerifyOrExit(rlocIn);
+    VerifyOrExit(rlocIn, OT_NO_ACTION);
     RemoveRloc(aRloc16, aMatchMode);
 
     mVersion++;
@@ -154,13 +154,13 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
     {
-        VerifyOrExit(rloc16.IsValid());
+        VerifyOrExit(rloc16.IsValid(), OT_NO_ACTION);
         RemoveBorderRouter(rloc16.GetRloc16(), kMatchModeRloc16);
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
-        VerifyOrExit(networkData.IsValid());
+        VerifyOrExit(networkData.IsValid(), OT_NO_ACTION);
         RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]), networkData.GetTlvs(),
                             networkData.GetLength());
     }
@@ -192,8 +192,8 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     MeshCoP::Tlv *cur;
     MeshCoP::Tlv *end;
 
-    VerifyOrExit(length <= sizeof(tlvs));
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(length <= sizeof(tlvs), OT_NO_ACTION);
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, OT_NO_ACTION);
 
     aMessage.Read(offset, length, tlvs);
 
@@ -206,7 +206,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     {
         MeshCoP::Tlv::Type type;
 
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         type = cur->GetType();
 
@@ -222,7 +222,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
         {
             MeshCoP::CommissionerSessionIdTlv *tlv = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur);
 
-            VerifyOrExit(tlv->IsValid());
+            VerifyOrExit(tlv->IsValid(), OT_NO_ACTION);
             sessionId    = tlv->GetCommissionerSessionId();
             hasSessionId = true;
         }
@@ -235,10 +235,10 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     }
 
     // verify whether or not commissioner session id TLV is included
-    VerifyOrExit(hasSessionId);
+    VerifyOrExit(hasSessionId, OT_NO_ACTION);
 
     // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
-    VerifyOrExit(hasValidTlv);
+    VerifyOrExit(hasValidTlv, OT_NO_ACTION);
 
     // Find Commissioning Data TLV
     for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -254,11 +254,12 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
                 if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
                 {
                     VerifyOrExit(sessionId ==
-                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
+                                     static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
+                                 OT_NO_ACTION);
                 }
                 else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
                 {
-                    VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                    VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs), OT_NO_ACTION);
                     memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
                     length += cur->GetSize();
                 }
@@ -606,7 +607,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         switch (cur->GetType())
         {
@@ -690,7 +691,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             {
                                 ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
 
-                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end);
+                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end,
+                                             OT_NO_ACTION);
 
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
@@ -1057,7 +1059,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeService)
         {

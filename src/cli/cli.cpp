@@ -1893,7 +1893,7 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 {
     uint32_t timestamp = 0;
 
-    VerifyOrExit(aIcmpHeader.mType == OT_ICMP6_TYPE_ECHO_REPLY);
+    VerifyOrExit(aIcmpHeader.mType == OT_ICMP6_TYPE_ECHO_REPLY, OT_NO_ACTION);
 
     mServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset() + sizeof(otIcmp6Header));
 
@@ -3264,7 +3264,7 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
 
             error = otLinkFilterAddAddress(mInstance, &extAddr);
 
-            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NO_ACTION);
 
             if (argc > 2)
             {
@@ -3426,7 +3426,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     mServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL && strnlen(aBuf, aBufLength + 1) <= aBufLength);
+    VerifyOrExit(aBuf != NULL && strnlen(aBuf, aBufLength + 1) <= aBufLength, OT_NO_ACTION);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, argc, argv, kMaxArgs) == OT_ERROR_NONE,
                  mServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
@@ -3598,7 +3598,7 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Server::sServer != NULL);
+    VerifyOrExit(Server::sServer != NULL, OT_NO_ACTION);
 
     Server::sServer->OutputFormatV(aFormat, aArgs);
     Server::sServer->OutputFormat("\r\n");

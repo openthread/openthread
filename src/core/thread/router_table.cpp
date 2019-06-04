@@ -79,7 +79,7 @@ exit:
 
 const Router *RouterTable::GetNextEntry(const Router *aRouter) const
 {
-    VerifyOrExit(aRouter != NULL);
+    VerifyOrExit(aRouter != NULL, OT_NO_ACTION);
     aRouter++;
     VerifyOrExit(aRouter < &mRouters[Mle::kMaxRouters], aRouter = NULL);
     VerifyOrExit(aRouter->GetRloc16() != 0xffff, aRouter = NULL);
@@ -214,7 +214,7 @@ Router *RouterTable::Allocate(void)
         }
     }
 
-    VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters && numAvailable > 0);
+    VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters && numAvailable > 0, OT_NO_ACTION);
 
     // choose available router id at random
     freeBit = Random::NonCrypto::GetUint8InRange(0, numAvailable);
@@ -246,7 +246,8 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     Router *rval = NULL;
 
     VerifyOrExit(aRouterId <= Mle::kMaxRouterId && mActiveRouterCount < Mle::kMaxRouters && !IsAllocated(aRouterId) &&
-                 mRouterIdReuseDelay[aRouterId] == 0);
+                     mRouterIdReuseDelay[aRouterId] == 0,
+                 OT_NO_ACTION);
 
     mAllocatedRouterIds.Add(aRouterId);
     UpdateAllocation();
@@ -348,7 +349,7 @@ Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 {
     Router *router = NULL;
 
-    VerifyOrExit(aRloc16 != Get<Mle::MleRouter>().GetRloc16());
+    VerifyOrExit(aRloc16 != Get<Mle::MleRouter>().GetRloc16(), OT_NO_ACTION);
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
@@ -366,7 +367,7 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 {
     Router *router = NULL;
 
-    VerifyOrExit(aExtAddress != Get<Mac::Mac>().GetExtAddress());
+    VerifyOrExit(aExtAddress != Get<Mac::Mac>().GetExtAddress(), OT_NO_ACTION);
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
@@ -478,7 +479,8 @@ uint8_t RouterTable::GetLinkCost(Router &aRouter)
     uint8_t rval = Mle::kMaxRouteCost;
 
     VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() &&
-                 aRouter.GetState() == Neighbor::kStateValid);
+                     aRouter.GetState() == Neighbor::kStateValid,
+                 OT_NO_ACTION);
 
     rval = aRouter.GetLinkInfo().GetLinkQuality();
 

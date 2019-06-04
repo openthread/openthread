@@ -180,7 +180,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
         mKeySwitchGuardEnabled)
     {
-        VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+        VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime, OT_NO_ACTION);
     }
 
     mKeySequence = aKeySequence;

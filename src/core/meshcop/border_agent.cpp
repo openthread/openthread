@@ -520,7 +520,8 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     Ip6::MessageInfo       messageInfo;
     uint16_t               offset = 0;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
+                 OT_NO_ACTION);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerRouterLocator, sizeof(joinerRouterRloc), joinerRouterRloc));
     VerifyOrExit(joinerRouterRloc.IsValid(), error = OT_ERROR_PARSE);

@@ -78,11 +78,12 @@ otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset
         {
             uint16_t extLength;
 
-            VerifyOrExit(sizeof(extLength) == aMessage.Read(offset + sizeof(tlv), sizeof(extLength), &extLength));
+            VerifyOrExit(sizeof(extLength) == aMessage.Read(offset + sizeof(tlv), sizeof(extLength), &extLength),
+                         error = OT_ERROR_NOT_FOUND);
             length += sizeof(extLength) + HostSwap16(extLength);
         }
 
-        VerifyOrExit(offset + length <= end);
+        VerifyOrExit(offset + length <= end, error = OT_ERROR_NOT_FOUND);
 
         if (tlv.GetType() == aType)
         {
@@ -114,13 +115,13 @@ otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aO
 
         if (length == kExtendedLength)
         {
-            VerifyOrExit(offset + sizeof(length) <= end);
+            VerifyOrExit(offset + sizeof(length) <= end, error = OT_ERROR_NOT_FOUND);
             aMessage.Read(offset, sizeof(length), &length);
             offset += sizeof(length);
             length = HostSwap16(length);
         }
 
-        VerifyOrExit(length <= end - offset);
+        VerifyOrExit(length <= end - offset, error = OT_ERROR_NOT_FOUND);
 
         if (tlv.GetType() == aType)
         {

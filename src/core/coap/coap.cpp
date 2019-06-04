@@ -127,7 +127,7 @@ Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL, OT_NO_ACTION);
     message->SetOffset(0);
 
 exit:
@@ -623,7 +623,8 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                 *curUriPath++ = '/';
             }
 
-            VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath));
+            VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath),
+                         error = OT_ERROR_NOT_FOUND);
 
             aMessage.GetOptionValue(curUriPath);
             curUriPath += option->mLength;
@@ -782,7 +783,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
         DequeueOldestResponse();
     }
 
-    VerifyOrExit((responseCopy = aMessage.Clone()) != NULL);
+    VerifyOrExit((responseCopy = aMessage.Clone()) != NULL, OT_NO_ACTION);
 
     SuccessOrExit(error = enqueuedResponseHeader.AppendTo(*responseCopy));
     mQueue.Enqueue(*responseCopy);
@@ -806,7 +807,7 @@ void ResponsesQueue::DequeueOldestResponse(void)
 {
     Message *message;
 
-    VerifyOrExit((message = static_cast<Message *>(mQueue.GetHead())) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(mQueue.GetHead())) != NULL, OT_NO_ACTION);
     DequeueResponse(*message);
 
 exit:

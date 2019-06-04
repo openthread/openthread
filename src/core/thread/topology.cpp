@@ -122,7 +122,7 @@ otError Child::GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aItera
     if (aIterator.Get() == 0)
     {
         aIterator.Increment();
-        VerifyOrExit(GetMeshLocalIp6Address(aInstance, aAddress) == OT_ERROR_NOT_FOUND);
+        VerifyOrExit(GetMeshLocalIp6Address(aInstance, aAddress) == OT_ERROR_NOT_FOUND, OT_NO_ACTION);
     }
 
     index = aIterator.Get() - 1;
@@ -187,7 +187,7 @@ otError Child::RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddres
 
     for (index = 0; index < kNumIp6Addresses; index++)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NO_ACTION);
 
         if (mIp6Address[index] == aAddress)
         {
@@ -213,7 +213,7 @@ bool Child::HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) con
 {
     bool retval = false;
 
-    VerifyOrExit(!aAddress.IsUnspecified());
+    VerifyOrExit(!aAddress.IsUnspecified(), OT_NO_ACTION);
 
     if (aInstance.Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
@@ -223,7 +223,7 @@ bool Child::HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) con
 
     for (uint16_t index = 0; index < kNumIp6Addresses; index++)
     {
-        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+        VerifyOrExit(!mIp6Address[index].IsUnspecified(), OT_NO_ACTION);
 
         if (mIp6Address[index] == aAddress)
         {

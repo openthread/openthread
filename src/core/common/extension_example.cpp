@@ -68,7 +68,7 @@ ExtensionBase &ExtensionBase::Init(Instance &aInstance)
 {
     ExtensionBase *ext = reinterpret_cast<ExtensionBase *>(&sExtensionRaw);
 
-    VerifyOrExit(!ext->mIsInitialized);
+    VerifyOrExit(!ext->mIsInitialized, OT_NO_ACTION);
 
     ext = new (&sExtensionRaw) Extension(aInstance);
 

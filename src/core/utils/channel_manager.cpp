@@ -102,9 +102,9 @@ void ChannelManager::PreparePendingDataset(void)
     otOperationalDataset dataset;
     otError              error;
 
-    VerifyOrExit(mState == kStateChangeRequested);
+    VerifyOrExit(mState == kStateChangeRequested, OT_NO_ACTION);
 
-    VerifyOrExit(mChannel != Get<Mac::Mac>().GetPanChannel());
+    VerifyOrExit(mChannel != Get<Mac::Mac>().GetPanChannel(), OT_NO_ACTION);
 
     if (Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
     {
@@ -259,8 +259,8 @@ void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChanged
 
 void ChannelManager::HandleStateChanged(otChangedFlags aChangedFlags)
 {
-    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
-    VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel());
+    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0, OT_NO_ACTION);
+    VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel(), OT_NO_ACTION);
 
     mState = kStateIdle;
     StartAutoSelectTimer();
@@ -347,7 +347,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     VerifyOrExit(Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
+    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange(), OT_NO_ACTION);
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
@@ -398,7 +398,7 @@ otError ChannelManager::RequestChannelSelect(bool)
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
-    VerifyOrExit(mState == kStateIdle);
+    VerifyOrExit(mState == kStateIdle, OT_NO_ACTION);
 
     if (mAutoSelectEnabled)
     {

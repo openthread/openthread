@@ -336,7 +336,7 @@ exit:
 
 void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 {
-    VerifyOrExit(aInstance == sInstance);
+    VerifyOrExit(aInstance == sInstance, OT_NO_ACTION);
 
     if (aError == OT_ERROR_NONE)
     {
@@ -359,7 +359,7 @@ exit:
 
 void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    VerifyOrExit(aInstance == sInstance);
+    VerifyOrExit(aInstance == sInstance, OT_NO_ACTION);
 
     if (aError == OT_ERROR_NONE)
     {
@@ -380,7 +380,7 @@ exit:
 
 void Diag::AlarmFired(otInstance *aInstance)
 {
-    VerifyOrExit(aInstance == sInstance);
+    VerifyOrExit(aInstance == sInstance, OT_NO_ACTION);
 
     if (sRepeatActive)
     {

@@ -189,12 +189,8 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
                                      const otMessageSettings *aSettings)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Message * message;
 
-    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL);
-
-exit:
-    return message;
+    return instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings);
 }
 
 otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)

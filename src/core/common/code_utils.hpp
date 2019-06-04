@@ -116,6 +116,14 @@
     } while (false)
 
 /**
+ * This macro allows use of `VerifyOrExit()` when there is no action to take.
+ *
+ * Example: `VerifyOrExit(condition, OT_NO_ACTION);`
+ *
+ */
+#define OT_NO_ACTION
+
+/**
  * This macro unconditionally executes @a ... and branches to the local label 'exit'.
  *
  * @note The use of this interface implies neither success nor failure for the overall exit status of the enclosing

@@ -77,7 +77,7 @@ Filter::FilterEntry *Filter::FindAvailableEntry(void)
 
     for (entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
     {
-        VerifyOrExit(entry->IsInUse());
+        VerifyOrExit(entry->IsInUse(), OT_NO_ACTION);
     }
 
     entry = NULL;

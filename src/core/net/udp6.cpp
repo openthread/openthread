@@ -378,12 +378,12 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_ENABLE_PLATFORM_UDP
-    VerifyOrExit(IsMle(GetInstance(), aMessageInfo.mSockPort));
+    VerifyOrExit(IsMle(GetInstance(), aMessageInfo.mSockPort), OT_NO_ACTION);
 #endif
 
     for (UdpReceiver *receiver = mReceivers; receiver; receiver = receiver->GetNext())
     {
-        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo));
+        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo), OT_NO_ACTION);
     }
 
     HandlePayload(aMessage, aMessageInfo);

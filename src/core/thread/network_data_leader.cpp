@@ -492,7 +492,7 @@ MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
     MeshCoP::Tlv *  end;
 
     commissioningDataTlv = GetCommissioningData();
-    VerifyOrExit(commissioningDataTlv != NULL);
+    VerifyOrExit(commissioningDataTlv != NULL, OT_NO_ACTION);
 
     cur = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
     end = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());
@@ -514,10 +514,10 @@ bool LeaderBase::IsJoiningEnabled(void)
     MeshCoP::Tlv *steeringData;
     bool          rval = false;
 
-    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != NULL);
+    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != NULL, OT_NO_ACTION);
 
     steeringData = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringData != NULL);
+    VerifyOrExit(steeringData != NULL, OT_NO_ACTION);
 
     for (int i = 0; i < steeringData->GetLength(); i++)
     {

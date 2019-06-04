@@ -360,7 +360,7 @@ exit:
 
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
 {
-    VerifyOrExit(sPlatNetifIndex != 0);
+    VerifyOrExit(sPlatNetifIndex != 0, OT_NO_ACTION);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {
@@ -403,7 +403,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    VerifyOrExit(sPlatNetifIndex != 0);
+    VerifyOrExit(sPlatNetifIndex != 0, OT_NO_ACTION);
 
     for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != NULL; socket = socket->mNext)
     {

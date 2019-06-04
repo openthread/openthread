@@ -367,25 +367,26 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
     uint32_t                     lastTransactionTime;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
+                 OT_NO_ACTION);
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid());
+    VerifyOrExit(targetTlv.IsValid(), OT_NO_ACTION);
     targetTlv.Init(); // reset TLV length
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
-    VerifyOrExit(mlIidTlv.IsValid());
+    VerifyOrExit(mlIidTlv.IsValid(), OT_NO_ACTION);
     mlIidTlv.Init(); // reset TLV length
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
-    VerifyOrExit(rloc16Tlv.IsValid());
+    VerifyOrExit(rloc16Tlv.IsValid(), OT_NO_ACTION);
 
     lastTransactionTime = 0;
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kLastTransactionTime, sizeof(lastTransactionTimeTlv),
                           lastTransactionTimeTlv) == OT_ERROR_NONE)
     {
-        VerifyOrExit(lastTransactionTimeTlv.IsValid());
+        VerifyOrExit(lastTransactionTimeTlv.IsValid(), OT_NO_ACTION);
         lastTransactionTime = lastTransactionTimeTlv.GetTime();
     }
 
@@ -589,10 +590,11 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
     ThreadMeshLocalEidTlv        mlIidTlv;
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
+                 OT_NO_ACTION);
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid());
+    VerifyOrExit(targetTlv.IsValid(), OT_NO_ACTION);
     targetTlv.Init(); // reset TLV length
 
     mlIidTlv.Init();
@@ -749,9 +751,9 @@ void AddressResolver::HandleIcmpReceive(Message &               aMessage,
 
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach);
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute);
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header));
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach, OT_NO_ACTION);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute, OT_NO_ACTION);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), OT_NO_ACTION);
 
     for (int i = 0; i < kCacheEntries; i++)
     {

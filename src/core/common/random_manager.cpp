@@ -61,7 +61,7 @@ RandomManager::RandomManager(void)
 
     assert(sInitCount < 0xffff);
 
-    VerifyOrExit(sInitCount == 0);
+    VerifyOrExit(sInitCount == 0, OT_NO_ACTION);
 
 #ifndef OPENTHREAD_RADIO
     sEntropy.Init();
@@ -85,7 +85,7 @@ RandomManager::~RandomManager(void)
     assert(sInitCount > 0);
 
     sInitCount--;
-    VerifyOrExit(sInitCount == 0);
+    VerifyOrExit(sInitCount == 0, OT_NO_ACTION);
 
 #ifndef OPENTHREAD_RADIO
     sCtrDrbg.Deinit();
@@ -168,7 +168,7 @@ int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
     SuccessOrExit(otPlatEntropyGet(reinterpret_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen)));
     rval = 0;
 
-    VerifyOrExit(aOutLen != NULL);
+    VerifyOrExit(aOutLen != NULL, OT_NO_ACTION);
     *aOutLen = aInLen;
 
 exit:

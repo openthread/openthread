@@ -106,7 +106,7 @@ Instance &Instance::InitSingle(void)
 {
     Instance *instance = &Get();
 
-    VerifyOrExit(instance->mIsInitialized == false);
+    VerifyOrExit(instance->mIsInitialized == false, OT_NO_ACTION);
 
     instance = new (&gInstanceRaw) Instance();
 
@@ -170,7 +170,7 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized == true);
+    VerifyOrExit(mIsInitialized, OT_NO_ACTION);
 
     mIsInitialized = false;
 

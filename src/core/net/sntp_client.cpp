@@ -136,7 +136,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NO_ACTION);
     message->Prepend(&aHeader, sizeof(aHeader));
     message->SetOffset(0);
 
@@ -345,10 +345,10 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *     message  = NULL;
     uint64_t      unixTime = 0;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
-                 sizeof(responseHeader));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
+                 OT_NO_ACTION);
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL, OT_NO_ACTION);
 
     // Check if response came from the server.
     VerifyOrExit(responseHeader.GetMode() == Header::kModeServer, error = OT_ERROR_FAILED);

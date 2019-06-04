@@ -213,7 +213,7 @@ const otCoapOption *Message::GetFirstOption(void)
 
     memset(&GetHelpData().mOption, 0, sizeof(GetHelpData().mOption));
 
-    VerifyOrExit(GetLength() - GetHelpData().mHeaderOffset >= GetOptionStart());
+    VerifyOrExit(GetLength() - GetHelpData().mHeaderOffset >= GetOptionStart(), option = NULL);
 
     GetHelpData().mNextOptionOffset = GetHelpData().mHeaderOffset + GetOptionStart();
 
@@ -397,7 +397,7 @@ Message *Message::Clone(uint16_t aLength) const
 {
     Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
 
-    VerifyOrExit(message != NULL);
+    VerifyOrExit(message != NULL, OT_NO_ACTION);
 
     memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
 

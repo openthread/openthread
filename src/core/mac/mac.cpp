@@ -319,7 +319,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
-    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle);
+    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle, OT_NO_ACTION);
 
     mRxOnWhenIdle = aRxOnWhenIdle;
 
@@ -367,7 +367,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
     mCcaSuccessRateTracker.Reset();
     Get<Notifier>().Signal(OT_CHANGED_THREAD_CHANNEL);
 
-    VerifyOrExit(!mRadioChannelAcquisitionId);
+    VerifyOrExit(!mRadioChannelAcquisitionId, OT_NO_ACTION);
 
     mRadioChannel = mPanChannel;
 
@@ -531,7 +531,7 @@ void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
 
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NO_ACTION);
 
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
     if (mShouldDelaySleep)
@@ -627,7 +627,7 @@ void Mac::HandleOperationTask(Tasklet &aTasklet)
 
 void Mac::PerformNextOperation(void)
 {
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NO_ACTION);
 
     if (!mEnabled)
     {
@@ -852,7 +852,7 @@ bool Mac::ShouldSendBeacon(void) const
 {
     bool shouldSend = false;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NO_ACTION);
 
     shouldSend = IsBeaconEnabled();
 
@@ -1487,7 +1487,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     mCounters.mRxTotal++;
 
-    VerifyOrExit(error == OT_ERROR_NONE);
+    VerifyOrExit(error == OT_ERROR_NONE, OT_NO_ACTION);
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
@@ -1600,7 +1600,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         // so the duplicate frame will not be passed to next
         // layer (`MeshForwarder`).
 
-        VerifyOrExit(mOperation == kOperationWaitingForData);
+        VerifyOrExit(mOperation == kOperationWaitingForData, OT_NO_ACTION);
 
         // Fall through
 
@@ -1943,7 +1943,7 @@ void Mac::ProcessTimeIe(Frame &aFrame)
 {
     TimeIe *timeIe = reinterpret_cast<TimeIe *>(aFrame.GetTimeIe());
 
-    VerifyOrExit(timeIe != NULL);
+    VerifyOrExit(timeIe != NULL, OT_NO_ACTION);
 
     aFrame.SetNetworkTimeOffset(static_cast<int64_t>(timeIe->GetTime()) - static_cast<int64_t>(aFrame.GetTimestamp()));
     aFrame.SetTimeSyncSeq(timeIe->GetSequence());
@@ -1959,7 +1959,7 @@ uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
     uint8_t *cur    = NULL;
 
     cur = aFrame.GetTimeIe();
-    VerifyOrExit(cur != NULL);
+    VerifyOrExit(cur != NULL, OT_NO_ACTION);
 
     cur += sizeof(VendorIeHeader);
     offset = static_cast<uint8_t>(cur - base);

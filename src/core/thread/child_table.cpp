@@ -80,7 +80,7 @@ void ChildTable::Iterator::Advance(void)
     Child *     listStart  = &childTable.mChildren[0];
     Child *     listEnd    = &childTable.mChildren[childTable.mMaxChildrenAllowed];
 
-    VerifyOrExit(mChild != NULL);
+    VerifyOrExit(mChild != NULL, OT_NO_ACTION);
 
     do
     {
@@ -109,7 +109,7 @@ Child *ChildTable::GetChildAtIndex(uint8_t aChildIndex)
 {
     Child *child = NULL;
 
-    VerifyOrExit(aChildIndex < mMaxChildrenAllowed);
+    VerifyOrExit(aChildIndex < mMaxChildrenAllowed, OT_NO_ACTION);
     child = &mChildren[aChildIndex];
 
 exit:

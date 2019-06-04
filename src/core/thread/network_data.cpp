@@ -485,7 +485,7 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
         NetworkDataTlv *subCur;
         NetworkDataTlv *subEnd;
 
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() != NetworkDataTlv::kTypeService)
         {
@@ -503,7 +503,7 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
             {
                 ServerTlv *server;
 
-                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd);
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, OT_NO_ACTION);
 
                 if (subCur->GetType() != NetworkDataTlv::kTypeServer)
                 {
@@ -766,7 +766,7 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter)
         {
@@ -788,7 +788,7 @@ BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter && cur->IsStable() == aStable)
         {
@@ -810,7 +810,7 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute)
         {
@@ -832,7 +832,7 @@ HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix, bool aStable)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeHasRoute && cur->IsStable() == aStable)
         {
@@ -854,7 +854,7 @@ ContextTlv *NetworkData::FindContext(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeContext)
         {
@@ -881,7 +881,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
@@ -952,7 +952,7 @@ ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NO_ACTION);
 
         if (cur->GetType() == NetworkDataTlv::kTypeService)
         {

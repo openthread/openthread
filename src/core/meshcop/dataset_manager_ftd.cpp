@@ -267,7 +267,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
         borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-        VerifyOrExit(borderAgentLocator != NULL);
+        VerifyOrExit(borderAgentLocator != NULL, OT_NO_ACTION);
 
         memset(&destination, 0, sizeof(destination));
         destination                = Get<Mle::MleRouter>().GetMeshLocal16();
@@ -553,7 +553,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     Dataset       dataset(mLocal.GetType());
     DelayTimerTlv delayTimer;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NO_ACTION);
 
     while (offset < aMessage.GetLength())
     {

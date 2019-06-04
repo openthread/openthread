@@ -66,7 +66,7 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
     Block *  curr = NULL;
     uint16_t size = static_cast<uint16_t>(aCount * aSize);
 
-    VerifyOrExit(size);
+    VerifyOrExit(size, OT_NO_ACTION);
 
     size += kAlignSize - 1 - kBlockRemainderSize;
     size &= ~(kAlignSize - 1);
@@ -81,7 +81,7 @@ void *Heap::CAlloc(size_t aCount, size_t aSize)
         curr = &BlockNext(*curr);
     }
 
-    VerifyOrExit(curr->IsFree());
+    VerifyOrExit(curr->IsFree(), OT_NO_ACTION);
 
     prev->SetNext(curr->GetNext());
 

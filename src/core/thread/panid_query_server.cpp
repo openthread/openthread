@@ -68,11 +68,11 @@ void PanIdQueryServer::HandleQuery(Coap::Message &aMessage, const Ip6::MessageIn
     Ip6::MessageInfo  responseInfo(aMessageInfo);
     uint32_t          mask;
 
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST);
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, OT_NO_ACTION);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NO_ACTION);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
-    VerifyOrExit(panId.IsValid());
+    VerifyOrExit(panId.IsValid(), OT_NO_ACTION);
 
     mChannelMask  = mask;
     mCommissioner = aMessageInfo.GetPeerAddr();

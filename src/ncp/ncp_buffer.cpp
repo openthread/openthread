@@ -253,7 +253,7 @@ otError NcpFrameBuffer::InFrameBeginSegment(void)
     uint16_t headerFlags = kSegmentHeaderNoFlag;
 
     // Verify that segment is not yet started (i.e., head and tail are the same).
-    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail);
+    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail, OT_NO_ACTION);
 
     // Check if this is the start of a new frame (i.e., frame start is same as segment head).
     if (mWriteFrameStart[mWriteDirection] == mWriteSegmentHead)
@@ -310,7 +310,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     otMessage *message;
 #endif
 
-    VerifyOrExit(mWriteDirection != kUnknown);
+    VerifyOrExit(mWriteDirection != kUnknown, OT_NO_ACTION);
 
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
@@ -469,12 +469,12 @@ uint16_t NcpFrameBuffer::InFrameGetDistance(const WritePosition &aPosition) cons
     uint16_t segmentLength;
     uint16_t offset;
 
-    VerifyOrExit(mWriteDirection != kUnknown);
-    VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead);
+    VerifyOrExit(mWriteDirection != kUnknown, OT_NO_ACTION);
+    VerifyOrExit(aPosition.mSegmentHead == mWriteSegmentHead, OT_NO_ACTION);
 
     segmentLength = GetDistance(mWriteSegmentHead, mWriteSegmentTail, mWriteDirection);
     offset        = GetDistance(mWriteSegmentHead, aPosition.mPosition, mWriteDirection);
-    VerifyOrExit(offset < segmentLength);
+    VerifyOrExit(offset < segmentLength, OT_NO_ACTION);
 
     distance = GetDistance(aPosition.mPosition, mWriteSegmentTail, mWriteDirection);
 

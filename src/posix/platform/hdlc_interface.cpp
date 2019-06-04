@@ -169,7 +169,7 @@ HdlcInterface::~HdlcInterface(void)
 
 void HdlcInterface::Deinit(void)
 {
-    VerifyOrExit(mSockFd != -1);
+    VerifyOrExit(mSockFd != -1, OT_NO_ACTION);
 
     VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
     VerifyOrExit(-1 != wait(NULL) || errno == ECHILD, perror("wait RCP"));
@@ -335,14 +335,14 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         int  cstopb = 1;
         char parity = 'N';
 
-        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
+        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NO_ACTION);
 
         cfmakeraw(&tios);
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
         // example: 115200N1
-        sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+        sscanf(aConfig, "%d%c%d", &speed, &parity, &cstopb);
 
         switch (parity)
         {
@@ -465,7 +465,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
         VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
-        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
+        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0, OT_NO_ACTION);
     }
 
 exit:
