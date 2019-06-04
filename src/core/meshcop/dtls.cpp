@@ -440,11 +440,6 @@ void Dtls::Disconnect(void)
     new (&mPeerAddress) Ip6::MessageInfo();
     mSocket.Connect(Ip6::SockAddr());
 
-    if (mConnectedHandler != NULL)
-    {
-        mConnectedHandler(mContext, false);
-    }
-
     FreeMbedtls();
 
 exit:
@@ -802,6 +797,11 @@ void Dtls::HandleTimer(void)
     case kStateCloseNotify:
         mState = kStateOpen;
         mTimer.Stop();
+
+        if (mConnectedHandler != NULL)
+        {
+            mConnectedHandler(mContext, false);
+        }
         break;
 
     default:
