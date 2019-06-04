@@ -82,9 +82,7 @@ static uint32_t sIEEEOverrides[] = {
     // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0x3 (DITHER_EN=0 and IPEAK=3).
     (uint32_t)0x00F388D3,
     // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
-    (uint32_t)0x000F8883,
-    (uint32_t)0xFFFFFFFF
-};
+    (uint32_t)0x000F8883, (uint32_t)0xFFFFFFFF};
 
 /*
  * Number of retry counts left to the currently transmitting frame.
