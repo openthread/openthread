@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       pka.h
-*  Revised:        2018-03-02 10:51:37 +0100 (Fri, 02 Mar 2018)
-*  Revision:       51635
+*  Revised:        2018-07-19 15:07:05 +0200 (Thu, 19 Jul 2018)
+*  Revision:       52294
 *
 *  Description:    PKA header file.
 *
@@ -83,6 +83,7 @@ extern "C"
 //
 //*****************************************************************************
 #if !defined(DOXYGEN)
+    #define PKAClearPkaRam                  NOROM_PKAClearPkaRam
     #define PKAGetOpsStatus                 NOROM_PKAGetOpsStatus
     #define PKAArrayAllZeros                NOROM_PKAArrayAllZeros
     #define PKAZeroOutArray                 NOROM_PKAZeroOutArray
@@ -602,6 +603,15 @@ extern const PKA_EccParam256 Curve25519_order;
 // Prototypes for the APIs.
 //
 //*****************************************************************************
+
+//*****************************************************************************
+//
+//! \brief Zeroizes PKA RAM.
+//!
+//! This function uses the zeroization function in PRCM to clear the PKA RAM.
+//
+//*****************************************************************************
+extern void PKAClearPkaRam(void);
 
 //*****************************************************************************
 //
@@ -1323,6 +1333,10 @@ extern uint32_t PKAEccVerifyPublicKeyWeierstrassStart(const uint8_t *curvePointX
 //*****************************************************************************
 #if !defined(DRIVERLIB_NOROM) && !defined(DOXYGEN)
     #include "../driverlib/rom.h"
+    #ifdef ROM_PKAClearPkaRam
+        #undef  PKAClearPkaRam
+        #define PKAClearPkaRam                  ROM_PKAClearPkaRam
+    #endif
     #ifdef ROM_PKAGetOpsStatus
         #undef  PKAGetOpsStatus
         #define PKAGetOpsStatus                 ROM_PKAGetOpsStatus

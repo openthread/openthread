@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       prcm.c
-*  Revised:        2017-07-19 10:58:53 +0200 (Wed, 19 Jul 2017)
-*  Revision:       49363
+*  Revised:        2018-10-18 17:33:32 +0200 (Thu, 18 Oct 2018)
+*  Revision:       52954
 *
 *  Description:    Driver for the PRCM.
 *
@@ -53,6 +53,10 @@
     #define PRCMAudioClockConfigSet         NOROM_PRCMAudioClockConfigSet
     #undef  PRCMAudioClockConfigSetOverride
     #define PRCMAudioClockConfigSetOverride NOROM_PRCMAudioClockConfigSetOverride
+    #undef  PRCMAudioClockInternalSource
+    #define PRCMAudioClockInternalSource    NOROM_PRCMAudioClockInternalSource
+    #undef  PRCMAudioClockExternalSource
+    #define PRCMAudioClockExternalSource    NOROM_PRCMAudioClockExternalSource
     #undef  PRCMPowerDomainOn
     #define PRCMPowerDomainOn               NOROM_PRCMPowerDomainOn
     #undef  PRCMPowerDomainOff
@@ -348,6 +352,64 @@ PRCMAudioClockConfigSetOverride(uint32_t ui32ClkConfig, uint32_t ui32MstDiv,
     ui32Reg = HWREG(PRCM_BASE + PRCM_O_I2SCLKCTL) & ~(PRCM_I2SCLKCTL_WCLK_PHASE_M |
               PRCM_I2SCLKCTL_SMPL_ON_POSEDGE_M);
     HWREG(PRCM_BASE + PRCM_O_I2SCLKCTL) = ui32Reg | ui32ClkConfig;
+}
+
+//*****************************************************************************
+//
+// Configure the audio clocks for I2S module
+//
+//*****************************************************************************
+void
+PRCMAudioClockConfigOverride(uint8_t  ui8SamplingEdge,
+                             uint8_t  ui8WCLKPhase,
+                             uint32_t ui32MstDiv,
+                             uint32_t ui32BitDiv,
+                             uint32_t ui32WordDiv)
+{
+    // Check the arguments.
+    ASSERT(    ui8BitsPerSample == PRCM_WCLK_SINGLE_PHASE
+            || ui8BitsPerSample == PRCM_WCLK_DUAL_PHASE
+            || ui8BitsPerSample == PRCM_WCLK_USER_DEF);
+
+    // Make sure the audio clock generation is disabled before reconfiguring.
+    PRCMAudioClockDisable();
+
+    // Make sure to compensate the Frame clock division factor if using single
+    // phase format.
+    if((ui8WCLKPhase) == PRCM_WCLK_SINGLE_PHASE)
+    {
+        ui32WordDiv -= 1;
+    }
+
+    // Write the clock division factors.
+    HWREG(PRCM_BASE + PRCM_O_I2SMCLKDIV) = ui32MstDiv;
+    HWREG(PRCM_BASE + PRCM_O_I2SBCLKDIV) = ui32BitDiv;
+    HWREG(PRCM_BASE + PRCM_O_I2SWCLKDIV) = ui32WordDiv;
+
+    // Configure the Word clock format and polarity and enable it.
+    HWREG(PRCM_BASE + PRCM_O_I2SCLKCTL) =  (ui8SamplingEdge  << PRCM_I2SCLKCTL_SMPL_ON_POSEDGE_S) |
+                                           (ui8WCLKPhase     << PRCM_I2SCLKCTL_WCLK_PHASE_S     ) |
+                                           (1                << PRCM_I2SCLKCTL_EN_S             );
+}
+
+//*****************************************************************************
+//
+// Configure the clocks as "internally generated".
+//
+//*****************************************************************************
+void PRCMAudioClockInternalSource(void)
+{
+    HWREGBITW(PRCM_BASE + PRCM_O_I2SBCLKSEL, PRCM_I2SBCLKSEL_SRC_BITN)     = 1;
+}
+
+//*****************************************************************************
+//
+// Configure the clocks as "externally generated".
+//
+//*****************************************************************************
+void PRCMAudioClockExternalSource(void)
+{
+    HWREGBITW(PRCM_BASE + PRCM_O_I2SBCLKSEL, PRCM_I2SBCLKSEL_SRC_BITN)     = 0;
 }
 
 //*****************************************************************************

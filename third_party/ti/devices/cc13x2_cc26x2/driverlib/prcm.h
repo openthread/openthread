@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       prcm.h
-*  Revised:        2017-12-11 16:44:38 +0100 (Mon, 11 Dec 2017)
-*  Revision:       50602
+*  Revised:        2018-10-23 10:19:14 +0200 (Tue, 23 Oct 2018)
+*  Revision:       52979
 *
 *  Description:    Defines and prototypes for the PRCM
 *
@@ -71,6 +71,7 @@ extern "C"
 #include "debug.h"
 #include "cpu.h"
 
+
 //*****************************************************************************
 //
 // Support for DriverLib in ROM:
@@ -89,6 +90,8 @@ extern "C"
     #define PRCMInfClockConfigureGet        NOROM_PRCMInfClockConfigureGet
     #define PRCMAudioClockConfigSet         NOROM_PRCMAudioClockConfigSet
     #define PRCMAudioClockConfigSetOverride NOROM_PRCMAudioClockConfigSetOverride
+    #define PRCMAudioClockInternalSource    NOROM_PRCMAudioClockInternalSource
+    #define PRCMAudioClockExternalSource    NOROM_PRCMAudioClockExternalSource
     #define PRCMPowerDomainOn               NOROM_PRCMPowerDomainOn
     #define PRCMPowerDomainOff              NOROM_PRCMPowerDomainOff
     #define PRCMPeripheralRunEnable         NOROM_PRCMPeripheralRunEnable
@@ -169,6 +172,11 @@ extern "C"
 #define PRCM_WCLK_SINGLE_PHASE  0x00000000
 #define PRCM_WCLK_DUAL_PHASE    0x00000002
 #define PRCM_WCLK_USER_DEF      0x00000004
+#define PRCM_I2S_WCLK_NEG_EDGE           0
+#define PRCM_I2S_WCLK_POS_EDGE           1
+#define PRCM_I2S_WCLK_SINGLE_PHASE       0
+#define PRCM_I2S_WCLK_DUAL_PHASE         1
+#define PRCM_I2S_WCLK_USER_DEF           2
 
 #define I2S_SAMPLE_RATE_16K     0x00000001
 #define I2S_SAMPLE_RATE_24K     0x00000002
@@ -428,6 +436,8 @@ PRCMAudioClockDisable(void)
 //
 //! \brief Configure the audio clock generation.
 //!
+//! \deprecated This function will be removed in a future release.
+//!
 //! Use this function to set the sample rate when using internal audio clock
 //! generation for the I2S module.
 //!
@@ -455,12 +465,16 @@ PRCMAudioClockDisable(void)
 //! \sa \ref PRCMAudioClockConfigSetOverride()
 //
 //*****************************************************************************
+#ifndef DEPRECATED
 extern void PRCMAudioClockConfigSet(uint32_t ui32ClkConfig,
                                     uint32_t ui32SampleRate);
+#endif
 
 //*****************************************************************************
 //
 //! \brief Configure the audio clock generation with manual setting of clock divider.
+//!
+//! \deprecated This function will be removed in a future release.
 //!
 //! Use this function to set the audio clock divider values manually.
 //!
@@ -483,8 +497,64 @@ extern void PRCMAudioClockConfigSet(uint32_t ui32ClkConfig,
 //! \sa \ref PRCMAudioClockConfigSet()
 //
 //*****************************************************************************
+#ifndef DEPRECATED
 extern void PRCMAudioClockConfigSetOverride(uint32_t ui32ClkConfig, uint32_t ui32MstDiv,
                         uint32_t ui32BitDiv, uint32_t ui32WordDiv);
+#endif
+
+//*****************************************************************************
+//
+//! \brief Configure the audio clocks for I2S module.
+//!
+//! \note See hardware documentation before setting audio clock dividers.
+//!       This is user's responsability to provide valid clock dividers.
+//!
+//! \param ui8SamplingEdge Define the clock polarity:
+//!        - \ref PRCM_I2S_WCLK_NEG_EDGE
+//!        - \ref PRCM_I2S_WCLK_POS_EDGE
+//! \param ui8WCLKPhase Define I2S phase used
+//!        - PRCM_I2S_WCLK_SINGLE_PHASE
+//!        - PRCM_I2S_WCLK_DUAL_PHASE
+//!        - PRCM_I2S_WCLK_USER_DEF
+//! \param ui32MstDiv is the desired master clock divider.
+//! \param ui32BitDiv is the desired bit clock divider.
+//! \param ui32WordDiv is the desired word clock divider.
+//!
+//! \return None
+//!
+//*****************************************************************************
+extern void PRCMAudioClockConfigOverride
+                           (uint8_t  ui8SamplingEdge,
+                            uint8_t  ui8WCLKPhase,
+                            uint32_t ui32MstDiv,
+                            uint32_t ui32BitDiv,
+                            uint32_t ui32WordDiv);
+
+//*****************************************************************************
+//
+//! \brief Configure the audio clocks to be internally generated.
+//!
+//! Use this function to set the audio clocks as internal.
+//!
+//! \return None
+//!
+//! \sa \ref PRCMAudioClockExternalSource()
+//
+//*****************************************************************************
+extern void PRCMAudioClockInternalSource(void);
+
+//*****************************************************************************
+//
+//! \brief Configure the audio clocks to be externally generated.
+//!
+//! Use this function to set the audio clocks as external.
+//!
+//! \return None
+//!
+//! \sa \ref PRCMAudioClockInternalSource()
+//
+//*****************************************************************************
+extern void PRCMAudioClockExternalSource(void);
 
 //*****************************************************************************
 //
@@ -1093,6 +1163,14 @@ PRCMCacheRetentionDisable( void )
     #ifdef ROM_PRCMAudioClockConfigSetOverride
         #undef  PRCMAudioClockConfigSetOverride
         #define PRCMAudioClockConfigSetOverride ROM_PRCMAudioClockConfigSetOverride
+    #endif
+    #ifdef ROM_PRCMAudioClockInternalSource
+        #undef  PRCMAudioClockInternalSource
+        #define PRCMAudioClockInternalSource    ROM_PRCMAudioClockInternalSource
+    #endif
+    #ifdef ROM_PRCMAudioClockExternalSource
+        #undef  PRCMAudioClockExternalSource
+        #define PRCMAudioClockExternalSource    ROM_PRCMAudioClockExternalSource
     #endif
     #ifdef ROM_PRCMPowerDomainOn
         #undef  PRCMPowerDomainOn

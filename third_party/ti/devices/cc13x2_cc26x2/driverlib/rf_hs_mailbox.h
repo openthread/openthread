@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_hs_mailbox.h
-*  Revised:        2017-11-03 15:06:37 +0100 (Fri, 03 Nov 2017)
-*  Revision:       18032
+*  Revised:        2018-01-15 15:58:36 +0100 (Mon, 15 Jan 2018)
+*  Revision:       18171
 *
 *  Description:     Definitions for high-speed mode radio interface
 *

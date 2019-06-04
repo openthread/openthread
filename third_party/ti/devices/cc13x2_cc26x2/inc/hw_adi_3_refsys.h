@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_adi_3_refsys_h
-*  Revised:        2017-02-18 14:22:30 +0100 (Sat, 18 Feb 2017)
-*  Revision:       48483
+*  Revised:        2018-09-27 10:33:21 +0200 (Thu, 27 Sep 2018)
+*  Revision:       52772
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -67,7 +67,7 @@
 // DCDC Control 2
 #define ADI_3_REFSYS_O_DCDCCTL2                                     0x00000008
 
-// DCDC Control 3
+// Internal
 #define ADI_3_REFSYS_O_DCDCCTL3                                     0x00000009
 
 // Internal
@@ -451,6 +451,22 @@
 // Register: ADI_3_REFSYS_O_DCDCCTL3
 //
 //*****************************************************************************
+// Field:   [1:0] VDDR_BOOST_COMP
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// BOOST_P1                 Internal. Only to be used through TI provided API.
+// BOOST                    Internal. Only to be used through TI provided API.
+// BOOST_N1                 Internal. Only to be used through TI provided API.
+// DEFAULT                  Internal. Only to be used through TI provided API.
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_W                              2
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_M                     0x00000003
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_S                              0
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_BOOST_P1              0x00000003
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_BOOST                 0x00000002
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_BOOST_N1              0x00000001
+#define ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_DEFAULT               0x00000000
+
 //*****************************************************************************
 //
 // Register: ADI_3_REFSYS_O_DCDCCTL4

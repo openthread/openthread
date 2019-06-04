@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_mailbox.h
-*  Revised:        2018-05-07 15:02:01 +0200 (Mon, 07 May 2018)
-*  Revision:       18438
+*  Revised:        2018-11-02 11:52:02 +0100 (Fri, 02 Nov 2018)
+*  Revision:       18756
 *
 *  Description:    Definitions for interface between system and radio CPU
 *
@@ -83,6 +83,8 @@ typedef struct {
 #define IRQN_TX_RETRANS             9           ///< Packet retransmitted
 #define IRQN_TX_ENTRY_DONE          10          ///< Tx queue data entry state changed to Finished
 #define IRQN_TX_BUFFER_CHANGED      11          ///< A buffer change is complete
+#define IRQN_COMMAND_STARTED        12          ///< A radio operation command has gone into active state
+#define IRQN_FG_COMMAND_STARTED     13          ///< FG level radio operation command has gone into active state
 #define IRQN_PA_CHANGED             14          ///< PA is changed
 #define IRQN_RX_OK                  16          ///< Packet received with CRC OK, payload, and not to be ignored
 #define IRQN_RX_NOK                 17          ///< Packet received with CRC error
@@ -117,6 +119,8 @@ typedef struct {
 #define IRQ_TX_ENTRY_DONE           (1U << IRQN_TX_ENTRY_DONE)
 #define IRQ_TX_BUFFER_CHANGED       (1U << IRQN_TX_BUFFER_CHANGED)
 
+#define IRQ_COMMAND_STARTED         (1U << IRQN_COMMAND_STARTED)
+#define IRQ_FG_COMMAND_STARTED      (1U << IRQN_FG_COMMAND_STARTED)
 #define IRQ_PA_CHANGED              (1U << IRQN_PA_CHANGED)
 
 #define IRQ_RX_OK                   (1U << IRQN_RX_OK)
@@ -301,13 +305,19 @@ typedef struct {
 (((_POSITION_##cmd##_##field) + ((offset) << 1)) << 4) | ((uint32_t)(val) << 16))
 /// 8-bit SW register as defined in radio_par_def.txt
 #define SW_REG_BYTE_OVERRIDE(cmd, field, val) (0x8003 | ((_POSITION_##cmd##_##field) << 4) | \
-((uint32_t)(val) << 16))
+(((uint32_t)(val) & 0xFF) << 16))
 /// Two 8-bit SW registers as defined in radio_par_def.txt; the one given by field and the next byte.
 #define SW_REG_2BYTE_OVERRIDE(cmd, field, val0, val1) (3 | (((_POSITION_##cmd##_##field) & 0xFFFE) << 4) | \
                                                        (((uint32_t)(val0) << 16) & 0x00FF0000) | ((uint32_t)(val1) << 24))
+#define SW_REG_MASK_OVERRIDE(cmd, field, offset, mask, val) (0x8003 | \
+((_POSITION_##cmd##_##field + (offset)) << 4) | (((uint32_t)(val) & 0xFF) << 16) | (((uint32_t)(mask) & 0xFF) << 24))
+
 #define HW16_ARRAY_OVERRIDE(addr, length) (1 | (((uintptr_t) (addr)) & 0xFFFC) | ((uint32_t)(length) << 16))
 #define HW32_ARRAY_OVERRIDE(addr, length) (1 | (((uintptr_t) (addr)) & 0xFFFC) | \
 ((uint32_t)(length) << 16) | (1U << 30))
+#define HW16_MASK_ARRAY_OVERRIDE(addr, length) (0x20000001 | (((uintptr_t) (addr)) & 0xFFFC) | ((uint32_t)(length) << 16))
+#define HW32_MASK_ARRAY_OVERRIDE(addr, length) (0x60000001 | (((uintptr_t) (addr)) & 0xFFFC) | ((uint32_t)(length) << 16))
+#define HW16_MASK_VAL(mask, val) ((mask) << 16 | (val))
 #define ADI_ARRAY_OVERRIDE(adiNo, addr, bHalfSize, length) (1 | ((((addr) & 0x3F) << 2)) | \
 ((!!(bHalfSize)) << 8) | ((!!(adiNo)) << 9) | ((uint32_t)(length) << 16) | (2U << 30))
 #define SW_ARRAY_OVERRIDE(cmd, firstfield, length) (1 | (((_POSITION_##cmd##_##firstfield)) << 2) | \
@@ -317,10 +327,15 @@ typedef struct {
     ((mceCfg & 1) << 6) | (((mceRomBank) & 0x0F) << 7) | \
     ((rfeCfg & 1) << 11) | (((rfeRomBank) & 0x0F) << 12) | \
     (((mceMode) & 0x00FF) << 16) | (((rfeMode) & 0x00FF) << 24))
-#define CENTER_FREQ_OVERRIDE(centerFreq, flags) (0x001B | ((flags & 0x07) << 9) | \
-   ((((((12 * 24) << 20) / ((uint32_t) centerFreq)) + 1) / 2) << 12))
+#define HPOSC_OVERRIDE(freqOffset) (0x000B | ((freqOffset) << 16))
 #define TX20_POWER_OVERRIDE(tx20Power) (0x002B | (((uint32_t) tx20Power) << 10))
 #define TX_STD_POWER_OVERRIDE(txPower) (0x022B | (((uint32_t) txPower) << 10))
+#define MCE_RFE_SPLIT_OVERRIDE(mceRxCfg, mceTxCfg, rfeRxCfg, rfeTxCfg) \
+    (0x003B | ((mceRxCfg) << 12) | ((mceTxCfg) << 17) | ((rfeRxCfg) << 22) | ((rfeTxCfg) << 27))
+#define CENTER_FREQ_OVERRIDE(centerFreq, flags) (0x004B | ((flags & 0x03) << 18) | \
+   ((centerFreq) << 20))
+#define MOD_TYPE_OVERRIDE(modType, deviation, stepSz, flags) (0x005B | ((flags & 0x01) << 15) | \
+   ((modType) << 16) | ((deviation) << 19) |((stepSz) << 30) )
 #define NEW_OVERRIDE_SEGMENT(address) (((((uintptr_t)(address)) & 0x03FFFFFC) << 6) | 0x000F | \
    (((((uintptr_t)(address) >> 24) == 0x20) ? 0x01 : \
      (((uintptr_t)(address) >> 24) == 0x21) ? 0x02 : \

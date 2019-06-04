@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       setup.c
-*  Revised:        2018-04-05 13:46:03 +0200 (Thu, 05 Apr 2018)
-*  Revision:       51853
+*  Revised:        2018-11-06 15:08:57 +0100 (Tue, 06 Nov 2018)
+*  Revision:       53239
 *
 *  Description:    Setup file for CC13xx/CC26xx devices.
 *
@@ -53,6 +53,7 @@
 #include "../inc/hw_aon_pmctl.h"
 #include "../inc/hw_aon_rtc.h"
 #include "../inc/hw_ddi_0_osc.h"
+#include "../inc/hw_ddi.h"
 #include "../inc/hw_ccfg.h"
 #include "../inc/hw_fcfg1.h"
 #include "../inc/hw_flash.h"
@@ -121,9 +122,9 @@ SetupTrimDevice(void)
         ui32Fcfg1Revision = 0;
     }
 
-    // This driverlib version and setup file is for the CC13x2, CC26x2 chips.
+    // This driverlib version and setup file is for the CC13x2, CC26x2 PG2.0 or later chips.
     // Halt if violated
-    ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated();
+    ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated();
 
     // Enable standby in flash bank
     HWREGBITW( FLASH_BASE + FLASH_O_CFG, FLASH_CFG_DIS_STANDBY_BITN ) = 0;
@@ -227,58 +228,6 @@ TrimAfterColdResetWakeupFromShutDownWakeupFromPowerDown( void )
     // Currently no specific trim for Powerdown
 }
 
-// Special shadow register trim propagation on first batch of devices
-
-static void
-Step_RCOSCHF_CTRIM( uint32_t toCode )
-{
-    uint32_t currentRcoscHfCtlReg ;
-    uint32_t currentTrim          ;
-
-    currentRcoscHfCtlReg = HWREGH( AUX_DDI0_OSC_BASE + DDI_0_OSC_O_RCOSCHFCTL );
-    currentTrim = ((( currentRcoscHfCtlReg & DDI_0_OSC_RCOSCHFCTL_RCOSCHF_CTRIM_M ) >>
-                                             DDI_0_OSC_RCOSCHFCTL_RCOSCHF_CTRIM_S ) ^ 0xC0 );
-
-    while ( toCode != currentTrim ) {
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );   // Wait for next edge on SCLK_LF (positive or negative)
-
-        if ( toCode > currentTrim ) currentTrim++;
-        else                        currentTrim--;
-
-        HWREGH( AUX_DDI0_OSC_BASE + DDI_0_OSC_O_RCOSCHFCTL ) =
-            ( currentRcoscHfCtlReg  & ~DDI_0_OSC_RCOSCHFCTL_RCOSCHF_CTRIM_M ) |
-            (( currentTrim ^ 0xC0 ) << DDI_0_OSC_RCOSCHFCTL_RCOSCHF_CTRIM_S );
-    }
-}
-
-static void
-Step_VBG( int32_t targetSigned )
-{
-    // VBG (ANA_TRIM[5:0]=TRIMTEMP --> ADI_3_REFSYS:REFSYSCTL3.TRIM_VBG)
-    uint32_t refSysCtl3Reg ;
-    int32_t  currentSigned ;
-
-    do {
-        refSysCtl3Reg = HWREGB( ADI3_BASE + ADI_3_REFSYS_O_REFSYSCTL3 );
-        currentSigned =
-            (((int32_t)( refSysCtl3Reg << ( 32 - ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_W - ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_S )))
-                                       >> ( 32 - ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_W ));
-
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );   // Wait for next edge on SCLK_LF (positive or negative)
-
-        if ( targetSigned != currentSigned ) {
-            if ( targetSigned > currentSigned ) currentSigned++;
-            else                                currentSigned--;
-
-            HWREGB( ADI3_BASE + ADI_3_REFSYS_O_REFSYSCTL3 ) =
-                ( refSysCtl3Reg & ~( ADI_3_REFSYS_REFSYSCTL3_BOD_BG_TRIM_EN | ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_M )) |
-                ((((uint32_t)currentSigned) << ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_S ) & ADI_3_REFSYS_REFSYSCTL3_TRIM_VBG_M );
-
-            HWREGB( ADI3_BASE + ADI_3_REFSYS_O_REFSYSCTL3 ) |= ADI_3_REFSYS_REFSYSCTL3_BOD_BG_TRIM_EN;  // Bit set by doing a read modify write
-        }
-    } while ( targetSigned != currentSigned );
-}
-
 //*****************************************************************************
 //
 //! \brief Trims to be applied when coming from SHUTDOWN (also called when
@@ -304,7 +253,16 @@ TrimAfterColdResetWakeupFromShutDown(uint32_t ui32Fcfg1Revision)
 
     }
 
-    // TBD-Agama - Temporarily removed for Agama
+    // TBD - Temporarily removed for CC13x2 / CC26x2
+
+        // Force DCDC to use RCOSC before starting up XOSC.
+        // Clock loss detector does not use XOSC until SCLK_HF actually switches
+        // and thus DCDC is not protected from clock loss on XOSC in that time frame.
+        // The force must be released when the switch to XOSC has happened. This is done
+        // in OSCHfSourceSwitch().
+        HWREG(AUX_DDI0_OSC_BASE + DDI_O_MASK16B + (DDI_0_OSC_O_CTL0 << 1) + 4) = DDI_0_OSC_CTL0_CLK_DCDC_SRC_SEL_M | (DDI_0_OSC_CTL0_CLK_DCDC_SRC_SEL_M >> 16);
+        // Dummy read to ensure that the write has propagated
+        HWREGH(AUX_DDI0_OSC_BASE + DDI_0_OSC_O_CTL0);
 
     // read the MODE_CONF register in CCFG
     ccfg_ModeConfReg = HWREG( CCFG_BASE + CCFG_O_MODE_CONF );
@@ -314,6 +272,14 @@ TrimAfterColdResetWakeupFromShutDown(uint32_t ui32Fcfg1Revision)
     // -Configure DCDC.
     SetupAfterColdResetWakeupFromShutDownCfg1( ccfg_ModeConfReg );
 
+    // Addition to the CC1352 boost mode for HWREV >= 2.0
+    // The combination VDDR_EXT_LOAD=0 and VDDS_BOD_LEVEL=1 is defined to select boost mode
+    if ((( ccfg_ModeConfReg & CCFG_MODE_CONF_VDDR_EXT_LOAD  ) == 0 ) &&
+        (( ccfg_ModeConfReg & CCFG_MODE_CONF_VDDS_BOD_LEVEL ) != 0 )    )
+    {
+        HWREGB( ADI3_BASE + ADI_3_REFSYS_O_DCDCCTL3 ) = ADI_3_REFSYS_DCDCCTL3_VDDR_BOOST_COMP_BOOST ;
+    }
+
     // Second part of trim done after cold reset and wakeup from shutdown:
     // -Configure XOSC.
 #if ( CCFG_BASE == CCFG_BASE_DEFAULT )
@@ -321,106 +287,6 @@ TrimAfterColdResetWakeupFromShutDown(uint32_t ui32Fcfg1Revision)
 #else
     NOROM_SetupAfterColdResetWakeupFromShutDownCfg2( ui32Fcfg1Revision, ccfg_ModeConfReg );
 #endif
-
-    // Special shadow register trim propagation on first batch of devices
-    {
-        uint32_t ui32EfuseData ;
-        uint32_t orgResetCtl   ;
-
-        // Get VTRIM_COARSE and VTRIM_DIG from EFUSE shadow register OSC_BIAS_LDO_TRIM
-        ui32EfuseData = HWREG( FCFG1_BASE + FCFG1_O_SHDW_OSC_BIAS_LDO_TRIM );
-
-        Step_RCOSCHF_CTRIM(( ui32EfuseData &
-            FCFG1_SHDW_OSC_BIAS_LDO_TRIM_RCOSCHF_CTRIM_M ) >>
-            FCFG1_SHDW_OSC_BIAS_LDO_TRIM_RCOSCHF_CTRIM_S ) ;
-
-        // Write to register SOCLDO_0_1 (addr offset 3) bits[7:4] (VTRIM_COARSE) and
-        // bits[3:0] (VTRIM_DIG) in ADI_2_REFSYS. Direct write can be used since
-        // all register bit fields are trimmed.
-        HWREGB(ADI2_BASE + ADI_O_DIR + ADI_2_REFSYS_O_SOCLDOCTL1) =
-            ((((ui32EfuseData & FCFG1_SHDW_OSC_BIAS_LDO_TRIM_VTRIM_COARSE_M) >>
-               FCFG1_SHDW_OSC_BIAS_LDO_TRIM_VTRIM_COARSE_S) <<
-              ADI_2_REFSYS_SOCLDOCTL1_VTRIM_COARSE_S) |
-
-             (((ui32EfuseData & FCFG1_SHDW_OSC_BIAS_LDO_TRIM_VTRIM_DIG_M) >>
-               FCFG1_SHDW_OSC_BIAS_LDO_TRIM_VTRIM_DIG_S) <<
-              ADI_2_REFSYS_SOCLDOCTL1_VTRIM_DIG_S));
-
-        // Write to register CTLSOCREFSYS0 (addr offset 0) bits[4:0] (TRIMIREF) in
-        // ADI_2_REFSYS. Avoid using masked write access since bit field spans
-        // nibble boundary. Direct write can be used since this is the only defined
-        // bit field in this register.
-        HWREGB(ADI2_BASE + ADI_O_DIR + ADI_2_REFSYS_O_REFSYSCTL0) =
-            (((ui32EfuseData & FCFG1_SHDW_OSC_BIAS_LDO_TRIM_TRIMIREF_M) >>
-              FCFG1_SHDW_OSC_BIAS_LDO_TRIM_TRIMIREF_S) <<
-             ADI_2_REFSYS_REFSYSCTL0_TRIM_IREF_S);
-
-        // Write to register CTLSOCREFSYS2 (addr offset 4) bits[7:4] (TRIMMAG) in
-        // ADI_3_REFSYS
-        HWREGH(ADI3_BASE + ADI_O_MASK8B + (ADI_3_REFSYS_O_REFSYSCTL2 << 1)) =
-            (ADI_3_REFSYS_REFSYSCTL2_TRIM_VREF_M << 8) |
-            (((ui32EfuseData & FCFG1_SHDW_OSC_BIAS_LDO_TRIM_TRIMMAG_M) >>
-              FCFG1_SHDW_OSC_BIAS_LDO_TRIM_TRIMMAG_S) <<
-             ADI_3_REFSYS_REFSYSCTL2_TRIM_VREF_S);
-
-        // Get TRIMBOD_EXTMODE or TRIMBOD_INTMODE from EFUSE shadow register in FCFG1
-        ui32EfuseData = HWREG( FCFG1_BASE + FCFG1_O_SHDW_ANA_TRIM );
-
-        orgResetCtl = ( HWREG( AON_PMCTL_BASE + AON_PMCTL_O_RESETCTL ) & ~AON_PMCTL_RESETCTL_MCU_WARM_RESET_M );
-        HWREG( AON_PMCTL_BASE + AON_PMCTL_O_RESETCTL ) =
-            ( orgResetCtl & ~( AON_PMCTL_RESETCTL_CLK_LOSS_EN  |
-                               AON_PMCTL_RESETCTL_VDD_LOSS_EN  |
-                               AON_PMCTL_RESETCTL_VDDR_LOSS_EN |
-                               AON_PMCTL_RESETCTL_VDDS_LOSS_EN   ));
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNC ); // Wait for xxx_LOSS_EN setting to propagate
-
-        // The VDDS_BOD trim and the VDDR trim is already stepped up to max/HH if "CC1352 boost mode" is requested.
-        // See function SetupAfterColdResetWakeupFromShutDownCfg1() in setup_rom.c for details.
-        if ((( ccfg_ModeConfReg & CCFG_MODE_CONF_VDDR_EXT_LOAD  ) != 0 ) ||
-            (( ccfg_ModeConfReg & CCFG_MODE_CONF_VDDS_BOD_LEVEL ) == 0 )    )
-        {
-            if(HWREG(AON_PMCTL_BASE + AON_PMCTL_O_PWRCTL) &
-                    AON_PMCTL_PWRCTL_EXT_REG_MODE)
-            {
-                // Apply VDDS BOD trim value
-                // Write to register CTLSOCREFSYS1 (addr offset 3) bit[7:3] (TRIMBOD)
-                // in ADI_3_REFSYS
-                HWREGH(ADI3_BASE + ADI_O_MASK8B + (ADI_3_REFSYS_O_REFSYSCTL1 << 1)) =
-                    (ADI_3_REFSYS_REFSYSCTL1_TRIM_VDDS_BOD_M << 8) |
-                    (((ui32EfuseData & FCFG1_SHDW_ANA_TRIM_TRIMBOD_EXTMODE_M) >>
-                      FCFG1_SHDW_ANA_TRIM_TRIMBOD_EXTMODE_S) <<
-                     ADI_3_REFSYS_REFSYSCTL1_TRIM_VDDS_BOD_S);
-            }
-            else
-            {
-                // Apply VDDS BOD trim value
-                // Write to register CTLSOCREFSYS1 (addr offset 3) bit[7:3] (TRIMBOD)
-                // in ADI_3_REFSYS
-                HWREGH(ADI3_BASE + ADI_O_MASK8B + (ADI_3_REFSYS_O_REFSYSCTL1 << 1)) =
-                    (ADI_3_REFSYS_REFSYSCTL1_TRIM_VDDS_BOD_M << 8) |
-                    (((ui32EfuseData & FCFG1_SHDW_ANA_TRIM_TRIMBOD_INTMODE_M) >>
-                      FCFG1_SHDW_ANA_TRIM_TRIMBOD_INTMODE_S) <<
-                     ADI_3_REFSYS_REFSYSCTL1_TRIM_VDDS_BOD_S);
-            }
-            // Load the new VDDS_BOD setting
-            HWREGB( ADI3_BASE + ADI_3_REFSYS_O_REFSYSCTL3 ) &= ~ADI_3_REFSYS_REFSYSCTL3_BOD_BG_TRIM_EN; // Bit clear by doing a read modify write
-            HWREGB( ADI3_BASE + ADI_3_REFSYS_O_REFSYSCTL3 ) |= ADI_3_REFSYS_REFSYSCTL3_BOD_BG_TRIM_EN;  // Bit set by doing a read modify write
-
-            SetupStepVddrTrimTo(( ui32EfuseData &
-                FCFG1_SHDW_ANA_TRIM_VDDR_TRIM_M ) >>
-                FCFG1_SHDW_ANA_TRIM_VDDR_TRIM_S ) ;
-        }
-
-        // VBG (ANA_TRIM[5:0]=TRIMTEMP --> ADI_3_REFSYS:REFSYSCTL3.TRIM_VBG)
-        Step_VBG(((int32_t)( ui32EfuseData << ( 32 - FCFG1_SHDW_ANA_TRIM_TRIMTEMP_W - FCFG1_SHDW_ANA_TRIM_TRIMTEMP_S )))
-                                           >> ( 32 - FCFG1_SHDW_ANA_TRIM_TRIMTEMP_W ));
-
-        // Wait two more LF edges before restoring xxx_LOSS_EN settings
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );  // Wait for next edge on SCLK_LF (positive or negative)
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );  // Wait for next edge on SCLK_LF (positive or negative)
-        HWREG( AON_PMCTL_BASE + AON_PMCTL_O_RESETCTL ) = orgResetCtl;
-        HWREG( AON_RTC_BASE + AON_RTC_O_SYNC );    // Wait for xxx_LOSS_EN setting to propagate
-    }
 
     {
         uint32_t  trimReg        ;
@@ -432,11 +298,19 @@ TrimAfterColdResetWakeupFromShutDown(uint32_t ui32Fcfg1Revision)
                                      FCFG1_DAC_BIAS_CNF_LPM_TRIM_IOUT_S ) ;
         HWREGB( AUX_ADI4_BASE + ADI_4_AUX_O_LPMBIAS ) = (( ui32TrimValue << ADI_4_AUX_LPMBIAS_LPM_TRIM_IOUT_S ) &
                                                                             ADI_4_AUX_LPMBIAS_LPM_TRIM_IOUT_M ) ;
-        //--- Set fixed LPM_BIAS values --- LPM_BIAS_BACKUP_EN = 1 and LPM_BIAS_WIDTH_TRIM = 3
-        HWREGB( ADI3_BASE + ADI_O_SET + ADI_3_REFSYS_O_AUX_DEBUG ) = ADI_3_REFSYS_AUX_DEBUG_LPM_BIAS_BACKUP_EN;
-        HWREGH( AUX_ADI4_BASE + ADI_O_MASK8B + ( ADI_4_AUX_O_COMP * 2 )) =     // Set LPM_BIAS_WIDTH_TRIM = 3
-            (( ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_M << 8 ) |                   // Set mask (bits to be written) in [15:8]
-             ( 3 << ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_S )   );                // Set value (in correct bit pos) in [7:0]
+        // Set LPM_BIAS_BACKUP_EN according to FCFG1 configuration
+        if ( trimReg & FCFG1_DAC_BIAS_CNF_LPM_BIAS_BACKUP_EN ) {
+            HWREGB( ADI3_BASE + ADI_O_SET + ADI_3_REFSYS_O_AUX_DEBUG ) = ADI_3_REFSYS_AUX_DEBUG_LPM_BIAS_BACKUP_EN;
+        } else {
+            HWREGB( ADI3_BASE + ADI_O_CLR + ADI_3_REFSYS_O_AUX_DEBUG ) = ADI_3_REFSYS_AUX_DEBUG_LPM_BIAS_BACKUP_EN;
+        }
+        // Set LPM_BIAS_WIDTH_TRIM according to FCFG1 configuration
+        {
+            uint32_t widthTrim = (( trimReg & FCFG1_DAC_BIAS_CNF_LPM_BIAS_WIDTH_TRIM_M ) >> FCFG1_DAC_BIAS_CNF_LPM_BIAS_WIDTH_TRIM_S );
+            HWREGH( AUX_ADI4_BASE + ADI_O_MASK8B + ( ADI_4_AUX_O_COMP * 2 )) = // Set LPM_BIAS_WIDTH_TRIM = 3
+                (( ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_M << 8         ) |       // Set mask (bits to be written) in [15:8]
+                 ( widthTrim << ADI_4_AUX_COMP_LPM_BIAS_WIDTH_TRIM_S )   );    // Set value (in correct bit pos) in [7:0]
+        }
     }
 
     // Third part of trim done after cold reset and wakeup from shutdown:

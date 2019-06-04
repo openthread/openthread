@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       pka.c
-*  Revised:        2018-05-08 10:58:47 +0200 (Tue, 08 May 2018)
-*  Revision:       51975
+*  Revised:        2018-07-19 15:07:05 +0200 (Thu, 19 Jul 2018)
+*  Revision:       52294
 *
 *  Description:    Driver for the PKA module
 *
@@ -45,6 +45,8 @@
 //
 //*****************************************************************************
 #if !defined(DOXYGEN)
+    #undef  PKAClearPkaRam
+    #define PKAClearPkaRam                  NOROM_PKAClearPkaRam
     #undef  PKAGetOpsStatus
     #define PKAGetOpsStatus                 NOROM_PKAGetOpsStatus
     #undef  PKAArrayAllZeros
@@ -102,6 +104,8 @@
 //
 //*****************************************************************************
 #if !defined(DOXYGEN)
+    #undef  PKAClearPkaRam
+    #define PKAClearPkaRam                  NOROM_PKAClearPkaRam
     #undef  PKAGetOpsStatus
     #define PKAGetOpsStatus                 NOROM_PKAGetOpsStatus
     #undef  PKAArrayAllZeros
@@ -568,6 +572,29 @@ const PKA_EccParam256 Curve25519_order       = {.byte = {0xb9, 0xdc, 0xf5, 0x5c,
                                                          0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
                                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,}};
+
+
+//*****************************************************************************
+//
+// Zeroize PKA RAM. Not threadsafe.
+//
+//*****************************************************************************
+void PKAClearPkaRam(void){
+    // Get initial state
+    uint32_t secdmaclkgr = HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR);
+
+    // OR in zeroize bit
+    secdmaclkgr |= PRCM_SECDMACLKGR_PKA_ZERIOZE_RESET_N;
+
+    // Start zeroization
+    HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR) = secdmaclkgr;
+
+    // Wait 256 cycles for PKA RAM to be cleared
+    CPUdelay(256 / 4);
+
+    // Turn off zeroization
+    HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR) = secdmaclkgr & (~PRCM_SECDMACLKGR_PKA_ZERIOZE_RESET_N);
+}
 
 //*****************************************************************************
 //

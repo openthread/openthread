@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_common_cmd.h
-*  Revised:        2018-05-07 15:02:01 +0200 (Mon, 07 May 2018)
-*  Revision:       18438
+*  Revised:        2018-11-02 11:52:02 +0100 (Fri, 02 Nov 2018)
+*  Revision:       18756
 *
 *  Description:    CC13x2/CC26x2 API for common/generic commands
 *
@@ -103,9 +103,11 @@ typedef struct __RFC_STRUCT rfc_CMD_DISARM_RAT_CH_s rfc_CMD_DISARM_RAT_CH_t;
 typedef struct __RFC_STRUCT rfc_CMD_SET_TX_POWER_s rfc_CMD_SET_TX_POWER_t;
 typedef struct __RFC_STRUCT rfc_CMD_SET_TX20_POWER_s rfc_CMD_SET_TX20_POWER_t;
 typedef struct __RFC_STRUCT rfc_CMD_CHANGE_PA_s rfc_CMD_CHANGE_PA_t;
+typedef struct __RFC_STRUCT rfc_CMD_UPDATE_HPOSC_FREQ_s rfc_CMD_UPDATE_HPOSC_FREQ_t;
 typedef struct __RFC_STRUCT rfc_CMD_UPDATE_FS_s rfc_CMD_UPDATE_FS_t;
 typedef struct __RFC_STRUCT rfc_CMD_MODIFY_FS_s rfc_CMD_MODIFY_FS_t;
 typedef struct __RFC_STRUCT rfc_CMD_BUS_REQUEST_s rfc_CMD_BUS_REQUEST_t;
+typedef struct __RFC_STRUCT rfc_CMD_SET_CMD_START_IRQ_s rfc_CMD_SET_CMD_START_IRQ_t;
 
 //! \addtogroup command
 //! @{
@@ -256,7 +258,7 @@ struct __RFC_STRUCT rfc_CMD_FS_s {
       uint8_t bTxMode:1;                //!< \brief 0: Start synth in RX mode<br>
                                         //!<        1: Start synth in TX mode
       uint8_t refFreq:6;                //!< \brief 0: Use default reference frequency<br>
-                                        //!<        Others: Use reference frequency 24 MHz/<code>refFreq</code>
+                                        //!<        Others: Use reference frequency 48 MHz/<code>refFreq</code>
    } synthConf;
    uint8_t __dummy0;                    //!<        <i>Reserved</i>, always write 0
    uint8_t __dummy1;                    //!<        <i>Reserved</i>
@@ -1020,6 +1022,17 @@ struct __RFC_STRUCT rfc_CMD_CHANGE_PA_s {
 
 //! @}
 
+//! \addtogroup CMD_UPDATE_HPOSC_FREQ
+//! @{
+#define CMD_UPDATE_HPOSC_FREQ                                   0x0608
+//! Set New Frequency Offset for HPOSC
+struct __RFC_STRUCT rfc_CMD_UPDATE_HPOSC_FREQ_s {
+   uint16_t commandNo;                  //!<        The command ID number 0x0608
+   int16_t freqOffset;                  //!<        Relative frequency offset, signed, scaled by 2<sup>-22</sup>
+} __RFC_STRUCT_ATTR;
+
+//! @}
+
 //! \addtogroup CMD_UPDATE_FS
 //! @{
 #define CMD_UPDATE_FS                                           0x0011
@@ -1056,6 +1069,17 @@ struct __RFC_STRUCT rfc_CMD_BUS_REQUEST_s {
    uint16_t commandNo;                  //!<        The command ID number 0x040E
    uint8_t bSysBusNeeded;               //!< \brief 0: System bus may sleep<br>
                                         //!<        1: System bus access needed
+} __RFC_STRUCT_ATTR;
+
+//! @}
+
+//! \addtogroup CMD_SET_CMD_START_IRQ
+//! @{
+#define CMD_SET_CMD_START_IRQ                                   0x0411
+//! Enable or disable generation of IRQ when a radio operation command starts
+struct __RFC_STRUCT rfc_CMD_SET_CMD_START_IRQ_s {
+   uint16_t commandNo;                  //!<        The command ID number 0x0411
+   uint8_t bEna;                        //!<        1 to enable interrupt generation; 0 to disable it
 } __RFC_STRUCT_ATTR;
 
 //! @}

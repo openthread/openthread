@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       chipinfo.h
-*  Revised:        2018-05-01 11:59:00 +0200 (Tue, 01 May 2018)
-*  Revision:       51944
+*  Revised:        2018-06-18 10:26:12 +0200 (Mon, 18 Jun 2018)
+*  Revision:       52189
 *
 *  Description:    Collection of functions returning chip information.
 *
@@ -84,7 +84,7 @@ extern "C"
     #define ChipInfo_GetChipType            NOROM_ChipInfo_GetChipType
     #define ChipInfo_GetChipFamily          NOROM_ChipInfo_GetChipFamily
     #define ChipInfo_GetHwRevision          NOROM_ChipInfo_GetHwRevision
-    #define ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated NOROM_ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
+    #define ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated NOROM_ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
 #endif
 
 //*****************************************************************************
@@ -624,12 +624,12 @@ ChipInfo_HwRevisionIs_GTEQ_2_4( void )
 
 //*****************************************************************************
 //
-//! \brief Verifies that current chip is CC13x2 or CC26x2 and never returns if violated.
+//! \brief Verifies that current chip is CC13x2 or CC26x2 PG2.0 or later and never returns if violated.
 //!
 //! \return None
 //
 //*****************************************************************************
-extern void ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated( void );
+extern void ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated( void );
 
 //*****************************************************************************
 //
@@ -659,9 +659,9 @@ extern void ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated( void );
         #undef  ChipInfo_GetHwRevision
         #define ChipInfo_GetHwRevision          ROM_ChipInfo_GetHwRevision
     #endif
-    #ifdef ROM_ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
-        #undef  ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
-        #define ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated ROM_ThisLibraryIsFor_CC13x2_CC26x2_HaltIfViolated
+    #ifdef ROM_ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
+        #undef  ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
+        #define ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated ROM_ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
     #endif
 #endif
 

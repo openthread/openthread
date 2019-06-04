@@ -1,9 +1,9 @@
 /*
  @file      cc26x2r1f.lds
- @brief     CC26x2R1F linker configuration file for GNU compiler.
+ @brief     CC26x2R1F rev2 linker configuration file for GNU compiler.
 
- Revised    $Date: 2017-08-07 11:45:00 +0200 (ma, 07 aug 2017) $
- Revision   $Revision: 17871 $
+ Revised    $Date$
+ Revision   $Revision$
 
  This file is auto-generated.
 

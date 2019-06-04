@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_gpram_h
-*  Revised:        2017-05-06 20:38:09 +0200 (Sat, 06 May 2017)
-*  Revision:       48921
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_fcfg1_h
-*  Revised:        2018-04-16 11:16:52 +0200 (Mon, 16 Apr 2018)
-*  Revision:       51887
+*  Revised:        2018-11-06 14:08:24 +0100 (Tue, 06 Nov 2018)
+*  Revision:       53237
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -48,6 +48,21 @@
 
 // Internal
 #define FCFG1_O_MISC_CONF_2                                         0x000000A4
+
+// Internal
+#define FCFG1_O_HPOSC_MEAS_5                                        0x000000B0
+
+// Internal
+#define FCFG1_O_HPOSC_MEAS_4                                        0x000000B4
+
+// Internal
+#define FCFG1_O_HPOSC_MEAS_3                                        0x000000B8
+
+// Internal
+#define FCFG1_O_HPOSC_MEAS_2                                        0x000000BC
+
+// Internal
+#define FCFG1_O_HPOSC_MEAS_1                                        0x000000C0
 
 // Internal
 #define FCFG1_O_CONFIG_CC26_FE                                      0x000000C4
@@ -226,40 +241,16 @@
 // Internal
 #define FCFG1_O_MISC_OTP_DATA_1                                     0x00000398
 
-// Power Down Current Control 20C
-#define FCFG1_O_PWD_CURR_20C                                        0x0000039C
-
-// Power Down Current Control 35C
-#define FCFG1_O_PWD_CURR_35C                                        0x000003A0
-
-// Power Down Current Control 50C
-#define FCFG1_O_PWD_CURR_50C                                        0x000003A4
-
-// Power Down Current Control 65C
-#define FCFG1_O_PWD_CURR_65C                                        0x000003A8
-
-// Power Down Current Control 80C
-#define FCFG1_O_PWD_CURR_80C                                        0x000003AC
-
-// Power Down Current Control 95C
-#define FCFG1_O_PWD_CURR_95C                                        0x000003B0
-
-// Power Down Current Control 110C
-#define FCFG1_O_PWD_CURR_110C                                       0x000003B4
-
-// Power Down Current Control 125C
-#define FCFG1_O_PWD_CURR_125C                                       0x000003B8
-
-// Shadow of EFUSE:DIE_ID_0
+// Shadow of EFUSE:DIE_ID_0 register
 #define FCFG1_O_SHDW_DIE_ID_0                                       0x000003D0
 
-// Shadow of EFUSE:DIE_ID_1
+// Shadow of EFUSE:DIE_ID_1 register
 #define FCFG1_O_SHDW_DIE_ID_1                                       0x000003D4
 
-// Shadow of EFUSE:DIE_ID_2
+// Shadow of EFUSE:DIE_ID_2 register
 #define FCFG1_O_SHDW_DIE_ID_2                                       0x000003D8
 
-// Shadow of EFUSE:DIE_ID_3
+// Shadow of EFUSE:DIE_ID_3 register
 #define FCFG1_O_SHDW_DIE_ID_3                                       0x000003DC
 
 // Internal
@@ -315,6 +306,136 @@
 #define FCFG1_MISC_CONF_2_HPOSC_COMP_P3_W                                    8
 #define FCFG1_MISC_CONF_2_HPOSC_COMP_P3_M                           0x000000FF
 #define FCFG1_MISC_CONF_2_HPOSC_COMP_P3_S                                    0
+
+//*****************************************************************************
+//
+// Register: FCFG1_O_HPOSC_MEAS_5
+//
+//*****************************************************************************
+// Field: [31:16] HPOSC_D5
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_5_HPOSC_D5_W                                       16
+#define FCFG1_HPOSC_MEAS_5_HPOSC_D5_M                               0xFFFF0000
+#define FCFG1_HPOSC_MEAS_5_HPOSC_D5_S                                       16
+
+// Field:  [15:8] HPOSC_T5
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_5_HPOSC_T5_W                                        8
+#define FCFG1_HPOSC_MEAS_5_HPOSC_T5_M                               0x0000FF00
+#define FCFG1_HPOSC_MEAS_5_HPOSC_T5_S                                        8
+
+// Field:   [7:0] HPOSC_DT5
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_5_HPOSC_DT5_W                                       8
+#define FCFG1_HPOSC_MEAS_5_HPOSC_DT5_M                              0x000000FF
+#define FCFG1_HPOSC_MEAS_5_HPOSC_DT5_S                                       0
+
+//*****************************************************************************
+//
+// Register: FCFG1_O_HPOSC_MEAS_4
+//
+//*****************************************************************************
+// Field: [31:16] HPOSC_D4
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_4_HPOSC_D4_W                                       16
+#define FCFG1_HPOSC_MEAS_4_HPOSC_D4_M                               0xFFFF0000
+#define FCFG1_HPOSC_MEAS_4_HPOSC_D4_S                                       16
+
+// Field:  [15:8] HPOSC_T4
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_4_HPOSC_T4_W                                        8
+#define FCFG1_HPOSC_MEAS_4_HPOSC_T4_M                               0x0000FF00
+#define FCFG1_HPOSC_MEAS_4_HPOSC_T4_S                                        8
+
+// Field:   [7:0] HPOSC_DT4
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_4_HPOSC_DT4_W                                       8
+#define FCFG1_HPOSC_MEAS_4_HPOSC_DT4_M                              0x000000FF
+#define FCFG1_HPOSC_MEAS_4_HPOSC_DT4_S                                       0
+
+//*****************************************************************************
+//
+// Register: FCFG1_O_HPOSC_MEAS_3
+//
+//*****************************************************************************
+// Field: [31:16] HPOSC_D3
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_3_HPOSC_D3_W                                       16
+#define FCFG1_HPOSC_MEAS_3_HPOSC_D3_M                               0xFFFF0000
+#define FCFG1_HPOSC_MEAS_3_HPOSC_D3_S                                       16
+
+// Field:  [15:8] HPOSC_T3
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_3_HPOSC_T3_W                                        8
+#define FCFG1_HPOSC_MEAS_3_HPOSC_T3_M                               0x0000FF00
+#define FCFG1_HPOSC_MEAS_3_HPOSC_T3_S                                        8
+
+// Field:   [7:0] HPOSC_DT3
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_3_HPOSC_DT3_W                                       8
+#define FCFG1_HPOSC_MEAS_3_HPOSC_DT3_M                              0x000000FF
+#define FCFG1_HPOSC_MEAS_3_HPOSC_DT3_S                                       0
+
+//*****************************************************************************
+//
+// Register: FCFG1_O_HPOSC_MEAS_2
+//
+//*****************************************************************************
+// Field: [31:16] HPOSC_D2
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_2_HPOSC_D2_W                                       16
+#define FCFG1_HPOSC_MEAS_2_HPOSC_D2_M                               0xFFFF0000
+#define FCFG1_HPOSC_MEAS_2_HPOSC_D2_S                                       16
+
+// Field:  [15:8] HPOSC_T2
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_2_HPOSC_T2_W                                        8
+#define FCFG1_HPOSC_MEAS_2_HPOSC_T2_M                               0x0000FF00
+#define FCFG1_HPOSC_MEAS_2_HPOSC_T2_S                                        8
+
+// Field:   [7:0] HPOSC_DT2
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_2_HPOSC_DT2_W                                       8
+#define FCFG1_HPOSC_MEAS_2_HPOSC_DT2_M                              0x000000FF
+#define FCFG1_HPOSC_MEAS_2_HPOSC_DT2_S                                       0
+
+//*****************************************************************************
+//
+// Register: FCFG1_O_HPOSC_MEAS_1
+//
+//*****************************************************************************
+// Field: [31:16] HPOSC_D1
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_1_HPOSC_D1_W                                       16
+#define FCFG1_HPOSC_MEAS_1_HPOSC_D1_M                               0xFFFF0000
+#define FCFG1_HPOSC_MEAS_1_HPOSC_D1_S                                       16
+
+// Field:  [15:8] HPOSC_T1
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_1_HPOSC_T1_W                                        8
+#define FCFG1_HPOSC_MEAS_1_HPOSC_T1_M                               0x0000FF00
+#define FCFG1_HPOSC_MEAS_1_HPOSC_T1_S                                        8
+
+// Field:   [7:0] HPOSC_DT1
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_HPOSC_MEAS_1_HPOSC_DT1_W                                       8
+#define FCFG1_HPOSC_MEAS_1_HPOSC_DT1_M                              0x000000FF
+#define FCFG1_HPOSC_MEAS_1_HPOSC_DT1_S                                       0
 
 //*****************************************************************************
 //
@@ -1360,11 +1481,7 @@
 //*****************************************************************************
 // Field: [31:28] PG_REV
 //
-// Field used to distinguish revisions of the device.
-//
-// 0: Silicon revision 1.0
-// 1: Silicon revision 1.01
-// 2: Silicon revision 1.1
+// Field used to distinguish revisions of the device
 #define FCFG1_USER_ID_PG_REV_W                                               4
 #define FCFG1_USER_ID_PG_REV_M                                      0xF0000000
 #define FCFG1_USER_ID_PG_REV_S                                              28
@@ -1879,10 +1996,6 @@
 // Field: [31:28] PG_REV
 //
 // Field used to distinguish revisions of the device.
-//
-// 0: Silicon revision 1.0
-// 1: Silicon revision 1.01
-// 2: Silicon revision 1.1
 #define FCFG1_ICEPICK_DEVICE_ID_PG_REV_W                                     4
 #define FCFG1_ICEPICK_DEVICE_ID_PG_REV_M                            0xF0000000
 #define FCFG1_ICEPICK_DEVICE_ID_PG_REV_S                                    28
@@ -1952,15 +2065,6 @@
 #define FCFG1_MISC_OTP_DATA_PER_E_W                                          3
 #define FCFG1_MISC_OTP_DATA_PER_E_M                                 0x00007000
 #define FCFG1_MISC_OTP_DATA_PER_E_S                                         12
-
-// Field:   [7:0] TEST_PROGRAM_REV
-//
-// The revision of the test program used in the production process when FCFG1
-// was programmed.
-// Value migth change without warning.
-#define FCFG1_MISC_OTP_DATA_TEST_PROGRAM_REV_W                               8
-#define FCFG1_MISC_OTP_DATA_TEST_PROGRAM_REV_M                      0x000000FF
-#define FCFG1_MISC_OTP_DATA_TEST_PROGRAM_REV_S                               0
 
 //*****************************************************************************
 //
@@ -2490,278 +2594,6 @@
 
 //*****************************************************************************
 //
-// Register: FCFG1_O_PWD_CURR_20C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_20C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_20C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_20C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_20C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_20C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_20C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_20C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_20C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_20C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_20C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_20C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_20C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_35C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_35C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_35C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_35C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_35C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_35C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_35C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_35C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_35C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_35C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_35C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_35C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_35C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_50C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_50C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_50C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_50C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_50C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_50C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_50C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_50C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_50C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_50C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_50C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_50C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_50C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_65C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_65C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_65C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_65C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_65C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_65C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_65C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_65C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_65C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_65C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_65C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_65C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_65C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_80C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_80C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_80C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_80C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_80C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_80C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_80C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_80C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_80C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_80C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_80C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_80C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_80C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_95C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_95C_DELTA_CACHE_REF_W                                 8
-#define FCFG1_PWD_CURR_95C_DELTA_CACHE_REF_M                        0xFF000000
-#define FCFG1_PWD_CURR_95C_DELTA_CACHE_REF_S                                24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_95C_DELTA_RFMEM_RET_W                                 8
-#define FCFG1_PWD_CURR_95C_DELTA_RFMEM_RET_M                        0x00FF0000
-#define FCFG1_PWD_CURR_95C_DELTA_RFMEM_RET_S                                16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_95C_DELTA_XOSC_LPM_W                                  8
-#define FCFG1_PWD_CURR_95C_DELTA_XOSC_LPM_M                         0x0000FF00
-#define FCFG1_PWD_CURR_95C_DELTA_XOSC_LPM_S                                  8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_95C_BASELINE_W                                        8
-#define FCFG1_PWD_CURR_95C_BASELINE_M                               0x000000FF
-#define FCFG1_PWD_CURR_95C_BASELINE_S                                        0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_110C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_110C_DELTA_CACHE_REF_W                                8
-#define FCFG1_PWD_CURR_110C_DELTA_CACHE_REF_M                       0xFF000000
-#define FCFG1_PWD_CURR_110C_DELTA_CACHE_REF_S                               24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_110C_DELTA_RFMEM_RET_W                                8
-#define FCFG1_PWD_CURR_110C_DELTA_RFMEM_RET_M                       0x00FF0000
-#define FCFG1_PWD_CURR_110C_DELTA_RFMEM_RET_S                               16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_110C_DELTA_XOSC_LPM_W                                 8
-#define FCFG1_PWD_CURR_110C_DELTA_XOSC_LPM_M                        0x0000FF00
-#define FCFG1_PWD_CURR_110C_DELTA_XOSC_LPM_S                                 8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_110C_BASELINE_W                                       8
-#define FCFG1_PWD_CURR_110C_BASELINE_M                              0x000000FF
-#define FCFG1_PWD_CURR_110C_BASELINE_S                                       0
-
-//*****************************************************************************
-//
-// Register: FCFG1_O_PWD_CURR_125C
-//
-//*****************************************************************************
-// Field: [31:24] DELTA_CACHE_REF
-//
-// Additional maximum current, in units of 1uA, with cache retention
-#define FCFG1_PWD_CURR_125C_DELTA_CACHE_REF_W                                8
-#define FCFG1_PWD_CURR_125C_DELTA_CACHE_REF_M                       0xFF000000
-#define FCFG1_PWD_CURR_125C_DELTA_CACHE_REF_S                               24
-
-// Field: [23:16] DELTA_RFMEM_RET
-//
-// Additional maximum current, in 1uA units, with RF memory retention
-#define FCFG1_PWD_CURR_125C_DELTA_RFMEM_RET_W                                8
-#define FCFG1_PWD_CURR_125C_DELTA_RFMEM_RET_M                       0x00FF0000
-#define FCFG1_PWD_CURR_125C_DELTA_RFMEM_RET_S                               16
-
-// Field:  [15:8] DELTA_XOSC_LPM
-//
-// Additional maximum current, in units of 1uA, with XOSC_HF on in low-power
-// mode
-#define FCFG1_PWD_CURR_125C_DELTA_XOSC_LPM_W                                 8
-#define FCFG1_PWD_CURR_125C_DELTA_XOSC_LPM_M                        0x0000FF00
-#define FCFG1_PWD_CURR_125C_DELTA_XOSC_LPM_S                                 8
-
-// Field:   [7:0] BASELINE
-//
-// Worst-case baseline maximum powerdown current, in units of 0.5uA
-#define FCFG1_PWD_CURR_125C_BASELINE_W                                       8
-#define FCFG1_PWD_CURR_125C_BASELINE_M                              0x000000FF
-#define FCFG1_PWD_CURR_125C_BASELINE_S                                       0
-
-//*****************************************************************************
-//
 // Register: FCFG1_O_SHDW_DIE_ID_0
 //
 //*****************************************************************************
@@ -2860,6 +2692,29 @@
 // Register: FCFG1_O_SHDW_ANA_TRIM
 //
 //*****************************************************************************
+// Field:    [30] ALT_VDDR_TRIM
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_SHDW_ANA_TRIM_ALT_VDDR_TRIM                           0x40000000
+#define FCFG1_SHDW_ANA_TRIM_ALT_VDDR_TRIM_BITN                              30
+#define FCFG1_SHDW_ANA_TRIM_ALT_VDDR_TRIM_M                         0x40000000
+#define FCFG1_SHDW_ANA_TRIM_ALT_VDDR_TRIM_S                                 30
+
+// Field:    [29] DET_LOGIC_DIS
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_SHDW_ANA_TRIM_DET_LOGIC_DIS                           0x20000000
+#define FCFG1_SHDW_ANA_TRIM_DET_LOGIC_DIS_BITN                              29
+#define FCFG1_SHDW_ANA_TRIM_DET_LOGIC_DIS_M                         0x20000000
+#define FCFG1_SHDW_ANA_TRIM_DET_LOGIC_DIS_S                                 29
+
+// Field: [28:27] BOD_BANDGAP_TRIM_CNF_EXT
+//
+// Internal. Only to be used through TI provided API.
+#define FCFG1_SHDW_ANA_TRIM_BOD_BANDGAP_TRIM_CNF_EXT_W                       2
+#define FCFG1_SHDW_ANA_TRIM_BOD_BANDGAP_TRIM_CNF_EXT_M              0x18000000
+#define FCFG1_SHDW_ANA_TRIM_BOD_BANDGAP_TRIM_CNF_EXT_S                      27
+
 // Field: [26:25] BOD_BANDGAP_TRIM_CNF
 //
 // Internal. Only to be used through TI provided API.
