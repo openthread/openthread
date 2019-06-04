@@ -286,7 +286,9 @@ otError Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
+#if MBEDTLS_DEBUG_C
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
+#endif
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     if (!aClient)
@@ -888,6 +890,7 @@ exit:
     }
 }
 
+#if MBEDTLS_DEBUG_C
 void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)
 {
     OT_UNUSED_VARIABLE(str);
@@ -898,23 +901,24 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
     switch (level)
     {
     case 1:
-        otLogCritMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        otLogCritMeshCoP("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
         break;
 
     case 2:
-        otLogWarnMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        otLogWarnMeshCoP("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
         break;
 
     case 3:
-        otLogInfoMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        otLogInfoMeshCoP("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
         break;
 
     case 4:
     default:
-        otLogDebgMbedTls("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
+        otLogDebgMeshCoP("[%hu] %s", pThis->mSocket.GetSockName().mPort, str);
         break;
     }
 }
+#endif // MBEDTLS_DEBUG_C
 
 otError Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {

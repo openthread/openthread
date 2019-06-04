@@ -403,7 +403,9 @@ private:
     int SetApplicationCoapSecureKeys(void);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
+#if MBEDTLS_DEBUG_C
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
+#endif
 
     static int HandleMbedtlsGetTimer(void *aContext);
     int        HandleMbedtlsGetTimer(void);

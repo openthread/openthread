@@ -2686,7 +2686,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Discovery Request");
+        otLogWarnMle("Failed to process Discovery Request: %s", otThreadErrorToString(error));
     }
 
     return error;

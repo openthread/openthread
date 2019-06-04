@@ -2956,7 +2956,7 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Data Response");
+        otLogWarnMle("Failed to process Data Response: %s", otThreadErrorToString(error));
     }
 
     if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
@@ -3377,7 +3377,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Parent Response");
+        otLogWarnMle("Failed to process Parent Response: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -3498,7 +3498,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Child ID Response");
+        otLogWarnMle("Failed to process Child ID Response: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -3673,7 +3673,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Child Update Response");
+        otLogWarnMle("Failed to process Child Update Response: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -3868,7 +3868,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Discovery Response");
+        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
     }
 
     return error;
