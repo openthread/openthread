@@ -795,8 +795,19 @@ MessageQueue::MessageQueue(void)
     SetTail(NULL);
 }
 
-void MessageQueue::AddToList(Message &aMessage, QueuePosition aPosition)
+Message *MessageQueue::GetHead(void) const
 {
+    return (GetTail() == NULL) ? NULL : GetTail()->Next();
+}
+
+otError MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
+
+    aMessage.SetMessageQueue(this);
+
     assert((aMessage.Next() == NULL) && (aMessage.Prev() == NULL));
 
     if (GetTail() == NULL)
@@ -821,10 +832,17 @@ void MessageQueue::AddToList(Message &aMessage, QueuePosition aPosition)
             SetTail(&aMessage);
         }
     }
+
+exit:
+    return error;
 }
 
-void MessageQueue::RemoveFromList(Message &aMessage)
+otError MessageQueue::Dequeue(Message &aMessage)
 {
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aMessage.GetMessageQueue() == this, error = OT_ERROR_NOT_FOUND);
+
     assert((aMessage.Next() != NULL) && (aMessage.Prev() != NULL));
 
     if (&aMessage == GetTail())
@@ -842,34 +860,6 @@ void MessageQueue::RemoveFromList(Message &aMessage)
 
     aMessage.Prev() = NULL;
     aMessage.Next() = NULL;
-}
-
-Message *MessageQueue::GetHead(void) const
-{
-    return (GetTail() == NULL) ? NULL : GetTail()->Next();
-}
-
-otError MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
-
-    aMessage.SetMessageQueue(this);
-
-    AddToList(aMessage, aPosition);
-
-exit:
-    return error;
-}
-
-otError MessageQueue::Dequeue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMessage.GetMessageQueue() == this, error = OT_ERROR_NOT_FOUND);
-
-    RemoveFromList(aMessage);
 
     aMessage.SetMessageQueue(NULL);
 
@@ -953,11 +943,16 @@ Message *PriorityQueue::GetTail(void) const
     return FindFirstNonNullTail(0);
 }
 
-void PriorityQueue::AddToList(Message &aMessage)
+otError PriorityQueue::Enqueue(Message &aMessage)
 {
+    otError  error = OT_ERROR_NONE;
     uint8_t  priority;
     Message *tail;
     Message *next;
+
+    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
+
+    aMessage.SetPriorityQueue(this);
 
     priority = aMessage.GetPriority();
 
@@ -979,12 +974,18 @@ void PriorityQueue::AddToList(Message &aMessage)
     }
 
     mTails[priority] = &aMessage;
+
+exit:
+    return error;
 }
 
-void PriorityQueue::RemoveFromList(Message &aMessage)
+otError PriorityQueue::Dequeue(Message &aMessage)
 {
+    otError  error = OT_ERROR_NONE;
     uint8_t  priority;
     Message *tail;
+
+    VerifyOrExit(aMessage.GetPriorityQueue() == this, error = OT_ERROR_NOT_FOUND);
 
     priority = aMessage.GetPriority();
 
@@ -1006,29 +1007,7 @@ void PriorityQueue::RemoveFromList(Message &aMessage)
     aMessage.Prev()->Next() = aMessage.Next();
     aMessage.Next()         = NULL;
     aMessage.Prev()         = NULL;
-}
 
-otError PriorityQueue::Enqueue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!aMessage.IsInAQueue(), error = OT_ERROR_ALREADY);
-
-    aMessage.SetPriorityQueue(this);
-
-    AddToList(aMessage);
-
-exit:
-    return error;
-}
-
-otError PriorityQueue::Dequeue(Message &aMessage)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aMessage.GetPriorityQueue() == this, error = OT_ERROR_NOT_FOUND);
-
-    RemoveFromList(aMessage);
     aMessage.SetMessageQueue(NULL);
 
 exit:

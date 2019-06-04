@@ -1004,31 +1004,6 @@ private:
      *
      */
     void SetTail(Message *aMessage) { mData = aMessage; }
-
-    /**
-     * This method adds a message to the end of the list.
-     *
-     * @param[in]  aMessage  The message to add.
-     *
-     */
-    void AddToList(Message &aMessage) { AddToList(aMessage, kQueuePositionTail); }
-
-    /**
-     * This method adds a message at a give position (head or tail) of the list.
-     *
-     * @param[in]  aMessage  The message to add.
-     * @param[in]  aPosition The position where to add the message.
-     *
-     */
-    void AddToList(Message &aMessage, QueuePosition aPosition);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aMessage  The message to add.
-     *
-     */
-    void RemoveFromList(Message &aMessage);
 };
 
 /**
@@ -1107,22 +1082,6 @@ public:
     Message *GetTail(void) const;
 
 private:
-    /**
-     * This method adds a message to a list.
-     *
-     * @param[in]  aMessage  The message to add.
-     *
-     */
-    void AddToList(Message &aMessage);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aMessage  The message to add.
-     *
-     */
-    void RemoveFromList(Message &aMessage);
-
     /**
      * This method increases (moves forward) the given priority while ensuring to wrap from
      * priority value `kNumPriorities` -1 back to 0.
