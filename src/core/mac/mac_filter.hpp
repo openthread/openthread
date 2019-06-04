@@ -59,11 +59,24 @@ namespace Mac {
 class Filter
 {
 public:
+    /**
+     * This structure represents a Mac Filter entry (used during iteration).
+     *
+     */
     typedef otMacFilterEntry Entry;
+
+    /**
+     * This type represents an iterator used to iterate through filter entries.
+     *
+     * See `GetNextAddress()` and `GetNextRssIn()`.
+     *
+     */
+    typedef otMacFilterIterator Iterator;
 
     enum
     {
-        kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE,
+        kMaxEntries       = OPENTHREAD_CONFIG_MAC_FILTER_SIZE, ///< The maximum number of filter entries.
+        kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED,  ///< Value to indicate no fixed RSS is set.
     };
 
     /**
@@ -71,14 +84,6 @@ public:
      *
      */
     Filter(void);
-
-    /**
-     * This method returns the maximum number of filter entries.
-     *
-     * @returns The maximum number of filter entries.
-     *
-     */
-    uint8_t GetMaxEntries(void) const { return kMaxEntries; }
 
     /**
      * This function gets the address mode of the filter.
@@ -129,17 +134,17 @@ public:
     void ClearAddresses(void);
 
     /**
-     * This method gets an in-use address filter entry.
+     * This method iterates through filter entries.
      *
-     * @param[inout]  aIterator  A reference to the MAC filter iterator context. To get the first in-use address filter
-     *                           entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
+     * @param[inout]  aIterator  A reference to the MAC filter iterator context.
+     *                           To get the first in-use address filter, set it to OT_MAC_FILTER_ITERATOR_INIT.
      * @param[out]     aEntry    A reference to where the information is placed.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved an in-use address filter entry.
+     * @retval OT_ERROR_NONE       Successfully retrieved the next address filter entry.
      * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
      *
      */
-    otError GetNextAddress(otMacFilterIterator &aIterator, Entry &aEntry);
+    otError GetNextAddress(Iterator &aIterator, Entry &aEntry);
 
     /**
      * This method sets the received signal strength for the messages from the Extended Address.
@@ -176,7 +181,7 @@ public:
     void ClearRssIn(void);
 
     /**
-     * This method gets an in-use RssIn filter entry.
+     * This method iterates through RssIn filter entry.
      *
      * @param[inout]  aIterator  A reference to the MAC filter iterator context. To get the first in-use RssIn
      *                           filter entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
@@ -184,14 +189,14 @@ public:
      *                           Extended Address as all 0xff to indicate the default received signal strength
      *                           if it was set.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the in-use RssIn filter entry.
+     * @retval OT_ERROR_NONE       Successfully retrieved the next RssIn filter entry.
      * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
      *
      */
-    otError GetNextRssIn(otMacFilterIterator &aIterator, Entry &aEntry);
+    otError GetNextRssIn(Iterator &aIterator, Entry &aEntry);
 
     /**
-     * This method applies the filter rules on the Extended Address.
+     * This method applies the filter rules on a given Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the Extended Address.
      * @param[out] aRss         A reference to where the received signal strength to be placed.
@@ -204,12 +209,21 @@ public:
     otError Apply(const ExtAddress &aExtAddress, int8_t &aRss);
 
 private:
-    Entry *FindAvailEntry(void);
-    Entry *FindEntry(const ExtAddress &aExtAddress);
+    struct FilterEntry
+    {
+        bool       mFiltered;   // Indicates whether or not this entry is filtered (whitelist/blacklist modes).
+        int8_t     mRssIn;      // The RssIn value for this entry or `kFixedRssDisabled`.
+        ExtAddress mExtAddress; // IEEE 802.15.4 Extended Address.
 
-    Entry                  mEntries[kMaxEntries];
+        bool IsInUse(void) const { return mFiltered || (mRssIn != kFixedRssDisabled); }
+    };
+
+    FilterEntry *FindAvailableEntry(void);
+    FilterEntry *FindEntry(const ExtAddress &aExtAddress);
+
     otMacFilterAddressMode mAddressMode;
-    int8_t                 mRssIn;
+    int8_t                 mDefaultRssIn;
+    FilterEntry            mFilterEntries[kMaxEntries];
 };
 
 /**

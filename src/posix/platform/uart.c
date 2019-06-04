@@ -30,7 +30,6 @@
 #include "platform-posix.h"
 
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <string.h>
@@ -39,6 +38,7 @@
 #include <sys/un.h>
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -46,6 +46,7 @@
 #include <openthread/platform/uart.h>
 
 #include "code_utils.h"
+#include "common/code_utils.hpp"
 
 #define OPENTHREAD_POSIX_APP_SOCKET_LOCK OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".lock"
 
@@ -55,12 +56,20 @@ static int sUartLock      = -1;
 static int sSessionSocket = -1;
 #endif
 
+static bool           sEnabled     = false;
 static const uint8_t *sWriteBuffer = NULL;
 static uint16_t       sWriteLength = 0;
 
-void platformUartRestore(void)
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+static void set_flag_cloexec(int a_fd)
 {
+    int ret = fcntl(a_fd, F_GETFD, 0);
+    VerifyOrDie(ret != -1, OT_EXIT_FAILURE);
+    ret |= FD_CLOEXEC;
+    ret = fcntl(a_fd, F_SETFD, ret);
+    VerifyOrDie(ret != -1, OT_EXIT_FAILURE);
 }
+#endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
 otError otPlatUartEnable(void)
 {
@@ -70,11 +79,14 @@ otError otPlatUartEnable(void)
     int                ret;
 
     sUartSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+
     if (sUartSocket == -1)
     {
         perror("socket");
         exit(OT_EXIT_FAILURE);
     }
+
+    set_flag_cloexec(sUartSocket);
 
     sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY, 0600);
 
@@ -83,6 +95,8 @@ otError otPlatUartEnable(void)
         perror("open");
         exit(OT_EXIT_FAILURE);
     }
+
+    set_flag_cloexec(sUartLock);
 
     if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
     {
@@ -95,7 +109,7 @@ otError otPlatUartEnable(void)
     (void)unlink(OPENTHREAD_POSIX_APP_SOCKET_NAME);
 
     sockname.sun_family = AF_UNIX;
-    assert(sizeof(OPENTHREAD_POSIX_APP_SOCKET_NAME) < sizeof(sockname.sun_path), "socket name too long");
+    assert(sizeof(OPENTHREAD_POSIX_APP_SOCKET_NAME) < sizeof(sockname.sun_path));
     strncpy(sockname.sun_path, OPENTHREAD_POSIX_APP_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
     ret = bind(sUartSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
@@ -116,12 +130,15 @@ otError otPlatUartEnable(void)
         exit(OT_EXIT_FAILURE);
     }
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+
+    sEnabled = true;
     return error;
 }
 
 otError otPlatUartDisable(void)
 {
     otError error = OT_ERROR_NONE;
+    sEnabled      = false;
 
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (sSessionSocket != -1)
@@ -150,6 +167,7 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
+    assert(sEnabled);
     otEXPECT_ACTION(sWriteLength == 0, error = OT_ERROR_BUSY);
 
     sWriteBuffer = aBuf;
@@ -161,6 +179,8 @@ exit:
 
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
+    otEXPECT(sEnabled);
+
     if (aReadFdSet != NULL)
     {
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
@@ -201,6 +221,9 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
             *aMaxFd = fd;
         }
     }
+
+exit:
+    return;
 }
 
 void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
@@ -208,6 +231,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     ssize_t rval;
     int     fd;
 
+    otEXPECT(sEnabled);
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
@@ -217,6 +241,14 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     else if (FD_ISSET(sUartSocket, aReadFdSet))
     {
         sSessionSocket = accept(sUartSocket, NULL, NULL);
+    }
+
+    if (sSessionSocket == -1 && sWriteBuffer != NULL)
+    {
+        IgnoreReturnValue(write(STDERR_FILENO, sWriteBuffer, sWriteLength));
+        sWriteBuffer = NULL;
+        sWriteLength = 0;
+        otPlatUartSendDone();
     }
 
     otEXPECT(sSessionSocket != -1);

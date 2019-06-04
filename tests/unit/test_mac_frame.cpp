@@ -30,6 +30,7 @@
 #include "common/debug.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
+#include "phy/phy.hpp"
 #include "utils/wrap_string.h"
 
 #include "test_util.h"
@@ -93,7 +94,7 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
     uint8_t index = 0;
     uint8_t channel;
 
-    for (channel = OT_RADIO_CHANNEL_MIN; channel <= OT_RADIO_CHANNEL_MAX; channel++)
+    for (channel = Phy::kChannelMin; channel <= Phy::kChannelMax; channel++)
     {
         if (index < aLength)
         {
@@ -140,7 +141,7 @@ void TestMacChannelMask(void)
     uint8_t channles4[]    = {20};
 
     Mac::ChannelMask mask1;
-    Mac::ChannelMask mask2(OT_RADIO_SUPPORTED_CHANNELS);
+    Mac::ChannelMask mask2(Phy::kSupportedChannels);
 
     printf("Testing Mac::ChannelMask\n");
 
@@ -148,12 +149,12 @@ void TestMacChannelMask(void)
     printf("empty = %s\n", mask1.ToString().AsCString());
 
     VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
-    VerifyOrQuit(mask2.GetMask() == OT_RADIO_SUPPORTED_CHANNELS, "ChannelMask.GetMask() failed\n");
+    VerifyOrQuit(mask2.GetMask() == Phy::kSupportedChannels, "ChannelMask.GetMask() failed\n");
     printf("all_channels = %s\n", mask2.ToString().AsCString());
 
-    mask1.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
+    mask1.SetMask(Phy::kSupportedChannels);
     VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
-    VerifyOrQuit(mask1.GetMask() == OT_RADIO_SUPPORTED_CHANNELS, "ChannelMask.GetMask() failed\n");
+    VerifyOrQuit(mask1.GetMask() == Phy::kSupportedChannels, "ChannelMask.GetMask() failed\n");
 
     VerifyChannelMaskContent(mask1, all_channels, sizeof(all_channels));
 
@@ -203,8 +204,8 @@ void TestMacChannelMask(void)
     mask2.Clear();
     VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
 
-    mask1.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
-    mask2.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
+    mask1.SetMask(Phy::kSupportedChannels);
+    mask2.SetMask(Phy::kSupportedChannels);
     VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
 
     mask1.Clear();

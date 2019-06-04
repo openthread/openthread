@@ -62,13 +62,19 @@ namespace Ncp {
 class NcpBase
 {
 public:
+    enum
+    {
+        kSpinelCmdHeaderSize = 2, ///< Size of spinel command header (in bytes).
+        kSpinelPropIdSize    = 3, ///< Size of spinel property identifier (in bytes).
+    };
+
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(Instance *aInstance);
+    explicit NcpBase(Instance *aInstance);
 
     /**
      * This static method returns the pointer to the single NCP instance.
@@ -276,11 +282,11 @@ protected:
     void        HandleTimeSyncUpdate(void);
 
 #if OPENTHREAD_FTD
-    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
-    void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
+    void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
-    void        HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo);
+    void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -321,6 +327,8 @@ protected:
                                      uint8_t *             aTlvsLength       = NULL,
                                      const otIp6Address ** aDestIpAddress    = NULL,
                                      bool                  aAllowEmptyValues = false);
+
+    otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
@@ -398,7 +406,8 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
 #if OPENTHREAD_ENABLE_DIAG
-    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,
+    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
+                         OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
                      "diag output buffer should be smaller than NCP UART tx buffer");
 
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
@@ -409,6 +418,7 @@ protected:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+    otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
@@ -543,6 +553,9 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
+#if OPENTHREAD_ENABLE_SERVICE
+    bool mAllowLocalServerDataChange;
+#endif
 
 #if OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

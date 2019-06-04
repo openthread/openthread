@@ -86,6 +86,7 @@ configure_options="                \
     --enable-diag                  \
     --enable-ftd                   \
     --enable-jam-detection         \
+    --enable-joiner                \
     --enable-legacy                \
     --enable-mac-filter            \
     --enable-ncp                   \

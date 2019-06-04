@@ -145,8 +145,10 @@ SOURCES_COMMON =                      \
     cli.cpp                           \
     cli_coap.cpp                      \
     cli_coap_secure.cpp               \
+    cli_commissioner.cpp              \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
+    cli_joiner.cpp                    \
     cli_server.cpp                    \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
@@ -164,8 +166,10 @@ noinst_HEADERS                      = \
     cli.hpp                           \
     cli_coap.hpp                      \
     cli_coap_secure.hpp               \
+    cli_commissioner.hpp              \
     cli_console.hpp                   \
     cli_dataset.hpp                   \
+    cli_joiner.hpp                    \
     cli_server.hpp                    \
     cli_uart.hpp                      \
     cli_udp.hpp                       \

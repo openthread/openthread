@@ -98,6 +98,19 @@ otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
+ * This function sends a UDP message without socket.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMessage      A pointer to a message without UDP header.
+ * @param[in]  aMessageInfo  A pointer to a message info associated with @p aMessage.
+ *
+ * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
+ * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
+ *
+ */
+otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo);
+
+/**
  * This callback allows OpenThread to inform the application of a received UDP message.
  *
  */

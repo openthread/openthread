@@ -1881,14 +1881,14 @@ extern "C" {
 /**
  * This method dumps bytes to the log in a human-readable fashion.
  *
- * @param[in]  aLevel    The log level.
- * @param[in]  aRegion   The log region.
- * @param[in]  aId       A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf      A pointer to the buffer.
- * @param[in]  aLength   Number of bytes to print.
+ * @param[in]  aLogLevel    The log level.
+ * @param[in]  aLogRegion   The log region.
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
  *
  */
-void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, const size_t aLength);
+void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, size_t aLength);
 
 /**
  * This function converts a log level to a prefix string for appending to log message.

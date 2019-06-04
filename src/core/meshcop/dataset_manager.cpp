@@ -39,10 +39,11 @@
 #include <stdio.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "phy/phy.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -91,6 +92,8 @@ otError DatasetManager::Restore(void)
 
     mTimer.Stop();
 
+    mTimestampValid = false;
+
     SuccessOrExit(error = mLocal.Restore(dataset));
 
     timestamp = dataset.GetTimestamp();
@@ -99,11 +102,11 @@ otError DatasetManager::Restore(void)
     {
         mTimestamp      = *timestamp;
         mTimestampValid = true;
+    }
 
-        if (mLocal.GetType() == Tlv::kActiveTimestamp)
-        {
-            dataset.ApplyConfiguration(GetInstance());
-        }
+    if (mLocal.GetType() == Tlv::kActiveTimestamp)
+    {
+        dataset.ApplyConfiguration(GetInstance());
     }
 
 exit:
@@ -115,7 +118,7 @@ otError DatasetManager::ApplyConfiguration(void) const
     otError error;
     Dataset dataset(mLocal.GetType());
 
-    SuccessOrExit(error = mLocal.Get(dataset));
+    SuccessOrExit(error = mLocal.Read(dataset));
     SuccessOrExit(error = dataset.ApplyConfiguration(GetInstance()));
 
 exit:
@@ -135,7 +138,7 @@ void DatasetManager::HandleDetach(void)
     Restore();
 }
 
-otError DatasetManager::Set(const Dataset &aDataset)
+otError DatasetManager::Save(const Dataset &aDataset)
 {
     otError          error = OT_ERROR_NONE;
     const Timestamp *timestamp;
@@ -159,13 +162,13 @@ otError DatasetManager::Set(const Dataset &aDataset)
 
     if (isMasterkeyUpdated || compare > 0)
     {
-        mLocal.Set(aDataset);
+        mLocal.Save(aDataset);
 
 #if OPENTHREAD_FTD
-        if (GetNetif().GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
+        if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
         {
-            GetNetif().GetNetworkDataLeader().IncrementVersion();
-            GetNetif().GetNetworkDataLeader().IncrementStableVersion();
+            Get<NetworkData::Leader>().IncrementVersion();
+            Get<NetworkData::Leader>().IncrementStableVersion();
         }
 #endif
     }
@@ -178,14 +181,13 @@ exit:
     return error;
 }
 
-otError DatasetManager::Set(const otOperationalDataset &aDataset)
+otError DatasetManager::Save(const otOperationalDataset &aDataset)
 {
-    ThreadNetif &netif = GetNetif();
-    otError      error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mLocal.Set(aDataset));
+    SuccessOrExit(error = mLocal.Save(aDataset));
 
-    switch (netif.GetMle().GetRole())
+    switch (Get<Mle::MleRouter>().GetRole())
     {
     case OT_DEVICE_ROLE_DISABLED:
         Restore();
@@ -201,8 +203,8 @@ otError DatasetManager::Set(const otOperationalDataset &aDataset)
 
     case OT_DEVICE_ROLE_LEADER:
         Restore();
-        netif.GetNetworkDataLeader().IncrementVersion();
-        netif.GetNetworkDataLeader().IncrementStableVersion();
+        Get<NetworkData::Leader>().IncrementVersion();
+        Get<NetworkData::Leader>().IncrementStableVersion();
         break;
 #endif
 
@@ -216,20 +218,18 @@ exit:
 
 otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 {
-    otError                            error;
-    const MeshCoP::ChannelMaskBaseTlv *channelMaskTlv;
-    const MeshCoP::ChannelMaskEntry *  channelMaskEntry;
-    Dataset                            dataset(mLocal.GetType());
+    otError                        error;
+    const MeshCoP::ChannelMaskTlv *channelMaskTlv;
+    uint32_t                       mask;
+    Dataset                        dataset(mLocal.GetType());
 
-    SuccessOrExit(error = mLocal.Get(dataset));
+    SuccessOrExit(error = mLocal.Read(dataset));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskBaseTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
-    channelMaskEntry = channelMaskTlv->GetMaskEntry(OT_RADIO_CHANNEL_PAGE);
-    VerifyOrExit(channelMaskEntry != NULL, error = OT_ERROR_NOT_FOUND);
-
-    aChannelMask.SetMask(channelMaskEntry->GetMask() & OT_RADIO_SUPPORTED_CHANNELS);
+    aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     VerifyOrExit(!aChannelMask.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
@@ -239,16 +239,14 @@ exit:
 
 void DatasetManager::HandleTimer(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    VerifyOrExit(netif.GetMle().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
     VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0);
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
         Dataset dataset(Tlv::kPendingTimestamp);
-        netif.GetPendingDataset().Get(dataset);
+        Get<PendingDataset>().Read(dataset);
 
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
         const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
@@ -269,26 +267,25 @@ exit:
 
 otError DatasetManager::Register(void)
 {
-    ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
     Dataset          dataset(mLocal.GetType());
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
     message->AppendUriPathOptions(mUriSet);
     message->SetPayloadMarker();
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
     SuccessOrExit(error = message->Append(dataset.GetBytes(), dataset.GetSize()));
 
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
-    netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset to leader");
 
@@ -302,7 +299,7 @@ exit:
     return error;
 }
 
-void DatasetManager::Get(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
     Tlv      tlv;
     uint16_t offset = aMessage.GetOffset();
@@ -350,14 +347,13 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
                                      uint8_t *               aTlvs,
                                      uint8_t                 aLength) const
 {
-    ThreadNetif &  netif = GetNetif();
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
     Dataset        dataset(mLocal.GetType());
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->SetDefaultResponseHeader(aRequest);
     message->SetPayloadMarker();
@@ -370,9 +366,9 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         while (cur < end)
         {
             if (cur->GetType() != Tlv::kNetworkMasterKey ||
-                (netif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+                (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
             {
-                SuccessOrExit(error = message->Append(cur, sizeof(Tlv) + cur->GetLength()));
+                SuccessOrExit(error = message->AppendTlv(*cur));
             }
 
             cur = cur->GetNext();
@@ -385,14 +381,14 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
             const Tlv *tlv;
 
             if (aTlvs[index] == Tlv::kNetworkMasterKey &&
-                !(netif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+                !(Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
             {
                 continue;
             }
 
             if ((tlv = dataset.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
-                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+                SuccessOrExit(error = message->AppendTlv(*tlv));
             }
         }
     }
@@ -403,7 +399,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         message->SetLength(message->GetLength() - 1);
     }
 
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset get response");
 
@@ -417,12 +413,11 @@ exit:
 
 otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
-    ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
@@ -431,31 +426,29 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-    if (netif.GetCommissioner().IsActive())
+    if (Get<Commissioner>().IsActive())
     {
-        const uint8_t *cur          = aTlvs;
-        const uint8_t *end          = aTlvs + aLength;
-        bool           hasSessionId = false;
+        const Tlv *cur          = reinterpret_cast<const Tlv *>(aTlvs);
+        const Tlv *end          = reinterpret_cast<const Tlv *>(aTlvs + aLength);
+        bool       hasSessionId = false;
 
-        while (cur < end)
+        for (; cur < end; cur = cur->GetNext())
         {
-            const Tlv *data = reinterpret_cast<const Tlv *>(cur);
+            VerifyOrExit((cur + 1) <= end, error = OT_ERROR_INVALID_ARGS);
 
-            if (data->GetType() == Tlv::kCommissionerSessionId)
+            if (cur->GetType() == Tlv::kCommissionerSessionId)
             {
                 hasSessionId = true;
                 break;
             }
-
-            cur += sizeof(Tlv) + data->GetLength();
         }
 
         if (!hasSessionId)
         {
             CommissionerSessionIdTlv sessionId;
             sessionId.Init();
-            sessionId.SetCommissionerSessionId(netif.GetCommissioner().GetSessionId());
-            SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+            sessionId.SetCommissionerSessionId(Get<Commissioner>().GetSessionId());
+            SuccessOrExit(error = message->AppendTlv(sessionId));
         }
     }
 
@@ -467,7 +460,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+        SuccessOrExit(error = message->AppendTlv(timestamp));
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
@@ -476,7 +469,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+        SuccessOrExit(error = message->AppendTlv(timestamp));
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
@@ -484,7 +477,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
         masterkey.SetNetworkMasterKey(aDataset.mMasterKey);
-        SuccessOrExit(error = message->Append(&masterkey, sizeof(masterkey)));
+        SuccessOrExit(error = message->AppendTlv(masterkey));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
@@ -492,7 +485,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         NetworkNameTlv networkname;
         networkname.Init();
         networkname.SetNetworkName(aDataset.mNetworkName.m8);
-        SuccessOrExit(error = message->Append(&networkname, sizeof(Tlv) + networkname.GetLength()));
+        SuccessOrExit(error = message->AppendTlv(networkname));
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
@@ -500,7 +493,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
         extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
-        SuccessOrExit(error = message->Append(&extpanid, sizeof(extpanid)));
+        SuccessOrExit(error = message->AppendTlv(extpanid));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
@@ -508,7 +501,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         MeshLocalPrefixTlv localprefix;
         localprefix.Init();
         localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
-        SuccessOrExit(error = message->Append(&localprefix, sizeof(localprefix)));
+        SuccessOrExit(error = message->AppendTlv(localprefix));
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
@@ -516,7 +509,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         DelayTimerTlv delaytimer;
         delaytimer.Init();
         delaytimer.SetDelayTimer(aDataset.mDelay);
-        SuccessOrExit(error = message->Append(&delaytimer, sizeof(delaytimer)));
+        SuccessOrExit(error = message->AppendTlv(delaytimer));
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
@@ -524,25 +517,23 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         PanIdTlv panid;
         panid.Init();
         panid.SetPanId(aDataset.mPanId);
-        SuccessOrExit(error = message->Append(&panid, sizeof(panid)));
+        SuccessOrExit(error = message->AppendTlv(panid));
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
         ChannelTlv channel;
         channel.Init();
-        channel.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
         channel.SetChannel(aDataset.mChannel);
-        SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
+        SuccessOrExit(error = message->AppendTlv(channel));
     }
 
-    if (aDataset.mComponents.mIsChannelMaskPage0Present)
+    if (aDataset.mComponents.mIsChannelMaskPresent)
     {
         ChannelMaskTlv channelMask;
         channelMask.Init();
-        channelMask.SetChannelPage(OT_RADIO_CHANNEL_PAGE);
-        channelMask.SetMask(aDataset.mChannelMaskPage0);
-        SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+        channelMask.SetChannelMask(aDataset.mChannelMask);
+        SuccessOrExit(error = message->AppendTlv(channelMask));
     }
 
     if (aLength > 0)
@@ -556,10 +547,10 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         message->SetLength(message->GetLength() - 1);
     }
 
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
-    netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
@@ -578,7 +569,6 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
                                        uint8_t                               aLength,
                                        const otIp6Address *                  aAddress) const
 {
-    ThreadNetif &    netif = GetNetif();
     otError          error = OT_ERROR_NONE;
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
@@ -643,12 +633,12 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.mIsChannelMaskPage0Present)
+    if (aDatasetComponents.mIsChannelMaskPresent)
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(netif.GetCoap())) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     message->SetToken(Coap::Message::kDefaultTokenLength);
@@ -682,12 +672,12 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
     }
     else
     {
-        netif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
+        Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
     }
 
-    messageInfo.SetSockAddr(netif.GetMle().GetMeshLocal16());
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = netif.GetCoap().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset get request");
 
@@ -712,32 +702,22 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 #endif
 {
-    GetNetif().GetCoap().AddResource(mResourceGet);
+    Get<Coap::Coap>().AddResource(mResourceGet);
 }
 
-void ActiveDataset::Clear(void)
+bool ActiveDataset::IsPartiallyComplete(void) const
 {
-    DatasetManager::Clear();
+    return mLocal.IsSaved() && !mTimestampValid;
 }
 
-void ActiveDataset::Set(const Dataset &aDataset)
-{
-    DatasetManager::Set(aDataset);
-}
-
-otError ActiveDataset::Set(const otOperationalDataset &aDataset)
-{
-    return DatasetManager::Set(aDataset);
-}
-
-otError ActiveDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+otError ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
     Dataset dataset(mLocal.GetType());
 
     SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
     dataset.SetTimestamp(aTimestamp);
-    DatasetManager::Set(dataset);
+    DatasetManager::Save(dataset);
 
 exit:
     return error;
@@ -751,7 +731,7 @@ void ActiveDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessa
 
 void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    DatasetManager::Get(aMessage, aMessageInfo);
+    DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
 void ActiveDataset::HandleTimer(Timer &aTimer)
@@ -771,7 +751,7 @@ PendingDataset::PendingDataset(Instance &aInstance)
     , mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 #endif
 {
-    GetNetif().GetCoap().AddResource(mResourceGet);
+    Get<Coap::Coap>().AddResource(mResourceGet);
 }
 
 void PendingDataset::Clear(void)
@@ -786,28 +766,28 @@ void PendingDataset::ClearNetwork(void)
 
     mTimestamp.Init();
     mTimestampValid = false;
-    DatasetManager::Set(dataset);
+    DatasetManager::Save(dataset);
 }
 
-otError PendingDataset::Set(const otOperationalDataset &aDataset)
+otError PendingDataset::Save(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = DatasetManager::Set(aDataset));
+    SuccessOrExit(error = DatasetManager::Save(aDataset));
     StartDelayTimer();
 
 exit:
     return error;
 }
 
-otError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+otError PendingDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     otError error = OT_ERROR_NONE;
     Dataset dataset(mLocal.GetType());
 
     SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
     dataset.SetTimestamp(aTimestamp);
-    DatasetManager::Set(dataset);
+    DatasetManager::Save(dataset);
     StartDelayTimer();
 
 exit:
@@ -819,7 +799,7 @@ void PendingDataset::StartDelayTimer(void)
     DelayTimerTlv *delayTimer;
     Dataset        dataset(mLocal.GetType());
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
 
     mDelayTimer.Stop();
 
@@ -848,7 +828,7 @@ void PendingDataset::HandleDelayTimer(void)
     DelayTimerTlv *delayTimer;
     Dataset        dataset(mLocal.GetType());
 
-    mLocal.Get(dataset);
+    mLocal.Read(dataset);
 
     // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
     // the remainder and wait some more.
@@ -867,7 +847,8 @@ void PendingDataset::HandleDelayTimer(void)
     otLogInfoMeshCoP("pending delay timer expired");
 
     dataset.ConvertToActive();
-    GetNetif().GetActiveDataset().Set(dataset);
+
+    Get<ActiveDataset>().Save(dataset);
 
     Clear();
 
@@ -883,7 +864,7 @@ void PendingDataset::HandleGet(void *aContext, otMessage *aMessage, const otMess
 
 void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    DatasetManager::Get(aMessage, aMessageInfo);
+    DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
 void PendingDataset::HandleTimer(Timer &aTimer)

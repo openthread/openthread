@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <stddef.h>
+
 #include "utils/wrap_stdint.h"
 
 #include <openthread/platform/alarm-micro.h>
@@ -69,10 +70,9 @@ class Timer : public InstanceLocator, public OwnerLocator
     friend class TimerScheduler;
 
 public:
-    enum
-    {
-        kMaxDt = (1UL << 31) - 1, //< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
-    };
+    static const uint32_t kMaxDt =
+        (1UL << 31) - 1; ///< Maximum permitted value for parameter `aDt` in `Start` and `StartAt` method.
+    static const uint32_t kForeverDt = 0xffffffff; ///< The special forever `aDt` value.
 
     /**
      * This function pointer is called when the timer expires.
@@ -120,14 +120,14 @@ protected:
     /**
      * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.
      *
-     * @param[in]  aTimer   A reference to the second timer object.
-     * @param[in]  aNow     The current time (may in milliseconds or microsecond, which depends on the timer type).
+     * @param[in]  aSecondTimer   A reference to the second timer object.
+     * @param[in]  aNow           The current time (milliseconds or microsecond, depending on timer type).
      *
      * @retval TRUE  If the fire time of this timer object is strictly before aTimer's fire time
      * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
      *
      */
-    bool DoesFireBefore(const Timer &aTimer, uint32_t aNow);
+    bool DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow);
 
     void Fired(void) { mHandler(*this); }
 
@@ -182,6 +182,46 @@ public:
     void Stop(void);
 
     /**
+     * This static method returns the time diff in milliseconds between @p aStart and @p aEnd.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The time diff in milliseconds.
+     *
+     */
+    static int32_t Diff(uint32_t aStart, uint32_t aEnd)
+    {
+        uint32_t diff = aEnd - aStart;
+        return reinterpret_cast<int32_t &>(diff);
+    }
+
+    /**
+     * This static method returns the time elapsed in milliseconds from @p aStart to @p aEnd.
+     *
+     * @note This method assumes @p aEnd is after @p aStart.
+     *
+     * @param[in]   aStart  The start time.
+     * @param[in]   aEnd    The end time.
+     *
+     * @returns The elapsed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart, uint32_t aEnd) { return aEnd - aStart; }
+
+    /**
+     * This static method returns the time passed in milliseconds since @p aStart.
+     *
+     * @note This method assumes now is after @p aStart.
+     *
+     * @param[in]   aStart  The start time.
+     *
+     * @returns The elapsed time in milliseconds.
+     *
+     */
+    static uint32_t Elapsed(uint32_t aStart) { return Elapsed(aStart, GetNow()); }
+
+    /**
      * This static method returns the current time in milliseconds.
      *
      * @returns The current time in milliseconds.
@@ -204,15 +244,6 @@ public:
      *
      */
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
-
-private:
-    /**
-     * This method returns a reference to the TimerMilliScheduler.
-     *
-     * @returns   A reference to the TimerMilliScheduler.
-     *
-     */
-    TimerMilliScheduler &GetTimerMilliScheduler(void) const;
 };
 
 /**
@@ -295,7 +326,7 @@ protected:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerScheduler(Instance &aInstance)
+    explicit TimerScheduler(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mHead(NULL)
     {
@@ -351,7 +382,7 @@ public:
      * @param[in]  aInstance  A reference to the instance object.
      *
      */
-    TimerMilliScheduler(Instance &aInstance)
+    explicit TimerMilliScheduler(Instance &aInstance)
         : TimerScheduler(aInstance)
     {
     }
@@ -437,15 +468,6 @@ public:
      *
      */
     static uint32_t GetNow(void) { return otPlatAlarmMicroGetNow(); }
-
-private:
-    /**
-     * This method returns a reference to the TimerMicroScheduler.
-     *
-     * @returns   A reference to the TimerMicroScheduler.
-     *
-     */
-    TimerMicroScheduler &GetTimerMicroScheduler(void) const;
 };
 
 /**

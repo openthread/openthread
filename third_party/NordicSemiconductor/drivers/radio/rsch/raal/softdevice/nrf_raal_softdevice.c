@@ -82,6 +82,17 @@ _Pragma("GCC diagnostic pop")
  */
 #define BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION     (6001001)
 
+/*
+ * @brief Defines the minimum version of the SoftDevice that correctly handles timeslot releasing.
+ *
+ *        The first SoftDevice that supports this option is S140 6.1.0 (6001000). The full version
+ *        number for the SoftDevice binary is a decimal number in the form Mmmmbbb, where:
+ *           - M is major version (one or more digits)
+ *           - mmm is minor version (three digits)
+ *           - bbb is bugfix version (three digits).
+ */
+#define TIMESLOT_RELEASE_SUPPORT_MIN_SD_VERSION      (6001000)
+
 /**@brief Enable Request and End on timeslot safety interrupt. */
 #define ENABLE_REQUEST_AND_END_ON_TIMESLOT_END       0
 
@@ -161,6 +172,9 @@ static uint16_t m_extension_interval;
 /**@brief Number of already performed extentions tries on failed event. */
 static volatile uint16_t m_timeslot_extend_tries;
 
+/**@brief Defines if timeslot releasing works correctly on given SoftDevice version. */
+static bool m_timeslot_releasing;
+
 /***************************************************************************************************
  * @section Drift calculations
  **************************************************************************************************/
@@ -197,9 +211,12 @@ static void timer_start(void)
 /**@brief Reset timer. */
 static void timer_reset(void)
 {
+    NVIC_DisableIRQ(RAAL_TIMER_IRQn);
+    __DSB();
+    __ISB();
+
     nrf_timer_task_trigger(RAAL_TIMER, NRF_TIMER_TASK_STOP);
     nrf_timer_event_clear(RAAL_TIMER, TIMER_CC_ACTION_EVENT);
-    NVIC_ClearPendingIRQ(RAAL_TIMER_IRQn);
 }
 
 /**@brief Get current time on RAAL Timer. */
@@ -486,9 +503,8 @@ static nrf_radio_signal_callback_return_param_t * signal_handler(uint8_t signal_
 
         m_timeslot_state = TIMESLOT_STATE_IDLE;
 
-        // TODO: Change to NRF_RADIO_SIGNAL_CALLBACK_ACTION_END (KRKNWK-937)
-        m_ret_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-        timer_reset();
+        m_ret_param.callback_action = m_timeslot_releasing ? NRF_RADIO_SIGNAL_CALLBACK_ACTION_END :
+                                      NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
         nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_EVENT_ENDED);
         nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_SIG_HANDLER);
@@ -714,6 +730,12 @@ void nrf_raal_init(void)
     }
 #endif
 
+    // Ensure that correct SoftDevice version is flashed.
+    if (SD_VERSION_GET(MBR_SIZE) >= TIMESLOT_RELEASE_SUPPORT_MIN_SD_VERSION)
+    {
+        m_timeslot_releasing = true;
+    }
+
     m_initialized = true;
 }
 
@@ -757,12 +779,22 @@ void nrf_raal_continuous_mode_exit(void)
     assert(m_initialized);
     assert(m_continuous);
 
-    m_continuous = false;
-
-    // Emulate signal interrupt to inform SD about end of continuous mode.
     if (timeslot_is_granted())
     {
-        NVIC_SetPendingIRQ(RAAL_TIMER_IRQn);
+        // Reset timer prior marking exiting continuous mode to prevent timeslot release caused by
+        // the timer
+        timer_reset();
+
+        m_continuous = false;
+        __DMB();
+
+        // Emulate signal interrupt to inform SD about end of continuous mode.
+        NVIC_SetPendingIRQ(RADIO_IRQn);
+        NVIC_EnableIRQ(RADIO_IRQn);
+    }
+    else
+    {
+        m_continuous = false;
     }
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RAAL_CONTINUOUS_EXIT);
@@ -792,5 +824,5 @@ bool nrf_raal_timeslot_request(uint32_t length_us)
 
 uint32_t nrf_raal_timeslot_us_left_get(void)
 {
-    return safe_time_to_timeslot_end_get();
+    return timeslot_is_granted() ? safe_time_to_timeslot_end_get() : 0;
 }

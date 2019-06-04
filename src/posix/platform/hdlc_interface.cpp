@@ -63,6 +63,62 @@
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
 #endif
 
+#ifdef __APPLE__
+
+#ifndef B230400
+#define B230400 230400
+#endif
+
+#ifndef B460800
+#define B460800 460800
+#endif
+
+#ifndef B500000
+#define B500000 500000
+#endif
+
+#ifndef B576000
+#define B576000 576000
+#endif
+
+#ifndef B921600
+#define B921600 921600
+#endif
+
+#ifndef B1000000
+#define B1000000 1000000
+#endif
+
+#ifndef B1152000
+#define B1152000 1152000
+#endif
+
+#ifndef B1500000
+#define B1500000 1500000
+#endif
+
+#ifndef B2000000
+#define B2000000 2000000
+#endif
+
+#ifndef B2500000
+#define B2500000 2500000
+#endif
+
+#ifndef B3000000
+#define B3000000 3000000
+#endif
+
+#ifndef B3500000
+#define B3500000 3500000
+#endif
+
+#ifndef B4000000
+#define B4000000 4000000
+#endif
+
+#endif // __APPLE__
+
 namespace ot {
 namespace PosixApp {
 
@@ -200,14 +256,11 @@ otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-    struct timeval end;
-    struct timeval now;
+    uint64_t       now     = otSysGetTime();
+    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
     int            rval;
-
-    otSysGetTime(&now);
-    timeradd(&now, &timeout, &end);
 
     while (true)
     {
@@ -241,11 +294,14 @@ otError HdlcInterface::WaitForWritable(void)
             exit(OT_EXIT_FAILURE);
         }
 
-        otSysGetTime(&now);
+        now = otSysGetTime();
 
-        if (timercmp(&end, &now, >))
+        if (end > now)
         {
-            timersub(&end, &now, &timeout);
+            uint64_t remain = end - now;
+
+            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
         }
         else
         {

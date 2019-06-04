@@ -41,9 +41,13 @@
 #include "em_system.h"
 
 #include "core_cm4.h"
+#include "rail.h"
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;
+
+// Global reference to rail handle
+extern RAIL_Handle_t gRailHandle;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -108,5 +112,27 @@ void efr32LogInit(void);
  *
  */
 void efr32LogDeinit(void);
+
+/**
+ * Registers the sleep callback handler.  The callback is used to check that
+ * the application has no work pending and that it is safe to put the EFR32
+ * into a low energy sleep mode.
+ *
+ * The callback should return true if it is ok to enter sleep mode. Note
+ * that the callback itself is run with interrupts disabled and so should
+ * be kept as short as possible.  Anny interrupt including those from timers
+ * will wake the EFR32 out of sleep mode.
+ *
+ * @param[in]  aCallback  Callback function.
+ *
+ */
+void efr32SetSleepCallback(bool (*aCallback)(void));
+
+/**
+ * Put the EFR32 into a low power mode.  Before sleeping it will call a callback
+ * in the application registered with efr32SetSleepCallback to ensure that there
+ * is no outstanding work in the application to do.
+ */
+void efr32Sleep(void);
 
 #endif // PLATFORM_EFR32_H_

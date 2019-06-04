@@ -51,6 +51,8 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features                               \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/power                                            \
@@ -70,6 +72,7 @@ COMMONCPPFLAGS                                                                  
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
     alarm.c                                                                                                  \
+    entropy.c                                                                                                \
     fem.c                                                                                                    \
     flash.c                                                                                                  \
     logging.c                                                                                                \
@@ -78,7 +81,6 @@ PLATFORM_COMMON_SOURCES                                                         
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
     radio.c                                                                                                  \
-    random.c                                                                                                 \
     temp.c                                                                                                   \
     spi-slave.c                                                                                              \
     system.c                                                                                                 \

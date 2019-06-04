@@ -60,14 +60,23 @@ namespace ot {
 /**
  * This class implements the OpenThread Notifier.
  *
- * It can be used to register callbacks to be notified of state or configuration changes within OpenThread.
+ * It can be used to register callbacks that notify of state or configuration changes within OpenThread.
+ *
+ * Two callback models are provided:
+ *
+ * - A `Notifier::Callback` object that upon initialization (from its constructor) auto-registers itself with
+ *   the `Notifier`. This model is mainly used by OpenThread core modules.
+ *
+ * - A `otStateChangedCallback` callback handler which needs to be explicitly registered with the `Notifier`. This is
+ *   commonly used by external users (provided as an OpenThread public API). Max number of such callbacks that can be
+ *   registered at the same time is specified by `OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS` configuration parameter.
  *
  */
 class Notifier : public InstanceLocator
 {
 public:
     /**
-     * This class defines a callback instance that can be registered with the `Notifier`.
+     * This class defines a `Notifier` callback instance.
      *
      */
     class Callback : public OwnerLocator
@@ -85,7 +94,7 @@ public:
         typedef void (*Handler)(Callback &aCallback, otChangedFlags aFlags);
 
         /**
-         * This constructor initializes a `Callback` instance
+         * This constructor initializes a `Callback` instance and registers it with `Notifier`.
          *
          * @param[in] aInstance   A reference to OpenThread instance.
          * @param[in] aHandler    A function pointer to the callback handler.

@@ -316,14 +316,14 @@ exit:
     return error;
 }
 
-otError Settings::Save(Key aKey, const void *aBuffer, uint16_t aSize)
+otError Settings::Save(Key aKey, const void *aValue, uint16_t aSize)
 {
-    return otPlatSettingsSet(&GetInstance(), aKey, reinterpret_cast<const uint8_t *>(aBuffer), aSize);
+    return otPlatSettingsSet(&GetInstance(), aKey, reinterpret_cast<const uint8_t *>(aValue), aSize);
 }
 
-otError Settings::Add(Key aKey, const void *aBuffer, uint16_t aSize)
+otError Settings::Add(Key aKey, const void *aValue, uint16_t aSize)
 {
-    return otPlatSettingsAdd(&GetInstance(), aKey, reinterpret_cast<const uint8_t *>(aBuffer), aSize);
+    return otPlatSettingsAdd(&GetInstance(), aKey, reinterpret_cast<const uint8_t *>(aValue), aSize);
 }
 
 otError Settings::Delete(Key aKey)

@@ -94,6 +94,11 @@ bool nrf_802154_core_hooks_tx_started(const uint8_t * p_frame);
 void nrf_802154_core_hooks_rx_started(void);
 
 /**
+ * @brief Process hooks for the RX ACK started event.
+ */
+void nrf_802154_core_hooks_rx_ack_started(void);
+
+/**
  *@}
  **/
 

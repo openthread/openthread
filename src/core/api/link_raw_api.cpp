@@ -39,8 +39,7 @@
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
-#include "common/owner-locator.hpp"
+#include "common/locator-getters.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
@@ -52,17 +51,17 @@ using namespace ot;
 
 otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetEnabled(aEnabled);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetEnabled(aEnabled);
 }
 
 bool otLinkRawIsEnabled(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled();
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled();
 }
 
 otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetShortAddress(aShortAddress);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetShortAddress(aShortAddress);
 }
 
 bool otLinkRawGetPromiscuous(otInstance *aInstance)
@@ -74,10 +73,7 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-
-    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
-
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
     otPlatRadioSetPromiscuous(aInstance, aEnable);
 
 exit:
@@ -88,9 +84,7 @@ otError otLinkRawSleep(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
-
-    otLogInfoPlat("LinkRaw Sleep");
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioSleep(aInstance);
 
@@ -100,19 +94,17 @@ exit:
 
 otError otLinkRawReceive(otInstance *aInstance, otLinkRawReceiveDone aCallback)
 {
-    otLogInfoPlat("LinkRaw Recv");
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().Receive(aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().Receive(aCallback);
 }
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
-    return &static_cast<Instance *>(aInstance)->GetLinkRaw().GetTransmitFrame();
+    return &static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetTransmitFrame();
 }
 
 otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback)
 {
-    otLogInfoPlat("LinkRaw Transmit");
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().Transmit(aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().Transmit(aCallback);
 }
 
 int8_t otLinkRawGetRssi(otInstance *aInstance)
@@ -122,7 +114,7 @@ int8_t otLinkRawGetRssi(otInstance *aInstance)
 
 otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetCaps();
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetCaps();
 }
 
 otError otLinkRawEnergyScan(otInstance *            aInstance,
@@ -130,14 +122,14 @@ otError otLinkRawEnergyScan(otInstance *            aInstance,
                             uint16_t                aScanDuration,
                             otLinkRawEnergyScanDone aCallback)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().EnergyScan(aScanChannel, aScanDuration, aCallback);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().EnergyScan(aScanChannel, aScanDuration, aCallback);
 }
 
 otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioEnableSrcMatch(aInstance, aEnable);
 
@@ -149,7 +141,7 @@ otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aSh
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioAddSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -162,7 +154,7 @@ otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *
     Mac::Address address;
     otError      error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     address.SetExtended(aExtAddress->m8, /* aReverse */ true);
 
@@ -176,7 +168,7 @@ otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t a
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioClearSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -189,7 +181,7 @@ otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress
     Mac::Address address;
     otError      error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     address.SetExtended(aExtAddress->m8, /* aReverse */ true);
 
@@ -203,7 +195,7 @@ otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchShortEntries(aInstance);
 
@@ -215,7 +207,7 @@ otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(static_cast<Instance *>(aInstance)->GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchExtEntries(aInstance);
 
@@ -233,38 +225,38 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 
 uint8_t otLinkGetChannel(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetChannel();
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetChannel();
 }
 
 otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetChannel(aChannel);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetChannel(aChannel);
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetPanId();
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetPanId();
 }
 
 otError otLinkSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetPanId(aPanId);
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetPanId(aPanId);
 }
 
 const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 {
-    return &static_cast<Instance *>(aInstance)->GetLinkRaw().GetExtAddress();
+    return &static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetExtAddress();
 }
 
 otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().SetExtAddress(
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetExtAddress(
         *static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 uint16_t otLinkGetShortAddress(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->GetLinkRaw().GetShortAddress();
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetShortAddress();
 }
 
 #if OPENTHREAD_ENABLE_DIAG

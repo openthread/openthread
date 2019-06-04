@@ -37,10 +37,6 @@
 #include "openthread-core-config.h"
 
 #include <mbedtls/certs.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/entropy_poll.h>
-#include <mbedtls/error.h>
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
@@ -57,9 +53,12 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "net/socket.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -81,7 +80,9 @@ public:
 
     enum State
     {
-        kStateStopped = 0,
+        kStateClosed = 0,
+        kStateOpen,
+        kStateInitializing,
         kStateConnecting,
         kStateConnected,
         kStateCloseNotify,
@@ -90,10 +91,11 @@ public:
     /**
      * This constructor initializes the DTLS object.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in]  aNetif               A reference to the Thread network interface.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      *
      */
-    explicit Dtls(Instance &aInstance);
+    explicit Dtls(Instance &aInstance, bool aLayerTwoSecurity);
 
     /**
      * This function pointer is called when a connection is established or torn down.
@@ -115,6 +117,16 @@ public:
     typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
 
     /**
+     * This function pointer is called when secure CoAP server want to send encrypted message.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     */
+    typedef otError (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
      * This function pointer is called when data is ready to transmit for the DTLS session.
      *
      * @param[in]  aContext         A pointer to application-specific context.
@@ -126,40 +138,100 @@ public:
     typedef otError (*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     /**
-     * This method starts the DTLS service.
+     * This method opens the DTLS socket.
+     *
+     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive DTLS payload.
+     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
+     * @param[in]  aContext             A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE     Successfully opened the socket.
+     * @retval OT_ERROR_ALREADY  The DTLS is already open.
+     *
+     */
+    otError Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
+
+    /**
+     * This method binds this DTLS to a UDP port.
+     *
+     * @param[in]  aPort              The port to bind.
+     *
+     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
+     *
+     */
+    otError Bind(uint16_t aPort);
+
+    /**
+     * This method binds this DTLS with a transport callback.
+     *
+     * @param[in]  aCallback  A pointer to a function for sending messages.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
+     * @retval OT_ERROR_ALREADY        Already bound.
+     *
+     */
+    otError Bind(TransportCallback aCallback, void *aContext);
+
+    /**
+     * This method establishes a DTLS session.
      *
      * For CoAP Secure API do first:
      * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
      * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
      *
-     * @param[in]  aClient                 TRUE if operating as a client, FALSE if operating as a server.
-     * @param[in]  aConnectedHandler       A pointer to the connected handler.
-     * @param[in]  aReceiveHandler         A pointer to the receive handler.
-     * @param[in]  aSendHandler            A pointer to the send handler.
-     * @param[in]  aContext                A pointer to application-specific context.
+     * @param[in]  aSockAddr               A reference to the remote sockaddr.
      *
-     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
+     * @retval OT_ERROR_NONE           Successfully started DTLS handshake.
+     * @retval OT_ERROR_INVALID_STATE  The DTLS service is not in state kStateOpen.
      *
      */
-    otError Start(bool             aClient,
-                  ConnectedHandler aConnectedHandler,
-                  ReceiveHandler   aReceiveHandler,
-                  SendHandler      aSendHandler,
-                  void *           aContext);
+    otError Connect(const Ip6::SockAddr &aSockAddr);
 
     /**
-     * This method stops the DTLS service.
+     * This method indicates whether or not the DTLS session is active.
+     *
+     * In other words, the state is kStateConnecting, kStateConnected, or kStateCloseNotify.
+     *
+     * @retval TRUE  If DTLS session is active.
+     * @retval FALSE If DTLS session is not active.
      *
      */
-    void Stop(void);
+    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
+
+    /**
+     * This method indicates whether or not the DTLS session is connected.
+     *
+     * In other words, the state is kStateConnected.
+     *
+     * @retval TRUE   The DTLS session is connected.
+     * @retval FALSE  The DTLS session is not connected.
+     *
+     */
+    bool IsConnected(void) const { return mState == kStateConnected; }
+
+    /**
+     * This method disconnects the DTLS session.
+     *
+     */
+    void Disconnect(void);
+
+    /**
+     * This method closes the DTLS socket.
+     *
+     */
+    void Close(void);
 
     /**
      * This method returns the DTLS connection state.
      *
-     * @retval kStateStopped      If the DTLS service has not been started.
-     * @retval kStateConnecting   If the DTLS service is establishing a connection.
-     * @retval kStateConnected    If the DTLS service has a connection established.
-     * @retval kStateCloseNotify  If the DTLS service is closing a connection.
+     * @retval kStateClosed       The UDP socket closed.
+     * @retval kStateOpen         The UDP socket is open.
+     * @retval kStateConnecting   The DTLS service is establishing a connection.
+     * @retval kStateConnected    The DTLS service has a connection established.
+     * @retval kStateCloseNotify  The DTLS service is closing a connection.
      *
      */
     State GetState(void) const { return mState; }
@@ -227,7 +299,7 @@ public:
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
+     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
      *
      */
     otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
@@ -308,15 +380,18 @@ public:
     void SetDefaultMessageSubType(uint8_t aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
 
     /**
-     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
+     * This method returns the DTLS session's peer address.
+     *
+     * @return DTLS session's message info.
      *
      */
-    ProvisioningUrlTlv mProvisioningUrl;
+    const Ip6::MessageInfo &GetPeerAddress(void) const { return mPeerAddress; }
+
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    void FreeMbedtls(void);
-
-    static otError MapError(int rval);
+    void    FreeMbedtls(void);
+    otError Setup(bool aClient);
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     /**
@@ -357,9 +432,16 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    void    HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
+    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+
+    static void HandleUdpTransmit(Tasklet &aTasklet);
+    void        HandleUdpTransmit(void);
+
     static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
 
-    void Close(void);
     void Process(void);
 
     State mState;
@@ -392,20 +474,22 @@ private:
 
     bool mVerifyPeerCertificate;
 
-    mbedtls_entropy_context  mEntropy;
-    mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context      mSsl;
-    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_context mSsl;
+    mbedtls_ssl_config  mConf;
 
 #ifdef MBEDTLS_SSL_COOKIE_C
     mbedtls_ssl_cookie_ctx mCookieCtx;
 #endif
 
-    TimerMilli mTimer;
-    uint32_t   mTimerIntermediate;
-    bool       mTimerSet;
+    TimerMilliContext mTimer;
 
-    Message *mReceiveMessage;
+    uint32_t mTimerIntermediate;
+    bool     mTimerSet : 1;
+
+    bool mLayerTwoSecurity : 1;
+
+    const Message *mReceiveMessage;
+
     uint16_t mReceiveOffset;
     uint16_t mReceiveLength;
 
@@ -413,6 +497,12 @@ private:
     ReceiveHandler   mReceiveHandler;
     SendHandler      mSendHandler;
     void *           mContext;
+
+    Ip6::MessageInfo mPeerAddress;
+    Ip6::UdpSocket   mSocket;
+
+    TransportCallback mTransportCallback;
+    void *            mTransportContext;
 
     uint8_t mMessageSubType;
     uint8_t mMessageDefaultSubType;

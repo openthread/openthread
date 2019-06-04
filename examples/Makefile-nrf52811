@@ -44,6 +44,7 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 configure_OPTIONS                                 = \
     --enable-mtd                                    \
+    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52811                        \
     MBEDTLS_CPPFLAGS="$(NRF52811_MBEDTLS_CPPFLAGS)" \
@@ -105,7 +106,6 @@ configure_OPTIONS              += --with-ncp-bus=spi
 else
 COMMONCFLAGS                   += -DUART_AS_SERIAL_TRANSPORT=1
 configure_OPTIONS              += --with-ncp-bus=uart
-configure_OPTIONS              += --enable-diag
 configure_OPTIONS              += --enable-cli
 endif # NCP_SPI == 1
 endif # DISABLE_TRANSPORTS

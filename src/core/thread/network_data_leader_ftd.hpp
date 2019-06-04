@@ -182,10 +182,10 @@ private:
     otError AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute);
     otError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
     otError AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
-    otError AddPrefix(PrefixTlv &aTlv);
+    otError AddPrefix(PrefixTlv &aPrefix);
 #if OPENTHREAD_ENABLE_SERVICE
     otError AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
-    otError AddService(ServiceTlv &aTlv, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
+    otError AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
 #endif
 
     int  AllocateContext(void);
@@ -201,7 +201,7 @@ private:
     void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode);
     void RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode);
 #if OPENTHREAD_ENABLE_SERVICE
-    void RemoveRloc(ServiceTlv &service, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatchMode);
 #endif
     void RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode);
     void RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode);
@@ -226,7 +226,7 @@ private:
 
     void SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                       const Ip6::MessageInfo &aMessageInfo,
-                                      uint8_t *               aTlvs,
+                                      const uint8_t *         aTlvs,
                                       uint8_t                 aLength);
     void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,

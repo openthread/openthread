@@ -39,6 +39,8 @@
 #include <hal/nrf_spis.h>
 #include <platform-nrf5.h>
 
+#include "openthread-system.h"
+
 #if (SPIS_AS_SERIAL_TRANSPORT == 1)
 
 /**
@@ -230,6 +232,8 @@ void SPIM0_SPIS0_SPI0_IRQHandler(void)
         {
             /* Further processing is required. */
             sFurtherProcessingFlag = true;
+
+            otSysEventSignalPending();
         }
     }
 }

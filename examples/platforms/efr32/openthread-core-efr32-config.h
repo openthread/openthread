@@ -32,6 +32,9 @@
  *   for OpenThread.
  */
 
+#include "board_config.h"
+#include "em_msc.h"
+
 #ifndef OPENTHREAD_CORE_EFR32_CONFIG_H_
 #define OPENTHREAD_CORE_EFR32_CONFIG_H_
 
@@ -42,6 +45,30 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT                           OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
+
+/*
+ * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 if you want to enable physical layer to support OQPSK modulation in 915MHz band.
+ *
+ */
+#ifdef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT           1
+#else
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT           0
+#endif
+
+/*
+ * @def OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 if you want to enable physical layer to support OQPSK modulation in 2.4GHz band.
+ *
+ */
+#ifdef RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT           1
+#else
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT           0
 #endif
 
 /**
@@ -90,7 +117,7 @@
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                              0x800
+#define SETTINGS_CONFIG_PAGE_SIZE                              FLASH_PAGE_SIZE
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM

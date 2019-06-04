@@ -1415,6 +1415,20 @@ otDatasetSetDelayTimerMinimal(
 }
 
 OTAPI
+otError
+OTCALL
+otDatasetCreateNewNetwork(
+    _In_ otInstance *aInstance,
+    _Out_ otOperationalDataset *aDataset
+    )
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    // TODO
+    UNREFERENCED_PARAMETER(aDataset);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OTAPI
 uint32_t
 OTCALL
 otDatasetGetDelayTimerMinimal(
@@ -1619,7 +1633,7 @@ otThreadSetMasterKey(
 }
 
 OTAPI 
-const uint8_t *
+const otPSKc *
 OTCALL
 otThreadGetPSKc(
     _In_ otInstance *aInstance 
@@ -1627,7 +1641,7 @@ otThreadGetPSKc(
 {
     if (aInstance == nullptr) return nullptr;
 
-    uint8_t *Result = (uint8_t*)malloc(sizeof(otPSKc));
+    otPSKc *Result = (otPSKc*)malloc(sizeof(otPSKc));
     if (Result == nullptr) return nullptr;
     if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_PSKC, Result) != ERROR_SUCCESS)
     {
@@ -1642,16 +1656,44 @@ otError
 OTCALL
 otThreadSetPSKc(
     _In_ otInstance *aInstance, 
-    const uint8_t *aPSKc 
+    const otPSKc *aPSKc 
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     
-    BYTE Buffer[sizeof(GUID) + sizeof(otPSKc)];
-    memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
-    memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), aPSKc, sizeof(otPSKc));
-    
-    return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_PSKC, Buffer, sizeof(Buffer), nullptr, 0));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PSKC, aPSKc));
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
+otThreadGetLinkLocalIp6Address(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_LINK_LOCAL_ADDRESS, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
+}
+
+OTAPI
+const otIp6Address *
+OTCALL
+otThreadGetRloc(
+    _In_ otInstance *aInstance
+    )
+{
+    otIp6Address *Result = (otIp6Address*)malloc(sizeof(otIp6Address));
+    if (Result && QueryIOCTL(aInstance, IOCTL_OTLWF_OT_RLOC, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        Result = nullptr;
+    }
+    return Result;
 }
 
 OTAPI
@@ -3093,6 +3135,22 @@ otThreadGetChildInfoByIndex(
 OTAPI
 otError
 OTCALL
+otThreadGetChildNextIp6Address(
+    _In_ otInstance *aInstance,
+    uint8_t aChildIndex,
+    _Inout_ otChildIp6AddressIterator *aIterator,
+    _Out_ otIp6Address *aAddress)
+{
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    UNREFERENCED_PARAMETER(aChildIndex);
+    UNREFERENCED_PARAMETER(aIterator);
+    UNREFERENCED_PARAMETER(aAddress);
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
+}
+
+OTAPI
+otError
+OTCALL
 otThreadGetNextNeighborInfo(
     _In_ otInstance *aInstance,
     _Inout_ otNeighborInfoIterator *aIterator,
@@ -3638,7 +3696,10 @@ OTAPI
 otError 
 OTCALL
 otCommissionerStart(
-    _In_ otInstance *aInstance
+    _In_ otInstance *aInstance,
+    _In_ otCommissionerStateCallback aStateCallback,
+    _In_ otCommissionerJoinerCallback aJoinerCallback,
+    _In_ void *aContext
     )
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
@@ -3976,4 +4037,25 @@ otThreadSetParentPriority(
 {
     if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PARENT_PRIORITY, aParentPriority));
+}
+
+OTAPI
+const otMleCounters*
+OTCALL
+otThreadGetMleCounters(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return nullptr;
+
+    otMleCounters* aCounters = (otMleCounters*)malloc(sizeof(otMleCounters));
+    if (aCounters)
+    {
+        if (ERROR_SUCCESS != QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MLE_COUNTERS, aCounters))
+        {
+            free(aCounters);
+            aCounters = nullptr;
+        }
+    }
+    return aCounters;
 }

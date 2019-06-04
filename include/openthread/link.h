@@ -99,7 +99,6 @@ typedef struct otMacFilterEntry
 {
     otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address
     int8_t       mRssIn;      ///< Received signal strength
-    bool         mFiltered;   ///< Indicates whether or not this entry is filtered.
 } otMacFilterEntry;
 
 /**
@@ -300,6 +299,7 @@ OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRad
  * @returns The IEEE 802.15.4 channel.
  *
  * @sa otLinkSetChannel
+ *
  */
 OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 
@@ -322,7 +322,7 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * Get the supported channel mask.
+ * Get the supported channel mask of MAC layer.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -332,7 +332,7 @@ OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
 
 /**
- * Set the supported channel mask.
+ * Set the supported channel mask of MAC layer.
  *
  * This function succeeds only when Thread protocols are disabled.
  *
@@ -429,6 +429,9 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
  *
  * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms).
  *       Or zero to clear user-specified poll period.
+ *
+ * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,
+ * otherwise it would be cilpped by the maximal value.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.

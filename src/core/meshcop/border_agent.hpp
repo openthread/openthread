@@ -62,7 +62,8 @@ public:
     /**
      * This method starts the Border Agent service.
      *
-     * @retval OT_ERROR_NONE  Successfully started the Border Agent service.
+     * @retval OT_ERROR_NONE    Successfully started the Border Agent service.
+     * @retval OT_ERROR_ALREADY Already started.
      *
      */
     otError Start(void);
@@ -78,7 +79,7 @@ public:
     /**
      * This method gets the state of the Border Agent service.
      *
-     * @returns The state of the the Border Agent service.
+     * @returns The state of the Border Agent service.
      *
      */
     otBorderAgentState GetState(void) const { return mState; }

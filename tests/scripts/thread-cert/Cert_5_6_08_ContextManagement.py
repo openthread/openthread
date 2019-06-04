@@ -84,6 +84,10 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
 
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.simulator.go(2)
 
         addrs = self.nodes[LEADER].get_addrs()
@@ -104,6 +108,10 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
 
         self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.simulator.go(5)
 
         addrs = self.nodes[LEADER].get_addrs()
@@ -116,6 +124,10 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.simulator.go(5)
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(3, '2001:2:0:3::/64')
+
         self.simulator.go(5)
 
         addrs = self.nodes[LEADER].get_addrs()

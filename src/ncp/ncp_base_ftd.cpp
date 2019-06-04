@@ -87,27 +87,27 @@ void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *
 {
     VerifyOrExit(aInfo && aContext);
 
-    static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(aInfo);
+    static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(*aInfo);
 
 exit:
     return;
 }
 
-void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo)
+void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 {
-    VerifyOrExit(aInfo);
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO));
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_PARENT_RESPONSE_INFO));
 
-    SuccessOrExit(mEncoder.WriteEui64(aInfo->mExtAddr));
-    SuccessOrExit(mEncoder.WriteUint16(aInfo->mRloc16));
-    SuccessOrExit(mEncoder.WriteInt8(aInfo->mRssi));
-    SuccessOrExit(mEncoder.WriteInt8(aInfo->mPriority));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality3));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality2));
-    SuccessOrExit(mEncoder.WriteUint8(aInfo->mLinkQuality1));
-    SuccessOrExit(mEncoder.WriteBool(aInfo->mIsAttached));
+    SuccessOrExit(mEncoder.WriteEui64(aInfo.mExtAddr));
+    SuccessOrExit(mEncoder.WriteUint16(aInfo.mRloc16));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo.mRssi));
+    SuccessOrExit(mEncoder.WriteInt8(aInfo.mPriority));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality3));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality2));
+    SuccessOrExit(mEncoder.WriteUint8(aInfo.mLinkQuality1));
+    SuccessOrExit(mEncoder.WriteBool(aInfo.mIsAttached));
 
     SuccessOrExit(mEncoder.EndFrame());
 
@@ -115,37 +115,51 @@ exit:
     return;
 }
 
-void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo)
+void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
-    GetNcpInstance()->HandleChildTableChanged(aEvent, *aChildInfo);
+    GetNcpInstance()->HandleNeighborTableChanged(aEvent, *aEntry);
 }
 
-void NcpBase::HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo)
+void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry)
 {
-    otError      error   = OT_ERROR_NONE;
-    uint8_t      header  = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-    unsigned int command = 0;
-
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_THREAD_CHILD_TABLE));
-
-    VerifyOrExit(!aChildInfo.mIsStateRestoring);
+    otError           error   = OT_ERROR_NONE;
+    unsigned int      command = SPINEL_CMD_PROP_VALUE_REMOVED;
+    spinel_prop_key_t property;
 
     switch (aEvent)
     {
-    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED:
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
+        // Fall through
+    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+        property = SPINEL_PROP_THREAD_CHILD_TABLE;
+        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
         break;
 
-    case OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED:
-        command = SPINEL_CMD_PROP_VALUE_REMOVED;
+    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
+        command = SPINEL_CMD_PROP_VALUE_INSERTED;
+        // Fall through
+    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
+        property = SPINEL_PROP_THREAD_NEIGHBOR_TABLE;
         break;
 
     default:
         ExitNow();
     }
 
-    SuccessOrExit(error = mEncoder.BeginFrame(header, command, SPINEL_PROP_THREAD_CHILD_TABLE));
-    SuccessOrExit(error = EncodeChildInfo(aChildInfo));
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property));
+
+    SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, command, property));
+
+    if (property == SPINEL_PROP_THREAD_CHILD_TABLE)
+    {
+        SuccessOrExit(error = EncodeChildInfo(aEntry.mInfo.mChild));
+    }
+    else
+    {
+        SuccessOrExit(error = EncodeNeighborInfo(aEntry.mInfo.mRouter));
+    }
+
     SuccessOrExit(error = mEncoder.EndFrame());
 
 exit:
@@ -158,7 +172,10 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        mShouldEmitChildTableUpdate = true;
+        if (property == SPINEL_PROP_THREAD_CHILD_TABLE)
+        {
+            mShouldEmitChildTableUpdate = true;
+        }
 
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
         mUpdateChangedPropsTask.Post();
@@ -294,7 +311,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    return mEncoder.WriteData(otThreadGetPSKc(mInstance), sizeof(spinel_net_pskc_t));
+    return mEncoder.WriteData(otThreadGetPSKc(mInstance)->m8, sizeof(spinel_net_pskc_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
@@ -307,7 +324,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_pskc_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetPSKc(mInstance, ptr);
+    error = otThreadSetPSKc(mInstance, reinterpret_cast<const otPSKc *>(ptr));
 
 exit:
     return error;
@@ -459,7 +476,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_
         break;
 
     case SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE:
-        error = otCommissionerStart(mInstance);
+        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
         break;
 
     default:
@@ -725,7 +742,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
     }
     else
     {
-        error = otCommissionerStart(mInstance);
+        error = otCommissionerStart(mInstance, NULL, NULL, NULL);
     }
 
 exit:

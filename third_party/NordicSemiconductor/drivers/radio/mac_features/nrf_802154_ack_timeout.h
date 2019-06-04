@@ -95,6 +95,12 @@ bool nrf_802154_ack_timeout_tx_failed_hook(const uint8_t * p_frame, nrf_802154_t
 bool nrf_802154_ack_timeout_tx_started_hook(const uint8_t * p_frame);
 
 /**
+ * @brief Handler of RX ACK started event.
+ *
+ */
+void nrf_802154_ack_timeout_rx_ack_started_hook(void);
+
+/**
  *@}
  **/
 

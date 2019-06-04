@@ -285,6 +285,7 @@ OTAPI bool OTCALL otThreadIsDiscoverInProgress(otInstance *aInstance);
  * @returns The Thread Child Timeout value in seconds.
  *
  * @sa otThreadSetChildTimeout
+ *
  */
 OTAPI uint32_t OTCALL otThreadGetChildTimeout(otInstance *aInstance);
 
@@ -294,7 +295,7 @@ OTAPI uint32_t OTCALL otThreadGetChildTimeout(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aTimeout  The timeout value in seconds.
  *
- * @sa otThreadSetChildTimeout
+ * @sa otThreadGetChildTimeout
  *
  */
 OTAPI void OTCALL otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
@@ -307,6 +308,7 @@ OTAPI void OTCALL otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeo
  * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
  *
  * @sa otThreadSetExtendedPanId
+ *
  */
 OTAPI const otExtendedPanId *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 
@@ -324,6 +326,7 @@ OTAPI const otExtendedPanId *OTCALL otThreadGetExtendedPanId(otInstance *aInstan
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otThreadGetExtendedPanId
+ *
  */
 OTAPI otError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId);
 
@@ -348,6 +351,7 @@ OTAPI otError OTCALL otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *
  * @returns The MLE Link Mode configuration.
  *
  * @sa otThreadSetLinkMode
+ *
  */
 OTAPI otLinkModeConfig OTCALL otThreadGetLinkMode(otInstance *aInstance);
 
@@ -360,6 +364,7 @@ OTAPI otLinkModeConfig OTCALL otThreadGetLinkMode(otInstance *aInstance);
  * @retval OT_ERROR_NONE  Successfully set the MLE Link Mode configuration.
  *
  * @sa otThreadGetLinkMode
+ *
  */
 OTAPI otError OTCALL otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 
@@ -371,6 +376,7 @@ OTAPI otError OTCALL otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig
  * @returns A pointer to a buffer containing the thrMasterKey.
  *
  * @sa otThreadSetMasterKey
+ *
  */
 OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 
@@ -389,15 +395,26 @@ OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
  *
  * @sa otThreadGetMasterKey
+ *
  */
 OTAPI otError OTCALL otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
 
 /**
- * This function returns a pointer to the Mesh Local EID.
+ * This function returns a pointer to the Thread Routing Locator (RLOC) address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns A pointer to the Mesh Local EID.
+ * @returns A pointer to the Thread Routing Locator (RLOC) address.
+ *
+ */
+OTAPI const otIp6Address *OTCALL otThreadGetRloc(otInstance *aInstance);
+
+/**
+ * This function returns a pointer to the Mesh Local EID address.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Mesh Local EID address.
  *
  */
 OTAPI const otIp6Address *OTCALL otThreadGetMeshLocalEid(otInstance *aInstance);
@@ -438,7 +455,7 @@ OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const otM
  * @returns A pointer to Thread link-local IPv6 address.
  *
  */
-const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
+OTAPI const otIp6Address *OTCALL otThreadGetLinkLocalIp6Address(otInstance *aInstance);
 
 /**
  * Get the Thread Network Name.
@@ -733,7 +750,7 @@ OTAPI const otIpCounters *OTCALL otThreadGetIp6Counters(otInstance *aInstance);
  * @returns A pointer to the Thread MLE counters.
  *
  */
-const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
+OTAPI const otMleCounters *OTCALL otThreadGetMleCounters(otInstance *aInstance);
 
 /**
  * Reset the Thread MLE counters.

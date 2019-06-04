@@ -168,6 +168,7 @@ private:
 class MeshForwarder : public InstanceLocator
 {
     friend class Mac::Mac;
+    friend class Instance;
 
 public:
     /**
@@ -295,14 +296,6 @@ public:
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
-     * This method returns a reference to the data poll manager.
-     *
-     * @returns  A reference to the data poll manager.
-     *
-     */
-    DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
-
-    /**
      * This method returns a reference to the IP level counters.
      *
      * @returns A reference to the IP level counters.
@@ -318,14 +311,6 @@ public:
      *
      */
     const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-
-    /**
-     * This method returns a reference to the source match controller.
-     *
-     * @returns  A reference to the source match controller.
-     *
-     */
-    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
 #endif
 
 private:
@@ -400,20 +385,20 @@ private:
     void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     otError  PrepareDataPoll(void);
     void     HandleMesh(uint8_t *               aFrame,
-                        uint8_t                 aPayloadLength,
+                        uint8_t                 aFrameLength,
                         const Mac::Address &    aMacSource,
                         const otThreadLinkInfo &aLinkInfo);
     void     HandleFragment(uint8_t *               aFrame,
-                            uint8_t                 aPayloadLength,
+                            uint8_t                 aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
     void     HandleLowpanHC(uint8_t *               aFrame,
-                            uint8_t                 aPayloadLength,
+                            uint8_t                 aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
-    void     HandleDataRequest(const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
+    void HandleDataRequest(const Mac::Frame &aFrame, const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
 
     static otError GetFragmentHeader(const uint8_t *         aFrame,
                                      uint8_t                 aFrameLength,
@@ -441,7 +426,7 @@ private:
     void    HandleReceivedFrame(Mac::Frame &aFrame);
     otError HandleFrameRequest(Mac::Frame &aFrame);
     void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &macDest);
+    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);

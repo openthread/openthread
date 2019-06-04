@@ -99,6 +99,10 @@ class Cert_5_6_3_NetworkDataRegisterAfterAttachLeader(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[LEADER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.simulator.go(10)
 
         addrs = self.nodes[ED1].get_addrs()

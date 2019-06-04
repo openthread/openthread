@@ -78,21 +78,19 @@ typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext)
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
- * @param[in]  aContext   A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE  Successfully started the CoAP Secure server.
  *
  */
-otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext);
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function stops the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE  Successfully stopped the CoAP Secure server.
  */
-otError otCoapSecureStop(otInstance *aInstance);
+void otCoapSecureStop(otInstance *aInstance);
 
 /**
  * This method sets the Pre-Shared Key (PSK) and cipher suite
@@ -130,8 +128,8 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
  */
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              unsigned char *aPeerCert,
-                                             uint64_t *     aCertLength,
-                                             uint64_t       aCertBufferSize);
+                                             size_t *       aCertLength,
+                                             size_t         aCertBufferSize);
 
 /**
  * This method sets the authentication mode for the coap secure connection.
@@ -177,7 +175,7 @@ otError otCoapSecureSetCertificate(otInstance *   aInstance,
  * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
  * @param[in]  aX509CaCertChainLength   The length of chain.
  *
- * @retval OT_ERROR_NONE  Successfully set the the trusted top level CAs.
+ * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
  *
  */
 otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
@@ -206,10 +204,8 @@ otError otCoapSecureConnect(otInstance *                    aInstance,
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE  Successfully stopped the DTLS connection.
- *
  */
-otError otCoapSecureDisconnect(otInstance *aInstance);
+void otCoapSecureDisconnect(otInstance *aInstance);
 
 /**
  * This method indicates whether or not the DTLS session is connected.

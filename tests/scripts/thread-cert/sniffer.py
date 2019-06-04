@@ -33,6 +33,7 @@ import logging
 import os
 import pcap
 import threading
+import traceback
 
 try:
     import Queue
@@ -85,16 +86,15 @@ class Sniffer:
 
             # Ignore any exceptions
             try:
-                msg = self._message_factory.create(io.BytesIO(data))
-
-                if msg is not None:
-                    self.logger.debug("Received message: {}".format(msg))
+                messages = self._message_factory.create(io.BytesIO(data))
+                self.logger.debug("Received messages: {}".format(messages))
+                for msg in messages:
                     self._buckets[nodeid].put(msg)
 
             except Exception as e:
                 # Just print the exception to the console
                 print("EXCEPTION: %s" % e)
-                pass
+                traceback.print_exc()
 
         self.logger.debug("Sniffer stopped.")
 

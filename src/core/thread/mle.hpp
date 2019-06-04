@@ -398,26 +398,26 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
      * This method removes delayed response header from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the header.
-     *
      */
-    static otError RemoveFrom(Message &aMessage)
+    static void RemoveFrom(Message &aMessage)
     {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-    };
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
+    }
 
     /**
      * This method returns a time when the message shall be sent.
@@ -545,7 +545,7 @@ public:
      * @param[in]  aScanChannels          A bit vector indicating which channels to scan.
      * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
-     * @param[in]  aEnableEui64Filtering  Enable filtering out MLE discovery responses that don't match our factory
+     * @param[in]  aEnableFiltering       Enable filtering out MLE discovery responses that don't match our factory
      *                                    assigned EUI64.
      * @param[in]  aHandler               A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext               A pointer to arbitrary context information.
@@ -557,7 +557,7 @@ public:
     otError Discover(const Mac::ChannelMask &aScanChannels,
                      uint16_t                aPanId,
                      bool                    aJoiner,
-                     bool                    aEnableEui64Filtering,
+                     bool                    aEnableFiltering,
                      DiscoverHandler         aCallback,
                      void *                  aContext);
 
@@ -567,7 +567,7 @@ public:
      * @returns true if an MLE Thread Discovery is in progress, false otherwise.
      *
      */
-    bool IsDiscoverInProgress(void) const { return mIsDiscoverInProgress; }
+    bool IsDiscoverInProgress(void) const { return mDiscoverInProgress; }
 
     /**
      * This method is called by the MeshForwarder to indicate that discovery is complete.
@@ -636,11 +636,13 @@ public:
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
      *
+     * @param[in]  aDeviceMode  The device mode to set.
+     *
      * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
      * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
      *
      */
-    otError SetDeviceMode(uint8_t aMode);
+    otError SetDeviceMode(uint8_t aDeviceMode);
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -700,10 +702,10 @@ public:
     /**
      * This method sets the Mesh Local Prefix.
      *
-     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
+     * @param[in]  aMeshLocalPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aPrefix);
+    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix);
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -1070,6 +1072,16 @@ public:
      */
     void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
 
+    /**
+     * This method requests MLE layer to prepare and send a shorter version of Child ID Request message by only
+     * including the mesh-local IPv6 address in the Address Registration TLV.
+     *
+     * This method should be called when a previous MLE Child ID Request message would require fragmentation at 6LoWPAN
+     * layer.
+     *
+     */
+    void RequestShorterChildIdRequest(void);
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1101,6 +1113,17 @@ protected:
     enum
     {
         kMleMaxResponseDelay = 1000u, ///< Maximum delay before responding to a multicast request.
+    };
+
+    /**
+     * This enumeration type is used in `AppendAddressRegistration()` to determine which addresses to include in the
+     * appended Address Registration TLV.
+     *
+     */
+    enum AddressRegistrationMode
+    {
+        kAppendAllAddresses,  ///< Append all addresses (unicast/multicast) in Address Registration TLV.
+        kAppendMeshLocalOnly, ///< Only append the Mesh Local (ML-EID) address in Address Registration TLV.
     };
 
     /**
@@ -1321,12 +1344,13 @@ protected:
      * This method appends an Address Registration TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aMode     Determines which addresses to include in the TLV (see `AddressRegistrationMode`).
      *
      * @retval OT_ERROR_NONE     Successfully appended the Address Registration TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
      *
      */
-    otError AppendAddressRegistration(Message &aMessage);
+    otError AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     /**
@@ -1549,21 +1573,21 @@ protected:
     /**
      * This method prints an MLE log message with an IPv6 address.
      *
-     * @param[in]  aLogMessage  The log message string.
-     * @param[in]  aAddress     The IPv6 address of the peer.
+     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAddress    The IPv6 address of the peer.
      *
      */
-    void LogMleMessage(const char *aLogMessage, const Ip6::Address &aAddress) const;
+    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const;
 
     /**
      * This method prints an MLE log message with an IPv6 address and RLOC16.
      *
-     * @param[in]  aLogMessage  The log message string.
-     * @param[in]  aAddress     The IPv6 address of the peer.
-     * @param[in]  aRloc        The RLOC16.
+     * @param[in]  aLogString  The log message string.
+     * @param[in]  aAddress    The IPv6 address of the peer.
+     * @param[in]  aRloc       The RLOC16.
      *
      */
-    void LogMleMessage(const char *aLogMessage, const Ip6::Address &aAddress, uint16_t aRloc) const;
+    void LogMleMessage(const char *aLogString, const Ip6::Address &aAddress, uint16_t aRloc) const;
 
     /**
      * This method triggers MLE Announce on previous channel after the Thread device successfully
@@ -1697,6 +1721,7 @@ private:
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
+    bool    HasUnregisteredAddress(void);
 
     uint32_t GetAttachStartDelay(void) const;
     otError  SendParentRequest(ParentRequestType aType);
@@ -1753,6 +1778,8 @@ private:
     uint8_t                 mDataRequestAttempts;
     DataRequestState        mDataRequestState;
 
+    AddressRegistrationMode mAddressRegistrationMode;
+
     uint8_t       mParentLinkMargin;
     bool          mParentIsSingleton;
     bool          mReceivedResponseFromParent;
@@ -1765,8 +1792,10 @@ private:
 
     DiscoverHandler mDiscoverHandler;
     void *          mDiscoverContext;
-    bool            mIsDiscoverInProgress;
-    bool            mEnableEui64Filtering;
+    uint16_t        mDiscoverCcittIndex;
+    uint16_t        mDiscoverAnsiIndex;
+    bool            mDiscoverInProgress;
+    bool            mDiscoverEnableFiltering;
 
 #if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
@@ -1788,7 +1817,7 @@ private:
     Ip6::NetifUnicastAddress mLeaderAloc;
 
 #if OPENTHREAD_ENABLE_SERVICE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVER_ALOCS];
+    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS];
 #endif
 
     otMleCounters mCounters;

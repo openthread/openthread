@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,22 +38,25 @@
 
 #include "utils/wrap_stdint.h"
 
-#include <openthread/platform/random.h>
+#include <openthread/error.h>
+
+#ifndef OPENTHREAD_RADIO
+
+#include <mbedtls/ctr_drbg.h>
+
+#endif // OPENTHREAD_RADIO
 
 namespace ot {
 namespace Random {
+namespace NonCrypto {
 
 /**
- * @addtogroup core-random
+ * This function generates and returns a random `uint32_t` value.
  *
- * @brief
- *   This module includes definitions for OpenThread random number generation.
- *
- *   The functions in this header file uses the platform random number generator `otPlatRandomGet()`.
- *
- * @{
+ * @returns    A random `uint32_t` value.
  *
  */
+uint32_t GetUint32(void);
 
 /**
  * This function generates and returns a random byte.
@@ -63,7 +66,7 @@ namespace Random {
  */
 inline uint8_t GetUint8(void)
 {
-    return static_cast<uint8_t>(otPlatRandomGet() & 0xff);
+    return static_cast<uint8_t>(GetUint32() & 0xff);
 }
 
 /**
@@ -74,18 +77,7 @@ inline uint8_t GetUint8(void)
  */
 inline uint16_t GetUint16(void)
 {
-    return static_cast<uint16_t>(otPlatRandomGet() & 0xffff);
-}
-
-/**
- * This function generates and returns a random `uint32_t` value.
- *
- * @returns    A random `uint32_t` value.
- *
- */
-inline uint32_t GetUint32(void)
-{
-    return otPlatRandomGet();
+    return static_cast<uint16_t>(GetUint32() & 0xffff);
 }
 
 /**
@@ -164,9 +156,53 @@ inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
 }
 
 /**
- * @}
+ * This function seeds a software random generator.
+ *
+ * @param[in]  aSeed  Seed value.
  *
  */
+void Seed(uint32_t aSeed);
+
+} // namespace NonCrypto
+
+#ifndef OPENTHREAD_RADIO
+
+namespace Crypto {
+
+/**
+ * This function initializes cryptographic random number generator.
+ *
+ */
+void Init(void);
+
+/**
+ * This function deinitializes cryptographic random number generator.
+ *
+ */
+void Deinit(void);
+
+/**
+ * This function fills a given buffer with cryptographically secure random bytes.
+ *
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ *
+ * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
+ *
+ */
+otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
+
+/**
+ * This function returns initialized mbedtls_ctr_drbg_context.
+ *
+ * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
+ *
+ */
+mbedtls_ctr_drbg_context *MbedTlsContextGet(void);
+
+} // namespace Crypto
+
+#endif // OPENTHREAD_RADIO
 
 } // namespace Random
 } // namespace ot

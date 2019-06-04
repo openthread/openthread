@@ -46,13 +46,9 @@
 #include "hal/nrf_radio.h"
 
 /// Maximum number of Short Addresses of nodes for which there is pending data in buffer.
-#define NUM_PENDING_SHORT_ADDRESSES     NRF_802154_PENDING_SHORT_ADDRESSES
+#define NUM_PENDING_SHORT_ADDRESSES    NRF_802154_PENDING_SHORT_ADDRESSES
 /// Maximum number of Extended Addresses of nodes for which there is pending data in buffer.
-#define NUM_PENDING_EXTENDED_ADDRESSES  NRF_802154_PENDING_EXTENDED_ADDRESSES
-/// Value used to mark Short Address as unused.
-#define UNUSED_PENDING_SHORT_ADDRESS    ((uint8_t[SHORT_ADDRESS_SIZE]) {0xff, 0xff})
-/// Value used to mark Extended Address as unused.
-#define UNUSED_PENDING_EXTENDED_ADDRESS ((uint8_t[EXTENDED_ADDRESS_SIZE]) {0})
+#define NUM_PENDING_EXTENDED_ADDRESSES NRF_802154_PENDING_EXTENDED_ADDRESSES
 
 /// If pending bit in ACK frame should be set to valid or default value.
 static bool m_setting_pending_bit_enabled;

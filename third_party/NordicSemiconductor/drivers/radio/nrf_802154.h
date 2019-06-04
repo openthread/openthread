@@ -400,10 +400,10 @@ bool nrf_802154_transmit(const uint8_t * p_data, uint8_t length, bool cca);
  * @note This function is implemented in zero-copy fashion. It passes the given buffer pointer to
  *       the RADIO peripheral.
  *
- * This function works as delayed version of the @sref nrf_drv_radio802154_transmit_raw. It is not
+ * This function works as delayed version of the @sref nrf_802154_transmit_raw. It is not
  * blocking, but queues delayed transmission using Radio Scheduler module. If delayed transmission
- * cannot be performed (the @ref nrf_drv_radio802154_transmit_raw would return false) or requested
- * transmission timeslot is denied, the @ref nrf_drv_radio802154_transmit_failed with the
+ * cannot be performed (the @ref nrf_802154_transmit_raw would return false) or requested
+ * transmission timeslot is denied, the @ref nrf_802154_transmit_failed with the
  * @ref NRF_802154_TX_ERROR_TIMESLOT_DENIED argument is called.
  *
  * This function is designed to transmit first symbol of SHR at given time.
@@ -487,8 +487,10 @@ bool nrf_802154_continuous_carrier(void);
  * @brief Notify that transmitting the ACK frame has started.
  *
  * @note This function should be very short to prevent dropping frames by the driver.
+ *
+ * @param[in]  p_data  Pointer to buffer containing ACK data (PHR + PSDU).
  */
-extern void nrf_802154_tx_ack_started(void);
+extern void nrf_802154_tx_ack_started(const uint8_t * p_data);
 
 #if NRF_802154_USE_RAW_API
 
@@ -942,6 +944,24 @@ void nrf_802154_pan_coord_set(bool enabled);
  * @retval  false  If radio is not configured as the PAN coordinator.
  */
 bool nrf_802154_pan_coord_get(void);
+
+/**
+ * @brief Add address of a peer node for which provided ACK data should be set.
+ *
+ * @param[in]  p_addr    Array of bytes containing the address of the node (little-endian).
+ * @param[in]  extended  If the given address is an extended MAC address or a short MAC address.
+ * @param[in]  p_data    Pointer to the buffer containing data to be set.
+ * @param[in]  length    Length of @p p_data.
+ * @param[in]  data_type Type of data to be set. Please refer to nrf_802154_ack_data_t type.
+ *
+ * @retval True   Address successfully added to the list.
+ * @retval False  There is not enough memory to store this address in the list.
+ */
+bool nrf_802154_ack_data_set(const uint8_t * p_addr,
+                             bool            extended,
+                             const void    * p_data,
+                             uint16_t        length,
+                             uint8_t         data_type);
 
 /**
  * @brief Enable or disable setting pending bit in automatically transmitted ACK frames.

@@ -272,7 +272,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
  * @sa otMessageWrite
  *
  */
-int otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
+uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
 /**
  * Write bytes to a message.

@@ -26,6 +26,41 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+# OpenThread Features (Makefile default configuration).
+
+BORDER_AGENT        ?= 0
+BORDER_ROUTER       ?= 0
+CERT_LOG            ?= 0
+COAP                ?= 0
+COAPS               ?= 0
+COMMISSIONER        ?= 0
+COVERAGE            ?= 0
+CHANNEL_MANAGER     ?= 0
+CHANNEL_MONITOR     ?= 0
+CHILD_SUPERVISION   ?= 0
+DEBUG               ?= 0
+DHCP6_CLIENT        ?= 0
+DHCP6_SERVER        ?= 0
+DIAGNOSTIC          ?= 0
+DISABLE_DOC         ?= 0
+DNS_CLIENT          ?= 0
+ECDSA               ?= 0
+JAM_DETECTION       ?= 0
+JOINER              ?= 0
+LEGACY              ?= 0
+LINK_RAW            ?= 0
+MAC_FILTER          ?= 0
+MTD_NETDIAG         ?= 0
+PLATFORM_UDP        ?= 0
+SERVICE             ?= 0
+SETTINGS_RAM        ?= 0
+# SLAAC is enabled by default
+SLAAC               ?= 1
+SNTP_CLIENT         ?= 0
+TIME_SYNC           ?= 0
+UDP_FORWARD         ?= 0
+
+
 ifeq ($(BORDER_AGENT),1)
 configure_OPTIONS              += --enable-border-agent
 endif
@@ -127,12 +162,16 @@ ifeq ($(SERVICE),1)
 configure_OPTIONS              += --enable-service
 endif
 
+ifeq ($(SLAAC),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_SLAAC=1
+endif
+
 ifeq ($(SNTP_CLIENT),1)
 configure_OPTIONS              += --enable-sntp-client
 endif
 
 ifeq ($(TIME_SYNC),1)
-COMMONCFLAGS                   += -DPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_HEADER_IE_SUPPORT=1
 endif
 
 ifeq ($(UDP_FORWARD),1)
@@ -155,6 +194,10 @@ endif
 ifeq ($(DEBUG_UART_LOG),1)
 CFLAGS   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
 CXXFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
+endif
+
+ifeq ($(SETTINGS_RAM),1)
+COMMONCFLAGS += -DOPENTHREAD_SETTINGS_RAM=1
 endif
 
 ifeq ($(FULL_LOGS),1)

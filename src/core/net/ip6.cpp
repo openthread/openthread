@@ -38,9 +38,9 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
-#include "common/owner-locator.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_routes.hpp"
@@ -69,8 +69,8 @@ Ip6::Ip6(Instance &aInstance)
 
 Message *Ip6::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
 {
-    return GetInstance().GetMessagePool().New(
-        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+    return Get<MessagePool>().New(Message::kTypeIp6,
+                                  sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMessageSettings *aSettings)
@@ -84,7 +84,7 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMes
     }
 
     SuccessOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)));
-    VerifyOrExit((message = GetInstance().GetMessagePool().New(Message::kTypeIp6, 0, &settings)) != NULL);
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
     {
@@ -215,6 +215,7 @@ otError Ip6::AddMplOption(Message &aMessage, Header &aHeader)
     SuccessOrExit(error = aMessage.Prepend(&hbhHeader, sizeof(hbhHeader)));
     aHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(hbhHeader) + sizeof(mplOption));
     aHeader.SetNextHeader(kProtoHopOpts);
+
 exit:
     return error;
 }
@@ -248,18 +249,18 @@ exit:
     return error;
 }
 
-otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo &aMessageInfo)
+otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
-                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
+    VerifyOrExit(aHeader.GetDestination().IsMulticast() &&
+                 aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
-    if (aIp6Header.GetDestination().IsRealmLocalMulticast())
+    if (aHeader.GetDestination().IsRealmLocalMulticast())
     {
-        aMessage.RemoveHeader(sizeof(aIp6Header));
+        aMessage.RemoveHeader(sizeof(aHeader));
 
-        if (aIp6Header.GetNextHeader() == kProtoHopOpts)
+        if (aHeader.GetNextHeader() == kProtoHopOpts)
         {
             HopByHopHeader hbh;
             uint16_t       hbhLength = 0;
@@ -269,7 +270,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             aMessage.Read(0, sizeof(hbh), &hbh);
             hbhLength = (hbh.GetLength() + 1) * 8;
 
-            VerifyOrExit(hbhLength <= aIp6Header.GetPayloadLength(), error = OT_ERROR_PARSE);
+            VerifyOrExit(hbhLength <= aHeader.GetPayloadLength(), error = OT_ERROR_PARSE);
 
             // increase existing hop-by-hop option header length by 8 bytes
             hbh.SetLength(hbh.GetLength() + 1);
@@ -280,7 +281,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             aMessage.CopyTo(8, 0, hbhLength, aMessage);
 
             // insert MPL Option
-            mMpl.InitOption(mplOption, aIp6Header.GetSource());
+            mMpl.InitOption(mplOption, aHeader.GetSource());
             aMessage.Write(hbhLength, mplOption.GetTotalLength(), &mplOption);
 
             // insert Pad Option (if needed)
@@ -292,19 +293,19 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             }
 
             // increase IPv6 Payload Length
-            aIp6Header.SetPayloadLength(aIp6Header.GetPayloadLength() + 8);
+            aHeader.SetPayloadLength(aHeader.GetPayloadLength() + 8);
         }
         else
         {
-            SuccessOrExit(error = AddMplOption(aMessage, aIp6Header));
+            SuccessOrExit(error = AddMplOption(aMessage, aHeader));
         }
 
-        SuccessOrExit(error = aMessage.Prepend(&aIp6Header, sizeof(aIp6Header)));
+        SuccessOrExit(error = aMessage.Prepend(&aHeader, sizeof(aHeader)));
     }
     else
     {
-        if (aIp6Header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(aIp6Header.GetDestination()))
+        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
+            Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
         {
             Message *messageCopy = NULL;
 
@@ -319,7 +320,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo 
             }
         }
 
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, aIp6Header, aMessageInfo));
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader, aMessageInfo));
     }
 
 exit:
@@ -357,8 +358,13 @@ otError Ip6::RemoveMplOption(Message &aMessage)
         switch (option.GetType())
         {
         case OptionMpl::kType:
+            // if multiple MPL options exist, discard packet
+            VerifyOrExit(mplOffset == 0, error = OT_ERROR_PARSE);
+
             mplOffset = offset;
             mplLength = option.GetLength();
+
+            VerifyOrExit(mplLength <= sizeof(OptionMpl) - sizeof(OptionHeader), error = OT_ERROR_PARSE);
 
             if (mplOffset == sizeof(ip6Header) + sizeof(hbh) && hbh.GetLength() == 0)
             {
@@ -500,7 +506,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
-        if (GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
+        if (Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
         {
             Message *messageCopy = NULL;
 
@@ -554,17 +560,17 @@ otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
     uint16_t       endOffset;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(hbhHeader), &hbhHeader) == sizeof(hbhHeader),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
     endOffset = aMessage.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
 
-    VerifyOrExit(endOffset <= aMessage.GetLength(), error = OT_ERROR_DROP);
+    VerifyOrExit(endOffset <= aMessage.GetLength(), error = OT_ERROR_PARSE);
 
     aMessage.MoveOffset(sizeof(optionHeader));
 
     while (aMessage.GetOffset() < endOffset)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         if (optionHeader.GetType() == OptionPad1::kType)
         {
@@ -573,7 +579,7 @@ otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
         }
 
         VerifyOrExit(aMessage.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         switch (optionHeader.GetType())
         {
@@ -615,7 +621,7 @@ otError Ip6::HandleFragment(Message &aMessage)
     FragmentHeader fragmentHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
-                 error = OT_ERROR_DROP);
+                 error = OT_ERROR_PARSE);
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
 
@@ -637,7 +643,7 @@ otError Ip6::HandleExtensionHeaders(Message &aMessage,
     while (aReceive == true || aNextHeader == kProtoHopOpts)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
-                     error = OT_ERROR_DROP);
+                     error = OT_ERROR_PARSE);
 
         switch (aNextHeader)
         {
@@ -696,15 +702,16 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     otError  error       = OT_ERROR_NONE;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_DROP);
+    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_NO_ROUTE);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = OT_ERROR_NO_ROUTE);
 
     if (mIsReceiveIp6FilterEnabled)
     {
-        // do not pass messages sent to an RLOC/ALOC
-        VerifyOrExit(!aMessageInfo.GetSockAddr().IsRoutingLocator() &&
-                         !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator(),
-                     error = OT_ERROR_NO_ROUTE);
+        // do not pass messages sent to an RLOC/ALOC, except Service Locator
+        VerifyOrExit(
+            (!aMessageInfo.GetSockAddr().IsRoutingLocator() && !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator()) ||
+                aMessageInfo.GetSockAddr().IsAnycastServiceLocator(),
+            error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
         {
@@ -715,7 +722,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_NO_ROUTE);
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_DROP);
             }
 
             break;
@@ -741,7 +748,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
             case kCoapUdpPort:
 
                 // do not pass TMF messages
-                if (GetInstance().GetThreadNetif().IsTmfMessage(aMessageInfo))
+                if (Get<ThreadNetif>().IsTmfMessage(aMessageInfo))
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
@@ -751,7 +758,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
             default:
 #if OPENTHREAD_FTD
-                if (udp.GetDestinationPort() == GetInstance().Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
+                if (udp.GetDestinationPort() == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
                 {
                     ExitNow(error = OT_ERROR_NO_ROUTE);
                 }
@@ -864,7 +871,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
             }
 
             if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
-                GetInstance().GetThreadNetif().GetMle().HasSleepyChildrenSubscribed(header.GetDestination()))
+                Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
             {
                 forward = true;
             }

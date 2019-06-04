@@ -38,14 +38,15 @@
 
 #include <openthread/platform/toolchain.h>
 
+#include "utils/wrap_stdint.h"
+
 namespace ot {
 
 class Instance;
-class ThreadNetif;
-class Notifier;
-namespace Ip6 {
-class Ip6;
-}
+
+#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+extern uint64_t gInstanceRaw[];
+#endif
 
 /**
  * @addtogroup core-locator
@@ -61,8 +62,8 @@ class Ip6;
  * This class implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
- * to get to its owning/parent OpenThread `Instance` and other objects within the OpenTread hierarchy (e.g. the
- * `ThreadNetif` or `Ip6::Ip6` objects).
+ * to get to its owning/parent OpenThread `Instance` and also any other `Type` within the `Instance` member variable
+ * property hierarchy (using `Get<Type>()` method).
  *
  * If multiple-instance feature is supported, the owning/parent OpenThread `Instance` is tracked as a reference. In the
  * single-instance case, this class becomes an empty base class.
@@ -80,32 +81,21 @@ public:
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
     Instance &GetInstance(void) const { return mInstance; }
 #else
-    Instance &GetInstance(void) const;
+    Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
 #endif
 
     /**
-     * This method returns a reference to the Ip6.
+     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
      *
-     * @returns   A reference to the Ip6.
+     * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
      *
-     */
-    Ip6::Ip6 &GetIp6(void) const;
-
-    /**
-     * This method returns a reference to the thread network interface.
+     * Note that any `Type` for which the `Get<Type>` is defined MUST be uniquely accessible from the OpenThread
+     * `Instance` through the member variable property hierarchy.
      *
-     * @returns   A reference to the thread network interface.
+     * @returns A reference to the `Type` object of the instance.
      *
      */
-    ThreadNetif &GetNetif(void) const;
-
-    /**
-     * This method returns a reference to the Notifier.
-     *
-     * @returns   A reference to the Notifier.
-     *
-     */
-    Notifier &GetNotifier(void) const;
+    template <typename Type> inline Type &Get(void) const; // Implemented in `locator-getters.hpp`.
 
 protected:
     /**
@@ -114,7 +104,7 @@ protected:
      * @param[in]  aInstance  A pointer to the otInstance.
      *
      */
-    InstanceLocator(Instance &aInstance)
+    explicit InstanceLocator(Instance &aInstance)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         : mInstance(aInstance)
 #endif
@@ -151,18 +141,18 @@ public:
         return *static_cast<OwnerType *>(mOwner);
     }
 #else
-    // Implemented in `owner-locator.hpp`
+    // Implemented in `locator-getters.hpp`
     ;
 #endif
 
 protected:
     /**
-     * This constructor initializes the object
+     * This constructor initializes the object.
      *
      * @param[in]  aOwner   A pointer to the owner object (as `void *`).
      *
      */
-    OwnerLocator(void *aOwner)
+    explicit OwnerLocator(void *aOwner)
 #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
         : mOwner(aOwner)
 #endif

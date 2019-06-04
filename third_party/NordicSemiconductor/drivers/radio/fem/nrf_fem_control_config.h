@@ -45,15 +45,11 @@ extern "C" {
 /** Time in us when LNA GPIO is activated before radio is ready for reception. */
 #define NRF_FEM_LNA_TIME_IN_ADVANCE 5
 
-#ifdef NRF52840_XXAA
-
-/** Radio ramp-up time in TX mode, in us. */
-#define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 40
-
-/** Radio ramp-up time in RX mode, in us. */
-#define NRF_FEM_RADIO_RX_STARTUP_LATENCY_US 40
-
-#elif defined NRF52811_XXAA
+#if defined(NRF52840_XXAA) || \
+    defined(NRF52840_AAAA) || \
+    defined(NRF52840_AABA) || \
+    defined(NRF52840_AACX) || \
+    defined(NRF52811_XXAA)
 
 /** Radio ramp-up time in TX mode, in us. */
 #define NRF_FEM_RADIO_TX_STARTUP_LATENCY_US 40

@@ -36,6 +36,7 @@
 #include <openthread/message.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -100,7 +101,7 @@ otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
     return message.Append(aBuf, aLength);
 }
 
-int otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
+uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
     const Message &message = *static_cast<const Message *>(aMessage);
     return message.Read(aOffset, aLength, aBuf);
@@ -170,39 +171,35 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 
     aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 
-    aBufferInfo->mFreeBuffers = instance.GetMessagePool().GetFreeBufferCount();
+    aBufferInfo->mFreeBuffers = instance.Get<MessagePool>().GetFreeBufferCount();
 
-    instance.GetThreadNetif().GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
-                                                                        aBufferInfo->m6loSendBuffers);
+    instance.Get<MeshForwarder>().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages, aBufferInfo->m6loSendBuffers);
 
-    instance.GetThreadNetif().GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
-                                                                              aBufferInfo->m6loReassemblyBuffers);
+    instance.Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
+                                                               aBufferInfo->m6loReassemblyBuffers);
 
 #if OPENTHREAD_FTD
-    instance.GetThreadNetif().GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
-                                                                             aBufferInfo->mArpBuffers);
+    instance.Get<MeshForwarder>().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages, aBufferInfo->mArpBuffers);
 #else
     aBufferInfo->mArpMessages             = 0;
     aBufferInfo->mArpBuffers              = 0;
 #endif
 
-    instance.GetThreadNetif().GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
+    instance.Get<Ip6::Ip6>().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
 
-    instance.GetThreadNetif().GetIp6().GetMpl().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
-                                                                                aBufferInfo->mMplBuffers);
+    instance.Get<Ip6::Mpl>().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages, aBufferInfo->mMplBuffers);
 
-    instance.GetThreadNetif().GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages, aBufferInfo->mMleBuffers);
+    instance.Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages, aBufferInfo->mMleBuffers);
 
-    instance.GetThreadNetif().GetCoap().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages,
-                                                                     aBufferInfo->mCoapBuffers);
-    instance.GetThreadNetif().GetCoap().GetCachedResponses().GetInfo(messages, buffers);
+    instance.Get<Coap::Coap>().GetRequestMessages().GetInfo(aBufferInfo->mCoapMessages, aBufferInfo->mCoapBuffers);
+    instance.Get<Coap::Coap>().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 
 #if OPENTHREAD_ENABLE_DTLS
-    instance.GetThreadNetif().GetCoapSecure().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
-                                                                           aBufferInfo->mCoapSecureBuffers);
-    instance.GetThreadNetif().GetCoapSecure().GetCachedResponses().GetInfo(messages, buffers);
+    instance.Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
+                                                                  aBufferInfo->mCoapSecureBuffers);
+    instance.Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(messages, buffers);
     aBufferInfo->mCoapSecureMessages += messages;
     aBufferInfo->mCoapSecureBuffers += buffers;
 #else

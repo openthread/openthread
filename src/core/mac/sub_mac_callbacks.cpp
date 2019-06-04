@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "mac/mac.hpp"
 
 namespace ot {
@@ -49,7 +50,7 @@ void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {
@@ -81,7 +82,7 @@ void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aE
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {
@@ -99,7 +100,7 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     Mac &mac = *static_cast<Mac *>(this);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.GetInstance().GetLinkRaw();
+    LinkRaw &linkRaw = mac.Get<LinkRaw>();
 
     if (linkRaw.IsEnabled())
     {
@@ -143,8 +144,13 @@ void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t)
 {
 }
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &, const Frame *, otError, uint8_t, bool)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
+                                                  const Frame *aAckFrame,
+                                                  otError      aError,
+                                                  uint8_t      aRetryCount,
+                                                  bool         aWillRetx)
 {
+    static_cast<LinkRaw *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)

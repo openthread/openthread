@@ -90,7 +90,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset) const { return mLocal.Get(aDataset); }
+    otError Read(Dataset &aDataset) const { return mLocal.Read(aDataset); }
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -101,7 +101,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(otOperationalDataset &aDataset) const { return mLocal.Get(aDataset); }
+    otError Read(otOperationalDataset &aDataset) const { return mLocal.Read(aDataset); }
 
     /**
      * This method retrieves the channel mask from local dataset.
@@ -173,7 +173,7 @@ protected:
      *
      */
     DatasetManager(Instance &          aInstance,
-                   const Tlv::Type     aType,
+                   Tlv::Type           aType,
                    const char *        aUriGet,
                    const char *        aUriSet,
                    TimerMilli::Handler aTimerHandler);
@@ -185,7 +185,7 @@ protected:
     void Clear(void);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
@@ -193,15 +193,15 @@ protected:
      * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
      *
      */
-    otError Set(const Dataset &aDataset);
+    otError Save(const Dataset &aDataset);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -214,7 +214,7 @@ protected:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
      * This method handles a MGMT_GET request message.
@@ -224,7 +224,7 @@ protected:
      * @param[in]  aMessageInfo  The message info.
      *
      */
-    void Get(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
      * This method compares the partition's Operational Dataset with that stored in non-volatile memory.
@@ -240,6 +240,13 @@ protected:
      *
      */
     void HandleTimer(void);
+
+    /**
+     * This method re-defines template `Get<Type>()` as the `InstanceLoctaor` (base class) definition is shadowed by
+     * the public `Get(dataset)` methods in this class.
+     *
+     */
+    template <typename Type> inline Type &Get(void) const { return InstanceLocator::Get<Type>(); }
 
     DatasetLocal mLocal;
     Timestamp    mTimestamp;
@@ -288,7 +295,7 @@ protected:
      * @retval OT_ERROR_DROP  The MGMT_SET request message was dropped.
      *
      */
-    otError Set(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
@@ -307,20 +314,32 @@ public:
     explicit ActiveDataset(Instance &aInstance);
 
     /**
+     * This method indicates whether the Active Dataset is partially complete.
+     *
+     * This method is primarily used to determine whether a user has supplied a partial Active Dataset for use
+     * with joining a network.
+     *
+     * @retval TRUE   if an Active Dataset is saved but does not include an Active Timestamp.
+     * @retval FALSE  if an Active Dataset is not saved or does include an Active Timestamp.
+     *
+     */
+    bool IsPartiallyComplete(void) const;
+
+    /**
      * This method clears the Active Operational Dataset.
      *
      */
-    void Clear(void);
+    void Clear(void) { DatasetManager::Clear(); }
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * This method also reconfigures the Thread interface.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    void Set(const Dataset &aDataset);
+    void Save(const Dataset &aDataset) { DatasetManager::Save(aDataset); }
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -334,7 +353,7 @@ public:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
      * This method sets the Operational Dataset in non-volatile memory.
@@ -342,9 +361,20 @@ public:
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset) { return DatasetManager::Save(aDataset); }
 
 #if OPENTHREAD_FTD
+
+    /**
+     * This method creates a new Operational Dataset to use when forming a new network.
+     *
+     * @param[out]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE    Successfully created a new Operational Dataset.
+     * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
+     *
+     */
+    otError CreateNewNetwork(otOperationalDataset &aDataset);
 
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
@@ -417,14 +447,14 @@ public:
     void ClearNetwork(void);
 
     /**
-     * This method sets the Operational Dataset in non-volatile memory.
+     * This method saves the Operational Dataset in non-volatile memory.
      *
      * This method also starts the Delay Timer.
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
 
     /**
      * This method sets the Operational Dataset for the partition.
@@ -439,7 +469,7 @@ public:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 #if OPENTHREAD_FTD
 

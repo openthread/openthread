@@ -50,8 +50,10 @@ protocol document.
     to be successfully transmitted. Increasing this value will (up to a point)
     decrease latency for smaller packets at the expense of overall bandwidth.
     Default value is 32. The minimum value is 0. The maximum value is 2043.
-*   `--verbose`: Increase debug verbosity (can be repeated up to 3 times,
-    each time increasing the verbosity of the logs).
+*   `--verbose[=num]`: Change log verbosity level (Repeatable).
+    num argument is optional and value 1 is default when not specified. Every
+    instance of this option will increment or decrement (when num is negative)
+    the syslog log level accordingly. Starting log level is LOG_NOTICE (5).
 *   `--help`: Print out usage information to `stdout` and exit.
 
 `spi-device-path` is a required argument since it indicates which SPI

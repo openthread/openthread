@@ -434,8 +434,16 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
+
+if test "$enable_builtin_mbedtls" = "yes"; then
+    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1
+else
+    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0
+fi
+
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
+AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS], [${OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS}], [Define to 1 if you want to enable support for bultin-mbedtls.])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
@@ -460,15 +468,15 @@ AC_ARG_ENABLE(posix-app,
     [enable_posix_app=no])
 
 if test "$enable_posix_app" = "yes"; then
-    OPENTHREAD_ENABLE_POSIX_APP=1
+    OPENTHREAD_PLATFORM_POSIX_APP=1
 else
-    OPENTHREAD_ENABLE_POSIX_APP=0
+    OPENTHREAD_PLATFORM_POSIX_APP=0
 fi
 
 AC_MSG_RESULT(${enable_posix_app})
-AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP], [test "${enable_posix_app}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_POSIX_APP], [${OPENTHREAD_ENABLE_POSIX_APP}], [Define to 1 to build posix application.])
+AC_SUBST(OPENTHREAD_PLATFORM_POSIX_APP)
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX_APP], [test "${enable_posix_app}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_PLATFORM_POSIX_APP], [${OPENTHREAD_PLATFORM_POSIX_APP}], [Define to 1 to build posix application.])
 
 #
 # POSIX Daemon
@@ -736,6 +744,30 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${with_ncp_bus}"  = "uart"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_UART],[${OPENTHREAD_ENABLE_NCP_UART}],[Define to 1 to enable the NCP UART interface.])
 AC_MSG_CHECKING([should NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
+
+#
+# Readline - readline library to use for POSIX CLI
+#
+
+AC_ARG_WITH(
+    [readline],
+    [AS_HELP_STRING([--with-readline],[Specify the readline library (none|readline|edit) @<:@default=none@:>@.])],
+    [],
+    [with_readline=none])
+
+case "${with_readline}" in
+"none")
+    ;;
+"readline")
+    AC_CHECK_LIB([readline], [rl_callback_handler_install])
+    ;;
+"edit")
+    AC_CHECK_LIB([edit], [rl_callback_handler_install])
+    ;;
+*)
+    AC_MSG_ERROR([unexpected --with-readline=${with_readline}])
+    ;;
+esac
 
 #
 # Thread UDP forward
@@ -1653,19 +1685,18 @@ AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
-
 #
 # Examples
 #
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, da15000, efr32, emsk, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32, emsk, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
         none)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|da15000|efr32|emsk|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32|emsk|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
             fi
@@ -1704,11 +1735,6 @@ case ${with_examples} in
     cc2652)
         OPENTHREAD_EXAMPLES_CC2652=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2652],[${OPENTHREAD_EXAMPLES_CC2652}],[Define to 1 if you want to use cc2652 examples])
-        ;;
-
-    da15000)
-        OPENTHREAD_EXAMPLES_DA15000=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
     efr32)
@@ -1775,9 +1801,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${with_examples}" = "cc2650"
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2652)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652], [test "${with_examples}" = "cc2652"])
 
-AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${with_examples}" = "da15000"])
-
 AC_SUBST(OPENTHREAD_EXAMPLES_EFR32)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${with_examples}" = "efr32"])
 
@@ -1838,7 +1861,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${OPENTHREAD_ENABLE_POSIX_APP}" = "1" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${OPENTHREAD_PLATFORM_POSIX_APP}" = "1" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
 
 #
 # Checks for libraries and packages.
@@ -1915,6 +1938,7 @@ CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
 LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
+LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by
@@ -1950,8 +1974,10 @@ examples/platforms/cc1352/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/cc2652/Makefile
-examples/platforms/da15000/Makefile
 examples/platforms/efr32/Makefile
+examples/platforms/efr32/sleepy-demo/Makefile
+examples/platforms/efr32/sleepy-demo/efr32-sleepy-demo-ftd/Makefile
+examples/platforms/efr32/sleepy-demo/efr32-sleepy-demo-mtd/Makefile
 examples/platforms/emsk/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile

@@ -41,6 +41,7 @@
 
 #include <openthread/commissioner.h>
 #include <openthread/dataset.h>
+#include <openthread/platform/radio.h>
 
 #include "common/crc16.hpp"
 #include "common/encoding.hpp"
@@ -48,13 +49,14 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "phy/phy.hpp"
+
+namespace ot {
+namespace MeshCoP {
 
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
-
-namespace ot {
-namespace MeshCoP {
 
 /**
  * This class implements MeshCoP TLV generation and parsing.
@@ -135,6 +137,12 @@ public:
      */
     Tlv *GetNext(void) { return static_cast<Tlv *>(ot::Tlv::GetNext()); }
 
+    /**
+     * This method returns a pointer to the next TLV.
+     *
+     * @returns A pointer to the next TLV.
+     *
+     */
     const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
 
     /**
@@ -233,7 +241,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const;
 
     /**
      * This method returns the ChannelPage value.
@@ -261,11 +269,12 @@ public:
 
     /**
      * This method sets the Channel value.
+     * Note: This method also sets the channel page according to the channel value.
      *
      * @param[in]  aChannel  The Channel value.
      *
      */
-    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
+    void SetChannel(uint16_t aChannel);
 
 private:
     uint8_t  mChannelPage;
@@ -451,7 +460,7 @@ public:
      * @returns The PSKc value.
      *
      */
-    const uint8_t *GetPSKc(void) const { return mPSKc; }
+    const otPSKc &GetPSKc(void) const { return mPSKc; }
 
     /**
      * This method sets the PSKc value.
@@ -459,10 +468,10 @@ public:
      * @param[in]  aPSKc  A pointer to the PSKc value.
      *
      */
-    void SetPSKc(const uint8_t *aPSKc) { memcpy(mPSKc, aPSKc, sizeof(mPSKc)); }
+    void SetPSKc(const otPSKc &aPSKc) { mPSKc = aPSKc; }
 
 private:
-    uint8_t mPSKc[16];
+    otPSKc mPSKc;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1364,6 +1373,9 @@ private:
     uint32_t mDelayTimer;
 } OT_TOOL_PACKED_END;
 
+// forward declare ChannelMaskTlv
+class ChannelMaskTlv;
+
 /**
  * This class implements Channel Mask Entry generation and parsing.
  *
@@ -1410,7 +1422,7 @@ public:
      * @returns The total size of this entry (number of bytes).
      *
      */
-    uint16_t GetSize(void) const { return sizeof(ChannelMaskEntryBase) + mMaskLength; }
+    uint16_t GetEntrySize(void) const { return sizeof(ChannelMaskEntryBase) + mMaskLength; }
 
     /**
      * This method clears the bit corresponding to @p aChannel in ChannelMask.
@@ -1451,12 +1463,24 @@ public:
     /**
      * This method gets the next Channel Mask Entry in a Channel Mask TLV.
      *
-     * @param[in] aChannelMaskBaseTlv  A pointer to the Channel Mask TLV to which this entry belongs.
-     *
-     * @returns A pointer to next Channel Mask Entry or NULL if none found.
+     * @returns A pointer to next Channel Mask Entry.
      *
      */
-    const ChannelMaskEntryBase *GetNext(const Tlv *aChannelMaskBaseTlv) const;
+    const ChannelMaskEntryBase *GetNext(void) const
+    {
+        return reinterpret_cast<const ChannelMaskEntryBase *>(reinterpret_cast<const uint8_t *>(this) + GetEntrySize());
+    }
+
+    /**
+     * This method gets the next Channel Mask Entry in a Channel Mask TLV.
+     *
+     * @returns A pointer to next Channel Mask Entry.
+     *
+     */
+    ChannelMaskEntryBase *GetNext(void)
+    {
+        return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskEntryBase *>(this)->GetNext());
+    }
 
 private:
     uint8_t mChannelPage;
@@ -1546,15 +1570,12 @@ public:
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
 
     /**
-     * This method gets the Channel Mask Entry in the Channel Mask TLV.
+     * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @param[in]  aChannelPage  The ChannelPage value.
-     *
-     * @returns A pointer to Channel Mask Entry or NULL if not found.
+     * @returns A pointer to first Channel Mask Entry or NULL if not found.
      *
      */
-    const ChannelMaskEntry *GetMaskEntry(uint8_t aChannelPage) const;
-
+    ChannelMaskEntryBase *GetFirstEntry(void);
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1562,7 +1583,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelMaskTlv : public ChannelMaskBaseTlv, public ChannelMaskEntry
+class ChannelMaskTlv : public ChannelMaskBaseTlv
 {
 public:
     /**
@@ -1573,17 +1594,42 @@ public:
     {
         SetType(kChannelMask);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        ChannelMaskEntry::Init();
+        memset(mEntries, 0, sizeof(mEntries));
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method sets the Channel Mask Entries.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in]  aMask  The Channel Mask value.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv) && ChannelMaskEntry::IsValid(); }
+    void SetChannelMask(uint32_t aChannelMask);
+
+    /**
+     * This method returns the Channel Mask value as a `uint32_t` bit mask.
+     *
+     * @returns The Channel Mask or 0 if not found.
+     *
+     */
+    uint32_t GetChannelMask(void) const;
+
+    /**
+     * This method reads message and returns the Channel Mask value as a `uint32_t` bit mask.
+     *
+     * @param[in]   aMessage     A reference to the message.
+     *
+     * @returns The Channel Mask or 0 if not found.
+     *
+     */
+    static uint32_t GetChannelMask(const Message &aMessage);
+
+private:
+    enum
+    {
+        kNumMaskEntries = Phy::kNumChannelPages,
+    };
+
+    ChannelMaskEntry mEntries[kNumMaskEntries];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1763,6 +1809,11 @@ OT_TOOL_PACKED_BEGIN
 class ProvisioningUrlTlv : public Tlv
 {
 public:
+    enum
+    {
+        kMaxLength = 64, // Maximum number of chars in the Provisioning URL string.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1796,29 +1847,19 @@ public:
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL value.
      *
      */
-    otError SetProvisioningUrl(const char *aProvisioningUrl)
+    void SetProvisioningUrl(const char *aProvisioningUrl)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength + 1) : 0;
+        size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength) : 0;
 
-        VerifyOrExit(len <= kMaxLength, error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mProvisioningUrl, aProvisioningUrl, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     char mProvisioningUrl[kMaxLength];
 } OT_TOOL_PACKED_END;
 
@@ -1863,21 +1904,16 @@ public:
      * @param[in]  aVendorName  A pointer to the Vendor Name value.
      *
      */
-    otError SetVendorName(const char *aVendorName)
+    void SetVendorName(const char *aVendorName)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName) + 1);
+        size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName));
 
-        VerifyOrExit(len <= sizeof(mVendorName), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorName, aVendorName, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -1930,21 +1966,16 @@ public:
      * @param[in]  aVendorModel  A pointer to the Vendor Model value.
      *
      */
-    otError SetVendorModel(const char *aVendorModel)
+    void SetVendorModel(const char *aVendorModel)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel) + 1);
+        size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel));
 
-        VerifyOrExit(len <= sizeof(mVendorModel), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorModel, aVendorModel, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -1997,21 +2028,16 @@ public:
      * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version value.
      *
      */
-    otError SetVendorSwVersion(const char *aVendorSwVersion)
+    void SetVendorSwVersion(const char *aVendorSwVersion)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion) + 1);
+        size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion));
 
-        VerifyOrExit(len <= sizeof(mVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorSwVersion, aVendorSwVersion, len);
         }
-
-    exit:
-        return error;
     }
 
 private:
@@ -2064,21 +2090,16 @@ public:
      * @param[in]  aVendorData  A pointer to the Vendor Data value.
      *
      */
-    otError SetVendorData(const char *aVendorData)
+    void SetVendorData(const char *aVendorData)
     {
-        otError error = OT_ERROR_NONE;
-        size_t  len   = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData) + 1);
+        size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData));
 
-        VerifyOrExit(len <= sizeof(mVendorData), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0)
         {
             memcpy(mVendorData, aVendorData, len);
         }
-
-    exit:
-        return error;
     }
 
 private:

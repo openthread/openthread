@@ -39,16 +39,17 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
 
 using namespace ot;
 
-otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort, void *aContext)
+otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Start(aPort, NULL, aContext);
+    return instance.GetApplicationCoapSecure().Start(aPort);
 }
 
 otError otCoapSecureSetCertificate(otInstance *   aInstance,
@@ -127,14 +128,13 @@ otError otCoapSecureSetPsk(otInstance *   aInstance,
 
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              unsigned char *aPeerCert,
-                                             uint64_t *     aCertLength,
-                                             uint64_t       aCertBufferSize)
+                                             size_t *       aCertLength,
+                                             size_t         aCertBufferSize)
 {
 #ifdef MBEDTLS_BASE64_C
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, (size_t *)aCertLength,
-                                                                        (size_t)aCertBufferSize);
+    return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPeerCert);
@@ -163,11 +163,11 @@ otError otCoapSecureConnect(otInstance *                    aInstance,
                                                        aContext);
 }
 
-otError otCoapSecureDisconnect(otInstance *aInstance)
+void otCoapSecureDisconnect(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Disconnect();
+    instance.GetApplicationCoapSecure().Disconnect();
 }
 
 bool otCoapSecureIsConnected(otInstance *aInstance)
@@ -184,11 +184,11 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance)
     return instance.GetApplicationCoapSecure().IsConnectionActive();
 }
 
-otError otCoapSecureStop(otInstance *aInstance)
+void otCoapSecureStop(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoapSecure().Stop();
+    instance.GetApplicationCoapSecure().Stop();
 }
 
 otError otCoapSecureSendRequest(otInstance *          aInstance,

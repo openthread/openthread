@@ -44,6 +44,7 @@
 #include <stdint.h>
 
 #include <common/logging.hpp>
+#include <openthread-system.h>
 #include <utils/code_utils.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -75,7 +76,7 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(sAppCdcAcm,
                             CDC_ACM_COMM_EPIN,
                             CDC_ACM_DATA_EPIN,
                             CDC_ACM_DATA_EPOUT,
-                            APP_USBD_CDC_COMM_PROTOCOL_AT_V250);
+                            APP_USBD_CDC_COMM_PROTOCOL_NONE);
 
 // Rx buffer length must by multiple of NRF_DRV_USBD_EPSIZE.
 static char sRxBuffer[NRF_DRV_USBD_EPSIZE * ((UART_RX_BUFFER_SIZE + NRF_DRV_USBD_EPSIZE - 1) / NRF_DRV_USBD_EPSIZE)];
@@ -123,6 +124,14 @@ static void cdcAcmUserEventHandler(app_usbd_class_inst_t const *aCdcAcmInstance,
     default:
         break;
     }
+}
+
+static void usbdIsrHandler(app_usbd_internal_evt_t const *const aEvent, bool aQueued)
+{
+    (void)aEvent;
+    (void)aQueued;
+
+    otSysEventSignalPending();
 }
 
 static void usbdUserEventHandler(app_usbd_event_type_t aEvent)
@@ -253,7 +262,10 @@ static void processTransmit(void)
 
 void nrf5UartInit(void)
 {
-    static const app_usbd_config_t usbdConfig = {.ev_state_proc = usbdUserEventHandler};
+    static const app_usbd_config_t usbdConfig = {
+        .ev_state_proc  = usbdUserEventHandler,
+        .ev_isr_handler = usbdIsrHandler,
+    };
 
     memset((void *)&sUsbState, 0, sizeof(sUsbState));
 

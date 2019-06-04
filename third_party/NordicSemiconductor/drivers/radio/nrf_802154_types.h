@@ -130,6 +130,14 @@ typedef struct
 } nrf_802154_cca_cfg_t;
 
 /**
+ * @brief Types of data that can be set in an Ack message.
+ */
+typedef uint8_t nrf_802154_ack_data_t;
+
+#define NRF_802154_ACK_DATA_PENDING_BIT 0x00
+#define NRF_802154_ACK_DATA_IE          0x01
+
+/**
  *@}
  **/
 

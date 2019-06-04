@@ -141,7 +141,7 @@ int8_t GetRandomRss(void)
 {
     uint32_t value;
 
-    value = otPlatRandomGet() % 128;
+    value = rand() % 128;
     return -static_cast<int8_t>(value);
 }
 

@@ -254,7 +254,7 @@ class OpenThread(IThci):
                 # link local address
                 if ip6Addr.split(':')[4] != '0':
                     linkLocal64Addr = ip6Addr
-            elif ip6AddrPrefix == 'fd00':
+            elif ip6Addr.startswith(self.meshLocalPrefix):
                 # mesh local address
                 if ip6Addr.split(':')[4] == '0':
                     # rloc
@@ -500,7 +500,7 @@ class OpenThread(IThci):
         finalMac = ':'.join(a + b + c + d for a,b,c,d in zip(hexIter, hexIter,hexIter,hexIter))
         prefix = str(finalMac)
         strIp6Prefix = prefix[:20]
-        return strIp6Prefix +':'
+        return strIp6Prefix +'::'
 
     def __convertLongToString(self, iValue):
         """convert a long hex integer to string
@@ -777,7 +777,7 @@ class OpenThread(IThci):
             if bType == MacType.FactoryMac:
                 macAddr64 = self.__sendCommand('eui64')[0]
             elif bType == MacType.HashMac:
-                macAddr64 = self.__sendCommand('joinerid')[0]
+                macAddr64 = self.__sendCommand('joiner id')[0]
             else:
                 macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
@@ -1257,7 +1257,7 @@ class OpenThread(IThci):
         self.channelMask = "0x7fff800" #(0xffff << 11)
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
-        self.localprefix = ModuleHelper.Default_MLPrefix
+        self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
         self.pskc = "00000000000000000000000000000000"  # OT only accept hex format PSKc for now
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = "onrcb"
@@ -1287,7 +1287,7 @@ class OpenThread(IThci):
             self.setXpanId(self.xpanId)
             self.setNetworkName(self.networkName)
             self.setNetworkKey(self.networkKey)
-            self.setMLPrefix(self.localprefix)
+            self.setMLPrefix(self.meshLocalPrefix)
             self.setPSKc(self.pskc)
             self.setActiveTimestamp(self.activetimestamp)
         except Exception, e:

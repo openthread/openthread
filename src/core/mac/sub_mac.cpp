@@ -40,8 +40,8 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 
 namespace ot {
@@ -135,11 +135,11 @@ otError SubMac::Enable(void)
     VerifyOrExit(mState == kStateDisabled);
 
     SuccessOrExit(error = otPlatRadioEnable(&GetInstance()));
-    error = otPlatRadioSleep(&GetInstance());
-    assert(error == OT_ERROR_NONE);
+    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
     SetState(kStateSleep);
 
 exit:
+    assert(error == OT_ERROR_NONE);
     return error;
 }
 
@@ -148,10 +148,11 @@ otError SubMac::Disable(void)
     otError error;
 
     mTimer.Stop();
-    error = otPlatRadioDisable(&GetInstance());
-    assert(error == OT_ERROR_NONE);
+    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
+    SuccessOrExit(error = otPlatRadioDisable(&GetInstance()));
     SetState(kStateDisabled);
 
+exit:
     return error;
 }
 
@@ -245,7 +246,7 @@ void SubMac::StartCsmaBackoff(void)
         backoffExponent = kMaxBE;
     }
 
-    backoff = Random::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
+    backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
     backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
     if (mRxOnWhenBackoff)
@@ -420,8 +421,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
         mEnergyScanEndTime = TimerMilli::GetNow() + aScanDuration;
-        mTimer.Start(kEnergyScanRssiSampleInterval);
-        SampleRssi();
+        mTimer.Start(0);
     }
     else
     {
@@ -495,7 +495,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -513,7 +513,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -531,7 +531,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
@@ -549,7 +549,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(GetInstance().GetLinkRaw().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO

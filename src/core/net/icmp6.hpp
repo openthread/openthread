@@ -42,10 +42,10 @@
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-ip6-icmp6
@@ -309,11 +309,11 @@ public:
     /**
      * This method updates the ICMPv6 checksum.
      *
-     * @param[in]  aMessage               A reference to the ICMPv6 message.
-     * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
+     * @param[in]  aMessage   A reference to the ICMPv6 message.
+     * @param[in]  aChecksum  The pseudo-header checksum value.
      *
      */
-    void UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.
@@ -342,7 +342,7 @@ public:
     bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
 private:
-    otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
+    otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 
@@ -358,4 +358,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_ICMP6_HPP_
+#endif // ICMP6_HPP_

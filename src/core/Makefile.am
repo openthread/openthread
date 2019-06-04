@@ -113,6 +113,7 @@ SOURCES_COMMON                      = \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
     api/dns_api.cpp                   \
+    api/entropy_api.cpp               \
     api/icmp6_api.cpp                 \
     api/instance_api.cpp              \
     api/ip6_api.cpp                   \
@@ -124,6 +125,8 @@ SOURCES_COMMON                      = \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/network_time_api.cpp          \
+    api/random_crypto_api.cpp         \
+    api/random_noncrypto_api.cpp      \
     api/server_api.cpp                \
     api/sntp_api.cpp                  \
     api/tasklet_api.cpp               \
@@ -134,11 +137,14 @@ SOURCES_COMMON                      = \
     coap/coap_message.cpp             \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
+    common/entropy.cpp                \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
     common/message.cpp                \
     common/notifier.cpp               \
+    common/random_crypto.cpp          \
+    common/random_manager.cpp         \
+    common/random_noncrypto.cpp       \
     common/settings.cpp               \
     common/string.cpp                 \
     common/tasklet.cpp                \
@@ -188,6 +194,7 @@ SOURCES_COMMON                      = \
     net/netif.cpp                     \
     net/sntp_client.cpp               \
     net/udp6.cpp                      \
+    phy/radio_weak.cpp                \
     thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
     thread/announce_sender.cpp        \
@@ -233,12 +240,13 @@ libopenthread_radio_a_SOURCES       = \
     api/instance_api.cpp              \
     api/link_raw_api.cpp              \
     api/logging_api.cpp               \
-    api/message_api.cpp               \
+    api/random_noncrypto_api.cpp      \
     api/tasklet_api.cpp               \
+    common/entropy.cpp                \
     common/instance.cpp               \
-    common/locator.cpp                \
     common/logging.cpp                \
-    common/message.cpp                \
+    common/random_manager.cpp         \
+    common/random_noncrypto.cpp       \
     common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
@@ -246,6 +254,7 @@ libopenthread_radio_a_SOURCES       = \
     mac/mac_frame.cpp                 \
     mac/sub_mac.cpp                   \
     mac/sub_mac_callbacks.cpp         \
+    phy/radio_weak.cpp                \
     thread/link_quality.cpp           \
     utils/missing_strlcat.c           \
     utils/missing_strlcpy.c           \
@@ -294,15 +303,17 @@ HEADERS_COMMON                      = \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
+    common/entropy.hpp                \
     common/extension.hpp              \
     common/instance.hpp               \
     common/locator.hpp                \
+    common/locator-getters.hpp        \
     common/logging.hpp                \
     common/message.hpp                \
     common/new.hpp                    \
     common/notifier.hpp               \
-    common/owner-locator.hpp          \
     common/random.hpp                 \
+    common/random_manager.hpp         \
     common/settings.hpp               \
     common/string.hpp                 \
     common/tasklet.hpp                \
@@ -354,6 +365,7 @@ HEADERS_COMMON                      = \
     net/socket.hpp                    \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
+    phy/phy.hpp                       \
     thread/address_resolver.hpp       \
     thread/announce_begin_server.hpp  \
     thread/announce_sender.hpp        \

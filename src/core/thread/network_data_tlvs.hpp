@@ -41,12 +41,12 @@
 #include "common/encoding.hpp"
 #include "net/ip6_address.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 #define THREAD_ENTERPRISE_NUMBER 44970
 
 namespace ot {
 namespace NetworkData {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-netdata-tlvs
@@ -345,7 +345,8 @@ public:
     bool IsValid(void) const
     {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)));
+                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
+                (BitVectorBytes(mPrefixLength) <= sizeof(Ip6::Address)));
     }
 
     /**

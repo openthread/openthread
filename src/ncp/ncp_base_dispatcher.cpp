@@ -134,6 +134,12 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_VENDOR_ID:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_VENDOR_ID>;
         break;
+    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>;
+        break;
+    case SPINEL_PROP_PHY_CHAN_PREFERRED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>;
+        break;
 
         // --------------------------------------------------------------------------
         // MTD (or FTD) Properties (Get Handler)
@@ -170,9 +176,6 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 #endif
     case SPINEL_PROP_MSG_BUFFER_COUNTERS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MSG_BUFFER_COUNTERS>;
-        break;
-    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
-        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>;
         break;
     case SPINEL_PROP_PHY_FREQ:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>;
@@ -506,9 +509,25 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX_APP
     case SPINEL_PROP_RCP_VERSION:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
+        break;
+#endif
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    case SPINEL_PROP_SLAAC_ENABLED:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
+        break;
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>;
+        break;
+    case SPINEL_PROP_SERVER_LEADER_SERVICES:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>;
         break;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -842,6 +861,16 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+    case SPINEL_PROP_SLAAC_ENABLED:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -1022,6 +1051,11 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>;
         break;
 #endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>;
+        break;
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -1100,6 +1134,11 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
         break;
     case SPINEL_PROP_MAC_FIXED_RSS:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>;
+        break;
+#endif
+#if OPENTHREAD_ENABLE_SERVICE
+    case SPINEL_PROP_SERVER_SERVICES:
+        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>;
         break;
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

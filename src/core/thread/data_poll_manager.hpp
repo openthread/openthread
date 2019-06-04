@@ -62,8 +62,9 @@ class DataPollManager : public InstanceLocator
 public:
     enum
     {
-        kDefaultFastPolls = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
-        kMaxFastPolls     = 15, ///< Maximum number of fast poll transmissions allowed.
+        kDefaultFastPolls  = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
+        kMaxFastPolls      = 15, ///< Maximum number of fast poll transmissions allowed.
+        kMaxFastPollsUsers = 63, ///< Maximum number of the users of fast poll transmissions allowed.
     };
 
     /**
@@ -110,6 +111,9 @@ public:
      *
      * Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear user-specified
      * poll period.
+     *
+     * User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed, otherwise it
+     * would be cilpped by the maximal value.
      *
      * @param[in]  aPeriod  The data poll period in milliseconds.
      *
@@ -183,10 +187,25 @@ public:
      * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead. The number of
      * fast polls is clipped by maximum value specified by `kMaxFastPolls`.
      *
+     * Note that per `SendFastPolls()` would increase the internal reference count until up to the allowed maximum
+     * value. If there are retransmission mechanism in the caller component, it should be responsible to call
+     * `StopFastPolls()` the same times as `SendFastPolls()` it triggered to decrease the reference count properly,
+     * guaranteeing to exit fast poll mode gracefully. Otherwise, fast poll would continue until all data polls are sent
+     * out.
+     *
      * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
      *
      */
     void SendFastPolls(uint8_t aNumFastPolls);
+
+    /**
+     * This method asks data poll manager to stop fast polls when the expecting response is received.
+     *
+     * @retval OT_ERROR_NONE            Successfully stopped fast polls when no other responses are expected.
+     * @retval OT_ERROR_BUSY            There are other callers who are waiting for responses.
+     *
+     */
+    otError StopFastPolls(void);
 
     /**
      * This method gets the maximum data polling period in use.
@@ -204,6 +223,8 @@ private:
         kNoBufferRetxPollPeriod = 200,                                       ///< Poll retx due to no buffer space.
         kFastPollPeriod         = 188,                                       ///< Period used for fast polls.
         kMinPollPeriod          = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
+        kMaxExternalPeriod      = ((1 << 26) - 1),                           ///< Maximum allowed user-specified period.
+                                                                             ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
     };
 
     enum
@@ -225,8 +246,9 @@ private:
     uint32_t    GetDefaultPollPeriod(void) const;
 
     uint32_t mTimerStartTime;
-    uint32_t mExternalPollPeriod;
     uint32_t mPollPeriod;
+    uint32_t mExternalPollPeriod : 26; //< In milliseconds.
+    uint8_t  mFastPollsUsers : 6;      //< Number of callers which request fast polls.
 
     TimerMilli mTimer;
 

@@ -60,6 +60,7 @@ enum
     kThreadVersion                  = 2,     ///< Thread Version
     kUdpPort                        = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout     = 750,   ///< Router Parent Request timeout
+    kParentRequestDuplicateMargin   = 50,    ///< Margin for duplicate parent request
     kParentRequestReedTimeout       = 1250,  ///< Router and REEDs Parent Request timeout
     kAttachStartJitter              = 50,    ///< Maximum jitter time added to start of attach.
     kAnnounceProcessTimeout         = 250,   ///< Timeout after receiving Announcement before channel/pan-id change
@@ -126,6 +127,7 @@ enum
     kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (sec)
     kLeaderWeight               = 64,                                      ///< Default leader weight
     kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (sec)
+    kMeshLocalPrefixContextId   = 0,                                       ///< 0 is reserved for Mesh Local Prefix
 };
 
 /**

@@ -252,20 +252,20 @@ int aes_soft_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 
     switch( keybits )
     {
-        case 128: ctx->nr = 10; break;
-        case 192: ctx->nr = 12; break;
-        case 256: ctx->nr = 14; break;
+        case 128: ctx->software.nr = 10; break;
+        case 192: ctx->software.nr = 12; break;
+        case 256: ctx->software.nr = 14; break;
         default : return( MBEDTLS_ERR_AES_INVALID_KEY_LENGTH );
     }
 
-    ctx->rk = RK = ctx->buf;
+    ctx->software.rk = RK = ctx->software.buf;
 
     for( i = 0; i < ( keybits >> 5 ); i++ )
     {
         GET_UINT32_LE( RK[i], key, i << 2 );
     }
 
-    switch( ctx->nr )
+    switch( ctx->software.nr )
     {
         case 10:
 
@@ -341,14 +341,14 @@ int aes_encrypt( mbedtls_aes_context *ctx,
     int i;
     uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
 
-    RK = ctx->rk;
+    RK = ctx->software.rk;
 
     GET_UINT32_LE( X0, input,  0 ); X0 ^= *RK++;
     GET_UINT32_LE( X1, input,  4 ); X1 ^= *RK++;
     GET_UINT32_LE( X2, input,  8 ); X2 ^= *RK++;
     GET_UINT32_LE( X3, input, 12 ); X3 ^= *RK++;
 
-    for( i = ( ctx->nr >> 1 ) - 1; i > 0; i-- )
+    for( i = ( ctx->software.nr >> 1 ) - 1; i > 0; i-- )
     {
         AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
         AES_FROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );

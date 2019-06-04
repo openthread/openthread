@@ -33,7 +33,7 @@ sudo: required
 dist: trusty
 
 before_install:
-  - .travis/before_install.sh
+  - travis_retry .travis/before_install.sh
 
 before_script:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
@@ -44,17 +44,17 @@ script:
   - .travis/script.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - .travis/after_success.sh
 
 matrix:
   include:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-app-pty" CC=clang CXX=clang++ VERBOSE=1 COVERAGE=1
       os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1
+      compiler: clang
+    - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
       os: linux
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1

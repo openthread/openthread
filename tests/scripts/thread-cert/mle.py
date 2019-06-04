@@ -1009,17 +1009,30 @@ class PendingOperationalDatasetFactory:
         return PendingOperationalDataset()
 
 
-class ThreadDiscovery:
-    # TODO: Not implemented yet
+class ThreadDiscovery(object):
 
-    def __init__(self):
-        print("ThreadDiscovery is not implemented yet.")
+    def __init__(self, tlvs):
+        self._tlvs = tlvs
 
+    @property
+    def tlvs(self):
+        return self._tlvs
+
+    def __eq__(self, other):
+        return self.tlvs == other.tlvs
+
+    def __repr__(self):
+        return "ThreadDiscovery(tlvs={})".format(self.tlvs)
 
 class ThreadDiscoveryFactory:
 
+    def __init__(self, thread_discovery_tlvs_factory):
+        self._tlvs_factory = thread_discovery_tlvs_factory
+
     def parse(self, data, message_info):
-        return ThreadDiscovery()
+        tlvs = self._tlvs_factory.parse(data, message_info)
+        return ThreadDiscovery(tlvs)
+
 
 class TimeRequest:
     # TODO: Not implemented yet
@@ -1043,6 +1056,7 @@ class TimeParameterFactory:
 
     def parse(self, data, message_info):
         return TimeParameter()
+
 
 class MleCommand(object):
 

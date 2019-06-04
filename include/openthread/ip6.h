@@ -133,24 +133,6 @@ typedef enum otNetifInterfaceId
 } otNetifInterfaceId;
 
 /**
- * This structure represents data used by Semantically Opaque IID Generator.
- *
- */
-typedef struct
-{
-    uint8_t *mInterfaceId;       ///< String of bytes representing interface ID. Like "eth0" or "wlan0".
-    uint8_t  mInterfaceIdLength; ///< Length of interface ID string.
-
-    uint8_t *mNetworkId;       ///< Network ID (or name). Can be null if mNetworkIdLength is 0.
-    uint8_t  mNetworkIdLength; ///< Length of Network ID string.
-
-    uint8_t mDadCounter; ///< Duplicate address detection counter.
-
-    uint8_t *mSecretKey;       ///< Secret key used to create IID. Cannot be null.
-    uint16_t mSecretKeyLength; ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
-} otSemanticallyOpaqueIidGeneratorData;
-
-/**
  * This structure represents an IPv6 socket address.
  *
  */
@@ -176,7 +158,7 @@ typedef struct otMessageInfo
 
     /**
      * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
-     * @p mLinkInfo points to @sa otThreadLinkInfo. This field is only valid for messages received from the
+     * @p mLinkInfo points to otThreadLinkInfo(). This field is only valid for messages received from the
      * Thread radio and is ignored on transmission.
      */
     const void *mLinkInfo;
@@ -307,72 +289,6 @@ bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
 void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function pointer is called to create IPv6 IID during SLAAC procedure.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[inout]  aContext   A pointer to creator-specific context.
- *
- * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
- * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
- *
- */
-typedef otError (*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
-
-/**
- * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
- *
- * @param[in]     aInstance      A pointer to an OpenThread instance.
- * @param[inout]  aAddresses     A pointer to an array of automatically created IPv6 addresses.
- * @param[in]     aNumAddresses  The number of slots in aAddresses array.
- * @param[in]     aIidCreate     A pointer to a function that is called to create IPv6 IIDs.
- * @param[in]     aContext       A pointer to data passed to aIidCreate function.
- *
- */
-void otIp6SlaacUpdate(otInstance *        aInstance,
-                      otNetifAddress *    aAddresses,
-                      uint32_t            aNumAddresses,
-                      otIp6SlaacIidCreate aIidCreate,
-                      void *              aContext);
-
-/**
- * Create random IID for given IPv6 address.
- *
- * @param[in]     aInstance   A pointer to an OpenThread instance.
- * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
- * @param[in]     aContext    A pointer to unused data.
- *
- * @retval OT_ERROR_NONE  Created valid IID for given IPv6 address.
- *
- */
-otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
-
-/**
- * Create IID for given IPv6 address using extended MAC address.
- *
- * @param[in]     aInstance   A pointer to an OpenThread instance.
- * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
- * @param[in]     aContext    A pointer to unused data.
- *
- * @retval OT_ERROR_NONE  Created valid IID for given IPv6 address.
- *
- */
-otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
-
-/**
- * Create semantically opaque IID for given IPv6 address.
- *
- * @param[in]     aInstance   A pointer to an OpenThread instance.
- * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
- * @param[inout]  aContext    A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
- *
- * @retval OT_ERROR_NONE                          Created valid IID for given IPv6 address.
- * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not create valid IID for given IPv6 address.
- *
- */
-otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
-
-/**
  * Allocate a new message buffer for sending an IPv6 message.
  *
  * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
@@ -413,7 +329,9 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
 /**
  * This function pointer is called when an IPv6 datagram is received.
  *
- * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
+ * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
+ *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
+ *                       freed by the receiver of the callback after it is processed (see otMessageFree()).
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
@@ -491,8 +409,17 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
 /**
  * This function sends an IPv6 datagram via the Thread interface.
  *
+ * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
+ * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
+ *
+ * @retval OT_ERROR_NONE      Successfully processed the message.
+ * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
+ * @retval OT_ERROR_NO_BUFS   Could not allocate necessary message buffers when processing the datagram.
+ * @retval OT_ERROR_NO_ROUTE  No route to host.
+ * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
  *
  */
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage);
@@ -603,6 +530,65 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
  *
  */
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo);
+
+/**
+ * This function indicates whether the SLAAC module is enabled or not.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ *
+ * @retval TRUE    SLAAC module is enabled.
+ * @retval FALSE   SLAAC module is disabled.
+ *
+ */
+bool otIp6IsSlaacEnabled(otInstance *aInstance);
+
+/**
+ * This function enables/disables the SLAAC module.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ *
+ * When SLAAC module is enabled, SLAAC addresses (based on on-mesh prefixes in Network Data) are added to the interface.
+ * When SLAAC module is disabled any previously added SLAAC address is removed.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnabled  TRUE to enable, FALSE to disable.
+ *
+ */
+void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function pointer allows user to filter prefixes and not allow an SLAAC address based on a prefix to be added.
+ *
+ * `otIp6SetSlaacPrefixFilter()` can be used to set the filter handler. The filter handler is invoked by SLAAC module
+ * when it is about to add a SLAAC address based on a prefix. Its boolean return value determines whether the address
+ * is filtered (not added) or not.
+ *
+ * @param[in] aInstacne   A pointer to an OpenThread instance.
+ * @param[in] aPrefix     A pointer to prefix for which SLAAC address is about to be added.
+ *
+ * @retval TRUE    Indicates that the SLAAC address based on the prefix should be filtered and NOT added.
+ * @retval FALSE   Indicates that the SLAAC address based on the prefix should be added.
+ *
+ */
+typedef bool (*otIp6SlaacPrefixFilter)(otInstance *aInstance, const otIp6Prefix *aPrefix);
+
+/**
+ * This function sets the SLAAC module filter handler.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ *
+ * The filter handler is called by SLAAC module when it is about to add a SLAAC address based on a prefix to decide
+ * whether the address should be added or not.
+ *
+ * A NULL filter handler disables filtering and allows all SLAAC addresses to be added.
+ *
+ * If this function is not called, the default filter used by SLAAC module will be NULL (filtering is disabled).
+ *
+ * @param[in] aInstance    A pointer to an OpenThread instance.
+ * @param[in] aFilter      A pointer to SLAAC prefix filter handler, or NULL to disable filtering.
+ *
+ */
+void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter);
 
 /**
  * @}

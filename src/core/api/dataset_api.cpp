@@ -36,6 +36,7 @@
 #include <openthread/dataset.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -57,7 +58,7 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetActiveDataset().Get(*aDataset);
+    error = instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
 
 exit:
     return error;
@@ -70,7 +71,7 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetActiveDataset().Set(*aDataset);
+    error = instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
 
 exit:
     return error;
@@ -83,7 +84,7 @@ otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDatase
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetPendingDataset().Get(*aDataset);
+    error = instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
 
 exit:
     return error;
@@ -96,7 +97,7 @@ otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *a
 
     VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetPendingDataset().Set(*aDataset);
+    error = instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
 
 exit:
     return error;
@@ -110,8 +111,7 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetActiveDataset().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength,
-                                                                       aAddress);
+    return instance.Get<MeshCoP::ActiveDataset>().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength, aAddress);
 }
 
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
@@ -121,7 +121,7 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
+    return instance.Get<MeshCoP::ActiveDataset>().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
 otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
@@ -132,8 +132,7 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetPendingDataset().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength,
-                                                                        aAddress);
+    return instance.Get<MeshCoP::PendingDataset>().SendGetRequest(*aDatasetComponents, aTlvTypes, aLength, aAddress);
 }
 
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
@@ -143,5 +142,5 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
+    return instance.Get<MeshCoP::PendingDataset>().SendSetRequest(*aDataset, aTlvs, aLength);
 }

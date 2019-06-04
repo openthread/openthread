@@ -52,6 +52,7 @@ typedef void (* transmitted_hook)(const uint8_t * p_frame);
 typedef bool (* tx_failed_hook)(const uint8_t * p_frame, nrf_802154_tx_error_t error);
 typedef bool (* tx_started_hook)(const uint8_t * p_frame);
 typedef void (* rx_started_hook)(void);
+typedef void (* rx_ack_started_hook)(void);
 
 /* Since some compilers do not allow empty initializers for arrays with unspecified bounds,
  * NULL pointer is appended to below arrays if the compiler used is not GCC. It is intentionally
@@ -114,6 +115,15 @@ static const rx_started_hook m_rx_started_hooks[] =
 {
 #if NRF_802154_DELAYED_TRX_ENABLED
     nrf_802154_delayed_trx_rx_started_hook,
+#endif
+
+    NULL,
+};
+
+static const rx_ack_started_hook m_rx_ack_started_hooks[] =
+{
+#if NRF_802154_ACK_TIMEOUT_ENABLED
+    nrf_802154_ack_timeout_rx_ack_started_hook,
 #endif
 
     NULL,
@@ -208,5 +218,19 @@ void nrf_802154_core_hooks_rx_started(void)
         }
 
         m_rx_started_hooks[i]();
+    }
+}
+
+void nrf_802154_core_hooks_rx_ack_started(void)
+{
+    for (uint32_t i = 0; i < sizeof(m_rx_ack_started_hooks) / sizeof(m_rx_ack_started_hooks[0]);
+         i++)
+    {
+        if (m_rx_ack_started_hooks[i] == NULL)
+        {
+            break;
+        }
+
+        m_rx_ack_started_hooks[i]();
     }
 }

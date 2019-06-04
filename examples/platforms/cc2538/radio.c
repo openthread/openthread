@@ -41,6 +41,52 @@
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
+#define RFCORE_RXTX_INT (141)
+
+#define RFCORE_XREG_RFIRQM0 0x4008868C // RF interrupt masks
+#define RFCORE_XREG_RFIRQM1 0x40088690 // RF interrupt masks
+#define RFCORE_XREG_RFERRM 0x40088694  // RF error interrupt mask
+
+#define RFCORE_SFR_RFIRQF0_RXMASKZERO 0x00000080      // RXENABLE is now completely clear
+#define RFCORE_SFR_RFIRQF0_RXPKTDONE 0x00000040       // A complete frame has been received
+#define RFCORE_SFR_RFIRQF0_FRAME_ACCEPTED 0x00000020  // Frame has passed frame filtering
+#define RFCORE_SFR_RFIRQF0_SRC_MATCH_FOUND 0x00000010 // Source match is found
+#define RFCORE_SFR_RFIRQF0_SRC_MATCH_DONE 0x00000008  // Source matching is complete
+#define RFCORE_SFR_RFIRQF0_FIFOP 0x00000004           // The number of bytes in the RX fifo is above threshold
+#define RFCORE_SFR_RFIRQF0_SFD 0x00000002             // SFD has been received or transmitted
+#define RFCORE_SFR_RFIRQF0_ACT_UNUSED 0x00000001      // Reserved
+
+#define RFCORE_XREG_RFIRQM0_RXMASKZERO 0x00000080
+#define RFCORE_XREG_RFIRQM0_RXPKTDONE 0x00000040
+#define RFCORE_XREG_RFIRQM0_FRAME_ACCEPTED 0x00000020
+#define RFCORE_XREG_RFIRQM0_SRC_MATCH_FOUND 0x00000010
+#define RFCORE_XREG_RFIRQM0_SRC_MATCH_DONE 0x00000008
+#define RFCORE_XREG_RFIRQM0_FIFOP 0x00000004
+#define RFCORE_XREG_RFIRQM0_SFD 0x00000002
+#define RFCORE_XREG_RFIRQM0_ACT_UNUSED 0x00000001
+
+#define RFCORE_SFR_RFIRQF1_CSP_WAIT 0x00000020
+#define RFCORE_SFR_RFIRQF1_CSP_STOP 0x00000010
+#define RFCORE_SFR_RFIRQF1_CSP_MANINT 0x00000008
+#define RFCORE_SFR_RFIRQF1_RF_IDLE 0x00000004
+#define RFCORE_SFR_RFIRQF1_TXDONE 0x00000002
+#define RFCORE_SFR_RFIRQF1_TXACKDONE 0x00000001
+
+#define RFCORE_XREG_RFIRQM1_CSP_WAIT 0x00000020
+#define RFCORE_XREG_RFIRQM1_CSP_STOP 0x00000010
+#define RFCORE_XREG_RFIRQM1_CSP_MANINT 0x00000008
+#define RFCORE_XREG_RFIRQM1_RF_IDLE 0x00000004
+#define RFCORE_XREG_RFIRQM1_TXDONE 0x00000002
+#define RFCORE_XREG_RFIRQM1_TXACKDONE 0x00000001
+
+#define RFCORE_XREG_RFERRM_STROBE_ERR 0x00000040
+#define RFCORE_XREG_RFERRM_TXUNDERF 0x00000020
+#define RFCORE_XREG_RFERRM_TXOVERF 0x00000010
+#define RFCORE_XREG_RFERRM_RXUNDERF 0x00000008
+#define RFCORE_XREG_RFERRM_RXOVERF 0x00000004
+#define RFCORE_XREG_RFERRM_RXABO 0x00000002
+#define RFCORE_XREG_RFERRM_NLOCK 0x00000001
+
 enum
 {
     IEEE802154_MIN_LENGTH      = 5,
@@ -55,14 +101,21 @@ enum
 
 enum
 {
-    CC2538_RSSI_OFFSET  = 73,
-    CC2538_CRC_BIT_MASK = 0x80,
-    CC2538_LQI_BIT_MASK = 0x7f,
+    CC2538_RSSI_OFFSET = OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET,
+    // TI AN130 (SWRA447) Table 4 (bottom of page 3)
+    CC2592_RSSI_OFFSET_HGM = 85,
+    CC2592_RSSI_OFFSET_LGM = 81,
+    CC2538_CRC_BIT_MASK    = 0x80,
+    CC2538_LQI_BIT_MASK    = 0x7f,
 };
 
+// All values in dBm
 enum
 {
-    CC2538_RECEIVE_SENSITIVITY = -88, // dBm
+    CC2538_RECEIVE_SENSITIVITY = OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY,
+    // TI AN130 (SWRA447) Table 3 (middle of page 3)
+    CC2592_RECEIVE_SENSITIVITY_LGM = -99,
+    CC2592_RECEIVE_SENSITIVITY_HGM = -101,
 };
 
 typedef struct TxPowerTable
@@ -71,8 +124,25 @@ typedef struct TxPowerTable
     uint8_t mTxPowerReg;
 } TxPowerTable;
 
-// The transmit power table, the values are from SmartRF Studio 2.4.0
+// The transmit power table.
 static const TxPowerTable sTxPowerTable[] = {
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592
+    // CC2538 using CC2592 PA
+    // Values are from AN130 table 6 (page 4)
+    {22, 0xFF}, // 22.0dBm =~ 158.5mW
+    {21, 0xD5}, // 20.9dBm =~ 123.0mW
+    {20, 0xC5}, // 20.1dBm =~ 102.3mW
+    {19, 0xB0}, // 19.0dBm =~  79.4mW
+    {18, 0xA1}, // 17.8dBm =~  60.3mW
+    {16, 0x91}, // 16.4dBm =~  43.7mW
+    {15, 0x88}, // 14.9dBm =~  30.9mW
+    {13, 0x72}, // 13.0dBm =~  20.0mW
+    {11, 0x62}, // 11.0dBm =~  12.6mW
+    {10, 0x58}, //  9.5dBm =~   8.9mW
+    {8, 0x42},  //  7.5dBm =~   5.6mW
+#else
+    // CC2538 operating "bare foot"
+    // Values are from SmartRF Studio 2.4.0
     {7, 0xFF},   //
     {5, 0xED},   //
     {3, 0xD5},   //
@@ -87,6 +157,7 @@ static const TxPowerTable sTxPowerTable[] = {
     {-13, 0x58}, //
     {-15, 0x42}, //
     {-24, 0x00}, //
+#endif
 };
 
 static otRadioFrame sTransmitFrame;
@@ -256,6 +327,11 @@ void cc2538RadioInit(void)
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
 
+    // Enable interrupts for RX/TX, interrupt 141.
+    // That's NVIC index 5 bit 13.
+    HWREG(NVIC_EN0 + (5 * 4)) = (1 << 13);
+    HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+
     // enable clock
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
     HWREG(SYS_CTRL_SCGCRFC) = SYS_CTRL_SCGCRFC_RFC0;
@@ -277,8 +353,59 @@ void cc2538RadioInit(void)
     HWREG(RFCORE_XREG_TXPOWER) = sTxPowerTable[0].mTxPowerReg;
     sTxPower                   = sTxPowerTable[0].mTxPowerVal;
 
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592
+    // PA_EN pin configuration.
+    // Step 1. make it an output
+    HWREG(GPIO_C_BASE | GPIO_O_DIR) |= GPIO_PIN(OPENTHREAD_CONFIG_CC2592_PA_EN_PIN);
+    // Step 2. Route PA_PD to OBS0 and invert it to produce PA_EN
+    HWREG_ARR(RFCORE_XREG_RFC_OBS_CTRL, 0) = RFCORE_XREG_RFC_OBS_POL_INV      // Invert the output
+                                             | RFCORE_XREG_RFC_OBS_MUX_PA_PD; // PA "power down" signal
+    // Step 3. Connect the selected pin to OBS0 and enable OBS0.
+    HWREG_ARR(CCTEST_OBSSEL, OPENTHREAD_CONFIG_CC2592_PA_EN_PIN) = CCTEST_OBSSEL_EN          // Enable the output
+                                                                   | CCTEST_OBSSEL_SEL_OBS0; // Select OBS0
+
+    // LNA_EN pin configuration.
+    HWREG(GPIO_C_BASE | GPIO_O_DIR) |= GPIO_PIN(OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN);
+    HWREG_ARR(RFCORE_XREG_RFC_OBS_CTRL, 1) = RFCORE_XREG_RFC_OBS_POL_INV | RFCORE_XREG_RFC_OBS_MUX_LNA_PD;
+    HWREG_ARR(CCTEST_OBSSEL, OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN) = CCTEST_OBSSEL_EN | CCTEST_OBSSEL_SEL_OBS1;
+
+#if OPENTHREAD_CONFIG_CC2592_USE_HGM
+    // HGM pin configuration.  Set the pin state first so we don't glitch.
+    cc2538RadioSetHgm(OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE);
+    HWREG(OPENTHREAD_CONFIG_CC2592_HGM_PORT | GPIO_O_DIR) |= GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN);
+#endif // OPENTHREAD_CONFIG_CC2592_USE_HGM
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592
+
     otLogInfoPlat("Initialized", NULL);
 }
+
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+void cc2538RadioSetHgm(bool aState)
+{
+    if (aState)
+    {
+        HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT, GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN)) =
+            GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN);
+    }
+    else
+    {
+        HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT, GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN)) = 0;
+    }
+}
+
+bool cc2538RadioGetHgm(void)
+{
+    if (HWREG_ARR(OPENTHREAD_CONFIG_CC2592_HGM_PORT, GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN)) &
+        GPIO_PIN(OPENTHREAD_CONFIG_CC2592_HGM_PIN))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
@@ -490,6 +617,22 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
+static int8_t cc2538RadioGetRssiOffset(void)
+{
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+    if (cc2538RadioGetHgm())
+    {
+        return CC2592_RSSI_OFFSET_HGM;
+    }
+    else
+    {
+        return CC2592_RSSI_OFFSET_LGM;
+    }
+#else  // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+    return CC2538_RSSI_OFFSET;
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+}
+
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -532,7 +675,7 @@ void readFrame(otInstance *aInstance)
         sReceiveFrame.mPsdu[i] = HWREG(RFCORE_SFR_RFDATA);
     }
 
-    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - CC2538_RSSI_OFFSET;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = (int8_t)HWREG(RFCORE_SFR_RFDATA) - cc2538RadioGetRssiOffset();
     crcCorr                           = HWREG(RFCORE_SFR_RFDATA);
 
     if (crcCorr & CC2538_CRC_BIT_MASK)
@@ -568,6 +711,9 @@ void cc2538RadioProcess(otInstance *aInstance)
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -958,5 +1104,16 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+#if OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
+    if (cc2538RadioGetHgm())
+    {
+        return CC2592_RECEIVE_SENSITIVITY_HGM;
+    }
+    else
+    {
+        return CC2592_RECEIVE_SENSITIVITY_LGM;
+    }
+#else  // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
     return CC2538_RECEIVE_SENSITIVITY;
+#endif // OPENTHREAD_CONFIG_CC2538_WITH_CC2592 && OPENTHREAD_CONFIG_CC2592_USE_HGM
 }

@@ -38,8 +38,11 @@
 #include <openthread/ip6.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
 #include "utils/slaac_address.hpp"
+#endif
 
 using namespace ot;
 
@@ -49,16 +52,16 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(!instance.GetLinkRaw().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 #endif
 
     if (aEnabled)
     {
-        instance.GetThreadNetif().Up();
+        instance.Get<ThreadNetif>().Up();
     }
     else
     {
-        instance.GetThreadNetif().Down();
+        instance.Get<ThreadNetif>().Down();
     }
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -71,21 +74,21 @@ bool otIp6IsEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().IsUp();
+    return instance.Get<ThreadNetif>().IsUp();
 }
 
 const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetUnicastAddresses();
+    return instance.Get<ThreadNetif>().GetUnicastAddresses();
 }
 
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().AddExternalUnicastAddress(
+    return instance.Get<ThreadNetif>().AddExternalUnicastAddress(
         *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
 }
 
@@ -93,91 +96,70 @@ otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAd
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(aAddress));
+    return instance.Get<ThreadNetif>().RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(aAddress));
 }
 
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMulticastAddresses();
+    return instance.Get<ThreadNetif>().GetMulticastAddresses();
 }
 
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+    return instance.Get<ThreadNetif>().SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
 }
 
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+    return instance.Get<ThreadNetif>().UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
 }
 
 bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().IsMulticastPromiscuousEnabled();
+    return instance.Get<ThreadNetif>().IsMulticastPromiscuousEnabled();
 }
 
 void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().SetMulticastPromiscuous(aEnabled);
-}
-
-otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
-}
-
-otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
-           &instance.GetThreadNetif().GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
-    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
-
-    return OT_ERROR_NONE;
-}
-
-otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
+    instance.Get<ThreadNetif>().SetMulticastPromiscuous(aEnabled);
 }
 
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetIp6().SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    instance.Get<Ip6::Ip6>().SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
 void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().SetAddressCallback(aCallback, aCallbackContext);
+    instance.Get<ThreadNetif>().SetAddressCallback(aCallback, aCallbackContext);
 }
 
 bool otIp6IsReceiveFilterEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetIp6().IsReceiveIp6FilterEnabled();
+    return instance.Get<Ip6::Ip6>().IsReceiveIp6FilterEnabled();
 }
 
 void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetIp6().SetReceiveIp6FilterEnabled(aEnabled);
+    instance.Get<Ip6::Ip6>().SetReceiveIp6FilterEnabled(aEnabled);
 }
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
@@ -185,7 +167,8 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetIp6().SendRaw(*static_cast<Message *>(aMessage), instance.GetThreadNetif().GetInterfaceId());
+    error = instance.Get<Ip6::Ip6>().SendRaw(*static_cast<Message *>(aMessage),
+                                             instance.Get<ThreadNetif>().GetInterfaceId());
 
     return error;
 }
@@ -200,7 +183,7 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
         VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
     }
 
-    message = instance.GetIp6().NewMessage(0, aSettings);
+    message = instance.Get<Ip6::Ip6>().NewMessage(0, aSettings);
 
 exit:
     return message;
@@ -214,7 +197,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    VerifyOrExit((message = instance.GetIp6().NewMessage(aData, aDataLength, aSettings)) != NULL);
+    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL);
 
 exit:
     return message;
@@ -224,28 +207,28 @@ otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetIp6Filter().AddUnsecurePort(aPort);
+    return instance.Get<Ip6::Filter>().AddUnsecurePort(aPort);
 }
 
 otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetIp6Filter().RemoveUnsecurePort(aPort);
+    return instance.Get<Ip6::Filter>().RemoveUnsecurePort(aPort);
 }
 
 void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetIp6Filter().RemoveAllUnsecurePorts();
+    instance.Get<Ip6::Filter>().RemoveAllUnsecurePorts();
 }
 
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetIp6Filter().GetUnsecurePorts(*aNumEntries);
+    return instance.Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
 }
 
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
@@ -281,10 +264,40 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
     Instance &                      instance = *static_cast<Instance *>(aInstance);
     const Ip6::NetifUnicastAddress *netifAddr;
 
-    netifAddr = instance.GetIp6().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
+    netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
     VerifyOrExit(netifAddr != NULL, error = OT_ERROR_NOT_FOUND);
     memcpy(&aMessageInfo->mSockAddr, &netifAddr->mAddress, sizeof(aMessageInfo->mSockAddr));
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+
+bool otIp6IsSlaacEnabled(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Utils::Slaac>().IsEnabled();
+}
+
+void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    if (aEnabled)
+    {
+        instance.Get<Utils::Slaac>().Enable();
+    }
+    else
+    {
+        instance.Get<Utils::Slaac>().Disable();
+    }
+}
+
+void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFilter)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Utils::Slaac>().SetFilter(aFilter);
+}
+
+#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC

@@ -147,6 +147,9 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_NEXT_MAC_FIXED_RSS",          REF_IOCTL_FUNC(otNextMacFixedRss) },
     { "IOCTL_OTLWF_OT_CLEAR_MAC_FIXED_RSS",         REF_IOCTL_FUNC_WITH_TUN(otClearMacFixedRss) },
     { "IOCTL_OTLWF_OT_NEXT_ROUTE",                  REF_IOCTL_FUNC(otNextRoute) },
+    { "IOCTL_OTLWF_OT_MLE_COUNTERS",                REF_IOCTL_FUNC(otMleCounters) },
+    { "IOCTL_OTLWF_OT_LINK_LOCAL_ADDRESS",          REF_IOCTL_FUNC(otLinkLocalAddress) },
+    { "IOCTL_OTLWF_OT_RLOC",                        REF_IOCTL_FUNC(otRloc) },
 };
 
 // intentionally -1 in the end due to that IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY (#161) is removed now.
@@ -1745,12 +1748,12 @@ otLwfIoCtl_otPSKc(
 
     if (InBufferLength >= sizeof(otPSKc))
     {
-        status = ThreadErrorToNtstatus(otThreadSetPSKc(pFilter->otCtx, InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetPSKc(pFilter->otCtx, (otPSKc*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otPSKc))
     {
-        const uint8_t* aPSKc = otThreadGetPSKc(pFilter->otCtx);
+        const otPSKc* aPSKc = otThreadGetPSKc(pFilter->otCtx);
         memcpy(OutBuffer, aPSKc, sizeof(otPSKc));
         *OutBufferLength = sizeof(otPSKc);
         status = STATUS_SUCCESS;
@@ -1830,6 +1833,66 @@ otLwfTunIoCtl_otPSKc_Handler(
             status = STATUS_SUCCESS;
         }
     }
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otLinkLocalAddress(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(otIp6Address))
+    {
+        memcpy(OutBuffer,  otThreadGetLinkLocalIp6Address(pFilter->otCtx), sizeof(otIp6Address));
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otRloc(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(otIp6Address))
+    {
+        memcpy(OutBuffer,  otThreadGetRloc(pFilter->otCtx), sizeof(otIp6Address));
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
     return status;
 }
 
@@ -5366,7 +5429,7 @@ otLwfIoCtl_otCommissionerStart(
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
 
-    return ThreadErrorToNtstatus(otCommissionerStart(pFilter->otCtx));
+    return ThreadErrorToNtstatus(otCommissionerStart(pFilter->otCtx, NULL, NULL, NULL));
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -6582,6 +6645,37 @@ otLwfIoCtl_otNextMacFixedRss(
         {
             *(uint8_t*)OutBuffer = aIterator;
         }
+    }
+    else
+    {
+        *OutBufferLength = 0;
+    }
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfIoCtl_otMleCounters(
+    _In_ PMS_FILTER         pFilter,
+    _In_reads_bytes_(InBufferLength)
+            PUCHAR          InBuffer,
+    _In_    ULONG           InBufferLength,
+    _Out_writes_bytes_(*OutBufferLength)
+            PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferLength
+    )
+{
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    UNREFERENCED_PARAMETER(InBuffer);
+    UNREFERENCED_PARAMETER(InBufferLength);
+
+    if (*OutBufferLength >= sizeof(otMleCounters))
+    {
+        memcpy_s(OutBuffer, *OutBufferLength, otThreadGetMleCounters(pFilter->otCtx), sizeof(otMleCounters));
+        *OutBufferLength = sizeof(otMleCounters);
+        status = STATUS_SUCCESS;
     }
     else
     {

@@ -31,11 +31,11 @@
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
 #include <openthread/dataset.h>
+#include <openthread/random_noncrypto.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 #include <openthread/platform/time.h>
 
 #include "utils/code_utils.h"
@@ -90,6 +90,12 @@ enum
     POSIX_HIGH_RSSI_SAMPLE               = -30, // dBm
     POSIX_LOW_RSSI_SAMPLE                = -98, // dBm
     POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
+};
+
+enum
+{
+    POSIX_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    POSIX_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -408,11 +414,11 @@ void platformRadioInit(void)
 
     if (sPromiscuous)
     {
-        sockaddr.sin_port = htons(9000 + sPortOffset + WELLKNOWN_NODE_ID);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + WELLKNOWN_NODE_ID));
     }
     else
     {
-        sockaddr.sin_port = htons(9000 + sPortOffset + gNodeId);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + gNodeId));
     }
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
@@ -472,12 +478,15 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    if (otPlatRadioIsEnabled(aInstance))
-    {
-        sState = OT_RADIO_STATE_DISABLED;
-    }
+    otError error = OT_ERROR_NONE;
 
-    return OT_ERROR_NONE;
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
+
+    sState = OT_RADIO_STATE_DISABLED;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
@@ -543,15 +552,15 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     uint8_t  channel = sReceiveFrame.mChannel;
     uint32_t probabilityThreshold;
 
-    otEXPECT((OT_RADIO_CHANNEL_MIN <= channel) && channel <= (OT_RADIO_CHANNEL_MAX));
+    otEXPECT((POSIX_RADIO_CHANNEL_MIN <= channel) && channel <= (POSIX_RADIO_CHANNEL_MAX));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
 
-    probabilityThreshold = (channel - OT_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    probabilityThreshold = (channel - POSIX_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
-    if ((otPlatRandomGet() & 0xffff) < (probabilityThreshold * 0xffff / 100))
+    if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
         rssi = POSIX_HIGH_RSSI_SAMPLE;
     }
@@ -747,7 +756,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
             continue;
         }
 
-        sockaddr.sin_port = htons(9000 + sPortOffset + i);
+        sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset + i));
         rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr,
                       sizeof(sockaddr));
 
@@ -767,6 +776,7 @@ void radioSendAck(void)
     if (isDataRequestAndHasFramePending(sReceiveFrame.mPsdu))
     {
         sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
     sAckMessage.mPsdu[1] = 0;
@@ -815,6 +825,7 @@ void radioProcessFrame(otInstance *aInstance)
     sReceiveFrame.mInfo.mRxInfo.mRssi = -20;
     sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
 
+    sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))
     {

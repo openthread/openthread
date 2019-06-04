@@ -70,6 +70,53 @@ COMMONCFLAGS                   := \
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
+# Optional CC2592 options, first and foremost, whether to enable support for it
+# at all.
+ifeq ($(CC2592),1)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_WITH_CC2592=1
+
+# If the PA_EN is on another port C pin, specify it with CC2592_PA_PIN.
+ifneq ($(CC2592_PA_EN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_PA_EN_PIN=$(CC2592_PA_EN)
+endif
+
+# If the LNA_EN is on another port C pin, specify it with CC2592_LNA_PIN.
+ifneq ($(CC2592_LNA_EN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_LNA_EN_PIN=$(CC2592_LNA_EN)
+endif
+
+# If we're not using HGM, set CC2538_USE_HGM to 0.
+ifeq ($(CC2592_USE_HGM),0)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_USE_HGM=0
+else # CC2592_USE_HGM=1
+
+# HGM in use, if not on port D, specify the port here (A, B or C) with CC2592_HGM_PORT.
+ifneq ($(CC2592_HGM_PORT),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_PORT=GPIO_$(CC2592_HGM_PORT)_BASE
+endif
+
+# If HGM is not at pin 2, specify which pin here with CC2592_HGM_PIN.
+ifneq ($(CC2592_HGM_PIN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_PIN=$(CC2592_HGM_PIN)
+endif
+
+# If we want it off by default, specify CC2592_HGM_DEFAULT_STATE=0
+ifeq ($(CC2592_HGM_DEFAULT_STATE),0)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE=false
+endif
+
+endif # CC2592_USE_HGM
+
+endif # CC2592
+
+ifneq ($(CC2538_RECEIVE_SENSITIVITY),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY=$(CC2538_RECEIVE_SENSITIVITY)
+endif
+
+ifneq ($(CC2538_RSSI_OFFSET),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_RSSI_OFFSET=$(CC2538_RSSI_OFFSET)
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CPPFLAGS)            \

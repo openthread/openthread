@@ -42,7 +42,9 @@
 #include <openthread/ip6.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
+#include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -101,7 +103,9 @@ class Interpreter
 {
     friend class Coap;
     friend class CoapSecure;
+    friend class Commissioner;
     friend class Dataset;
+    friend class Joiner;
     friend class UdpExample;
 
 public:
@@ -110,7 +114,7 @@ public:
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
-    Interpreter(Instance *aInstance);
+    explicit Interpreter(Instance *aInstance);
 
     /**
      * This method interprets a CLI command.
@@ -162,7 +166,7 @@ public:
      *
      * @param[in]  aError Error code value.
      */
-    void AppendResult(otError error) const;
+    void AppendResult(otError aError) const;
 
     /**
      * Write a number of bytes to the CLI console as a hex string.
@@ -171,6 +175,13 @@ public:
      * @param[in]  aLength  @p aBytes length.
      */
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
+
+    /**
+     * Write an IPv6 address to the CLI console.
+     *
+     * @param[in]  aAddress  A reference to the IPv6 address.
+     */
+    void OutputIp6Address(const otIp6Address &aAddress) const;
 
     /**
      * Set a user command table.
@@ -183,17 +194,18 @@ public:
 private:
     enum
     {
-        kMaxArgs              = 32,
-        kMaxAutoAddresses     = 8,
-        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
+        kMaxArgs          = 32,
+        kMaxAutoAddresses = 8,
     };
 
-    void ProcessHelp(int argc, char *argv[]);
-    void ProcessAutoStart(int argc, char *argv[]);
-    void ProcessBufferInfo(int argc, char *argv[]);
-    void ProcessChannel(int argc, char *argv[]);
+    otError ParsePingInterval(const char *aString, uint32_t &aInterval);
+    void    ProcessHelp(int argc, char *argv[]);
+    void    ProcessAutoStart(int argc, char *argv[]);
+    void    ProcessBufferInfo(int argc, char *argv[]);
+    void    ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
+    void ProcessChildIp(int argc, char *argv[]);
     void ProcessChildMax(int argc, char *argv[]);
 #endif
     void ProcessChildTimeout(int argc, char *argv[]);
@@ -205,7 +217,7 @@ private:
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif
 #if OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
@@ -245,8 +257,7 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
-    void ProcessJoinerId(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
 #endif
@@ -350,17 +361,11 @@ private:
 #ifndef OTDLL
     static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 #endif
-    static void OTCALL s_HandleEnergyReport(uint32_t       aChannelMask,
-                                            const uint8_t *aEnergyList,
-                                            uint8_t        aEnergyListLength,
-                                            void *         aContext);
-    static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 #ifndef OTDLL
     static void OTCALL s_HandleDiagnosticGetResponse(otMessage *          aMessage,
                                                      const otMessageInfo *aMessageInfo,
                                                      void *               aContext);
 #endif
-    static void OTCALL s_HandleJoinerCallback(otError aError, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     static void s_HandleDnsResponse(void *        aContext,
@@ -383,12 +388,9 @@ private:
 #ifndef OTDLL
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
 #endif
-    void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
-    void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
-    void HandleJoinerCallback(otError aError);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
@@ -444,15 +446,21 @@ private:
     Dataset mDataset;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-
     Coap mCoap;
+#endif
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-
     CoapSecure mCoapSecure;
+#endif
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    Commissioner mCommissioner;
+#endif
+
+#if OPENTHREAD_ENABLE_JOINER
+    Joiner mJoiner;
+#endif
+
     Instance *mInstance;
 };
 

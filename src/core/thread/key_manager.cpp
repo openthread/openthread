@@ -35,7 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/owner-locator.hpp"
+#include "common/locator-getters.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "thread/mle_router.hpp"
@@ -81,7 +81,9 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
+    , mIsPSKcSet(false)
 {
+    memset(&mPSKc, 0, sizeof(mPSKc));
     ComputeKey(mKeySequence, mKey);
 }
 
@@ -97,19 +99,14 @@ void KeyManager::Stop(void)
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-const uint8_t *KeyManager::GetPSKc(void) const
+void KeyManager::SetPSKc(const otPSKc &aPSKc)
 {
-    return mPSKc;
-}
-
-void KeyManager::SetPSKc(const uint8_t *aPSKc)
-{
-    VerifyOrExit(memcmp(mPSKc, aPSKc, sizeof(mPSKc)) != 0, GetNotifier().SignalIfFirst(OT_CHANGED_PSKC));
-    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
-    GetNotifier().Signal(OT_CHANGED_PSKC);
+    VerifyOrExit(memcmp(&mPSKc, &aPSKc, sizeof(mPSKc)) != 0, Get<Notifier>().SignalIfFirst(OT_CHANGED_PSKC));
+    mPSKc = aPSKc;
+    Get<Notifier>().Signal(OT_CHANGED_PSKC);
 
 exit:
-    return;
+    mIsPSKcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -120,19 +117,18 @@ const otMasterKey &KeyManager::GetMasterKey(void) const
 
 otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
-    Mle::MleRouter &mle   = GetNetif().GetMle();
-    otError         error = OT_ERROR_NONE;
-    Router *        routers;
+    otError error = OT_ERROR_NONE;
+    Router *routers;
 
     VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0,
-                 GetNotifier().SignalIfFirst(OT_CHANGED_MASTER_KEY));
+                 Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
 
     mMasterKey   = aKey;
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = mle.GetParent();
+    routers = Get<Mle::MleRouter>().GetParent();
     routers->SetKeySequence(0);
     routers->SetLinkFrameCounter(0);
     routers->SetMleFrameCounter(0);
@@ -153,7 +149,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
         iter.GetChild()->SetMleFrameCounter(0);
     }
 
-    GetNotifier().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
 
 exit:
     return error;
@@ -178,7 +174,7 @@ void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    VerifyOrExit(aKeySequence != mKeySequence, GetNotifier().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
+    VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
     // Check if the guard timer has expired if key rotation is requested.
     if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
@@ -199,7 +195,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         StartKeyRotationTimer();
     }
 
-    GetNotifier().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;
@@ -223,7 +219,7 @@ void KeyManager::IncrementMacFrameCounter(void)
 
     if (mMacFrameCounter >= mStoredMacFrameCounter)
     {
-        GetNetif().GetMle().Store();
+        Get<Mle::MleRouter>().Store();
     }
 }
 
@@ -233,7 +229,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        GetNetif().GetMle().Store();
+        Get<Mle::MleRouter>().Store();
     }
 }
 
@@ -257,7 +253,7 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    Notifier &notifier = GetNotifier();
+    Notifier &notifier = Get<Notifier>();
 
     if (!notifier.HasSignaled(OT_CHANGED_SECURITY_POLICY) || (mSecurityPolicyFlags != aSecurityPolicyFlags))
     {

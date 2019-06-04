@@ -41,7 +41,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <common/code_utils.hpp>
+#include "utils/code_utils.h"
+
 #include <platform-config.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/diag.h>
@@ -60,10 +61,13 @@
 
 // clang-format off
 
-#define SHORT_ADDRESS_SIZE    2
-#define EXTENDED_ADDRESS_SIZE 8
-#define PENDING_BIT           0x10
-#define US_PER_MS             1000ULL
+#define SHORT_ADDRESS_SIZE    2            ///< Size of MAC short address.
+#define US_PER_MS             1000ULL      ///< Microseconds in millisecond.
+
+#define ACK_REQUEST_OFFSET    1            ///< Byte containing Ack request bit (+1 for frame length byte).
+#define ACK_REQUEST_BIT       (1 << 5)     ///< Ack request bit.
+#define FRAME_PENDING_OFFSET  1            ///< Byte containing pending bit (+1 for frame length byte).
+#define FRAME_PENDING_BIT     (1 << 4)     ///< Frame Pending bit.
 
 // clang-format on
 
@@ -86,6 +90,7 @@ static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
 static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
+static bool         sAckedWithFramePending;
 
 static int8_t sDefaultTxPower;
 
@@ -182,10 +187,18 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    uint64_t factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
-    factoryAddress |= NRF_FICR->DEVICEID[1];
+    uint64_t factoryAddress;
+    uint32_t index = 0;
 
-    memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
+    // Set the MAC Address Block Larger (MA-L) formerly called OUI.
+    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 16) & 0xff;
+    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 8) & 0xff;
+    aIeeeEui64[index++] = OPENTHREAD_CONFIG_STACK_VENDOR_OUI & 0xff;
+
+    // Use device identifier assigned during the production.
+    factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
+    factoryAddress |= NRF_FICR->DEVICEID[1];
+    memcpy(aIeeeEui64 + index, &factoryAddress, sizeof(factoryAddress) - index);
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 
@@ -248,6 +261,8 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
         return OT_RADIO_STATE_RECEIVE;
 
     case NRF_802154_STATE_TRANSMIT:
+    case NRF_802154_STATE_CCA:
+    case NRF_802154_STATE_CONTINUOUS_CARRIER:
         return OT_RADIO_STATE_TRANSMIT;
 
     default:
@@ -255,6 +270,13 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     }
 
     return OT_RADIO_STATE_RECEIVE; // It is the default state. Return it in case of unknown.
+}
+
+bool otPlatRadioIsEnabled(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return !sDisabled;
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
@@ -278,28 +300,16 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
 
-    OT_UNUSED_VARIABLE(aInstance);
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
+    otEXPECT_ACTION(otPlatRadioGetState(aInstance) == OT_RADIO_STATE_SLEEP || isPendingEventSet(kPendingEventSleep),
+                    error = OT_ERROR_INVALID_STATE);
 
-    if (!sDisabled)
-    {
-        sDisabled = true;
-        error     = OT_ERROR_NONE;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_STATE;
-    }
+    sDisabled = true;
 
+exit:
     return error;
-}
-
-bool otPlatRadioIsEnabled(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return !sDisabled;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
@@ -335,7 +345,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError result = OT_ERROR_NONE;
+    bool result = true;
 
     aFrame->mPsdu[-1] = aFrame->mLength;
 
@@ -347,20 +357,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
-        if (!nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false))
-        {
-            result = OT_ERROR_FAILED;
-        }
+        result = nrf_802154_transmit_raw(&aFrame->mPsdu[-1], false);
     }
 
     clearPendingEvents();
+    otPlatRadioTxStarted(aInstance, aFrame);
 
-    if (result == OT_ERROR_NONE)
+    if (!result)
     {
-        otPlatRadioTxStarted(aInstance, aFrame);
+        setPendingEvent(kPendingEventChannelAccessFailure);
     }
 
-    return result;
+    return OT_ERROR_NONE;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
@@ -550,6 +558,8 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 void nrf5RadioProcess(otInstance *aInstance)
 {
+    bool isEventPending = false;
+
     for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
@@ -660,6 +670,10 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             resetPendingEvent(kPendingEventSleep);
         }
+        else
+        {
+            isEventPending = true;
+        }
     }
 
     if (isPendingEventSet(kPendingEventEnergyDetectionStart))
@@ -670,6 +684,15 @@ void nrf5RadioProcess(otInstance *aInstance)
         {
             resetPendingEvent(kPendingEventEnergyDetectionStart);
         }
+        else
+        {
+            isEventPending = true;
+        }
+    }
+
+    if (isEventPending)
+    {
+        otSysEventSignalPending();
     }
 }
 
@@ -702,6 +725,17 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mInfo.mRxInfo.mRssi = power;
     receivedFrame->mInfo.mRxInfo.mLqi  = lqi;
     receivedFrame->mChannel            = nrf_802154_channel_get();
+
+    // Inform if this frame was acknowledged with frame pending set.
+    if (p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT)
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = sAckedWithFramePending;
+    }
+    else
+    {
+        receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
+    }
+
     if (otPlatRadioGetPromiscuous(sInstance))
     {
         uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
@@ -715,6 +749,8 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
 #endif
 
+    sAckedWithFramePending = false;
+
     otSysEventSignalPending();
 }
 
@@ -723,6 +759,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     switch (error)
     {
     case NRF_802154_RX_ERROR_INVALID_FRAME:
+    case NRF_802154_RX_ERROR_DELAYED_TIMEOUT:
         sReceiveError = OT_ERROR_NO_FRAME_RECEIVED;
         break;
 
@@ -737,6 +774,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     case NRF_802154_RX_ERROR_RUNTIME:
     case NRF_802154_RX_ERROR_TIMESLOT_ENDED:
     case NRF_802154_RX_ERROR_ABORTED:
+    case NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED:
     case NRF_802154_RX_ERROR_INVALID_LENGTH:
         sReceiveError = OT_ERROR_FAILED;
         break;
@@ -745,7 +783,15 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
         assert(false);
     }
 
+    sAckedWithFramePending = false;
+
     setPendingEvent(kPendingEventReceiveFailed);
+}
+
+void nrf_802154_tx_ack_started(const uint8_t *p_data)
+{
+    // Check if the frame pending bit is set in ACK frame.
+    sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
 }
 
 void nrf_802154_transmitted_raw(const uint8_t *aFrame, uint8_t *aAckPsdu, int8_t aPower, uint8_t aLqi)
@@ -776,6 +822,8 @@ void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t err
     {
     case NRF_802154_TX_ERROR_BUSY_CHANNEL:
     case NRF_802154_TX_ERROR_TIMESLOT_ENDED:
+    case NRF_802154_TX_ERROR_ABORTED:
+    case NRF_802154_TX_ERROR_TIMESLOT_DENIED:
         setPendingEvent(kPendingEventChannelAccessFailure);
         break;
 

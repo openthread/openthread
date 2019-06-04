@@ -48,8 +48,8 @@
  *
  * The nrf52811 platform provides an otPlatLog() function.
  */
-#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 /**
@@ -58,7 +58,17 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "NRF52811"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "NRF52811"
+
+/**
+ * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+ *
+ * The Organizationally Unique Identifier for the vendor.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STACK_VENDOR_OUI
+#define OPENTHREAD_CONFIG_STACK_VENDOR_OUI 0xf4ce36
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
@@ -66,7 +76,9 @@
  * The number of message buffers in the buffer pool.
  *
  */
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   64
+#ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 60
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
@@ -74,7 +86,9 @@
  * The maximum number of state-changed callback handlers (set using `otSetStateChangedCallback()`).
  *
  */
-#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS              3
+#ifndef OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS 3
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
@@ -82,7 +96,9 @@
  * The number of EID-to-RLOC cache entries.
  *
  */
-#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES                 20
+#ifndef OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
+#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES 20
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPREND_LEVEL
@@ -91,7 +107,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
-#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL                     0
+#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 0
 #endif
 
  /**
@@ -100,7 +116,9 @@
   * Define to 1 if you want to enable software ACK timeout logic.
   *
   */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 0
+#endif
 
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -108,7 +126,9 @@
   * Define to 1 if you want to enable software retransmission logic.
   *
   */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -116,7 +136,9 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          0
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 0
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
@@ -124,7 +146,9 @@
  * Define to 1 if you want to support microsecond timer in platform.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER            1
+#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
+#endif
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -132,7 +156,9 @@
  * The base address of settings.
  *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                            0
+#ifndef SETTINGS_CONFIG_BASE_ADDRESS
+#define SETTINGS_CONFIG_BASE_ADDRESS 0
+#endif
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -140,7 +166,9 @@
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                               4096
+#ifndef SETTINGS_CONFIG_PAGE_SIZE
+#define SETTINGS_CONFIG_PAGE_SIZE 4096
+#endif
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -148,7 +176,9 @@
  * The page number of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                                2
+#ifndef SETTINGS_CONFIG_PAGE_NUM
+#define SETTINGS_CONFIG_PAGE_NUM 2
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEAP_SIZE
@@ -156,7 +186,9 @@
  * The size of heap buffer when DTLS is enabled.
  *
  */
-#define OPENTHREAD_CONFIG_HEAP_SIZE                             (4096 * sizeof(void *))
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
+#define OPENTHREAD_CONFIG_HEAP_SIZE (4096 * sizeof(void *))
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
@@ -164,7 +196,9 @@
  * The size of heap buffer when DTLS is disabled.
  *
  */
-#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS                     2048
+#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS 2048
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -172,7 +206,9 @@
  * Define as 1 to enable the time synchronization service feature.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC                      0
+#ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC 0
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
@@ -185,7 +221,7 @@
  *
  */
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT                     1
+#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
 #endif
 
 /**
@@ -198,9 +234,9 @@
  *
  */
 #if OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER || OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT                   1
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 1
 #else
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT                   0
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
 #endif
 
 /*

@@ -106,19 +106,9 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_CHANNEL
- *
- * The default IEEE 802.15.4 channel.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_CHANNEL
-#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 11
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
  *
- * The default IEEE 802.15.4 transmit power (dBm)
+ * The default IEEE 802.15.4 transmit power (dBm).
  *
  */
 #ifndef OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
@@ -279,7 +269,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
- *  The maximum size of the CLI line in bytes
+ * The maximum size of the CLI line in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
@@ -289,7 +279,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
  *
- *  The size of CLI UART RX buffer in bytes
+ * The size of CLI UART RX buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
@@ -299,7 +289,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE
  *
- *  The size of CLI message buffer in bytes
+ * The size of CLI message buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE
@@ -380,13 +370,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
+ * @def OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS
  *
  * The maximum number of supported Service ALOCs registrations for this device.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_SERVER_ALOCS
-#define OPENTHREAD_CONFIG_MAX_SERVER_ALOCS 1
+#ifndef OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS
+#define OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS 1
 #endif
 
 /**
@@ -598,7 +588,7 @@
 /**
  * @def OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
  *
- *  The value ahead of the current frame counter for persistent storage
+ * The value ahead of the current frame counter for persistent storage.
  *
  */
 #ifndef OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
@@ -647,7 +637,7 @@
  * Note:
  *
  * 1) Because the default is: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
- *    The platform is expected to provide at least a stub for `otPlatLog()`
+ *    The platform is expected to provide at least a stub for `otPlatLog()`.
  *
  * 2) This is effectively an ENUM so it can be if/else/endif at compile time.
  *
@@ -677,6 +667,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL
 #define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_CRIT
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+ *
+ * Define as 1 to enable bultin-mbedtls.
+ *
+ * Note that the OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS determines whether to use bultin-mbedtls as well as
+ * whether to manage mbedTLS internally, such as memory allocation and debug.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+#define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS 1
 #endif
 
 /**
@@ -856,7 +859,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
- * Define to prepend the log level to all log messages
+ * Define to prepend the log level to all log messages.
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
@@ -866,7 +869,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
  *
- * Define to prepend the log region to all log messages
+ * Define to prepend the log region to all log messages.
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
@@ -915,9 +918,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ *
+ * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SLAAC
+#define OPENTHREAD_CONFIG_ENABLE_SLAAC 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
  *
- * The number of auto-configured SLAAC addresses.
+ * The number of auto-configured SLAAC addresses. Applicable only if OPENTHREAD_CONFIG_ENABLE_SLAAC is enabled.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
@@ -927,7 +940,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
  *
- *  The size of NCP message buffer in bytes
+ * The size of NCP message buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
@@ -937,7 +950,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE
  *
- *  The size of NCP UART TX chunk in bytes
+ * The size of NCP UART TX chunk in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE
@@ -947,7 +960,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
  *
- *  The size of NCP UART RX buffer in bytes
+ * The size of NCP UART RX buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
@@ -961,7 +974,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
  *
- *  The size of NCP SPI (RX/TX) buffer in bytes
+ * The size of NCP SPI (RX/TX) buffer in bytes.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
@@ -975,8 +988,8 @@
 /**
  * @def OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
  *
- *  The size of extra data to be allocated in UART buffer,
- *  needed by NCP Spinel Encrypter.
+ * The size of extra data to be allocated in UART buffer,
+ * needed by NCP Spinel Encrypter.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
@@ -1154,7 +1167,7 @@
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
  *
- * Define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages)
+ * Define as 1 to enable transmission error rate tracking (for both MAC frames and IPv6 messages).
  *
  * When enabled, OpenThread will track average error rate of MAC frame transmissions and IPv6 message error rate for
  * every neighbor.
@@ -1398,12 +1411,12 @@
  * better parent and will switch parent if a better one is found.
  *
  * The child will periodically check the average RSS value for the current parent, and only if it is below a specific
- * threshold, a parent search is performed. The `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` specifies the the
+ * threshold, a parent search is performed. The `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` specifies the
  * check interval (in seconds) and `OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD` gives the RSS threshold.
  *
  * Since the parent search process can be power consuming (child needs to stays in RX mode to collect parent response)
  * and to limit its impact on battery-powered devices, after a parent search is triggered, the child will not trigger
- * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`
+ * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`.
  *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
@@ -1710,7 +1723,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
- * Define as 1 to disable CSMA-CA on the last transmit attempt
+ * Define as 1 to disable CSMA-CA on the last transmit attempt.
  *
  */
 #ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
@@ -1776,7 +1789,7 @@
  *
  * Specifies the default period of time synchronization, in seconds.
  *
- * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set)
+ * Applicable only if time synchronization service feature is enabled (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
  *
  */
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_PERIOD
@@ -1929,5 +1942,46 @@
 #ifndef OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES
 #define OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES 8
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 to support OQPSK modulation in 915MHz frequency band. The physical layer parameters are defined in
+ * section 6 of IEEE802.15.4-2006.
+ *
+ * @note If this setting is set to 1, the IEEE 802.15.4 channel range is 1 to 10.
+ *
+ * @def OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+ *
+ * Define to 1 to support OQPSK modulation in 2.4GHz frequency band. The physical layer parameters are defined in
+ * section 6 of IEEE802.15.4-2006.
+ *
+ * @note If this settings is set to 1, the IEEE 802.15.4 channel range is 11 to 26.
+ *
+ * @note At least one of these two settings must be set to 1. The platform must support the modulation and frequency
+ *       band configured by the setting.
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#ifndef OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 0
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+ *
+ * The default IEEE 802.15.4 channel.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 11
+#else
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL 1
+#endif // OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#endif // OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

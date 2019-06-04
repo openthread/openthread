@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef NRF52811_MBEDTLS_CONFIG_H_
+#define NRF52811_MBEDTLS_CONFIG_H_
+
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe550")
 #endif
@@ -34,3 +37,5 @@
     _Pragma("diag_suppress=550")
     _Pragma("diag_suppress=68")
 #endif
+
+#endif // NRF52811_MBEDTLS_CONFIG_H_

@@ -39,6 +39,8 @@ import time
 
 import io
 import config
+import dtls
+import mesh_cop
 import message
 import pcap
 
@@ -46,9 +48,47 @@ def dbg_print(*args):
     if False:
         print(args)
 
-class RealTime:
+class BaseSimulator(object):
 
     def __init__(self):
+        self._nodes = {}
+        self.commissioning_messages = {}
+        self._payload_parse_factory = mesh_cop.MeshCopCommandFactory(mesh_cop.create_default_mesh_cop_tlv_factories())
+        self._mesh_cop_msg_set = mesh_cop.create_mesh_cop_message_type_set()
+
+    def __del__(self):
+        self._nodes = None
+
+    def add_node(self, node):
+        self._nodes[node.nodeid] = node
+        self.commissioning_messages[node.nodeid] = []
+
+    def set_lowpan_context(self, cid, prefix):
+        raise NotImplementedError
+
+    def get_messages_sent_by(self, nodeid):
+        raise NotImplementedError
+
+    def go(self, duration, nodeid=None):
+        raise NotImplementedError
+
+    def stop(self):
+        raise NotImplementedError
+
+    def read_cert_messages_in_commissioning_log(self, nodeids):
+        for nodeid in nodeids:
+            node  = self._nodes[nodeid]
+            if not node:
+                continue
+            for direction, type, payload in node.read_cert_messages_in_commissioning_log():
+                if direction == b'send':
+                    msg = self._payload_parse_factory.parse(type.decode("utf-8"), io.BytesIO(payload))
+                    self.commissioning_messages[nodeid].append(msg)
+
+class RealTime(BaseSimulator):
+
+    def __init__(self):
+        super(RealTime, self).__init__()
         self._sniffer = config.create_default_thread_sniffer()
         self._sniffer.start()
 
@@ -56,7 +96,10 @@ class RealTime:
         self._sniffer.set_lowpan_context(cid, prefix)
 
     def get_messages_sent_by(self, nodeid):
-        return self._sniffer.get_messages_sent_by(nodeid)
+        messages = self._sniffer.get_messages_sent_by(nodeid).messages
+        ret = message.MessagesSet(messages, self.commissioning_messages[nodeid])
+        self.commissioning_messages[nodeid] = []
+        return ret
 
     def go(self, duration, nodeid=None):
         time.sleep(duration)
@@ -64,7 +107,7 @@ class RealTime:
     def stop(self):
         pass
 
-class VirtualTime:
+class VirtualTime(BaseSimulator):
 
     OT_SIM_EVENT_ALARM_FIRED    = 0
     OT_SIM_EVENT_RADIO_RECEIVED = 1
@@ -91,6 +134,7 @@ class VirtualTime:
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
 
     def __init__(self):
+        super(VirtualTime, self).__init__()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         ip = '127.0.0.1'
@@ -126,14 +170,13 @@ class VirtualTime:
 
         # Ignore any exceptions
         try:
-            msg = self._message_factory.create(io.BytesIO(message))
-
-            if msg is not None:
-                self.devices[addr]['msgs'].append(msg)
+            messages = self._message_factory.create(io.BytesIO(message))
+            self.devices[addr]['msgs'] += messages
 
         except Exception as e:
             # Just print the exception to the console
             print("EXCEPTION: %s" % e)
+            traceback.print_exc()
 
     def set_lowpan_context(self, cid, prefix):
         self._message_factory.set_lowpan_context(cid, prefix)
@@ -154,7 +197,9 @@ class VirtualTime:
         messages = self.devices[addr]['msgs']
         self.devices[addr]['msgs'] = []
 
-        return message.MessagesSet(messages)
+        ret = message.MessagesSet(messages, self.commissioning_messages[nodeid])
+        self.commissioning_messages[nodeid] = []
+        return ret
 
     def _is_radio(self, addr):
         return addr[1] < self.BASE_PORT * 2

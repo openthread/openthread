@@ -33,8 +33,8 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
@@ -59,7 +59,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     , mDefaultHandlerContext(NULL)
     , mSender(aSender)
 {
-    mMessageId = Random::GetUint16();
+    mMessageId = Random::NonCrypto::GetUint16();
 }
 
 void CoapBase::ClearRequestsAndResponses(void)
@@ -129,7 +129,7 @@ Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(GetInstance().GetIp6().GetUdp().NewMessage(0, aSettings))) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL);
     message->SetOffset(0);
 
 exit:
@@ -263,7 +263,7 @@ void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 void CoapBase::HandleRetransmissionTimer(void)
 {
     uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = 0xffffffff;
+    uint32_t         nextDelta = TimerMilli::kForeverDt;
     CoapMetadata     coapMetadata;
     Message *        message     = static_cast<Message *>(mPendingRequests.GetHead());
     Message *        nextMessage = NULL;
@@ -276,10 +276,11 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (coapMetadata.IsLater(now))
         {
+            uint32_t diff = TimerMilli::Elapsed(now, coapMetadata.mNextTimerShot);
             // Calculate the next delay and choose the lowest.
-            if (coapMetadata.mNextTimerShot - now < nextDelta)
+            if (diff < nextDelta)
             {
-                nextDelta = coapMetadata.mNextTimerShot - now;
+                nextDelta = diff;
             }
         }
         else if ((coapMetadata.mConfirmable) && (coapMetadata.mRetransmissionCount < kMaxRetransmit))
@@ -302,7 +303,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerAddr(coapMetadata.mDestinationAddress);
                 messageInfo.SetPeerPort(coapMetadata.mDestinationPort);
                 messageInfo.SetSockAddr(coapMetadata.mSourceAddress);
-                messageInfo.SetInterfaceId(GetNetif().GetInterfaceId());
+                messageInfo.SetInterfaceId(Get<ThreadNetif>().GetInterfaceId());
 
                 SendCopy(*message, messageInfo);
             }
@@ -316,7 +317,7 @@ void CoapBase::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != 0xffffffff)
+    if (nextDelta != TimerMilli::kForeverDt)
     {
         mRetransmissionTimer.Start(nextDelta);
     }
@@ -661,8 +662,6 @@ exit:
             cachedResponse->Free();
         }
     }
-
-    return;
 }
 
 CoapMetadata::CoapMetadata(bool                    aConfirmable,
@@ -677,7 +676,7 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mResponseContext       = aContext;
     mRetransmissionCount   = 0;
     mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
-    mRetransmissionTimeout += Random::GetUint32InRange(
+    mRetransmissionTimeout += Random::NonCrypto::GetUint32InRange(
         0, TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
                TimerMilli::SecToMsec(kAckTimeout) + 1);
 
@@ -734,9 +733,8 @@ otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
             continue;
         }
 
-        VerifyOrExit((*aResponse = message->Clone()) != NULL, error = OT_ERROR_NO_BUFS);
-
-        EnqueuedResponseHeader::RemoveFrom(**aResponse);
+        VerifyOrExit((*aResponse = message->Clone(message->GetLength() - sizeof(EnqueuedResponseHeader))) != NULL,
+                     error = OT_ERROR_NO_BUFS);
 
         error = OT_ERROR_NONE;
         break;
@@ -748,18 +746,21 @@ exit:
 
 void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Message *              copy;
+    otError                error          = OT_ERROR_NONE;
+    Message *              cachedResponse = NULL;
+    Message *              responseCopy   = NULL;
     EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
     uint16_t               messageCount;
     uint16_t               bufferCount;
 
-    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &copy))
+    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &cachedResponse))
     {
     case OT_ERROR_NOT_FOUND:
         break;
 
     case OT_ERROR_NONE:
-        copy->Free();
+        assert(cachedResponse != NULL);
+        cachedResponse->Free();
 
         // fall through
 
@@ -775,10 +776,10 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
         DequeueOldestResponse();
     }
 
-    VerifyOrExit((copy = aMessage.Clone()) != NULL);
+    VerifyOrExit((responseCopy = aMessage.Clone()) != NULL);
 
-    enqueuedResponseHeader.AppendTo(*copy);
-    mQueue.Enqueue(*copy);
+    SuccessOrExit(error = enqueuedResponseHeader.AppendTo(*responseCopy));
+    mQueue.Enqueue(*responseCopy);
 
     if (!mTimer.IsRunning())
     {
@@ -786,6 +787,12 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE && responseCopy != NULL)
+    {
+        responseCopy->Free();
+    }
+
     return;
 }
 
@@ -845,7 +852,7 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
-    , mSocket(aInstance.GetIp6().GetUdp())
+    , mSocket(aInstance.Get<Ip6::Udp>())
 {
 }
 

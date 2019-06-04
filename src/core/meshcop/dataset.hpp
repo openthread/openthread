@@ -63,7 +63,7 @@ public:
      * @param[in]  aType       The type of the dataset, active or pending.
      *
      */
-    Dataset(const Tlv::Type aType);
+    explicit Dataset(Tlv::Type aType);
 
     /**
      * This method clears the Dataset.

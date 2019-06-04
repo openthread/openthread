@@ -56,7 +56,7 @@ public:
          * @param[in] aInstance  A reference to the OpenThread instance.
          *
          */
-        Iterator(Instance &aInstance);
+        explicit Iterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start over.
@@ -118,7 +118,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    RouterTable(Instance &aInstance);
+    explicit RouterTable(Instance &aInstance);
 
     /**
      * This method clears the router table.
@@ -312,10 +312,10 @@ public:
     /**
      * This method updates the router table with a received Route TLV.
      *
-     * @param[in]  aRoute  A reference to the Route TLV.
+     * @param[in]  aTlv  A reference to the Route TLV.
      *
      */
-    void ProcessTlv(const Mle::RouteTlv &aRoute);
+    void ProcessTlv(const Mle::RouteTlv &aTlv);
 
     /**
      * This method updates the router table with a received Router Mask TLV.
@@ -323,7 +323,7 @@ public:
      * @param[in]  aTlv  A reference to the Router Mask TLV.
      *
      */
-    void ProcessTlv(const ThreadRouterMaskTlv &Tlv);
+    void ProcessTlv(const ThreadRouterMaskTlv &aTlv);
 
     /**
      * This method updates the router table and must be called with a one second period.
@@ -332,6 +332,18 @@ public:
     void ProcessTimerTick(void);
 
 private:
+    class RouterIdSet
+    {
+    public:
+        void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
+        bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & (1 << (aRouterId % 8))) != 0; }
+        void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= 1 << (aRouterId % 8); }
+        void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~(1 << (aRouterId % 8)); }
+
+    private:
+        uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    };
+
     void          UpdateAllocation(void);
     const Router *GetFirstEntry(void) const;
     const Router *GetNextEntry(const Router *aRouter) const;
@@ -341,12 +353,12 @@ private:
         return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
     }
 
-    Router   mRouters[Mle::kMaxRouters];
-    uint8_t  mAllocatedRouterIds[BitVectorBytes(Mle::kMaxRouterId + 1)];
-    uint8_t  mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
-    uint32_t mRouterIdSequenceLastUpdated;
-    uint8_t  mRouterIdSequence;
-    uint8_t  mActiveRouterCount;
+    Router      mRouters[Mle::kMaxRouters];
+    RouterIdSet mAllocatedRouterIds;
+    uint8_t     mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
+    uint32_t    mRouterIdSequenceLastUpdated;
+    uint8_t     mRouterIdSequence;
+    uint8_t     mActiveRouterCount;
 };
 
 #endif // OPENTHREAD_FTD
@@ -359,7 +371,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(Instance &) {}
+        explicit Iterator(Instance &) {}
         void    Reset(void) {}
         bool    IsDone(void) const { return true; }
         void    Advance(void) {}

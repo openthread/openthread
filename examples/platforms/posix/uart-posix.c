@@ -272,18 +272,20 @@ void platformUartProcess(void)
         {
             rval = write(s_out_fd, s_write_buffer, s_write_length);
 
-            if (rval <= 0)
+            if (rval >= 0)
+            {
+                s_write_buffer += (uint16_t)rval;
+                s_write_length -= (uint16_t)rval;
+
+                if (s_write_length == 0)
+                {
+                    otPlatUartSendDone();
+                }
+            }
+            else if (errno != EINTR)
             {
                 perror("write");
                 exit(EXIT_FAILURE);
-            }
-
-            s_write_buffer += (uint16_t)rval;
-            s_write_length -= (uint16_t)rval;
-
-            if (s_write_length == 0)
-            {
-                otPlatUartSendDone();
             }
         }
     }

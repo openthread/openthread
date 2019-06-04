@@ -110,6 +110,10 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros', 'med')
         self.nodes[LEADER].add_route('2001:2:0:2::/64', 'med')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.simulator.go(10)
 
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'low')

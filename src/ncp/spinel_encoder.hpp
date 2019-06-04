@@ -59,7 +59,7 @@ public:
      * @param[in] aNcpBuffer   A reference to a `NcpFrameBuffer` where the frames are written.
      *
      */
-    SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
+    explicit SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
         : mNcpBuffer(aNcpBuffer)
         , mNumOpenStructs(0)
         , mSavedNumOpenStructs(0)
@@ -541,6 +541,7 @@ public:
      */
     otError WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen);
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
      * This method adds a message to the current input frame.
      *
@@ -565,6 +566,7 @@ public:
      *
      */
     otError WriteMessage(otMessage *aMessage) { return mNcpBuffer.InFrameFeedMessage(aMessage); }
+#endif
 
     /**
      * This method encodes and writes a set of variables to the current input frame using a given spinel packing format

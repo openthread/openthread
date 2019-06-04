@@ -45,6 +45,8 @@ class otCli:
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.simulator = simulator
+        if self.simulator:
+            self.simulator.add_node(self)
 
         mode = os.environ.get('USE_MTD') is '1' and is_mtd and 'mtd' or 'ftd'
 
@@ -61,6 +63,8 @@ class otCli:
                 self.pexpect.logfile_read = sys.stdout
             else:
                 self.pexpect.logfile_read = sys.stdout.buffer
+
+        self._initialized = True
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
@@ -142,7 +146,7 @@ class otCli:
         self.destroy()
 
     def destroy(self):
-        if not self.pexpect:
+        if not self._initialized:
             return
 
         if hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or \
@@ -150,7 +154,58 @@ class otCli:
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
-            self.pexpect = None
+            self.pexpect.wait()
+            self._initialized = False
+
+    def read_cert_messages_in_commissioning_log(self, timeout=-1):
+        """Get the log of the traffic after DTLS handshake.
+        """
+        format_str = br"=+?\[\[THCI\].*?type=%s.*?\].*?=+?[\s\S]+?-{40,}"
+        join_fin_req = format_str % br"JOIN_FIN\.req"
+        join_fin_rsp = format_str % br"JOIN_FIN\.rsp"
+        dummy_format_str = br"\[THCI\].*?type=%s.*?"
+        join_ent_ntf = dummy_format_str % br"JOIN_ENT\.ntf"
+        join_ent_rsp = dummy_format_str % br"JOIN_ENT\.rsp"
+        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|("+ join_ent_ntf + b")|(" + join_ent_rsp + b")")
+
+        messages = []
+        # There are at most 4 cert messages both for joiner and commissioner
+        for _ in range(0, 4):
+            try:
+                self._expect(pattern, timeout=timeout)
+                log = self.pexpect.match.group(0)
+                messages.append(self._extract_cert_message(log))
+            except:
+                break
+        return messages
+
+    def _extract_cert_message(self, log):
+        res = re.search(br"direction=\w+", log)
+        assert res
+        direction = res.group(0).split(b'=')[1].strip()
+
+        res = re.search(br"type=\S+", log)
+        assert res
+        type = res.group(0).split(b'=')[1].strip()
+
+        payload = bytearray([])
+        payload_len = 0
+        if type in [b"JOIN_FIN.req", b"JOIN_FIN.rsp"]:
+            res = re.search(br"len=\d+", log)
+            assert res
+            payload_len = int(res.group(0).split(b'=')[1].strip())
+
+            hex_pattern = br"\|(\s([0-9a-fA-F]{2}|\.\.))+?\s+?\|"
+            while True:
+                res = re.search(hex_pattern, log)
+                if not res:
+                    break
+                data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
+                payload += bytearray(data)
+                log = log[res.end()-1:]
+
+        assert len(payload) == payload_len
+        return (direction, type, payload)
 
     def send_command(self, cmd, go=True):
         print("%d: %s" % (self.nodeid, cmd))
@@ -164,7 +219,7 @@ class otCli:
         self._expect('Commands:')
         commands = []
         while True:
-            i = self._expect(['Done', '(\S+)'])
+            i = self._expect(['Done', r'(\S+)'])
             if i != 0:
                 commands.append(self.pexpect.match.groups()[0])
             else:
@@ -271,7 +326,7 @@ class otCli:
         return addr64
 
     def get_joiner_id(self):
-        self.send_command('joinerid')
+        self.send_command('joiner id')
         i = self._expect('([0-9a-fA-F]{16})')
         if i == 0:
             addr = self.pexpect.match.groups()[0].decode("utf-8")
@@ -280,7 +335,7 @@ class otCli:
 
     def get_channel(self):
         self.send_command('channel')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             channel = int(self.pexpect.match.groups()[0])
         self._expect('Done')
@@ -306,7 +361,7 @@ class otCli:
 
     def get_key_sequence_counter(self):
         self.send_command('keysequence counter')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             key_sequence_counter = int(self.pexpect.match.groups()[0])
         self._expect('Done')
@@ -330,7 +385,7 @@ class otCli:
     def get_network_name(self):
         self.send_command('networkname')
         while True:
-            i = self._expect(['Done', '(\S+)'])
+            i = self._expect(['Done', r'(\S+)'])
             if i != 0:
                 network_name = self.pexpect.match.groups()[0].decode('utf-8')
             else:
@@ -357,7 +412,7 @@ class otCli:
 
     def get_partition_id(self):
         self.send_command('leaderpartitionid')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             weight = self.pexpect.match.groups()[0]
         self._expect('Done')
@@ -397,7 +452,7 @@ class otCli:
 
     def get_timeout(self):
         self.send_command('childtimeout')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             timeout = self.pexpect.match.groups()[0]
         self._expect('Done')
@@ -415,7 +470,7 @@ class otCli:
 
     def get_weight(self):
         self.send_command('leaderweight')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             weight = self.pexpect.match.groups()[0]
         self._expect('Done')
@@ -436,7 +491,7 @@ class otCli:
         self.send_command('ipaddr')
 
         while True:
-            i = self._expect(['(\S+(:\S*)+)\r?\n', 'Done'])
+            i = self._expect([r'(\S+(:\S*)+)\r?\n', 'Done'])
             if i == 0:
                 addrs.append(self.pexpect.match.groups()[0].decode("utf-8"))
             elif i == 1:
@@ -459,12 +514,28 @@ class otCli:
 
         return None
 
+    def get_addr_rloc(self):
+        addrs = self.get_addrs()
+        for addr in addrs:
+            segs = addr.split(':')
+            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] != 'fc00':
+                return addr
+        return None
+
+    def get_addr_leader_aloc(self):
+        addrs = self.get_addrs()
+        for addr in addrs:
+            segs = addr.split(':')
+            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] == 'fc00':
+                return addr
+        return None
+
     def get_eidcaches(self):
         eidcaches = []
         self.send_command('eidcache')
 
         while True:
-            i = self._expect(['([a-fA-F0-9\:]+) ([a-fA-F0-9]+)\r?\n', 'Done'])
+            i = self._expect([r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)\r?\n', 'Done'])
             if i == 0:
                 eid = self.pexpect.match.groups()[0].decode("utf-8")
                 rloc = self.pexpect.match.groups()[1].decode("utf-8")
@@ -553,7 +624,7 @@ class otCli:
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')
-        i = self._expect('(\d+)\r?\n')
+        i = self._expect(r'(\d+)\r?\n')
         if i == 0:
             timeout = self.pexpect.match.groups()[0]
         self._expect('Done')
@@ -617,7 +688,7 @@ class otCli:
 
         results = []
         while True:
-            i = self._expect(['\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
+            i = self._expect([r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
                                         'Done'])
             if i == 0:
                 results.append(self.pexpect.match.groups())
@@ -640,7 +711,7 @@ class otCli:
         try:
             responders = {}
             while len(responders) < num_responses:
-                i = self._expect(['from (\S+):'])
+                i = self._expect([r'from (\S+):'])
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1
             self._expect('\n')
@@ -786,7 +857,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_psk(self, psk, pskIdentity):
-        cmd = 'coaps set psk ' + psk + ' ' + pskIdentity
+        cmd = 'coaps psk ' + psk + ' ' + pskIdentity
         self.send_command(cmd)
         self._expect('Done')
 
@@ -795,7 +866,7 @@ class otCli:
         self._expect('Done')
 
     def coaps_start_x509(self):
-        cmd = 'coaps set x509'
+        cmd = 'coaps x509'
         self.send_command(cmd)
         self._expect('Done')
 
@@ -830,7 +901,7 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('CoAP Secure connected!', timeout=timeout)
+        self._expect('coaps connected', timeout=timeout)
 
     def coaps_disconnect(self):
         cmd = 'coaps disconnect'
@@ -848,4 +919,19 @@ class otCli:
         else:
             timeout = 5
 
-        self._expect('Received coap secure response', timeout=timeout)
+        self._expect('coaps response', timeout=timeout)
+
+    def commissioner_mgmtset(self, tlvs_binary):
+        cmd = 'commissioner mgmtset binary ' + tlvs_binary
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def bytes_to_hex_str(self, src):
+        return ''.join(format(x, '02x') for x in src)
+
+    def commissioner_mgmtset_with_tlvs(self, tlvs):
+        payload = bytearray()
+        for tlv in tlvs:
+            payload += tlv.to_hex()
+        self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
+

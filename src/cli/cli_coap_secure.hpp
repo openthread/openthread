@@ -41,11 +41,6 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 
-/**
- * to test the default handler for not handled requests set to 1.
- */
-#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
-
 namespace ot {
 namespace Cli {
 
@@ -64,7 +59,7 @@ public:
      * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    CoapSecure(Interpreter &aInterpreter);
+    explicit CoapSecure(Interpreter &aInterpreter);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -84,35 +79,45 @@ private:
         kPskIdMaxLength = 32
     };
 
-    void PrintHeaderInfos(otMessage *aMessage) const;
+    struct Command
+    {
+        const char *mName;
+        otError (CoapSecure::*mCommand)(int argc, char *argv[]);
+    };
 
     void PrintPayload(otMessage *aMessage) const;
 
+    otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessConnect(int argc, char *argv[]);
+    otError ProcessDisconnect(int argc, char *argv[]);
+    otError ProcessPsk(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
+    otError ProcessResource(int argc, char *argv[]);
+    otError ProcessStart(int argc, char *argv[]);
+    otError ProcessStop(int argc, char *argv[]);
+    otError ProcessX509(int argc, char *argv[]);
 
-    otError Stop(void);
+    void Stop(void);
 
-    static void OTCALL HandleServerResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void               HandleServerResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void OTCALL HandleClientResponse(void *               aContext,
-                                            otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aError);
-    void               HandleClientResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+    void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-    static void OTCALL DefaultHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void               DefaultHandle(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void DefaultHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
-    static void OTCALL HandleClientConnect(bool aConnected, void *aContext);
-    void               HandleClientConnect(bool aConnected);
+    static void HandleConnected(bool aConnected, void *aContext);
+    void        HandleConnected(bool aConnected);
+
+    static const Command sCommands[];
+    Interpreter &        mInterpreter;
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
-
-    Interpreter &mInterpreter;
 
     bool    mShutdownFlag;
     bool    mUseCertificate;

@@ -88,6 +88,9 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:3::/64')
+
         self.simulator.go(2)
 
         self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())

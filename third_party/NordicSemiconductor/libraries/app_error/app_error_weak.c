@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,6 +37,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #include "app_error.h"
 
 /*lint -save -e14 */
@@ -49,10 +50,11 @@ __WEAK void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
     (void)id;
     (void)pc;
     (void)info;
+
 #ifndef DEBUG
     NVIC_SystemReset();
 #else
-    assert(false);
+    app_error_save_and_stop(id, pc, info);
 #endif // DEBUG
 }
 /*lint -restore */

@@ -998,7 +998,8 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerStart(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: commissioner start\r\n", aNode->mId);
 
-    auto error = otCommissionerStart(aNode->mInstance);
+    // TODO: handle commissioner callback
+    auto error = otCommissionerStart(aNode->mInstance, NULL, NULL, NULL);
     
     otLogFuncExit();
     return error;
@@ -1256,14 +1257,15 @@ OTNODEAPI int32_t OTCALL otNodeSetPSKc(otNode* aNode, const char *aPSKc)
     otLogFuncEntryMsg("[%d] %s", aNode->mId, aPSKc);
     printf("%d: pskc %s\r\n", aNode->mId, aPSKc);
 
-    uint8_t pskc[OT_PSKC_MAX_SIZE];
-    if (Hex2Bin(aPSKc, pskc, sizeof(pskc)) != OT_PSKC_MAX_SIZE)
+    int pskcLength;
+    otPSKc pskc;
+    if ((pskcLength = Hex2Bin(aPSKc, pskc.m8, sizeof(aPSKc))) != OT_PSKC_MAX_SIZE)
     {
-        printf("invalid pskc %s\r\n", aPSKc);
+        printf("invalid length pskd %d\r\n", pskcLength);
         return OT_ERROR_PARSE;
     }
 
-    auto error = otThreadSetPSKc(aNode->mInstance, pskc);
+    auto error = otThreadSetPSKc(aNode->mInstance, &pskc);
     otLogFuncExit();
     return error;
 }
@@ -1278,7 +1280,7 @@ OTNODEAPI const char* OTCALL otNodeGetPSKc(otNode* aNode)
     {
         aNode->mMemoryToFree.push_back(str);
         for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
-            sprintf_s(str + i * 2, strLength - (2 * i), "%02x", aPSKc[i]);
+            sprintf_s(str + i * 2, strLength - (2 * i), "%02x", aPSKc->m8[i]);
         printf("%d: pskc\r\n%s\r\n", aNode->mId, str);
     }
     otFreeMemory(aPSKc);
@@ -1992,8 +1994,8 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
 
     if (aChannelMask != 0)
     {
-        aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mComponents.mIsChannelMaskPage0Present = true;
+        aDataset.mChannelMask = aChannelMask;
+        aDataset.mComponents.mIsChannelMaskPresent = true;
     }
 
     if (aMasterKey != NULL && strlen(aMasterKey) != 0)
@@ -2144,8 +2146,8 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
 
     if (aChannelMask != 0)
     {
-        aDataset.mChannelMaskPage0 = aChannelMask;
-        aDataset.mComponents.mIsChannelMaskPage0Present = true;
+        aDataset.mChannelMask = aChannelMask;
+        aDataset.mComponents.mIsChannelMaskPresent = true;
     }
 
     if (aExtPanId != NULL && strlen(aExtPanId) != 0)

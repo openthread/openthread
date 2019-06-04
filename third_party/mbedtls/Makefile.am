@@ -75,6 +75,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/ssl_srv.c                      \
     repo/library/ssl_ticket.c                   \
     repo/library/ssl_tls.c                      \
+    repo/library/threading.c                    \
     repo/library/x509.c                         \
     repo/library/x509_crt.c                     \
     $(NULL)

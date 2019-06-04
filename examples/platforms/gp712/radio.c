@@ -226,6 +226,10 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
         sLastReceivedPower = aPacket->mInfo.mRxInfo.mRssi;
     }
 
+    // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+    // See https://github.com/openthread/openthread/pull/3785
+    aPacket->mInfo.mRxInfo.mAckedWithFramePending = true;
+
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
 }
 

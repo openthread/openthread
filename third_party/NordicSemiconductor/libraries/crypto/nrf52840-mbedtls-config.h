@@ -26,11 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef NRF52840_MBEDTLS_CONFIG_H_
+#define NRF52840_MBEDTLS_CONFIG_H_
+
+#include <openthread/config.h>
+
 #ifndef DISABLE_CC310
 #define MBEDTLS_AES_ALT
 #define MBEDTLS_ECP_ALT
 #define MBEDTLS_SHA256_ALT
 #endif // DISABLE_CC310
+
+#ifdef MBEDTLS_THREADING
+#define MBEDTLS_THREADING_C
+#define MBEDTLS_THREADING_ALT
+#endif // MBEDTLS_THREADING
 
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe550")
@@ -40,3 +50,20 @@
     _Pragma("diag_suppress=550")
     _Pragma("diag_suppress=68")
 #endif
+
+/**
+ * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+ *
+ * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
+ *
+ * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt context
+ *       used by Header IE related features.
+ *
+ */
+#if OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER || OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 1
+#else
+#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
+#endif
+
+#endif // NRF52840_MBEDTLS_CONFIG_H_

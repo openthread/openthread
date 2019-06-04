@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
@@ -65,7 +66,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
                      (aPrf == OT_ROUTE_PREFERENCE_HIGH),
                  error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, GetNetif().GetMle().GetMeshLocalPrefix().m8, prefixLengthBytes) <
+    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, prefixLengthBytes) <
                      Ip6::Address::kMeshLocalPrefixLength,
                  error = OT_ERROR_INVALID_ARGS);
 
@@ -202,7 +203,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
     serviceTlv->SetLength(static_cast<uint8_t>(serviceTlvLength));
 
-    serverTlv = reinterpret_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
+    serverTlv = static_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
     serverTlv->Init();
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
@@ -214,7 +215,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
         serverTlv->SetStable();
     }
 
-    serverTlv->SetServer16(GetNetif().GetMle().GetRloc16());
+    serverTlv->SetServer16(Get<Mle::MleRouter>().GetRloc16());
     serverTlv->SetServerData(aServerData, aServerDataLength);
 
     ClearResubmitDelayTimer();
@@ -292,13 +293,13 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
 void Local::UpdateRloc(HasRouteTlv &aHasRoute)
 {
     HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(GetNetif().GetMle().GetRloc16());
+    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
 }
 
 void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
 {
     BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(GetNetif().GetMle().GetRloc16());
+    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
@@ -321,48 +322,41 @@ void Local::UpdateRloc(ServiceTlv &aService)
 
 void Local::UpdateRloc(ServerTlv &aServer)
 {
-    aServer.SetServer16(GetNetif().GetMle().GetRloc16());
+    aServer.SetServer16(Get<Mle::MleRouter>().GetRloc16());
 }
 #endif
 
 bool Local::IsOnMeshPrefixConsistent(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    return (netif.GetNetworkDataLeader().ContainsOnMeshPrefixes(*this, netif.GetMle().GetRloc16()) &&
-            ContainsOnMeshPrefixes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
+    return (Get<Leader>().ContainsOnMeshPrefixes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+            ContainsOnMeshPrefixes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
 bool Local::IsExternalRouteConsistent(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    return (netif.GetNetworkDataLeader().ContainsExternalRoutes(*this, netif.GetMle().GetRloc16()) &&
-            ContainsExternalRoutes(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
+    return (Get<Leader>().ContainsExternalRoutes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+            ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
 #if OPENTHREAD_ENABLE_SERVICE
 bool Local::IsServiceConsistent(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    return (netif.GetNetworkDataLeader().ContainsServices(*this, netif.GetMle().GetRloc16()) &&
-            ContainsServices(netif.GetNetworkDataLeader(), netif.GetMle().GetRloc16()));
+    return (Get<Leader>().ContainsServices(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+            ContainsServices(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 #endif
 
 otError Local::SendServerDataNotification(void)
 {
-    ThreadNetif &   netif = GetNetif();
-    Mle::MleRouter &mle   = netif.GetMle();
-    otError         error = OT_ERROR_NONE;
-    uint16_t        rloc  = mle.GetRloc16();
+    otError  error = OT_ERROR_NONE;
+    uint16_t rloc  = Get<Mle::MleRouter>().GetRloc16();
 
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (mle.IsFullThreadDevice() && mle.IsRouterRoleEnabled() && (mle.GetRole() < OT_DEVICE_ROLE_ROUTER) &&
-        (mle.GetRouterTable().GetActiveRouterCount() < mle.GetRouterUpgradeThreshold()))
+    if (Get<Mle::MleRouter>().IsFullThreadDevice() && Get<Mle::MleRouter>().IsRouterRoleEnabled() &&
+        (Get<Mle::MleRouter>().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
+        (Get<RouterTable>().GetActiveRouterCount() < Get<Mle::MleRouter>().GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }

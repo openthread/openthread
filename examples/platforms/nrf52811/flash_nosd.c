@@ -51,7 +51,7 @@ bool nrf5FlashIsBusy(void)
     return NRF_NVMC->READY != NVMC_READY_READY_Ready;
 }
 
-uint32_t nrf5FlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
     nrf_nvmc_write_bytes(aAddress, aData, aSize);
     return aSize;

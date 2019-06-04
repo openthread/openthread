@@ -54,12 +54,12 @@
 
 static void aes_init(mbedtls_aes_context * ctx, SaSiAesEncryptMode_t mode)
 {
-    memset(&ctx->user_context, 0, sizeof(ctx->user_context));
+    memset(&ctx->hardware.user_context, 0, sizeof(ctx->hardware.user_context));
 
-    ctx->mode = mode;
-    ctx->key.pKey = ctx->key_buffer;
+    ctx->hardware.mode = mode;
+    ctx->hardware.key.pKey = ctx->hardware.key_buffer;
 
-    CC310_OPERATION_NO_RESULT(SaSi_AesInit(&ctx->user_context,
+    CC310_OPERATION_NO_RESULT(SaSi_AesInit(&ctx->hardware.user_context,
                                            mode,
                                            SASI_AES_MODE_ECB,
                                            SASI_AES_PADDING_NONE));
@@ -74,7 +74,7 @@ void aes_cc310_init(mbedtls_aes_context * ctx)
 
 void aes_cc310_free(mbedtls_aes_context * ctx)
 {
-    CC310_OPERATION_NO_RESULT(SaSi_AesFree(&ctx->user_context));
+    CC310_OPERATION_NO_RESULT(SaSi_AesFree(&ctx->hardware.user_context));
 }
 
 int aes_cc310_setkey_enc(mbedtls_aes_context * ctx,
@@ -83,15 +83,15 @@ int aes_cc310_setkey_enc(mbedtls_aes_context * ctx,
 {
     SaSiError_t result = SASI_OK;
 
-    ctx->key.keySize = (keybits + 7) / 8;
-    ctx->key.pKey = ctx->key_buffer;
+    ctx->hardware.key.keySize = (keybits + 7) / 8;
+    ctx->hardware.key.pKey = ctx->hardware.key_buffer;
 
-    memcpy(ctx->key_buffer, key, ctx->key.keySize);
+    memcpy(ctx->hardware.key_buffer, key, ctx->hardware.key.keySize);
 
-    CC310_OPERATION(SaSi_AesSetKey(&ctx->user_context,
+    CC310_OPERATION(SaSi_AesSetKey(&ctx->hardware.user_context,
                                    SASI_AES_USER_KEY,
-                                   &ctx->key,
-                                   sizeof(ctx->key)),
+                                   &ctx->hardware.key,
+                                   sizeof(ctx->hardware.key)),
                     result);
 
     return (int)result;
@@ -105,11 +105,11 @@ int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
     SaSiAesEncryptMode_t reinit_mode = SASI_AES_ENCRYPT_MODE_LAST;
     SaSiError_t          result      = SASI_OK;
 
-    if ((mode == MBEDTLS_AES_ENCRYPT) && (ctx->mode != SASI_AES_ENCRYPT))
+    if ((mode == MBEDTLS_AES_ENCRYPT) && (ctx->hardware.mode != SASI_AES_ENCRYPT))
     {
         reinit_mode = SASI_AES_ENCRYPT;
     }
-    else if ((mode == MBEDTLS_AES_DECRYPT) && (ctx->mode != SASI_AES_DECRYPT))
+    else if ((mode == MBEDTLS_AES_DECRYPT) && (ctx->hardware.mode != SASI_AES_DECRYPT))
     {
         reinit_mode = SASI_AES_DECRYPT;
     }
@@ -118,10 +118,10 @@ int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
     {
         aes_init(ctx, reinit_mode);
 
-        CC310_OPERATION(SaSi_AesSetKey(&ctx->user_context,
+        CC310_OPERATION(SaSi_AesSetKey(&ctx->hardware.user_context,
                                        SASI_AES_USER_KEY,
-                                       &ctx->key,
-                                       sizeof(ctx->key)),
+                                       &ctx->hardware.key,
+                                       sizeof(ctx->hardware.key)),
                         result);
 
         if (result != SASI_OK)
@@ -130,7 +130,7 @@ int aes_cc310_crypt_ecb(mbedtls_aes_context * ctx,
         }
     }
 
-    CC310_OPERATION(SaSi_AesBlock(&ctx->user_context, (uint8_t *)input, 16, output), result);
+    CC310_OPERATION(SaSi_AesBlock(&ctx->hardware.user_context, (uint8_t *)input, 16, output), result);
 
     return (int)result;
 }

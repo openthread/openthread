@@ -86,7 +86,7 @@ void TestMessageQueue(void)
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
 
-    sMessagePool = &sInstance->GetMessagePool();
+    sMessagePool = &sInstance->Get<ot::MessagePool>();
 
     for (int i = 0; i < kNumTestMessages; i++)
     {

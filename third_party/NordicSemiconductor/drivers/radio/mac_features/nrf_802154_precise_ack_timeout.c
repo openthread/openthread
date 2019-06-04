@@ -160,6 +160,13 @@ void nrf_802154_ack_timeout_transmitted_hook(const uint8_t * p_frame)
     timeout_timer_stop();
 }
 
+void nrf_802154_ack_timeout_rx_ack_started_hook(void)
+{
+    assert(m_procedure_is_active);
+
+    timeout_timer_stop();
+}
+
 bool nrf_802154_ack_timeout_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_error_t error)
 {
     (void)error;

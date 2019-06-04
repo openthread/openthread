@@ -35,8 +35,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -103,7 +103,7 @@ void JamDetector::CheckState(void)
 {
     VerifyOrExit(mEnabled);
 
-    switch (GetInstance().Get<Mle::MleRouter>().GetRole())
+    switch (Get<Mle::MleRouter>().GetRole())
     {
     case OT_DEVICE_ROLE_DISABLED:
         VerifyOrExit(mTimer.IsRunning());
@@ -200,7 +200,7 @@ void JamDetector::HandleTimer(void)
         }
     }
 
-    mTimer.Start(mSampleInterval + Random::GetUint32InRange(0, kMaxRandomDelay));
+    mTimer.Start(mSampleInterval + Random::NonCrypto::GetUint32InRange(0, kMaxRandomDelay));
 
 exit:
     return;
@@ -208,7 +208,7 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
-    uint32_t now = TimerMilli::GetNow();
+    int32_t diff = TimerMilli::Diff(mCurSecondStartTime, TimerMilli::GetNow());
 
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.
@@ -218,7 +218,7 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
     }
 
     // If we reached end of current one second interval, update the history bitmap
-    if (now - mCurSecondStartTime >= kOneSecondInterval)
+    if (diff >= kOneSecondInterval)
     {
         mHistoryBitmap <<= 1;
 
@@ -229,10 +229,7 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
         mAlwaysAboveThreshold = true;
 
-        while (now - mCurSecondStartTime >= kOneSecondInterval)
-        {
-            mCurSecondStartTime += kOneSecondInterval;
-        }
+        mCurSecondStartTime += (static_cast<uint32_t>(diff) / kOneSecondInterval) * kOneSecondInterval;
 
         UpdateJamState();
     }

@@ -84,7 +84,7 @@ typedef void (*otNetworkTimeSyncCallbackFn)(void *aCallbackContext);
  * @returns The time synchronization status.
  *
  */
-otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t &aNetworkTime);
+otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime);
 
 /**
  * Set the time synchronization period.

@@ -40,13 +40,16 @@ libopenthread_platform_utils_a_CPPFLAGS                 = \
 libopenthread_platform_utils_a_SOURCES  = \
     debug_uart.c                          \
     logging_rtt.c                         \
+    settings_ram.c                        \
     settings_flash.c                      \
+    soft_source_match_table.c             \
     $(NULL)
 
 noinst_HEADERS                          = \
     code_utils.h                          \
     flash.h                               \
     logging_rtt.h                         \
+    soft_source_match_table.h             \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

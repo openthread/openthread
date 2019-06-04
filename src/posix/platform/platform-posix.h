@@ -138,13 +138,10 @@ void platformAlarmProcess(otInstance *aInstance);
  */
 int32_t platformAlarmGetNext(void);
 
-/**
- * This function returns the current alarm time.
- *
- * @returns The current alarm time.
- *
- */
-uint64_t platformAlarmGetNow(void);
+#define MS_PER_S 1000
+#define US_PER_MS 1000
+#define US_PER_S 1000000
+#define NS_PER_US 1000
 
 /**
  * This function advances the alarm time by @p aDelta.
@@ -157,11 +154,15 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
 /**
  * This function initializes the radio service used by OpenThread.
  *
+ * @note Even when @p aReset is false, a reset event (i.e. a PROP_LAST_STATUS between
+ * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
+ *
  * @param[in]  aRadioFile       A pointer to the radio file.
  * @param[in]  aRadioConfig     A pointer to the radio config.
+ * @param[in]  aReset           Whether to reset RCP when initializing.
  *
  */
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig);
+void platformRadioInit(const char *aRadioFile, const char *aRadioConfig, bool aReset);
 
 /**
  * This function shuts down the radio service used by OpenThread.
@@ -264,12 +265,6 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
- * This function restores the Uart.
- *
- */
-void platformUartRestore(void);
-
-/**
  * This function initialize simulation.
  *
  */
@@ -280,14 +275,6 @@ void otSimInit(void);
  *
  */
 void otSimDeinit(void);
-
-/**
- * This function gets simulation time.
- *
- * @param[in] aTime   A pointer to a timeval receiving the current time.
- *
- */
-void otSimGetTime(struct timeval *aTime);
 
 /**
  * This function performs simulation processing.
@@ -360,11 +347,13 @@ void otSimRadioSpinelUpdate(struct timeval *atimeout);
  */
 void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-#define otSysGetTime(aTime) otSimGetTime(aTime)
-#else
-#define otSysGetTime(aTime) gettimeofday(aTime, NULL)
-#endif
+/**
+ * This function gets system time in microseconds without applying speed up factor.
+ *
+ * @returns System time in microseconds.
+ *
+ */
+uint64_t otSysGetTime(void);
 
 /**
  * This function initializes platform UDP driver.

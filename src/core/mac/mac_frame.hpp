@@ -549,11 +549,11 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf     The Frame Control field.
-     * @param[in]  aSecCtl  The Security Control field.
+     * @param[in]  aFcf          The Frame Control field.
+     * @param[in]  aSecurityCtl  The Security Control field.
      *
      */
-    void InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
+    void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
 
     /**
      * This method validates the frame.
@@ -1018,6 +1018,15 @@ public:
     bool IsARetransmission(void) const { return mInfo.mTxInfo.mIsARetx; }
 
     /**
+     * This method indicates whether or not the received frame is acknowledged with frame pending set.
+     *
+     * @retval TRUE   This frame is acknowledged with frame pending set.
+     * @retval FALSE  This frame is acknowledged with frame pending not set.
+     *
+     */
+    bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
+
+    /**
      * This method sets the retransmission flag attribute.
      *
      * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
@@ -1247,10 +1256,10 @@ public:
      * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
      * the PSDU buffer of the current frame.
 
-     * @param[in] aFrame   The frame to copy from.
+     * @param[in] aFromFrame  The frame to copy from.
      *
      */
-    void CopyFrom(const Frame &aFrame);
+    void CopyFrom(const Frame &aFromFrame);
 
     /**
      * This method returns information about the frame object as an `InfoString` object.

@@ -67,19 +67,41 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_FRAME_MAX_SIZE     = 127,                            ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    OT_RADIO_CHANNEL_PAGE       = 0,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_MIN        = 11,                             ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_MAX        = 26,                             ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SUPPORTED_CHANNELS = 0xffff << OT_RADIO_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_SYMBOLS_PER_OCTET  = 2,                              ///< 2.4 GHz IEEE 802.15.4-2006
-    OT_RADIO_BIT_RATE           = 250000,                         ///< 2.4 GHz IEEE 802.15.4 (bits per second)
+    OT_RADIO_FRAME_MAX_SIZE    = 127,    ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_SYMBOLS_PER_OCTET = 2,      ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
+    OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
 
-    OT_RADIO_BITS_PER_OCTET = 8, ///< Number of bits per octet
-    OT_RADIO_SYMBOL_TIME    = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
-
+    OT_RADIO_SYMBOL_TIME  = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
     OT_RADIO_LQI_NONE     = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID = 127, ///< Invalid or unknown RSSI value
+};
+
+/**
+ * This enumeration defines the channel page.
+ *
+ */
+enum
+{
+    OT_RADIO_CHANNEL_PAGE_0      = 0,                               ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_0_MASK = (1U << OT_RADIO_CHANNEL_PAGE_0), ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_2      = 2,                               ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_2_MASK = (1U << OT_RADIO_CHANNEL_PAGE_2), ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_PAGE_MAX    = OT_RADIO_CHANNEL_PAGE_2,         ///< Maximum supported channel page value
+};
+
+/**
+ * This enumeration defines the frequency band channel range.
+ *
+ */
+enum
+{
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN  = 1,                                           ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX  = 10,                                          ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK = 0x3ff << OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,  ///< 915 MHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN  = 11,                                          ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX  = 26,                                          ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK = 0xffff << OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN, ///< 2.4 GHz IEEE 802.15.4-2006
 };
 
 /**
@@ -180,8 +202,12 @@ typedef struct otRadioFrame
          */
         struct
         {
-            int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
-            uint8_t mLqi;  ///< Link Quality Indicator for received frames.
+            /**
+             * The timestamp when the frame was received (milliseconds).
+             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
+             *
+             */
+            uint32_t mMsec;
 
             /**
              * The timestamp when the frame was received (microseconds, the offset to mMsec).
@@ -189,13 +215,11 @@ typedef struct otRadioFrame
              *
              */
             uint16_t mUsec;
+            int8_t   mRssi; ///< Received signal strength indicator in dBm for received frames.
+            uint8_t  mLqi;  ///< Link Quality Indicator for received frames.
 
-            /**
-             * The timestamp when the frame was received (milliseconds).
-             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
-             *
-             */
-            uint32_t mMsec;
+            // Flags
+            bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
         } mRxInfo;
     } mInfo;
 } otRadioFrame;
@@ -400,7 +424,8 @@ otError otPlatRadioEnable(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE  Successfully transitioned to Disabled.
+ * @retval OT_ERROR_NONE            Successfully transitioned to Disabled.
+ * @retval OT_ERROR_INVALID_STATE   The radio was not in sleep state.
  *
  */
 otError otPlatRadioDisable(otInstance *aInstance);
@@ -671,6 +696,26 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
  *
  */
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
+
+/**
+ * Get the radio supported channel mask that the device is allowed to be on.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ * @returns The radio supported channel mask.
+ *
+ */
+uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
+
+/**
+ * Get the radio preferred channel mask that the device prefers to form on.
+ *
+ * @param[in]  aInstance   The OpenThread instance strucyyture.
+ *
+ * @returns The radio preferred channel mask.
+ *
+ */
+uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 
 /**
  * @}

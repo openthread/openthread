@@ -113,7 +113,8 @@ static bool startCarrierTransmision(void)
 
 static void processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
@@ -139,7 +140,7 @@ exit:
 
 static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error = OT_ERROR_NONE;
 
@@ -336,7 +337,7 @@ exit:
 
 static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError              error = OT_ERROR_NONE;
     nrf_802154_cca_cfg_t ccaConfig;
@@ -379,9 +380,9 @@ const struct PlatformDiagCommand sCommands[] = {
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    uint32_t i;
+    size_t i;
 
-    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
@@ -390,7 +391,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
         }
     }
 
-    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    if (i == otARRAY_LENGTH(sCommands))
     {
         snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
     }
@@ -429,7 +430,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     if (sListen && (aError == OT_ERROR_NONE))
     {

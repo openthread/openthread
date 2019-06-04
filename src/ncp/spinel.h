@@ -33,6 +33,17 @@
 #ifndef SPINEL_HEADER_INCLUDED
 #define SPINEL_HEADER_INCLUDED 1
 
+/*
+ * Spinel definition guideline:
+ *
+ * New NCP firmware should work with an older host driver, i.e., NCP implementation should remain backward compatible.
+ *
+ *  - Existing fields in the format of an already implemented spinel property or command cannot change.
+ *  - New fields may be appended at the end of the format (or the end of a struct) as long as the NCP implementation
+ *    treats the new fields as optional (i.e., a driver not aware of and therefore not using the new fields should
+ *    continue to function as before).
+ */
+
 #ifdef SPINEL_PLATFORM_HEADER
 #include SPINEL_PLATFORM_HEADER
 #else // ifdef SPINEL_PLATFORM_HEADER
@@ -248,6 +259,16 @@ typedef enum
     SPINEL_HOST_POWER_STATE_ONLINE     = 4,
 } spinel_host_power_state_t;
 
+typedef enum
+{
+    SPINEL_MESHCOP_JOINER_STATE_IDLE       = 0,
+    SPINEL_MESHCOP_JOINER_STATE_DISCOVER   = 1,
+    SPINEL_MESHCOP_JOINER_STATE_CONNECTING = 2,
+    SPINEL_MESHCOP_JOINER_STATE_CONNECTED  = 3,
+    SPINEL_MESHCOP_JOINER_STATE_ENTRUST    = 4,
+    SPINEL_MESHCOP_JOINER_STATE_JOINED     = 5,
+} spinel_meshcop_joiner_state_t;
+
 enum
 {
     SPINEL_NET_FLAG_ON_MESH       = (1 << 0),
@@ -378,7 +399,8 @@ enum
     SPINEL_MD_FLAG_TX       = 0x0001, //!< Packet was transmitted, not received.
     SPINEL_MD_FLAG_BAD_FCS  = 0x0004, //!< Packet was received with bad FCS
     SPINEL_MD_FLAG_DUPE     = 0x0008, //!< Packet seems to be a duplicate
-    SPINEL_MD_FLAG_RESERVED = 0xFFF2, //!< Flags reserved for future use.
+    SPINEL_MD_FLAG_ACKED_FP = 0x0010, //!< Packet was acknowledged with frame pending set
+    SPINEL_MD_FLAG_RESERVED = 0xFFE2, //!< Flags reserved for future use.
 };
 
 enum
@@ -767,6 +789,7 @@ enum
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
+    SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -775,6 +798,7 @@ enum
     SPINEL_CAP_THREAD_UDP_FORWARD   = (SPINEL_CAP_THREAD__BEGIN + 2),
     SPINEL_CAP_THREAD_JOINER        = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD_BORDER_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 4),
+    SPINEL_CAP_THREAD_SERVICE       = (SPINEL_CAP_THREAD__BEGIN + 5),
     SPINEL_CAP_THREAD__END          = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -807,6 +831,7 @@ enum
  *    Stream       | 0x070 - 0x07F, 0x1700 - 0x17FF | Stream
  *    MeshCop      | 0x080 - 0x08F, 0x1800 - 0x18FF | Thread Mesh Commissioning
  *    OpenThread   |                0x1900 - 0x19FF | OpenThread specific
+ *    Server       | 0x0A0 - 0x0AF                  | ALOC Service Server
  *    Interface    | 0x100 - 0x1FF                  | Interface (e.g., UART)
  *    PIB          | 0x400 - 0x4FF                  | 802.15.4 PIB
  *    Counter      | 0x500 - 0x7FF                  | Counters (MAC, IP, etc).
@@ -1184,6 +1209,7 @@ typedef enum
     SPINEL_PROP_PHY_RSSI           = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
     SPINEL_PROP_PHY_RX_SENSITIVITY = SPINEL_PROP_PHY__BEGIN + 7, ///< dBm [c]
     SPINEL_PROP_PHY_PCAP_ENABLED   = SPINEL_PROP_PHY__BEGIN + 8, ///< [b]
+    SPINEL_PROP_PHY_CHAN_PREFERRED = SPINEL_PROP_PHY__BEGIN + 9, ///< [A(C)]
     SPINEL_PROP_PHY__END           = 0x30,
 
     SPINEL_PROP_PHY_EXT__BEGIN = 0x1200,
@@ -2617,13 +2643,14 @@ typedef enum
      *
      * Required capability: SPINEL_CAP_THREAD_JOINER
      *
-     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     * The valid values are specified by `spinel_meshcop_joiner_state_t` (`SPINEL_MESHCOP_JOINER_STATE_<state>`)
+     * enumeration.
      *
      */
     SPINEL_PROP_MESHCOP_JOINER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 0, ///<[C]
 
     /// Thread Joiner Commissioning command and the parameters
-    /** Format `bUU` - Write Only
+    /** Format `b` or `bU(UUUUU)` (fields in parenthesis are optional) - Write Only
      *
      * This property starts or stops Joiner's commissioning process
      *
@@ -2634,7 +2661,7 @@ typedef enum
      * the Joiner commissioning process.
      *
      * After a successful start operation, the join process outcome is reported through an
-     * asynchronous `VALUE_IS(LAST_STATUS)`  update with one of the following error status values:
+     * asynchronous `VALUE_IS(LAST_STATUS)` update with one of the following error status values:
      *
      *     - SPINEL_STATUS_JOIN_SUCCESS     the join process succeeded.
      *     - SPINEL_STATUS_JOIN_SECURITY    the join process failed due to security credentials.
@@ -2642,11 +2669,21 @@ typedef enum
      *     - SPINEL_STATUS_JOIN_RSP_TIMEOUT if a response timed out.
      *     - SPINEL_STATUS_JOIN_FAILURE     join failure.
      *
-     * Data per item is:
+     * Frame format:
      *
-     *  `b` : Start or stop commissioning process
-     *  `U` : Joiner's PSKd if start commissioning, empty string if stop commissioning
-     *  `U` : Provisioning url if start commissioning, empty string if stop commissioning
+     *  `b` : Start or stop commissioning process (true to start).
+     *
+     * Only if the start commissioning.
+     *
+     *  `U` : Joiner's PSKd.
+     *
+     * The next fields are all optional. If not provided, OpenThread default values would be used.
+     *
+     *  `U` : Provisioning URL (use empty string if not required).
+     *  `U` : Vendor Name. If not specified or empty string, use OpenThread default (PACKAGE_NAME).
+     *  `U` : Vendor Model. If not specified or empty string, use OpenThread default (OPENTHREAD_CONFIG_PLATFORM_INFO).
+     *  `U` : Vendor Sw Version. If not specified or empty string, use OpenThread default (PACKAGE_VERSION).
+     *  `U` : Vendor Data String. Will not be appended if not specified.
      *
      */
     SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING = SPINEL_PROP_MESHCOP__BEGIN + 1,
@@ -2990,7 +3027,7 @@ typedef enum
      * Required capability: SPINEL_CAP_POSIX_APP
      *
      * This property gives the version string of RCP (NCP in radio mode) which is being controlled by the POSIX
-     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_ENABLE_POSIX_APP` is
+     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_PLATFORM_POSIX_APP` is
      * enabled).
      *
      */
@@ -3014,7 +3051,70 @@ typedef enum
      */
     SPINEL_PROP_PARENT_RESPONSE_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 13,
 
+    /// SLAAC enabled
+    /** Format `b` - Read-Write
+     *  Required capability: `SPINEL_CAP_SLAAC`
+     *
+     * This property allows the host to enable/disable SLAAC module on NCP at run-time. When SLAAC module is enabled,
+     * SLAAC addresses (based on on-mesh prefixes in Network Data) are added to the interface. When SLAAC module is
+     * disabled any previously added SLAAC address is removed.
+     *
+     */
+    SPINEL_PROP_SLAAC_ENABLED = SPINEL_PROP_OPENTHREAD__BEGIN + 14,
+
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
+
+    SPINEL_PROP_SERVER__BEGIN = 0xA0,
+
+    /// Server Allow Local Network Data Change
+    /** Format `b` - Read-write
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Set to true before changing local server net data. Set to false when finished.
+     * This allows changes to be aggregated into a single event.
+     *
+     */
+    SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE = SPINEL_PROP_SERVER__BEGIN + 0,
+
+    // Server Services
+    /** Format: `A(t(LdbdS))`
+     *
+     * This property provides all services registered on the device
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Array of structures containing:
+     *
+     *  `L`: Enterprise Number
+     *  `d`: Service Data
+     *  `b`: Stable
+     *  `d`: Server Data
+     *  `S`: RLOC
+     *
+     */
+    SPINEL_PROP_SERVER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 1,
+
+    // Server Leader Services
+    /** Format: `A(t(CLdbdS))`
+     *
+     * This property provides all services registered on the leader
+     *
+     * Required capability: SPINEL_CAP_THREAD_SERVICE
+     *
+     * Array of structures containing:
+     *
+     *  `C`: Service ID
+     *  `L`: Enterprise Number
+     *  `d`: Service Data
+     *  `b`: Stable
+     *  `d`: Server Data
+     *  `S`: RLOC
+     *
+     */
+    SPINEL_PROP_SERVER_LEADER_SERVICES = SPINEL_PROP_SERVER__BEGIN + 2,
+
+    SPINEL_PROP_SERVER__END = 0xB0,
 
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
 
@@ -3507,11 +3607,11 @@ typedef char spinel_datatype_t;
 #define SPINEL_MAX_UINT_PACKED 2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *     data_out,
-                                                      spinel_size_t data_len,
+                                                      spinel_size_t data_len_max,
                                                       const char *  pack_format,
                                                       ...);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vpack(uint8_t *     data_out,
-                                                       spinel_size_t data_len,
+                                                       spinel_size_t data_len_max,
                                                        const char *  pack_format,
                                                        va_list       args);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
@@ -3579,7 +3679,7 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack_in_place(const uint8_t 
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_decode(const uint8_t *bytes,
                                                            spinel_size_t  len,
-                                                           unsigned int * value);
+                                                           unsigned int * value_ptr);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_encode(uint8_t *bytes, spinel_size_t len, unsigned int value);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 

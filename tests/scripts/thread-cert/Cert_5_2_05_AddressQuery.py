@@ -86,6 +86,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
+        self.simulator.set_lowpan_context(1, '2001::/64')
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
@@ -93,6 +94,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
+        self.simulator.set_lowpan_context(2, '2002::/64')
 
         # 3. Bring up remaining devices except DUT_REED.
         for i in range(2, 17):

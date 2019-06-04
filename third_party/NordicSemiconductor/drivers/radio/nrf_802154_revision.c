@@ -38,15 +38,17 @@
 
 #include <assert.h>
 
-/** @breif Types of nRF52840 revisions. */
+/** @breif Types of nRF revisions. */
 typedef enum
 {
     NRF52840_REVISION_AAAA,
     NRF52840_REVISION_AABA,
-    NRF52840_REVISION_UNKNOWN,
+    NRF52840_REVISION_AACX,
+    NRF52811_REVISION,
+    NRF_REVISION_UNKNOWN,
 } nrf_802154_chip_revision;
 
-static nrf_802154_chip_revision m_nrf52840_revision = NRF52840_REVISION_UNKNOWN;
+static nrf_802154_chip_revision m_nrf_revision = NRF_REVISION_UNKNOWN;
 
 /**
  * @brief Internal auxiliary function to check if the program is running on NRF52840 chip.
@@ -78,7 +80,7 @@ static inline bool nrf_revision_type_52840_aaaa(void)
  * @brief Internal auxiliary function to check if the program is running
  *        on the AABA revision of the nRF52840 chip.
  *
- * @retval true  If it is NRF52480_AAAA chip revision.
+ * @retval true  If it is NRF52480_AABA chip revision.
  * @retval false It is other chip revision.
  */
 static inline bool nrf_revision_type_52840_aaba(void)
@@ -88,39 +90,82 @@ static inline bool nrf_revision_type_52840_aaba(void)
             (((*(uint32_t *)0xF0000FEC) & 0xF0) == 0x00));  // sub-revision
 }
 
+/**
+ * @brief Internal auxiliary function to check if the program is running
+ *        on the AACx revision of the nRF52840 chip.
+ *
+ * @retval true  If it is NRF52480_AACx chip revision.
+ * @retval false It is other chip revision.
+ */
+static inline bool nrf_revision_type_52840_aacx(void)
+{
+    return (nrf_revision_type_52840() &&
+            (((*(uint32_t *)0xF0000FE8) & 0xF0) == 0x20) && // revision
+            (((*(uint32_t *)0xF0000FEC) & 0xF0) == 0x00));  // sub-revision
+}
+
+/**
+ * @brief Internal auxiliary function to check if the program is running on NRF52811 chip.
+ *
+ * @retval true  If it is NRF52411 chip.
+ * @retval false If it is other chip.
+ */
+static inline bool nrf_revision_type_52811(void)
+{
+    return ((((*(uint32_t *)0xF0000FE0) & 0xFF) == 0x0E) &&
+            (((*(uint32_t *)0xF0000FE4) & 0x0F) == 0x00));
+}
+
 void nrf_802154_revision_init(void)
 {
     if (nrf_revision_type_52840_aaaa())
     {
-        m_nrf52840_revision = NRF52840_REVISION_AAAA;
+        m_nrf_revision = NRF52840_REVISION_AAAA;
     }
     else if (nrf_revision_type_52840_aaba())
     {
-        m_nrf52840_revision = NRF52840_REVISION_AABA;
+        m_nrf_revision = NRF52840_REVISION_AABA;
+    }
+    else if (nrf_revision_type_52840_aacx())
+    {
+        m_nrf_revision = NRF52840_REVISION_AACX;
+    }
+    else if (nrf_revision_type_52811())
+    {
+        m_nrf_revision = NRF52811_REVISION;
     }
     else
     {
-        m_nrf52840_revision = NRF52840_REVISION_UNKNOWN;
+        m_nrf_revision = NRF_REVISION_UNKNOWN;
     }
+
+    // This variable may be unused if revision is defined by the compiler.
+    (void)m_nrf_revision;
 }
 
 bool nrf_802154_revision_has_phyend_event(void)
 {
-#if NRF52840_AAAA
+#if defined(NRF52840_XXAA) || defined(NRF52840_AAAA)
     return false;
-#elif NRF52840_AABA
+#elif defined(NRF52840_AABA)
+    return true;
+#elif defined(NRF52840_AACX)
+    return true;
+#elif defined(NRF52811_XXAA)
     return true;
 #else
     bool result = false;
 
-    switch (m_nrf52840_revision)
+    switch (m_nrf_revision)
     {
         case NRF52840_REVISION_AAAA:
             result = false;
             break;
 
         case NRF52840_REVISION_AABA:
-        case NRF52840_REVISION_UNKNOWN:
+        case NRF52840_REVISION_AACX:
+        case NRF52811_REVISION:
+        case NRF_REVISION_UNKNOWN:
             result = true;
             break;
 

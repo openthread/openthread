@@ -37,6 +37,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {
+    (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list*)
     sudo apt-get update || die
 
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
@@ -63,17 +64,8 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != posix-app-pty ] || {
-        sudo apt-get install socat expect libdbus-1-dev autoconf-archive || die
+        sudo apt-get install socat expect || die
         JOBS=$(getconf _NPROCESSORS_ONLN)
-        (
-        WPANTUND_TMPDIR=/tmp/wpantund
-        git clone --depth 1 https://github.com/openthread/wpantund.git $WPANTUND_TMPDIR
-        cd $WPANTUND_TMPDIR
-        ./bootstrap.sh
-        ./configure --prefix= --exec-prefix=/usr --disable-ncp-dummy --enable-static-link-ncp-plugin=spinel
-        make -j $JOBS
-        sudo make install
-        ) || die
         (
         LIBCOAP_TMPDIR=/tmp/libcoap
         mkdir $LIBCOAP_TMPDIR

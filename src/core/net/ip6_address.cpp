@@ -130,6 +130,12 @@ bool Address::IsAnycastRoutingLocator(void) const
             mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
 }
 
+bool Address::IsAnycastServiceLocator(void) const
+{
+    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
+           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+}
+
 bool Address::IsSubnetRouterAnycast(void) const
 {
     return (mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -236,7 +242,7 @@ uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, u
     return rval;
 }
 
-uint8_t Address::PrefixMatch(const Address &aOther) const
+uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
 {
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }
@@ -253,15 +259,17 @@ bool Address::operator!=(const Address &aOther) const
 
 otError Address::FromString(const char *aBuf)
 {
-    otError  error  = OT_ERROR_NONE;
-    uint8_t *dst    = reinterpret_cast<uint8_t *>(mFields.m8);
-    uint8_t *endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-    uint8_t *colonp = NULL;
-    uint16_t val    = 0;
-    uint8_t  count  = 0;
-    bool     first  = true;
-    char     ch;
-    uint8_t  d;
+    otError     error  = OT_ERROR_NONE;
+    uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
+    uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+    uint8_t *   colonp = NULL;
+    const char *colonc = NULL;
+    uint16_t    val    = 0;
+    uint8_t     count  = 0;
+    bool        first  = true;
+    bool        hasIp4 = false;
+    char        ch;
+    uint8_t     d;
 
     memset(mFields.m8, 0, 16);
 
@@ -298,7 +306,20 @@ otError Address::FromString(const char *aBuf)
                 break;
             }
 
+            colonc = aBuf;
+
             continue;
+        }
+        else if (ch == '.')
+        {
+            hasIp4 = true;
+
+            // Do not count bytes of the embedded IPv4 address.
+            endp -= kIp4AddressSize;
+
+            VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+            break;
         }
         else
         {
@@ -310,6 +331,8 @@ otError Address::FromString(const char *aBuf)
         VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
     }
 
+    VerifyOrExit(colonp || dst == endp, error = OT_ERROR_PARSE);
+
     while (colonp && dst > colonp)
     {
         *endp-- = *dst--;
@@ -318,6 +341,44 @@ otError Address::FromString(const char *aBuf)
     while (endp > dst)
     {
         *endp-- = 0;
+    }
+
+    if (hasIp4)
+    {
+        val = 0;
+
+        // Reset the start and end pointers.
+        dst  = reinterpret_cast<uint8_t *>(mFields.m8 + 12);
+        endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+
+        for (;;)
+        {
+            ch = *colonc++;
+
+            if (ch == '.' || ch == '\0' || ch == ' ')
+            {
+                VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+                *dst++ = static_cast<uint8_t>(val);
+                val    = 0;
+
+                if (ch == '\0' || ch == ' ')
+                {
+                    // Check if embedded IPv4 address had exactly four parts.
+                    VerifyOrExit(dst == endp + 1, error = OT_ERROR_PARSE);
+                    break;
+                }
+            }
+            else
+            {
+                VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
+
+                val = (10 * val) + (ch & 0xf);
+
+                // Single part of IPv4 address has to fit in one byte.
+                VerifyOrExit(val <= 0xff, error = OT_ERROR_PARSE);
+            }
+        }
     }
 
 exit:

@@ -44,6 +44,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/tlvs.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/link_quality.hpp"
 
@@ -114,6 +115,7 @@ struct MessageInfo
     uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+    bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
@@ -216,16 +218,17 @@ public:
 
     enum
     {
-        kSubTypeNone                   = 0, ///< None
-        kSubTypeMleAnnounce            = 1, ///< MLE Announce
-        kSubTypeMleDiscoverRequest     = 2, ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse    = 3, ///< MLE Discover Response
-        kSubTypeJoinerEntrust          = 4, ///< Joiner Entrust
-        kSubTypeMplRetransmission      = 5, ///< MPL next retransmission message
-        kSubTypeMleGeneral             = 6, ///< General MLE
-        kSubTypeJoinerFinalizeResponse = 7, ///< Joiner Finalize Response
-        kSubTypeMleChildUpdateRequest  = 8, ///< MLE Child Update Request
-        kSubTypeMleDataResponse        = 9, ///< MLE Data Response
+        kSubTypeNone                   = 0,  ///< None
+        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
+        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
+        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
+        kSubTypeMplRetransmission      = 5,  ///< MPL next retransmission message
+        kSubTypeMleGeneral             = 6,  ///< General MLE
+        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
+        kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
+        kSubTypeMleDataResponse        = 9,  ///< MLE Data Response
+        kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
     };
 
     enum
@@ -403,6 +406,19 @@ public:
      *
      */
     otError Append(const void *aBuf, uint16_t aLength);
+
+    /**
+     * This method appends a TLV to the end of the message.
+     *
+     * On success, this method grows the message by the size of the TLV.
+     *
+     * @param[in]  aTlv     A reference to a TLV.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    otError AppendTlv(const Tlv &aTlv);
 
     /**
      * This method reads bytes from the message.
@@ -619,7 +635,7 @@ public:
     void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
 
     /**
-     * This methods indicates whether the direct transmission of message was successful.
+     * This method indicates whether the direct transmission of message was successful.
      *
      * @retval TRUE   If direct transmission of message was successful (all fragments were delivered and acked).
      * @retval FALSE  If direct transmission of message failed (at least one fragment failed).
@@ -628,13 +644,30 @@ public:
     bool GetTxSuccess(void) const { return mBuffer.mHead.mInfo.mTxSuccess; }
 
     /**
-     * This methods sets whether the direct transmission of message was successful.
+     * This method sets whether the direct transmission of message was successful.
      *
      * @param[in] aTxSuccess   TRUE if the direct transmission is successful, FALSE otherwise (i.e., at least one
      *                         fragment transmission failed).
      *
      */
     void SetTxSuccess(bool aTxSuccess) { mBuffer.mHead.mInfo.mTxSuccess = aTxSuccess; }
+
+    /**
+     * This method indicates whether the message may be evicted.
+     *
+     * @retval TRUE   If the message must not be evicted.
+     * @retval FALSE  If the message may be evicted.
+     *
+     */
+    bool GetDoNotEvict(void) const { return mBuffer.mHead.mInfo.mDoNotEvict; }
+
+    /**
+     * This method sets whether the message may be evicted.
+     *
+     * @param[in]  aDoNotEvict  TRUE if the message may not be evicted, FALSE otherwise.
+     *
+     */
+    void SetDoNotEvict(bool aDoNotEvict) { mBuffer.mHead.mInfo.mDoNotEvict = aDoNotEvict; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -1226,7 +1259,7 @@ public:
         }
 
     private:
-        Iterator(Message *aMessage)
+        explicit Iterator(Message *aMessage)
             : mMessage(aMessage)
         {
         }

@@ -39,6 +39,7 @@
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "mac/mac.hpp"
@@ -72,7 +73,7 @@ otError LinkRaw::SetEnabled(bool aEnabled)
     otLogDebgMac("LinkRaw::Enabled(%s)", aEnabled ? "true" : "false");
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    VerifyOrExit(!GetInstance().GetThreadNetif().IsUp(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 #endif
 
     if (aEnabled)
@@ -204,6 +205,24 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
         mEnergyScanDoneCallback = NULL;
     }
 }
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
+                                        const Frame *aAckFrame,
+                                        otError      aError,
+                                        uint8_t      aRetryCount,
+                                        bool         aWillRetx)
+{
+    OT_UNUSED_VARIABLE(aAckFrame);
+    OT_UNUSED_VARIABLE(aWillRetx);
+
+    if (aError != OT_ERROR_NONE)
+    {
+        otLogInfoMac("Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError), aRetryCount,
+                     aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+    }
+}
+#endif
 
 } // namespace Mac
 } // namespace ot

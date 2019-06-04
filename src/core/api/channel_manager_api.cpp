@@ -35,6 +35,7 @@
 #include "openthread/channel_manager.h"
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "utils/channel_manager.hpp"
 
 using namespace ot;
@@ -45,91 +46,91 @@ void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChanne
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetChannelManager().RequestChannelChange(aChannel);
+    instance.Get<Utils::ChannelManager>().RequestChannelChange(aChannel);
 }
 
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetRequestedChannel();
+    return instance.Get<Utils::ChannelManager>().GetRequestedChannel();
 }
 
 uint16_t otChannelManagerGetDelay(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetDelay();
+    return instance.Get<Utils::ChannelManager>().GetDelay();
 }
 
-otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aMinDelay)
+otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().SetDelay(aMinDelay);
+    return instance.Get<Utils::ChannelManager>().SetDelay(aDelay);
 }
 
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().RequestChannelSelect(aSkipQualityCheck);
+    return instance.Get<Utils::ChannelManager>().RequestChannelSelect(aSkipQualityCheck);
 }
 
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetChannelManager().SetAutoChannelSelectionEnabled(aEnabled);
+    instance.Get<Utils::ChannelManager>().SetAutoChannelSelectionEnabled(aEnabled);
 }
 
 bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetAutoChannelSelectionEnabled();
+    return instance.Get<Utils::ChannelManager>().GetAutoChannelSelectionEnabled();
 }
 
 otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().SetAutoChannelSelectionInterval(aInterval);
+    return instance.Get<Utils::ChannelManager>().SetAutoChannelSelectionInterval(aInterval);
 }
 
 uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetAutoChannelSelectionInterval();
+    return instance.Get<Utils::ChannelManager>().GetAutoChannelSelectionInterval();
 }
 
 uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetSupportedChannels();
+    return instance.Get<Utils::ChannelManager>().GetSupportedChannels();
 }
 
 void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().SetSupportedChannels(aChannelMask);
+    return instance.Get<Utils::ChannelManager>().SetSupportedChannels(aChannelMask);
 }
 
 uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().GetFavoredChannels();
+    return instance.Get<Utils::ChannelManager>().GetFavoredChannels();
 }
 
 void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetChannelManager().SetFavoredChannels(aChannelMask);
+    return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
 }
 
 #endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD

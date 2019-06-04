@@ -31,6 +31,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "ncp/ncp_buffer.hpp"
 
 #include "test_platform.h"
@@ -381,7 +382,7 @@ void TestNcpFrameBuffer(void)
     NcpFrameBuffer::WritePosition pos1, pos2;
 
     sInstance    = testInitInstance();
-    sMessagePool = &sInstance->GetMessagePool();
+    sMessagePool = &sInstance->Get<MessagePool>();
 
     for (i = 0; i < sizeof(buffer); i++)
     {
@@ -933,11 +934,11 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        otPlatRandomGetTrue(reinterpret_cast<uint8_t *>(&value), sizeof(value));
+        Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value));
     }
     else
     {
-        value = otPlatRandomGet();
+        value = Random::NonCrypto::GetUint32();
     }
 
     return value % max;
@@ -1006,7 +1007,7 @@ void TestFuzzNcpFrameBuffer(void)
     uint32_t lensArrayCount[kNumPrios];
 
     sInstance    = testInitInstance();
-    sMessagePool = &sInstance->GetMessagePool();
+    sMessagePool = &sInstance->Get<MessagePool>();
 
     memset(buffer, 0, sizeof(buffer));
 

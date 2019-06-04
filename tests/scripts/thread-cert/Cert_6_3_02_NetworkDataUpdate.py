@@ -72,6 +72,10 @@ class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.simulator.go(5)
 
         addrs = self.nodes[ED].get_addrs()
@@ -85,6 +89,10 @@ class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.simulator.go(5)
 
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())

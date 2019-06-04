@@ -13,7 +13,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 * [diag power](#diag-power)
 * [diag send](#diag-send-packets-length)
 * [diag repeat](#diag-repeat-delay-length)
-* [diag sleep](#diag-sleep)
+* [diag radio](#diag-radio)
 * [diag stats](#diag-stats)
 * [diag stop](#diag-stop)
 
@@ -105,13 +105,24 @@ repeated packet transmission is stopped
 status 0x00
 ```
 
-### diag sleep
+### diag radio sleep
 
 Enter radio sleep mode.
 
 ```bash
-> diag sleep
-sleeping now...
+> diag radio sleep
+set radio from receive to sleep
+status 0x00
+```
+
+### diag radio receive
+
+Set radio from sleep mode to receive mode.
+
+```bash
+> diag radio receive
+set radio from sleep to receive on channel 11
+status 0x00
 ```
 
 ### diag stats

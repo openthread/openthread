@@ -56,7 +56,7 @@ if OPENTHREAD_ENABLE_DIAG
 SUBDIRS                                += diag
 endif
 
-if OPENTHREAD_ENABLE_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX_APP
 SUBDIRS                                += posix
 endif
 

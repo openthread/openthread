@@ -46,6 +46,8 @@
 namespace ot {
 namespace Sntp {
 
+using ot::Encoding::BigEndian::HostSwap32;
+
 /**
  * This class implements SNTP header generation and parsing.
  *
@@ -160,15 +162,15 @@ public:
     /**
      * This method returns the root delay field value.
      *
-     * @returns Value of the the root delay field.
+     * @returns Value of the root delay field.
      *
      */
     uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
 
     /**
-     * This method sets the the root delay field.
+     * This method sets the root delay field.
      *
-     * @param[in]  aRootDelay  The value of the the root delay field.
+     * @param[in]  aRootDelay  The value of the root delay field.
      *
      */
     void SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
@@ -176,15 +178,15 @@ public:
     /**
      * This method returns the root dispersion field value.
      *
-     * @returns Value of the the root dispersion field.
+     * @returns Value of the root dispersion field.
      *
      */
     uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
 
     /**
-     * This method sets the the root dispersion field.
+     * This method sets the root dispersion field.
      *
-     * @param[in]  aRootDispersion  The value of the the root dispersion field.
+     * @param[in]  aRootDispersion  The value of the root dispersion field.
      *
      */
     void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
@@ -192,15 +194,15 @@ public:
     /**
      * This method returns the reference identifier field value.
      *
-     * @returns Value of the the reference identifier field.
+     * @returns Value of the reference identifier field.
      *
      */
     uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
 
     /**
-     * This method sets the the reference identifier field.
+     * This method sets the reference identifier field.
      *
-     * @param[in]  aReferenceId  The value of the the reference identifier field.
+     * @param[in]  aReferenceId  The value of the reference identifier field.
      *
      */
     void SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
@@ -208,7 +210,7 @@ public:
     /**
      * This method returns the kiss code in ASCII format.
      *
-     * @returns Value of the the reference identifier field in ASCII format.
+     * @returns Value of the reference identifier field in ASCII format.
      *
      */
     char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
@@ -461,13 +463,13 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(const Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
      * This method updates request data in the message.
@@ -526,10 +528,7 @@ public:
      * @param[in]  aNetif    A reference to the network interface that SNTP client should be assigned to.
      *
      */
-    Client(Ip6::Netif &aNetif)
-        : mSocket(aNetif.GetIp6().GetUdp())
-        , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this)
-        , mUnixEra(0){};
+    explicit Client(Ip6::Netif &aNetif);
 
     /**
      * This method starts the SNTP client.

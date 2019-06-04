@@ -189,4 +189,16 @@ void __assert_func(const char * file, int line, const char * func, const char * 
         ;
 }
 
+void __aeabi_assert(const char * expr, const char * file, int line)
+{
+    (void)expr;
+    (void)file;
+    (void)line;
+
+    __disable_irq();
+
+    while (1)
+        ;
+}
+
 #endif // ENABLE_DEBUG_ASSERT

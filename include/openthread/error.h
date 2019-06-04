@@ -121,11 +121,13 @@ extern "C" {
  *
  * @defgroup api-cli                 Command Line Interface
  * @defgroup api-crypto              Crypto
+ * @defgroup api-entropy             Entropy Source
  * @defgroup api-factory-diagnostics Factory Diagnostics
  * @defgroup api-jam-detection       Jam Detection
  * @defgroup api-logging             Logging
  * @defgroup api-ncp                 Network Co-Processor
  * @defgroup api-network-time        Network Time Synchronization
+ * @defgroup api-random              Random Number Generator
  * @defgroup api-sntp                SNTP
  *
  * @}
@@ -143,13 +145,13 @@ extern "C" {
  *
  * @defgroup plat-alarm               Alarm
  * @defgroup plat-ble                 BLE Host
+ * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics
  * @defgroup plat-logging             Logging
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
  * @defgroup plat-radio               Radio
- * @defgroup plat-random              Random
  * @defgroup plat-settings            Settings
  * @defgroup plat-spi-slave           SPI Slave
  * @defgroup plat-time                Time Service
@@ -346,6 +348,11 @@ typedef enum otError
      * The link margin was too low.
      */
     OT_ERROR_LINK_MARGIN_LOW = 34,
+
+    /**
+     * The number of defined errors.
+     */
+    OT_NUM_ERRORS,
 
     /**
      * Generic error (should not use).

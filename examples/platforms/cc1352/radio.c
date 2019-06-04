@@ -36,10 +36,10 @@
 
 #include <assert.h>
 #include <utils/code_utils.h>
+#include <openthread/random_noncrypto.h> /* to seed the CSMA-CA funciton */
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include "cc1352_radio.h"
 #include <driverlib/chipinfo.h>
@@ -65,6 +65,11 @@ enum
 {
     CC1352_RECEIVE_SENSITIVITY = -100, // dBm
     CC1352_RF_CMD0             = 0x0607,
+};
+
+enum
+{
+    CC1352_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
 };
 
 /* phy state as defined by openthread */
@@ -248,7 +253,7 @@ static void rfCoreInitReceiveParams(void)
         .condition                  = {
             .rule                   = COND_NEVER,
         },
-        .channel                    = OT_RADIO_CHANNEL_MIN,
+        .channel                    = CC1352_CHANNEL_MIN,
         .rxConfig                   =
         {
             .bAutoFlushCrc          = 1,
@@ -654,7 +659,7 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
     sCsmacaBackoffCmd = cCsmacaBackoffCmd;
     /* initialize the random state with a true random seed for the radio core's
      * psudo rng */
-    sCsmacaBackoffCmd.randomState = otPlatRandomGet();
+    sCsmacaBackoffCmd.randomState = otRandomNonCryptoGetUint16();
     sCsmacaBackoffCmd.pNextOp     = (rfc_radioOp_t *)&sTransmitCmd;
 
     sTransmitCmd = cTransmitCmd;
@@ -1240,6 +1245,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
         GPIO_writeDio(IOID_30, 0);
 
         sState = cc1352_stateSleep;
+        error  = OT_ERROR_NONE;
     }
 
 exit:
@@ -1876,6 +1882,9 @@ static void cc1352RadioProcessTransmitDone(otInstance *  aInstance,
 
 static void cc1352RadioProcessReceiveDone(otInstance *aInstance, otRadioFrame *aReceiveFrame, otError aReceiveError)
 {
+    // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+    // See https://github.com/openthread/openthread/pull/3785
+    aReceiveFrame->mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_ENABLE_DIAG
 
     if (otPlatDiagModeGet())

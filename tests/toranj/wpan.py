@@ -58,6 +58,7 @@ WPAN_NCP_VERSION                               = 'NCP:Version'
 WPAN_NCP_MCU_POWER_STATE                       = "NCP:MCUPowerState"
 WPAN_NETWORK_ALLOW_JOIN                        = 'com.nestlabs.internal:Network:AllowingJoin'
 WPAN_NETWORK_PASSTHRU_PORT                     = 'com.nestlabs.internal:Network:PassthruPort'
+WPAN_RCP_VERSION                               = "POSIXApp:RCPVersion"
 
 WPAN_IP6_LINK_LOCAL_ADDRESS                    = "IPv6:LinkLocalAddress"
 WPAN_IP6_MESH_LOCAL_ADDRESS                    = "IPv6:MeshLocalAddress"
@@ -106,15 +107,13 @@ WPAN_THREAD_ADDRESS_CACHE_TABLE                = "Thread:AddressCacheTable"
 WPAN_THREAD_ADDRESS_CACHE_TABLE_ASVALMAP       = "Thread:AddressCacheTable:AsValMap"
 
 WPAN_OT_LOG_LEVEL                              = "OpenThread:LogLevel"
+WPAN_OT_SLAAC_ENABLED                          = "OpenThread:SLAAC:Enabled"
 WPAN_OT_STEERING_DATA_ADDRESS                  = "OpenThread:SteeringData:Address"
 WPAN_OT_STEERING_DATA_SET_WHEN_JOINABLE        = "OpenThread:SteeringData:SetWhenJoinable"
 WPAN_OT_MSG_BUFFER_COUNTERS                    = "OpenThread:MsgBufferCounters"
 WPAN_OT_MSG_BUFFER_COUNTERS_AS_STRING          = "OpenThread:MsgBufferCounters:AsString"
 WPAN_OT_DEBUG_TEST_ASSERT                      = "OpenThread:Debug:TestAssert"
 WPAN_OT_DEBUG_TEST_WATCHDOG                    = "OpenThread:Debug:TestWatchdog"
-
-WPAN_NCP_COUNTER_ALL_MAC                       = "NCP:Counter:AllMac"
-WPAN_NCP_COUNTER_ALL_MAC_ASVALMAP              = "NCP:Counter:AllMac:AsValMap"
 
 WPAN_MAC_WHITELIST_ENABLED                     = "MAC:Whitelist:Enabled"
 WPAN_MAC_WHITELIST_ENTRIES                     = "MAC:Whitelist:Entries"
@@ -147,6 +146,52 @@ WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED       = "ChannelManager:AutoSelect:Enab
 WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL      = "ChannelManager:AutoSelect:Interval"
 WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK    = "ChannelManager:SupportedChannelMask"
 WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK      = "ChannelManager:FavoredChannelMask"
+
+WPAN_NCP_COUNTER_ALL_MAC                       = "NCP:Counter:AllMac"
+WPAN_NCP_COUNTER_ALL_MAC_ASVALMAP              = "NCP:Counter:AllMac:AsValMap"
+WPAN_NCP_COUNTER_TX_PKT_TOTAL                  = "NCP:Counter:TX_PKT_TOTAL"
+WPAN_NCP_COUNTER_TX_PKT_UNICAST                = "NCP:Counter:TX_PKT_UNICAST"
+WPAN_NCP_COUNTER_TX_PKT_BROADCAST              = "NCP:Counter:TX_PKT_BROADCAST"
+WPAN_NCP_COUNTER_TX_PKT_ACK_REQ                = "NCP:Counter:TX_PKT_ACK_REQ"
+WPAN_NCP_COUNTER_TX_PKT_ACKED                  = "NCP:Counter:TX_PKT_ACKED"
+WPAN_NCP_COUNTER_TX_PKT_NO_ACK_REQ             = "NCP:Counter:TX_PKT_NO_ACK_REQ"
+WPAN_NCP_COUNTER_TX_PKT_DATA                   = "NCP:Counter:TX_PKT_DATA"
+WPAN_NCP_COUNTER_TX_PKT_DATA_POLL              = "NCP:Counter:TX_PKT_DATA_POLL"
+WPAN_NCP_COUNTER_TX_PKT_BEACON                 = "NCP:Counter:TX_PKT_BEACON"
+WPAN_NCP_COUNTER_TX_PKT_BEACON_REQ             = "NCP:Counter:TX_PKT_BEACON_REQ"
+WPAN_NCP_COUNTER_TX_PKT_OTHER                  = "NCP:Counter:TX_PKT_OTHER"
+WPAN_NCP_COUNTER_TX_PKT_RETRY                  = "NCP:Counter:TX_PKT_RETRY"
+WPAN_NCP_COUNTER_TX_ERR_CCA                    = "NCP:Counter:TX_ERR_CCA"
+WPAN_NCP_COUNTER_TX_ERR_ABORT                  = "NCP:Counter:TX_ERR_ABORT"
+WPAN_NCP_COUNTER_RX_PKT_TOTAL                  = "NCP:Counter:RX_PKT_TOTAL"
+WPAN_NCP_COUNTER_RX_PKT_UNICAST                = "NCP:Counter:RX_PKT_UNICAST"
+WPAN_NCP_COUNTER_RX_PKT_BROADCAST              = "NCP:Counter:RX_PKT_BROADCAST"
+WPAN_NCP_COUNTER_RX_PKT_DATA                   = "NCP:Counter:RX_PKT_DATA"
+WPAN_NCP_COUNTER_RX_PKT_DATA_POLL              = "NCP:Counter:RX_PKT_DATA_POLL"
+WPAN_NCP_COUNTER_RX_PKT_BEACON                 = "NCP:Counter:RX_PKT_BEACON"
+WPAN_NCP_COUNTER_RX_PKT_BEACON_REQ             = "NCP:Counter:RX_PKT_BEACON_REQ"
+WPAN_NCP_COUNTER_RX_PKT_OTHER                  = "NCP:Counter:RX_PKT_OTHER"
+WPAN_NCP_COUNTER_RX_PKT_FILT_WL                = "NCP:Counter:RX_PKT_FILT_WL"
+WPAN_NCP_COUNTER_RX_PKT_FILT_DA                = "NCP:Counter:RX_PKT_FILT_DA"
+WPAN_NCP_COUNTER_RX_ERR_EMPTY                  = "NCP:Counter:RX_ERR_EMPTY"
+WPAN_NCP_COUNTER_RX_ERR_UKWN_NBR               = "NCP:Counter:RX_ERR_UKWN_NBR"
+WPAN_NCP_COUNTER_RX_ERR_NVLD_SADDR             = "NCP:Counter:RX_ERR_NVLD_SADDR"
+WPAN_NCP_COUNTER_RX_ERR_SECURITY               = "NCP:Counter:RX_ERR_SECURITY"
+WPAN_NCP_COUNTER_RX_ERR_BAD_FCS                = "NCP:Counter:RX_ERR_BAD_FCS"
+WPAN_NCP_COUNTER_RX_ERR_OTHER                  = "NCP:Counter:RX_ERR_OTHER"
+WPAN_NCP_COUNTER_TX_IP_SEC_TOTAL               = "NCP:Counter:TX_IP_SEC_TOTAL"
+WPAN_NCP_COUNTER_TX_IP_INSEC_TOTAL             = "NCP:Counter:TX_IP_INSEC_TOTAL"
+WPAN_NCP_COUNTER_TX_IP_DROPPED                 = "NCP:Counter:TX_IP_DROPPED"
+WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL               = "NCP:Counter:RX_IP_SEC_TOTAL"
+WPAN_NCP_COUNTER_RX_IP_INSEC_TOTAL             = "NCP:Counter:RX_IP_INSEC_TOTAL"
+WPAN_NCP_COUNTER_RX_IP_DROPPED                 = "NCP:Counter:RX_IP_DROPPED"
+WPAN_NCP_COUNTER_TX_SPINEL_TOTAL               = "NCP:Counter:TX_SPINEL_TOTAL"
+WPAN_NCP_COUNTER_RX_SPINEL_TOTAL               = "NCP:Counter:RX_SPINEL_TOTAL"
+WPAN_NCP_COUNTER_RX_SPINEL_ERR                 = "NCP:Counter:RX_SPINEL_ERR"
+WPAN_NCP_COUNTER_IP_TX_SUCCESS                 = "NCP:Counter:IP_TX_SUCCESS"
+WPAN_NCP_COUNTER_IP_RX_SUCCESS                 = "NCP:Counter:IP_RX_SUCCESS"
+WPAN_NCP_COUNTER_IP_TX_FAILURE                 = "NCP:Counter:IP_TX_FAILURE"
+WPAN_NCP_COUNTER_IP_RX_FAILURE                 = "NCP:Counter:IP_RX_FAILURE"
 
 #----------------------------------------------------------------------------------------------------------------------
 # Valid state values
@@ -254,11 +299,11 @@ class Node(object):
         # Check if env variable `TORANJ_POSIX_APP_RCP_MODEL` is defined
         # and use it to determine if to use operate in "posix-ncp-app".
         if self._POSIX_APP_ENV_VAR in os.environ:
-            use_posix_app_with_rcp = (os.environ[self._POSIX_APP_ENV_VAR] in ['1', 'yes'])
+            self._use_posix_app_with_rcp = (os.environ[self._POSIX_APP_ENV_VAR] in ['1', 'yes'])
         else:
-            use_posix_app_with_rcp = False
+            self._use_posix_app_with_rcp = False
 
-        if use_posix_app_with_rcp:
+        if self._use_posix_app_with_rcp:
             ncp_socket_path = 'system:{} -s {} {} {}'.format(self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR,
                 self._OT_RCP, index)
         else:
@@ -305,6 +350,10 @@ class Node(object):
     @property
     def tund_log_file(self):
         return self._tund_log_file
+
+    @property
+    def using_posix_app_with_rcp(self):
+        return self._use_posix_app_with_rcp
 
     #------------------------------------------------------------------------------------------------------------------
     # Executing a `wpanctl` command
@@ -446,6 +495,18 @@ class Node(object):
         return self.wpanctl('remove-route ' + route_prefix +
                             (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
                             (' -p {}'.format(priority) if priority is not None else ''))
+
+    def commissioner_start(self):
+        return self.wpanctl('commissioner start')
+
+    def commissioner_add_joiner(self, eui64, pskd, timeout = '100'):
+        return self.wpanctl('commissioner joiner-add {} {} {}'.format(eui64, timeout, pskd))
+
+    def joiner_join(self, pskd):
+        return self.wpanctl('joiner --join {}'.format(pskd))
+
+    def joiner_attach(self):
+        return self.wpanctl('joiner --attach')
 
     #------------------------------------------------------------------------------------------------------------------
     # Helper methods

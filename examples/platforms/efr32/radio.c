@@ -42,7 +42,10 @@
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
+#include "utils/soft_source_match_table.h"
+
 #include "board_config.h"
+#include "em_cmu.h"
 #include "em_core.h"
 #include "em_system.h"
 #include "openthread-core-efr32-config.h"
@@ -51,6 +54,7 @@
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
+#include "rtcdriver.h"
 
 enum
 {
@@ -62,14 +66,6 @@ enum
     IEEE802154_FRAME_PENDING   = 1 << 4,
     IEEE802154_ACK_REQUEST     = 1 << 5,
     IEEE802154_DSN_OFFSET      = 2,
-};
-
-enum
-{
-    EFR32_915MHZ_OQPSK_CHANNEL_MIN = 1,
-    EFR32_915MHZ_OQPSK_CHANNEL_MAX = 10,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MIN = 11,
-    EFR32_2P4GHZ_OQPSK_CHANNEL_MAX = 26,
 };
 
 enum
@@ -88,21 +84,32 @@ enum
 
 enum
 {
-#if RADIO_SUPPORT_2P4GHZ_OQPSK && RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT && RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     EFR32_NUM_BAND_CONFIGS = 2,
 #else
     EFR32_NUM_BAND_CONFIGS = 1,
 #endif
 };
 
-static uint16_t      sPanId             = 0;
+typedef enum
+{
+    ENERGY_SCAN_STATUS_IDLE,
+    ENERGY_SCAN_STATUS_IN_PROGRESS,
+    ENERGY_SCAN_STATUS_COMPLETED
+} energyScanStatus;
+
+typedef enum
+{
+    ENERGY_SCAN_MODE_SYNC,
+    ENERGY_SCAN_MODE_ASYNC
+} energyScanMode;
+
+RAIL_Handle_t gRailHandle;
+
 static volatile bool sTransmitBusy      = false;
 static bool          sPromiscuous       = false;
 static bool          sIsSrcMatchEnabled = false;
 static otRadioState  sState             = OT_RADIO_STATE_DISABLED;
-
-static volatile bool   sSampleRssiDone;
-static volatile int8_t sRssi;
 
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
 static otRadioFrame sReceiveFrame;
@@ -112,16 +119,14 @@ static otRadioFrame     sTransmitFrame;
 static uint8_t          sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static volatile otError sTransmitError;
 
-typedef struct srcMatchEntry
-{
-    uint16_t checksum;
-    bool     allocated;
-} sSrcMatchEntry;
+static efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
 
-static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
-static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
+static volatile energyScanStatus sEnergyScanStatus;
+static volatile int8_t           sEnergyScanResultDbm;
+static energyScanMode            sEnergyScanMode;
 
-efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS];
+#define QUARTER_DBM_IN_DBM 4
+#define US_IN_MS 1000
 
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents);
 
@@ -163,7 +168,7 @@ static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static efr32BandConfig *sTxBandConfig = NULL;
 static efr32BandConfig *sRxBandConfig = NULL;
 
-RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
+static RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t     status;
     RAIL_Handle_t     handle;
@@ -176,6 +181,11 @@ RAIL_Handle_t efr32RailConfigInit(efr32BandConfig *aBandConfig)
 
     handle = RAIL_Init(&aBandConfig->mRailConfig, NULL);
     assert(handle != NULL);
+
+    if (gRailHandle == NULL)
+    {
+        gRailHandle = handle;
+    }
 
     status = RAIL_ConfigData(handle, &railDataConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -241,7 +251,7 @@ static void efr32RadioSetTxPower(RAIL_Handle_t               aRailHandle,
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
+static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
     efr32BandConfig *config = NULL;
 
@@ -257,29 +267,29 @@ efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
     return config;
 }
 
-void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
+static void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
 {
     uint8_t index = 0;
 
-#if RADIO_SUPPORT_2P4GHZ_OQPSK
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = NULL;
-    sBandConfigs[index].mChannelMin                = EFR32_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_2P4GHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
     index++;
 #endif
 
-#if RADIO_SUPPORT_915MHZ_OQPSK
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     sBandConfigs[index].mRailConfig.eventsCallback = aEventCallback;
     sBandConfigs[index].mRailConfig.protocol       = NULL;
     sBandConfigs[index].mRailConfig.scheduler      = &sBandConfigs[index].mRailSchedState;
     sBandConfigs[index].mChannelConfig             = channelConfigs[0];
-    sBandConfigs[index].mChannelMin                = EFR32_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax                = EFR32_915MHZ_OQPSK_CHANNEL_MAX;
+    sBandConfigs[index].mChannelMin                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfigs[index].mChannelMax                = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 
     assert((sBandConfigs[index].mRailHandle = efr32RailConfigInit(&sBandConfigs[index])) != NULL);
 #endif
@@ -287,7 +297,14 @@ void efr32BandConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_E
 
 void efr32RadioInit(void)
 {
+    RAIL_Status_t status;
+
     efr32BandConfigInit(RAILCb_Generic);
+
+    CMU_ClockEnable(cmuClock_PRS, true);
+    RTCDRV_Init();
+    status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
+    assert(status == RAIL_STATUS_NO_ERROR);
 
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
@@ -299,6 +316,8 @@ void efr32RadioInit(void)
 
     sTxBandConfig = sRxBandConfig;
     efr32RadioSetTxPower(sTxBandConfig->mRailHandle, sTxBandConfig->mChannelConfig, sTxPowerDbm);
+
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
 
     otLogInfoPlat("Initialized", NULL);
 }
@@ -319,6 +338,26 @@ void efr32RadioDeinit(void)
 
     sTxBandConfig = NULL;
     sRxBandConfig = NULL;
+}
+
+static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAIL_Time_t aAveragingTimeUs)
+{
+    RAIL_Status_t        status;
+    RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
+    otError              error         = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE, error = OT_ERROR_BUSY);
+
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IN_PROGRESS;
+    sEnergyScanMode   = aMode;
+
+    RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
+
+    status = RAIL_StartAverageRssi(sRxBandConfig->mRailHandle, aChannel, aAveragingTimeUs, &schedulerInfo);
+    otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -345,7 +384,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
     otLogInfoPlat("PANID=%X", aPanId);
 
-    sPanId = aPanId;
+    utilsSoftSrcMatchSetPanId(aPanId);
 
     for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
@@ -525,35 +564,38 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    RAIL_Status_t        status;
-    RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY};
-    uint32_t             start;
+    otError  error;
+    uint32_t start;
+    int8_t   rssi = OT_RADIO_RSSI_INVALID;
+
     OT_UNUSED_VARIABLE(aInstance);
 
-    RAIL_Idle(sRxBandConfig->mRailHandle, RAIL_IDLE, true);
-
-    sSampleRssiDone = false;
-    sRssi           = OT_RADIO_RSSI_INVALID;
-
-    status = RAIL_StartAverageRssi(sRxBandConfig->mRailHandle, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME,
-                                   &schedulerInfo);
-    otEXPECT(status == RAIL_STATUS_NO_ERROR);
+    error = efr32StartEnergyScan(ENERGY_SCAN_MODE_SYNC, sReceiveFrame.mChannel, EFR32_RSSI_AVERAGING_TIME);
+    otEXPECT(error == OT_ERROR_NONE);
 
     start = RAIL_GetTime();
 
     // waiting for the event RAIL_EVENT_RSSI_AVERAGE_DONE
-    while (!sSampleRssiDone && ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
+    while (sEnergyScanStatus == ENERGY_SCAN_STATUS_IN_PROGRESS &&
+           ((RAIL_GetTime() - start) < EFR32_RSSI_AVERAGING_TIMEOUT))
         ;
 
+    if (sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
+    {
+        rssi = sEnergyScanResultDbm;
+    }
+
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+
 exit:
-    return sRssi;
+    return rssi;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -578,204 +620,12 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-int8_t findSrcMatchAvailEntry(bool aShortAddress)
-{
-    int8_t entry = -1;
-
-    if (aShortAddress)
-    {
-        for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM; i++)
-        {
-            if (!srcMatchShortEntry[i].allocated)
-            {
-                entry = i;
-                break;
-            }
-        }
-    }
-    else
-    {
-        for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM; i++)
-        {
-            if (!srcMatchExtEntry[i].allocated)
-            {
-                entry = i;
-                break;
-            }
-        }
-    }
-
-    return entry;
-}
-
-int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
-{
-    int8_t   entry    = -1;
-    uint16_t checksum = aShortAddress + sPanId;
-
-    for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM; i++)
-    {
-        if (checksum == srcMatchShortEntry[i].checksum && srcMatchShortEntry[i].allocated)
-        {
-            entry = i;
-            break;
-        }
-    }
-
-    return entry;
-}
-
-int8_t findSrcMatchExtEntry(const otExtAddress *aExtAddress)
-{
-    int8_t   entry    = -1;
-    uint16_t checksum = sPanId;
-
-    checksum += (uint16_t)aExtAddress->m8[0] | (uint16_t)(aExtAddress->m8[1] << 8);
-    checksum += (uint16_t)aExtAddress->m8[2] | (uint16_t)(aExtAddress->m8[3] << 8);
-    checksum += (uint16_t)aExtAddress->m8[4] | (uint16_t)(aExtAddress->m8[5] << 8);
-    checksum += (uint16_t)aExtAddress->m8[6] | (uint16_t)(aExtAddress->m8[7] << 8);
-
-    for (uint8_t i = 0; i < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM; i++)
-    {
-        if (checksum == srcMatchExtEntry[i].checksum && srcMatchExtEntry[i].allocated)
-        {
-            entry = i;
-            break;
-        }
-    }
-
-    return entry;
-}
-
-void addToSrcMatchShortIndirect(uint8_t entry, const uint16_t aShortAddress)
-{
-    uint16_t checksum = aShortAddress + sPanId;
-
-    srcMatchShortEntry[entry].checksum  = checksum;
-    srcMatchShortEntry[entry].allocated = true;
-}
-
-void addToSrcMatchExtIndirect(uint8_t entry, const otExtAddress *aExtAddress)
-{
-    uint16_t checksum = sPanId;
-
-    checksum += (uint16_t)aExtAddress->m8[0] | (uint16_t)(aExtAddress->m8[1] << 8);
-    checksum += (uint16_t)aExtAddress->m8[2] | (uint16_t)(aExtAddress->m8[3] << 8);
-    checksum += (uint16_t)aExtAddress->m8[4] | (uint16_t)(aExtAddress->m8[5] << 8);
-    checksum += (uint16_t)aExtAddress->m8[6] | (uint16_t)(aExtAddress->m8[7] << 8);
-
-    srcMatchExtEntry[entry].checksum  = checksum;
-    srcMatchExtEntry[entry].allocated = true;
-}
-
-void removeFromSrcMatchShortIndirect(uint8_t entry)
-{
-    srcMatchShortEntry[entry].allocated = false;
-    memset(&srcMatchShortEntry[entry].checksum, 0, sizeof(uint16_t));
-}
-
-void removeFromSrcMatchExtIndirect(uint8_t entry)
-{
-    srcMatchExtEntry[entry].allocated = false;
-    memset(&srcMatchExtEntry[entry].checksum, 0, sizeof(uint16_t));
-}
-
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     // set Frame Pending bit for all outgoing ACKs if aEnable is false
     sIsSrcMatchEnabled = aEnable;
-}
-
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-    int8_t  entry = -1;
-
-    entry = findSrcMatchAvailEntry(true);
-    otLogDebgPlat("Add ShortAddr entry: %d", entry);
-
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
-
-    addToSrcMatchShortIndirect(entry, aShortAddress);
-
-exit:
-    return error;
-}
-
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-    int8_t  entry = -1;
-
-    entry = findSrcMatchAvailEntry(false);
-    otLogDebgPlat("Add ExtAddr entry: %d", entry);
-
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
-
-    addToSrcMatchExtIndirect(entry, aExtAddress);
-
-exit:
-    return error;
-}
-
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-    int8_t  entry = -1;
-
-    entry = findSrcMatchShortEntry(aShortAddress);
-    otLogDebgPlat("Clear ShortAddr entry: %d", entry);
-
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
-
-    removeFromSrcMatchShortIndirect(entry);
-
-exit:
-    return error;
-}
-
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-    int8_t  entry = -1;
-
-    entry = findSrcMatchExtEntry(aExtAddress);
-    otLogDebgPlat("Clear ExtAddr entry: %d", entry);
-
-    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
-
-    removeFromSrcMatchExtIndirect(entry);
-
-exit:
-    return error;
-}
-
-void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otLogDebgPlat("Clear ShortAddr entries", NULL);
-
-    memset(srcMatchShortEntry, 0, sizeof(srcMatchShortEntry));
-}
-
-void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otLogDebgPlat("Clear ExtAddr entries", NULL);
-
-    memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
 
 static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle)
@@ -846,6 +696,10 @@ static void processNextRxPacket(otInstance *aInstance, RAIL_Handle_t aRailHandle
 
         sReceiveError = OT_ERROR_NONE;
 
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
@@ -885,9 +739,9 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
         assert(status == RAIL_STATUS_NO_ERROR);
 
         if ((sourceAddress.length == RAIL_IEEE802154_LongAddress &&
-             findSrcMatchExtEntry((otExtAddress *)sourceAddress.longAddress) >= 0) ||
+             utilsSoftSrcMatchExtFindEntry((otExtAddress *)sourceAddress.longAddress) >= 0) ||
             (sourceAddress.length == RAIL_IEEE802154_ShortAddress &&
-             findSrcMatchShortEntry(sourceAddress.shortAddress) >= 0))
+             utilsSoftSrcMatchShortFindEntry(sourceAddress.shortAddress) >= 0))
         {
             status = RAIL_IEEE802154_SetFramePending(aRailHandle);
             assert(status == RAIL_STATUS_NO_ERROR);
@@ -958,8 +812,18 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
     if (aEvents & RAIL_EVENT_RSSI_AVERAGE_DONE)
     {
-        sSampleRssiDone = true;
-        sRssi           = (int8_t)(RAIL_GetAverageRssi(aRailHandle) >> 2);
+        const int16_t energyScanResultQuarterDbm = RAIL_GetAverageRssi(aRailHandle);
+
+        sEnergyScanStatus = ENERGY_SCAN_STATUS_COMPLETED;
+
+        if (energyScanResultQuarterDbm == RAIL_RSSI_INVALID)
+        {
+            sEnergyScanResultDbm = OT_RADIO_RSSI_INVALID;
+        }
+        else
+        {
+            sEnergyScanResultDbm = energyScanResultQuarterDbm / QUARTER_DBM_IN_DBM;
+        }
 
         RAIL_YieldRadio(aRailHandle);
     }
@@ -968,10 +832,8 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aScanChannel);
-    OT_UNUSED_VARIABLE(aScanDuration);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return efr32StartEnergyScan(ENERGY_SCAN_MODE_ASYNC, aScanChannel, (RAIL_Time_t)aScanDuration * US_IN_MS);
 }
 
 void efr32RadioProcess(otInstance *aInstance)
@@ -1000,6 +862,11 @@ void efr32RadioProcess(otInstance *aInstance)
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
+    }
+    else if (sEnergyScanMode == ENERGY_SCAN_MODE_ASYNC && sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
+    {
+        sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+        otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
     }
 
     processNextRxPacket(aInstance, sRxBandConfig->mRailHandle);

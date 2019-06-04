@@ -36,6 +36,7 @@
 #include <openthread/joiner.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
@@ -53,8 +54,8 @@ otError otJoinerStart(otInstance *     aInstance,
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetJoiner().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel,
-                                                        aVendorSwVersion, aVendorData, aCallback, aContext);
+    error = instance.Get<MeshCoP::Joiner>().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
+                                                  aVendorData, aCallback, aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPSKd);
@@ -77,7 +78,7 @@ otError otJoinerStop(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetJoiner().Stop();
+    instance.Get<MeshCoP::Joiner>().Stop();
     error = OT_ERROR_NONE;
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -94,7 +95,7 @@ otJoinerState otJoinerGetState(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    state = instance.GetThreadNetif().GetJoiner().GetState();
+    state = instance.Get<MeshCoP::Joiner>().GetState();
 #else
     OT_UNUSED_VARIABLE(aInstance);
 #endif
@@ -109,7 +110,7 @@ otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
 #if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetJoiner().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
+    instance.Get<MeshCoP::Joiner>().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
     error = OT_ERROR_NONE;
 #else
     OT_UNUSED_VARIABLE(aInstance);

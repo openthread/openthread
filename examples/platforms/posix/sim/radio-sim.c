@@ -410,12 +410,15 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    if (otPlatRadioIsEnabled(aInstance))
-    {
-        sState = OT_RADIO_STATE_DISABLED;
-    }
+    otError error = OT_ERROR_NONE;
 
-    return OT_ERROR_NONE;
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
+
+    sState = OT_RADIO_STATE_DISABLED;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
@@ -639,6 +642,7 @@ void radioSendAck(void)
     if (isDataRequestAndHasFramePending(sReceiveFrame.mPsdu))
     {
         sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
     sAckMessage.mPsdu[1] = 0;
@@ -687,6 +691,7 @@ void radioProcessFrame(otInstance *aInstance)
     sReceiveFrame.mInfo.mRxInfo.mRssi = -20;
     sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
 
+    sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))
     {

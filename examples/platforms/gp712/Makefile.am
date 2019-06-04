@@ -41,11 +41,11 @@ libopenthread_gp712_a_CPPFLAGS            = \
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
+    entropy.c                               \
     flash.c                                 \
     logging.c                               \
     misc.c                                  \
     radio.c                                 \
-    random.c                                \
     system.c                                \
     uart-posix.c                            \
     $(NULL)

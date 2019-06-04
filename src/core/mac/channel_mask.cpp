@@ -36,6 +36,7 @@
 #include "channel_mask.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Mac {
@@ -59,10 +60,10 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
     if (aChannel == kChannelIteratorFirst)
     {
-        aChannel = (OT_RADIO_CHANNEL_MIN - 1);
+        aChannel = (Phy::kChannelMin - 1);
     }
 
-    for (aChannel++; aChannel <= OT_RADIO_CHANNEL_MAX; aChannel++)
+    for (aChannel++; aChannel <= Phy::kChannelMax; aChannel++)
     {
         if (ContainsChannel(aChannel))
         {
@@ -72,6 +73,26 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
 exit:
     return error;
+}
+
+uint8_t ChannelMask::ChooseRandomChannel(void) const
+{
+    uint8_t channel = kChannelIteratorFirst;
+    uint8_t randomIndex;
+
+    VerifyOrExit(!IsEmpty());
+
+    randomIndex = Random::NonCrypto::GetUint8InRange(0, GetNumberOfChannels());
+
+    SuccessOrExit(GetNextChannel(channel));
+
+    while (randomIndex-- != 0)
+    {
+        SuccessOrExit(GetNextChannel(channel));
+    }
+
+exit:
+    return channel;
 }
 
 ChannelMask::InfoString ChannelMask::ToString(void) const

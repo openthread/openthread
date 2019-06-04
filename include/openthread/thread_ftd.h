@@ -117,7 +117,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
  * @retval  OT_ERROR_INVALID_STATE  If Thread isn't stopped.
  *
- * @sa otThreadGetMaxAllowedChildren, otThreadStop
+ * @sa otThreadGetMaxAllowedChildren
  *
  */
 OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
@@ -169,6 +169,7 @@ OTAPI otError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t
  * @returns The Thread Leader Weight value.
  *
  * @sa otThreadSetLeaderWeight
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
@@ -179,6 +180,7 @@ OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
  * @param[in]  aWeight   The Thread Leader Weight value.
  *
  * @sa otThreadGetLeaderWeight
+ *
  */
 OTAPI void OTCALL otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
@@ -374,6 +376,7 @@ OTAPI otError OTCALL otThreadBecomeLeader(otInstance *aInstance);
  * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otThreadSetRouterDowngradeThreshold
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
 
@@ -387,6 +390,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
  * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otThreadGetRouterDowngradeThreshold
+ *
  */
 OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
@@ -398,6 +402,7 @@ OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uin
  * @returns The ROUTER_SELECTION_JITTER value.
  *
  * @sa otThreadSetRouterSelectionJitter
+ *
  */
 OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
 
@@ -411,6 +416,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
  * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
  *
  * @sa otThreadGetRouterSelectionJitter
+ *
  */
 OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
@@ -462,10 +468,10 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @sa otThreadGetChildInfoByIndex
  *
  */
-otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                       uint8_t                    aChildIndex,
-                                       otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *             aAddress);
+OTAPI otError OTCALL otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                                    uint8_t                    aChildIndex,
+                                                    otChildIp6AddressIterator *aIterator,
+                                                    otIp6Address *             aAddress);
 
 /**
  * Get the current Router ID Sequence.
@@ -524,7 +530,7 @@ OTAPI otError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIn
  * @sa otThreadSetPSKc
  *
  */
-OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
+OTAPI const otPSKc *OTCALL otThreadGetPSKc(otInstance *aInstance);
 
 /**
  * Set the thrPSKc.
@@ -542,7 +548,7 @@ OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
  * @sa otThreadGetPSKc
  *
  */
-OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc);
+OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc);
 
 /**
  * Get the assigned parent priority.
@@ -569,51 +575,60 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS   If the parent priority value is not among 1, 0, -1 and -2.
  *
  * @sa otThreadGetParentPriority
+ *
  */
 OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
- * This enumeration defines the constants used in `otThreadChildTableCallback` to indicate whether a child is added or
- * removed.
+ * This enumeration defines the constants used in `otNeighborTableCallback` to indicate whether a child or router
+ * neighbor is being added or removed.
  *
  */
-typedef enum otThreadChildTableEvent
+typedef enum
 {
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_ADDED,   ///< A child is being added.
-    OT_THREAD_CHILD_TABLE_EVENT_CHILD_REMOVED, ///< A child is being removed.
-} otThreadChildTableEvent;
+    OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED,    ///< A child is being added.
+    OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED,  ///< A child is being removed.
+    OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED,   ///< A router is being added.
+    OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, ///< A router is being removed.
+} otNeighborTableEvent;
 
 /**
- * This function pointer is called to notify that a child is being added to or removed from child table.
- *
- * @param[in]  aEvent      A event flag indicating whether a child is being added or removed.
- * @param[in]  aChildInfo  A pointer to child information structure.
+ * This type represent a neighbor table entry info (child or router) and is used as a parameter in the neighbor table
+ * callback `otNeighborTableCallback`.
  *
  */
-typedef void (*otThreadChildTableCallback)(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
+typedef struct
+{
+    otInstance *mInstance; ///< The OpenThread instance.
+    union
+    {
+        otChildInfo    mChild;  ///< The child neighbor info.
+        otNeighborInfo mRouter; ///< The router neighbor info.
+    } mInfo;
+} otNeighborTableEntryInfo;
 
 /**
- * This function gets the child table callback function.
+ * This function pointer is called to notify that a child or router neighbor is being added to or removed from neighbor
+ * table.
  *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- *
- * @returns  The callback function pointer.
+ * @param[in]  aEvent      A event flag.
+ * @param[in]  aEntryInfo  A pointer to table entry info.
  *
  */
-otThreadChildTableCallback otThreadGetChildTableCallback(otInstance *aInstance);
+typedef void (*otNeighborTableCallback)(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntryInfo);
 
 /**
- * This function sets the child table callback function.
+ * This function registers a neighbor table callback function.
  *
- * The provided callback (if non-NULL) will be invoked when a child entry is being added/removed to/from the child
- * table. Subsequent calls to this method will overwrite the previous callback. Note that this callback in invoked
- * while the child table is being updated and always before the `otStateChangedCallback`.
+ * The provided callback (if non-NULL) will be invoked when a child or router neighbor entry is being added/removed
+ * to/from the neighbor table. Subsequent calls to this method will overwrite the previous callback.  Note that this
+ * callback in invoked while the neighbor/child table is being updated and always before the `otStateChangedCallback`.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to callback handler function.
  *
  */
-void otThreadSetChildTableCallback(otInstance *aInstance, otThreadChildTableCallback aCallback);
+void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTableCallback aCallback);
 
 /**
  * @}

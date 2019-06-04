@@ -57,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Console(Instance *aInstance);
+    explicit Console(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.

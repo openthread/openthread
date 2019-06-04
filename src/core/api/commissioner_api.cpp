@@ -36,10 +36,14 @@
 #include <openthread/commissioner.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
-otError otCommissionerStart(otInstance *aInstance)
+otError otCommissionerStart(otInstance *                 aInstance,
+                            otCommissionerStateCallback  aStateCallback,
+                            otCommissionerJoinerCallback aJoinerCallback,
+                            void *                       aCallbackContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
@@ -49,10 +53,16 @@ otError otCommissionerStart(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_BORDER_AGENT
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
 #endif
-    SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Start());
+    SuccessOrExit(error =
+                      instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext));
 exit:
-#endif
+#else
     OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aStateCallback);
+    OT_UNUSED_VARIABLE(aJoinerCallback);
+    OT_UNUSED_VARIABLE(aCallbackContext);
+#endif
+
     return error;
 }
 
@@ -65,7 +75,7 @@ otError otCommissionerStop(otInstance *aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    SuccessOrExit(error = instance.GetThreadNetif().GetCommissioner().Stop());
+    SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop());
 #if OPENTHREAD_ENABLE_BORDER_AGENT
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
 #endif
@@ -81,8 +91,8 @@ otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui6
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPSKd,
-                                                                  aTimeout);
+    error =
+        instance.Get<MeshCoP::Commissioner>().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPSKd, aTimeout);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEui64);
@@ -100,7 +110,7 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
+    error = instance.Get<MeshCoP::Commissioner>().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEui64);
@@ -116,7 +126,7 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
+    error = instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aProvisioningUrl);
@@ -134,7 +144,7 @@ const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aL
 
     if (aLength != NULL)
     {
-        url = instance.GetThreadNetif().GetCommissioner().GetProvisioningUrl(*aLength);
+        url = instance.Get<MeshCoP::Commissioner>().GetProvisioningUrl(*aLength);
     }
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -155,7 +165,7 @@ otError otCommissionerAnnounceBegin(otInstance *        aInstance,
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().GetAnnounceBeginClient().SendRequest(
+    error = instance.Get<MeshCoP::Commissioner>().GetAnnounceBeginClient().SendRequest(
         aChannelMask, aCount, aPeriod, *static_cast<const Ip6::Address *>(aAddress));
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -182,7 +192,7 @@ otError otCommissionerEnergyScan(otInstance *                       aInstance,
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().GetEnergyScanClient().SendQuery(
+    error = instance.Get<MeshCoP::Commissioner>().GetEnergyScanClient().SendQuery(
         aChannelMask, aCount, aPeriod, aScanDuration, *static_cast<const Ip6::Address *>(aAddress), aCallback,
         aContext);
 #else
@@ -211,7 +221,7 @@ otError otCommissionerPanIdQuery(otInstance *                        aInstance,
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().GetPanIdQueryClient().SendQuery(
+    error = instance.Get<MeshCoP::Commissioner>().GetPanIdQueryClient().SendQuery(
         aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 #else
     OT_UNUSED_VARIABLE(aInstance);
@@ -232,7 +242,7 @@ otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, u
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
+    error = instance.Get<MeshCoP::Commissioner>().SendMgmtCommissionerGetRequest(aTlvs, aLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTlvs);
@@ -252,7 +262,7 @@ otError otCommissionerSendMgmtSet(otInstance *                  aInstance,
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+    error = instance.Get<MeshCoP::Commissioner>().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aDataset);
@@ -270,7 +280,7 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    sessionId = instance.GetThreadNetif().GetCommissioner().GetSessionId();
+    sessionId = instance.Get<MeshCoP::Commissioner>().GetSessionId();
 #else
     OT_UNUSED_VARIABLE(aInstance);
 #endif
@@ -285,7 +295,7 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    state = instance.GetThreadNetif().GetCommissioner().GetState();
+    state = instance.Get<MeshCoP::Commissioner>().GetState();
 #else
     OT_UNUSED_VARIABLE(aInstance);
 #endif
@@ -299,12 +309,12 @@ otError otCommissionerGeneratePSKc(otInstance *           aInstance,
                                    const otExtendedPanId *aExtPanId,
                                    uint8_t *              aPSKc)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    error = instance.GetThreadNetif().GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
+    error = MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPassPhrase);

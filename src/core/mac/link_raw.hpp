@@ -57,6 +57,8 @@ class LinkRaw : public InstanceLocator
                 public SubMac::Callbacks
 #endif
 {
+    friend class ot::Instance;
+
 public:
     /**
      * This constructor initializes the object.
@@ -65,14 +67,6 @@ public:
      *
      */
     explicit LinkRaw(Instance &aInstance);
-
-    /**
-     * This method gets the associated `SubMac` object.
-     *
-     * @returns A reference to the `SubMac` object.
-     *
-     */
-    SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
      * This method returns true if the raw link-layer is enabled.
@@ -252,6 +246,33 @@ public:
      *
      */
     otError SetExtAddress(const ExtAddress &aExtAddress);
+
+    /**
+     * This method records the status of a frame transmission attempt and is mainly used for logging failures.
+     *
+     * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
+     * of a frame transmission request, this method is invoked on all frame transmission attempts.
+     *
+     * @param[in] aFrame      The transmitted frame.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or NULL if no ACK was received.
+     * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
+     *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+     *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
+     *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+     * @param[in] aRetryCount Indicates number of transmission retries for this frame.
+     * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
+     *                        when there was an error in transmission (i.e., `aError` is not NONE).
+     *
+     */
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+    void RecordFrameTransmitStatus(const Frame &aFrame,
+                                   const Frame *aAckFrame,
+                                   otError      aError,
+                                   uint8_t      aRetryCount,
+                                   bool         aWillRetx);
+#else
+    void    RecordFrameTransmitStatus(const Frame &, const Frame *, otError, uint8_t, bool) {}
+#endif
 
 private:
     bool                    mEnabled;

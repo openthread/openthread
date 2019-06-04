@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define MAX_ITERATIONS 100
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,6 +35,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/uart.h>
@@ -40,6 +43,7 @@
 #include "common/code_utils.hpp"
 
 extern "C" void FuzzerPlatformInit(void);
+extern "C" void FuzzerPlatformProcess(otInstance *aInstance);
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -64,6 +68,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(buf, data, size);
 
     otPlatUartReceived(buf, (uint16_t)size);
+
+    for (int i = 0; i < MAX_ITERATIONS; i++)
+    {
+        while (otTaskletsArePending(instance))
+        {
+            otTaskletsProcess(instance);
+        }
+
+        FuzzerPlatformProcess(instance);
+    }
 
 exit:
 

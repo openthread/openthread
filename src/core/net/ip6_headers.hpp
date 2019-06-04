@@ -44,9 +44,6 @@
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 
 /**
@@ -57,6 +54,9 @@ namespace ot {
  *
  */
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-ipv6
@@ -632,4 +632,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_HEADERS_HPP_
+#endif // IP6_HEADERS_HPP_
