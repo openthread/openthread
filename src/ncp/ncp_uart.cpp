@@ -50,6 +50,11 @@
 #if OPENTHREAD_ENABLE_NCP_UART
 
 #if OPENTHREAD_ENABLE_DIAG
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
+                                                                  ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
+                                                                  ot::Ncp::NcpBase::kSpinelPropIdSize,
+                 "diag output should be smaller than NCP UART rx buffer");
+
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,
                  "diag command line should be smaller than NCP UART rx buffer");
 #endif
