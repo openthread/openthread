@@ -112,67 +112,6 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
     va_end(args);
 }
 
-// This function verifies the content of the all message queue to match the passed in messages
-void VerifyAllMessagesContent(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
-{
-    va_list                   args;
-    ot::MessagePool::Iterator it;
-    ot::Message *             msgArg;
-
-    va_start(args, aExpectedLength);
-
-    if (aExpectedLength == 0)
-    {
-        VerifyOrQuit(aMessagePool->GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
-        VerifyOrQuit(aMessagePool->GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
-    }
-    else
-    {
-        for (it = aMessagePool->GetAllMessagesHead(); !it.HasEnded(); it.GoToNext())
-        {
-            VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
-            msgArg = va_arg(args, ot::Message *);
-            VerifyOrQuit(msgArg == it.GetMessage(), "AllMessagesQueue content does not match what is expected.\n");
-            aExpectedLength--;
-        }
-
-        VerifyOrQuit(aExpectedLength == 0, "AllMessagesQueue contains less entries than expected.\n");
-    }
-
-    va_end(args);
-}
-
-// This function verifies the content of the all message queue to match the passed in messages. It goes
-// through the AllMessages list in reverse.
-void VerifyAllMessagesContentInReverse(ot::MessagePool *aMessagePool, int aExpectedLength, ...)
-{
-    va_list                   args;
-    ot::MessagePool::Iterator it;
-    ot::Message *             msgArg;
-
-    va_start(args, aExpectedLength);
-
-    if (aExpectedLength == 0)
-    {
-        VerifyOrQuit(aMessagePool->GetAllMessagesHead().IsEmpty(), "Head is not empty when expected len is zero.\n");
-        VerifyOrQuit(aMessagePool->GetAllMessagesTail().IsEmpty(), "Tail is not empty when expected len is zero.\n");
-    }
-    else
-    {
-        for (it = aMessagePool->GetAllMessagesTail(); !it.HasEnded(); it.GoToPrev())
-        {
-            VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
-            msgArg = va_arg(args, ot::Message *);
-            VerifyOrQuit(msgArg == it.GetMessage(), "AllMessagesQueue content does not match what is expected.\n");
-            aExpectedLength--;
-        }
-
-        VerifyOrQuit(aExpectedLength == 0, "AllMessagesQueue contains less entries than expected.\n");
-    }
-
-    va_end(args);
-}
-
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
@@ -207,15 +146,14 @@ void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength,
 
 void TestPriorityQueue(void)
 {
-    ot::Instance *            instance;
-    ot::MessagePool *         messagePool;
-    ot::PriorityQueue         queue;
-    ot::MessageQueue          messageQueue;
-    ot::Message *             msgNet[kNumTestMessages];
-    ot::Message *             msgHigh[kNumTestMessages];
-    ot::Message *             msgNor[kNumTestMessages];
-    ot::Message *             msgLow[kNumTestMessages];
-    ot::MessagePool::Iterator it;
+    ot::Instance *    instance;
+    ot::MessagePool * messagePool;
+    ot::PriorityQueue queue;
+    ot::MessageQueue  messageQueue;
+    ot::Message *     msgNet[kNumTestMessages];
+    ot::Message *     msgHigh[kNumTestMessages];
+    ot::Message *     msgNor[kNumTestMessages];
+    ot::Message *     msgLow[kNumTestMessages];
 
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
@@ -292,35 +230,6 @@ void TestPriorityQueue(void)
     VerifyPriorityQueueContent(queue, 8, msgNet[0], msgNet[1], msgHigh[0], msgHigh[1], msgHigh[2], msgHigh[3],
                                msgNor[0], msgLow[0]);
 
-    // Check the MessagePool::Iterator methods.
-    VerifyOrQuit(it.IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
-    VerifyOrQuit(it.GetNext().IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
-    VerifyOrQuit(it.GetPrev().IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
-    it.GoToNext();
-    VerifyOrQuit(it.IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
-    it.GoToNext();
-    VerifyOrQuit(it.IsEmpty(), "Iterator::IsEmpty() failed to return `true` for an empty iterator.\n");
-
-    it = messagePool->GetAllMessagesHead();
-    VerifyOrQuit(!it.IsEmpty(), "Iterator::IsEmpty() failed to return `false` when it is not empty.\n");
-    VerifyOrQuit(it.GetMessage() == msgNet[0], "Iterator::GetMessage() failed.\n");
-    it = it.GetNext();
-    VerifyOrQuit(!it.IsEmpty(), "Iterator::IsEmpty() failed to return `false` when it is not empty.\n");
-    VerifyOrQuit(it.GetMessage() == msgNet[1], "Iterator::GetNext() failed.\n");
-    it = it.GetPrev();
-    VerifyOrQuit(it.GetMessage() == msgNet[0], "Iterator::GetPrev() failed.\n");
-    it = it.GetPrev();
-    VerifyOrQuit(it.HasEnded(), "Iterator::GetPrev() failed to return empty at head.\n");
-    it = messagePool->GetAllMessagesTail();
-    it = it.GetNext();
-    VerifyOrQuit(it.HasEnded(), "Iterator::GetNext() failed to return empty at tail.\n");
-
-    // Check the AllMessage queue contents (should match the content of priority queue).
-    VerifyAllMessagesContent(messagePool, 8, msgNet[0], msgNet[1], msgHigh[0], msgHigh[1], msgHigh[2], msgHigh[3],
-                             msgNor[0], msgLow[0]);
-    VerifyAllMessagesContentInReverse(messagePool, 8, msgLow[0], msgNor[0], msgHigh[3], msgHigh[2], msgHigh[1],
-                                      msgHigh[0], msgNet[1], msgNet[0]);
-
     // Remove messages in different order and check the content of queue in each step.
     SuccessOrQuit(queue.Dequeue(*msgNet[0]), "PriorityQueue::Dequeue() failed.\n");
     VerifyPriorityQueueContent(queue, 7, msgNet[1], msgHigh[0], msgHigh[1], msgHigh[2], msgHigh[3], msgNor[0],
@@ -339,7 +248,6 @@ void TestPriorityQueue(void)
     VerifyPriorityQueueContent(queue, 1, msgHigh[3]);
     SuccessOrQuit(queue.Dequeue(*msgHigh[3]), "PriorityQueue::Dequeue() failed.\n");
     VerifyPriorityQueueContent(queue, 0);
-    VerifyAllMessagesContent(messagePool, 0);
 
     // Check the failure cases: Enqueuing an already queued message, or dequeuing a message not queued.
     SuccessOrQuit(queue.Enqueue(*msgNet[0]), "PriorityQueue::Enqueue() failed.\n");
@@ -358,7 +266,6 @@ void TestPriorityQueue(void)
     VerifyPriorityQueueContent(queue, 2, msgHigh[0], msgNor[0]);
     SuccessOrQuit(queue.Enqueue(*msgLow[0]), "PriorityQueue::Enqueue() failed.\n");
     VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgNor[0], msgLow[0]);
-    VerifyAllMessagesContent(messagePool, 3, msgHigh[0], msgNor[0], msgLow[0]);
 
     SuccessOrQuit(msgNor[0]->SetPriority(ot::Message::kPriorityNet),
                   "SetPriority failed for an already queued message.\n");
@@ -372,7 +279,6 @@ void TestPriorityQueue(void)
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityHigh),
                   "SetPriority failed for an already queued message.\n");
     VerifyPriorityQueueContent(queue, 3, msgNor[0], msgHigh[0], msgLow[0]);
-    VerifyAllMessagesContent(messagePool, 3, msgNor[0], msgHigh[0], msgLow[0]);
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityNet),
                   "SetPriority failed for an already queued message.\n");
     VerifyPriorityQueueContent(queue, 3, msgNor[0], msgLow[0], msgHigh[0]);
@@ -381,51 +287,36 @@ void TestPriorityQueue(void)
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityLow),
                   "SetPriority failed for an already queued message.\n");
     VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgNor[0], msgLow[0]);
-    VerifyAllMessagesContent(messagePool, 3, msgHigh[0], msgNor[0], msgLow[0]);
-    VerifyAllMessagesContentInReverse(messagePool, 3, msgLow[0], msgNor[0], msgHigh[0]);
 
-    // Checking the AllMessages queue when adding messages from same pool to another queue.
     SuccessOrQuit(messageQueue.Enqueue(*msgNor[1]), "MessageQueue::Enqueue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 4, msgHigh[0], msgNor[0], msgNor[1], msgLow[0]);
     SuccessOrQuit(messageQueue.Enqueue(*msgHigh[1]), "MessageQueue::Enqueue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 5, msgHigh[0], msgHigh[1], msgNor[0], msgNor[1], msgLow[0]);
-    VerifyAllMessagesContentInReverse(messagePool, 5, msgLow[0], msgNor[1], msgNor[0], msgHigh[1], msgHigh[0]);
     SuccessOrQuit(messageQueue.Enqueue(*msgNet[1]), "MessageQueue::Enqueue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 6, msgNet[1], msgHigh[0], msgHigh[1], msgNor[0], msgNor[1], msgLow[0]);
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
-    // Change priority of message and check that order changes in the AllMessage queue and not in messageQueue.
+    // Change priority of message and check for not in messageQueue.
     SuccessOrQuit(msgNor[1]->SetPriority(ot::Message::kPriorityNet),
                   "SetPriority failed for an already queued message.\n");
-    VerifyAllMessagesContent(messagePool, 6, msgNet[1], msgNor[1], msgHigh[0], msgHigh[1], msgNor[0], msgLow[0]);
-    VerifyAllMessagesContentInReverse(messagePool, 6, msgLow[0], msgNor[0], msgHigh[1], msgHigh[0], msgNor[1],
-                                      msgNet[1]);
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
     SuccessOrQuit(msgLow[0]->SetPriority(ot::Message::kPriorityHigh),
                   "SetPriority failed for an already queued message.\n");
-    VerifyAllMessagesContent(messagePool, 6, msgNet[1], msgNor[1], msgHigh[0], msgHigh[1], msgLow[0], msgNor[0]);
     VerifyPriorityQueueContent(queue, 3, msgHigh[0], msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
-    // Remove messages from the two queues and verify that AllMessage queue is updated correctly.
+    // Remove messages from the two queues
     SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 5, msgNet[1], msgNor[1], msgHigh[1], msgLow[0], msgNor[0]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 3, msgNor[1], msgHigh[1], msgNet[1]);
 
     SuccessOrQuit(messageQueue.Dequeue(*msgNet[1]), "MessageQueue::Dequeue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 4, msgNor[1], msgHigh[1], msgLow[0], msgNor[0]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 2, msgNor[1], msgHigh[1]);
 
     SuccessOrQuit(messageQueue.Dequeue(*msgHigh[1]), "MessageQueue::Dequeue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 3, msgNor[1], msgLow[0], msgNor[0]);
     VerifyPriorityQueueContent(queue, 2, msgLow[0], msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
 
     SuccessOrQuit(queue.Dequeue(*msgLow[0]), "PriorityQueue::Dequeue() failed.\n");
-    VerifyAllMessagesContent(messagePool, 2, msgNor[1], msgNor[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
 

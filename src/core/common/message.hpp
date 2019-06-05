@@ -77,16 +77,9 @@ class PriorityQueue;
  */
 struct MessageInfo
 {
-    enum
-    {
-        kListAll       = 0, ///< Identifies the all messages list (maintained by the MessagePool).
-        kListInterface = 1, ///< Identifies the list for per-interface message queue.
-        kNumLists      = 2, ///< Number of lists.
-    };
-
-    Message *    mNext[kNumLists]; ///< A pointer to the next Message in a doubly linked list.
-    Message *    mPrev[kNumLists]; ///< A pointer to the previous Message in a doubly linked list.
-    MessagePool *mMessagePool;     ///< Identifies the message pool for this message.
+    Message *    mNext;        ///< A pointer to the next Message in a doubly linked list.
+    Message *    mPrev;        ///< A pointer to the previous Message in a doubly linked list.
+    MessagePool *mMessagePool; ///< Identifies the message pool for this message.
     union
     {
         MessageQueue * mMessage;  ///< Identifies the message queue (if any) where this message is queued.
@@ -248,9 +241,9 @@ public:
     void Free(void);
 
     /**
-     * This method returns a pointer to the next message in the same interface list.
+     * This method returns a pointer to the next message.
      *
-     * @returns A pointer to the next message in the same interface list or NULL if at the end of the list.
+     * @returns A pointer to the next message in the list or NULL if at the end of the list.
      *
      */
     Message *GetNext(void) const;
@@ -865,34 +858,29 @@ private:
     void SetPriorityQueue(PriorityQueue *aPriorityQueue);
 
     /**
-     * This method returns a reference to the `mNext` pointer for a given list.
+     * This method returns a reference to the `mNext` pointer.
      *
-     * @param[in]  aList  The index to the message list.
-     *
-     * @returns A reference to the mNext pointer for the specified list.
+     * @returns A reference to the mNext pointer.
      *
      */
-    Message *&Next(uint8_t aList) { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message *&Next(void) { return mBuffer.mHead.mInfo.mNext; }
 
     /**
-     * This method returns a const reference to the `mNext` pointer for a given list.
+     * This method returns a reference to the `mNext` pointer (const pointer).
      *
-     * @param[in]  aList  The index to the message list.
      *
-     * @returns A const reference to the mNext pointer for the specified list.
+     * @returns A reference to the mNext pointer.
      *
      */
-    Message *const &Next(uint8_t aList) const { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message *const &Next(void) const { return mBuffer.mHead.mInfo.mNext; }
 
     /**
-     * This method returns a reference to the `mPrev` pointer for a given list.
+     * This method returns a reference to the `mPrev` pointer.
      *
-     * @param[in]  aList  The index to the message list.
-     *
-     * @returns A reference to the mPrev pointer for the specified list.
+     * @returns A reference to the mPrev pointer.
      *
      */
-    Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
+    Message *&Prev(void) { return mBuffer.mHead.mInfo.mPrev; }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -1016,34 +1004,6 @@ private:
      *
      */
     void SetTail(Message *aMessage) { mData = aMessage; }
-
-    /**
-     * This method adds a message to the end of the list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage) { AddToList(aListId, aMessage, kQueuePositionTail); }
-
-    /**
-     * This method adds a message at a give position (head or tail) of the list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     * @param[in]  aPosition The position where to add the message.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage, QueuePosition aPosition);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void RemoveFromList(uint8_t aListId, Message &aMessage);
 };
 
 /**
@@ -1123,24 +1083,6 @@ public:
 
 private:
     /**
-     * This method adds a message to a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void RemoveFromList(uint8_t aListId, Message &aMessage);
-
-    /**
      * This method increases (moves forward) the given priority while ensuring to wrap from
      * priority value `kNumPriorities` -1 back to 0.
      *
@@ -1179,96 +1121,6 @@ class MessagePool : public InstanceLocator
     friend class PriorityQueue;
 
 public:
-    /**
-     * This class represents an iterator for iterating through all queued message from this pool.
-     *
-     */
-    class Iterator
-    {
-        friend class MessagePool;
-
-    public:
-        /**
-         * This constructor initializes an empty iterator.
-         */
-        Iterator(void)
-            : mMessage(NULL)
-        {
-        }
-
-        /**
-         * This method returns the associated message with the iterator.
-         *
-         * @returns A pointer to associated message with this iterator.
-         *
-         */
-        Message *GetMessage(void) const { return mMessage; }
-
-        /**
-         * This method returns `true` if the iterator is empty (i.e., associated with a NULL message)
-         *
-         * @returns `true` if the iterator is empty, `false` otherwise.
-         */
-        bool IsEmpty(void) const { return (mMessage == NULL); }
-
-        /**
-         * This method returns `true` if the iterator has ended (beyond the last message on list).
-         *
-         * @returns `true` if the iterator has ended , `false` otherwise.
-         */
-        bool HasEnded(void) const { return IsEmpty(); }
-
-        /**
-         * This method returns a new iterator corresponding to next message on the list.
-         *
-         * @returns An iterator corresponding to next message on the list.
-         *
-         */
-        Iterator GetNext(void) const { return Iterator(Next()); }
-
-        /**
-         * This method returns a new iterator corresponding to previous message on the list.
-         *
-         * @returns An iterator corresponding to previous message on the list.
-         *
-         */
-        Iterator GetPrev(void) const { return Iterator(Prev()); }
-
-        /**
-         * This method moves the current iterator to the next message on the list.
-         *
-         * @returns A reference to current iterator.
-         *
-         */
-        Iterator &GoToNext(void)
-        {
-            mMessage = Next();
-            return *this;
-        }
-
-        /**
-         * This method moves the current iterator to the previous message on the list.
-         *
-         * @returns A reference to current iterator.
-         *
-         */
-        Iterator &GoToPrev(void)
-        {
-            mMessage = Prev();
-            return *this;
-        }
-
-    private:
-        explicit Iterator(Message *aMessage)
-            : mMessage(aMessage)
-        {
-        }
-        Message *Next(void) const;
-        Message *Prev(void) const;
-
-        Message *mMessage;
-    };
-
     /**
      * This constructor initializes the object.
      *
@@ -1312,24 +1164,6 @@ public:
     void Free(Message *aMessage);
 
     /**
-     * This method returns a pointer to the first message (head) in the all-messages list.
-     * Messages are sorted based on their priority (head with highest priority) and order by which they are enqueued.
-     *
-     * @returns A pointer to the first message.
-     *
-     */
-    Iterator GetAllMessagesHead(void) const;
-
-    /**
-     * This method returns a pointer to the last message (head) in the all-messages list.
-     * Messages are sorted based on their priority (head with highest priority) and order by which they are enqueued.
-     *
-     * @returns A pointer to the last message.
-     *
-     */
-    Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
-
-    /**
      * This method returns the number of free buffers.
      *
      * @returns The number of free buffers.
@@ -1343,18 +1177,15 @@ private:
         kDefaultMessagePriority = Message::kPriorityNormal,
     };
 
-    Buffer *       NewBuffer(uint8_t aPriority);
-    void           FreeBuffers(Buffer *aBuffer);
-    otError        ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
-    PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
+    Buffer *NewBuffer(uint8_t aPriority);
+    void    FreeBuffers(Buffer *aBuffer);
+    otError ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
     uint16_t mNumFreeBuffers;
     Buffer   mBuffers[kNumBuffers];
     Buffer * mFreeBuffers;
 #endif
-
-    PriorityQueue mAllQueue;
 };
 
 /**
