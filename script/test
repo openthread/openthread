@@ -99,7 +99,7 @@ main()
     export VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
 
     if [[ "${NODE_MODE}" = 'transceiver' ]] ; then
-        export RADIO_DEVICE="build/${SYSTEM_TRIPLET}/examples/apps/ncp/ot-ncp-radio"
+        export RADIO_DEVICE="build/${SYSTEM_TRIPLET}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="build/posix/${SYSTEM_TRIPLET}/src/posix/ot-cli"
         export OT_NCP_PATH="build/posix/${SYSTEM_TRIPLET}/src/posix/ot-ncp"
     fi

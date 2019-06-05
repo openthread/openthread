@@ -37,7 +37,7 @@ You can also perform radio diagnostics using the command [diag](../../src/diag/R
 
 ```sh
 make -f examples/Makefile-posix
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1
 ```
 
 ### With Real Device
@@ -48,8 +48,8 @@ make -f examples/Makefile-posix
 
 ```sh
 make -f examples/Makefile-nrf52840
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-ncp-radio ot-ncp-radio.hex
-nrfjprog -f nrf52 --chiperase --reset --program ot-ncp-radio.hex
+arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
+nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
 nrfjprog -f nrf52 --pinresetenable
 nrfjprog -f nrf52 --reset
 
@@ -70,8 +70,8 @@ EOF
 ```sh
 # without USB=1 may result in failure for serial port issue
 make -f examples/Makefile-nrf52840 USB=1
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-ncp-radio ot-ncp-radio.hex
-nrfjprog -f nrf52 --chiperase --reset --program ot-ncp-radio.hex
+arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
+nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
 # plug the CDC serial USB port
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
 ```
@@ -80,9 +80,9 @@ nrfjprog -f nrf52 --chiperase --reset --program ot-ncp-radio.hex
 
 ```sh
 make -f examples/Makefile-cc2538
-arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-ncp-radio ot-ncp-radio.bin
+arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-rcp ot-rcp.bin
 # see https://github.com/JelmerT/cc2538-bsl
-python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-ncp-radio.bin
+python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyUSB0 115200
 ```
 
@@ -94,7 +94,7 @@ Wpantund Support
 ### With Simulation
 
 ```sh
-sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1'
+sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1'
 ```
 
 ### With Real Device
@@ -116,7 +116,7 @@ can communicate with it by connecting to the socket. The protocol is OpenThread 
 # build daemon mode core stack for POSIX
 make -f src/posix/Makefile-posix DAEMON=1
 # Daemon with simulation
-./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon ./output/x86_64-unknown-linux-gnu/bin/ot-ncp-radio 1
+./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1
 # Daemon with real device
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-daemon /dev/ttyACM0 115200
 # Built-in controller

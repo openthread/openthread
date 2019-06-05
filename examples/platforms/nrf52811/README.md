@@ -7,7 +7,7 @@ This directory contains example platform drivers for [Nordic Semiconductor nRF52
 This SoC is meant to be used in the configuration that involves the Host Processor and the IEEE 802.15.4 radio.
 In this configuration, the full OpenThread stack is running on the Host Processor and the nRF52811 SoC acts as an IEEE 802.15.4 radio.
 The radio is running a minimal OpenThread implementation that allows for communication between the Host Processor and the nRF52811.
-In this architecture, the nRF52811 SoC device is called NCP radio or RCP (Radio Co-Processor).
+In this architecture the nRF52811 SoC device is called RCP (Radio Co-Processor).
 
 The nRF52811 platform is currently under development.
 
@@ -46,7 +46,7 @@ Install the [nRF5 Command Line Tools][nRF5-Command-Line-Tools] to flash, debug, 
 
 With this platform, you can build:
  - Limited version of CLI example (e.g. without Thread commissioning functionality)
- - NCP radio-only example that consists of two parts:
+ - RCP example that consists of two parts:
     - firmware that is flashed to the nRF52811 SoC
     - host executables to be executed on a POSIX platform in case of the RCP usage
 
@@ -76,7 +76,7 @@ After a successful build, the `elf` files can be found in
 You can convert them to hex using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O ihex ot-cli-mtd ot-cli-mtd.hex
-$ arm-none-eabi-objcopy -O ihex ot-ncp-radio ot-ncp-radio.hex
+$ arm-none-eabi-objcopy -O ihex ot-rcp ot-rcp.hex
 ```
 
 ### Building the firmware with native SPI support
@@ -133,7 +133,7 @@ To test the example:
 
 2. Flash one with the `CLI MTD Example` (ot-cli-mtd.hex, as shown above).
 
-3. Flash `RCP Example` (ot-ncp-radio.hex) to the other board.
+3. Flash `RCP Example` (ot-rcp.hex) to the other board.
 
 4. Connect the RCP to the PC.
 

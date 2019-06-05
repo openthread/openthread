@@ -163,7 +163,7 @@ build_nrf52811() {
     make -f examples/Makefile-nrf52811 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52811/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-rcp || die
 
     # SPI transport for NCP
     git checkout -- . || die
@@ -171,7 +171,7 @@ build_nrf52811() {
     ./bootstrap || die
     NCP_SPI=1 make -f examples/Makefile-nrf52811 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52811/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52811/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52811/bin/ot-rcp || die
 
     # Build without transport (no CLI or NCP applications)
     git checkout -- . || die
@@ -193,7 +193,7 @@ build_nrf52840() {
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 
     # USB transport with bootloader e.g. to support PCA10059 dongle
     git checkout -- . || die
@@ -204,7 +204,7 @@ build_nrf52840() {
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 
     # SPI transport for NCP
     git checkout -- . || die
@@ -213,7 +213,7 @@ build_nrf52840() {
     NCP_SPI=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-radio || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 
     # Build without transport (no CLI or NCP applications)
     git checkout -- . || die
@@ -408,7 +408,7 @@ build_samr21() {
     CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # readline supports pipe, editline does not
     CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
-    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" make -f src/posix/Makefile-posix check || die
+    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
@@ -431,7 +431,7 @@ build_samr21() {
     CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # enable code coverage for OpenThread posix radio
     CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
-    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-ncp-radio)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
+    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {

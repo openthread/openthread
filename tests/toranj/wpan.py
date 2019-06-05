@@ -263,16 +263,16 @@ class Node(object):
     _VERBOSE = False        # defines the default verbosity setting (can be changed per `Node`)
     _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
 
-    # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-ncp-radio`
+    # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-rcp`
     _WPANTUND = '%s/sbin/wpantund' % _WPANTUND_PREFIX
     _WPANCTL  = '%s/bin/wpanctl' % _WPANTUND_PREFIX
 
     _OT_NCP_FTD = '%s/examples/apps/ncp/ot-ncp-ftd' % _OT_BUILDDIR
     _OT_NCP_FTD_POSIX_APP = '%s/src/posix/ot-ncp' % _OT_BUILDDIR
-    _OT_NCP_RADIO = '%s/examples/apps/ncp/ot-ncp-radio' % _OT_BUILDDIR
+    _OT_RCP = '%s/examples/apps/ncp/ot-rcp' % _OT_BUILDDIR
 
     # Environment variable used to determine how to run OpenThread
-    # If set to 1, then posix-app (`ot-ncp`) is used along with a posix RCP `ot-ncp-radio`.
+    # If set to 1, then posix-app (`ot-ncp`) is used along with a posix RCP `ot-rcp`.
     # Otherwise, the posix NCP `ot-ncp-ftd` is used
     _POSIX_APP_ENV_VAR = 'TORANJ_POSIX_APP_RCP_MODEL'
 
@@ -305,7 +305,7 @@ class Node(object):
 
         if self._use_posix_app_with_rcp:
             ncp_socket_path = 'system:{} -s {} {} {}'.format(self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR,
-                self._OT_NCP_RADIO, index)
+                self._OT_RCP, index)
         else:
             ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
 

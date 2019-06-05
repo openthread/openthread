@@ -91,10 +91,10 @@ COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLAT
 endif
 
 #
-# Select transport which CLI, NCP and NCP-Radio examples will use to communicate.
+# Select transport which CLI, NCP and RCP examples will use to communicate.
 # To disable all transports use the DISABLE_TRANSPORTS switch. This will disable
 # the build of all above examples.
-# If NCP_SPI switch is set, only NCP and NCP-Radio examples will be built.
+# If NCP_SPI switch is set, only NCP and RCP examples will be built.
 # Otherwise, the default serial transport is UART.
 #
 ifndef DISABLE_TRANSPORTS
