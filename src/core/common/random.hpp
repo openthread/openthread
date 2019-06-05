@@ -36,9 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
-
 #include <openthread/error.h>
+
+#include "common/debug.hpp"
+#include "utils/wrap_stdint.h"
 
 #ifndef OPENTHREAD_RADIO
 
@@ -90,6 +91,7 @@ inline uint16_t GetUint16(void)
  */
 inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
+    assert(aMax > aMin);
     return (aMin + (GetUint8() % (aMax - aMin)));
 }
 
@@ -105,6 +107,7 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  */
 inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
+    assert(aMax > aMin);
     return (aMin + (GetUint16() % (aMax - aMin)));
 }
 
@@ -121,6 +124,7 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  */
 inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
+    assert(aMax > aMin);
     return (aMin + (GetUint32() % (aMax - aMin)));
 }
 
