@@ -38,6 +38,7 @@
 #include <mbedtls/entropy.h>
 #include <mbedtls/error.h>
 #include <mbedtls/platform.h>
+#include <mbedtls/threading.h>
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/pem.h>
@@ -136,6 +137,8 @@ otError MbedTls::MapError(int rval)
     case MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED:
     case MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE:
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
+    case MBEDTLS_ERR_THREADING_BAD_INPUT_DATA:
+    case MBEDTLS_ERR_THREADING_MUTEX_ERROR:
         error = OT_ERROR_SECURITY;
         break;
 
