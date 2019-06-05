@@ -40,7 +40,7 @@ import time
 import unittest
 
 class Node:
-    def __init__(self, nodeid, is_mtd, simulator=None):
+    def __init__(self, nodeid, is_mtd=False, simulator=None):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
@@ -234,6 +234,14 @@ class Node:
     def debug(self, level):
         # `debug` command will not trigger interaction with simulator
         self.send_command('debug '+ str(level), go=False)
+
+    def start(self):
+        self.interface_up()
+        self.thread_start()
+
+    def stop(self):
+        self.thread_stop()
+        self.interface_down()
 
     def interface_up(self):
         self.send_command('ifconfig up')
