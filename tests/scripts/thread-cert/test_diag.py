@@ -29,16 +29,16 @@
 
 import unittest
 
-import node_cli
+import node
 import config
 
 class TestDiag(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
-        self.node_cli = node_cli.otCli(1, False, simulator=self.simulator)
+        self.node = node.Node(1, False, simulator=self.simulator)
 
     def tearDown(self):
-        self.node_cli.destroy()
+        self.node.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -80,9 +80,9 @@ class TestDiag(unittest.TestCase):
         ]
 
         for case in cases:
-            self.node_cli.send_command(case[0])
+            self.node.send_command(case[0])
             self.simulator.go(1)
-            self.node_cli._expect(case[1])
+            self.node._expect(case[1])
 
 if __name__ == '__main__':
     unittest.main()
