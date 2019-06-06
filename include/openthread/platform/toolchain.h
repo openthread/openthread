@@ -249,10 +249,6 @@ extern "C" {
 #ifdef __cplusplus
 #if defined(__CC_ARM) || defined(__ICCARM__)
 
-#ifndef UINT32_MAX
-#define UINT32_MAX 0xffffffff
-#endif
-
 #ifndef UINT8_MAX
 #define UINT8_MAX 0xff
 #endif
