@@ -2994,8 +2994,8 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     {
         // Some Embedded C libraries do not support printing of 64-bit unsigned integers.
         // To simplify, unix epoch time and era number are printed separately.
-        mServer->OutputFormat("SNTP response - Unix time: %ld (era: %ld)\r\n",
-                              static_cast<uint32_t>(aTime & UINT32_MAX), static_cast<uint32_t>(aTime >> 32));
+        mServer->OutputFormat("SNTP response - Unix time: %ld (era: %ld)\r\n", static_cast<uint32_t>(aTime),
+                              static_cast<uint32_t>(aTime >> 32));
     }
     else
     {
