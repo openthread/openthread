@@ -1689,6 +1689,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "DATASET_DEST_ADDRESS";
         break;
 
+    case SPINEL_PROP_THREAD_NEW_DATASET:
+        ret = "THREAD_NEW_DATASET";
+        break;
+
     case SPINEL_PROP_MESHCOP_JOINER_STATE:
         ret = "MESHCOP_JOINER_STATE";
         break;

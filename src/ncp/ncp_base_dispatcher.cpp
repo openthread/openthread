@@ -581,6 +581,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE>;
         break;
+    case SPINEL_PROP_THREAD_NEW_DATASET:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEW_DATASET>;
+        break;
 #if OPENTHREAD_ENABLE_JOINER
     case SPINEL_PROP_MESHCOP_JOINER_STATE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>;
