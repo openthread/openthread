@@ -413,7 +413,7 @@ class Node:
         self._expect('Done')
         return panid
 
-    def set_panid(self, panid):
+    def set_panid(self, panid = config.PANID):
         cmd = 'panid %d' % panid
         self.send_command(cmd)
         self._expect('Done')
