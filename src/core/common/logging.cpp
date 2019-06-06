@@ -31,8 +31,6 @@
  *   This file implements the tasklet scheduler.
  */
 
-#define WPP_NAME "logging.tmh"
-
 #include "logging.hpp"
 
 #include "common/instance.hpp"
@@ -46,10 +44,8 @@
 #error OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #endif
 
-#ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...) \
     _otDynamicLog(aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

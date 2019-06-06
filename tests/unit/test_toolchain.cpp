@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include <openthread/ip6.h>
@@ -33,7 +34,6 @@
 
 #include "test_util.h"
 #include "thread/topology.hpp"
-#include "utils/wrap_stdint.h"
 
 extern "C" {
 uint32_t       otNetifAddress_Size_c();

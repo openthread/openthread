@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define WPP_NAME "coap_secure.tmh"
-
 #include "coap_secure.hpp"
 
 #include "common/instance.hpp"

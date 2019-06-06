@@ -31,8 +31,6 @@
  *   This file implements the OpenThread Tasklet API.
  */
 
-#define WPP_NAME "tasklet_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/tasklet.h>
@@ -67,8 +65,6 @@ exit:
     return retval;
 }
 
-#ifndef _MSC_VER
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
-#endif

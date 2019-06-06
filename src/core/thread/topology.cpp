@@ -31,8 +31,6 @@
  *   This file includes definitions for maintaining Thread network topologies.
  */
 
-#define WPP_NAME "topology.tmh"
-
 #include "topology.hpp"
 
 #include "common/code_utils.hpp"

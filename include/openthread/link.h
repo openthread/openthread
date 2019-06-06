@@ -179,7 +179,7 @@ typedef struct otEnergyScanResult
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
+typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Active Scan
@@ -194,11 +194,11 @@ typedef void(OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void
  * @retval OT_ERROR_BUSY  Already performing an Active Scan.
  *
  */
-OTAPI otError OTCALL otLinkActiveScan(otInstance *             aInstance,
-                                      uint32_t                 aScanChannels,
-                                      uint16_t                 aScanDuration,
-                                      otHandleActiveScanResult aCallback,
-                                      void *                   aCallbackContext);
+otError otLinkActiveScan(otInstance *             aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleActiveScanResult aCallback,
+                         void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
@@ -207,7 +207,7 @@ OTAPI otError OTCALL otLinkActiveScan(otInstance *             aInstance,
  *
  * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
  */
-OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
+bool otLinkIsActiveScanInProgress(otInstance *aInstance);
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
@@ -217,7 +217,7 @@ OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
@@ -232,11 +232,11 @@ typedef void(OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void
  * @retval OT_ERROR_BUSY  Could not start the energy scan.
  *
  */
-OTAPI otError OTCALL otLinkEnergyScan(otInstance *             aInstance,
-                                      uint32_t                 aScanChannels,
-                                      uint16_t                 aScanDuration,
-                                      otHandleEnergyScanResult aCallback,
-                                      void *                   aCallbackContext);
+otError otLinkEnergyScan(otInstance *             aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleEnergyScanResult aCallback,
+                         void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
@@ -246,7 +246,7 @@ OTAPI otError OTCALL otLinkEnergyScan(otInstance *             aInstance,
  * @returns true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise.
  *
  */
-OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
+bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
 
 /**
  * This function enqueues an IEEE 802.15.4 Data Request message for transmission.
@@ -259,7 +259,7 @@ OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
  * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
  *
  */
-OTAPI otError OTCALL otLinkSendDataRequest(otInstance *aInstance);
+otError otLinkSendDataRequest(otInstance *aInstance);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
@@ -273,7 +273,7 @@ OTAPI otError OTCALL otLinkSendDataRequest(otInstance *aInstance);
  * @returns true if an IEEE 802.15.4 MAC is in the transmit state, false otherwise.
  *
  */
-OTAPI bool OTCALL otLinkIsInTransmitState(otInstance *aInstance);
+bool otLinkIsInTransmitState(otInstance *aInstance);
 
 /**
  * This function enqueues an IEEE 802.15.4 out of band Frame for transmission.
@@ -289,7 +289,7 @@ OTAPI bool OTCALL otLinkIsInTransmitState(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
  *
  */
-OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame);
+otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame);
 
 /**
  * Get the IEEE 802.15.4 channel.
@@ -301,7 +301,7 @@ OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRad
  * @sa otLinkSetChannel
  *
  */
-OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
+uint8_t otLinkGetChannel(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 channel
@@ -319,7 +319,7 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
  * @sa otLinkGetChannel
  *
  */
-OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
+otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
  * Get the supported channel mask of MAC layer.
@@ -353,7 +353,7 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
  * @returns A pointer to the IEEE 802.15.4 Extended Address.
  *
  */
-OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
+const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
@@ -368,7 +368,7 @@ OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance)
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the factory-assigned IEEE EUI-64.
@@ -377,7 +377,7 @@ OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExt
  * @param[out]  aEui64     A pointer to where the factory-assigned IEEE EUI-64 is placed.
  *
  */
-OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
+void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
  * Get the IEEE 802.15.4 PAN ID.
@@ -389,7 +389,7 @@ OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExt
  * @sa otLinkSetPanId
  *
  */
-OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
+otPanId otLinkGetPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
@@ -407,7 +407,7 @@ OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
  * @sa otLinkGetPanId
  *
  */
-OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
+otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
 
 /**
  * Get the data poll period of sleepy end device.
@@ -419,7 +419,7 @@ OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
  * @sa otLinkSetPollPeriod
  *
  */
-OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
+uint32_t otLinkGetPollPeriod(otInstance *aInstance);
 
 /**
  * Set/clear user-specified/external data poll period for sleepy end device.
@@ -442,7 +442,7 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
  * @sa otLinkGetPollPeriod
  *
  */
-OTAPI otError OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
+otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
  * Get the IEEE 802.15.4 Short Address.
@@ -452,7 +452,7 @@ OTAPI otError OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPe
  * @returns A pointer to the IEEE 802.15.4 Short Address.
  *
  */
-OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
+otShortAddress otLinkGetShortAddress(otInstance *aInstance);
 
 /**
  * This function gets the address mode of MAC filter.
@@ -472,7 +472,7 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInstance);
+otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
 
 /**
  * This function sets the address mode of MAC filter.
@@ -494,7 +494,7 @@ OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInst
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
+otError otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
 
 /**
  * This method adds an Extended Address to MAC filter.
@@ -518,7 +518,7 @@ OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilt
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method removes an Extended Address from MAC filter.
@@ -541,7 +541,7 @@ OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAd
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the Extended Addresses from MAC filter.
@@ -559,7 +559,7 @@ OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otEx
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
+void otLinkFilterClearAddresses(otInstance *aInstance);
 
 /**
  * This method gets an in-use address filter entry.
@@ -584,9 +584,7 @@ OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *         aInstance,
-                                                otMacFilterIterator *aIterator,
-                                                otMacFilterEntry *   aEntry);
+otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * This method sets the received signal strength (in dBm) for the messages from the Extended Address.
@@ -612,7 +610,7 @@ OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *         aInstance,
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
+otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
  * This method removes the received signal strength setting for the received messages from the Extended Address or
@@ -637,7 +635,7 @@ OTAPI otError OTCALL otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddr
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the received signal strength settings.
@@ -655,7 +653,7 @@ OTAPI otError OTCALL otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtA
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
+void otLinkFilterClearRssIn(otInstance *aInstance);
 
 /**
  * This method gets an in-use RssIn filter entry.
@@ -681,9 +679,7 @@ OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
  * @sa otLinkFilterClearRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextRssIn(otInstance *         aInstance,
-                                              otMacFilterIterator *aIterator,
-                                              otMacFilterEntry *   aEntry);
+otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * This method converts received signal strength to link quality.
@@ -715,7 +711,7 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
  * @returns A pointer to the MAC layer counters.
  *
  */
-OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
+const otMacCounters *otLinkGetCounters(otInstance *aInstance);
 
 /**
  * This function pointer is called when an IEEE 802.15.4 frame is received.

@@ -31,8 +31,6 @@
  *   This file implements MLE functionality required for the Thread Child, Router and Leader roles.
  */
 
-#define WPP_NAME "mle.tmh"
-
 #include "mle.hpp"
 
 #include <openthread/platform/radio.h>

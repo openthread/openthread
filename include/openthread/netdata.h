@@ -167,7 +167,7 @@ typedef enum otRoutePreference
  *                             On exit, number of copied bytes.
  *
  */
-OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
+otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
 /**
  * This function gets the next On Mesh Prefix in the partition's Network Data.
@@ -181,9 +181,9 @@ OTAPI otError OTCALL otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-OTAPI otError OTCALL otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
-                                                  otNetworkDataIterator *aIterator,
-                                                  otBorderRouterConfig * aConfig);
+otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
+                                     otNetworkDataIterator *aIterator,
+                                     otBorderRouterConfig * aConfig);
 
 /**
  * This function gets the next external route in the partition's Network Data.
@@ -207,7 +207,7 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
  * @returns The Network Data Version.
  *
  */
-OTAPI uint8_t OTCALL otNetDataGetVersion(otInstance *aInstance);
+uint8_t otNetDataGetVersion(otInstance *aInstance);
 
 /**
  * Get the Stable Network Data Version.
@@ -217,7 +217,7 @@ OTAPI uint8_t OTCALL otNetDataGetVersion(otInstance *aInstance);
  * @returns The Stable Network Data Version.
  *
  */
-OTAPI uint8_t OTCALL otNetDataGetStableVersion(otInstance *aInstance);
+uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 
 /**
  * @}

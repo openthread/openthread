@@ -84,12 +84,6 @@
 #define ENOMEM 1
 #endif
 
-#ifdef _KERNEL_MODE
-#define va_copy(destination, source) ((destination) = (source))
-#undef errno
-#define assert_printf(fmt, ...)
-#endif
-
 #if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
 #error "SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined."
 #endif

@@ -452,11 +452,7 @@ void platformRadioInit(void)
 
 void platformRadioDeinit(void)
 {
-#ifndef _WIN32
     close(sSockFd);
-#else
-    closesocket(sSockFd);
-#endif
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -707,7 +703,7 @@ void platformRadioProcess(otInstance *aInstance)
     const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = {sSockFd, flags, 0};
 
-    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
         radioReceive(aInstance);
     }

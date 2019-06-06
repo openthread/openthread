@@ -37,8 +37,9 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
 
 #ifdef __cplusplus
 extern "C" {

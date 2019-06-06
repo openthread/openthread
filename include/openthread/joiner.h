@@ -76,7 +76,7 @@ typedef enum otJoinerState
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
+typedef void (*otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
@@ -96,15 +96,15 @@ typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
-                                   const char *     aPSKd,
-                                   const char *     aProvisioningUrl,
-                                   const char *     aVendorName,
-                                   const char *     aVendorModel,
-                                   const char *     aVendorSwVersion,
-                                   const char *     aVendorData,
-                                   otJoinerCallback aCallback,
-                                   void *           aContext);
+otError otJoinerStart(otInstance *     aInstance,
+                      const char *     aPSKd,
+                      const char *     aProvisioningUrl,
+                      const char *     aVendorName,
+                      const char *     aVendorModel,
+                      const char *     aVendorSwVersion,
+                      const char *     aVendorData,
+                      otJoinerCallback aCallback,
+                      void *           aContext);
 
 /**
  * This function disables the Thread Joiner role.
@@ -115,7 +115,7 @@ OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
  * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
-OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
+otError otJoinerStop(otInstance *aInstance);
 
 /**
  * This function returns the Joiner State.
@@ -130,7 +130,7 @@ OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
  * @retval OT_JOINER_STATE_JOINED
  *
  */
-OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
+otJoinerState otJoinerGetState(otInstance *aInstance);
 
 /**
  * Get the Joiner ID.
@@ -145,7 +145,7 @@ OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
  * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
-OTAPI otError OTCALL otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
+otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
 
 /**
  * @}

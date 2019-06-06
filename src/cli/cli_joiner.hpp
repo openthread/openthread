@@ -84,8 +84,8 @@ private:
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
 
-    static void OTCALL HandleCallback(otError aError, void *aContext);
-    void               HandleCallback(otError aError);
+    static void HandleCallback(otError aError, void *aContext);
+    void        HandleCallback(otError aError);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;

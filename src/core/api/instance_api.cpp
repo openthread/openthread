@@ -31,8 +31,6 @@
  *   This file implements the OpenThread Instance API.
  */
 
-#define WPP_NAME "instance_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/instance.h>

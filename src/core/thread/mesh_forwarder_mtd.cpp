@@ -33,8 +33,6 @@
 
 #if OPENTHREAD_MTD
 
-#define WPP_NAME "mesh_forwarder_mtd.tmh"
-
 #include "mesh_forwarder.hpp"
 
 namespace ot {

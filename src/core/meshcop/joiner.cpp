@@ -31,8 +31,6 @@
  *   This file implements the Joiner role.
  */
 
-#define WPP_NAME "joiner.tmh"
-
 #include "joiner.hpp"
 
 #include <stdio.h>

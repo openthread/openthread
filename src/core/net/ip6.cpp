@@ -31,8 +31,6 @@
  *   This file implements IPv6 networking.
  */
 
-#define WPP_NAME "ip6.tmh"
-
 #include "ip6.hpp"
 
 #include "common/code_utils.hpp"

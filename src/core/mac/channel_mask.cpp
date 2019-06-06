@@ -31,8 +31,6 @@
  *   This file implements MAC Channel Mask.
  */
 
-#define WPP_NAME "mac-channel-mask.tmh"
-
 #include "channel_mask.hpp"
 
 #include "common/code_utils.hpp"

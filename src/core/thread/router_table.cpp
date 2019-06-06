@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define WPP_NAME "router_table.tmh"
-
 #include "router_table.hpp"
 
 #if OPENTHREAD_FTD

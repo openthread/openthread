@@ -38,7 +38,7 @@
 
 #include <openthread/platform/toolchain.h>
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 namespace ot {
 

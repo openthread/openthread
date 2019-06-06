@@ -31,8 +31,6 @@
  *   This file implements the Energy Scan Server.
  */
 
-#define WPP_NAME "energy_scan_server.tmh"
-
 #include "energy_scan_server.hpp"
 
 #include "coap/coap_message.hpp"

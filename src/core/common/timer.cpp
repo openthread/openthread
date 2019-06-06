@@ -31,8 +31,6 @@
  *   This file implements a multiplexed timer service on top of the alarm abstraction.
  */
 
-#define WPP_NAME "timer.tmh"
-
 #include "timer.hpp"
 
 #include "common/code_utils.hpp"

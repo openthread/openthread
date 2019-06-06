@@ -138,7 +138,6 @@ EXTRA_DIST                                                         = \
     network_data.py                                                  \
     network_layer.py                                                 \
     node.py                                                          \
-    node_cli.py                                                      \
     pcap.py                                                          \
     simulator.py                                                     \
     sniffer.py                                                       \

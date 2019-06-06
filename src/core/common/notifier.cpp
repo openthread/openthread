@@ -31,8 +31,6 @@
  *   This file implements the Notifier class.
  */
 
-#define WPP_NAME "notifier.tmh"
-
 #include "notifier.hpp"
 
 #include "common/code_utils.hpp"

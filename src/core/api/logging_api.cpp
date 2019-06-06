@@ -31,8 +31,6 @@
  *   This file implements the OpenThread logging related APIs.
  */
 
-#define WPP_NAME "logging_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/logging.h>

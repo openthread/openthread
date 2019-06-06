@@ -33,7 +33,7 @@
 
 #include "random.hpp"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include "entropy.hpp"
 #include "crypto/mbedtls.hpp"

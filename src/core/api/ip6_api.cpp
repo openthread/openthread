@@ -31,8 +31,6 @@
  *   This file implements the OpenThread IPv6 API.
  */
 
-#define WPP_NAME "ip6_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/ip6.h>

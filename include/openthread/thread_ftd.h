@@ -103,7 +103,7 @@ typedef struct otEidCacheEntry
  * @sa otThreadSetMaxAllowedChildren
  *
  */
-OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
+uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 
 /**
  * Set the maximum number of children currently allowed.
@@ -120,7 +120,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @sa otThreadGetMaxAllowedChildren
  *
  */
-OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
+otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
 
 /**
  * This function indicates whether or not the Router Role is enabled.
@@ -131,7 +131,7 @@ OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_
  * @retval FALSE  If the Router Role is not enabled.
  *
  */
-OTAPI bool OTCALL otThreadIsRouterRoleEnabled(otInstance *aInstance);
+bool otThreadIsRouterRoleEnabled(otInstance *aInstance);
 
 /**
  * This function sets whether or not the Router Role is enabled.
@@ -140,7 +140,7 @@ OTAPI bool OTCALL otThreadIsRouterRoleEnabled(otInstance *aInstance);
  * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
  *
  */
-OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
+void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Set the preferred Router Id.
@@ -159,7 +159,7 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
  * @retval OT_ERROR_INVALID_STATE Could not set (role is not detached or disabled)
  *
  */
-OTAPI otError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
+otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
@@ -171,7 +171,7 @@ OTAPI otError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t
  * @sa otThreadSetLeaderWeight
  *
  */
-OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
+uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
 /**
  * Set the Thread Leader Weight used when operating in the Leader role.
@@ -182,7 +182,7 @@ OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
  * @sa otThreadGetLeaderWeight
  *
  */
-OTAPI void OTCALL otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
+void otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
 /**
  * Get the Thread Leader Partition Id used when operating in the Leader role.
@@ -192,7 +192,7 @@ OTAPI void OTCALL otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aW
  * @returns The Thread Leader Partition Id value.
  *
  */
-OTAPI uint32_t OTCALL otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
+uint32_t otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
 
 /**
  * Set the Thread Leader Partition Id used when operating in the Leader role.
@@ -201,7 +201,7 @@ OTAPI uint32_t OTCALL otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
  * @param[in]  aPartitionId  The Thread Leader Partition Id value.
  *
  */
-OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
+void otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
  * Get the Joiner UDP Port.
@@ -213,7 +213,7 @@ OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint3
  * @sa otThreadSetJoinerUdpPort
  *
  */
-OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
+uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance);
 
 /**
  * Set the Joiner UDP Port.
@@ -226,7 +226,7 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  * @sa otThreadGetJoinerUdpPort
  *
  */
-OTAPI otError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
  * Set Steering data out of band.
@@ -257,7 +257,7 @@ otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtA
  * @sa otThreadSetContextIdReuseDelay
  *
  */
-OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
+uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance);
 
 /**
  * Set the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
@@ -271,7 +271,7 @@ OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
  * @sa otThreadGetContextIdReuseDelay
  *
  */
-OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
+void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 
 /**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
@@ -286,7 +286,7 @@ OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t
  * @sa otThreadSetNetworkIdTimeout
  *
  */
-OTAPI uint8_t OTCALL otThreadGetNetworkIdTimeout(otInstance *aInstance);
+uint8_t otThreadGetNetworkIdTimeout(otInstance *aInstance);
 
 /**
  * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
@@ -297,7 +297,7 @@ OTAPI uint8_t OTCALL otThreadGetNetworkIdTimeout(otInstance *aInstance);
  * @sa otThreadGetNetworkIdTimeout
  *
  */
-OTAPI void OTCALL otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
+void otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
 
 /**
  * Get the ROUTER_UPGRADE_THRESHOLD parameter used in the REED role.
@@ -309,7 +309,7 @@ OTAPI void OTCALL otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTi
  * @sa otThreadSetRouterUpgradeThreshold
  *
  */
-OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
+uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 
 /**
  * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
@@ -323,7 +323,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
  * @sa otThreadGetRouterUpgradeThreshold
  *
  */
-OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
+void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * Release a Router ID that has been allocated by the device in the Leader role.
@@ -340,7 +340,7 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @retval OT_ERROR_NOT_FOUND      The router id is not currently allocated.
  *
  */
-OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
+otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * Attempt to become a router.
@@ -353,7 +353,7 @@ OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRou
  * @retval OT_ERROR_NONE           Successfully begin attempt to become a router.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
  */
-OTAPI otError OTCALL otThreadBecomeRouter(otInstance *aInstance);
+otError otThreadBecomeRouter(otInstance *aInstance);
 
 /**
  * Become a leader and start a new partition.
@@ -366,7 +366,7 @@ OTAPI otError OTCALL otThreadBecomeRouter(otInstance *aInstance);
  * @retval OT_ERROR_NONE           Successfully became a leader and started a new partition.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
  */
-OTAPI otError OTCALL otThreadBecomeLeader(otInstance *aInstance);
+otError otThreadBecomeLeader(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
@@ -378,7 +378,7 @@ OTAPI otError OTCALL otThreadBecomeLeader(otInstance *aInstance);
  * @sa otThreadSetRouterDowngradeThreshold
  *
  */
-OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
+uint8_t otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
 
 /**
  * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
@@ -392,7 +392,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
  * @sa otThreadGetRouterDowngradeThreshold
  *
  */
-OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
+void otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -404,7 +404,7 @@ OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uin
  * @sa otThreadSetRouterSelectionJitter
  *
  */
-OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
+uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance);
 
 /**
  * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -418,7 +418,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
  * @sa otThreadGetRouterSelectionJitter
  *
  */
-OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
+void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
  * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
@@ -432,7 +432,7 @@ OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_
  * @retval OT_ERROR_INVALID_ARGS  If @p aChildInfo is NULL.
  *
  */
-OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
+otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
 
 /**
  * The function retains diagnostic information for an attached Child by the internal table index.
@@ -449,7 +449,7 @@ OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aC
  * @sa otGetMaxAllowedChildren
  *
  */
-OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
+otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
  * This function gets the next IPv6 address (using an iterator) for a given child.
@@ -468,10 +468,10 @@ OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t 
  * @sa otThreadGetChildInfoByIndex
  *
  */
-OTAPI otError OTCALL otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                                    uint8_t                    aChildIndex,
-                                                    otChildIp6AddressIterator *aIterator,
-                                                    otIp6Address *             aAddress);
+otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+                                       uint8_t                    aChildIndex,
+                                       otChildIp6AddressIterator *aIterator,
+                                       otIp6Address *             aAddress);
 
 /**
  * Get the current Router ID Sequence.
@@ -481,7 +481,7 @@ OTAPI otError OTCALL otThreadGetChildNextIp6Address(otInstance *               a
  * @returns The Router ID Sequence.
  *
  */
-OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
+uint8_t otThreadGetRouterIdSequence(otInstance *aInstance);
 
 /**
  * The function returns the maximum allowed router ID
@@ -491,7 +491,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @returns The maximum allowed router ID.
  *
  */
-OTAPI uint8_t OTCALL otThreadGetMaxRouterId(otInstance *aInstance);
+uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
@@ -505,7 +505,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxRouterId(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aRouterInfo is NULL.
  *
  */
-OTAPI otError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
+otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
  * This function gets an EID cache entry.
@@ -518,7 +518,7 @@ OTAPI otError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRout
  * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */
-OTAPI otError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
+otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
 
 /**
  * Get the thrPSKc.
@@ -530,7 +530,7 @@ OTAPI otError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIn
  * @sa otThreadSetPSKc
  *
  */
-OTAPI const otPSKc *OTCALL otThreadGetPSKc(otInstance *aInstance);
+const otPSKc *otThreadGetPSKc(otInstance *aInstance);
 
 /**
  * Set the thrPSKc.
@@ -548,7 +548,7 @@ OTAPI const otPSKc *OTCALL otThreadGetPSKc(otInstance *aInstance);
  * @sa otThreadGetPSKc
  *
  */
-OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc);
+otError otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc);
 
 /**
  * Get the assigned parent priority.
@@ -560,7 +560,7 @@ OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc)
  * @sa otThreadSetParentPriority
  *
  */
-OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
+int8_t otThreadGetParentPriority(otInstance *aInstance);
 
 /**
  * Set the parent priority.
@@ -577,7 +577,7 @@ OTAPI int8_t OTCALL otThreadGetParentPriority(otInstance *aInstance);
  * @sa otThreadGetParentPriority
  *
  */
-OTAPI otError OTCALL otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
+otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
  * This enumeration defines the constants used in `otNeighborTableCallback` to indicate whether a child or router

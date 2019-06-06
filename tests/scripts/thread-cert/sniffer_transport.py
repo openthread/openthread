@@ -153,66 +153,7 @@ class MacFrame(ctypes.Structure):
                 ("length", ctypes.c_ubyte),
                 ("nodeid", ctypes.c_uint)]
 
-class SnifferVirtualTransport(SnifferTransport):
-    """ Virtual interface based implementation of sniffer transport. """
-
-    def __init__(self, nodeid):
-        self.Handle = None
-
-        # Load the DLL
-        self.Api = ctypes.WinDLL("otnodeapi.dll")
-        if self.Api == None:
-            raise OSError("Failed to load otnodeapi.dll!")
-
-        # Define the functions
-        self.Api.otListenerInit.argtypes = [ctypes.c_uint]
-        self.Api.otListenerInit.restype = ctypes.c_void_p
-
-        self.Api.otListenerFinalize.argtypes = [ctypes.c_void_p]
-
-        self.Api.otListenerRead.argtypes = [ctypes.c_void_p, ctypes.POINTER(MacFrame)]
-
-    def __del__(self):
-        if not self.is_opened:
-            return
-
-        self.close()
-
-    def open(self):
-        if self.is_opened:
-            raise RuntimeError("Transport is already opened.")
-
-        # Initialize a listener
-        self.Handle = self.Api.otListenerInit(0)
-
-        if not self.is_opened:
-            raise RuntimeError("Transport opening failed.")
-
-    def close(self):
-        if not self.is_opened:
-            raise RuntimeError("Transport is closed.")
-
-        self.Api.otListenerFinalize(self.Handle);
-        self.Handle = None
-
-    @property
-    def is_opened(self):
-        return bool(self.Handle is not None)
-
-    def recv(self, bufsize):
-        frame = MacFrame()
-        pFrame = ctypes.pointer(frame);
-
-        self.Api.otListenerRead(self.Handle, pFrame)
-
-        return bytearray(frame.buffer)[:frame.length], frame.nodeid
-
-
 class SnifferTransportFactory(object):
 
     def create_transport(self, nodeid):
-        if sys.platform != "win32":
-            return SnifferSocketTransport(nodeid)
-
-        else:
-            return SnifferVirtualTransport(nodeid)
+        return SnifferSocketTransport(nodeid)

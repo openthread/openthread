@@ -107,7 +107,7 @@ otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *
  */
-otError OTCALL otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * Transition the radio from Receive to Sleep.
@@ -131,7 +131,7 @@ otError otLinkRawSleep(otInstance *aInstance);
  *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
  *
  */
-typedef void(OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Transitioning the radio from Sleep to Receive.

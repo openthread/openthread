@@ -37,13 +37,14 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/topology.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 

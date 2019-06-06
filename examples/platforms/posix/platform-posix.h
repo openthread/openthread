@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the (posix or windows) platform-specific initializers.
+ *   This file includes the platform-specific initializers.
  */
 
 #ifndef PLATFORM_POSIX_H_
@@ -44,28 +44,6 @@
 #include <string.h>
 #include <time.h>
 
-#if _WIN32
-#include <WS2tcpip.h>
-#include <WinSock2.h>
-#include <windows.h>
-#define POLL WSAPoll
-#define ssize_t long
-#include <time.h>
-#define localtime _localtime32
-// In user mode, define some Linux functions
-__forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
-{
-    (void)tz;
-    tv->tv_sec  = _time32(NULL);
-    tv->tv_usec = 0;
-    return 0;
-}
-__forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
-{
-    res->tv_sec  = (long)_difftime32(a->tv_sec, b->tv_sec);
-    res->tv_usec = 0;
-}
-#else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -76,8 +54,6 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#define POLL poll
-#endif
 
 #include <openthread/instance.h>
 

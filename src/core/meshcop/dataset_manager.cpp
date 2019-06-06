@@ -32,8 +32,6 @@
  *
  */
 
-#define WPP_NAME "dataset_manager.tmh"
-
 #include "dataset_manager.hpp"
 
 #include <stdio.h>
