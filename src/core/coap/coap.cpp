@@ -239,7 +239,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
         break;
     }
 
-    message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
+    SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
 
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 

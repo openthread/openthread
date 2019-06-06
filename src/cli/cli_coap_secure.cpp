@@ -267,7 +267,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
 
         if (payloadLength > 0)
         {
-            otCoapMessageSetPayloadMarker(message);
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(message));
         }
     }
 
@@ -499,11 +499,12 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
 
         otCoapMessageInit(responseMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
         otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+        SuccessOrExit(error = otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage),
+                                                    otCoapMessageGetTokenLength(aMessage)));
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
-            otCoapMessageSetPayloadMarker(responseMessage);
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
         }
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
@@ -573,7 +574,8 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
 
         otCoapMessageInit(responseMessage, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
         otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+        SuccessOrExit(error = otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage),
+                                                    otCoapMessageGetTokenLength(aMessage)));
 
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }

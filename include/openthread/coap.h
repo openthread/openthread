@@ -350,8 +350,11 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
  * @param[in]     aToken            A pointer to the Token value.
  * @param[in]     aTokenLength      The Length of @p aToken.
  *
+ * @retval OT_ERROR_NONE     Successfully set the Token value.
+ * @retval OT_ERROR_NO_BUFS  Insufficient buffers to set the Token value.
+ *
  */
-void otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength);
+otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength);
 
 /**
  * This function sets the Token length and randomizes its value.

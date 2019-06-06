@@ -491,13 +491,11 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_GET);
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_GET));
 
     if (aLength > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     if (aLength > 0)
@@ -558,10 +556,8 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_SET);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_COMMISSIONER_SET));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (aDataset.mIsLocatorSet)
     {
@@ -658,10 +654,8 @@ otError Commissioner::SendPetition(void)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_LEADER_PETITION);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_PETITION));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     commissionerId.Init();
     commissionerId.SetCommissionerId("OpenThread Commissioner");
@@ -753,10 +747,8 @@ otError Commissioner::SendKeepAlive(void)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_LEADER_KEEP_ALIVE);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_KEEP_ALIVE));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     state.Init();
     state.SetState(mState == OT_COMMISSIONER_STATE_ACTIVE ? StateTlv::kAccept : StateTlv::kReject);
@@ -986,8 +978,8 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
     message->SetOffset(message->GetLength());
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
@@ -1050,8 +1042,8 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     udpPort.Init();
     udpPort.SetUdpPort(mJoinerPort);

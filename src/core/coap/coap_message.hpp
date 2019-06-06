@@ -111,6 +111,19 @@ public:
     void Init(Type aType, Code aCode);
 
     /**
+     * This method initializes the CoAP header with specific Type and Code.
+     *
+     * @param[in]  aType              The Type value.
+     * @param[in]  aCode              The Code value.
+     * @param[in]  aUriPath           A pointer to a NULL-terminated string.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError Init(Type aType, Code aCode, const char *aUriPath);
+
+    /**
      * This method writes header to the message. This must be called before sending the message.
      *
      */
@@ -226,16 +239,22 @@ public:
      * @param[in]  aToken        A pointer to the Token value.
      * @param[in]  aTokenLength  The Length of @p aToken.
      *
+     * @retval OT_ERROR_NONE     Successfully set the token value.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     *
      */
-    void SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+    otError SetToken(const uint8_t *aToken, uint8_t aTokenLength);
 
     /**
      * This method sets the Token length and randomizes its value.
      *
      * @param[in]  aTokenLength  The Length of a Token to set.
      *
+     * @retval OT_ERROR_NONE     Successfully set the token value.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     *
      */
-    void SetToken(uint8_t aTokenLength);
+    otError SetToken(uint8_t aTokenLength);
 
     /**
      *  This method checks if Tokens in two CoAP headers are equal.
@@ -414,8 +433,11 @@ public:
      *
      * @param[in]  aRequest  The request message.
      *
+     * @retval OT_ERROR_NONE     Successfully set the default response header.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the default response header.
+     *
      */
-    void SetDefaultResponseHeader(const Message &aRequest);
+    otError SetDefaultResponseHeader(const Message &aRequest);
 
     /**
      * This method checks if a header is an empty message header.
