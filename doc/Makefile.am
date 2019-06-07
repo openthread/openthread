@@ -43,8 +43,6 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/ot-contrib-qorvo.png         \
     $(srcdir)/images/ot-contrib-synopsys.png      \
     $(srcdir)/images/ot-contrib-ti.png            \
-    draft-rquattle-spinel-unified.html            \
-    draft-rquattle-spinel-unified.txt             \
     $(NULL)
 
 #
