@@ -40,6 +40,7 @@
 #include <openthread/child_supervision.h>
 #endif
 #include <openthread/dataset.h>
+#include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/ncp.h>
@@ -435,6 +436,25 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_NETWORK_ID_TIM
     otThreadSetNetworkIdTimeout(mInstance, timeout);
 
 exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEW_DATASET>(void)
+{
+    otError              error;
+    otOperationalDataset dataset;
+
+    error = otDatasetCreateNewNetwork(mInstance, &dataset);
+
+    if (error == OT_ERROR_NONE)
+    {
+        error = EncodeOperationalDataset(dataset);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
     return error;
 }
 
