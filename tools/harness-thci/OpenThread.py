@@ -259,6 +259,9 @@ class OpenThread(IThci):
         meshEIDAddr = ''
 
         addrs = self.__sendCommand('ipaddr')
+
+        # find rloc address firstly as a reference for current mesh local prefix as for some TCs,
+        # mesh local prefix may be updated through pending dataset management.
         for ip6Addr in addrs:
             if ip6Addr == 'Done':
                 break
@@ -266,22 +269,23 @@ class OpenThread(IThci):
 
             print('fullip %s' % fullIp)
 
+            if fullIp.startswith('fd00') and fullIp.startswith('0000:00ff:fe00:', 20) and \
+                    not fullIp.startswith('fc', 35):
+                rlocAddr = fullIp
+                print('rloc')
+                break
+
+        for ip6Addr in addrs:
+            if ip6Addr == 'Done':
+                break
+            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
+
             if fullIp.startswith('fe80'):
                 # link local address
                 linkLocal64Addr = fullIp
                 print('link local')
-            elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
-                # mesh local address
-                print('mesh local')
-                if fullIp.startswith('0000:00ff:fe00:', 20):
-                    # rloc
-                    if fullIp.startswith('fc', 35):
-                        alocAddr = fullIp
-                        print('aloc')
-                    else:
-                        rlocAddr = fullIp
-                        print('rloc')
-                else:
+            elif fullIp.startswith(rlocAddr[0:19]):
+                if not fullIp.startswith('0000:00ff:fe00:', 20):
                     # mesh EID
                     meshEIDAddr = fullIp
                     print('mleid')
@@ -1944,6 +1948,9 @@ class OpenThread(IThci):
     def getGUA(self, filterByPrefix=None):
         """get expected global unicast IPv6 address of Thread device
 
+        note: existing filterByPrefix are string of in lowercase. e.g.
+        '2001' or '2001:0db8:0001:0000".
+
         Args:
             filterByPrefix: a given expected global IPv6 prefix to be matched
 
@@ -1960,9 +1967,9 @@ class OpenThread(IThci):
             if filterByPrefix is None:
                 return globalAddrs[0]
             else:
-                for line in globalAddrs:
-                    fullIp = ModuleHelper.GetFullIpv6Address(line)
+                for fullIp in globalAddrs:
                     if fullIp.startswith(filterByPrefix):
+                        print('target global %s' % fullIp);
                         return fullIp
                 print('no global address matched')
                 return str(globalAddrs[0])

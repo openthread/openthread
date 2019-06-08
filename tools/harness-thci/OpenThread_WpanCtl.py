@@ -317,77 +317,6 @@ class OpenThread_WpanCtl(IThci):
 
         return ':'.join(segments)
 
-    def __getIp6Address(self, addressType):
-        """get specific type of IPv6 address configured on OpenThread_WpanCtl
-
-        Args:
-            addressType: the specific type of IPv6 address
-
-            link local: link local unicast IPv6 address that's within one-hop scope
-            global: global unicast IPv6 address
-            rloc: mesh local unicast IPv6 address for routing in thread network
-            mesh EID: mesh Endpoint Identifier
-
-        Returns:
-            IPv6 address string
-        """
-        addrType = ['link local', 'global', 'rloc', 'mesh EID']
-        addrs = []
-        globalAddr = []
-        linkLocal64Addr = ''
-        rlocAddr = ''
-        meshEIDAddr = ''
-
-        addrs = self.__sendCommand(
-            WPANCTL_CMD + 'getprop -v IPv6:AllAddresses')
-        for ip6AddrItem in addrs:
-            if re.match(r'\[|\]', ip6AddrItem):
-                continue
-            if re.match(WPAN_CARRIER_PROMPT, ip6AddrItem, re.M | re.I):
-                break
-            ip6AddrItem = ip6AddrItem.strip()
-            ip6Addr = self.__stripValue(ip6AddrItem).split(' ')[0]
-
-            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
-
-            if fullIp.startswith('fe80'):
-                # link local address
-                linkLocal64Addr = fullIp
-                print('link local')
-            elif fullIp.startswith(self.meshLocalPrefix.lower()[0:19]):
-                # mesh local address
-                print('mesh local')
-                if fullIp.startswith('0000:00ff:fe00:', 20):
-                    # rloc
-                    if fullIp.startswith('fc', 35):
-                        alocAddr = fullIp
-                        print('aloc')
-                    else:
-                        rlocAddr = fullIp
-                        print('rloc')
-                else:
-                    # mesh EID
-                    meshEIDAddr = fullIp
-                    print('mleid')
-            else:
-                # global ipv6 address
-                if fullIp != None:
-                    globalAddr.append(fullIp)
-                    print('global')
-                else:
-                    pass
-
-        if addressType == addrType[0]:
-            return linkLocal64Addr
-        elif addressType == addrType[1]:
-            return globalAddr
-        elif addressType == addrType[2]:
-            return rlocAddr
-        elif addressType == addrType[3]:
-            return meshEIDAddr
-        else:
-            pass
-
     def __setDeviceMode(self, mode):
         """set thread device mode:
 
@@ -1048,7 +977,10 @@ class OpenThread_WpanCtl(IThci):
     def getMLEID(self):
         """get mesh local endpoint identifier address"""
         print('%s call getMLEID' % self.port)
-        return self.__getIp6Address('mesh EID')
+        return self.__stripValue(
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v IPv6:MeshLocalAddress')[0])
 
     def getRloc16(self):
         """get rloc16 short address"""
@@ -1078,7 +1010,42 @@ class OpenThread_WpanCtl(IThci):
            if configuring multiple entries
         """
         print('%s call getGlobal' % self.port)
-        return self.__getIp6Address('global')
+        globalAddrs = []
+
+        mleid = self.__stripValue(
+        self.__sendCommand(
+            WPANCTL_CMD +
+            'getprop -v IPv6:MeshLocalAddress')[0])
+
+        mleid = ModuleHelper.GetFullIpv6Address(mleid).lower()
+
+        addrs = self.__sendCommand(
+            WPANCTL_CMD + 'getprop -v IPv6:AllAddresses')
+
+        # find rloc address firstly as a reference for current mesh local prefix as for some TCs,
+        # mesh local prefix may be updated through pending dataset management.
+        for ip6AddrItem in addrs:
+            if re.match(r'\[|\]', ip6AddrItem):
+                continue
+            if re.match(WPAN_CARRIER_PROMPT, ip6AddrItem, re.M | re.I):
+                break
+            ip6AddrItem = ip6AddrItem.strip()
+            ip6Addr = self.__stripValue(ip6AddrItem).split(' ')[0]
+
+            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
+
+            print('fullip %s' % fullIp)
+
+            if fullIp.startswith('fe80'):
+                continue
+
+            if fullIp.startswith(mleid[0:19]):
+                continue
+
+            print('global')
+            globalAddrs.append(fullIp)
+
+        return globalAddrs
 
     def setNetworkKey(self, key):
         """set Thread Network master key
@@ -2055,6 +2022,9 @@ class OpenThread_WpanCtl(IThci):
     def getGUA(self, filterByPrefix=None):
         """get expected global unicast IPv6 address of OpenThreadWpan
 
+        note: existing filterByPrefix are string of in lowercase. e.g.
+        '2001' or '2001:0db8:0001:0000".
+
         Args:
             filterByPrefix: a given expected global IPv6 prefix to be matched
 
@@ -2069,13 +2039,12 @@ class OpenThread_WpanCtl(IThci):
             globalAddrs = self.getGlobal()
 
             if filterByPrefix is None:
-                return self.__padIp6Addr(globalAddrs[0])
+                return self.globalAddrs[0]
             else:
-                for line in globalAddrs:
-                    line = self.__padIp6Addr(line)
-                    print('Padded IPv6 Address:' + line)
-                    if line.startswith(filterByPrefix):
-                        return line
+                for fullIp in globalAddrs:
+                    if fullIp.startswith(filterByPrefix):
+                        print('target global %s' % fullIp);
+                        return fullIp
                 print('no global address matched')
                 return str(globalAddrs[0])
         except Exception, e:
