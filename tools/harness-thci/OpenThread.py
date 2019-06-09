@@ -326,7 +326,7 @@ class OpenThread(IThci):
         print(mode)
         try:
             cmd = 'mode %s' % mode
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setDeviceMode() Error: ' + str(e))
@@ -346,7 +346,7 @@ class OpenThread(IThci):
         try:
             cmd = 'routerupgradethreshold %s' % str(iThreshold)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setRouterUpgradeThreshold() Error: ' + str(e))
@@ -367,7 +367,7 @@ class OpenThread(IThci):
         try:
             cmd = 'routerdowngradethreshold %s' % str(iThreshold)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setRouterDowngradeThreshold() Error: ' + str(e))
@@ -386,7 +386,7 @@ class OpenThread(IThci):
         try:
             cmd = 'routerselectionjitter %s' % str(iRouterJitter)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setRouterSelectionJitter() Error: ' + str(e))
@@ -401,7 +401,7 @@ class OpenThread(IThci):
         print('call setAddressFilterMode() ' + mode)
         try:
             cmd = 'macfilter addr ' + mode
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 return True
             return False
         except Exception as e:
@@ -630,7 +630,7 @@ class OpenThread(IThci):
         try:
             cmd = 'dataset channelmask %s' % channelMask
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setChannelMask() Error: ' + str(e))
@@ -641,7 +641,7 @@ class OpenThread(IThci):
             cmd = 'dataset securitypolicy %s %s' % (
                 str(securityPolicySecs), securityPolicyFlags)
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setSecurityPolicy() Error: ' + str(e))
@@ -660,7 +660,7 @@ class OpenThread(IThci):
         print(iKeySwitchGuardTime)
         try:
             cmd = 'keysequence guardtime %s' % str(iKeySwitchGuardTime)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 time.sleep(1)
                 return True
             else:
@@ -739,7 +739,7 @@ class OpenThread(IThci):
             cmd = 'networkname %s' % networkName
             datasetCmd = 'dataset networkname %s' % networkName
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
+            return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -769,7 +769,7 @@ class OpenThread(IThci):
             cmd = 'channel %s' % channel
             datasetCmd = 'dataset channel %s' % channel
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
+            return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setChannel() Error: ' + str(e))
@@ -808,7 +808,7 @@ class OpenThread(IThci):
 
             cmd = 'extaddr %s' % address64
             print(cmd)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 self.mac = address64
                 return True
             else:
@@ -901,7 +901,7 @@ class OpenThread(IThci):
 
             self.networkKey = masterKey
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
+            return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -941,7 +941,7 @@ class OpenThread(IThci):
 
             cmd = 'macfilter addr add %s' % macAddr
             print(cmd)
-            ret = self.__sendCommand(cmd)[0] == 'Done'
+            ret = self.__sendCommand(cmd)[-1] == 'Done'
 
             self._addressfilterSet.add(macAddr)
             print('current blacklist entries:')
@@ -977,7 +977,7 @@ class OpenThread(IThci):
 
             cmd = 'macfilter addr add %s' % macAddr
             print(cmd)
-            ret = self.__sendCommand(cmd)[0] == 'Done'
+            ret = self.__sendCommand(cmd)[-1] == 'Done'
 
             self._addressfilterSet.add(macAddr)
             print('current whitelist entries:')
@@ -1008,7 +1008,7 @@ class OpenThread(IThci):
                 self._addressfilterMode = 'disable'
                 # clear ops
                 cmd = 'macfilter addr clear'
-                if self.__sendCommand(cmd)[0] == 'Done':
+                if self.__sendCommand(cmd)[-1] == 'Done':
                     self._addressfilterSet.clear()
                     return True
             return False
@@ -1036,7 +1036,7 @@ class OpenThread(IThci):
                 self._addressfilterMode = 'disable'
                 # clear ops
                 cmd = 'macfilter addr clear'
-                if self.__sendCommand(cmd)[0] == 'Done':
+                if self.__sendCommand(cmd)[-1] == 'Done':
                     self._addressfilterSet.clear()
                     return True
             return False
@@ -1264,7 +1264,7 @@ class OpenThread(IThci):
             cmd = 'panid %s' % panid
             datasetCmd = 'dataset panid %s' % panid
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
+            return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
@@ -1306,7 +1306,7 @@ class OpenThread(IThci):
 
         try:
             cmd = 'releaserouterid %s' % routerId
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'removeRouter() Error: ' + str(e))
@@ -1415,7 +1415,7 @@ class OpenThread(IThci):
         try:
             cmd = 'pollperiod %d' % iPollPeriod
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 '__setPollPeriod() Error: ' + str(e))
@@ -1454,7 +1454,7 @@ class OpenThread(IThci):
 
             cmd = 'macfilter rss add-lqi %s %s' % (address64, str(LinkQuality))
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setLinkQuality() Error: ' + str(e))
@@ -1479,7 +1479,7 @@ class OpenThread(IThci):
         try:
             cmd = 'macfilter rss add-lqi * %s' % str(LinkQuality)
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setOutBoundLinkQuality() Error: ' + str(e))
@@ -1501,7 +1501,7 @@ class OpenThread(IThci):
             prefixLen = 64
             cmd = 'prefix remove %s/%d' % (prefix, prefixLen)
             print(cmd)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
                 return self.__sendCommand('netdataregister')[0] == 'Done'
             else:
@@ -1601,7 +1601,7 @@ class OpenThread(IThci):
 
             cmd = 'prefix add %s/64 %s %s' % (prefix, parameter, prf)
             print(cmd)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 # if prefix configured before starting OpenThread stack
                 # do not send out server data ntf pro-actively
                 if not self.__isOpenThreadRunning():
@@ -1631,7 +1631,7 @@ class OpenThread(IThci):
         try:
             cmd = 'networkidtimeout %s' % str(iNwkIDTimeOut)
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setNetworkIDTimeout() Error: ' + str(e))
@@ -1653,7 +1653,7 @@ class OpenThread(IThci):
         try:
             cmd = 'pollperiod %d' % int(iTimeOut)
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setKeepAliveTimeOut() Error: ' + str(e))
@@ -1672,7 +1672,7 @@ class OpenThread(IThci):
         print(iKeySequenceValue)
         try:
             cmd = 'keysequence counter %s' % str(iKeySequenceValue)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 time.sleep(1)
                 return True
             else:
@@ -1763,7 +1763,7 @@ class OpenThread(IThci):
                 cmd = 'route add %s/64 %s' % (prefix, prf)
             print(cmd)
 
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
                 return self.__sendCommand('netdataregister')[0] == 'Done'
         except Exception as e:
@@ -1892,7 +1892,7 @@ class OpenThread(IThci):
 
             self.xpanId = xpanid
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(
+            return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
                 datasetCmd)[0] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setXpanId() Error: ' + str(e))
@@ -1943,7 +1943,7 @@ class OpenThread(IThci):
 
         cmd = 'leaderpartitionid %s' % (str(hex(partationId)).rstrip('L'))
         print(cmd)
-        return self.__sendCommand(cmd)[0] == 'Done'
+        return self.__sendCommand(cmd)[-1] == 'Done'
 
     def getGUA(self, filterByPrefix=None):
         """get expected global unicast IPv6 address of Thread device
@@ -1992,7 +1992,7 @@ class OpenThread(IThci):
         try:
             cmd = 'dataset meshlocalprefix %s' % sMeshLocalPrefix
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setMLPrefix() Error: ' + str(e))
 
@@ -2022,7 +2022,7 @@ class OpenThread(IThci):
         try:
             cmd = 'ipaddr add %s' % str(slaacAddress)
             print(cmd)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'forceSetSlaac() Error: ' + str(e))
@@ -2078,7 +2078,7 @@ class OpenThread(IThci):
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s' % (strPSKc)
         print(cmd)
-        if self.__sendCommand(cmd)[0] == 'Done':
+        if self.__sendCommand(cmd)[-1] == 'Done':
             return True
         else:
             return False
@@ -2095,7 +2095,7 @@ class OpenThread(IThci):
             time.sleep(20)
             cmd = 'commissioner start'
             print(cmd)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 self.isActiveCommissioner = True
                 time.sleep(20)  # time for petition process
                 return True
@@ -2133,7 +2133,7 @@ class OpenThread(IThci):
         cmd = 'commissioner joiner add %s %s %s' % (
             eui64, strPSKd, str(timeout))
         print(cmd)
-        if self.__sendCommand(cmd)[0] == 'Done':
+        if self.__sendCommand(cmd)[-1] == 'Done':
             if self.logThreadStatus == self.logStatus['stop']:
                 self.logThread = ThreadRunner.run(
                     target=self.__readCommissioningLogs, args=(120,))
@@ -2155,7 +2155,7 @@ class OpenThread(IThci):
         self.provisioningUrl = strURL
         if self.deviceRole == Thread_Device_Role.Commissioner:
             cmd = 'commissioner provisioningurl %s' % (strURL)
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         return True
 
     def allowCommission(self):
@@ -2169,7 +2169,7 @@ class OpenThread(IThci):
         try:
             cmd = 'commissioner start'
             print(cmd)
-            if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__sendCommand(cmd)[-1] == 'Done':
                 self.isActiveCommissioner = True
                 # time for petition process and at least one keep alive
                 time.sleep(40)
@@ -2194,7 +2194,7 @@ class OpenThread(IThci):
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s %s' % (strPSKd, self.provisioningUrl)
         print(cmd)
-        if self.__sendCommand(cmd)[0] == 'Done':
+        if self.__sendCommand(cmd)[-1] == 'Done':
             maxDuration = 150  # seconds
             self.joinCommissionedStatus = self.joinStatus['ongoing']
 
@@ -2302,7 +2302,7 @@ class OpenThread(IThci):
             cmd = 'commissioner energy %s %s %s %s %s' % (
                 channelMask, xCount, xPeriod, xScanDuration, sAddr)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
                 'MGMT_ED_SCAN() error: ' + str(e))
@@ -2334,7 +2334,7 @@ class OpenThread(IThci):
         try:
             cmd = 'commissioner panid %s %s %s' % (panid, channelMask, sAddr)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
                 'MGMT_PANID_QUERY() error: ' + str(e))
@@ -2360,7 +2360,7 @@ class OpenThread(IThci):
             cmd = 'commissioner announce %s %s %s %s' % (
                 channelMask, xCount, xPeriod, sAddr)
             print(cmd)
-            return self.__sendCommand(cmd) == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.writeintodebuglogger(
                 'MGMT_ANNOUNCE_BEGIN() error: ' + str(e))
@@ -2387,7 +2387,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2547,7 +2547,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2575,7 +2575,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2653,7 +2653,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2677,7 +2677,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2727,7 +2727,7 @@ class OpenThread(IThci):
 
             print(cmd)
 
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
@@ -2744,7 +2744,7 @@ class OpenThread(IThci):
         try:
             cmd = 'dataset pskc %s' % strPSKc
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPSKc() Error: ' + str(e))
 
@@ -2754,7 +2754,7 @@ class OpenThread(IThci):
             self.activetimestamp = xActiveTimestamp
             cmd = 'dataset activetimestamp %s' % str(xActiveTimestamp)
             self.hasActiveDatasetToCommit = True
-            return self.__sendCommand(cmd)[0] == 'Done'
+            return self.__sendCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setActiveTimestamp() Error: ' + str(e))
@@ -2772,7 +2772,7 @@ class OpenThread(IThci):
         print('%s call setUdpJoinerPort' % self.port)
         cmd = 'joinerport %d' % portNumber
         print(cmd)
-        return self.__sendCommand(cmd)[0] == 'Done'
+        return self.__sendCommand(cmd)[-1] == 'Done'
 
     def commissionerUnregister(self):
         """stop commissioner
@@ -2784,7 +2784,7 @@ class OpenThread(IThci):
         print('%s call commissionerUnregister' % self.port)
         cmd = 'commissioner stop'
         print(cmd)
-        return self.__sendCommand(cmd)[0] == 'Done'
+        return self.__sendCommand(cmd)[-1] == 'Done'
 
     def sendBeacons(
             self,
@@ -2810,7 +2810,7 @@ class OpenThread(IThci):
                 return False
 
         cmd = 'state router'
-        return self.__sendCommand(cmd)[0] == 'Done'
+        return self.__sendCommand(cmd)[-1] == 'Done'
 
     def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
         print('%s call setRouterThresholdValues' % self.port)
@@ -2821,7 +2821,7 @@ class OpenThread(IThci):
         print('%s call setMinDelayTimer' % self.port)
         cmd = 'delaytimermin %s' % iSeconds
         print(cmd)
-        return self.__sendCommand(cmd)[0] == 'Done'
+        return self.__sendCommand(cmd)[-1] == 'Done'
 
     def ValidateDeviceFirmware(self):
         print('%s call ValidateDeviceFirmware' % self.port)
