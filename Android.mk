@@ -184,7 +184,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_filter.cpp                             \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
-    src/core/net/ip6_routes.cpp                             \
     src/core/net/netif.cpp                                  \
     src/core/net/udp6.cpp                                   \
     src/core/phy/radio_weak.cpp                             \

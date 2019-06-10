@@ -41,7 +41,6 @@
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
-#include "net/ip6_routes.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
 #include "thread/mle.hpp"
@@ -58,7 +57,6 @@ Ip6::Ip6(Instance &aInstance)
     , mNetifListHead(NULL)
     , mSendQueue()
     , mSendQueueTask(aInstance, HandleSendQueue, this)
-    , mRoutes(aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
@@ -989,7 +987,7 @@ int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
         // on-link global address
         ;
     }
-    else if ((interfaceId = mRoutes.Lookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr())) > 0)
     {
         // route
         ;
@@ -1000,6 +998,25 @@ int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
     }
 
     return interfaceId;
+}
+
+int8_t Ip6::RouteLookup(const Address &aSource, const Address &aDestination)
+{
+    int8_t  maxPrefixMatch = -1;
+    uint8_t prefixMatch;
+    int8_t  rval = -1;
+
+    for (Netif *netif = Get<Ip6>().GetNetifList(); netif; netif = netif->GetNext())
+    {
+        if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == OT_ERROR_NONE &&
+            static_cast<int8_t>(prefixMatch) > maxPrefixMatch)
+        {
+            maxPrefixMatch = static_cast<int8_t>(prefixMatch);
+            rval           = netif->GetInterfaceId();
+        }
+    }
+
+    return rval;
 }
 
 otError Ip6::AddNetif(Netif &aNetif)
