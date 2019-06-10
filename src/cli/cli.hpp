@@ -332,26 +332,26 @@ private:
     otError ProcessMacFilterRss(int argc, char *argv[]);
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-    static void s_HandleIcmpReceive(void *               aContext,
-                                    otMessage *          aMessage,
-                                    const otMessageInfo *aMessageInfo,
-                                    const otIcmp6Header *aIcmpHeader);
-    static void s_HandlePingTimer(Timer &aTimer);
-    static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
-    static void s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
-    static void s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
-    static void s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
+    static void HandleIcmpReceive(void *               aContext,
+                                  otMessage *          aMessage,
+                                  const otMessageInfo *aMessageInfo,
+                                  const otIcmp6Header *aIcmpHeader);
+    static void HandlePingTimer(Timer &aTimer);
+    static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
+    static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
+    static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
+    static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    static void s_HandleDnsResponse(void *        aContext,
-                                    const char *  aHostname,
-                                    otIp6Address *aAddress,
-                                    uint32_t      aTtl,
-                                    otError       aResult);
+    static void HandleDnsResponse(void *        aContext,
+                                  const char *  aHostname,
+                                  otIp6Address *aAddress,
+                                  uint32_t      aTtl,
+                                  otError       aResult);
 #endif
 
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
-    static void s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
+    static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const otIcmp6Header &aIcmpHeader);

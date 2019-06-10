@@ -266,7 +266,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mLength(8)
     , mCount(1)
     , mInterval(1000)
-    , mPingTimer(*aInstance, &Interpreter::s_HandlePingTimer, this)
+    , mPingTimer(*aInstance, &Interpreter::HandlePingTimer, this)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     , mResolvingInProgress(0)
 #endif
@@ -287,10 +287,10 @@ Interpreter::Interpreter(Instance *aInstance)
     , mInstance(aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
-    otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
+    otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
 #endif
 
-    mIcmpHandler.mReceiveCallback = Interpreter::s_HandleIcmpReceive;
+    mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
     otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
 
@@ -990,7 +990,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false, false,
-                                           &Interpreter::s_HandleActiveScanResult, this));
+                                           &Interpreter::HandleActiveScanResult, this));
     mServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     mServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1041,7 +1041,7 @@ void Interpreter::ProcessDns(int argc, char *argv[])
         query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
         query.mNoRecursion = false;
 
-        SuccessOrExit(error = otDnsClientQuery(mInstance, &query, &Interpreter::s_HandleDnsResponse, this));
+        SuccessOrExit(error = otDnsClientQuery(mInstance, &query, &Interpreter::HandleDnsResponse, this));
 
         mResolvingInProgress = true;
     }
@@ -1057,11 +1057,11 @@ exit:
     }
 }
 
-void Interpreter::s_HandleDnsResponse(void *        aContext,
-                                      const char *  aHostname,
-                                      otIp6Address *aAddress,
-                                      uint32_t      aTtl,
-                                      otError       aResult)
+void Interpreter::HandleDnsResponse(void *        aContext,
+                                    const char *  aHostname,
+                                    otIp6Address *aAddress,
+                                    uint32_t      aTtl,
+                                    otError       aResult)
 {
     static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname, *static_cast<Ip6::Address *>(aAddress), aTtl,
                                                             aResult);
@@ -1951,10 +1951,10 @@ exit:
 }
 #endif
 
-void Interpreter::s_HandleIcmpReceive(void *               aContext,
-                                      otMessage *          aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      const otIcmp6Header *aIcmpHeader)
+void Interpreter::HandleIcmpReceive(void *               aContext,
+                                    otMessage *          aMessage,
+                                    const otMessageInfo *aMessageInfo,
+                                    const otIcmp6Header *aIcmpHeader)
 {
     static_cast<Interpreter *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),
                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
@@ -2053,7 +2053,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandlePingTimer(Timer &aTimer)
+void Interpreter::HandlePingTimer(Timer &aTimer)
 {
     GetOwner(aTimer).HandlePingTimer();
 }
@@ -2122,7 +2122,7 @@ void Interpreter::ProcessPromiscuous(int argc, char *argv[])
     {
         if (strcmp(argv[0], "enable") == 0)
         {
-            otLinkSetPcapCallback(mInstance, &s_HandleLinkPcapReceive, this);
+            otLinkSetPcapCallback(mInstance, &HandleLinkPcapReceive, this);
             SuccessOrExit(error = otLinkSetPromiscuous(mInstance, true));
         }
         else if (strcmp(argv[0], "disable") == 0)
@@ -2140,7 +2140,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
@@ -2845,7 +2845,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         mServer->OutputFormat("| Ch | RSSI |\r\n");
         mServer->OutputFormat("+----+------+\r\n");
         SuccessOrExit(error = otLinkEnergyScan(mInstance, scanChannels, scanDuration,
-                                               &Interpreter::s_HandleEnergyScanResult, this));
+                                               &Interpreter::HandleEnergyScanResult, this));
     }
     else
     {
@@ -2854,7 +2854,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         mServer->OutputFormat(
             "+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
         SuccessOrExit(error = otLinkActiveScan(mInstance, scanChannels, scanDuration,
-                                               &Interpreter::s_HandleActiveScanResult, this));
+                                               &Interpreter::HandleActiveScanResult, this));
     }
 
     return;
@@ -2863,7 +2863,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
+void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
@@ -2894,7 +2894,7 @@ exit:
     return;
 }
 
-void Interpreter::s_HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext)
+void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleEnergyScanResult(aResult);
 }
@@ -2967,7 +2967,7 @@ void Interpreter::ProcessSntp(int argc, char *argv[])
 
         query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
 
-        SuccessOrExit(error = otSntpClientQuery(mInstance, &query, &Interpreter::s_HandleSntpResponse, this));
+        SuccessOrExit(error = otSntpClientQuery(mInstance, &query, &Interpreter::HandleSntpResponse, this));
 
         mSntpQueryingInProgress = true;
     }
@@ -2983,7 +2983,7 @@ exit:
     }
 }
 
-void Interpreter::s_HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult)
+void Interpreter::HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult)
 {
     static_cast<Interpreter *>(aContext)->HandleSntpResponse(aTime, aResult);
 }
@@ -3595,7 +3595,7 @@ exit:
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
-void Interpreter::s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
+void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(
         *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
