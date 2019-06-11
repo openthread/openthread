@@ -42,6 +42,10 @@ python --version || die
     make pretty-check || die
 }
 
+[ $BUILD_TARGET != py-pretty-check ] || {
+    flake8 --config=script/pystyle.cfg tools/harness-thci/ || die
+}
+
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
 

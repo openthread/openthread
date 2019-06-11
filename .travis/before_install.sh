@@ -63,6 +63,11 @@ cd /tmp || die
         clang-format --version || die
     }
 
+    [ $BUILD_TARGET != py-pretty-check ] || {
+        pip install --upgrade pip || die
+        python -m pip install flake8 || die
+    }
+
     [ $BUILD_TARGET != posix-app-pty ] || {
         sudo apt-get install socat expect || die
         JOBS=$(getconf _NPROCESSORS_ONLN)
