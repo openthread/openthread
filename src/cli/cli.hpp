@@ -57,6 +57,11 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
+#if OPENTHREAD_ENABLE_EST_CLIENT
+#include <est/est_client.hpp>
+#include "cli/cli_est_client.hpp"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
@@ -99,6 +104,7 @@ class Interpreter
     friend class CoapSecure;
     friend class Commissioner;
     friend class Dataset;
+    friend class EstClient;
     friend class Joiner;
     friend class UdpExample;
 
@@ -211,6 +217,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_ENABLE_EST_CLIENT
+    void ProcessEstClient(int argc, char *argv[]);
+#endif // OPENTHREAD_ENABLE_EST_CLIENT
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     void ProcessCoexMetrics(int argc, char *argv[]);
 #endif
@@ -405,6 +414,10 @@ private:
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     Commissioner mCommissioner;
+#endif
+
+#if OPENTHREAD_ENABLE_EST_CLIENT
+    EstClient mEstClient;
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE

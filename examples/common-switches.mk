@@ -45,6 +45,7 @@ DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
+EST_CLIENT          ?= 0
 EXTERNAL_HEAP       ?= 0
 IP6_FRAGM           ?= 0
 JAM_DETECTION       ?= 0

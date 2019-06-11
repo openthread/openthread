@@ -126,6 +126,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     {"dns", &Interpreter::ProcessDns},
 #endif
+#if OPENTHREAD_ENABLE_EST_CLIENT
+    {"est", &Interpreter::ProcessEstClient},
+#endif
 #if OPENTHREAD_FTD
     {"eidcache", &Interpreter::ProcessEidCache},
 #endif
@@ -1089,7 +1092,16 @@ void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddres
 
     mResolvingInProgress = false;
 }
-#endif
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+
+#if OPENTHREAD_ENABLE_EST_CLIENT
+void Interpreter::ProcessEstClient(int argc, char *argv[])
+{
+    otError error;
+    error = mEstClient.Process(argc, argv);
+    AppendResult(error);
+}
+#endif // OPENTHREAD_ENABLE_EST_CLIENT
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessEidCache(int argc, char *argv[])

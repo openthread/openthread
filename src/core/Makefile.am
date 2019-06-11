@@ -115,6 +115,7 @@ SOURCES_COMMON                             = \
     api/diags_api.cpp                        \
     api/dns_api.cpp                          \
     api/entropy_api.cpp                      \
+    api/est_client_api.cpp                   \
     api/heap_api.cpp                         \
     api/icmp6_api.cpp                        \
     api/instance_api.cpp                     \
@@ -157,6 +158,7 @@ SOURCES_COMMON                             = \
     crypto/mbedtls.cpp                       \
     crypto/pbkdf2_cmac.cpp                   \
     crypto/sha256.cpp                        \
+    est/est_client.cpp                       \
     diags/factory_diags.cpp                  \
     mac/channel_mask.cpp                     \
     mac/data_poll_handler.cpp                \
@@ -356,6 +358,7 @@ HEADERS_COMMON                             = \
     crypto/pbkdf2_cmac.h                     \
     crypto/sha256.hpp                        \
     diags/factory_diags.hpp                  \
+    est/est_client.hpp                       \
     mac/channel_mask.hpp                     \
     mac/data_poll_handler.hpp                \
     mac/data_poll_sender.hpp                 \

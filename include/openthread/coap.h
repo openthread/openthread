@@ -282,6 +282,45 @@ typedef enum otCoapOptionContentFormat
     OT_COAP_OPTION_CONTENT_FORMAT_COAP_GROUP_JSON = 256,
 
     /**
+     * application/pkcs7-mime [draft-ietf-ace-coap-est-12]
+     * smime-type = server-generated-key
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_SERVER_GENERATED_KEY = 280,
+
+    /**
+     * application/pkcs7-mime [draft-ietf-ace-coap-est-12]
+     * smime-type = certs-only
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CERT_ONLY = 281,
+
+    /**
+     * application/pkcs7-mime [draft-ietf-ace-coap-est-06]
+     * smime-type = CMC-request
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CMS_REQUEST = 282,
+
+    /**
+     * application/pkcs7-mine [draft-ietf-ace-coap-est-06]
+     * smime-type = CMC-response
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CMC_RESPONSE = 283,
+
+    /**
+     * application/pkcs8 [draft-ietf-ace-coap-est-12]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS8 = 284,
+
+    /**
+     * application/csrattrs [draft-ietf-ace-coap-est-12]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_CSR_ATTRS = 285,
+
+    /**
+     * application/pkcs10 [draft-ietf-ace-coap-est-12]
+     */
+    OT_COAP_OPTION_CONTENT_FORMAT_PKCS10 = 286,
+
+    /**
      * application/senml+xml: [RFC8428]
      */
     OT_COAP_OPTION_CONTENT_FORMAT_SENML_XML = 310,

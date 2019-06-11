@@ -735,6 +735,36 @@ AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
+# EST Client
+#
+
+AC_ARG_ENABLE(est_client,
+    [AS_HELP_STRING([--enable-est-client],[Enable EST client support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_est_client=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_est_client} for --enable-est-client])
+            ;;
+        esac
+    ],
+    [enable_est_client=no])
+
+if test "$enable_est_client" = "yes"; then
+    OPENTHREAD_ENABLE_EST_CLIENT=1
+else
+    OPENTHREAD_ENABLE_EST_CLIENT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_EST_CLIENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_EST_CLIENT], [test "${enable_est_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EST_CLIENT],[${OPENTHREAD_ENABLE_EST_CLIENT}],[Define to 1 if you want to enable EST Client])
+
+#
 # Linker Map Output
 #
 
@@ -1064,6 +1094,7 @@ AC_MSG_NOTICE([
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
+  OpenThread EST Client support             : ${enable_est_client}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

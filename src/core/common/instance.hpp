@@ -386,6 +386,10 @@ private:
     Utils::ChannelManager mChannelManager;
 #endif
 
+#if OPENTHREAD_ENABLE_EST_CLIENT
+    Est::Client mEstClient;
+#endif
+
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     AnnounceSender mAnnounceSender;
 #endif
@@ -650,6 +654,13 @@ template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Server;
+}
+#endif
+
+#if OPENTHREAD_ENABLE_EST_CLIENT
+template <> inline Est::Client &Instance::Get(void)
+{
+    return mEstClient;
 }
 #endif
 

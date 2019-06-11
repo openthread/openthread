@@ -89,6 +89,7 @@ python --version || die
         --enable-builtin-mbedtls=no       \
         --enable-cli                      \
         --enable-executable=no            \
+        --enable-est-client               \
         --enable-ftd                      \
         --enable-mtd                      \
         --enable-ncp                      \
