@@ -79,7 +79,7 @@ class OpenThread_WpanCtl(IThci):
             self.AutoDUTEnable = False
             self._is_net = False                  # whether device is through ser2net
             self.logStatus = {'stop': 'stop', 'running': 'running',
-                'pauseReq': 'pauseReq', 'paused': 'paused'}
+                              'pauseReq': 'pauseReq', 'paused': 'paused'}
             self.logThreadStatus = self.logStatus['stop']
             self.connectType = (kwargs.get('Param5')).strip(
             ).lower() if kwargs.get('Param5') is not None else 'usb'
@@ -200,7 +200,7 @@ class OpenThread_WpanCtl(IThci):
         if self.logThreadStatus == self.logStatus['running']:
             self.logThreadStatus = self.logStatus['pauseReq']
             while self.logThreadStatus != self.logStatus[
-                'paused'] and self.logThreadStatus != self.logStatus['stop']:
+                    'paused'] and self.logThreadStatus != self.logStatus['stop']:
                 pass
 
         ssh_stdin = None
@@ -237,9 +237,9 @@ class OpenThread_WpanCtl(IThci):
                 if stderr_lines:
                     for stderr_line in stderr_lines:
                         if re.search(
-    r'Not\s+Found|failed\s+with\s+error',
-    stderr_line.strip(),
-     re.M | re.I):
+                            r'Not\s+Found|failed\s+with\s+error',
+                            stderr_line.strip(),
+                                re.M | re.I):
                             print('Command failed: %s' % stderr_line)
                             return 'Fail'
                         print('Got line: %s' % stderr_line)
@@ -251,9 +251,9 @@ class OpenThread_WpanCtl(IThci):
                         logging.info(
                             '%s: the read line is[%s]', self.port, stdout_line)
                         if re.search(
-    r'Not\s+Found|failed\s+with\s+error',
-    stdout_line.strip(),
-     re.M | re.I):
+                            r'Not\s+Found|failed\s+with\s+error',
+                            stdout_line.strip(),
+                                re.M | re.I):
                             print('Command failed')
                             return 'Fail'
                         print('Got line: ' + stdout_line)
@@ -298,7 +298,7 @@ class OpenThread_WpanCtl(IThci):
         """
         if isinstance(value, str):
             if (value[0] == '"' and value[-1] ==
-                '"') or (value[0] == '[' and value[-1] == ']'):
+                    '"') or (value[0] == '[' and value[-1] == ']'):
                 return value[1:-1]
         return value
 
@@ -468,9 +468,9 @@ class OpenThread_WpanCtl(IThci):
                 pass
 
             if self.deviceRole in [
-    Thread_Device_Role.Leader,
-    Thread_Device_Role.Router,
-     Thread_Device_Role.REED]:
+                    Thread_Device_Role.Leader,
+                    Thread_Device_Role.Router,
+                    Thread_Device_Role.REED]:
                 self.__setRouterSelectionJitter(1)
 
             if startType == 'form':
@@ -485,7 +485,7 @@ class OpenThread_WpanCtl(IThci):
                     self.isPowerDown = False
                     if self.hasActiveDatasetToCommit:
                         if self.__sendCommand(
-    WPANCTL_CMD + 'setprop Dataset:Command SetActive')[0] == 'Fail':
+                                WPANCTL_CMD + 'setprop Dataset:Command SetActive')[0] == 'Fail':
                             raise Exception('failed to commit active dataset')
                         else:
                             self.hasActiveDatasetToCommit = False
@@ -507,10 +507,10 @@ class OpenThread_WpanCtl(IThci):
         print('call stopOpenThreadWpan')
         try:
             if self.__sendCommand(
-    WPANCTL_CMD +
-    'leave')[0] != 'Fail' and self.__sendCommand(
-        WPANCTL_CMD +
-         'dataset erase')[0] != 'Fail':
+                    WPANCTL_CMD +
+                    'leave')[0] != 'Fail' and self.__sendCommand(
+                    WPANCTL_CMD +
+                    'dataset erase')[0] != 'Fail':
                 return True
             else:
                 return False
@@ -527,9 +527,9 @@ class OpenThread_WpanCtl(IThci):
         """
         print('call __isOpenThreadWpanRunning')
         if self.__stripValue(
-    self.__sendCommand(
-        WPANCTL_CMD +
-         'getprop -v NCP:State')[0]) == 'associated':
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v NCP:State')[0]) == 'associated':
             print('*****OpenThreadWpan is running')
             return True
         else:
@@ -717,7 +717,7 @@ class OpenThread_WpanCtl(IThci):
         """ get the commissioner session id allocated from Leader """
         print('%s call getCommissionerSessionId' % self.port)
         return self.__sendCommand(
-    WPANCTL_CMD + 'getprop -v Commissioner:SessionId')[0]
+            WPANCTL_CMD + 'getprop -v Commissioner:SessionId')[0]
 
     def __getJoinerState(self):
         """ get joiner state """
@@ -748,7 +748,7 @@ class OpenThread_WpanCtl(IThci):
                 attempts = 0
                 user_prompted = False
                 pwd_prompted = False
-                while attempts < 10 or pwd_prompted == True:
+                while attempts < 10 or pwd_prompted:
                     time.sleep(0.5)
                     attempts = attempts + 1
                     print('attempts...%d' % attempts)
@@ -756,7 +756,7 @@ class OpenThread_WpanCtl(IThci):
                     input_data = self.handle.read(self.handle.inWaiting())
 
                     if (not input_data):
-                        if user_prompted == False:
+                        if not user_prompted:
                             self.handle.write('\n')
                         time.sleep(0.5)
                         continue
@@ -780,7 +780,7 @@ class OpenThread_WpanCtl(IThci):
                         self.handle.write('stty cols 256\n')
                         time.sleep(1)
                         break
-                if self.deviceConnected == False:
+                if not self.deviceConnected:
                     raise Exception('login fail')
                 else:
                     self._is_net = False
@@ -970,9 +970,9 @@ class OpenThread_WpanCtl(IThci):
         """get link local unicast IPv6 address"""
         print('%s call getLL64' % self.port)
         return self.__stripValue(
-    self.__sendCommand(
-        WPANCTL_CMD +
-         'getprop -v IPv6:LinkLocalAddress')[0])
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v IPv6:LinkLocalAddress')[0])
 
     def getMLEID(self):
         """get mesh local endpoint identifier address"""
@@ -1013,9 +1013,9 @@ class OpenThread_WpanCtl(IThci):
         globalAddrs = []
 
         mleid = self.__stripValue(
-        self.__sendCommand(
-            WPANCTL_CMD +
-            'getprop -v IPv6:MeshLocalAddress')[0])
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v IPv6:MeshLocalAddress')[0])
 
         mleid = ModuleHelper.GetFullIpv6Address(mleid).lower()
 
@@ -1222,9 +1222,9 @@ class OpenThread_WpanCtl(IThci):
         """get current device role in Thread Network"""
         print('%s call getDeviceRole' % self.port)
         return self.__stripValue(
-    self.__sendCommand(
-        WPANCTL_CMD +
-         'getprop -v Network:NodeType')[0])
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v Network:NodeType')[0])
 
     def joinNetwork(self, eRoleId):
         """make device ready to join the Thread Network with a given role
@@ -1312,7 +1312,7 @@ class OpenThread_WpanCtl(IThci):
             return None
 
         return self.__sendCommand(
-    WPANCTL_CMD + 'getprop -v Network:PartitionId')[0]
+            WPANCTL_CMD + 'getprop -v Network:PartitionId')[0]
 
     def getParentAddress(self):
         """get Thread device's parent extended address and rloc16 short address
@@ -1331,8 +1331,8 @@ class OpenThread_WpanCtl(IThci):
         """power down the OpenThreadWpan"""
         print('%s call powerDown' % self.port)
         if self.__sendCommand(
-    WPANCTL_CMD +
-     'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
+                WPANCTL_CMD +
+                'setprop Daemon:AutoAssociateAfterReset false')[0] != 'Fail':
             time.sleep(0.5)
             if self.__sendCommand(WPANCTL_CMD + 'reset')[0] != 'Fail':
                 self.isPowerDown = True
@@ -1355,14 +1355,14 @@ class OpenThread_WpanCtl(IThci):
             return False
 
         if self.__sendCommand(
-    WPANCTL_CMD +
-     'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
+                WPANCTL_CMD +
+                'setprop Daemon:AutoAssociateAfterReset true')[0] == 'Fail':
             return False
 
         if self.__stripValue(
-    self.__sendCommand(
-        WPANCTL_CMD +
-         'getprop -v NCP:State')[0]) != 'associated':
+            self.__sendCommand(
+                WPANCTL_CMD +
+                'getprop -v NCP:State')[0]) != 'associated':
             print('powerUp failed')
             return False
         else:
@@ -1381,7 +1381,7 @@ class OpenThread_WpanCtl(IThci):
             self.isPowerDown = True
 
             if self.__sendCommand(WPANCTL_CMD +
-     'getprop -v NCP:State')[0] != 'associated':
+                                  'getprop -v NCP:State')[0] != 'associated':
                 print('[FAIL] reboot')
                 return False
             else:
@@ -1509,7 +1509,7 @@ class OpenThread_WpanCtl(IThci):
         routerId = self.__convertRlocToRouterId(xRouterId)
         print(routerId)
 
-        if routerId == None:
+        if routerId is None:
             print('no matched xRouterId')
             return False
 
@@ -1584,7 +1584,7 @@ class OpenThread_WpanCtl(IThci):
         """
         print('%s call getPollingRate' % self.port)
         return self.__sendCommand(
-    WPANCTL_CMD + 'getprop -v NCP:SleepyPollInterval')[0]
+            WPANCTL_CMD + 'getprop -v NCP:SleepyPollInterval')[0]
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
@@ -1724,14 +1724,23 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger(
                 'resetAndRejoin() Error: ' + str(e))
 
-    def configBorderRouter(self, P_Prefix, P_stable=1, P_default=1, P_slaac_preferred=0, P_Dhcp=0, P_preference=0, P_on_mesh=1, P_nd_dns=0):
+    def configBorderRouter(
+            self,
+            P_Prefix,
+            P_stable=1,
+            P_default=1,
+            P_slaac_preferred=0,
+            P_Dhcp=0,
+            P_preference=0,
+            P_on_mesh=1,
+            P_nd_dns=0):
         """configure the border router with a given prefix entry parameters
 
         Args:
             P_Prefix: IPv6 prefix that is available on the Thread Network
-            P_stable: is true if the default router is expected to be stable network data
-            P_default: is true if border router offers the default route for P_Prefix
-            P_slaac_preferred: is true if Thread device is allowed auto-configure address using P_Prefix
+            P_stable: true if the default router is expected to be stable network data
+            P_default: true if border router offers the default route for P_Prefix
+            P_slaac_preferred: true if allowing auto-configure address using P_Prefix
             P_Dhcp: is true if border router is a DHCPv6 Agent
             P_preference: is two-bit signed integer indicating router preference
             P_on_mesh: is true if P_Prefix is considered to be on-mesh
@@ -1989,13 +1998,13 @@ class OpenThread_WpanCtl(IThci):
 
         # get ED/SED children info
         childNeighbours = self.getChildrenInfo()
-        if childNeighbours != None and len(childNeighbours) > 0:
+        if childNeighbours is not None and len(childNeighbours) > 0:
             for entry in childNeighbours:
                 neighbourList.append(entry)
 
         # get neighboring routers info
         routerNeighbours = self.getNeighbouringRouters()
-        if routerNeighbours != None and len(routerNeighbours) > 0:
+        if routerNeighbours is not None and len(routerNeighbours) > 0:
             for entry in routerNeighbours:
                 neighbourList.append(entry)
 
@@ -2043,7 +2052,7 @@ class OpenThread_WpanCtl(IThci):
             else:
                 for fullIp in globalAddrs:
                     if fullIp.startswith(filterByPrefix):
-                        print('target global %s' % fullIp);
+                        print('target global %s' % fullIp)
                         return fullIp
                 print('no global address matched')
                 return str(globalAddrs[0])
@@ -2106,8 +2115,7 @@ class OpenThread_WpanCtl(IThci):
         """@todo : required if as reference device"""
         pass
 
-
-    def diagnosticQuery(self, strDestinationAddr, listTLV_ids = []):
+    def diagnosticQuery(self, strDestinationAddr, listTLV_ids=[]):
         """@todo : required if as reference device"""
         self.diagnosticGet(strDestinationAddr, listTLV_ids)
 
@@ -2409,9 +2417,25 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger(
                 'MGMT_ACTIVE_GET() Error: ' + str(e))
 
-    def MGMT_ACTIVE_SET(self, sAddr='', xCommissioningSessionId=None, listActiveTimestamp=None, listChannelMask=None, xExtendedPanId=None,
-                        sNetworkName=None, sPSKc=None, listSecurityPolicy=None, xChannel=None, sMeshLocalPrefix=None, xMasterKey=None,
-                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, BogusTLV=None, xDelayTimer=None):
+    def MGMT_ACTIVE_SET(
+            self,
+            sAddr='',
+            xCommissioningSessionId=None,
+            listActiveTimestamp=None,
+            listChannelMask=None,
+            xExtendedPanId=None,
+            sNetworkName=None,
+            sPSKc=None,
+            listSecurityPolicy=None,
+            xChannel=None,
+            sMeshLocalPrefix=None,
+            xMasterKey=None,
+            xPanId=None,
+            xTmfPort=None,
+            xSteeringData=None,
+            xBorderRouterLocator=None,
+            BogusTLV=None,
+            xDelayTimer=None):
         """send MGMT_ACTIVE_SET command
 
         Returns:
@@ -2425,7 +2449,7 @@ class OpenThread_WpanCtl(IThci):
             if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                 return False
 
-            if listActiveTimestamp != None:
+            if listActiveTimestamp is not None:
                 sActiveTimestamp = str(hex(listActiveTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
@@ -2434,7 +2458,7 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
-            if xExtendedPanId != None:
+            if xExtendedPanId is not None:
                 xpanid = self.__convertLongToString(xExtendedPanId)
                 if len(xpanid) < 16:
                     xpanid = xpanid.zfill(16)
@@ -2442,25 +2466,25 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setExtendedPanIdCmd)[0] == 'Fail':
                     return False
 
-            if sNetworkName != None:
+            if sNetworkName is not None:
                 setNetworkNameCmd = WPANCTL_CMD + \
                     'setprop Dataset:NetworkName ' + str(sNetworkName)
                 if self.__sendCommand(setNetworkNameCmd)[0] == 'Fail':
                     return False
 
-            if xChannel != None:
+            if xChannel is not None:
                 setChannelCmd = WPANCTL_CMD + \
                     'setprop Dataset:Channel ' + str(xChannel)
                 if self.__sendCommand(setChannelCmd)[0] == 'Fail':
                     return False
 
-            if sMeshLocalPrefix != None:
+            if sMeshLocalPrefix is not None:
                 setMLPrefixCmd = WPANCTL_CMD + \
                     'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
                 if self.__sendCommand(setMLPrefixCmd)[0] == 'Fail':
                     return False
 
-            if xMasterKey != None:
+            if xMasterKey is not None:
                 key = self.__convertLongToString(xMasterKey)
 
                 if len(key) < 32:
@@ -2470,24 +2494,25 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
                     return False
 
-            if xPanId != None:
+            if xPanId is not None:
                 setPanIdCmd = WPANCTL_CMD + \
                     'setprop Dataset:PanId ' + str(xPanId)
                 if self.__sendCommand(setPanIdCmd)[0] == 'Fail':
                     return False
 
-            if listChannelMask != None:
+            if listChannelMask is not None:
                 setChannelMaskCmd = WPANCTL_CMD + 'setprop Dataset:ChannelMaskPage0 ' \
                     + '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
                 if self.__sendCommand(setChannelMaskCmd)[0] == 'Fail':
                     return False
 
-            if sPSKc != None or listSecurityPolicy != None or \
-                    xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
-                    BogusTLV != None:
+            if sPSKc is not None or listSecurityPolicy is not None or \
+                    xCommissioningSessionId is not None or xTmfPort is not None or \
+                    xSteeringData is not None or xBorderRouterLocator is not None or \
+                    BogusTLV is not None:
                 setRawTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs '
 
-            if sPSKc != None:
+            if sPSKc is not None:
                 setRawTLVCmd += '0410'
                 stretchedPskc = Thread_PBKDF2.get(
                     sPSKc, ModuleHelper.Default_XpanId, ModuleHelper.Default_NwkName)
@@ -2498,7 +2523,7 @@ class OpenThread_WpanCtl(IThci):
 
                 setRawTLVCmd += pskc
 
-            if listSecurityPolicy != None:
+            if listSecurityPolicy is not None:
                 setRawTLVCmd += '0c03'
 
                 rotationTime = 0
@@ -2535,7 +2560,7 @@ class OpenThread_WpanCtl(IThci):
 
                 setRawTLVCmd += str(hex(policyBits))[2:]
 
-            if xCommissioningSessionId != None:
+            if xCommissioningSessionId is not None:
                 setRawTLVCmd += '0b02'
                 sessionid = str(hex(xCommissioningSessionId))[2:]
 
@@ -2544,7 +2569,7 @@ class OpenThread_WpanCtl(IThci):
 
                 setRawTLVCmd += sessionid
 
-            if xBorderRouterLocator != None:
+            if xBorderRouterLocator is not None:
                 setRawTLVCmd += '0902'
                 locator = str(hex(xBorderRouterLocator))[2:]
 
@@ -2553,12 +2578,12 @@ class OpenThread_WpanCtl(IThci):
 
                 setRawTLVCmd += locator
 
-            if xSteeringData != None:
+            if xSteeringData is not None:
                 steeringData = self.__convertLongToString(xSteeringData)
                 setRawTLVCmd += '08' + str(len(steeringData)/2).zfill(2)
                 setRawTLVCmd += steeringData
 
-            if BogusTLV != None:
+            if BogusTLV is not None:
                 setRawTLVCmd += '8202aa55'
 
             print(setRawTLVCmd)
@@ -2606,8 +2631,18 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger(
                 'MGMT_PENDING_GET() Error: ' + str(e))
 
-    def MGMT_PENDING_SET(self, sAddr='', xCommissionerSessionId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
-                         xChannel=None, xPanId=None, xMasterKey=None, sMeshLocalPrefix=None, sNetworkName=None):
+    def MGMT_PENDING_SET(
+            self,
+            sAddr='',
+            xCommissionerSessionId=None,
+            listPendingTimestamp=None,
+            listActiveTimestamp=None,
+            xDelayTimer=None,
+            xChannel=None,
+            xPanId=None,
+            xMasterKey=None,
+            sMeshLocalPrefix=None,
+            sNetworkName=None):
         """send MGMT_PENDING_SET command
 
         Returns:
@@ -2620,7 +2655,7 @@ class OpenThread_WpanCtl(IThci):
             if self.__sendCommand(WPANCTL_CMD + 'dataset erase')[0] == 'Fail':
                 return False
 
-            if listPendingTimestamp != None:
+            if listPendingTimestamp is not None:
                 sActiveTimestamp = str(hex(listPendingTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
@@ -2629,7 +2664,7 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setPendingTimeCmd)[0] == 'Fail':
                     return False
 
-            if listActiveTimestamp != None:
+            if listActiveTimestamp is not None:
                 sActiveTimestamp = str(hex(listActiveTimestamp[0]))
                 if len(sActiveTimestamp) < 18:
                     sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
@@ -2638,31 +2673,31 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
-            if xDelayTimer != None:
+            if xDelayTimer is not None:
                 setDelayTimerCmd = WPANCTL_CMD + \
                     'setprop Dataset:Delay ' + str(xDelayTimer)
                 if self.__sendCommand(setDelayTimerCmd)[0] == 'Fail':
                     return False
 
-            if sNetworkName != None:
+            if sNetworkName is not None:
                 setNetworkNameCmd = WPANCTL_CMD + \
                     'setprop Dataset:NetworkName ' + str(sNetworkName)
                 if self.__sendCommand(setNetworkNameCmd)[0] == 'Fail':
                     return False
 
-            if xChannel != None:
+            if xChannel is not None:
                 setChannelCmd = WPANCTL_CMD + \
                     'setprop Dataset:Channel ' + str(xChannel)
                 if self.__sendCommand(setChannelCmd)[0] == 'Fail':
                     return False
 
-            if sMeshLocalPrefix != None:
+            if sMeshLocalPrefix is not None:
                 setMLPrefixCmd = WPANCTL_CMD + \
                     'setprop Dataset:MeshLocalPrefix ' + str(sMeshLocalPrefix)
                 if self.__sendCommand(setMLPrefixCmd)[0] == 'Fail':
                     return False
 
-            if xMasterKey != None:
+            if xMasterKey is not None:
                 key = self.__convertLongToString(xMasterKey)
 
                 if len(key) < 32:
@@ -2672,13 +2707,13 @@ class OpenThread_WpanCtl(IThci):
                 if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
                     return False
 
-            if xPanId != None:
+            if xPanId is not None:
                 setPanIdCmd = WPANCTL_CMD + \
                     'setprop Dataset:PanId ' + str(xPanId)
                 if self.__sendCommand(setPanIdCmd)[0] == 'Fail':
                     return False
 
-            if xCommissionerSessionId != None:
+            if xCommissionerSessionId is not None:
                 print('not handle xCommissionerSessionId')
 
             print(cmd)
@@ -2734,7 +2769,7 @@ class OpenThread_WpanCtl(IThci):
             print(ExceedMaxPayload)
             print('-------------------------------')
 
-            if xCommissionerSessionID != None:
+            if xCommissionerSessionID is not None:
                 # use assigned session id
                 cmd += '0b02' + str(xCommissionerSessionID)
             elif xCommissionerSessionID is None:
@@ -2744,14 +2779,14 @@ class OpenThread_WpanCtl(IThci):
                 else:
                     pass
 
-            if xSteeringData != None:
+            if xSteeringData is not None:
                 cmd += '08' + \
                     str(len(hex(xSteeringData)[2:])) + str(hex(xSteeringData)[2:])
 
-            if xBorderRouterLocator != None:
+            if xBorderRouterLocator is not None:
                 cmd += '0902' + str(hex(xBorderRouterLocator))
 
-            if xChannelTlv != None:
+            if xChannelTlv is not None:
                 cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4)
 
             print(cmd)

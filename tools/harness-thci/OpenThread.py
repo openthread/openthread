@@ -41,7 +41,8 @@ from Queue import Queue
 import serial
 from IThci import IThci
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
-from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
+from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, \
+    PlatformDiagnosticPacket_Type
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from GRLLibs.UtilityModules.Plugins.AES_CMAC import Thread_PBKDF2
@@ -1288,7 +1289,7 @@ class OpenThread(IThci):
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
-        #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
+        # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
@@ -1515,9 +1516,9 @@ class OpenThread(IThci):
 
         Args:
             P_Prefix: IPv6 prefix that is available on the Thread Network
-            P_stable: is true if the default router is expected to be stable network data
-            P_default: is true if border router offers the default route for P_Prefix
-            P_slaac_preferred: is true if Thread device is allowed auto-configure address using P_Prefix
+            P_stable: true if the default router is expected to be stable network data
+            P_default: true if border router offers the default route for P_Prefix
+            P_slaac_preferred: true if allowing auto-configure address using P_Prefix
             P_Dhcp: is true if border router is a DHCPv6 Agent
             P_preference: is two-bit signed integer indicating router preference
             P_on_mesh: is true if P_Prefix is considered to be on-mesh
@@ -1811,7 +1812,7 @@ class OpenThread(IThci):
 
                 childrenInfo['EUI'] = int(eui, 16)
                 childrenInfo['Rloc16'] = int(rloc16, 16)
-                #children_info['MLEID'] = self.getMLEID()
+                # children_info['MLEID'] = self.getMLEID()
 
                 childrenInfoAll.append(childrenInfo['EUI'])
                 # childrenInfoAll.append(childrenInfo)
@@ -1929,7 +1930,7 @@ class OpenThread(IThci):
             else:
                 for fullIp in globalAddrs:
                     if fullIp.startswith(filterByPrefix):
-                        print('target global %s' % fullIp);
+                        print('target global %s' % fullIp)
                         return fullIp
                 print('no global address matched')
                 return str(globalAddrs[0])
@@ -2201,11 +2202,13 @@ class OpenThread(IThci):
                 infoType = info[0].strip()
                 infoValue = info[1].strip()
                 if 'direction' in infoType:
-                    EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
+                    EncryptedPacket.Direction = \
+                        PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
                         else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
                         else PlatformDiagnosticPacket_Direction.UNKNOWN
                 elif 'type' in infoType:
-                    EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
+                    EncryptedPacket.Type = \
+                        PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_req if 'JOIN_ENT.ntf' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.rsp' in infoValue \
@@ -2248,7 +2251,7 @@ class OpenThread(IThci):
             listChannelMask: a channel array to indicate which channels to be scaned
             xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
             xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
-            xScanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds)
+            xScanDuration: ScanDuration when performing an IEEE 802.15.4 ED Scan (milliseconds)
 
         Returns:
             True: successful to send MGMT_ED_SCAN message.
@@ -2426,8 +2429,9 @@ class OpenThread(IThci):
                     self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
             if sPSKc is not None or listSecurityPolicy is not None or \
-               xCommissioningSessionId is not None or xTmfPort is not None or xSteeringData is not None or xBorderRouterLocator is not None or \
-               BogusTLV is not None:
+                    xCommissioningSessionId is not None or xTmfPort is not None or \
+                    xSteeringData is not None or xBorderRouterLocator is not None or \
+                    BogusTLV is not None:
                 cmd += ' binary '
 
             if sPSKc is not None:
@@ -2574,7 +2578,7 @@ class OpenThread(IThci):
             if xDelayTimer is not None:
                 cmd += ' delaytimer '
                 cmd += str(xDelayTimer)
-                #cmd += ' delaytimer 3000000'
+                # cmd += ' delaytimer 3000000'
 
             if xChannel is not None:
                 cmd += ' channel '
