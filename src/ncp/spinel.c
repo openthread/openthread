@@ -139,6 +139,65 @@ typedef struct
 #define SPINEL_MAX_PACK_LENGTH 32767
 
 // ----------------------------------------------------------------------------
+
+// This function validates whether a given byte sequence (string) follows UTF8 encoding.
+static bool spinel_validate_utf8(const uint8_t *string)
+{
+    bool    ret = true;
+    uint8_t byte;
+    uint8_t continuation_bytes = 0;
+
+    while ((byte = *string++) != 0)
+    {
+        if ((byte & 0x80) == 0)
+        {
+            continue;
+        }
+
+        // This is a leading byte 1xxx-xxxx.
+
+        if ((byte & 0x40) == 0) // 10xx-xxxx
+        {
+            // We got a continuation byte pattern without seeing a leading byte earlier.
+            ret = false;
+            goto bail;
+        }
+        else if ((byte & 0x20) == 0) // 110x-xxxx
+        {
+            continuation_bytes = 1;
+        }
+        else if ((byte & 0x10) == 0) // 1110-xxxx
+        {
+            continuation_bytes = 2;
+        }
+        else if ((byte & 0x08) == 0) // 1111-0xxx
+        {
+            continuation_bytes = 3;
+        }
+        else // 1111-1xxx  (invalid pattern).
+        {
+            ret = false;
+            goto bail;
+        }
+
+        while (continuation_bytes-- != 0)
+        {
+            byte = *string++;
+
+            // Verify the continuation byte pattern 10xx-xxxx
+            if ((byte & 0xc0) != 0x80)
+            {
+                ret = false;
+                goto bail;
+            }
+        }
+    }
+
+bail:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // MARK: -
 
 spinel_ssize_t spinel_packed_uint_decode(const uint8_t *bytes, spinel_size_t len, unsigned int *value_ptr)
@@ -467,6 +526,9 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
 
             // Verify that the string is zero terminated.
             require_action(len <= data_len, bail, (ret = -1, errno = EOVERFLOW));
+
+            // Verify the string follows valid UTF8 encoding.
+            require_action(spinel_validate_utf8(data_in), bail, (ret = -1, errno = EINVAL));
 
             if (in_place)
             {
@@ -2817,6 +2879,72 @@ int main(void)
         {
             printf("error:%d: memcmp(&eui64, &static_eui64, sizeof(spinel_eui64_t)) != 0\n", __LINE__);
             goto bail;
+        }
+    }
+
+    {
+        // Test UTF8 validation - Good/Valid strings
+
+        // Single symbols
+        const uint8_t single1[] = {0};                            // 0000
+        const uint8_t single2[] = {0x7F, 0x00};                   // 007F
+        const uint8_t single3[] = {0xC2, 0x80, 0x00};             // 080
+        const uint8_t single4[] = {0xDF, 0xBF, 0x00};             // 07FF
+        const uint8_t single5[] = {0xE0, 0xA0, 0x80, 0x00};       // 0800
+        const uint8_t single6[] = {0xEF, 0xBF, 0xBF, 0x00};       // FFFF
+        const uint8_t single7[] = {0xF0, 0x90, 0x80, 0x80, 0x00}; // 010000
+        const uint8_t single8[] = {0xF4, 0x8F, 0xBF, 0xBF, 0x00}; // 10FFFF
+
+        // Strings
+        const uint8_t str1[] = "spinel";
+        const uint8_t str2[] = "OpenThread";
+        const uint8_t str3[] = {0x41, 0x7F, 0xEF, 0xBF, 0xBF, 0xC2, 0x80, 0x21, 0x33, 0x00};
+        const uint8_t str4[] = {0xCE, 0xBA, 0xE1, 0xBD, 0xB9, 0xCF, 0x83, 0xCE, 0xBC, 0xCE, 0xB5, 0x00}; // κόσμε
+        const uint8_t str5[] = {0x3D, 0xF4, 0x8F, 0xBF, 0xBF, 0x01, 0xE0, 0xA0, 0x83, 0x22, 0xEF, 0xBF, 0xBF, 0x00};
+        const uint8_t str6[] = {0xE5, 0xA2, 0x82, 0xE0, 0xA0, 0x80, 0xC2, 0x83, 0xC2, 0x80, 0xF4,
+                                0x8F, 0xBF, 0xBF, 0xF4, 0x8F, 0xBF, 0xBF, 0xDF, 0xBF, 0x21, 0x00};
+
+        const uint8_t * good_strings[] = {single1, single2, single3, single4, single5, single6, single7, single8,
+                                         str1,    str2,    str3,    str4,    str5,    str6,    NULL};
+        const uint8_t **str_ptr;
+
+        for (str_ptr = &good_strings[0]; *str_ptr != NULL; str_ptr++)
+        {
+            if (!spinel_validate_utf8(*str_ptr))
+            {
+                printf("error: spinel_validate_utf8() did not correctly detect a valid UTF8 sequence!\n");
+                goto bail;
+            }
+        }
+    }
+
+    {
+        // Test UTF8 validation - Bad/Invalid strings
+
+        // Single symbols (invalid)
+        const uint8_t single1[] = {0xF8, 0x00};
+        const uint8_t single2[] = {0xF9, 0x00};
+        const uint8_t single3[] = {0xFA, 0x00};
+        const uint8_t single4[] = {0xFF, 0x00};
+
+        // Bad continuations
+        const uint8_t bad1[] = {0xDF, 0x0F, 0x00};
+        const uint8_t bad2[] = {0xE0, 0xA0, 0x10, 0x00};
+        const uint8_t bad3[] = {0xF0, 0x90, 0x80, 0x60, 0x00};
+        const uint8_t bad4[] = {0xF4, 0x8F, 0xBF, 0x0F, 0x00};
+        const uint8_t bad5[] = {0x21, 0xA0, 0x00};
+        const uint8_t bad6[] = {0xCE, 0xBA, 0xE1, 0xBD, 0xB9, 0xCF, 0x83, 0xCE, 0xBC, 0xCE, 0x00};
+
+        const uint8_t * bad_strings[] = {single1, single2, single3, single4, bad1, bad2, bad3, bad4, bad5, bad6, NULL};
+        const uint8_t **str_ptr;
+
+        for (str_ptr = &bad_strings[0]; *str_ptr != NULL; str_ptr++)
+        {
+            if (spinel_validate_utf8(*str_ptr))
+            {
+                printf("error: spinel_validate_utf8() did not correctly detect an invalid UTF8 sequence\n");
+                goto bail;
+            }
         }
     }
 
