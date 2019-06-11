@@ -3802,10 +3802,8 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_SOLICIT);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_SOLICIT));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     macAddr64Tlv.Init();
     macAddr64Tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
@@ -3856,10 +3854,8 @@ otError MleRouter::SendAddressRelease(void)
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_RELEASE);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_RELEASE));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     rlocTlv.Init();
     rlocTlv.SetRloc16(GetRloc16(mRouterId));
@@ -4103,8 +4099,8 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     statusTlv.Init();
     statusTlv.SetStatus(aRouter == NULL ? statusTlv.kNoAddressAvailable : statusTlv.kSuccess);

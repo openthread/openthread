@@ -272,10 +272,8 @@ otError DatasetManager::Register(void)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriSet);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     mLocal.Read(dataset);
     SuccessOrExit(error = message->Append(dataset.GetBytes(), dataset.GetSize()));
@@ -353,8 +351,8 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (aLength == 0)
     {
@@ -417,10 +415,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriSet);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -638,13 +634,11 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriGet);
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriGet));
 
     if (aLength + length > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     if (aLength + length > 0)

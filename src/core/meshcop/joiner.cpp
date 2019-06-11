@@ -399,8 +399,8 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     mFinalizeMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
-    mFinalizeMessage->SetPayloadMarker();
+    SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE));
+    SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
     stateTlv.Init();
@@ -584,7 +584,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
-    message->SetDefaultResponseHeader(aRequest);
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));

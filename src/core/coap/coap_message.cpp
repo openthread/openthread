@@ -49,6 +49,7 @@ void Message::Init(void)
     SetVersion(kVersion1);
     SetOffset(0);
     GetHelpData().mHeaderLength = kMinHeaderLength;
+
     SetLength(GetHelpData().mHeaderLength);
 }
 
@@ -57,6 +58,18 @@ void Message::Init(Type aType, Code aCode)
     Init();
     SetType(aType);
     SetCode(aCode);
+}
+
+otError Message::Init(Type aType, Code aCode, const char *aUriPath)
+{
+    otError error;
+
+    Init(aType, aCode);
+    SuccessOrExit(error = SetToken(kDefaultTokenLength));
+    SuccessOrExit(error = AppendUriPathOptions(aUriPath));
+
+exit:
+    return error;
 }
 
 void Message::Finish(void)
@@ -117,8 +130,8 @@ otError Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aV
         *cur++       = optionLength & 0xff;
     }
 
-    Append(buf, static_cast<uint16_t>(cur - buf));
-    Append(aValue, aLength);
+    SuccessOrExit(error = Append(buf, static_cast<uint16_t>(cur - buf)));
+    SuccessOrExit(error = Append(aValue, aLength));
 
     GetHelpData().mOptionLast = aNumber;
 
@@ -308,7 +321,7 @@ otError Message::SetPayloadMarker(void)
     uint8_t marker = 0xff;
 
     VerifyOrExit(GetLength() < kMaxHeaderLength, error = OT_ERROR_NO_BUFS);
-    Append(&marker, sizeof(marker));
+    SuccessOrExit(error = Append(&marker, sizeof(marker)));
     GetHelpData().mHeaderLength = GetLength();
 
 exit:
@@ -340,16 +353,17 @@ exit:
     return error;
 }
 
-void Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
+otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 {
     GetHelpData().mHeader.mVersionTypeToken = (GetHelpData().mHeader.mVersionTypeToken & ~kTokenLengthMask) |
                                               ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
     memcpy(GetHelpData().mHeader.mToken, aToken, aTokenLength);
     GetHelpData().mHeaderLength += aTokenLength;
-    SetLength(GetHelpData().mHeaderLength);
+
+    return SetLength(GetHelpData().mHeaderLength);
 }
 
-void Message::SetToken(uint8_t aTokenLength)
+otError Message::SetToken(uint8_t aTokenLength)
 {
     uint8_t token[kMaxTokenLength] = {0};
 
@@ -357,14 +371,16 @@ void Message::SetToken(uint8_t aTokenLength)
 
     Random::NonCrypto::FillBuffer(token, aTokenLength);
 
-    SetToken(token, aTokenLength);
+    return SetToken(token, aTokenLength);
 }
 
-void Message::SetDefaultResponseHeader(const Message &aRequest)
+otError Message::SetDefaultResponseHeader(const Message &aRequest)
 {
     Init(OT_COAP_TYPE_ACKNOWLEDGMENT, OT_COAP_CODE_CHANGED);
+
     SetMessageId(aRequest.GetMessageId());
-    SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
+
+    return SetToken(aRequest.GetToken(), aRequest.GetTokenLength());
 }
 
 Message *Message::Clone(uint16_t aLength) const

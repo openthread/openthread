@@ -78,10 +78,10 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_ENERGY_SCAN);
-    message->SetPayloadMarker();
+    SuccessOrExit(error =
+                      message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                                    OT_COAP_CODE_POST, OT_URI_PATH_ENERGY_SCAN));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());

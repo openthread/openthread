@@ -1000,10 +1000,8 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_SERVER_DATA);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_SERVER_DATA));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (mType == kTypeLocal)
     {

@@ -90,21 +90,19 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
 
     if (aDestination.IsMulticast())
     {
-        message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-        message->SetToken(Coap::Message::kDefaultTokenLength);
-        message->AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_QUERY);
+        SuccessOrExit(
+            error = message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_QUERY));
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-        message->SetToken(Coap::Message::kDefaultTokenLength);
-        message->AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST);
+        SuccessOrExit(
+            error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_REQUEST));
     }
 
     if (aCount > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     if (aCount > 0)
@@ -496,13 +494,12 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER);
+    SuccessOrExit(error =
+                      message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_GET_ANSWER));
 
     if (networkDiagnosticTlv.GetLength() > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
@@ -560,8 +557,8 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aMessage);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aMessage));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -593,13 +590,11 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_RESET);
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DIAGNOSTIC_RESET));
 
     if (aCount > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     if (aCount > 0)

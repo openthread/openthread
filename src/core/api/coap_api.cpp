@@ -64,9 +64,9 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
     static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
 }
 
-void otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
+otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
 {
-    static_cast<Coap::Message *>(aMessage)->SetToken(aToken, aTokenLength);
+    return static_cast<Coap::Message *>(aMessage)->SetToken(aToken, aTokenLength);
 }
 
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)

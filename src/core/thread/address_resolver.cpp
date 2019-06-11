@@ -322,8 +322,8 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     targetTlv.Init();
     targetTlv.SetTarget(aEid);
@@ -459,8 +459,8 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(aDestination == NULL ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = message->AppendTlv(aTarget));
     SuccessOrExit(error = message->AppendTlv(aEid));
@@ -641,8 +641,8 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = message->AppendTlv(aTargetTlv));
     SuccessOrExit(error = message->AppendTlv(aMlEidTlv));

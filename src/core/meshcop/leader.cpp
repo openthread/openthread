@@ -126,8 +126,8 @@ otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     state.Init();
     state.SetState(aState);
@@ -222,8 +222,8 @@ otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     state.Init();
     state.SetState(aState);
@@ -251,9 +251,7 @@ otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_DATASET_CHANGED);
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_DATASET_CHANGED));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
