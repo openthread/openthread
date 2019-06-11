@@ -237,77 +237,6 @@ class OpenThread(IThci):
             ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
 
-    def __getIp6Address(self, addressType):
-        """get specific type of IPv6 address configured on thread device
-
-        Args:
-            addressType: the specific type of IPv6 address
-
-            link local: link local unicast IPv6 address that's within one-hop scope
-            global: global unicast IPv6 address
-            rloc: mesh local unicast IPv6 address for routing in thread network
-            mesh EID: mesh Endpoint Identifier
-
-        Returns:
-            IPv6 address string
-        """
-        addrType = ['link local', 'global', 'rloc', 'mesh EID']
-        addrs = []
-        globalAddr = []
-        linkLocal64Addr = ''
-        rlocAddr = ''
-        meshEIDAddr = ''
-
-        addrs = self.__sendCommand('ipaddr')
-
-        # find rloc address firstly as a reference for current mesh local prefix as for some TCs,
-        # mesh local prefix may be updated through pending dataset management.
-        for ip6Addr in addrs:
-            if ip6Addr == 'Done':
-                break
-            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
-
-            print('fullip %s' % fullIp)
-
-            if fullIp.startswith('fd00') and fullIp.startswith('0000:00ff:fe00:', 20) and \
-                    not fullIp.startswith('fc', 35):
-                rlocAddr = fullIp
-                print('rloc')
-                break
-
-        for ip6Addr in addrs:
-            if ip6Addr == 'Done':
-                break
-            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
-
-            if fullIp.startswith('fe80'):
-                # link local address
-                linkLocal64Addr = fullIp
-                print('link local')
-            elif fullIp.startswith(rlocAddr[0:19]):
-                if not fullIp.startswith('0000:00ff:fe00:', 20):
-                    # mesh EID
-                    meshEIDAddr = fullIp
-                    print('mleid')
-            else:
-                # global ipv6 address
-                if fullIp is not None:
-                    globalAddr.append(fullIp)
-                    print('global')
-                else:
-                    pass
-
-        if addressType == addrType[0]:
-            return linkLocal64Addr
-        elif addressType == addrType[1]:
-            return globalAddr
-        elif addressType == addrType[2]:
-            return rlocAddr
-        elif addressType == addrType[3]:
-            return meshEIDAddr
-        else:
-            pass
-
     def __setDeviceMode(self, mode):
         """set thread device mode:
 
@@ -441,8 +370,8 @@ class OpenThread(IThci):
                     Thread_Device_Role.REED]:
                 self.__setRouterSelectionJitter(1)
 
-            if self.__sendCommand('ifconfig up')[0] == 'Done':
-                if self.__sendCommand('thread start')[0] == 'Done':
+            if self.__sendCommand('ifconfig up')[-1] == 'Done':
+                if self.__sendCommand('thread start')[-1] == 'Done':
                     self.isPowerDown = False
                     return True
             else:
@@ -460,8 +389,8 @@ class OpenThread(IThci):
         """
         print('call stopOpenThread')
         try:
-            if self.__sendCommand('thread stop')[0] == 'Done':
-                return self.__sendCommand('ifconfig down')[0] == 'Done'
+            if self.__sendCommand('thread stop')[-1] == 'Done':
+                return self.__sendCommand('ifconfig down')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -740,7 +669,7 @@ class OpenThread(IThci):
             datasetCmd = 'dataset networkname %s' % networkName
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
-                datasetCmd)[0] == 'Done'
+                datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setNetworkName() Error: ' + str(e))
@@ -770,7 +699,7 @@ class OpenThread(IThci):
             datasetCmd = 'dataset channel %s' % channel
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
-                datasetCmd)[0] == 'Done'
+                datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setChannel() Error: ' + str(e))
 
@@ -845,12 +774,7 @@ class OpenThread(IThci):
     def getLL64(self):
         """get link local unicast IPv6 address"""
         print('%s call getLL64' % self.port)
-        return self.__getIp6Address('link local')
-
-    def getMLEID(self):
-        """get mesh local endpoint identifier address"""
-        print('%s call getMLEID' % self.port)
-        return self.__getIp6Address('mesh EID')
+        return self.__sendCommand('ipaddr linklocal')[0]
 
     def getRloc16(self):
         """get rloc16 short address"""
@@ -859,16 +783,51 @@ class OpenThread(IThci):
         return int(rloc16, 16)
 
     def getRloc(self):
-        """get router locator unicast IPv6 address"""
+        """get router locator unicast Ipv6 address"""
         print('%s call getRloc' % self.port)
-        return self.__getIp6Address('rloc')
+        return self.__sendCommand('ipaddr rloc')[0]
 
-    def getGlobal(self):
+    def __getGlobal(self):
         """get global unicast IPv6 address set
            if configuring multiple entries
         """
         print('%s call getGlobal' % self.port)
-        return self.__getIp6Address('global')
+        fullIpAddrs = []
+        globalAddrs = []
+        rlocAddr = None
+
+        addrs = self.__sendCommand('ipaddr')
+
+        # convert address to lower case in full expression, and find rloc address as
+        # a reference for current mesh local prefix as for some TCs, mesh local prefix
+        # may be updated through pending dataset management.
+        for ip6Addr in addrs:
+            if ip6Addr == 'Done':
+                break
+
+            fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
+            fullIpAddrs.append(fullIp)
+
+            if fullIp.startswith('fd00') and fullIp.startswith('0000:00ff:fe00:', 20) and \
+                    not fullIp.startswith('fc', 35):
+                rlocAddr = fullIp
+                print('rloc')
+
+        for ip6Addr in fullIpAddrs:
+            print('address %s' % ip6Addr)
+
+            if ip6Addr.startswith('fe80'):
+                print('link local')
+                continue
+
+            if ip6Addr.startswith(rlocAddr[0:19]):
+                print('mesh local')
+                continue
+
+            globalAddrs.append(ip6Addr)
+            print('global')
+
+        return globalAddrs
 
     def setNetworkKey(self, key):
         """set Thread Network master key
@@ -902,7 +861,7 @@ class OpenThread(IThci):
             self.networkKey = masterKey
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
-                datasetCmd)[0] == 'Done'
+                datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'setNetworkkey() Error: ' + str(e))
@@ -1265,7 +1224,7 @@ class OpenThread(IThci):
             datasetCmd = 'dataset panid %s' % panid
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
-                datasetCmd)[0] == 'Done'
+                datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
@@ -1280,6 +1239,7 @@ class OpenThread(IThci):
         try:
             self._sendline('factoryreset')
             self._read()
+            time.sleep(0.5)
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('reset() Error: ' + str(e))
@@ -1503,7 +1463,7 @@ class OpenThread(IThci):
             print(cmd)
             if self.__sendCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__sendCommand('netdataregister')[0] == 'Done'
+                return self.__sendCommand('netdataregister')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1608,7 +1568,7 @@ class OpenThread(IThci):
                     return True
                 else:
                     # send server data ntf to leader
-                    return self.__sendCommand('netdataregister')[0] == 'Done'
+                    return self.__sendCommand('netdataregister')[-1] == 'Done'
             else:
                 return False
         except Exception as e:
@@ -1765,7 +1725,7 @@ class OpenThread(IThci):
 
             if self.__sendCommand(cmd)[-1] == 'Done':
                 # send server data ntf to leader
-                return self.__sendCommand('netdataregister')[0] == 'Done'
+                return self.__sendCommand('netdataregister')[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
                 'configExternalRouter() Error: ' + str(e))
@@ -1893,7 +1853,7 @@ class OpenThread(IThci):
             self.xpanId = xpanid
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[-1] == 'Done' and self.__sendCommand(
-                datasetCmd)[0] == 'Done'
+                datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setXpanId() Error: ' + str(e))
 
@@ -1962,7 +1922,7 @@ class OpenThread(IThci):
         globalAddrs = []
         try:
             # get global addrs set if multiple
-            globalAddrs = self.getGlobal()
+            globalAddrs = self.__getGlobal()
 
             if filterByPrefix is None:
                 return globalAddrs[0]
@@ -1984,7 +1944,7 @@ class OpenThread(IThci):
     def getULA64(self):
         """get mesh local EID of Thread device"""
         print('%s call getULA64' % self.port)
-        return self.getMLEID()
+        return self.__sendCommand('ipaddr mleid')[0]
 
     def setMLPrefix(self, sMeshLocalPrefix):
         """set mesh local prefix"""
