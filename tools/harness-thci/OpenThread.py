@@ -793,39 +793,31 @@ class OpenThread(IThci):
            if configuring multiple entries
         """
         print('%s call getGlobal' % self.port)
-        fullIpAddrs = []
         globalAddrs = []
-        rlocAddr = None
+        rlocAddr = self.getRloc()
 
         addrs = self.__sendCommand('ipaddr')
 
-        # convert address to lower case in full expression, and find rloc address as
-        # a reference for current mesh local prefix as for some TCs, mesh local prefix
-        # may be updated through pending dataset management.
+        # take rloc address as a reference for current mesh local prefix,
+        # because for some TCs, mesh local prefix may be updated through
+        # pending dataset management.
         for ip6Addr in addrs:
             if ip6Addr == 'Done':
                 break
 
             fullIp = ModuleHelper.GetFullIpv6Address(ip6Addr).lower()
-            fullIpAddrs.append(fullIp)
 
-            if fullIp.startswith('fd00') and fullIp.startswith('0000:00ff:fe00:', 20) and \
-                    not fullIp.startswith('fc', 35):
-                rlocAddr = fullIp
-                print('rloc')
+            print('address %s' % fullIp)
 
-        for ip6Addr in fullIpAddrs:
-            print('address %s' % ip6Addr)
-
-            if ip6Addr.startswith('fe80'):
+            if fullIp.startswith('fe80'):
                 print('link local')
                 continue
 
-            if ip6Addr.startswith(rlocAddr[0:19]):
+            if fullIp.startswith(rlocAddr[0:19]):
                 print('mesh local')
                 continue
 
-            globalAddrs.append(ip6Addr)
+            globalAddrs.append(fullIp)
             print('global')
 
         return globalAddrs
