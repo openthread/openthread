@@ -122,7 +122,6 @@ void ThreadNetif::Up(void)
     Get<Utils::ChannelMonitor>().Start();
 #endif
     Get<MeshForwarder>().Start();
-    Get<Ip6::Ip6>().AddNetif(*this);
 
     mIsUp = true;
 
@@ -162,7 +161,6 @@ void ThreadNetif::Down(void)
     UnsubscribeAllNodesMulticast();
 
     mIsUp = false;
-    Get<Ip6::Ip6>().RemoveNetif(*this);
     Get<MeshForwarder>().Stop();
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     Get<Utils::ChannelMonitor>().Stop();

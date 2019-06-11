@@ -310,57 +310,6 @@ public:
     void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
 
     /**
-     * This method enables the network interface.
-     *
-     * @param  aNetif  A reference to the network interface.
-     *
-     * @retval OT_ERROR_NONE     Successfully enabled the network interface.
-     * @retval OT_ERROR_ALREADY  The network interface was already enabled.
-     *
-     */
-    otError AddNetif(Netif &aNetif);
-
-    /**
-     * This method disables the network interface.
-     *
-     * @param  aNetif  A reference to the network interface.
-     *
-     * @retval OT_ERROR_NONE       Successfully disabled the network interface.
-     * @retval OT_ERROR_NOT_FOUND  The network interface was already disabled.
-     *
-     */
-    otError RemoveNetif(Netif &aNetif);
-
-    /**
-     * This method returns the network interface list.
-     *
-     * @returns A pointer to the network interface list.
-     *
-     */
-    Netif *GetNetifList(void) { return mNetifListHead; }
-
-    /**
-     * This method returns the network interface identified by @p aInterfaceId.
-     *
-     * @param[in]  aInterfaceId  The network interface ID.
-     *
-     * @returns A pointer to the network interface or NULL if none is found.
-     *
-     */
-    Netif *GetNetifById(int8_t aInterfaceId);
-
-    /**
-     * This method indicates whether or not @p aAddress is assigned to a network interface.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 address.
-     *
-     * @retval TRUE   If the IPv6 address is assigned to a network interface.
-     * @retval FALSE  If the IPv6 address is not assigned to any network interface.
-     *
-     */
-    bool IsUnicastAddress(const Address &aAddress);
-
-    /**
      * This method perform default source address selection.
      *
      * @param[in]  aMessageInfo  A reference to the message information.
@@ -369,27 +318,6 @@ public:
      *
      */
     const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
-
-    /**
-     * This method determines which network interface @p aAddress is on-link, if any.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 address.
-     *
-     * @returns The network interface identifier for the on-link interface or -1 if none is found.
-     *
-     */
-    int8_t GetOnLinkNetif(const Address &aAddress);
-
-    /**
-     * This method performs a route lookup.
-     *
-     * @param[in]   aSource       A reference to the IPv6 source address.
-     * @param[in]   aDestination  A reference to the IPv6 destination address.
-     *
-     * @returns The network interface identifier for the interface if a route is round, otherwise -1
-     *
-     */
-    int8_t RouteLookup(const Address &aSource, const Address &aDestination);
 
     /**
      * This method returns a reference to the send queue.
@@ -434,13 +362,13 @@ private:
     otError RemoveMplOption(Message &aMessage);
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
-    int8_t  FindForwardInterfaceId(const MessageInfo &aMessageInfo);
+    bool    ShouldForwardToThread(const MessageInfo &aMessageInfo) const;
+    bool    IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *               mReceiveIp6DatagramCallbackContext;
-    Netif *              mNetifListHead;
 
     PriorityQueue mSendQueue;
     Tasklet       mSendQueueTask;
