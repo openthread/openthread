@@ -54,7 +54,6 @@ Ip6::Ip6(Instance &aInstance)
     , mIsReceiveIp6FilterEnabled(false)
     , mReceiveIp6DatagramCallback(NULL)
     , mReceiveIp6DatagramCallbackContext(NULL)
-    , mNetifListHead(NULL)
     , mSendQueue()
     , mSendQueueTask(aInstance, HandleSendQueue, this)
     , mIcmp(aInstance)
@@ -842,7 +841,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
     bool        multicastPromiscuous = false;
     uint8_t     nextHeader;
     uint8_t     hopLimit;
-    int8_t      forwardInterfaceId;
 
     SuccessOrExit(error = header.Init(aMessage));
 
@@ -879,7 +877,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
     }
     else
     {
-        if (IsUnicastAddress(header.GetDestination()))
+        if (Get<ThreadNetif>().IsUnicastAddress(header.GetDestination()))
         {
             receive = true;
         }
@@ -923,9 +921,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
 
     if (forward)
     {
-        forwardInterfaceId = FindForwardInterfaceId(messageInfo);
-
-        if (forwardInterfaceId == 0)
+        if (!ShouldForwardToThread(messageInfo))
         {
             // try passing to host
             SuccessOrExit(error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost));
@@ -953,8 +949,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
             aMessage.Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
 
             // submit aMessage to interface
-            VerifyOrExit((aNetif = GetNetifById(forwardInterfaceId)) != NULL, error = OT_ERROR_NO_ROUTE);
-            SuccessOrExit(error = aNetif->SendMessage(aMessage));
+            SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
         }
     }
 
@@ -968,146 +963,34 @@ exit:
     return error;
 }
 
-int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
+bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo) const
 {
-    int8_t interfaceId;
+    bool rval = false;
 
     if (aMessageInfo.GetSockAddr().IsMulticast())
     {
         // multicast
-        interfaceId = aMessageInfo.mInterfaceId;
+        ExitNow(rval = true);
     }
     else if (aMessageInfo.GetSockAddr().IsLinkLocal())
     {
         // on-link link-local address
-        interfaceId = aMessageInfo.mInterfaceId;
+        ExitNow(rval = true);
     }
-    else if ((interfaceId = GetOnLinkNetif(aMessageInfo.GetSockAddr())) > 0)
+    else if (IsOnLink(aMessageInfo.GetSockAddr()))
     {
         // on-link global address
-        ;
+        ExitNow(rval = true);
     }
-    else if ((interfaceId = RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr())) > 0)
+    else if (Get<ThreadNetif>().RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), NULL) ==
+             OT_ERROR_NONE)
     {
         // route
-        ;
+        ExitNow(rval = true);
     }
     else
     {
-        interfaceId = 0;
-    }
-
-    return interfaceId;
-}
-
-int8_t Ip6::RouteLookup(const Address &aSource, const Address &aDestination)
-{
-    int8_t  maxPrefixMatch = -1;
-    uint8_t prefixMatch;
-    int8_t  rval = -1;
-
-    for (Netif *netif = Get<Ip6>().GetNetifList(); netif; netif = netif->GetNext())
-    {
-        if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == OT_ERROR_NONE &&
-            static_cast<int8_t>(prefixMatch) > maxPrefixMatch)
-        {
-            maxPrefixMatch = static_cast<int8_t>(prefixMatch);
-            rval           = netif->GetInterfaceId();
-        }
-    }
-
-    return rval;
-}
-
-otError Ip6::AddNetif(Netif &aNetif)
-{
-    otError error = OT_ERROR_NONE;
-    Netif * netif;
-
-    if (mNetifListHead == NULL)
-    {
-        mNetifListHead = &aNetif;
-    }
-    else
-    {
-        netif = mNetifListHead;
-
-        do
-        {
-            if (netif == &aNetif || netif->mInterfaceId == aNetif.mInterfaceId)
-            {
-                ExitNow(error = OT_ERROR_ALREADY);
-            }
-        } while (netif->mNext);
-
-        netif->mNext = &aNetif;
-    }
-
-    aNetif.mNext = NULL;
-
-exit:
-    return error;
-}
-
-otError Ip6::RemoveNetif(Netif &aNetif)
-{
-    otError error = OT_ERROR_NOT_FOUND;
-
-    VerifyOrExit(mNetifListHead != NULL, error = OT_ERROR_NOT_FOUND);
-
-    if (mNetifListHead == &aNetif)
-    {
-        mNetifListHead = aNetif.mNext;
-    }
-    else
-    {
-        for (Netif *netif = mNetifListHead; netif->mNext; netif = netif->mNext)
-        {
-            if (netif->mNext != &aNetif)
-            {
-                continue;
-            }
-
-            netif->mNext = aNetif.mNext;
-            error        = OT_ERROR_NONE;
-            break;
-        }
-    }
-
-    aNetif.mNext = NULL;
-
-exit:
-    return error;
-}
-
-Netif *Ip6::GetNetifById(int8_t aInterfaceId)
-{
-    Netif *netif;
-
-    for (netif = mNetifListHead; netif; netif = netif->mNext)
-    {
-        if (netif->GetInterfaceId() == aInterfaceId)
-        {
-            ExitNow();
-        }
-    }
-
-exit:
-    return netif;
-}
-
-bool Ip6::IsUnicastAddress(const Address &aAddress)
-{
-    bool rval = false;
-
-    for (Netif *netif = mNetifListHead; netif; netif = netif->mNext)
-    {
-        rval = netif->IsUnicastAddress(aAddress);
-
-        if (rval)
-        {
-            ExitNow();
-        }
+        ExitNow(rval = false);
     }
 
 exit:
@@ -1117,130 +1000,93 @@ exit:
 const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
     Address *                  destination = &aMessageInfo.GetPeerAddr();
-    int                        interfaceId = aMessageInfo.mInterfaceId;
     const NetifUnicastAddress *rvalAddr    = NULL;
     const Address *            candidateAddr;
-    int8_t                     candidateId;
-    int8_t                     rvalIface         = 0;
     uint8_t                    rvalPrefixMatched = 0;
     uint8_t                    destinationScope  = destination->GetScope();
 
-    for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
+    for (const NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
-        candidateId = netif->GetInterfaceId();
+        uint8_t overrideScope;
+        uint8_t candidatePrefixMatched;
 
-        if (destination->IsLinkLocal() || destination->IsMulticast())
+        candidateAddr          = &addr->GetAddress();
+        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
+
+        if (candidateAddr->IsAnycastRoutingLocator())
         {
-            if (interfaceId != candidateId)
-            {
-                continue;
-            }
+            // Don't use anycast address as source address.
+            continue;
         }
 
-        for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
+        if (rvalAddr == NULL)
         {
-            uint8_t overrideScope;
-            uint8_t candidatePrefixMatched;
-
-            candidateAddr          = &addr->GetAddress();
-            candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
-            overrideScope = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
-
-            if (candidateAddr->IsAnycastRoutingLocator())
+            // Rule 0: Prefer any address
+            rvalAddr          = addr;
+            rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else if (*candidateAddr == *destination)
+        {
+            // Rule 1: Prefer same address
+            rvalAddr = addr;
+            ExitNow();
+        }
+        else if (addr->GetScope() < rvalAddr->GetScope())
+        {
+            // Rule 2: Prefer appropriate scope
+            if (addr->GetScope() >= overrideScope)
             {
-                // Don't use anycast address as source address.
-                continue;
-            }
-
-            if (rvalAddr == NULL)
-            {
-                // Rule 0: Prefer any address
                 rvalAddr          = addr;
-                rvalIface         = candidateId;
                 rvalPrefixMatched = candidatePrefixMatched;
             }
-            else if (*candidateAddr == *destination)
+        }
+        else if (addr->GetScope() > rvalAddr->GetScope())
+        {
+            if (rvalAddr->GetScope() < overrideScope)
             {
-                // Rule 1: Prefer same address
-                rvalAddr  = addr;
-                rvalIface = candidateId;
-                ExitNow();
-            }
-            else if (addr->GetScope() < rvalAddr->GetScope())
-            {
-                // Rule 2: Prefer appropriate scope
-                if (addr->GetScope() >= overrideScope)
-                {
-                    rvalAddr          = addr;
-                    rvalIface         = candidateId;
-                    rvalPrefixMatched = candidatePrefixMatched;
-                }
-            }
-            else if (addr->GetScope() > rvalAddr->GetScope())
-            {
-                if (rvalAddr->GetScope() < overrideScope)
-                {
-                    rvalAddr          = addr;
-                    rvalIface         = candidateId;
-                    rvalPrefixMatched = candidatePrefixMatched;
-                }
-            }
-            else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) &&
-                     (addr->GetScope() == Address::kRealmLocalScope))
-            {
-                // Additional rule: Prefer EID
-                if (rvalAddr->GetAddress().IsRoutingLocator())
-                {
-                    rvalAddr          = addr;
-                    rvalIface         = candidateId;
-                    rvalPrefixMatched = candidatePrefixMatched;
-                }
-            }
-            else if (addr->mPreferred && !rvalAddr->mPreferred)
-            {
-                // Rule 3: Avoid deprecated addresses
                 rvalAddr          = addr;
-                rvalIface         = candidateId;
                 rvalPrefixMatched = candidatePrefixMatched;
             }
-            else if (aMessageInfo.mInterfaceId != 0 && aMessageInfo.mInterfaceId == candidateId &&
-                     rvalIface != candidateId)
+        }
+        else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
+        {
+            // Additional rule: Prefer EID
+            if (rvalAddr->GetAddress().IsRoutingLocator())
             {
-                // Rule 4: Prefer home address
-                // Rule 5: Prefer outgoing interface
                 rvalAddr          = addr;
-                rvalIface         = candidateId;
                 rvalPrefixMatched = candidatePrefixMatched;
             }
-            else if (candidatePrefixMatched > rvalPrefixMatched)
-            {
-                // Rule 6: Prefer matching label
-                // Rule 7: Prefer public address
-                // Rule 8: Use longest prefix matching
-                rvalAddr          = addr;
-                rvalIface         = candidateId;
-                rvalPrefixMatched = candidatePrefixMatched;
-            }
+        }
+        else if (addr->mPreferred && !rvalAddr->mPreferred)
+        {
+            // Rule 3: Avoid deprecated addresses
+            rvalAddr          = addr;
+            rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else if (candidatePrefixMatched > rvalPrefixMatched)
+        {
+            // Rule 6: Prefer matching label
+            // Rule 7: Prefer public address
+            // Rule 8: Use longest prefix matching
+            rvalAddr          = addr;
+            rvalPrefixMatched = candidatePrefixMatched;
         }
     }
 
 exit:
-    aMessageInfo.mInterfaceId = rvalIface;
     return rvalAddr;
 }
 
-int8_t Ip6::GetOnLinkNetif(const Address &aAddress)
+bool Ip6::IsOnLink(const Address &aAddress) const
 {
-    int8_t rval = -1;
+    bool rval = false;
 
-    for (Netif *netif = mNetifListHead; netif; netif = netif->mNext)
+    for (const NetifUnicastAddress *cur = Get<ThreadNetif>().GetUnicastAddresses(); cur; cur = cur->GetNext())
     {
-        for (const NetifUnicastAddress *cur = netif->mUnicastAddresses; cur; cur = cur->GetNext())
+        if (cur->GetAddress().PrefixMatch(aAddress) >= cur->mPrefixLength)
         {
-            if (cur->GetAddress().PrefixMatch(aAddress) >= cur->mPrefixLength)
-            {
-                ExitNow(rval = netif->GetInterfaceId());
-            }
+            ExitNow(rval = true);
         }
     }
 
