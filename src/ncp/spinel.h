@@ -3874,28 +3874,6 @@ typedef char spinel_datatype_t;
     SPINEL_DATATYPE_COMMAND_S         /* prop command  */ \
         SPINEL_DATATYPE_UINT_PACKED_S /* property id */
 
-#define SPINEL_DATATYPE_MAC_SCAN_RESULT_S(mac_format_str, net_format_str) \
-    SPINEL_DATATYPE_UINT8_S                          /* Channel */        \
-            SPINEL_DATATYPE_INT8_S                   /* RSSI */           \
-            SPINEL_DATATYPE_STRUCT_S(mac_format_str) /* mac-layer data */ \
-        SPINEL_DATATYPE_STRUCT_S(net_format_str)     /* net-layer data */
-
-#define SPINEL_802_15_4_DATATYPE_MAC_SCAN_RESULT_V1_S \
-    SPINEL_DATATYPE_EUI64_S              /* laddr */  \
-                SPINEL_DATATYPE_UINT16_S /* saddr */  \
-                SPINEL_DATATYPE_UINT16_S /* panid */  \
-                SPINEL_DATATYPE_UINT8_S  /* lqi   */
-
-#define SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S               \
-    SPINEL_DATATYPE_UINT_PACKED_S           /* type */         \
-                SPINEL_DATATYPE_UINT8_S     /* flags */        \
-                SPINEL_DATATYPE_UTF8_S      /* network name */ \
-                SPINEL_DATATYPE_DATA_WLEN_S /* xpanid */
-
-#define SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V2_S \
-    SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S     \
-    SPINEL_DATATYPE_DATA_WLEN_S /* steering data */
-
 #define SPINEL_MAX_UINT_PACKED 2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *     data_out,
