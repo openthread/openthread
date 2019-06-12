@@ -422,7 +422,7 @@ otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOob
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mac::Mac>().SendOutOfBandFrameRequest(aOobFrame);
+    return instance.Get<Mac::Mac>().RequestOutOfBandFrameTransmission(aOobFrame);
 }
 
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)

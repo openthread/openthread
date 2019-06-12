@@ -478,7 +478,7 @@ exit:
     return;
 }
 
-otError Mac::SendFrameRequest(void)
+otError Mac::RequestFrameTransmission(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -491,7 +491,7 @@ exit:
     return error;
 }
 
-otError Mac::SendOutOfBandFrameRequest(otRadioFrame *aOobFrame)
+otError Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
 {
     otError error = OT_ERROR_NONE;
 

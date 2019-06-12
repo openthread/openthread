@@ -215,7 +215,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
      *
      */
-    otError SendFrameRequest(void);
+    otError RequestFrameTransmission(void);
 
     /**
      * This method requests an Out of Band frame for MAC Transmission.
@@ -230,7 +230,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
      *
      */
-    otError SendOutOfBandFrameRequest(otRadioFrame *aOobFrame);
+    otError RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame);
 
     /**
      * This method returns a reference to the IEEE 802.15.4 Extended Address.

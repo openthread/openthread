@@ -189,7 +189,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
         mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsDirect;
         mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesDirect;
-        Get<Mac::Mac>().SendFrameRequest();
+        Get<Mac::Mac>().RequestFrameTransmission();
         ExitNow();
     }
 

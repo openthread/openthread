@@ -432,7 +432,7 @@ otError MeshForwarder::GetIndirectTransmission(void)
 
         mIndirectStartingChild = &child;
 
-        Get<Mac::Mac>().SendFrameRequest();
+        Get<Mac::Mac>().RequestFrameTransmission();
         ExitNow(error = OT_ERROR_NONE);
     }
 
