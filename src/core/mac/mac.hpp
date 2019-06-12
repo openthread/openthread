@@ -262,7 +262,7 @@ public:
      * @param[in]  aShortAddress  The IEEE 802.15.4 Short Address.
      *
      */
-    void SetShortAddress(ShortAddress aShortAddress);
+    void SetShortAddress(ShortAddress aShortAddress) { mSubMac.SetShortAddress(aShortAddress); }
 
     /**
      * This method returns the IEEE 802.15.4 PAN Channel.
@@ -358,7 +358,10 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError SetNetworkName(const char *aNetworkName);
+    otError SetNetworkName(const char *aNetworkName)
+    {
+        return SetNetworkName(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1);
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
@@ -489,7 +492,10 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
+    {
+        mSubMac.SetPcapCallback(aPcapCallback, aCallbackContext);
+    }
 
     /**
      * This method indicates whether or not promiscuous mode is enabled at the link layer.
@@ -549,7 +555,7 @@ public:
      * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
      *
      */
-    void SetEnabled(bool aEnable);
+    void SetEnabled(bool aEnable) { mEnabled = aEnable; }
 
     /**
      * This method indicates whether or not the link layer is enabled.

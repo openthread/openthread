@@ -345,11 +345,6 @@ exit:
     return;
 }
 
-void Mac::SetShortAddress(ShortAddress aShortAddress)
-{
-    mSubMac.SetShortAddress(aShortAddress);
-}
-
 otError Mac::SetPanChannel(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
@@ -431,11 +426,6 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 exit:
     return;
-}
-
-otError Mac::SetNetworkName(const char *aNetworkName)
-{
-    return SetNetworkName(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1);
 }
 
 otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
@@ -1729,11 +1719,6 @@ exit:
     return error;
 }
 
-void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-{
-    mSubMac.SetPcapCallback(aPcapCallback, aCallbackContext);
-}
-
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
     mPromiscuous = aPromiscuous;
@@ -1746,11 +1731,6 @@ void Mac::SetPromiscuous(bool aPromiscuous)
 
     mSubMac.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
-}
-
-void Mac::SetEnabled(bool aEnable)
-{
-    mEnabled = aEnable;
 }
 
 void Mac::ResetCounters(void)
