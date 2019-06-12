@@ -73,8 +73,10 @@ Mac::Mac(Instance &aInstance)
     , mPendingEnergyScan(false)
     , mPendingTransmitBeacon(false)
     , mPendingTransmitData(false)
+    , mPendingTransmitPoll(false)
     , mPendingTransmitOobFrame(false)
     , mPendingWaitingForData(false)
+    , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mBeaconsEnabled(false)
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -174,8 +176,26 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
 bool Mac::IsInTransmitState(void) const
 {
-    return (mOperation == kOperationTransmitData) || (mOperation == kOperationTransmitBeacon) ||
-           (mOperation == kOperationTransmitOutOfBandFrame);
+    bool retval = false;
+
+    switch (mOperation)
+    {
+    case kOperationTransmitData:
+    case kOperationTransmitBeacon:
+    case kOperationTransmitPoll:
+    case kOperationTransmitOutOfBandFrame:
+        retval = true;
+        break;
+
+    case kOperationIdle:
+    case kOperationActiveScan:
+    case kOperationEnergyScan:
+    case kOperationWaitingForData:
+        retval = false;
+        break;
+    }
+
+    return retval;
 }
 
 otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
@@ -488,6 +508,25 @@ exit:
     return error;
 }
 
+otError Mac::RequestDataPollTransmission(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mPendingTransmitPoll && (mOperation != kOperationTransmitPoll), error = OT_ERROR_ALREADY);
+
+    // We ensure data frame and data poll tx requests are handled in the
+    // order they are requested. So if we have a pending data frame tx
+    // request, it should be sent before the poll frame.
+
+    mShouldTxPollBeforeData = !mPendingTransmitData;
+
+    StartOperation(kOperationTransmitPoll);
+
+exit:
+    return error;
+}
+
 void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
@@ -562,6 +601,10 @@ void Mac::StartOperation(Operation aOperation)
         mPendingTransmitData = true;
         break;
 
+    case kOperationTransmitPoll:
+        mPendingTransmitPoll = true;
+        break;
+
     case kOperationWaitingForData:
         mPendingWaitingForData = true;
         break;
@@ -594,6 +637,7 @@ void Mac::PerformNextOperation(void)
         mPendingEnergyScan       = false;
         mPendingTransmitBeacon   = false;
         mPendingTransmitData     = false;
+        mPendingTransmitPoll     = false;
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -630,6 +674,11 @@ void Mac::PerformNextOperation(void)
         mPendingTransmitBeacon = false;
         mOperation             = kOperationTransmitBeacon;
     }
+    else if (mPendingTransmitPoll && (!mPendingTransmitData || mShouldTxPollBeforeData))
+    {
+        mPendingTransmitPoll = false;
+        mOperation           = kOperationTransmitPoll;
+    }
     else if (mPendingTransmitData)
     {
         mPendingTransmitData = false;
@@ -657,6 +706,7 @@ void Mac::PerformNextOperation(void)
 
     case kOperationTransmitBeacon:
     case kOperationTransmitData:
+    case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
         BeginTransmit();
         break;
@@ -695,6 +745,49 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
 
     // security level
     aNonce[0] = aSecurityLevel;
+}
+
+otError Mac::PrepareDataRequest(Frame &aFrame)
+{
+    otError   error  = OT_ERROR_NONE;
+    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
+    uint16_t  fcf;
+    bool      useExtendedAddr;
+
+    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+
+    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfFrameVersion2006 | Frame::kFcfAckRequest |
+          Frame::kFcfSecurityEnabled;
+
+    useExtendedAddr = (GetShortAddress() == kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent());
+
+    if (useExtendedAddr)
+    {
+        fcf |= Frame::kFcfDstAddrExt | Frame::kFcfSrcAddrExt;
+    }
+    else
+    {
+        fcf |= Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrShort;
+    }
+
+    aFrame.InitMacHeader(fcf, Frame::kKeyIdMode1 | Frame::kSecEncMic32);
+    aFrame.SetDstPanId(GetPanId());
+
+    if (useExtendedAddr)
+    {
+        aFrame.SetSrcAddr(GetExtAddress());
+        aFrame.SetDstAddr(parent->GetExtAddress());
+    }
+    else
+    {
+        aFrame.SetSrcAddr(GetShortAddress());
+        aFrame.SetDstAddr(parent->GetRloc16());
+    }
+
+    aFrame.SetCommandId(Frame::kMacCmdDataRequest);
+
+exit:
+    return error;
 }
 
 void Mac::PrepareBeaconRequest(Frame &aFrame)
@@ -908,6 +1001,14 @@ void Mac::BeginTransmit(void)
         sendFrame.SetChannel(mRadioChannel);
         PrepareBeacon(sendFrame);
         sendFrame.SetSequence(mBeaconSequence++);
+        sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
+        break;
+
+    case kOperationTransmitPoll:
+        sendFrame.SetChannel(mRadioChannel);
+        SuccessOrExit(error = PrepareDataRequest(sendFrame));
+        sendFrame.SetSequence(mDataSequence++);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
         break;
@@ -1141,22 +1242,30 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
         PerformNextOperation();
         break;
 
-    case kOperationTransmitData:
-        if (aFrame.IsDataRequestCommand())
+    case kOperationTransmitPoll:
+        assert(aFrame.GetAckRequest());
+
+        if ((aError == OT_ERROR_NONE) && (aAckFrame != NULL))
         {
-            if (mEnabled && (aError == OT_ERROR_NONE) && aFrame.GetAckRequest() && (aAckFrame != NULL) &&
-                aAckFrame->GetFramePending())
+            bool framePending = aAckFrame->GetFramePending();
+
+            if (mEnabled && framePending)
             {
                 mTimer.Start(kDataPollTimeout);
                 StartOperation(kOperationWaitingForData);
             }
 
-            mCounters.mTxDataPoll++;
+            otLogInfoMac("Sent data poll, fp:%s", framePending ? "yes" : "no");
         }
-        else
-        {
-            mCounters.mTxData++;
-        }
+
+        mCounters.mTxDataPoll++;
+        FinishOperation();
+        Get<DataPollManager>().HandlePollSent(aFrame, aError);
+        PerformNextOperation();
+        break;
+
+    case kOperationTransmitData:
+        mCounters.mTxData++;
 
         if (!aFrame.IsARetransmission())
         {
@@ -1757,6 +1866,10 @@ const char *Mac::OperationToString(Operation aOperation)
 
     case kOperationTransmitData:
         retval = "TransmitData";
+        break;
+
+    case kOperationTransmitPoll:
+        retval = "TransmitPoll";
         break;
 
     case kOperationWaitingForData:

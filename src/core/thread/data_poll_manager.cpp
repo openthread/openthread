@@ -93,7 +93,6 @@ void DataPollManager::StopPolling(void)
 otError DataPollManager::SendDataPoll(void)
 {
     otError   error;
-    Message * message;
     Neighbor *parent;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
@@ -104,20 +103,7 @@ otError DataPollManager::SendDataPoll(void)
 
     mTimer.Stop();
 
-    for (message = Get<MeshForwarder>().GetSendQueue().GetHead(); message; message = message->GetNext())
-    {
-        VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
-    }
-
-    message = Get<MessagePool>().New(Message::kTypeMacDataPoll, 0);
-    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
-
-    error = Get<MeshForwarder>().SendMessage(*message);
-
-    if (error != OT_ERROR_NONE)
-    {
-        message->Free();
-    }
+    SuccessOrExit(error = Get<Mac::Mac>().RequestDataPollTransmission());
 
 exit:
 
@@ -203,11 +189,22 @@ uint32_t DataPollManager::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollSent(otError aError)
+void DataPollManager::HandlePollSent(Mac::Frame &aFrame, otError aError)
 {
-    bool shouldRecalculatePollPeriod = false;
+    Mac::Address macDest;
+    bool         shouldRecalculatePollPeriod = false;
 
     VerifyOrExit(mEnabled);
+
+    aFrame.GetDstAddr(macDest);
+    Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+
+    if (Get<Mle::MleRouter>().GetParentCandidate()->GetState() == Neighbor::kStateInvalid)
+    {
+        StopPolling();
+        Get<Mle::MleRouter>().BecomeDetached();
+        ExitNow();
+    }
 
     switch (aError)
     {
@@ -230,8 +227,6 @@ void DataPollManager::HandlePollSent(otError aError)
             mPollTxFailureCounter       = 0;
             shouldRecalculatePollPeriod = true;
         }
-
-        otLogInfoMac("Sent data poll");
 
         break;
 

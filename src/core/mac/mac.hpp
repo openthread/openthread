@@ -233,6 +233,16 @@ public:
     otError RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame);
 
     /**
+     * This method requests transmission of a data poll (MAC Data Request) frame.
+     *
+     * @retval OT_ERROR_NONE           Data poll transmission request is scheduled successfully.
+     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier poll transmission request.
+     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+     *
+     */
+    otError RequestDataPollTransmission(void);
+
+    /**
      * This method returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
@@ -591,6 +601,7 @@ private:
         kOperationEnergyScan,
         kOperationTransmitBeacon,
         kOperationTransmitData,
+        kOperationTransmitPoll,
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
     };
@@ -618,6 +629,7 @@ private:
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
     void    PerformNextOperation(void);
+    otError PrepareDataRequest(Frame &aFrame);
     void    PrepareBeaconRequest(Frame &aFrame);
     void    PrepareBeacon(Frame &aFrame);
     bool    ShouldSendBeacon(void) const;
@@ -651,8 +663,10 @@ private:
     bool mPendingEnergyScan : 1;
     bool mPendingTransmitBeacon : 1;
     bool mPendingTransmitData : 1;
+    bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
     bool mPendingWaitingForData : 1;
+    bool mShouldTxPollBeforeData : 1;
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
     bool mBeaconsEnabled : 1;

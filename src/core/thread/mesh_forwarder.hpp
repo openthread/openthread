@@ -169,6 +169,7 @@ class MeshForwarder : public InstanceLocator
 {
     friend class Mac::Mac;
     friend class Instance;
+    friend class DataPollManager;
 
 public:
     /**
@@ -383,7 +384,6 @@ private:
     Message *GetIndirectTransmission(Child &aChild);
     otError  PrepareDiscoverRequest(void);
     void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
-    otError  PrepareDataPoll(void);
     void     HandleMesh(uint8_t *               aFrame,
                         uint8_t                 aFrameLength,
                         const Mac::Address &    aMacSource,
@@ -404,7 +404,6 @@ private:
                                      uint8_t                 aFrameLength,
                                      Lowpan::FragmentHeader &aFragmentHeader);
 
-    void    SendPoll(Message &aMessage, Mac::Frame &aFrame);
     void    SendMesh(Message &aMessage, Mac::Frame &aFrame);
     otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
     void    SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
@@ -423,10 +422,11 @@ private:
     void    RemoveMessage(Message &aMessage);
     void    HandleDiscoverComplete(void);
 
-    void    HandleReceivedFrame(Mac::Frame &aFrame);
-    otError HandleFrameRequest(Mac::Frame &aFrame);
-    void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
+    void      HandleReceivedFrame(Mac::Frame &aFrame);
+    otError   HandleFrameRequest(Mac::Frame &aFrame);
+    Neighbor *UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
+    void      HandleSentFrame(Mac::Frame &aFrame, otError aError);
+    void      HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);
