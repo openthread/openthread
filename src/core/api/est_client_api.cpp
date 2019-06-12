@@ -43,11 +43,103 @@
 
 using namespace ot;
 
-otError otEstClientStart(otInstance *aInstance, bool aUseCoapsAsTrasportLayer, bool aVerifyPeer)
+otError otEstClientStart(otInstance *aInstance, bool aVerifyPeer)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().Start(aUseCoapsAsTrasportLayer, aVerifyPeer);
+    return instance.Get<Est::Client>().Start(aVerifyPeer);
+}
+
+void otEstClientStop(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Est::Client>().Stop();
+}
+
+otError otEstClientSetCertificate(otInstance *   aInstance,
+                                  const uint8_t *aX509Cert,
+                                  uint32_t       aX509Length,
+                                  const uint8_t *aPrivateKey,
+                                  uint32_t       aPrivateKeyLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+}
+
+otError otEstClientSetCaCertificateChain(otInstance *   aInstance,
+                                         const uint8_t *aX509CaCertificateChain,
+                                         uint32_t       aX509CaCertChainLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+}
+
+otError otEstClientConnect(otInstance *              aInstance,
+                           const otSockAddr *        aSockAddr,
+                           otHandleEstClientConnect  aConnectHandler,
+                           otHandleEstClientResponse aResponseHandler,
+                           void *                    aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().Connect(aSockAddr, aConnectHandler, aResponseHandler, aContext);
+}
+
+void otEstClientDisconnect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Est::Client>().Disconnect();
+}
+
+bool otEstClientIsConnected(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().IsConnected();
+}
+
+otError otEstClientSimpleEnroll(otInstance * aInstance,
+                                void *       aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().SimpleEnroll(aContext);
+}
+
+otError otEstClientSimpleReEnroll(otInstance *aInstance,
+                                  void *      aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().SimpleReEnroll(aContext);
+}
+
+otError otEstClientGetCsrAttributes(otInstance *aInstance,
+                                    void *      aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().GetCsrAttributes(aContext);
+}
+
+otError otEstClientGetServerGeneratedKeys(otInstance *aInstance,
+                                          void *      aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().GetServerGeneratedKeys(aContext);
+}
+
+otError otEstClientGetCaCertificates(otInstance *aInstance,
+                                     void *      aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().GetCaCertificates(aContext);
 }
 
 #endif // OPENTHREAD_ENABLE_EST_CLIENT

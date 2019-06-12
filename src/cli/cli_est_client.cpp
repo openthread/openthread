@@ -69,13 +69,13 @@ otError EstClient::ProcessHelp(int argc, char *argv[])
 otError EstClient::ProcessStart(int argc, char *argv[])
 {
     otError error;
-    bool    verifyPeerCert = true;
+    bool    mVerifyPeerCert = true;
 
     if (argc > 1)
     {
         if (strcmp(argv[1], "false") == 0)
         {
-            verifyPeerCert = false;
+            mVerifyPeerCert = false;
         }
         else if (strcmp(argv[1], "true") != 0)
         {
@@ -83,7 +83,7 @@ otError EstClient::ProcessStart(int argc, char *argv[])
         }
     }
 
-    SuccessOrExit(error = otEstClientStart(mInterpreter.mInstance, verifyPeerCert, verifyPeerCert));
+    SuccessOrExit(error = otEstClientStart(mInterpreter.mInstance, mVerifyPeerCert));
 
 exit:
     return error;

@@ -45,20 +45,106 @@ namespace Est {
 
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mIsConnected(false)
+    , mStarted(false)
+    , mVerifyEstServerCertificate(false)
+    , mApplicationContext(NULL)
+    , mConnectCallback(NULL)
+    , mResponseCallback(NULL)
+    , mCoapSecure(aInstance, true)
 {
+    OT_UNUSED_VARIABLE(mIsConnected);
+    OT_UNUSED_VARIABLE(mStarted);
+    OT_UNUSED_VARIABLE(mVerifyEstServerCertificate);
+    OT_UNUSED_VARIABLE(mApplicationContext);
+    OT_UNUSED_VARIABLE(mConnectCallback);
+    OT_UNUSED_VARIABLE(mResponseCallback);
 }
 
-otError Client::Start(bool aUseCoapsAsTrasportLayer, bool aVerifyPeer)
+otError Client::Start(bool aVerifyPeer)
 {
-    otError       error;
+    otError error = OT_ERROR_NONE;
 
-    error = OT_ERROR_NOT_IMPLEMENTED;
-    VerifyOrExit(error == OT_ERROR_NONE);
-    OT_UNUSED_VARIABLE(aUseCoapsAsTrasportLayer);
-    OT_UNUSED_VARIABLE(aVerifyPeer);
+    mStarted = true;
+    mVerifyEstServerCertificate = aVerifyPeer;
+
+    error = mCoapSecure.Start(54234);
+    VerifyOrExit(error);
 
 exit:
+
     return error;
+}
+
+void Client::Stop(void)
+{
+    mStarted = false;
+}
+
+otError Client::SetCertificate(const uint8_t *aX509Cert, uint32_t aX509Length, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+{
+    OT_UNUSED_VARIABLE(aX509Cert);
+    OT_UNUSED_VARIABLE(aX509Length);
+    OT_UNUSED_VARIABLE(aPrivateKey);
+    OT_UNUSED_VARIABLE(aPrivateKeyLength);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+{
+    OT_UNUSED_VARIABLE(aX509CaCertificateChain);
+    OT_UNUSED_VARIABLE(aX509CaCertChainLength);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::Connect(const otSockAddr * aSockAddr, otHandleEstClientConnect aConnectHandler, otHandleEstClientResponse aResponseHandler, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aSockAddr);
+    OT_UNUSED_VARIABLE(aConnectHandler);
+    OT_UNUSED_VARIABLE(aResponseHandler);
+    OT_UNUSED_VARIABLE(aContext);
+
+    return OT_ERROR_NONE;
+}
+
+void Client::Disconnect(void)
+{
+    return;
+}
+
+bool Client::IsConnected(void)
+{
+    return mIsConnected;
+}
+
+otError Client::SimpleEnroll(void *aContext)
+{
+    mApplicationContext = aContext;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::SimpleReEnroll(void *aContext)
+{
+    mApplicationContext = aContext;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::GetCsrAttributes(void *aContext)
+{
+    mApplicationContext = aContext;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::GetServerGeneratedKeys(void *aContext)
+{
+    mApplicationContext = aContext;
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError Client::GetCaCertificates(void *aContext)
+{
+    mApplicationContext = aContext;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 } // namespace Est

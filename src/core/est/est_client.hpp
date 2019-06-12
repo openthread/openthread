@@ -39,7 +39,7 @@
 
 /**
  * @file
- *   This file includes definitions for the EST client.
+ *   This file includes definitions for the EST-coaps client.
  */
 
 namespace ot {
@@ -64,10 +64,39 @@ public:
      * @retval OT_ERROR_NONE     Successfully started the EST client.
      * @retval OT_ERROR_ALREADY  The client is already started.
      */
-    otError Start(bool aUseCoapsAsTrasportLayer, bool aVerifyPeer);
+    otError Start(bool aVerifyPeer);
 
+    void Stop(void);
+
+    otError SetCertificate(const uint8_t *aX509Cert, uint32_t aX509Length, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+
+    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+
+    otError Connect(const otSockAddr * aSockAddr, otHandleEstClientConnect aConnectHandler, otHandleEstClientResponse aResponseHandler, void *aContext);
+
+    void Disconnect(void);
+
+    bool IsConnected(void);
+
+    otError SimpleEnroll(void *aContext);
+
+    otError SimpleReEnroll(void *aContext);
+
+    otError GetCsrAttributes(void *aContext);
+
+    otError GetServerGeneratedKeys(void *aContext);
+
+    otError GetCaCertificates(void *aContext);
 
 private:
+
+    bool                      mIsConnected;
+    bool                      mStarted;
+    bool                      mVerifyEstServerCertificate;
+    void *                    mApplicationContext;
+    otHandleEstClientConnect  mConnectCallback;
+    otHandleEstClientResponse mResponseCallback;
+    Coap::CoapSecure          mCoapSecure;
 
 };
 

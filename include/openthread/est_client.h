@@ -57,11 +57,26 @@ extern "C" {
  *
  */
 
+
+/**
+ * ToDo: bring down to a lower layer
+ */
 #define OT_EST_COAPS_SHORT_URI_CA_CERTS         "/crts" ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL    "/sen"  ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL  "/sren" ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_CSR_ATTRS        "/att"  ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN   "/skg"  ///< Specified in draft-ietf-ace-coap-est-12
+
+typedef enum otEstType
+{
+    OT_EST_TYPE_SIMPLE_ENROLL,
+    OT_EST_TYPE_SIMPLE_REENROLL,
+    OT_EST_TYPE_CA_CERTS,
+    OT_EST_TYPE_SERVER_SIDE_KEY,
+    OT_EST_TYPE_CSR_ATTR,
+    OT_EST_TYPE_INVALID_CERT,
+    OT_EST_TYPE_INVALID_KEY
+} otEstType;
 
 /**
  * This function pointer is called when the CoAPS connection state changes.
@@ -70,17 +85,12 @@ extern "C" {
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-typedef void (*otHandleEstClientConnectCallback)(bool aConnected, void *aContext);
+typedef void (*otHandleEstClientConnect)(bool aConnected, void *aContext);
 
 /**
  *
  */
-typedef void (*otEstResponseHandler)(otError aError, uint8_t* aCertificate, uint32_t aCertificateLength);
-
-/**
- *
- */
-typedef void (*otEstRawDataHandler)(otError aError, uint8_t* aRawData, uint32_t aRawDataLength);
+typedef void (*otHandleEstClientResponse)(otError aError, otEstType aType, uint8_t* aPayload, uint32_t aPayloadLenth);
 
 /**
  * This function starts the EST client service.
@@ -92,140 +102,138 @@ typedef void (*otEstRawDataHandler)(otError aError, uint8_t* aRawData, uint32_t 
  * @retval OT_ERROR_NONE  Successfully started the EST client.
  *
  */
-otError otEstClientStart(otInstance *aInstance, bool aUseCoapsAsTrasportLayer, bool aVerifyPeer);
+otError otEstClientStart(otInstance *aInstance, bool aVerifyPeer);
 
-///**
-// * This function stops the EST client.
-// *
-// * @param[in]  aInstance  A pointer to an OpenThread instance.
-// *
-// */
-//void otEstClientStop(otInstance *aInstance);
-//
-///**
-// * This method sets the local device's X509 certificate with corresponding private key for
-// * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 to connect to the EST server.
-// *
-// * @param[in]  aInstance          A pointer to an OpenThread instance.
-// * @param[in]  aX509Cert          A pointer to the PEM formatted X509 certificate.
-// * @param[in]  aX509Length        The length of certificate.
-// * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
-// * @param[in]  aPrivateKeyLength  The length of the private key.
-// *
-// * @retval OT_ERROR_NONE              Successfully set the x509 certificate
-// *                                    with his private key.
-// * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
-// *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
-// *
-// */
-//otError otEstClientSetCertificate(otInstance *   aInstance,
-//                                  const uint8_t *aX509Cert,
-//                                  uint32_t       aX509Length,
-//                                  const uint8_t *aPrivateKey,
-//                                  uint32_t       aPrivateKeyLength);
-//
-///**
-// * This method sets the trusted top level CAs. It is needed for validating the
-// * certificate of the EST Server.
-// *
-// * @param[in]  aInstance                A pointer to an OpenThread instance.
-// * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
-// * @param[in]  aX509CaCertChainLength   The length of chain.
-// *
-// * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
-// *
-// */
-//otError otEstClientSetCaCertificateChain(otInstance *   aInstance,
-//                                         const uint8_t *aX509CaCertificateChain,
-//                                         uint32_t       aX509CaCertChainLength);
-//
-///**
-// * This method initializes CoAP Secure session with a EST server.
-// *
-// * @param[in]  aInstance               A pointer to an OpenThread instance.
-// * @param[in]  aSockAddr               A pointer to the remote sockaddr.
-// * @param[in]  aHandler                A pointer to a function that will be called when the DTLS connection
-// *                                     state changes.
-// * @param[in]  aContext                A pointer to arbitrary context information.
-// *
-// * @retval OT_ERROR_NONE  Successfully started CoAP Secure connection.
-// *
-// */
-//otError otEstClientConnect(otInstance *                     aInstance,
-//                           const otSockAddr *               aSockAddr,
-//                           otHandleEstClientConnectCallback aHandler,
-//                           void *                           aContext);
-//
-///**
-// * This method stops the EST client connection.
-// *
-// * @param[in]  aInstance  A pointer to an OpenThread instance.
-// *
-// */
-//void otEstClientDisconnect(otInstance *aInstance);
-//
-///**
-// * This method indicates whether or not the EST client is connected to a EST server.
-// *
-// * @param[in]  aInstance  A pointer to an OpenThread instance.
-// *
-// * @retval TRUE   EST client is connected.
-// * @retval FALSE  EST client is not connected.
-// *
-// */
-//bool otEstClientIsConnected(otInstance *aInstance);
-//
-///**
-// * This method process a simple enrollment over CoAP Secure.
-// *
-// * @param[in]  aInstance            A pointer to an OpenThread instance.
-// * @param[in]  aResponseHandler     A function pointer that shall be called on response reception or time-out.
-// * @param[in]  otEstRawDataHandler  A function pointer that shall be called, if not the CoAP Secure is used for transportation.
-// * @param[in]  aContext             A pointer to arbitrary context information.
-// *
-// * @retval OT_ERROR_NONE           Successfully sent request.
-// * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-// * @retval OT_ERROR_INVALID_STATE  EST client not connected.
-// *
-// */
-//otError otEstClientSimpleEnroll(otInstance *          aInstance,
-//                                otEstResponseHandler  aResponseHandler,
-//                                otEstRawDataHandler   aRawDataHandler,
-//                                void *                aContext);
-//
-///**
-// * This method process a simple re-enrollment over CoAP Secure.
-// *
-// * @param[in]  aInstance            A pointer to an OpenThread instance.
-// * @param[in]  aResponseHandler     A function pointer that shall be called on response reception or time-out.
-// * @param[in]  otEstRawDataHandler  A function pointer that shall be called, if not the CoAP Secure is used for transportation.
-// * @param[in]  aContext             A pointer to arbitrary context information.
-// *
-// * @retval OT_ERROR_NONE           Successfully sent request.
-// * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-// * @retval OT_ERROR_INVALID_STATE  EST client not connected.
-// *
-// */
-//otError otEstClientSimpleReEnroll(otInstance *          aInstance,
-//                                  otEstResponseHandler  aResponseHandler,
-//                                  otEstRawDataHandler   aRawDataHandler,
-//                                  void *                aContext);
-//
-///**
-// *
-// */
-//otError otEstClientGetCsrAttributes(otInstance *          aInstance,
-//                                    otEstResponseHandler  aResponseHandler,
-//                                    otEstRawDataHandler   aRawDataHandler,
-//                                    void *                aContext);
-//
-///**
-// *
-// */
-//otError otEstClientGetServerGeneratedKeys(otInstance *          aInstance,
-//                                          otEstResponseHandler  aResponseHandler,
-//                                          otEstRawDataHandler   aRawDataHandler,
-//                                          void *                aContext);
+/**
+ * This function stops the EST client.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otEstClientStop(otInstance *aInstance);
+
+/**
+ * This method sets the local device's X509 certificate with corresponding private key for
+ * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 to connect to the EST server.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aX509Cert          A pointer to the PEM formatted X509 certificate.
+ * @param[in]  aX509Length        The length of certificate.
+ * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
+ * @param[in]  aPrivateKeyLength  The length of the private key.
+ *
+ * @retval OT_ERROR_NONE              Successfully set the x509 certificate
+ *                                    with his private key.
+ * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
+ *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
+ *
+ */
+otError otEstClientSetCertificate(otInstance *   aInstance,
+                                  const uint8_t *aX509Cert,
+                                  uint32_t       aX509Length,
+                                  const uint8_t *aPrivateKey,
+                                  uint32_t       aPrivateKeyLength);
+
+/**
+ * This method sets the trusted top level CAs. It is needed for validating the
+ * certificate of the EST Server.
+ *
+ * @param[in]  aInstance                A pointer to an OpenThread instance.
+ * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
+ * @param[in]  aX509CaCertChainLength   The length of chain.
+ *
+ * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
+ *
+ */
+otError otEstClientSetCaCertificateChain(otInstance *   aInstance,
+                                         const uint8_t *aX509CaCertificateChain,
+                                         uint32_t       aX509CaCertChainLength);
+
+/**
+ * This method initializes CoAP Secure session with a EST server.
+ *
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aSockAddr               A pointer to the remote sockaddr.
+ * @param[in]  aHandler                A pointer to a function that will be called when the DTLS connection
+ *                                     state changes.
+ * @param[in]  aContext                A pointer to arbitrary context information.
+ *
+ * @retval OT_ERROR_NONE  Successfully started CoAP Secure connection.
+ *
+ */
+otError otEstClientConnect(otInstance *              aInstance,
+                           const otSockAddr *        aSockAddr,
+                           otHandleEstClientConnect  aConnectHandler,
+                           otHandleEstClientResponse aResponseHandler,
+                           void *                    aContext);
+
+/**
+ * This method stops the EST client connection.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otEstClientDisconnect(otInstance *aInstance);
+
+/**
+ * This method indicates whether or not the EST client is connected to a EST server.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   EST client is connected.
+ * @retval FALSE  EST client is not connected.
+ *
+ */
+bool otEstClientIsConnected(otInstance *aInstance);
+
+/**
+ * This method process a simple enrollment over CoAP Secure.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aResponseHandler     A function pointer that shall be called on response reception or time-out.
+ * @param[in]  otEstRawDataHandler  A function pointer that shall be called, if not the CoAP Secure is used for transportation.
+ * @param[in]  aContext             A pointer to arbitrary context information.
+ *
+ * @retval OT_ERROR_NONE           Successfully sent request.
+ * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_STATE  EST client not connected.
+ *
+ */
+otError otEstClientSimpleEnroll(otInstance * aInstance,
+                                void *       aContext);
+
+/**
+ * This method process a simple re-enrollment over CoAP Secure.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aResponseHandler     A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext             A pointer to arbitrary context information.
+ *
+ * @retval OT_ERROR_NONE           Successfully sent request.
+ * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_STATE  EST client not connected.
+ *
+ */
+otError otEstClientSimpleReEnroll(otInstance *aInstance,
+                                  void *      aContext);
+
+/**
+ *
+ */
+otError otEstClientGetCsrAttributes(otInstance *aInstance,
+                                    void *      aContext);
+
+/**
+ *
+ */
+otError otEstClientGetServerGeneratedKeys(otInstance *aInstance,
+                                          void *      aContext);
+
+/**
+ *
+ */
+otError otEstClientGetCaCertificates(otInstance *aInstance,
+                                     void *      aContext);
 
 /**
  * @}
