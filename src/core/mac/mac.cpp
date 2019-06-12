@@ -717,18 +717,19 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
     aNonce[0] = aSecurityLevel;
 }
 
-void Mac::SendBeaconRequest(Frame &aFrame)
+void Mac::PrepareBeaconRequest(Frame &aFrame)
 {
-    // initialize MAC header
     uint16_t fcf = Frame::kFcfFrameMacCmd | Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrNone;
+
     aFrame.InitMacHeader(fcf, Frame::kSecNone);
     aFrame.SetDstPanId(kShortAddrBroadcast);
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
+
     otLogInfoMac("Sending Beacon Request");
 }
 
-void Mac::SendBeacon(Frame &aFrame)
+void Mac::PrepareBeacon(Frame &aFrame)
 {
     uint8_t        numUnsecurePorts;
     uint8_t        beaconLength;
@@ -736,13 +737,11 @@ void Mac::SendBeacon(Frame &aFrame)
     Beacon *       beacon        = NULL;
     BeaconPayload *beaconPayload = NULL;
 
-    // initialize MAC header
     fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
     aFrame.InitMacHeader(fcf, Frame::kSecNone);
     aFrame.SetSrcPanId(mPanId);
     aFrame.SetSrcAddr(GetExtAddress());
 
-    // write payload
     beacon = reinterpret_cast<Beacon *>(aFrame.GetPayload());
     beacon->Init();
     beaconLength = sizeof(*beacon);
@@ -919,7 +918,7 @@ void Mac::BeginTransmit(void)
     case kOperationActiveScan:
         mSubMac.SetPanId(kPanIdBroadcast);
         sendFrame.SetChannel(mScanChannel);
-        SendBeaconRequest(sendFrame);
+        PrepareBeaconRequest(sendFrame);
         sendFrame.SetSequence(0);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
@@ -927,7 +926,7 @@ void Mac::BeginTransmit(void)
 
     case kOperationTransmitBeacon:
         sendFrame.SetChannel(mRadioChannel);
-        SendBeacon(sendFrame);
+        PrepareBeacon(sendFrame);
         sendFrame.SetSequence(mBeaconSequence++);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);

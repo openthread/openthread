@@ -612,8 +612,8 @@ private:
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
     void    PerformNextOperation(void);
-    void    SendBeaconRequest(Frame &aFrame);
-    void    SendBeacon(Frame &aFrame);
+    void    PrepareBeaconRequest(Frame &aFrame);
+    void    PrepareBeacon(Frame &aFrame);
     bool    ShouldSendBeacon(void) const;
     void    BeginTransmit(void);
     otError HandleMacCommand(Frame &aFrame);
