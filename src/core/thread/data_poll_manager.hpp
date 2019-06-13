@@ -219,13 +219,12 @@ public:
 private:
     enum // Poll period under different conditions (in milliseconds).
     {
-        kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
-        kRetxPollPeriod         = OPENTHREAD_CONFIG_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
-        kNoBufferRetxPollPeriod = 200,                                       ///< Poll retx due to no buffer space.
-        kFastPollPeriod         = 188,                                       ///< Period used for fast polls.
-        kMinPollPeriod          = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
-        kMaxExternalPeriod      = ((1 << 26) - 1),                           ///< Maximum allowed user-specified period.
-                                                                             ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
+        kAttachDataPollPeriod = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
+        kRetxPollPeriod       = OPENTHREAD_CONFIG_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
+        kFastPollPeriod       = 188,                                       ///< Period used for fast polls.
+        kMinPollPeriod        = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
+        kMaxExternalPeriod    = ((1 << 26) - 1),                           ///< Maximum allowed user-specified period.
+                                                                           ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
     };
 
     enum
@@ -256,7 +255,6 @@ private:
     bool    mEnabled : 1;              //< Indicates whether data polling is enabled/started.
     bool    mAttachMode : 1;           //< Indicates whether in attach mode (to use attach poll period).
     bool    mRetxMode : 1;             //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    bool    mNoBufferRetxMode : 1;     //< Indicates whether last poll tx failed due to insufficient buffer.
     uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
     uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.

@@ -56,7 +56,6 @@ DataPollManager::DataPollManager(Instance &aInstance)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
-    , mNoBufferRetxMode(false)
     , mPollTimeoutCounter(0)
     , mPollTxFailureCounter(0)
     , mRemainingFastPolls(0)
@@ -82,7 +81,6 @@ void DataPollManager::StopPolling(void)
     mTimer.Stop();
     mAttachMode           = false;
     mRetxMode             = false;
-    mNoBufferRetxMode     = false;
     mPollTimeoutCounter   = 0;
     mPollTxFailureCounter = 0;
     mRemainingFastPolls   = 0;
@@ -111,17 +109,7 @@ exit:
     {
     case OT_ERROR_NONE:
         otLogDebgMac("Sending data poll");
-
-        if (mNoBufferRetxMode == true)
-        {
-            mNoBufferRetxMode = false;
-            ScheduleNextPoll(kRecalculatePollPeriod);
-        }
-        else
-        {
-            ScheduleNextPoll(kUsePreviousPollPeriod);
-        }
-
+        ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
     case OT_ERROR_INVALID_STATE:
@@ -134,9 +122,8 @@ exit:
         ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
-    case OT_ERROR_NO_BUFS:
     default:
-        mNoBufferRetxMode = true;
+        otLogWarnMac("Unexpected error %s requesting data poll", otThreadErrorToString(error));
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
@@ -437,14 +424,6 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
         if ((period == 0) || (period > kRetxPollPeriod))
         {
             period = kRetxPollPeriod;
-        }
-    }
-
-    if (mNoBufferRetxMode == true)
-    {
-        if ((period == 0) || (period > kNoBufferRetxPollPeriod))
-        {
-            period = kNoBufferRetxPollPeriod;
         }
     }
 
