@@ -3349,8 +3349,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
     VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
-    memcpy(mChildIdRequest.mChallenge, challenge.GetChallenge(), challenge.GetLength());
-    mChildIdRequest.mChallengeLength = challenge.GetLength();
+    mChildIdRequest.mChallengeLength = challenge.GetChallengeLength();
+    memcpy(mChildIdRequest.mChallenge, challenge.GetChallenge(), mChildIdRequest.mChallengeLength);
 
     mParentCandidate.SetExtAddress(extAddress);
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
@@ -3828,9 +3828,8 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
 
         case MeshCoP::Tlv::kNetworkName:
             aMessage.Read(offset, sizeof(networkName), &networkName);
-            VerifyOrExit(networkName.IsValid(), error = OT_ERROR_PARSE);
-            memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
-            result.mNetworkName.m8[networkName.GetLength()] = '\0';
+            memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetNetworkNameLength());
+            result.mNetworkName.m8[networkName.GetNetworkNameLength()] = '\0';
             break;
 
         case MeshCoP::Tlv::kSteeringData:
@@ -3844,7 +3843,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
             }
 
             didCheckSteeringData         = true;
-            result.mSteeringData.mLength = steeringData.GetLength();
+            result.mSteeringData.mLength = steeringData.GetSteeringDataLength();
             memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
 
             break;

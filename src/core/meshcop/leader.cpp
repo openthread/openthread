@@ -82,13 +82,12 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
-    VerifyOrExit(commissionerId.IsValid());
 
     if (mTimer.IsRunning())
     {
-        VerifyOrExit((commissionerId.GetLength() == mCommissionerId.GetLength()) &&
+        VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
                      (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                               commissionerId.GetLength())));
+                               commissionerId.GetCommissionerIdLength())));
 
         ResignCommissioner();
     }

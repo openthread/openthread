@@ -224,9 +224,9 @@ otError Commissioner::SendCommissionerSet(void)
     }
 
     // set bloom filter
-    memcpy(dataset.mSteeringData.m8, steeringData.GetValue(), steeringData.GetLength());
-    dataset.mSteeringData.mLength = steeringData.GetLength();
-    dataset.mIsSteeringDataSet    = true;
+    dataset.mSteeringData.mLength = steeringData.GetSteeringDataLength();
+    memcpy(dataset.mSteeringData.m8, steeringData.GetValue(), dataset.mSteeringData.mLength);
+    dataset.mIsSteeringDataSet = true;
 
     SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, NULL, 0));
 
@@ -946,9 +946,9 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == OT_ERROR_NONE)
     {
-        if (provisioningUrl.GetLength() != mProvisioningUrl.GetLength() ||
+        if (provisioningUrl.GetProvisioningUrlLength() != mProvisioningUrl.GetProvisioningUrlLength() ||
             memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl.GetProvisioningUrl(),
-                   provisioningUrl.GetLength()) != 0)
+                   provisioningUrl.GetProvisioningUrlLength()) != 0)
         {
             state = StateTlv::kReject;
         }
