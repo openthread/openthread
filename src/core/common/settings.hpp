@@ -130,7 +130,7 @@ protected:
         kKeyNetworkInfo       = 0x0003, ///< Thread network information
         kKeyParentInfo        = 0x0004, ///< Parent information
         kKeyChildInfo         = 0x0005, ///< Child information
-        kKeyThreadAutoStart   = 0x0006, ///< Auto-start information
+        kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
         kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
     };
 
@@ -287,41 +287,6 @@ public:
      *
      */
     otError DeleteParentInfo(void);
-
-    /**
-     * This method saves ThreadAutoStart.
-     *
-     * @param[in]   aAutoStart            A value to be saved (0 or 1).
-     *
-     * @retval OT_ERROR_NONE              Successfully saved the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
-     *
-     */
-    otError SaveThreadAutoStart(uint8_t aAutoStart) { return Save(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t)); }
-
-    /**
-     * This method reads ThreadAutoStart .
-     *
-     * @param[out]   aAutoStart          A reference to a `uint8_t` to output the read value
-     *
-     * @retval OT_ERROR_NONE              Successfully read the value.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
-     *
-     */
-    otError ReadThreadAutoStart(uint8_t &aAutoStart) const
-    {
-        return ReadFixedSize(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t));
-    }
-
-    /**
-     * This method deletes ThreadAutoStart value from settings.
-     *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
-     *
-     */
-    otError DeleteThreadAutoStart(void) { return Delete(kKeyThreadAutoStart); }
 
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
 

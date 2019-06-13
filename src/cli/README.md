@@ -7,7 +7,6 @@ OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command List
 
-* [autostart](#autostart)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -76,34 +75,6 @@ OpenThread test scripts use the CLI to execute test cases.
 * [service](#service)
 
 ## OpenThread Command Details
-
-### autostart enable
-
-Automatically start Thread on initialization.
-
-```bash
-> autostart enable
-Done
-```
-
-### autostart disable
-
-Don't automatically start Thread on initialization.
-
-```bash
-> autostart disable
-Done
-```
-
-### autostart
-
-Show the status of automatically starting Thread on initialization.
-
-```bash
-> autostart
-Disabled
-Done
-```
 
 ### bufferinfo
 
