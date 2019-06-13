@@ -58,6 +58,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
+#include <openthread/random_noncrypto.h>
 
 // clang-format off
 
@@ -882,3 +883,18 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     }
 }
 #endif
+
+void nrf_802154_random_init(void)
+{
+    // Intentionally empty
+}
+
+void nrf_802154_random_deinit(void)
+{
+    // Intentionally empty
+}
+
+uint32_t nrf_802154_random_get(void)
+{
+    return otRandomNonCryptoGetUint32();
+}

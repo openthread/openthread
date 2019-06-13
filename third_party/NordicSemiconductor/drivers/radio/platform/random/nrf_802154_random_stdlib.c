@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,60 +30,53 @@
 
 /**
  * @file
- *   This file implements the nrf 802.15.4 radio arbiter for single phy.
+ *   This file implements the pseudo-random number generator abstraction layer.
  *
- * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
+ * This pseudo-random number abstraction layer uses standard library rand() function.
  *
  */
 
-#include "rsch/raal/nrf_raal_api.h"
+#include "nrf_802154_random.h"
 
-#include <assert.h>
-#include <stdbool.h>
+#include <stdlib.h>
 #include <stdint.h>
 
-static bool m_continuous;
+#include "nrf.h"
 
-void nrf_raal_init(void)
+#if RAAL_SOFTDEVICE
+#include <softdevice.h>
+#endif // RAAL_SOFTDEVICE
+
+void nrf_802154_random_init(void)
 {
-    m_continuous = false;
+    uint32_t seed;
+
+#if RAAL_SOFTDEVICE
+    uint32_t result;
+
+    do
+    {
+        result = sd_rand_application_vector_get((uint8_t *)&seed, sizeof(seed));
+    }
+    while (result != NRF_SUCCESS);
+#else // RAAL_SOFTDEVICE
+    NRF_RNG->TASKS_START = 1;
+
+    while (!NRF_RNG->EVENTS_VALRDY);
+    NRF_RNG->EVENTS_VALRDY = 0;
+
+    seed = NRF_RNG->VALUE;
+#endif // RAAL_SOFTDEVICE
+
+    srand((unsigned int)seed);
 }
 
-void nrf_raal_uninit(void)
+void nrf_802154_random_deinit(void)
 {
-    // Intentionally empty.
+    // Intentionally empty
 }
 
-void nrf_raal_continuous_mode_enter(void)
+uint32_t nrf_802154_random_get(void)
 {
-    assert(!m_continuous);
-
-    m_continuous = true;
-    nrf_raal_timeslot_started();
-}
-
-void nrf_raal_continuous_mode_exit(void)
-{
-    assert(m_continuous);
-
-    m_continuous = false;
-}
-
-void nrf_raal_continuous_ended(void)
-{
-    // Intentionally empty.
-}
-
-bool nrf_raal_timeslot_request(uint32_t length_us)
-{
-    (void)length_us;
-
-    assert(m_continuous);
-
-    return true;
-}
-
-uint32_t nrf_raal_timeslot_us_left_get(void)
-{
-    return UINT32_MAX;
+    return (uint32_t)rand();
 }

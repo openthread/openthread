@@ -155,7 +155,13 @@ extern "C" {
  *
  */
 #ifndef NRF_802154_SWI_EGU_INSTANCE
+
+#ifdef NRF52811_XXAA
+#define NRF_802154_SWI_EGU_INSTANCE NRF_EGU0
+#else
 #define NRF_802154_SWI_EGU_INSTANCE NRF_EGU3
+#endif
+
 #endif
 
 /**
@@ -343,7 +349,13 @@ extern "C" {
  *
  */
 #ifndef NRF_802154_RTC_INSTANCE
+
+#ifdef NRF52811_XXAA
+#define NRF_802154_RTC_INSTANCE NRF_RTC0
+#else
 #define NRF_802154_RTC_INSTANCE NRF_RTC2
+#endif
+
 #endif
 
 /**
@@ -356,7 +368,13 @@ extern "C" {
  *
  */
 #ifndef NRF_802154_RTC_IRQ_HANDLER
+
+#ifdef NRF52811_XXAA
+#define NRF_802154_RTC_IRQ_HANDLER RTC0_IRQHandler
+#else
 #define NRF_802154_RTC_IRQ_HANDLER RTC2_IRQHandler
+#endif
+
 #endif
 
 /**
@@ -369,7 +387,13 @@ extern "C" {
  *
  */
 #ifndef NRF_802154_RTC_IRQN
+
+#ifdef NRF52811_XXAA
+#define NRF_802154_RTC_IRQN RTC0_IRQn
+#else
 #define NRF_802154_RTC_IRQN RTC2_IRQn
+#endif
+
 #endif
 
 /**

@@ -61,18 +61,18 @@ void nrf_802154_ack_data_enable(bool enabled);
  *
  * @param[in]  p_addr    Pointer to address that should be added to the list.
  * @param[in]  extended  Indication if @p p_addr is extended or short address.
+ * @param[in]  data_type Type of data to set. Please refer to nrf_802154_ack_data_t type.
  * @param[in]  p_data    Pointer to data to set.
  * @param[in]  data_len  Length of @p p_data buffer.
- * @param[in]  data_type Type of data to set. Please refer to nrf_802154_ack_data_t type.
  *
  * @retval true   Address successfully added to the list.
  * @retval false  Address was not added to the list (list is full).
  */
 bool nrf_802154_ack_data_for_addr_set(const uint8_t * p_addr,
                                       bool            extended,
+                                      uint8_t         data_type,
                                       const void    * p_data,
-                                      uint8_t         data_len,
-                                      uint8_t         data_type);
+                                      uint8_t         data_len);
 
 /**
  * @brief Remove address from ACK data list.
@@ -97,7 +97,7 @@ bool nrf_802154_ack_data_for_addr_clear(const uint8_t * p_addr, bool extended, u
  *                       from the list.
  * @param[in]  data_type Type of data that should be cleared for all addresses of given length.
  */
-void nrf_802154_ack_data_for_addr_reset(bool extended, uint8_t data_type);
+void nrf_802154_ack_data_reset(bool extended, uint8_t data_type);
 
 /**
  * @brief Check if pending bit should be set in ACK sent in response to given frame.

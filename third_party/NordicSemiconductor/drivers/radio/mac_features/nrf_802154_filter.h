@@ -60,8 +60,8 @@
  * there is nothing more to check, function returns true and does not modify @p p_num_bytes value.
  * If verified frame is incorrect this function returns false and @p p_num_bytes value is undefined.
  *
- * @param[in]    p_psdu       Pointer to PSDU of incoming frame.
- * @param[inout] p_num_bytes  Number of bytes available in @p p_psdu buffer. This value is set to
+ * @param[in]    p_data       Pointer to a buffer containing PHR and PSDU of incoming frame.
+ * @param[inout] p_num_bytes  Number of bytes available in @p p_data buffer. This value is set to
  *                            requested number of bytes for next iteration or this value is
  *                            unchanged if no more iterations shall be performed during filtering of
  *                            given frame.
@@ -71,6 +71,6 @@
  * @retval NRF_802154_RX_ERROR_INVALID_DEST_ADDR  Incoming frame has destination address that
  *                                                mismatches address of this node.
  */
-nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_psdu, uint8_t * p_num_bytes);
+nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_data, uint8_t * p_num_bytes);
 
 #endif /* NRF_802154_FILTER_H_ */

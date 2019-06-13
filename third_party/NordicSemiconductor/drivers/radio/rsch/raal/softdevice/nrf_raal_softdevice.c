@@ -42,13 +42,13 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <hal/nrf_timer.h>
-#include <nrf_raal_api.h>
 #include <nrf_802154.h>
 #include <nrf_802154_const.h>
-#include <nrf_802154_debug.h>
+#include "nrf_802154_debug.h"
 #include <nrf_802154_procedures_duration.h>
 #include <nrf_802154_utils.h>
+#include <nrf_timer.h>
+#include <rsch/raal/nrf_raal_api.h>
 
 #if defined(__GNUC__)
 _Pragma("GCC diagnostic push")

@@ -39,8 +39,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "hal/nrf_ppi.h"
-#include "hal/nrf_timer.h"
+#include "nrf_ppi.h"
+#include "nrf_timer.h"
 
 #ifdef __cplusplus
 extern "C" {

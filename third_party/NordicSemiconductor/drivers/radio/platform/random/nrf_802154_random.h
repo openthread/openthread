@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,61 +29,54 @@
  */
 
 /**
- * @file
- *   This file implements the nrf 802.15.4 radio arbiter for single phy.
- *
- * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
+ * @brief This module defines Pseudo-random number generator Abstraction Layer.
  *
  */
 
-#include "rsch/raal/nrf_raal_api.h"
+#ifndef NRF_802154_RANDOM_H_
+#define NRF_802154_RANDOM_H_
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-static bool m_continuous;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void nrf_raal_init(void)
-{
-    m_continuous = false;
+/**
+ * @defgroup nrf_802154_random Random Abstraction Layer for the 802.15.4 driver
+ * @{
+ * @ingroup nrf_802154_random
+ * @brief Pseudo-random number generator Abstraction Layer interface for the 802.15.4 driver.
+ *
+ * Random Abstraction Layer is an abstraction layer of a pseudo-random number generator that is used
+ * to perform CSMA-CA procedure correctly.
+ *
+ */
+
+/**
+ * @brief Initialize random number generator.
+ */
+void nrf_802154_random_init(void);
+
+/**
+ * @brief Uninitialize random number generator.
+ */
+void nrf_802154_random_deinit(void);
+
+/**
+ * @brief Get a pseudo-random number.
+ *
+ * @return Pseudo-random number.
+ */
+uint32_t nrf_802154_random_get(void);
+
+/**
+ *@}
+ **/
+
+#ifdef __cplusplus
 }
+#endif
 
-void nrf_raal_uninit(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_raal_continuous_mode_enter(void)
-{
-    assert(!m_continuous);
-
-    m_continuous = true;
-    nrf_raal_timeslot_started();
-}
-
-void nrf_raal_continuous_mode_exit(void)
-{
-    assert(m_continuous);
-
-    m_continuous = false;
-}
-
-void nrf_raal_continuous_ended(void)
-{
-    // Intentionally empty.
-}
-
-bool nrf_raal_timeslot_request(uint32_t length_us)
-{
-    (void)length_us;
-
-    assert(m_continuous);
-
-    return true;
-}
-
-uint32_t nrf_raal_timeslot_us_left_get(void)
-{
-    return UINT32_MAX;
-}
+#endif /* NRF_802154_RANDOM_H_ */

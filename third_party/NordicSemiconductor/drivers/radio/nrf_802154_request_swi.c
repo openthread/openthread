@@ -47,7 +47,7 @@
 #include "nrf_802154_utils.h"
 #include "nrf_802154_rx_buffer.h"
 #include "nrf_802154_swi.h"
-#include "hal/nrf_radio.h"
+#include "nrf_radio.h"
 
 #include <nrf.h>
 

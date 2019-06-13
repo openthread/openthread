@@ -156,8 +156,10 @@ bool nrf_802154_rsch_timeslot_request(uint32_t length_us);
  *
  * Request timeslot that should be granted in the future. Function parameters provides data when
  * the timeslot should start and how long should it last. When requested timeslot starts the
- * @ref nrf_802154_rsch_delayed_timeslot_started is called. If requested timeslot cannot be granted
- * with requested parameters, the @ref nrf_802154_rsch_delayed_timeslot_failed is called.
+ * @ref nrf_802154_rsch_delayed_timeslot_started is called.
+ *
+ * @note @ref nrf_802154_rsch_delayed_timeslot_started may be delayed and it is up to
+ *       the called module to check the delay and decide if it causes any issues.
  *
  * @note Time parameters use the same units that are used in the Timer Scheduler module.
  *
@@ -175,6 +177,16 @@ bool nrf_802154_rsch_delayed_timeslot_request(uint32_t         t0,
                                               uint32_t         length,
                                               rsch_prio_t      prio,
                                               rsch_dly_ts_id_t dly_ts);
+
+/**
+ * @brief Check if there is a pending timeslot request.
+ *
+ * @note Delayed timeslot is considered requested once its preconditions are granted.
+ *
+ * @retval true   There is a timeslot request pending.
+ * @retval false  There are no pending timeslot requests.
+ */
+bool nrf_802154_rsch_timeslot_is_requested(void);
 
 /**
  * @brief Check if the RSCH precondition is satisfied.
@@ -212,16 +224,6 @@ extern void nrf_802154_rsch_continuous_prio_changed(rsch_prio_t prio);
  * @param[in]  dly_ts_id  Type of the started timeslot.
  */
 extern void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id);
-
-/**
- * @brief Notification that previously requested delayed timeslot cannot be started.
- *
- * This function may be called when any of radio activity precondition is not satisfied at the
- * time when the timeslot should start.
- *
- * @param[in]  dly_ts_id  Type of the failed timeslot.
- */
-extern void nrf_802154_rsch_delayed_timeslot_failed(rsch_dly_ts_id_t dly_ts_id);
 
 /**
  *@}

@@ -40,7 +40,7 @@
 #include <stdint.h>
 
 #include "nrf_802154_core.h"
-#include "hal/nrf_radio.h"
+#include "nrf_radio.h"
 
 #define REQUEST_FUNCTION(func_core, ...) \
     bool result;                         \

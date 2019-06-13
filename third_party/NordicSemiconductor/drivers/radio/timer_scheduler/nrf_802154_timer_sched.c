@@ -47,7 +47,7 @@
 #include <stdint.h>
 
 #include <nrf.h>
-#include "nrf_802154_debug.h"
+#include "../nrf_802154_debug.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
 
 #if defined(__ICCARM__)

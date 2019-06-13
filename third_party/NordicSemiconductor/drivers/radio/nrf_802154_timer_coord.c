@@ -42,7 +42,7 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_debug.h"
-#include "hal/nrf_ppi.h"
+#include "nrf_ppi.h"
 #include "platform/hp_timer/nrf_802154_hp_timer.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
 
@@ -52,10 +52,10 @@
                                   DIV_ROUND_NEGATIVE(n, d) : \
                                   DIV_ROUND_POSITIVE(n, d))
 
-#define TIME_BASE                (1UL << 22)      ///< Unit used to calculate PPTB (Point per Time Base). It is not equal million to speed up computations and increase precision.
-#define FIRST_RESYNC_TIME        TIME_BASE        ///< Delay of the first resynchronization. The first resynchronization is needed to measure timers drift.
-#define RESYNC_TIME              (64 * TIME_BASE) ///< Delay of following resynchronizations.
-#define EWMA_COEF                (8)              ///< Weight used in the EWMA algorithm.
+#define TIME_BASE                (1UL << 22)     ///< Unit used to calculate PPTB (Point per Time Base). It is not equal million to speed up computations and increase precision.
+#define FIRST_RESYNC_TIME        TIME_BASE       ///< Delay of the first resynchronization. The first resynchronization is needed to measure timers drift.
+#define RESYNC_TIME              (4 * TIME_BASE) ///< Delay of following resynchronizations.
+#define EWMA_COEF                (8)             ///< Weight used in the EWMA algorithm.
 
 #define PPI_CH0                  NRF_PPI_CHANNEL13
 #define PPI_CH1                  NRF_PPI_CHANNEL14

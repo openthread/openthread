@@ -40,8 +40,8 @@
 
 #include <assert.h>
 
-#include <hal/nrf_rtc.h>
 #include <nrf.h>
+#include <nrf_rtc.h>
 
 #include "platform/clock/nrf_802154_clock.h"
 #include "nrf_802154_config.h"
@@ -62,6 +62,8 @@
 
 #define EPOCH_32BIT_US                  (1ULL << 32)
 #define EPOCH_FROM_TIME(time)           ((time) & ((uint64_t)UINT32_MAX << 32))
+
+#define MAX_LP_TIMER_SYNC_ITERS         4
 
 // Struct holding information about compare channel.
 typedef struct
@@ -85,12 +87,13 @@ static const compare_channel_descriptor_t m_cmp_ch[CHANNEL_CNT] = {{RTC_LP_TIMER
                                                                     RTC_SYNC_COMPARE_EVENT,
                                                                     RTC_SYNC_COMPARE_EVENT_MASK}};
 
-static uint64_t m_target_times[CHANNEL_CNT];     ///< Target time of given channel [us].
+static uint64_t m_target_times[CHANNEL_CNT];       ///< Target time of given channel [us].
 
-static volatile uint32_t m_offset_counter;       ///< Counter of RTC overflows, incremented by 2 on each OVERFLOW event.
-static volatile uint8_t  m_mutex;                ///< Mutex for write access to @ref m_offset_counter.
-static volatile bool     m_clock_ready;          ///< Information that LFCLK is ready.
-static volatile uint32_t m_lp_timer_irq_enabled; ///< Information that RTC interrupt was enabled while entering critical section.
+static volatile uint32_t m_lp_timer_irq_enabled;   ///< Information that RTC interrupt was enabled while entering critical section.
+static volatile uint32_t m_offset_counter;         ///< Counter of RTC overflows, incremented by 2 on each OVERFLOW event.
+static volatile uint8_t  m_mutex;                  ///< Mutex for write access to @ref m_offset_counter.
+static volatile bool     m_clock_ready;            ///< Information that LFCLK is ready.
+static volatile bool     m_shall_fire_immediately; ///< Information if timer should fire immediately.
 
 static uint32_t overflow_counter_get(void);
 
@@ -489,7 +492,8 @@ void nrf_802154_lp_timer_start(uint32_t t0, uint32_t dt)
 
     if (shall_strike(now + MIN_RTC_COMPARE_EVENT_DT))
     {
-        handle_compare_match(true);
+        m_shall_fire_immediately = true;
+        NVIC_SetPendingIRQ(NRF_802154_RTC_IRQN);
     }
     else
     {
@@ -514,6 +518,7 @@ void nrf_802154_lp_timer_sync_start_now(void)
     uint32_t counter;
     uint32_t offset;
     uint64_t now;
+    uint32_t iterations = MAX_LP_TIMER_SYNC_ITERS;
 
     do
     {
@@ -521,7 +526,7 @@ void nrf_802154_lp_timer_sync_start_now(void)
         now = time_get(offset, counter);
         timer_sync_start_at((uint32_t)now, MIN_RTC_COMPARE_EVENT_DT, &now);
     }
-    while (counter_get() != counter);
+    while ((counter_get() != counter) && (--iterations > 0));
 }
 
 void nrf_802154_lp_timer_sync_start_at(uint32_t t0, uint32_t dt)
@@ -570,6 +575,12 @@ void NRF_802154_RTC_IRQ_HANDLER(void)
     }
 
     // Handle compare match.
+    if (m_shall_fire_immediately)
+    {
+        m_shall_fire_immediately = false;
+        handle_compare_match(true);
+    }
+
     if (nrf_rtc_int_is_enabled(NRF_802154_RTC_INSTANCE, m_cmp_ch[LP_TIMER_CHANNEL].int_mask) &&
         nrf_rtc_event_pending(NRF_802154_RTC_INSTANCE, m_cmp_ch[LP_TIMER_CHANNEL].event))
     {
@@ -586,7 +597,10 @@ void NRF_802154_RTC_IRQ_HANDLER(void)
     }
 }
 
+#ifndef UNITY_ON_TARGET
 __WEAK void nrf_802154_lp_timer_synchronized(void)
 {
     // Intentionally empty
 }
+
+#endif // UNITY_ON_TARGET

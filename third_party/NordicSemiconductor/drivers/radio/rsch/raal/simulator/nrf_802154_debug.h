@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,61 +29,46 @@
  */
 
 /**
- * @file
- *   This file implements the nrf 802.15.4 radio arbiter for single phy.
- *
- * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
+ * @brief This module contains debug helpers for 802.15.4 radio driver for nRF SoC devices.
  *
  */
 
-#include "rsch/raal/nrf_raal_api.h"
+#ifndef NRF_802154_DEBUG_H_
+#define NRF_802154_DEBUG_H_
 
-#include <assert.h>
-#include <stdbool.h>
 #include <stdint.h>
 
-static bool m_continuous;
+#include "nrf_802154_debug_core.h"
 
-void nrf_raal_init(void)
-{
-    m_continuous = false;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define EVENT_TIMESLOT_REQUEST        0x0007UL
+#define EVENT_TIMESLOT_REQUEST_RESULT 0x0008UL
+
+/* Reserved for RAAL: 0x0300 - 0x047F */
+
+#define FUNCTION_RAAL_CRIT_SECT_ENTER          0x0301UL
+#define FUNCTION_RAAL_CRIT_SECT_EXIT           0x0302UL
+#define FUNCTION_RAAL_CONTINUOUS_ENTER         0x0303UL
+#define FUNCTION_RAAL_CONTINUOUS_EXIT          0x0304UL
+
+#define FUNCTION_RAAL_SIG_HANDLER              0x0400UL
+#define FUNCTION_RAAL_SIG_EVENT_START          0x0401UL
+#define FUNCTION_RAAL_SIG_EVENT_MARGIN         0x0402UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND         0x0403UL
+#define FUNCTION_RAAL_SIG_EVENT_ENDED          0x0404UL
+#define FUNCTION_RAAL_SIG_EVENT_RADIO          0x0405UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND_SUCCESS 0x0406UL
+#define FUNCTION_RAAL_SIG_EVENT_EXTEND_FAIL    0x0407UL
+#define FUNCTION_RAAL_EVT_BLOCKED              0x0408UL
+#define FUNCTION_RAAL_EVT_SESSION_IDLE         0x0409UL
+#define FUNCTION_RAAL_EVT_HFCLK_READY          0x040AUL
+#define FUNCTION_RAAL_SIG_EVENT_MARGIN_MOVE    0x040BUL
+
+#ifdef __cplusplus
 }
+#endif
 
-void nrf_raal_uninit(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_raal_continuous_mode_enter(void)
-{
-    assert(!m_continuous);
-
-    m_continuous = true;
-    nrf_raal_timeslot_started();
-}
-
-void nrf_raal_continuous_mode_exit(void)
-{
-    assert(m_continuous);
-
-    m_continuous = false;
-}
-
-void nrf_raal_continuous_ended(void)
-{
-    // Intentionally empty.
-}
-
-bool nrf_raal_timeslot_request(uint32_t length_us)
-{
-    (void)length_us;
-
-    assert(m_continuous);
-
-    return true;
-}
-
-uint32_t nrf_raal_timeslot_us_left_get(void)
-{
-    return UINT32_MAX;
-}
+#endif /* NRF_802154_DEBUG_H_ */
