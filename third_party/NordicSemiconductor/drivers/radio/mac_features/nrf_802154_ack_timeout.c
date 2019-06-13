@@ -40,6 +40,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../nrf_802154_debug.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
@@ -64,6 +65,8 @@ static void notify_tx_error(bool result)
 
 static void timeout_timer_fired(void * p_context)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_ACK_TIMEOUT_FIRED);
+
     (void)p_context;
 
     if (m_procedure_is_active)
@@ -80,6 +83,8 @@ static void timeout_timer_fired(void * p_context)
             timeout_timer_retry();
         }
     }
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_ACK_TIMEOUT_FIRED);
 }
 
 static void timeout_timer_retry(void)

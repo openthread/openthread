@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,9 +43,10 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
-#include "nrf_802154_debug.h"
+#include "../nrf_802154_debug.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_request.h"
+#include "platform/random/nrf_802154_random.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
 #if NRF_802154_CSMA_CA_ENABLED
@@ -53,7 +54,7 @@
 static uint8_t m_nb;                    ///< The number of times the CSMA-CA algorithm was required to back off while attempting the current transmission.
 static uint8_t m_be;                    ///< Backoff exponent, which is related to how many backoff periods a device shall wait before attempting to assess a channel.
 
-static const uint8_t    * mp_psdu;      ///< Pointer to PSDU of the frame being transmitted.
+static const uint8_t    * mp_data;      ///< Pointer to a buffer containing PHR and PSDU of the frame being transmitted.
 static nrf_802154_timer_t m_timer;      ///< Timer used to back off during CSMA-CA procedure.
 static bool               m_is_running; ///< Indicates if CSMA-CA procedure is running.
 
@@ -97,7 +98,7 @@ static void notify_busy_channel(bool result)
 {
     if (!result && (m_nb >= (NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS - 1)))
     {
-        nrf_802154_notify_transmit_failed(mp_psdu, NRF_802154_TX_ERROR_BUSY_CHANNEL);
+        nrf_802154_notify_transmit_failed(mp_data, NRF_802154_TX_ERROR_BUSY_CHANNEL);
     }
 }
 
@@ -120,7 +121,7 @@ static void frame_transmit(void * p_context)
     {
         if (!nrf_802154_request_transmit(NRF_802154_TERM_NONE,
                                          REQ_ORIG_CSMA_CA,
-                                         mp_psdu,
+                                         mp_data,
                                          true,
                                          NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT ? false : true,
                                          notify_busy_channel))
@@ -137,7 +138,7 @@ static void frame_transmit(void * p_context)
  */
 static void random_backoff_start(void)
 {
-    uint8_t backoff_periods = rand() % (1 << m_be);
+    uint8_t backoff_periods = nrf_802154_random_get() % (1 << m_be);
 
     m_timer.callback  = frame_transmit;
     m_timer.p_context = NULL;
@@ -182,7 +183,7 @@ void nrf_802154_csma_ca_start(const uint8_t * p_data)
 {
     assert(!procedure_is_running());
 
-    mp_psdu      = p_data;
+    mp_data      = p_data;
     m_nb         = 0;
     m_be         = NRF_802154_CSMA_CA_MIN_BE;
     m_is_running = true;
@@ -227,7 +228,7 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 
     bool result = true;
 
-    if (p_frame == mp_psdu)
+    if (p_frame == mp_data)
     {
         nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_FAILED);
 
@@ -241,7 +242,7 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 
 bool nrf_802154_csma_ca_tx_started_hook(const uint8_t * p_frame)
 {
-    if (p_frame == mp_psdu)
+    if (p_frame == mp_data)
     {
         nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CSMA_TX_STARTED);
 

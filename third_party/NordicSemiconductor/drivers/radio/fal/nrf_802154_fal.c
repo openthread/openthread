@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,60 +30,17 @@
 
 /**
  * @file
- *   This file implements the nrf 802.15.4 radio arbiter for single phy.
- *
- * This arbiter should be used when 802.15.4 is the only wireless protocol used by the application.
+ *   This file contains implementation of the nRF 802.15.4 FEM abstraction layer.
  *
  */
 
-#include "rsch/raal/nrf_raal_api.h"
-
-#include <assert.h>
-#include <stdbool.h>
 #include <stdint.h>
 
-static bool m_continuous;
+#include "nrf_802154_fal.h"
 
-void nrf_raal_init(void)
+int8_t nrf_802154_fal_tx_power_get(const uint8_t channel, const int8_t power)
 {
-    m_continuous = false;
-}
+    (void)channel;
 
-void nrf_raal_uninit(void)
-{
-    // Intentionally empty.
-}
-
-void nrf_raal_continuous_mode_enter(void)
-{
-    assert(!m_continuous);
-
-    m_continuous = true;
-    nrf_raal_timeslot_started();
-}
-
-void nrf_raal_continuous_mode_exit(void)
-{
-    assert(m_continuous);
-
-    m_continuous = false;
-}
-
-void nrf_raal_continuous_ended(void)
-{
-    // Intentionally empty.
-}
-
-bool nrf_raal_timeslot_request(uint32_t length_us)
-{
-    (void)length_us;
-
-    assert(m_continuous);
-
-    return true;
-}
-
-uint32_t nrf_raal_timeslot_us_left_get(void)
-{
-    return UINT32_MAX;
+    return power;
 }

@@ -43,8 +43,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <hal/nrf_timer.h>
 #include <nrf.h>
+#include <nrf_timer.h>
 
 #include "nrf_802154_config.h"
 

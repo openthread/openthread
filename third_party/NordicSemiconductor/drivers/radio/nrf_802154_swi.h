@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,11 +57,11 @@ void nrf_802154_swi_init(void);
 /**
  * @brief Notify next higher layer that a frame was received from SWI priority level.
  *
- * @param[in]  p_data  Array of bytes containing PSDU. First byte contains frame length, other contain the frame itself.
+ * @param[in]  p_data  Pointer to a buffer containing PHR and PSDU of the received frame.
  * @param[in]  power   RSSI measured during the frame reception.
  * @param[in]  lqi     LQI indicating measured link quality during the frame reception.
  */
-void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, int8_t lqi);
+void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi);
 
 /**
  * @brief Notify next higher layer that reception of a frame failed.
@@ -73,21 +73,22 @@ void nrf_802154_swi_notify_receive_failed(nrf_802154_rx_error_t error);
 /**
  * @brief Notify next higher layer that a frame was transmitted from SWI priority level.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of transmitted frame.
- * @param[in]  p_ack    Pointer to buffer containing PSDU of ACK frame. NULL if ACK was not requested.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the transmitted frame.
+ * @param[in]  p_ack    Pointer to a buffer containing PHR and PSDU of ACK frame. NULL if ACK was
+ *                      not requested.
  * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
  * @param[in]  lqi      LQI of received frame of 0 if ACK was not requested.
  */
 void nrf_802154_swi_notify_transmitted(const uint8_t * p_frame,
                                        uint8_t       * p_data,
                                        int8_t          power,
-                                       int8_t          lqi);
+                                       uint8_t         lqi);
 
 /**
  * @brief Notify next higher layer that a frame was not transmitted from SWI priority level.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that failed transmit
- *                      operation.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that failed
+ *                      the transmission.
  * @param[in]  error    Reason of the transmission failure.
  */
 void nrf_802154_swi_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_error_t error);
@@ -163,7 +164,8 @@ void nrf_802154_swi_receive(nrf_802154_term_t              term_lvl,
  *
  * @param[in]   term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]   req_orig         Module that originates this request.
- * @param[in]   p_data           Pointer to PSDU of the frame to transmit.
+ * @param[in]   p_data           Pointer to a buffer containing PHR and PSDU of the frame to be
+ *                               transmitted.
  * @param[in]   cca              If the driver should perform CCA procedure before transmission.
  * @param[in]   immediate        If true, the driver schedules transmission immediately or never;
  *                               if false transmission may be postponed until tx preconditions are

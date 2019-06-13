@@ -50,7 +50,7 @@ extern "C" {
  */
 typedef struct
 {
-    uint8_t psdu[MAX_PACKET_SIZE + 1];
+    uint8_t data[MAX_PACKET_SIZE + 1];
     bool    free; // If this buffer is free or contains a frame.
 } rx_buffer_t;
 

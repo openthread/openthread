@@ -55,7 +55,7 @@
  *       by the next layer. ACK timeout timer shall start when @sa nrf_802154_tx_started()
  *       function is called.
  *
- * @param[in]  p_data    Pointer to PSDU of frame that should be transmitted.
+ * @param[in]  p_data    Pointer to a buffer containing PHR and PSDU of the frame that should be transmitted.
  */
 void nrf_802154_csma_ca_start(const uint8_t * p_data);
 
@@ -78,7 +78,7 @@ bool nrf_802154_csma_ca_abort(nrf_802154_term_t term_lvl, req_originator_t req_o
 /**
  * @brief Handler of TX failed event.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that was not transmitted.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that was not transmitted.
  * @param[in]  error    Cause of failed transmission.
  *
  * @retval  true   TX failed event should be propagated to the MAC layer.
@@ -90,7 +90,7 @@ bool nrf_802154_csma_ca_tx_failed_hook(const uint8_t * p_frame, nrf_802154_tx_er
 /**
  * @brief Handler of TX started event.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that is being transmitted.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that is being transmitted.
  *
  * @retval  true   TX started event should be propagated to the MAC layer.
  * @retval  false  TX started event should not be propagated to the MAC layer. It is handled

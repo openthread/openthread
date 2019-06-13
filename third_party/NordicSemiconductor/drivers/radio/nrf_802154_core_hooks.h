@@ -61,14 +61,14 @@ bool nrf_802154_core_hooks_terminate(nrf_802154_term_t term_lvl, req_originator_
 /**
  * @brief Process hooks for the transmitted event.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that was transmitted.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that was transmitted.
  */
 void nrf_802154_core_hooks_transmitted(const uint8_t * p_frame);
 
 /**
  * @brief Process hooks for the TX failed event.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that was not transmitted.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that was not transmitted.
  * @param[in]  error    Cause of failed transmission.
  *
  * @retval  true   TX failed event should be propagated to the MAC layer.
@@ -80,7 +80,7 @@ bool nrf_802154_core_hooks_tx_failed(const uint8_t * p_frame, nrf_802154_tx_erro
 /**
  * @brief Process hooks for the TX started event.
  *
- * @param[in]  p_frame  Pointer to buffer containing PSDU of the frame that is being transmitted.
+ * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that is being transmitted.
  *
  * @retval  true   TX started event should be propagated to the MAC layer.
  * @retval  false  TX started event should not be propagated to the MAC layer. It is handled

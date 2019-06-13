@@ -33,7 +33,7 @@
 
 #include <stdint.h>
 
-#include "hal/nrf_radio.h"
+#include "nrf_radio.h"
 
 /**
  * @defgroup nrf_802154_types Type definitions used in the 802.15.4 driver.
@@ -84,6 +84,7 @@ typedef uint8_t nrf_802154_rx_error_t;
 #define NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED 0x07 // !< Delayed reception request was rejected due to denied timeslot request.
 #define NRF_802154_RX_ERROR_DELAYED_TIMEOUT         0x08 // !< Frame not received during delayed reception time slot.
 #define NRF_802154_RX_ERROR_INVALID_LENGTH          0x09 // !< Received a frame with invalid length.
+#define NRF_802154_RX_ERROR_DELAYED_ABORTED         0x0A // !< Delayed operation in ongoing state was aborted by other request.
 
 /**
  * @brief Possible errors during energy detection.
