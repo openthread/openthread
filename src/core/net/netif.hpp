@@ -360,7 +360,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent external multicast address.
      *
      */
-    otError GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress);
+    otError GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress) const;
 
     /**
      * This method subscribes the network interface to the external (to OpenThread) multicast address.
@@ -400,7 +400,7 @@ public:
      * @retval TRUE   If the multicast promiscuous mode is enabled.
      * @retval FALSE  If the multicast promiscuous mode is disabled.
      */
-    bool IsMulticastPromiscuousEnabled(void) { return mMulticastPromiscuous; }
+    bool IsMulticastPromiscuousEnabled(void) const { return mMulticastPromiscuous; }
 
     /**
      * This method enables multicast promiscuous mode on the network interface.

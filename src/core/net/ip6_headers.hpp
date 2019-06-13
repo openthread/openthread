@@ -576,7 +576,7 @@ public:
      * @returns The Fragment Offset value.
      *
      */
-    uint16_t GetOffset(void) { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
+    uint16_t GetOffset(void) const { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
 
     /**
      * This method sets the Fragment Offset value.
@@ -596,7 +596,7 @@ public:
      * @returns The M flag value.
      *
      */
-    bool IsMoreFlagSet(void) { return HostSwap16(mOffsetMore) & kMoreFlag; }
+    bool IsMoreFlagSet(void) const { return HostSwap16(mOffsetMore) & kMoreFlag; }
 
     /**
      * This method clears the M flag value.

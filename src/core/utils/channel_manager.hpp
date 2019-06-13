@@ -196,7 +196,7 @@ public:
      * @returns The interval (in seconds).
      *
      */
-    uint32_t GetAutoChannelSelectionInterval(void) { return mAutoSelectInterval; }
+    uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
 
     /**
      * This method gets the supported channel mask.

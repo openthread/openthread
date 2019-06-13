@@ -418,7 +418,7 @@ public:
          * @retval FALSE  The current entry is valid.
          *
          */
-        bool IsDone(void) { return mIsDone; }
+        bool IsDone(void) const { return mIsDone; }
 
         /**
          * This method advances the iterator to move to the next Child Info entry in the list (if any).

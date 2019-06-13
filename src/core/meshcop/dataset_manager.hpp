@@ -408,8 +408,6 @@ private:
 #if OPENTHREAD_FTD
     static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    bool IsTlvInitialized(Tlv::Type aType);
 #endif
 
     Coap::Resource mResourceGet;

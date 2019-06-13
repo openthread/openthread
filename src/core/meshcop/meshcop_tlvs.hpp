@@ -2445,7 +2445,7 @@ public:
      * @retval FALSE  If the Joiner flag is not set.
      *
      */
-    bool IsJoiner(void) { return (mFlags & kJoinerMask) != 0; }
+    bool IsJoiner(void) const { return (mFlags & kJoinerMask) != 0; }
 
     /**
      * This method sets the Joiner flag.
@@ -2532,7 +2532,7 @@ public:
      * @retval FALSE  If the Native Commissioner flag is not set.
      *
      */
-    bool IsNativeCommissioner(void) { return (mFlags & kNativeMask) != 0; }
+    bool IsNativeCommissioner(void) const { return (mFlags & kNativeMask) != 0; }
 
     /**
      * This method sets the Native Commissioner flag.

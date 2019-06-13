@@ -123,7 +123,7 @@ public:
      * @retval FALSE If DTLS session is not active.
      *
      */
-    bool IsConnectionActive(void) { return mDtls.IsConnectionActive(); }
+    bool IsConnectionActive(void) const { return mDtls.IsConnectionActive(); }
 
     /**
      * This method indicates whether or not the DTLS session is connected.
@@ -132,7 +132,7 @@ public:
      * @retval FALSE  The DTLS session is not connected.
      *
      */
-    bool IsConnected(void) { return mDtls.IsConnected(); }
+    bool IsConnected(void) const { return mDtls.IsConnected(); }
 
     /**
      * This method stops the DTLS connection.

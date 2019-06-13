@@ -144,7 +144,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
      *
      */
-    otError GetNextAddress(Iterator &aIterator, Entry &aEntry);
+    otError GetNextAddress(Iterator &aIterator, Entry &aEntry) const;
 
     /**
      * This method sets the received signal strength for the messages from the Extended Address.

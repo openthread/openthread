@@ -225,7 +225,7 @@ protected:
                                                    uint16_t          aValueLen);
 
     otError SendQueuedResponses(void);
-    bool    IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
+    bool    IsResponseQueueEmpty(void) const { return (mResponseQueueHead == mResponseQueueTail); }
     otError EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus);
 
     otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)

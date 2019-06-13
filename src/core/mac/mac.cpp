@@ -172,17 +172,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
     StartOperation(aScanOperation);
 }
 
-bool Mac::IsActiveScanInProgress(void)
-{
-    return (mOperation == kOperationActiveScan) || (mPendingActiveScan);
-}
-
-bool Mac::IsEnergyScanInProgress(void)
-{
-    return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan);
-}
-
-bool Mac::IsInTransmitState(void)
+bool Mac::IsInTransmitState(void) const
 {
     return (mOperation == kOperationTransmitData) || (mOperation == kOperationTransmitBeacon) ||
            (mOperation == kOperationTransmitOutOfBandFrame);

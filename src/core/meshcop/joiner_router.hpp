@@ -216,7 +216,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -226,7 +226,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
 
 private:
     Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
