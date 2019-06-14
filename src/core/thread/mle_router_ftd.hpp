@@ -319,17 +319,6 @@ public:
     /**
      * This method removes a link to a neighbor.
      *
-     * @param[in]  aAddress  The link address of the neighbor.
-     *
-     * @retval OT_ERROR_NONE       Successfully removed the neighbor.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the neighbor.
-     *
-     */
-    otError RemoveNeighbor(const Mac::Address &aAddress);
-
-    /**
-     * This method removes a link to a neighbor.
-     *
      * @param[in]  aNeighbor  A reference to the neighbor object.
      *
      */

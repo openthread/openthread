@@ -81,7 +81,6 @@ public:
     uint8_t GetLinkCost(uint16_t) { return 0; }
     uint8_t GetCost(uint16_t) { return 0; }
 
-    otError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
 
     bool IsMinimalChild(uint16_t) const { return false; }

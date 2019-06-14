@@ -3123,18 +3123,6 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
     return rval;
 }
 
-otError MleRouter::RemoveNeighbor(const Mac::Address &aAddress)
-{
-    otError   error = OT_ERROR_NONE;
-    Neighbor *neighbor;
-
-    VerifyOrExit((neighbor = GetNeighbor(aAddress)) != NULL, error = OT_ERROR_NOT_FOUND);
-    RemoveNeighbor(*neighbor);
-
-exit:
-    return error;
-}
-
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
     switch (mRole)
