@@ -161,22 +161,6 @@ void Instance::AfterInit(void)
     Get<Settings>().Init();
     Get<Mle::MleRouter>().Restore();
 
-#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-
-    if (otThreadGetAutoStart(this))
-    {
-        if (otIp6SetEnabled(this, true) == OT_ERROR_NONE)
-        {
-            // Only try to start Thread if we could bring up the interface
-            if (otThreadSetEnabled(this, true) != OT_ERROR_NONE)
-            {
-                // Bring the interface down if Thread failed to start
-                otIp6SetEnabled(this, false);
-            }
-        }
-    }
-
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION

@@ -100,7 +100,6 @@ namespace Cli {
 
 const struct Command Interpreter::sCommands[] = {
     {"help", &Interpreter::ProcessHelp},
-    {"autostart", &Interpreter::ProcessAutoStart},
     {"bufferinfo", &Interpreter::ProcessBufferInfo},
     {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
@@ -452,37 +451,6 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     {
         mServer->OutputFormat("%s\r\n", mUserCommands[i].mName);
     }
-}
-
-void Interpreter::ProcessAutoStart(int argc, char *argv[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (argc == 0)
-    {
-        if (otThreadGetAutoStart(mInstance))
-        {
-            mServer->OutputFormat("Enabled\r\n");
-        }
-        else
-        {
-            mServer->OutputFormat("Disabled\r\n");
-        }
-    }
-    else if (strcmp(argv[0], "enable") == 0)
-    {
-        error = otThreadSetAutoStart(mInstance, true);
-    }
-    else if (strcmp(argv[0], "disable") == 0)
-    {
-        error = otThreadSetAutoStart(mInstance, false);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-
-    AppendResult(error);
 }
 
 void Interpreter::ProcessBufferInfo(int argc, char *argv[])

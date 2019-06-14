@@ -1085,16 +1085,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
- *
- * Define to 1 if you want to enable auto start logic.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-#define OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT 1
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
  *
  * Define to 1 to enable IEEE 802.15.4 Beacons when joining is enabled.
