@@ -568,7 +568,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Frame &      aFrame,
     child->ResetLinkFailures();
     indirectMsgCount = child->GetIndirectMessageCount();
 
-    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d ack-fp:%d", child->GetRloc16(), indirectMsgCount,
+    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d, ack-fp:%d", child->GetRloc16(), indirectMsgCount,
                  aLinkInfo.mRss, aFrame.IsAckedWithFramePending());
     VerifyOrExit(aFrame.IsAckedWithFramePending());
 
