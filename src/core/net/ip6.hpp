@@ -279,7 +279,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) { return mIsReceiveIp6FilterEnabled; }
+    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -299,7 +299,7 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void) { return mForwardingEnabled; }
+    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
 
     /**
      * This method enables/disables IPv6 forwarding.

@@ -219,7 +219,7 @@ public:
      * @retval FALSE  The rx-on-when-idle-mode is disabled.
      *
      */
-    bool GetRxOnWhenIdle(void);
+    bool GetRxOnWhenIdle(void) const;
 
     /**
      * This method sets the rx-on-when-idle mode

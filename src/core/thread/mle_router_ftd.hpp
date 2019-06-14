@@ -282,7 +282,7 @@ public:
      * @returns The current router selection jitter timeout value.
      *
      */
-    uint8_t GetRouterSelectionJitterTimeout(void) { return mRouterSelectionJitterTimeout; }
+    uint8_t GetRouterSelectionJitterTimeout(void) const { return mRouterSelectionJitterTimeout; }
 
     /**
      * This method returns the ROUTER_UPGRADE_THRESHOLD value.

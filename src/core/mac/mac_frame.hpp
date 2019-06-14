@@ -1319,7 +1319,7 @@ public:
      * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
      *
      */
-    bool IsValid(void)
+    bool IsValid(void) const
     {
         return (mSuperframeSpec == ot::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) &&
                (mPendingAddressSpec == 0);
@@ -1387,7 +1387,7 @@ public:
      * @retval FALSE if the beacon does not appear to be a valid Thread Beacon Payload.
      *
      */
-    bool IsValid(void) { return (mProtocolId == kProtocolId); }
+    bool IsValid(void) const { return (mProtocolId == kProtocolId); }
 
     /**
      * This method returns the Protocol ID value.

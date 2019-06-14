@@ -1152,7 +1152,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND   No subsequent Tlv exists in TlvRequestTlv.
      *
      */
-    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv)
+    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) const
     {
         otError error = OT_ERROR_NOT_FOUND;
 
@@ -1233,7 +1233,7 @@ public:
      * @retval TRUE   If the Router flag is set.
      * @retval FALSE  If the Router flag is not set.
      */
-    bool IsRouterFlagSet(void) { return (mMask & kRouterFlag) != 0; }
+    bool IsRouterFlagSet(void) const { return (mMask & kRouterFlag) != 0; }
 
     /**
      * This method clears the End Device flag.
@@ -1253,7 +1253,7 @@ public:
      * @retval TRUE   If the End Device flag is set.
      * @retval FALSE  If the End Device flag is not set.
      */
-    bool IsEndDeviceFlagSet(void) { return (mMask & kEndDeviceFlag) != 0; }
+    bool IsEndDeviceFlagSet(void) const { return (mMask & kEndDeviceFlag) != 0; }
 
     /**
      * This method sets the Mask byte value.

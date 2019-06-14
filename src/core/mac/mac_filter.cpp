@@ -142,13 +142,13 @@ void Filter::ClearAddresses(void)
     }
 }
 
-otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry)
+otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
 {
     otError error = OT_ERROR_NOT_FOUND;
 
     for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
     {
-        FilterEntry &entry = mFilterEntries[aIterator];
+        const FilterEntry &entry = mFilterEntries[aIterator];
 
         if (entry.mFiltered)
         {

@@ -466,13 +466,13 @@ public:
      * This method returns if an active scan is in progress.
      *
      */
-    bool IsActiveScanInProgress(void);
+    bool IsActiveScanInProgress(void) const { return (mOperation == kOperationActiveScan) || (mPendingActiveScan); }
 
     /**
      * This method returns if an energy scan is in progress.
      *
      */
-    bool IsEnergyScanInProgress(void);
+    bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
 
     /**
      * This method returns if the MAC layer is in transmit state.
@@ -482,7 +482,7 @@ public:
      * Requests.
      *
      */
-    bool IsInTransmitState(void);
+    bool IsInTransmitState(void) const;
 
     /**
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
@@ -564,7 +564,7 @@ public:
      * @retval false  Link layer is not enabled.
      *
      */
-    bool IsEnabled(void) { return mEnabled; }
+    bool IsEnabled(void) const { return mEnabled; }
 
     /**
      * This method performs AES CCM on the frame which is going to be sent.

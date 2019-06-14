@@ -385,7 +385,7 @@ exit:
     return error;
 }
 
-bool MeshForwarder::GetRxOnWhenIdle(void)
+bool MeshForwarder::GetRxOnWhenIdle(void) const
 {
     return Get<Mac::Mac>().GetRxOnWhenIdle();
 }

@@ -164,7 +164,7 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) { return mHead != NULL; }
+    bool AreTaskletsPending(void) const { return mHead != NULL; }
 
     /**
      * This method processes all tasklets queued when this is called.
