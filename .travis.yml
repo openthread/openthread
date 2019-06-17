@@ -83,6 +83,9 @@ matrix:
     - env: BUILD_TARGET="posix-mtd" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="py-pretty-check"
+      os: linux
+      python: "2.7"
     - env: BUILD_TARGET="pretty-check"
       os: linux
       addons:
