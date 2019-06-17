@@ -139,9 +139,9 @@ SILABS_EFR32MG12_SOURCES                                                        
 SILABS_EFR32MG21_SOURCES                                                                      = \
     gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
     gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_se.c						                \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_trng.c     \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_aes.c      \
+    gecko_sdk_suite/v2.6/platform/emlib/src/em_se.c                                             \
+    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_trng.c                       \
+    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_aes.c                        \
     gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_management.c                 \
     $(NULL)
 

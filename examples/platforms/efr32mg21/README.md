@@ -49,8 +49,6 @@ on RAIL, see [Radio Abstraction Interface Layer][rail].
 
 3. Configure the path to Flex SDK source code.
 ```bash
-$ cd <path-to-openthread>/third_party
-$ mkdir silabs
 $ cd <path-to-Simplicity-Studio>/developer/sdks
 $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 ```
@@ -58,7 +56,6 @@ $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 Alternatively create a symbolic link to the Flex SDK source code.
 ```bash
 $ cd <path-to-openthread>/third_party
-$ mkdir silabs
 $ ln -s <path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite silabs/gecko_sdk_suite
 ```
 

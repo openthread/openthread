@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -271,13 +271,20 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sBandConfigs[index].mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
     sBandConfigs[index].mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 #endif
-    assert((gRailHandle = efr32RailInit(&sCommonConfig)) != NULL);
+    gRailHandle = efr32RailInit(&sCommonConfig);
+    assert(gRailHandle != NULL);
     efr32RailConfigLoad(&(sBandConfigs[0]));
 }
 
 void efr32RadioInit(void)
 {
     RAIL_Status_t status;
+
+    //check if RAIL_TX_FIFO_SIZE is power of two..
+    assert((RAIL_TX_FIFO_SIZE & (RAIL_TX_FIFO_SIZE - 1)) == 0);
+
+    //check the limits of the RAIL_TX_FIFO_SIZE.
+    assert((RAIL_TX_FIFO_SIZE >= 64 ) || (RAIL_TX_FIFO_SIZE <= 4096));
 
     efr32ConfigInit(RAILCb_Generic);
 
