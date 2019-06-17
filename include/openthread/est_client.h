@@ -30,7 +30,7 @@
  * @file
  * @brief
  *  This file defines the top-level functions for the OpenThread EST over CoAP Client
- *  implementation according to draft-ietf-ace-coap-est-06 based on EST - RFC 7030.
+ *  implementation according to draft-ietf-ace-coap-est-06 (EST - RFC 7030).
  */
 
 #ifndef OPENTHREAD_EST_CLIENT_H_

@@ -430,7 +430,7 @@ void Client::SimpleEnrollResponseHandler(otMessage *aMessage, const otMessageInf
 
     default:
         aResult        = OT_ERROR_FAILED;
-        mMessageLength = 0;
+        mPayloadLength = 0;
         break;
     }
 
