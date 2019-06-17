@@ -57,15 +57,17 @@ extern "C" {
  *
  */
 
+#define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6     "2001:620:190:ffa1::1234:4321"
+#define OT_EST_COAPS_DEFAULT_EST_SERVER_PORT    5684
 
 /**
  * ToDo: bring down to a lower layer
  */
-#define OT_EST_COAPS_SHORT_URI_CA_CERTS         "/crts" ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL    "/sen"  ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL  "/sren" ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS        "/att"  ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN   "/skg"  ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CA_CERTS "/crts"        ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL "/sen"    ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL "/sren" ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS "/att"        ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN "/skg"   ///< Specified in draft-ietf-ace-coap-est-12
 
 typedef enum otEstType
 {
@@ -90,7 +92,7 @@ typedef void (*otHandleEstClientConnect)(bool aConnected, void *aContext);
 /**
  *
  */
-typedef void (*otHandleEstClientResponse)(otError aError, otEstType aType, uint8_t* aPayload, uint32_t aPayloadLenth);
+typedef void (*otHandleEstClientResponse)(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLength, void *aContext);
 
 /**
  * This function starts the EST client service.
@@ -191,7 +193,8 @@ bool otEstClientIsConnected(otInstance *aInstance);
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aResponseHandler     A function pointer that shall be called on response reception or time-out.
- * @param[in]  otEstRawDataHandler  A function pointer that shall be called, if not the CoAP Secure is used for transportation.
+ * @param[in]  otEstRawDataHandler  A function pointer that shall be called, if not the CoAP Secure is used for
+ * transportation.
  * @param[in]  aContext             A pointer to arbitrary context information.
  *
  * @retval OT_ERROR_NONE           Successfully sent request.
@@ -199,8 +202,7 @@ bool otEstClientIsConnected(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  EST client not connected.
  *
  */
-otError otEstClientSimpleEnroll(otInstance * aInstance,
-                                void *       aContext);
+otError otEstClientSimpleEnroll(otInstance *aInstance);
 
 /**
  * This method process a simple re-enrollment over CoAP Secure.
@@ -214,26 +216,29 @@ otError otEstClientSimpleEnroll(otInstance * aInstance,
  * @retval OT_ERROR_INVALID_STATE  EST client not connected.
  *
  */
-otError otEstClientSimpleReEnroll(otInstance *aInstance,
-                                  void *      aContext);
+otError otEstClientSimpleReEnroll(otInstance *aInstance);
 
 /**
  *
  */
-otError otEstClientGetCsrAttributes(otInstance *aInstance,
-                                    void *      aContext);
+otError otEstClientGetCsrAttributes(otInstance *aInstance);
 
 /**
  *
  */
-otError otEstClientGetServerGeneratedKeys(otInstance *aInstance,
-                                          void *      aContext);
+otError otEstClientGetServerGeneratedKeys(otInstance *aInstance);
 
 /**
  *
  */
-otError otEstClientGetCaCertificates(otInstance *aInstance,
-                                     void *      aContext);
+otError otEstClientGetCaCertificates(otInstance *aInstance);
+
+/**
+ *
+ */
+otError otEstClientGenerateKeyPair(otInstance *aInstance, const uint8_t* aPersonalSeed, uint32_t *aPersonalSeedLength);
+
+
 
 /**
  * @}

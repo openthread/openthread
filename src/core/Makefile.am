@@ -139,6 +139,7 @@ SOURCES_COMMON                             = \
     coap/coap.cpp                            \
     coap/coap_message.cpp                    \
     coap/coap_secure.cpp                     \
+    common/asn1.cpp                          \
     common/crc16.cpp                         \
     common/instance.cpp                      \
     common/logging.cpp                       \
@@ -304,6 +305,7 @@ HEADERS_COMMON                             = \
     coap/coap.hpp                            \
     coap/coap_message.hpp                    \
     coap/coap_secure.hpp                     \
+    common/asn1.hpp                          \
     common/code_utils.hpp                    \
     common/crc16.hpp                         \
     common/debug.hpp                         \

@@ -35,9 +35,9 @@
 
 #include <openthread/est_client.h>
 
-#include "est/est_client.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "est/est_client.hpp"
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
@@ -85,7 +85,7 @@ otError otEstClientConnect(otInstance *              aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().Connect(aSockAddr, aConnectHandler, aResponseHandler, aContext);
+    return instance.Get<Est::Client>().Connect(*static_cast<const Ip6::SockAddr *>(aSockAddr), aConnectHandler, aResponseHandler, aContext);
 }
 
 void otEstClientDisconnect(otInstance *aInstance)
@@ -102,44 +102,46 @@ bool otEstClientIsConnected(otInstance *aInstance)
     return instance.Get<Est::Client>().IsConnected();
 }
 
-otError otEstClientSimpleEnroll(otInstance * aInstance,
-                                void *       aContext)
+otError otEstClientSimpleEnroll(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleEnroll(aContext);
+    return instance.Get<Est::Client>().SimpleEnroll();
 }
 
-otError otEstClientSimpleReEnroll(otInstance *aInstance,
-                                  void *      aContext)
+otError otEstClientSimpleReEnroll(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleReEnroll(aContext);
+    return instance.Get<Est::Client>().SimpleReEnroll();
 }
 
-otError otEstClientGetCsrAttributes(otInstance *aInstance,
-                                    void *      aContext)
+otError otEstClientGetCsrAttributes(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().GetCsrAttributes(aContext);
+    return instance.Get<Est::Client>().GetCsrAttributes();
 }
 
-otError otEstClientGetServerGeneratedKeys(otInstance *aInstance,
-                                          void *      aContext)
+otError otEstClientGetServerGeneratedKeys(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().GetServerGeneratedKeys(aContext);
+    return instance.Get<Est::Client>().GetServerGeneratedKeys();
 }
 
-otError otEstClientGetCaCertificates(otInstance *aInstance,
-                                     void *      aContext)
+otError otEstClientGetCaCertificates(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().GetCaCertificates(aContext);
+    return instance.Get<Est::Client>().GetCaCertificates();
+}
+
+otError otEstClientGenerateKeyPair(otInstance *aInstance, const uint8_t* aPersonalSeed, uint32_t *aPersonalSeedLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().GenerateKeyPair(aPersonalSeed, aPersonalSeedLength);
 }
 
 #endif // OPENTHREAD_ENABLE_EST_CLIENT

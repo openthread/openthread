@@ -31,11 +31,13 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_ENABLE_EST_CLIENT
+
 #include <openthread/est_client.h>
 
+#include "coap/coap_secure.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
-#include "coap/coap_secure.hpp"
 
 /**
  * @file
@@ -68,27 +70,42 @@ public:
 
     void Stop(void);
 
-    otError SetCertificate(const uint8_t *aX509Cert, uint32_t aX509Length, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength);
+    otError SetCertificate(const uint8_t *aX509Cert,
+                           uint32_t       aX509Length,
+                           const uint8_t *aPrivateKey,
+                           uint32_t       aPrivateKeyLength);
 
     otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 
-    otError Connect(const otSockAddr * aSockAddr, otHandleEstClientConnect aConnectHandler, otHandleEstClientResponse aResponseHandler, void *aContext);
+    otError Connect(const Ip6::SockAddr      &aSockAddr,
+                    otHandleEstClientConnect  aConnectHandler,
+                    otHandleEstClientResponse aResponseHandler,
+                    void *                    aContext);
 
     void Disconnect(void);
 
     bool IsConnected(void);
 
-    otError SimpleEnroll(void *aContext);
+    otError SimpleEnroll(void);
 
-    otError SimpleReEnroll(void *aContext);
+    otError SimpleReEnroll(void);
 
-    otError GetCsrAttributes(void *aContext);
+    otError GetCsrAttributes(void);
 
-    otError GetServerGeneratedKeys(void *aContext);
+    otError GetServerGeneratedKeys(void);
 
-    otError GetCaCertificates(void *aContext);
+    otError GetCaCertificates(void);
+
+    otError GenerateKeyPair(const uint8_t *aPersonalSeed, uint32_t *aPersonalSeedLength);
 
 private:
+    enum
+    {
+        kLocalPort = 12345,
+    };
+
+    static void CoapSecureConnectedHandle(bool aConnected, void *aContext);
+    void CoapSecureConnectedHandle(bool aConnected);
 
     bool                      mIsConnected;
     bool                      mStarted;
@@ -97,10 +114,11 @@ private:
     otHandleEstClientConnect  mConnectCallback;
     otHandleEstClientResponse mResponseCallback;
     Coap::CoapSecure          mCoapSecure;
-
 };
 
 } // namespace Est
 } // namespace ot
+
+#endif // OPENTHREAD_ENABLE_EST_CLIENT
 
 #endif // EST_CLIENT_HPP_

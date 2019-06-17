@@ -28,76 +28,26 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI EST client.
+ *   This file includes definitions for ASN.1 computations.
  */
 
-#ifndef CLI_EST_CLIENT_HPP_
-#define CLI_EST_CLIENT_HPP_
+#ifndef ASN1_HPP_
+#define ASN1_HPP_
 
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
-#include "est/est_client.hpp"
+#include <stdint.h>
 
 namespace ot {
-namespace Cli {
+namespace Asn1 {
 
-class Interpreter;
+void Init(void);
+void Deinit(void);
 
-/**
- * This class implements the CLI CoAP Secure server and client.
- *
- */
-class EstClient
-{
-public:
-    /**
-     * Constructor
-     *
-     * @param[in]  aInterpreter  The CLI interpreter.
-     *
-     */
-    explicit EstClient(Interpreter &aInterpreter);
-
-    /**
-     * This method interprets a list of CLI arguments.
-     *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     *
-     */
-    otError Process(int argc, char *argv[]);
-
-private:
-    struct Command
-    {
-        const char *mName;
-        otError (EstClient::*mCommand)(int argc, char *argv[]);
-    };
-
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessStart(int argc, char *argv[]);
-    otError ProcessStop(int argc, char *argv[]);
-    otError ProcessConnect(int argc, char *argv[]);
-    otError ProcessDisconnect(int argc, char *argv[]);
-    otError ProcessSimpleEnroll(int argc, char *argv[]);
-    otError ProcessSimpleReEnroll(int argc, char *argv[]);
-
-    static void HandleConnected(bool aConnected, void *aContext);
-    void HandleConnected(bool aConnected);
-
-    static void HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth, void *aContext);
-    void HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth);
-
-    static const Command sCommands[];
-    Interpreter &        mInterpreter;
-    bool                 mStopFlag;
-};
-
-} // namespace Cli
+} // namespace Asn1
 } // namespace ot
 
 #endif // OPENTHREAD_ENABLE_EST_CLIENT
-
-#endif // CLI_EST_CLIENT_HPP_
+#endif // ASN1_HPP_

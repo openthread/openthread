@@ -28,12 +28,19 @@
 
 #include "est_client.hpp"
 
-
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
+
+#include "../common/asn1.hpp"
+#include "common/entropy.hpp"
+#include "common/random.hpp"
+#include "crypto/mbedtls.hpp"
+#include "crypto/ecdsa.hpp"
+#include "crypto/sha256.hpp"
+
 
 /**
  * @file
@@ -65,10 +72,12 @@ otError Client::Start(bool aVerifyPeer)
 {
     otError error = OT_ERROR_NONE;
 
-    mStarted = true;
+    VerifyOrExit(mStarted == false, error = OT_ERROR_ALREADY);
+
+    mStarted                    = true;
     mVerifyEstServerCertificate = aVerifyPeer;
 
-    error = mCoapSecure.Start(54234);
+    error = mCoapSecure.Start(kLocalPort);
     VerifyOrExit(error);
 
 exit:
@@ -78,38 +87,39 @@ exit:
 
 void Client::Stop(void)
 {
+    mCoapSecure.Stop();
     mStarted = false;
 }
 
-otError Client::SetCertificate(const uint8_t *aX509Cert, uint32_t aX509Length, const uint8_t *aPrivateKey, uint32_t aPrivateKeyLength)
+otError Client::SetCertificate(const uint8_t *aX509Cert,
+                               uint32_t       aX509Length,
+                               const uint8_t *aPrivateKey,
+                               uint32_t       aPrivateKeyLength)
 {
-    OT_UNUSED_VARIABLE(aX509Cert);
-    OT_UNUSED_VARIABLE(aX509Length);
-    OT_UNUSED_VARIABLE(aPrivateKey);
-    OT_UNUSED_VARIABLE(aPrivateKeyLength);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);;
 }
 
 otError Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    OT_UNUSED_VARIABLE(aX509CaCertificateChain);
-    OT_UNUSED_VARIABLE(aX509CaCertChainLength);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return mCoapSecure.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 
-otError Client::Connect(const otSockAddr * aSockAddr, otHandleEstClientConnect aConnectHandler, otHandleEstClientResponse aResponseHandler, void *aContext)
+otError Client::Connect(const Ip6::SockAddr      &aSockAddr,
+                        otHandleEstClientConnect  aConnectHandler,
+                        otHandleEstClientResponse aResponseHandler,
+                        void *                    aContext)
 {
-    OT_UNUSED_VARIABLE(aSockAddr);
-    OT_UNUSED_VARIABLE(aConnectHandler);
-    OT_UNUSED_VARIABLE(aResponseHandler);
-    OT_UNUSED_VARIABLE(aContext);
+    mApplicationContext = aContext;
+    mConnectCallback = aConnectHandler;
+    mResponseCallback = aResponseHandler;
+    mCoapSecure.Connect(aSockAddr, &Client::CoapSecureConnectedHandle, this);
 
     return OT_ERROR_NONE;
 }
 
 void Client::Disconnect(void)
 {
-    return;
+    mCoapSecure.Disconnect();
 }
 
 bool Client::IsConnected(void)
@@ -117,34 +127,88 @@ bool Client::IsConnected(void)
     return mIsConnected;
 }
 
-otError Client::SimpleEnroll(void *aContext)
+otError Client::SimpleEnroll(void)
 {
-    mApplicationContext = aContext;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
 }
 
-otError Client::SimpleReEnroll(void *aContext)
+otError Client::SimpleReEnroll(void)
 {
-    mApplicationContext = aContext;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
 }
 
-otError Client::GetCsrAttributes(void *aContext)
+otError Client::GetCsrAttributes(void)
 {
-    mApplicationContext = aContext;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
 }
 
-otError Client::GetServerGeneratedKeys(void *aContext)
+otError Client::GetServerGeneratedKeys(void)
 {
-    mApplicationContext = aContext;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
 }
 
-otError Client::GetCaCertificates(void *aContext)
+otError Client::GetCaCertificates(void)
 {
-    mApplicationContext = aContext;
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
+}
+
+otError Client::GenerateKeyPair(const uint8_t *aPersonalSeed, uint32_t *aPersonalSeedLength)
+{
+    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+
+    OT_UNUSED_VARIABLE(aPersonalSeed);
+    OT_UNUSED_VARIABLE(aPersonalSeedLength);
+
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+exit:
+
+    return mError;
+}
+
+void Client::CoapSecureConnectedHandle(bool aConnected, void *aContext)
+{
+    return static_cast<Client *>(aContext)->CoapSecureConnectedHandle(aConnected);
+}
+
+void Client::CoapSecureConnectedHandle(bool aConnected)
+{
+    mIsConnected = aConnected;
+
+    if (mConnectCallback != NULL)
+    {
+        mConnectCallback(aConnected, mApplicationContext);
+    }
 }
 
 } // namespace Est
