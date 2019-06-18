@@ -134,22 +134,6 @@ public:
     void SetPeerPort(uint16_t aPort) { mPeerPort = aPort; }
 
     /**
-     * This method gets the Interface ID.
-     *
-     * @returns The Interface ID.
-     *
-     */
-    int8_t GetInterfaceId(void) const { return mInterfaceId; }
-
-    /**
-     * This method sets the Interface ID.
-     *
-     * @param[in]  aInterfaceId  The Interface ID.
-     *
-     */
-    void SetInterfaceId(int8_t aInterfaceId) { mInterfaceId = aInterfaceId; }
-
-    /**
      * This method gets the Hop Limit.
      *
      * @returns The Hop Limit.
@@ -180,6 +164,23 @@ public:
      *
      */
     void SetLinkInfo(const void *aLinkInfo) { mLinkInfo = aLinkInfo; }
+
+    /**
+     * This method indicates whether peer is via the host interface.
+     *
+     * @retval TRUE if the peer is via the host interface.
+     * @retval FALSE if the peer is via the Thread interface.
+     *
+     */
+    bool IsHostInterface(void) const { return mIsHostInterface; }
+
+    /**
+     * This method sets whether the peer is via the host interface.
+     *
+     * @param[in]  aIsHost  TRUE if the peer is via the host interface, FALSE otherwise.
+     *
+     */
+    void SetIsHostInterface(bool aIsHost) { mIsHostInterface = aIsHost; }
 };
 
 /**

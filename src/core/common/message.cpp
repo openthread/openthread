@@ -639,7 +639,6 @@ Message *Message::Clone(uint16_t aLength) const
 
     // Copy selected message information.
     messageCopy->SetOffset(GetOffset());
-    messageCopy->SetInterfaceId(GetInterfaceId());
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC

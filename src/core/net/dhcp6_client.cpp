@@ -282,8 +282,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.mPeerPort    = kDhcpServerPort;
-    messageInfo.mInterfaceId = Get<ThreadNetif>().GetInterfaceId();
+    messageInfo.mPeerPort = kDhcpServerPort;
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
     otLogInfoIp6("solicit");

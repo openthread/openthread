@@ -123,16 +123,6 @@ typedef struct otNetifMulticastAddress
 } otNetifMulticastAddress;
 
 /**
- * This enumeration represents the list of allowable values for an InterfaceId.
- *
- */
-typedef enum otNetifInterfaceId
-{
-    OT_NETIF_INTERFACE_ID_HOST   = -1, ///< The interface ID telling packets received by host side interfaces.
-    OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
-} otNetifInterfaceId;
-
-/**
  * This structure represents an IPv6 socket address.
  *
  */
@@ -149,19 +139,13 @@ typedef struct otSockAddr
  */
 typedef struct otMessageInfo
 {
-    otIp6Address mSockAddr;    ///< The local IPv6 address.
-    otIp6Address mPeerAddr;    ///< The peer IPv6 address.
-    uint16_t     mSockPort;    ///< The local transport-layer port.
-    uint16_t     mPeerPort;    ///< The peer transport-layer port.
-    int8_t       mInterfaceId; ///< The IPv6 interface identifier.
-    uint8_t      mHopLimit;    ///< The IPv6 hop limit.
-
-    /**
-     * A pointer to link-specific information. In case @p mInterfaceId is set to OT_NETIF_INTERFACE_ID_THREAD,
-     * @p mLinkInfo points to otThreadLinkInfo(). This field is only valid for messages received from the
-     * Thread radio and is ignored on transmission.
-     */
-    const void *mLinkInfo;
+    otIp6Address mSockAddr;            ///< The local IPv6 address.
+    otIp6Address mPeerAddr;            ///< The peer IPv6 address.
+    uint16_t     mSockPort;            ///< The local transport-layer port.
+    uint16_t     mPeerPort;            ///< The peer transport-layer port.
+    const void * mLinkInfo;            ///< A pointer to link-specific information.
+    uint8_t      mHopLimit;            ///< The IPv6 hop limit.
+    bool         mIsHostInterface : 1; ///< TRUE if packets sent/received via host interface, FALSE otherwise.
 } otMessageInfo;
 
 /**

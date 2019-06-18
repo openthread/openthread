@@ -95,7 +95,6 @@ struct MessageInfo
 
     uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
     uint8_t mTimeout;      ///< Seconds remaining before dropping the message.
-    int8_t  mInterfaceId;  ///< The interface ID.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -589,22 +588,6 @@ public:
      *
      */
     void DecrementTimeout(void) { mBuffer.mHead.mInfo.mTimeout--; }
-
-    /**
-     * This method returns the interface ID.
-     *
-     * @returns The interface ID.
-     *
-     */
-    int8_t GetInterfaceId(void) const { return mBuffer.mHead.mInfo.mInterfaceId; }
-
-    /**
-     * This method sets the interface ID.
-     *
-     * @param[in]  aInterfaceId  The interface ID value.
-     *
-     */
-    void SetInterfaceId(int8_t aInterfaceId) { mBuffer.mHead.mInfo.mInterfaceId = aInterfaceId; }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.

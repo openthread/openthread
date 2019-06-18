@@ -120,7 +120,7 @@ void otUdpForwardReceive(otInstance *        aInstance,
     messageInfo.SetSockPort(aSockPort);
     messageInfo.SetPeerAddr(*static_cast<const ot::Ip6::Address *>(aPeerAddr));
     messageInfo.SetPeerPort(aPeerPort);
-    messageInfo.SetInterfaceId(OT_NETIF_INTERFACE_ID_HOST);
+    messageInfo.SetIsHostInterface(true);
 
     instance.Get<Ip6::Udp>().HandlePayload(*static_cast<ot::Message *>(aMessage), messageInfo);
 

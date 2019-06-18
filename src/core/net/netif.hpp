@@ -189,10 +189,9 @@ public:
      * This constructor initializes the network interface.
      *
      * @param[in]  aInstance        A reference to the OpenThread instance.
-     * @param[in]  aInterfaceId     The interface ID for this object.
      *
      */
-    Netif(Instance &aInstance, int8_t aInterfaceId);
+    Netif(Instance &aInstance);
 
     /**
      * This method returns the next network interface in the list.
@@ -200,14 +199,6 @@ public:
      * @returns A pointer to the next network interface.
      */
     Netif *GetNext(void) const { return mNext; }
-
-    /**
-     * This method returns the network interface identifier.
-     *
-     * @returns The network interface identifier.
-     *
-     */
-    int8_t GetInterfaceId(void) const { return mInterfaceId; }
 
     /**
      * This method registers a callback to notify internal IPv6 address changes.
@@ -480,7 +471,6 @@ private:
 
     NetifUnicastAddress *  mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
-    int8_t                 mInterfaceId;
     bool                   mMulticastPromiscuous;
     Netif *                mNext;
 

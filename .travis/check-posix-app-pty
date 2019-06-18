@@ -48,7 +48,7 @@ at_exit() {
 
 build() {
     make -f examples/Makefile-posix
-    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1
+    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0
 }
 
 check() {

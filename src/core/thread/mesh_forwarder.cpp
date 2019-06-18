@@ -1501,7 +1501,7 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
         mIpCounters.mRxSuccess++;
     }
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &netif, netif.GetInterfaceId(), &aLinkInfo, false);
+    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &netif, &aLinkInfo, false);
 }
 
 otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,

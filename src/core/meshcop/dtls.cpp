@@ -151,15 +151,6 @@ otError Dtls::Connect(const Ip6::SockAddr &aSockAddr)
     memcpy(&mPeerAddress.mPeerAddr, &aSockAddr.mAddress, sizeof(mPeerAddress.mPeerAddr));
     mPeerAddress.mPeerPort = aSockAddr.mPort;
 
-    if (aSockAddr.GetAddress().IsLinkLocal() || aSockAddr.GetAddress().IsMulticast())
-    {
-        mPeerAddress.mInterfaceId = aSockAddr.mScopeId;
-    }
-    else
-    {
-        mPeerAddress.mInterfaceId = 0;
-    }
-
     error = Setup(true);
 
 exit:
@@ -189,7 +180,6 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
-        mPeerAddress.SetInterfaceId(aMessageInfo.GetInterfaceId());
 
         if (Get<ThreadNetif>().IsUnicastAddress(aMessageInfo.GetSockAddr()))
         {

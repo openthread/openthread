@@ -278,9 +278,8 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.mPeerAddr    = coapDestinationIp;
-    messageInfo.mPeerPort    = OT_DEFAULT_COAP_PORT;
-    messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+    messageInfo.mPeerAddr = coapDestinationIp;
+    messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
@@ -311,8 +310,7 @@ otError CoapSecure::ProcessConnect(int argc, char *argv[])
     // Destination IPv6 address
     memset(&sockaddr, 0, sizeof(sockaddr));
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &sockaddr.mAddress));
-    sockaddr.mPort    = OT_DEFAULT_COAP_SECURE_PORT;
-    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 
     // check for port specification
     if (argc > 2)
