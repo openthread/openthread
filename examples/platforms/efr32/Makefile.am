@@ -97,7 +97,11 @@ PLATFORM_SOURCES                                                              = 
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
+    openthread-core-efr32-config.h                                              \
+    platform-efr32.h                                                            \
+    platform-band.h                                                             \
     radio.c                                                                     \
+    rail_config.h                                                               \
     startup-gcc.c                                                               \
     system.c                                                                    \
     uart.c                                                                      \
@@ -138,18 +142,12 @@ nodist_libopenthread_efr32_a_SOURCES                                            
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v2.5/util/third_party/mbedtls/sl_crypto/src/crypto_management.c             \
     $(NULL)
 
-noinst_HEADERS                                                                = \
-    platform-efr32.h                                                            \
-    platform-band.h                                                             \
-    $(NULL)
-
 libopenthread_efr32_a_SOURCES                                                 = \
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
     $(PLATFORM_SOURCES)                                                         \
-    $(noinst_HEADERS)                                                           \
     $(NULL)
 
 Dash                                                                                                 = -

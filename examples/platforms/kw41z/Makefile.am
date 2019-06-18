@@ -55,6 +55,8 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                                          \
     logging.c                                                                                        \
     misc.c                                                                                           \
+    openthread-core-kw41z-config.h                                                                   \
+    platform-kw41z.h                                                                                 \
     radio.c                                                                                          \
     system.c                                                                                         \
     uart.c                                                                                           \
@@ -90,11 +92,6 @@ libopenthread_kw41z_a_SOURCES                                                   
 
 libopenthread_kw41z_a_SOURCES                                                                     += \
     $(PLATFORM_SOURCES)                                                                              \
-    $(NULL)
-
-noinst_HEADERS                                                                                     = \
-    platform-kw41z.h                                                                                 \
-    @top_builddir@/third_party/nxp/MKW41Z4/clock_config.h                                            \
     $(NULL)
 
 PRETTY_FILES                                                                                       = \

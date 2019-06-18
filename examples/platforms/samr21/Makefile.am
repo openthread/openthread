@@ -95,9 +95,12 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                                                    \
     logging.c                                                                                                  \
     misc.c                                                                                                     \
+    openthread-core-samr21-config.h                                                                            \
+    platform-samr21.h                                                                                          \
     radio.c                                                                                                    \
     system.c                                                                                                   \
     uart.c                                                                                                     \
+    user_row.h                                                                                                 \
     $(NULL)
 
 libopenthread_samr21_a_SOURCES                                                                               = \
@@ -127,9 +130,6 @@ nodist_libopenthread_samr21_a_SOURCES                                           
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/src/phy.c \
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/sal/at86rf2xx/src/sal.c              \
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/trx_access/trx_access.c              \
-    $(NULL)
-
-noinst_HEADERS                                                                                               = \
     $(NULL)
 
 PRETTY_FILES                                                                                                 = \

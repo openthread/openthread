@@ -41,13 +41,15 @@ PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
     entropy.c                               \
-    misc.c                                  \
-    logging.c                               \
-    radio.c                                 \
-    uart-posix.c                            \
     flash.c                                 \
+    logging.c                               \
+    misc.c                                  \
+    openthread-core-posix-config.h          \
+    platform-posix.h                        \
+    radio.c                                 \
     spi-stubs.c                             \
     system.c                                \
+    uart-posix.c                            \
     sim/alarm-sim.c                         \
     sim/platform-sim.c                      \
     sim/radio-sim.c                         \
@@ -57,13 +59,8 @@ libopenthread_posix_a_SOURCES             = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-noinst_HEADERS                            = \
-    platform-posix.h                        \
-    $(NULL)
-
 PRETTY_FILES                              = \
     $(PLATFORM_SOURCES)                     \
-    $(noinst_HEADERS)                       \
     $(NULL)
 
 Dash                                      = -
