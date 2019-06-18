@@ -1260,7 +1260,7 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 
         mCounters.mTxDataPoll++;
         FinishOperation();
-        Get<DataPollManager>().HandlePollSent(aFrame, aError);
+        Get<DataPollSender>().HandlePollSent(aFrame, aError);
         PerformNextOperation();
         break;
 
@@ -1308,7 +1308,7 @@ void Mac::HandleTimer(void)
     case kOperationWaitingForData:
         otLogDebgMac("Data poll timeout");
         FinishOperation();
-        Get<DataPollManager>().HandlePollTimeout();
+        Get<DataPollSender>().HandlePollTimeout();
         PerformNextOperation();
         break;
 
@@ -1612,7 +1612,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         ExitNow();
     }
 
-    Get<DataPollManager>().CheckFramePending(*aFrame);
+    Get<DataPollSender>().CheckFramePending(*aFrame);
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 

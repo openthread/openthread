@@ -28,10 +28,10 @@
 
 /**
  * @file
- *   This file implements data poll (mac data request command) manager class.
+ *   This file implements data poll (mac data request command) sender class.
  */
 
-#include "data_poll_manager.hpp"
+#include "data_poll_sender.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -46,13 +46,13 @@
 
 namespace ot {
 
-DataPollManager::DataPollManager(Instance &aInstance)
+DataPollSender::DataPollSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimerStartTime(0)
     , mPollPeriod(0)
     , mExternalPollPeriod(0)
     , mFastPollsUsers(0)
-    , mTimer(aInstance, &DataPollManager::HandlePollTimer, this)
+    , mTimer(aInstance, &DataPollSender::HandlePollTimer, this)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
@@ -62,7 +62,7 @@ DataPollManager::DataPollManager(Instance &aInstance)
 {
 }
 
-otError DataPollManager::StartPolling(void)
+otError DataPollSender::StartPolling(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -76,7 +76,7 @@ exit:
     return error;
 }
 
-void DataPollManager::StopPolling(void)
+void DataPollSender::StopPolling(void)
 {
     mTimer.Stop();
     mAttachMode           = false;
@@ -88,7 +88,7 @@ void DataPollManager::StopPolling(void)
     mEnabled              = false;
 }
 
-otError DataPollManager::SendDataPoll(void)
+otError DataPollSender::SendDataPoll(void)
 {
     otError   error;
     Neighbor *parent;
@@ -131,7 +131,7 @@ exit:
     return error;
 }
 
-otError DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
+otError DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
 {
     otError error = OT_ERROR_NONE;
 
@@ -160,7 +160,7 @@ exit:
     return error;
 }
 
-uint32_t DataPollManager::GetKeepAlivePollPeriod(void) const
+uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 {
     uint32_t period = 0;
 
@@ -176,7 +176,7 @@ uint32_t DataPollManager::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollSent(Mac::Frame &aFrame, otError aError)
+void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -256,7 +256,7 @@ exit:
     return;
 }
 
-void DataPollManager::HandlePollTimeout(void)
+void DataPollSender::HandlePollTimeout(void)
 {
     // A data poll timeout happened, i.e., the ack in response to
     // a data poll indicated that a frame was pending, but no frame
@@ -281,7 +281,7 @@ exit:
     return;
 }
 
-void DataPollManager::CheckFramePending(Mac::Frame &aFrame)
+void DataPollSender::CheckFramePending(Mac::Frame &aFrame)
 {
     VerifyOrExit(mEnabled);
 
@@ -296,7 +296,7 @@ exit:
     return;
 }
 
-void DataPollManager::RecalculatePollPeriod(void)
+void DataPollSender::RecalculatePollPeriod(void)
 {
     if (mEnabled)
     {
@@ -304,7 +304,7 @@ void DataPollManager::RecalculatePollPeriod(void)
     }
 }
 
-void DataPollManager::SetAttachMode(bool aMode)
+void DataPollSender::SetAttachMode(bool aMode)
 {
     if (mAttachMode != aMode)
     {
@@ -317,7 +317,7 @@ void DataPollManager::SetAttachMode(bool aMode)
     }
 }
 
-void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
+void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
 {
     bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
 
@@ -347,7 +347,7 @@ void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
     }
 }
 
-otError DataPollManager::StopFastPolls(void)
+otError DataPollSender::StopFastPolls(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -368,7 +368,7 @@ exit:
     return error;
 }
 
-void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
+void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
     uint32_t now;
     uint32_t oldPeriod = mPollPeriod;
@@ -410,7 +410,7 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
-uint32_t DataPollManager::CalculatePollPeriod(void) const
+uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
     uint32_t period = 0;
 
@@ -456,12 +456,12 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
     return period;
 }
 
-void DataPollManager::HandlePollTimer(Timer &aTimer)
+void DataPollSender::HandlePollTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DataPollManager>().SendDataPoll();
+    aTimer.GetOwner<DataPollSender>().SendDataPoll();
 }
 
-uint32_t DataPollManager::GetDefaultPollPeriod(void) const
+uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
     return TimerMilli::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;

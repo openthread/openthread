@@ -161,21 +161,21 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<DataPollManager>().GetKeepAlivePollPeriod();
+    return instance.Get<DataPollSender>().GetKeepAlivePollPeriod();
 }
 
 otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<DataPollManager>().SetExternalPollPeriod(aPollPeriod);
+    return instance.Get<DataPollSender>().SetExternalPollPeriod(aPollPeriod);
 }
 
 otError otLinkSendDataRequest(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<DataPollManager>().SendDataPoll();
+    return instance.Get<DataPollSender>().SendDataPoll();
 }
 
 otShortAddress otLinkGetShortAddress(otInstance *aInstance)

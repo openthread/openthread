@@ -154,6 +154,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/crypto/pbkdf2_cmac.cpp                         \
     src/core/crypto/sha256.cpp                              \
     src/core/mac/channel_mask.cpp                           \
+    src/core/mac/data_poll_sender.cpp                       \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
@@ -191,7 +192,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
-    src/core/thread/data_poll_manager.cpp                   \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/key_manager.cpp                         \
     src/core/thread/link_quality.cpp                        \
