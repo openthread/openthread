@@ -138,7 +138,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns a reference to the Target EID.
@@ -185,7 +185,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns a reference to the Extended MAC Address.
@@ -232,7 +232,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns the RLOC16 value.
@@ -279,7 +279,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns a pointer to the ML-EID IID.
@@ -338,7 +338,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * Status values.
@@ -398,7 +398,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns the Last Transaction Time value.
@@ -444,7 +444,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns the ID Sequence value.

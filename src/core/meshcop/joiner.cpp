@@ -547,7 +547,6 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     VerifyOrExit(extendedPanId.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkName, sizeof(networkName), networkName));
-    VerifyOrExit(networkName.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
     VerifyOrExit(activeTimestamp.IsValid(), error = OT_ERROR_PARSE);
@@ -560,7 +559,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     Get<Mle::MleRouter>().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
     Get<Mac::Mac>().SetExtendedPanId(extendedPanId.GetExtendedPanId());
 
-    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName(), networkName.GetLength());
+    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName(), networkName.GetNetworkNameLength());
 
     otLogInfoMeshCoP("Joiner successful!");
 

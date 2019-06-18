@@ -179,7 +179,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns a pointer to the Extended MAC Address.
@@ -226,7 +226,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the RLOC16 value.
@@ -273,7 +273,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     enum
     {
@@ -328,7 +328,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the Timeout value.
@@ -377,9 +377,9 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv) ||
-                GetLength() ==
-                    sizeof(*this) - sizeof(NetworkDiagnosticTlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+        return ((GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv)) ||
+                (GetLength() ==
+                 sizeof(*this) - sizeof(NetworkDiagnosticTlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount)));
     }
 
     /**
@@ -572,11 +572,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const
-    {
-        return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) &&
-               GetLength() <= sizeof(*this) - sizeof(NetworkDiagnosticTlv);
-    }
+    bool IsValid(void) const { return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask); }
 
     /**
      * This method returns the Router ID Sequence value.
@@ -746,7 +742,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the Partition ID value.
@@ -891,11 +887,6 @@ OT_TOOL_PACKED_BEGIN
 class Ip6AddressListTlv : public NetworkDiagnosticTlv
 {
 public:
-    enum
-    {
-        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
-    };
-
     /**
      * This method initializes the TLV.
      *
@@ -905,15 +896,6 @@ public:
         SetType(kIp6AddressList);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= sizeof(Ip6::Address) * kMaxSize; }
 
     /**
      * This method returns a pointer to the IPv6 address entry.
@@ -955,7 +937,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the IfInUnknownProtos counter.
@@ -1146,7 +1128,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the Status value.
@@ -1193,7 +1175,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the Status value.
@@ -1351,7 +1333,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return (GetLength() % sizeof(ChildTableEntry)) == 0; }
 
     /**
      * This method returns the number of Child Table entries.
@@ -1394,14 +1376,11 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns a pointer to the list of Channel Pages.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns A pointer to the list of Channel Pages.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
-
     uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
@@ -1425,22 +1404,6 @@ public:
         SetType(kTypeList);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
     }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES; }
-
-    /**
-     * This method returns a pointer to the Challenge value.
-     *
-     * @returns A pointer to the Challenge value.
-     *
-     */
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1468,7 +1431,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method returns the Timeout value.

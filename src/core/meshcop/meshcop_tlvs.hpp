@@ -306,7 +306,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the PAN ID value.
@@ -353,7 +353,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Extended PAN ID value.
@@ -400,7 +400,18 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return true; }
+
+    /**
+     * This method returns the Network Name length.
+     *
+     * @returns The Network Name length.
+     *
+     */
+    uint8_t GetNetworkNameLength(void) const
+    {
+        return GetLength() <= sizeof(mNetworkName) ? GetLength() : sizeof(mNetworkName);
+    }
 
     /**
      * This method returns the Network Name value.
@@ -452,7 +463,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the PSKc value.
@@ -499,7 +510,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Network Master Key value.
@@ -546,7 +557,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Network Key Sequence value.
@@ -593,7 +604,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Mesh Local Prefix value.
@@ -641,19 +652,30 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return ((GetLength() != 0) && (GetLength() <= sizeof(*this) - sizeof(Tlv))); }
+    bool IsValid(void) const { return GetLength() > 0; }
+
+    /**
+     * This method returns the Steering Data length.
+     *
+     * @returns The Steering Data length.
+     *
+     */
+    uint8_t GetSteeringDataLength(void) const
+    {
+        return GetLength() <= sizeof(mSteeringData) ? GetLength() : sizeof(mSteeringData);
+    }
 
     /**
      * This method sets all bits in the Bloom Filter to zero.
      *
      */
-    void Clear(void) { memset(mSteeringData, 0, GetLength()); }
+    void Clear(void) { memset(mSteeringData, 0, GetSteeringDataLength()); }
 
     /**
      * Ths method sets all bits in the Bloom Filter to one.
      *
      */
-    void Set(void) { memset(mSteeringData, 0xff, GetLength()); }
+    void Set(void) { memset(mSteeringData, 0xff, GetSteeringDataLength()); }
 
     /**
      * Ths method indicates whether or not the SteeringData allows all Joiners.
@@ -666,7 +688,7 @@ public:
     {
         bool rval = true;
 
-        for (uint8_t i = 0; i < GetLength(); i++)
+        for (uint8_t i = 0; i < GetSteeringDataLength(); i++)
         {
             if (mSteeringData[i] != 0xff)
             {
@@ -684,7 +706,7 @@ public:
      * @returns The number of bits in the Bloom Filter.
      *
      */
-    uint8_t GetNumBits(void) const { return GetLength() * 8; }
+    uint8_t GetNumBits(void) const { return GetSteeringDataLength() * 8; }
 
     /**
      * This method indicates whether or not bit @p aBit is set.
@@ -695,7 +717,10 @@ public:
      * @retval FALSE  If bit @p aBit is not set.
      *
      */
-    bool GetBit(uint8_t aBit) const { return (mSteeringData[GetLength() - 1 - (aBit / 8)] & (1 << (aBit % 8))) != 0; }
+    bool GetBit(uint8_t aBit) const
+    {
+        return (mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] & (1 << (aBit % 8))) != 0;
+    }
 
     /**
      * This method clears bit @p aBit.
@@ -703,7 +728,7 @@ public:
      * @param[in]  aBit  The bit offset.
      *
      */
-    void ClearBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] &= ~(1 << (aBit % 8)); }
+    void ClearBit(uint8_t aBit) { mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] &= ~(1 << (aBit % 8)); }
 
     /**
      * This method sets bit @p aBit.
@@ -711,7 +736,7 @@ public:
      * @param[in]  aBit  The bit offset.
      *
      */
-    void SetBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
+    void SetBit(uint8_t aBit) { mSteeringData[GetSteeringDataLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
 
     /**
      * Ths method indicates whether or not the SteeringData is all zeros.
@@ -759,7 +784,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Border Agent Locator value.
@@ -800,13 +825,15 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Commissioner ID length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Commissioner ID length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetCommissionerIdLength(void) const
+    {
+        return GetLength() <= sizeof(mCommissionerId) ? GetLength() : sizeof(mCommissionerId);
+    }
 
     /**
      * This method returns the Commissioner ID value.
@@ -863,7 +890,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Commissioner Session ID value.
@@ -910,7 +937,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Rotation Time value.
@@ -984,7 +1011,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1012,7 +1039,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the UDP Port value.
@@ -1059,7 +1086,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * State values.
@@ -1117,7 +1144,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the UDP Port value.
@@ -1164,7 +1191,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner IID.
@@ -1211,7 +1238,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Joiner Router Locator value.
@@ -1258,7 +1285,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner Router KEK.
@@ -1306,7 +1333,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1334,7 +1361,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Delay Timer value.
@@ -1657,7 +1684,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Count value.
@@ -1704,7 +1731,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Period value.
@@ -1751,7 +1778,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Scan Duration value.
@@ -1824,14 +1851,16 @@ public:
         SetLength(0);
     }
 
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+    /*
+     * This method returns the Provisioning URL length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Provisioning URL length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetProvisioningUrlLength(void) const
+    {
+        return GetLength() <= sizeof(mProvisioningUrl) ? GetLength() : sizeof(mProvisioningUrl);
+    }
 
     /**
      * This method returns the Provisioning URL value.
@@ -1882,13 +1911,15 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Vendor Name length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Vendor Name length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetVendorNameLength(void) const
+    {
+        return GetLength() <= sizeof(mVendorName) ? GetLength() : sizeof(mVendorName);
+    }
 
     /**
      * This method returns the Vendor Name value.
@@ -1944,13 +1975,15 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Vendor Model length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Vendor Model length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetVendorModelLength(void) const
+    {
+        return GetLength() <= sizeof(mVendorModel) ? GetLength() : sizeof(mVendorModel);
+    }
 
     /**
      * This method returns the Vendor Model value.
@@ -2006,13 +2039,15 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Vendor SW Version length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Vendor SW Version length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetVendorSwVersionLength(void) const
+    {
+        return GetLength() <= sizeof(mVendorSwVersion) ? GetLength() : sizeof(mVendorSwVersion);
+    }
 
     /**
      * This method returns the Vendor SW Version value.
@@ -2068,13 +2103,15 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Vendor Data length.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The Vendor Data length.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetVendorDataLength(void) const
+    {
+        return GetLength() <= sizeof(mVendorData) ? GetLength() : sizeof(mVendorData);
+    }
 
     /**
      * This method returns the Vendor Data value.
@@ -2146,7 +2183,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Stack Vendor OUI value.
@@ -2417,7 +2454,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Version value.
@@ -2504,7 +2541,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Version value.
