@@ -44,7 +44,7 @@
  * The efr32 platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT                           OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 /*
@@ -54,9 +54,9 @@
  *
  */
 #ifdef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
-#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT           1
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 1
 #else
-#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT           0
+#define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 0
 #endif
 
 /*
@@ -66,9 +66,9 @@
  *
  */
 #ifdef RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
-#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT           1
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
 #else
-#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT           0
+#define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 0
 #endif
 
 /**
@@ -77,7 +77,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                        "EFR32"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "EFR32"
 
 /*
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -85,7 +85,7 @@
  * Define to 1 if you want to enable software retransmission logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT           1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -93,7 +93,7 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF         1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -101,7 +101,7 @@
  * Define to 1 if you want to enable software energy scanning logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN          1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN 1
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -109,7 +109,7 @@
  * The base address of settings.
  *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                           0
+#define SETTINGS_CONFIG_BASE_ADDRESS 0
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -117,7 +117,7 @@
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                              FLASH_PAGE_SIZE
+#define SETTINGS_CONFIG_PAGE_SIZE FLASH_PAGE_SIZE
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -125,7 +125,7 @@
  * The page number of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                               4
+#define SETTINGS_CONFIG_PAGE_NUM 4
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
@@ -133,7 +133,7 @@
  * The number of short source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM                 6
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 6
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
@@ -141,6 +141,6 @@
  * The number of extended source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM                   6
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 6
 
-#endif  // OPENTHREAD_CORE_EFR32_CONFIG_H_
+#endif // OPENTHREAD_CORE_EFR32_CONFIG_H_

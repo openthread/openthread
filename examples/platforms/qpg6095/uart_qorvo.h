@@ -35,8 +35,8 @@
 #ifndef _UART_QORVO_H_
 #define _UART_QORVO_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <openthread/platform/logging.h>
 
 /**
@@ -70,7 +70,7 @@ void cbQorvoUartTxDone(void);
  * @param[in]  aBufLength   The number of bytes received from the uart.
  *
  */
-void qorvoUartSendInput(uint8_t* aBuf, uint16_t aBufLength);
+void qorvoUartSendInput(uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * Function which transmits data via the uart.
@@ -92,4 +92,4 @@ void qorvoUartSendOutput(const uint8_t *aBuf, uint16_t aBufLength);
  */
 void qorvoUartLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
-#endif  // _UART_QORVO_H_
+#endif // _UART_QORVO_H_

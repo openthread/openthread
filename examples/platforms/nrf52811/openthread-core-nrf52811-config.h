@@ -110,22 +110,22 @@
 #define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 0
 #endif
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-  *
-  * Define to 1 if you want to enable software ACK timeout logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ *
+ * Define to 1 if you want to enable software ACK timeout logic.
+ *
+ */
 #ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 0
 #endif
 
- /**
-  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-  *
-  * Define to 1 if you want to enable software retransmission logic.
-  *
-  */
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ *
+ * Define to 1 if you want to enable software retransmission logic.
+ *
+ */
 #ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
 #endif
@@ -229,8 +229,8 @@
  *
  * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
  *
- * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt context
- *       used by Header IE related features.
+ * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt
+ * context used by Header IE related features.
  *
  */
 #if OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER || OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
@@ -244,8 +244,7 @@
  * e.g. break after assert(false) or ExitNow() macro.
  */
 #if defined(__CC_ARM)
-    _Pragma("diag_suppress=111")
-    _Pragma("diag_suppress=128")
+_Pragma("diag_suppress=111") _Pragma("diag_suppress=128")
 #endif
 
-#endif  // OPENTHREAD_CORE_NRF52811_CONFIG_H_
+#endif // OPENTHREAD_CORE_NRF52811_CONFIG_H_

@@ -35,8 +35,8 @@
 #ifndef SETTINGS_QORVO_H_
 #define SETTINGS_QORVO_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,4 +56,4 @@ void qorvoSettingsWipe(void);
 }
 #endif
 
-#endif  // SETTINGS_QORVO_H_
+#endif // SETTINGS_QORVO_H_

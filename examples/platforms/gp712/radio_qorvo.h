@@ -200,4 +200,4 @@ void cbQorvoRadioTransmitDone(otRadioFrame *aPacket, bool aFramePending, otError
  */
 void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError);
 
-#endif  // RADIO_QORVO_H_
+#endif // RADIO_QORVO_H_
