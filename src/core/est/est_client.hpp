@@ -77,7 +77,7 @@ public:
 
     otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 
-    otError Connect(const Ip6::SockAddr      &aSockAddr,
+    otError Connect(const Ip6::SockAddr &     aSockAddr,
                     otHandleEstClientConnect  aConnectHandler,
                     otHandleEstClientResponse aResponseHandler,
                     void *                    aContext);
@@ -86,17 +86,27 @@ public:
 
     bool IsConnected(void);
 
-    otError SimpleEnroll(void);
+    otError SimpleEnroll(const uint8_t *aPrivateKey,
+                         uint32_t       aPrivateLeyLength,
+                         const uint8_t *aPublicKey,
+                         uint32_t       aPublicKeyLength,
+                         otMdType       aMdType,
+                         uint8_t        aKeyUsageFlags,
+                         bool           aPemFormat);
 
-    otError SimpleReEnroll(void);
+    otError SimpleReEnroll(const uint8_t *aPrivateKey,
+                           uint32_t       aPrivateLeyLength,
+                           const uint8_t *aPublicKey,
+                           uint32_t       aPublicKeyLength,
+                           otMdType       aMdType,
+                           uint8_t        aKeyUsageFlags,
+                           bool           aPemFormat);
 
     otError GetCsrAttributes(void);
 
     otError GetServerGeneratedKeys(void);
 
     otError GetCaCertificates(void);
-
-    otError GenerateKeyPair(const uint8_t *aPersonalSeed, uint32_t *aPersonalSeedLength);
 
 private:
     enum
@@ -105,7 +115,7 @@ private:
     };
 
     static void CoapSecureConnectedHandle(bool aConnected, void *aContext);
-    void CoapSecureConnectedHandle(bool aConnected);
+    void        CoapSecureConnectedHandle(bool aConnected);
 
     bool                      mIsConnected;
     bool                      mStarted;

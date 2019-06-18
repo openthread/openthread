@@ -85,7 +85,8 @@ otError otEstClientConnect(otInstance *              aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().Connect(*static_cast<const Ip6::SockAddr *>(aSockAddr), aConnectHandler, aResponseHandler, aContext);
+    return instance.Get<Est::Client>().Connect(*static_cast<const Ip6::SockAddr *>(aSockAddr), aConnectHandler,
+                                               aResponseHandler, aContext);
 }
 
 void otEstClientDisconnect(otInstance *aInstance)
@@ -102,18 +103,34 @@ bool otEstClientIsConnected(otInstance *aInstance)
     return instance.Get<Est::Client>().IsConnected();
 }
 
-otError otEstClientSimpleEnroll(otInstance *aInstance)
+otError otEstClientSimpleEnroll(otInstance *   aInstance,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateLeyLength,
+                                const uint8_t *aPublicKey,
+                                uint32_t       aPublicKeyLength,
+                                otMdType       aMdType,
+                                uint8_t        aKeyUsageFlags,
+                                bool           aPemFormat)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleEnroll();
+    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength, aPublicKey, aPublicKeyLength,
+                                                    aMdType, aKeyUsageFlags, aPemFormat);
 }
 
-otError otEstClientSimpleReEnroll(otInstance *aInstance)
+otError otEstClientSimpleReEnroll(otInstance *   aInstance,
+                                  const uint8_t *aPrivateKey,
+                                  uint32_t       aPrivateLeyLength,
+                                  const uint8_t *aPublicKey,
+                                  uint32_t       aPublicKeyLength,
+                                  otMdType       aMdType,
+                                  uint8_t        aKeyUsageFlags,
+                                  bool           aPemFormat)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleReEnroll();
+    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength, aPublicKey, aPublicKeyLength,
+                                                      aMdType, aKeyUsageFlags, aPemFormat);
 }
 
 otError otEstClientGetCsrAttributes(otInstance *aInstance)
@@ -135,13 +152,6 @@ otError otEstClientGetCaCertificates(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Est::Client>().GetCaCertificates();
-}
-
-otError otEstClientGenerateKeyPair(otInstance *aInstance, const uint8_t* aPersonalSeed, uint32_t *aPersonalSeedLength)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Est::Client>().GenerateKeyPair(aPersonalSeed, aPersonalSeedLength);
 }
 
 #endif // OPENTHREAD_ENABLE_EST_CLIENT

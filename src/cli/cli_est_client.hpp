@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
+#include "openthread/crypto.h"
 #include "est/est_client.hpp"
 
 namespace ot {
@@ -85,14 +86,22 @@ private:
     otError ProcessSimpleReEnroll(int argc, char *argv[]);
 
     static void HandleConnected(bool aConnected, void *aContext);
-    void HandleConnected(bool aConnected);
+    void        HandleConnected(bool aConnected);
 
-    static void HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth, void *aContext);
-    void HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth);
+    static void HandleResponse(otError   aError,
+                               otEstType aType,
+                               uint8_t * aPayload,
+                               uint32_t  aPayloadLenth,
+                               void *    aContext);
+    void        HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;
     bool                 mStopFlag;
+    uint32_t             mPrivateKeyLength;
+    uint32_t             mPublicKeyLength;
+    uint8_t              mPrivateKey[512];
+    uint8_t              mPublicKey[512];
 };
 
 } // namespace Cli

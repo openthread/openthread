@@ -128,6 +128,26 @@ otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           uint16_t       aPrivateKeyLength);
 
 /**
+ * This method generate a Elliptic Curve key pair.
+ *
+ * @param[in]       aPersonalSeed       An additional seed for the entropy. Can be NULL.
+ * @param[in]       aPersonalSeedLengh  The length of the @p aPersonalSeed.
+ * @param[out]      aPrivateKey         An output buffer where the private key should be stored.
+ * @param[inout]    aPrivateKeyLength   The length of the @p aPrivateKey buffer.
+ * @param[out]      aPublicKey          An output buffer where the private key should be stored.
+ * @param[inout]    aPublicKeyLength    The length of the @p aPublicKey buffer.
+ *
+ * @retval  OT_ERROR_NONE       EC key pairs has been created successfully.
+ *          OT_ERROR_NO_BUFS    Key buffers are too small or mbedtls heap too small.
+ */
+otError otCryptoEcpGenenrateKey(const uint8_t *aPersonalSeed,
+                                uint32_t       aPersonalSeedLength,
+                                uint8_t *      aPrivateKey,
+                                uint32_t *     aPrivateKeyLength,
+                                uint8_t *      aPublicKey,
+                                uint32_t *     aPublicKeyLength);
+
+/**
  * @}
  *
  */

@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 
+#include <mbedtls/x509.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -57,8 +58,8 @@ extern "C" {
  *
  */
 
-#define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6     "2001:620:190:ffa1::1234:4321"
-#define OT_EST_COAPS_DEFAULT_EST_SERVER_PORT    5684
+#define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6 "2001:620:190:ffa1::1234:4321"
+#define OT_EST_COAPS_DEFAULT_EST_SERVER_PORT 5684
 
 /**
  * ToDo: bring down to a lower layer
@@ -68,6 +69,16 @@ extern "C" {
 #define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL "/sren" ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_CSR_ATTRS "/att"        ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN "/skg"   ///< Specified in draft-ietf-ace-coap-est-12
+
+#define OT_EST_KEY_USAGE_DIGITAL_SIGNATURE MBEDTLS_X509_KU_DIGITAL_SIGNATURE
+#define OT_EST_KEY_USAGE_NON_REPUTATION MBEDTLS_X509_KU_NON_REPUDIATION
+#define OT_EST_KEY_USAGE_KEY_ENCIPHERMENT MBEDTLS_X509_KU_KEY_ENCIPHERMENT
+#define OT_EST_KEY_USAGE_DATA_ENCIPHERMENT MBEDTLS_X509_KU_DATA_ENCIPHERMENT
+#define OT_EST_KEY_USAGE_KEY_AGREEMENT MBEDTLS_X509_KU_KEY_AGREEMENT
+#define OT_EST_KEY_USAGE_KEY_CERT_SIGN MBEDTLS_X509_KU_KEY_CERT_SIGN
+#define OT_EST_KEY_USAGE_CRL_SIGN MBEDTLS_X509_KU_CRL_SIGN
+#define OT_EST_KEY_USAGE_ENCIPHER_ONLY MBEDTLS_X509_KU_ENCIPHER_ONLY
+#define OT_EST_KEY_USAGE_DECIPHER_ONLY MBEDTLS_X509_KU_DECIPHER_ONLY
 
 typedef enum otEstType
 {
@@ -81,6 +92,20 @@ typedef enum otEstType
 } otEstType;
 
 /**
+ * supported message digest
+ */
+typedef enum otMdType
+{
+    OT_MD_TYPE_NONE = 0,
+    OT_MD_TYPE_MD5,
+    OT_MD_TYPE_SHA1,
+    OT_MD_TYPE_SHA256,
+    OT_MD_TYPE_SHA384,
+    OT_MD_TYPE_SHA512,
+    OT_MD_TYPE_RIPEMD160
+} otMdType;
+
+/**
  * This function pointer is called when the CoAPS connection state changes.
  *
  * @param[in]  aConnected  true, if a connection was established, false otherwise.
@@ -92,7 +117,11 @@ typedef void (*otHandleEstClientConnect)(bool aConnected, void *aContext);
 /**
  *
  */
-typedef void (*otHandleEstClientResponse)(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLength, void *aContext);
+typedef void (*otHandleEstClientResponse)(otError   aError,
+                                          otEstType aType,
+                                          uint8_t * aPayload,
+                                          uint32_t  aPayloadLength,
+                                          void *    aContext);
 
 /**
  * This function starts the EST client service.
@@ -202,7 +231,14 @@ bool otEstClientIsConnected(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  EST client not connected.
  *
  */
-otError otEstClientSimpleEnroll(otInstance *aInstance);
+otError otEstClientSimpleEnroll(otInstance *   aInstance,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateLeyLength,
+                                const uint8_t *aPublicKey,
+                                uint32_t       aPublicKeyLength,
+                                otMdType       aMdType,
+                                uint8_t        aKeyUsageFlags,
+                                bool           aPemFormat);
 
 /**
  * This method process a simple re-enrollment over CoAP Secure.
@@ -216,7 +252,14 @@ otError otEstClientSimpleEnroll(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  EST client not connected.
  *
  */
-otError otEstClientSimpleReEnroll(otInstance *aInstance);
+otError otEstClientSimpleReEnroll(otInstance *   aInstance,
+                                  const uint8_t *aPrivateKey,
+                                  uint32_t       aPrivateLeyLength,
+                                  const uint8_t *aPublicKey,
+                                  uint32_t       aPublicKeyLength,
+                                  otMdType       aMdType,
+                                  uint8_t        aKeyUsageFlags,
+                                  bool           aPemFormat);
 
 /**
  *
@@ -232,13 +275,6 @@ otError otEstClientGetServerGeneratedKeys(otInstance *aInstance);
  *
  */
 otError otEstClientGetCaCertificates(otInstance *aInstance);
-
-/**
- *
- */
-otError otEstClientGenerateKeyPair(otInstance *aInstance, const uint8_t* aPersonalSeed, uint32_t *aPersonalSeedLength);
-
-
 
 /**
  * @}

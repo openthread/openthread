@@ -40,6 +40,7 @@
 #include "common/locator-getters.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/ecdsa.hpp"
+#include "crypto/ecp.hpp"
 #include "crypto/hmac_sha256.hpp"
 
 using namespace ot::Crypto;
@@ -94,6 +95,23 @@ void otCryptoAesCcm(const uint8_t *aKey,
 exit:
     return;
 }
+
+#if OPENTHREAD_ENABLE_EST_CLIENT
+
+otError otCryptoEcpGenenrateKey(const uint8_t *aPersonalSeed,
+                                uint32_t       aPersonalSeedLength,
+                                uint8_t *      aPrivateKey,
+                                uint32_t *     aPrivateKeyLength,
+                                uint8_t *      aPublicKey,
+                                uint32_t *     aPublicKeyLength)
+{
+    assert((aPrivateKey != NULL) && (aPrivateKeyLength != NULL) && (aPublicKey != NULL) && (aPublicKeyLength != NULL));
+
+    return Ecp::KeyPairGeneration(aPersonalSeed, aPersonalSeedLength, aPrivateKey, aPrivateKeyLength, aPublicKey,
+                                  aPublicKeyLength);
+}
+
+#endif // OPENTHREAD_ENABLE_EST_CLIENT
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 

@@ -37,10 +37,9 @@
 #include "../common/asn1.hpp"
 #include "common/entropy.hpp"
 #include "common/random.hpp"
-#include "crypto/mbedtls.hpp"
 #include "crypto/ecdsa.hpp"
+#include "crypto/mbedtls.hpp"
 #include "crypto/sha256.hpp"
-
 
 /**
  * @file
@@ -96,7 +95,8 @@ otError Client::SetCertificate(const uint8_t *aX509Cert,
                                const uint8_t *aPrivateKey,
                                uint32_t       aPrivateKeyLength)
 {
-    return mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);;
+    return mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    ;
 }
 
 otError Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
@@ -104,14 +104,14 @@ otError Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, ui
     return mCoapSecure.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 
-otError Client::Connect(const Ip6::SockAddr      &aSockAddr,
+otError Client::Connect(const Ip6::SockAddr &     aSockAddr,
                         otHandleEstClientConnect  aConnectHandler,
                         otHandleEstClientResponse aResponseHandler,
                         void *                    aContext)
 {
     mApplicationContext = aContext;
-    mConnectCallback = aConnectHandler;
-    mResponseCallback = aResponseHandler;
+    mConnectCallback    = aConnectHandler;
+    mResponseCallback   = aResponseHandler;
     mCoapSecure.Connect(aSockAddr, &Client::CoapSecureConnectedHandle, this);
 
     return OT_ERROR_NONE;
@@ -127,22 +127,50 @@ bool Client::IsConnected(void)
     return mIsConnected;
 }
 
-otError Client::SimpleEnroll(void)
+otError Client::SimpleEnroll(const uint8_t *aPrivateKey,
+                             uint32_t       aPrivateLeyLength,
+                             const uint8_t *aPublicKey,
+                             uint32_t       aPublicKeyLength,
+                             otMdType       aMdType,
+                             uint8_t        aKeyUsageFlags,
+                             bool           aPemFormat)
 {
     otError mError = OT_ERROR_NOT_IMPLEMENTED;
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+    OT_UNUSED_VARIABLE(aPrivateKey);
+    OT_UNUSED_VARIABLE(aPrivateLeyLength);
+    OT_UNUSED_VARIABLE(aPublicKey);
+    OT_UNUSED_VARIABLE(aPublicKeyLength);
+    OT_UNUSED_VARIABLE(aMdType);
+    OT_UNUSED_VARIABLE(aKeyUsageFlags);
+    OT_UNUSED_VARIABLE(aPemFormat);
 
 exit:
 
     return mError;
 }
 
-otError Client::SimpleReEnroll(void)
+otError Client::SimpleReEnroll(const uint8_t *aPrivateKey,
+                               uint32_t       aPrivateLeyLength,
+                               const uint8_t *aPublicKey,
+                               uint32_t       aPublicKeyLength,
+                               otMdType       aMdType,
+                               uint8_t        aKeyUsageFlags,
+                               bool           aPemFormat)
 {
     otError mError = OT_ERROR_NOT_IMPLEMENTED;
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+    OT_UNUSED_VARIABLE(aPrivateKey);
+    OT_UNUSED_VARIABLE(aPrivateLeyLength);
+    OT_UNUSED_VARIABLE(aPublicKey);
+    OT_UNUSED_VARIABLE(aPublicKeyLength);
+    OT_UNUSED_VARIABLE(aMdType);
+    OT_UNUSED_VARIABLE(aKeyUsageFlags);
+    OT_UNUSED_VARIABLE(aPemFormat);
 
 exit:
 
@@ -174,20 +202,6 @@ exit:
 otError Client::GetCaCertificates(void)
 {
     otError mError = OT_ERROR_NOT_IMPLEMENTED;
-
-    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
-
-exit:
-
-    return mError;
-}
-
-otError Client::GenerateKeyPair(const uint8_t *aPersonalSeed, uint32_t *aPersonalSeedLength)
-{
-    otError mError = OT_ERROR_NOT_IMPLEMENTED;
-
-    OT_UNUSED_VARIABLE(aPersonalSeed);
-    OT_UNUSED_VARIABLE(aPersonalSeedLength);
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
 
