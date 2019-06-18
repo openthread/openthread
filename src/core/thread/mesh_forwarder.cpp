@@ -247,10 +247,6 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
             break;
 
-        case Message::kTypeMacDataPoll:
-            error = PrepareDataPoll();
-            break;
-
 #if OPENTHREAD_FTD
 
         case Message::kType6lowpan:
@@ -293,31 +289,6 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
 exit:
     return curMessage;
-}
-
-otError MeshForwarder::PrepareDataPoll(void)
-{
-    otError   error  = OT_ERROR_NONE;
-    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
-    uint16_t  shortAddress;
-
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_DROP);
-
-    shortAddress = Get<Mac::Mac>().GetShortAddress();
-
-    if ((shortAddress == Mac::kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent()))
-    {
-        mMacSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
-        mMacDest.SetExtended(parent->GetExtAddress());
-    }
-    else
-    {
-        mMacSource.SetShort(shortAddress);
-        mMacDest.SetShort(parent->GetRloc16());
-    }
-
-exit:
-    return error;
 }
 
 otError MeshForwarder::UpdateIp6Route(Message &aMessage)
@@ -581,10 +552,6 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         assert(aFrame.GetLength() != 7);
         break;
 
-    case Message::kTypeMacDataPoll:
-        SendPoll(*mSendMessage, aFrame);
-        break;
-
 #if OPENTHREAD_FTD
 
     case Message::kType6lowpan:
@@ -645,33 +612,6 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
 exit:
     return error;
-}
-
-void MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
-{
-    uint16_t fcf;
-
-    // initialize MAC header
-    fcf = Mac::Frame::kFcfFrameMacCmd | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfFrameVersion2006;
-
-    if (mMacSource.IsShort())
-    {
-        fcf |= Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort;
-    }
-    else
-    {
-        fcf |= Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt;
-    }
-
-    fcf |= Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
-
-    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-    aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetSrcAddr(mMacSource);
-    aFrame.SetDstAddr(mMacDest);
-    aFrame.SetCommandId(Mac::Frame::kMacCmdDataRequest);
-
-    mMessageNextOffset = aMessage.GetLength();
 }
 
 otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
@@ -1000,52 +940,50 @@ void MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
     aFrame.SetFramePending(false);
 }
 
+Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)
+{
+    Neighbor *neighbor = NULL;
+
+    VerifyOrExit(mEnabled);
+
+    neighbor = Get<Mle::MleRouter>().GetNeighbor(aMacDest);
+    VerifyOrExit(neighbor != NULL);
+
+    VerifyOrExit(aFrame.GetAckRequest());
+
+    if (aError == OT_ERROR_NONE)
+    {
+        neighbor->ResetLinkFailures();
+    }
+    else if (aError == OT_ERROR_NO_ACK)
+    {
+        neighbor->IncrementLinkFailures();
+        VerifyOrExit(Mle::Mle::IsActiveRouter(neighbor->GetRloc16()));
+
+        if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
+        {
+            Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
+        }
+    }
+
+exit:
+    return neighbor;
+}
+
 void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
 {
-    Mle::MleRouter &mle = Get<Mle::MleRouter>();
-    Mac::Address    macDest;
-    Neighbor *      neighbor;
+    Neighbor *   neighbor = NULL;
+    Mac::Address macDest;
+
+    assert((aError == OT_ERROR_NONE) || (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE) || (aError == OT_ERROR_ABORT) ||
+           (aError == OT_ERROR_NO_ACK));
 
     mSendBusy = false;
 
     VerifyOrExit(mEnabled);
 
     aFrame.GetDstAddr(macDest);
-
-    if ((neighbor = mle.GetNeighbor(macDest)) != NULL)
-    {
-        switch (aError)
-        {
-        case OT_ERROR_NONE:
-            if (aFrame.GetAckRequest())
-            {
-                neighbor->ResetLinkFailures();
-            }
-
-            break;
-
-        case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-        case OT_ERROR_ABORT:
-            break;
-
-        case OT_ERROR_NO_ACK:
-            neighbor->IncrementLinkFailures();
-
-            if (Mle::Mle::IsActiveRouter(neighbor->GetRloc16()))
-            {
-                if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
-                {
-                    mle.RemoveNeighbor(*neighbor);
-                }
-            }
-
-            break;
-
-        default:
-            assert(false);
-            break;
-        }
-    }
+    neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
 
 #if OPENTHREAD_FTD
     HandleSentFrameToChild(aFrame, aError, macDest);
@@ -1123,21 +1061,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
             mSendBusy = true;
             mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
             ExitNow();
-        }
-    }
-
-    if (mSendMessage->GetType() == Message::kTypeMacDataPoll)
-    {
-        neighbor = mle.GetParentCandidate();
-
-        if (neighbor->GetState() == Neighbor::kStateInvalid)
-        {
-            mDataPollManager.StopPolling();
-            mle.BecomeDetached();
-        }
-        else
-        {
-            mDataPollManager.HandlePollSent(aError);
         }
     }
 
