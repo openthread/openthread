@@ -270,12 +270,10 @@ void initUdp(void)
 
     memset(&sMulticastSockAddr, 0, sizeof sMulticastSockAddr);
     otIp6AddressFromString(MULTICAST_ADDR, &sMulticastSockAddr.mAddress);
-    sMulticastSockAddr.mPort    = MULTICAST_PORT;
-    sMulticastSockAddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sMulticastSockAddr.mPort = MULTICAST_PORT;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.mPort    = RECV_PORT;
-    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sockaddr.mPort = RECV_PORT;
 
     error = otUdpOpen(instance, &sMtdSocket, mtdReceiveCallback, NULL);
 
@@ -330,8 +328,7 @@ void applicationTick(void)
 
         memset(&messageInfo, 0, sizeof(messageInfo));
         memcpy(&messageInfo.mPeerAddr, &sMulticastSockAddr.mAddress, sizeof messageInfo.mPeerAddr);
-        messageInfo.mPeerPort    = sMulticastSockAddr.mPort;
-        messageInfo.mInterfaceId = sMulticastSockAddr.mScopeId;
+        messageInfo.mPeerPort = sMulticastSockAddr.mPort;
 
         message = otUdpNewMessage(instance, NULL);
 

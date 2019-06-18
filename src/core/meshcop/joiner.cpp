@@ -341,8 +341,7 @@ otError Joiner::Connect(JoinerRouter &aRouter)
 
     sockaddr.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
     sockaddr.GetAddress().SetIid(aRouter.mExtAddr);
-    sockaddr.mPort    = aRouter.mJoinerUdpPort;
-    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sockaddr.mPort = aRouter.mJoinerUdpPort;
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Connect(sockaddr, Joiner::HandleSecureCoapClientConnect, this));
 

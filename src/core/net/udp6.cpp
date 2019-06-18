@@ -323,7 +323,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_ENABLE_UDP_FORWARD
-    if (aMessageInfo.GetInterfaceId() == OT_NETIF_INTERFACE_ID_HOST)
+    if (aMessageInfo.IsHostInterface())
     {
         VerifyOrExit(mUdpForwarder != NULL, error = OT_ERROR_NO_ROUTE);
         mUdpForwarder(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
@@ -398,11 +398,6 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     for (UdpSocket *socket = mSockets; socket; socket = socket->GetNext())
     {
         if (socket->GetSockName().mPort != aMessageInfo.GetSockPort())
-        {
-            continue;
-        }
-
-        if (socket->GetSockName().mScopeId != 0 && socket->GetSockName().mScopeId != aMessageInfo.mInterfaceId)
         {
             continue;
         }

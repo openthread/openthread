@@ -233,8 +233,7 @@ void initUdp(void)
     memset(&sockaddr, 0, sizeof(sockaddr));
 
     otIp6AddressFromString(MULTICAST_ADDR, &sockaddr.mAddress);
-    sockaddr.mPort    = MULTICAST_PORT;
-    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sockaddr.mPort = MULTICAST_PORT;
 
     error = otUdpOpen(instance, &sFtdSocket, sFtdReceiveCallback, NULL);
     if (error != OT_ERROR_NONE)
@@ -273,8 +272,7 @@ void applicationTick(void)
         {
             memset(&messageInfo, 0, sizeof(messageInfo));
             memcpy(&messageInfo.mPeerAddr, &sSwitchAddress, sizeof messageInfo.mPeerAddr);
-            messageInfo.mPeerPort    = RECV_PORT;
-            messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+            messageInfo.mPeerPort = RECV_PORT;
 
             message = otUdpNewMessage(instance, NULL);
 

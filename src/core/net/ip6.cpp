@@ -306,7 +306,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
 
             if ((messageCopy = aMessage.Clone()) != NULL)
             {
-                HandleDatagram(*messageCopy, NULL, aMessageInfo.GetInterfaceId(), NULL, true);
+                HandleDatagram(*messageCopy, NULL, NULL, true);
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
             }
             else
@@ -470,11 +470,6 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 
     header.SetDestination(aMessageInfo.GetPeerAddr());
 
-    if (header.GetDestination().IsLinkLocal() || header.GetDestination().IsLinkLocalMulticast())
-    {
-        VerifyOrExit(aMessageInfo.GetInterfaceId() != 0, error = OT_ERROR_DROP);
-    }
-
     if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast())
     {
         SuccessOrExit(error = AddMplOption(aMessage, header));
@@ -508,7 +503,6 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
             if ((messageCopy = aMessage.Clone()) != NULL)
             {
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
-                messageCopy->SetInterfaceId(aMessageInfo.GetInterfaceId());
                 EnqueueDatagram(*messageCopy);
             }
             else
@@ -524,7 +518,6 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        aMessage.SetInterfaceId(aMessageInfo.GetInterfaceId());
         EnqueueDatagram(aMessage);
     }
 
@@ -543,7 +536,7 @@ void Ip6::HandleSendQueue(void)
     while ((message = mSendQueue.GetHead()) != NULL)
     {
         mSendQueue.Dequeue(*message);
-        HandleDatagram(*message, NULL, message->GetInterfaceId(), NULL, false);
+        HandleDatagram(*message, NULL, NULL, false);
     }
 }
 
@@ -793,7 +786,7 @@ exit:
     return error;
 }
 
-otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
+otError Ip6::SendRaw(Message &aMessage)
 {
     otError     error = OT_ERROR_NONE;
     Header      header;
@@ -804,7 +797,6 @@ otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
 
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
-    messageInfo.SetInterfaceId(aInterfaceId);
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetLinkInfo(NULL);
 
@@ -813,7 +805,7 @@ otError Ip6::SendRaw(Message &aMessage, int8_t aInterfaceId)
         SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
     }
 
-    error = HandleDatagram(aMessage, NULL, aInterfaceId, NULL, true);
+    error = HandleDatagram(aMessage, NULL, NULL, true);
     freed = true;
 
 exit:
@@ -826,11 +818,7 @@ exit:
     return error;
 }
 
-otError Ip6::HandleDatagram(Message &   aMessage,
-                            Netif *     aNetif,
-                            int8_t      aInterfaceId,
-                            const void *aLinkMessageInfo,
-                            bool        aFromNcpHost)
+otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
 {
     otError     error = OT_ERROR_NONE;
     MessageInfo messageInfo;
@@ -846,7 +834,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
 
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
-    messageInfo.SetInterfaceId(aInterfaceId);
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetLinkInfo(aLinkMessageInfo);
 
@@ -891,7 +878,6 @@ otError Ip6::HandleDatagram(Message &   aMessage,
         }
     }
 
-    aMessage.SetInterfaceId(aInterfaceId);
     aMessage.SetOffset(sizeof(header));
 
     // process IPv6 Extension Headers
@@ -906,7 +892,7 @@ otError Ip6::HandleDatagram(Message &   aMessage,
             // Remove encapsulating header.
             aMessage.RemoveHeader(aMessage.GetOffset());
 
-            HandleDatagram(aMessage, aNetif, aInterfaceId, aLinkMessageInfo, aFromNcpHost);
+            HandleDatagram(aMessage, aNetif, aLinkMessageInfo, aFromNcpHost);
             ExitNow(tunnel = true);
         }
 

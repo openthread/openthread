@@ -232,8 +232,6 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
         replyMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
     }
 
-    replyMessageInfo.SetInterfaceId(aMessageInfo.mInterfaceId);
-
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);

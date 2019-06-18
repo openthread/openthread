@@ -48,7 +48,7 @@
 namespace ot {
 
 ThreadNetif::ThreadNetif(Instance &aInstance)
-    : Netif(aInstance, OT_NETIF_INTERFACE_ID_THREAD)
+    : Netif(aInstance)
     , mCoap(aInstance)
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     , mDhcp6Client(aInstance)

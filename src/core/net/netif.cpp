@@ -80,11 +80,10 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
     {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
     &Netif::kRealmLocalAllRoutersMulticastAddress};
 
-Netif::Netif(Instance &aInstance, int8_t aInterfaceId)
+Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mUnicastAddresses(NULL)
     , mMulticastAddresses(NULL)
-    , mInterfaceId(aInterfaceId)
     , mMulticastPromiscuous(false)
     , mNext(NULL)
     , mAddressCallback(NULL)

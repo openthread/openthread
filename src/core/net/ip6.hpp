@@ -186,7 +186,6 @@ public:
      * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
      *
      * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
      *
      * @retval OT_ERROR_NONE      Successfully processed the message.
      * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
@@ -195,14 +194,13 @@ public:
      * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
      *
      */
-    otError SendRaw(Message &aMessage, int8_t aInterfaceId);
+    otError SendRaw(Message &aMessage);
 
     /**
      * This method processes a received IPv6 datagram.
      *
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aNetif            A pointer to the network interface that received the message.
-     * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
      * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
      *
@@ -213,11 +211,7 @@ public:
      * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
      *
      */
-    otError HandleDatagram(Message &   aMessage,
-                           Netif *     aNetif,
-                           int8_t      aInterfaceId,
-                           const void *aLinkMessageInfo,
-                           bool        aFromNcpHost);
+    otError HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
      * This methods adds a full IPv6 packet to the transmit queue.
