@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread EST Client API.
+ *   This file implements the OpenThread EST over CoAP Secure Client API.
  */
 
 #include "openthread-core-config.h"

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file contains definitions for a simple CLI EST client.
+ *   This file contains definitions for a simple CLI EST over CoAP Secure client.
  */
 
 #ifndef CLI_EST_CLIENT_HPP_
@@ -38,8 +38,8 @@
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
-#include "openthread/crypto.h"
 #include "est/est_client.hpp"
+#include "openthread/crypto.h"
 
 namespace ot {
 namespace Cli {
@@ -47,7 +47,7 @@ namespace Cli {
 class Interpreter;
 
 /**
- * This class implements the CLI CoAP Secure server and client.
+ * This class implements the CLI EST over CoAP Secure client.
  *
  */
 class EstClient
