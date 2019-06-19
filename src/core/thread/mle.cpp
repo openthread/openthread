@@ -2384,7 +2384,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetLength()));
+            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetChallengeLength()));
             break;
 
         case Tlv::kLinkFrameCounter:
@@ -3212,7 +3212,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
     VerifyOrExit(response.IsValid() &&
-                     memcmp(response.GetResponse(), mParentRequest.mChallenge, response.GetLength()) == 0,
+                     memcmp(response.GetResponse(), mParentRequest.mChallenge, response.GetResponseLength()) == 0,
                  error = OT_ERROR_PARSE);
 
     aMessageInfo.GetPeerAddr().ToExtAddress(extAddress);
