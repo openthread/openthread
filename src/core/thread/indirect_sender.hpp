@@ -64,6 +64,78 @@ class IndirectSender : public InstanceLocator
 
 public:
     /**
+     * This class defines all the child info required for indirect transmission.
+     *
+     * `Child` class publicly inherits from this class.
+     */
+    class ChildInfo
+    {
+        friend class IndirectSender;
+        friend class SourceMatchController;
+
+    public:
+        /**
+         * This method returns the number of queued messages for the child.
+         *
+         * @returns Number of queued messages for the child.
+         *
+         */
+        uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
+
+    private:
+        bool IsDataRequestPending(void) const { return mDataRequestPendig; }
+        void SetDataRequestPending(bool aPending) { mDataRequestPendig = aPending; }
+
+        Message *GetIndirectMessage(void) { return mIndirectMessage; }
+        void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
+
+        uint16_t GetIndirectFragmentOffset(void) const { return mIndirectFragmentOffset; }
+        void     SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
+
+        bool GetIndirectTxSuccess(void) const { return mIndirectTxSuccess; }
+        void SetIndirectTxSuccess(bool aTxStatus) { mIndirectTxSuccess = aTxStatus; }
+
+        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
+        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+
+        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
+        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+
+        uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
+        void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
+        void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
+
+        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
+        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
+
+        bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
+        void SetIndirectSourceMatchShort(bool aShort) { mUseShortAddress = aShort; }
+
+        bool IsIndirectSourceMatchPending(void) const { return mSourceMatchPending; }
+        void SetIndirectSourceMatchPending(bool aPending) { mSourceMatchPending = aPending; }
+
+        void IncrementIndirectMessageCount(void) { mQueuedMessageCount++; }
+        void DecrementIndirectMessageCount(void) { mQueuedMessageCount--; }
+        void ResetIndirectMessageCount(void) { mQueuedMessageCount = 0; }
+
+        const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
+
+        Message *mIndirectMessage;             // Current indirect message.
+        uint16_t mIndirectFragmentOffset : 15; // 6LoWPAN fragment offset for the indirect message.
+        bool     mIndirectTxSuccess : 1;       // Indicates tx success/failure of current indirect message.
+        uint16_t mQueuedMessageCount : 13;     // Number of queued indirect messages for the child.
+        bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
+        bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
+        bool     mDataRequestPendig : 1;       // Indicates whether or not a Data Poll was received,
+        uint32_t mIndirectFrameCounter;        // Frame counter for current indirect message (used fore retx).
+        uint8_t  mIndirectKeyId;               // Key Id for current indirect message (used for retx).
+        uint8_t  mIndirectTxAttempts;          // Number of data poll triggered tx attempts.
+        uint8_t  mIndirectDsn;                 // MAC level Data Sequence Number (DSN) for retx attempts.
+
+        OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.

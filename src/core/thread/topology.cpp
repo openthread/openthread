@@ -240,18 +240,4 @@ void Child::GenerateChallenge(void)
     Random::NonCrypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
 }
 
-const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
-{
-    if (mUseShortAddress)
-    {
-        aMacAddress.SetShort(GetRloc16());
-    }
-    else
-    {
-        aMacAddress.SetExtended(GetExtAddress());
-    }
-
-    return aMacAddress;
-}
-
 } // namespace ot
