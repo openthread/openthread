@@ -43,9 +43,9 @@
 #include "mac/mac.hpp"
 #include "net/ip6.hpp"
 #include "thread/address_resolver.hpp"
+#include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
-#include "thread/src_match_controller.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -170,6 +170,7 @@ class MeshForwarder : public InstanceLocator
     friend class Mac::Mac;
     friend class Instance;
     friend class DataPollSender;
+    friend class IndirectSender;
 
 public:
     /**
@@ -238,14 +239,6 @@ public:
      *
      */
     void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
-
-    /**
-     * This method frees any indirect messages queued for a specific child.
-     *
-     * @param[in]  aChild  A reference to a child whom messages shall be removed.
-     *
-     */
-    void ClearChildIndirectMessages(Child &aChild);
 
     /**
      * This method frees any indirect messages queued for children that are no longer attached.
@@ -330,14 +323,6 @@ private:
         kNumFragmentPriorityEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
 
         /**
-         * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
-         * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
-         * the sleepy child.
-         *
-         */
-        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-
-        /**
          * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
          *
          */
@@ -380,10 +365,7 @@ private:
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    otError  GetIndirectTransmission(void);
-    Message *GetIndirectTransmission(Child &aChild);
     otError  PrepareDiscoverRequest(void);
-    void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void     HandleMesh(uint8_t *               aFrame,
                         uint16_t                aFrameLength,
                         const Mac::Address &    aMacSource,
@@ -398,7 +380,6 @@ private:
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
-    void HandleDataRequest(const Mac::Frame &aFrame, const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
 
     static otError GetFragmentHeader(const uint8_t *         aFrame,
                                      uint16_t                aFrameLength,
@@ -418,7 +399,6 @@ private:
                                    uint8_t                 aPriority);
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void    ClearReassemblyList(void);
-    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
     void    RemoveMessage(Message &aMessage);
     void    HandleDiscoverComplete(void);
 
@@ -426,7 +406,6 @@ private:
     otError   HandleFrameRequest(Mac::Frame &aFrame);
     Neighbor *UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
     void      HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    void      HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);
@@ -549,7 +528,7 @@ private:
 #if OPENTHREAD_FTD
     FragmentPriorityEntry mFragmentEntries[kNumFragmentPriorityEntries];
     MessageQueue          mResolvingQueue;
-    SourceMatchController mSourceMatchController;
+    IndirectSender        mIndirectSender;
     uint32_t              mSendMessageFrameCounter;
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
