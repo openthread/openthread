@@ -527,24 +527,15 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             }
         }
 
-        error = SendFragment(*mSendMessage, aFrame);
+        mMessageNextOffset =
+            PrepareDataFrame(aFrame, *mSendMessage, mMacSource, mMacDest, mAddMeshHeader, mMeshSource, mMeshDest);
 
-        // `SendFragment()` fails with `NotCapable` error if the message is MLE (with
-        // no link layer security) and also requires fragmentation.
-        if (error == OT_ERROR_NOT_CAPABLE)
+        if ((mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
-            // Enable security and try again.
-            mSendMessage->SetLinkSecurityEnabled(true);
-
-            if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest)
-            {
-                otLogNoteMac("Child ID Request requires fragmentation, aborting tx");
-                mMessageNextOffset = mSendMessage->GetLength();
-                error              = OT_ERROR_ABORT;
-                ExitNow();
-            }
-
-            error = SendFragment(*mSendMessage, aFrame);
+            otLogNoteMac("Child ID Request requires fragmentation, aborting tx");
+            mMessageNextOffset = mSendMessage->GetLength();
+            error              = OT_ERROR_ABORT;
+            ExitNow();
         }
 
         assert(aFrame.GetLength() != 7);
@@ -610,38 +601,38 @@ exit:
     return error;
 }
 
-otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
+// This method constructs a MAC data from from a given IPv6 message.
+//
+// This method handles generation of MAC header, mesh header (if
+// requested), lowpan compression of IPv6 header, lowpan fragmentation
+// header (if message requires fragmentation). It uses the message
+// offset to construct next fragments. This method enables link security
+// when message is MLE type and requires fragmentation. It returns the
+// next offset into the message after the prepared frame.
+//
+uint16_t MeshForwarder::PrepareDataFrame(Mac::Frame &        aFrame,
+                                         Message &           aMessage,
+                                         const Mac::Address &aMacSource,
+                                         const Mac::Address &aMacDest,
+                                         bool                aAddMeshHeader,
+                                         uint16_t            aMeshSource,
+                                         uint16_t            aMeshDest)
 {
-    Mac::Address            meshDest, meshSource;
-    uint16_t                fcf;
-    Lowpan::FragmentHeader *fragmentHeader;
-    uint8_t *               payload;
-    uint8_t                 headerLength;
-    uint16_t                payloadLength;
-    uint16_t                fragmentLength;
-    uint16_t                dstpan;
-    uint8_t                 secCtl = Mac::Frame::kSecNone;
-    otError                 error  = OT_ERROR_NONE;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    Mac::HeaderIe ieList[2];
-#endif
+    uint16_t fcf;
+    uint8_t *payload;
+    uint8_t  headerLength;
+    uint16_t payloadLength;
+    uint16_t fragmentLength;
+    uint16_t dstpan;
+    uint8_t  secCtl;
+    uint16_t nextOffset;
 
-    if (mAddMeshHeader)
-    {
-        meshSource.SetShort(mMeshSource);
-        meshDest.SetShort(mMeshDest);
-    }
-    else
-    {
-        meshDest   = mMacDest;
-        meshSource = mMacSource;
-    }
+start:
 
-    // initialize MAC header
+    // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-
     if (aMessage.IsTimeSync())
     {
         fcf |= Mac::Frame::kFcfFrameVersion2015 | Mac::Frame::kFcfIePresent;
@@ -652,11 +643,11 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         fcf |= Mac::Frame::kFcfFrameVersion2006;
     }
 
-    fcf |= (mMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (mMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
+    fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
+    fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
 
-    // all unicast frames request ACK
-    if (mMacDest.IsExtended() || !mMacDest.IsBroadcast())
+    // All unicast frames request ACK
+    if (aMacDest.IsExtended() || !aMacDest.IsBroadcast())
     {
         fcf |= Mac::Frame::kFcfAckRequest;
     }
@@ -681,6 +672,10 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         }
 
         secCtl |= Mac::Frame::kSecEncMic32;
+    }
+    else
+    {
+        secCtl = Mac::Frame::kSecNone;
     }
 
     dstpan = Get<Mac::Mac>().GetPanId();
@@ -723,15 +718,15 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     aFrame.InitMacHeader(fcf, secCtl);
     aFrame.SetDstPanId(dstpan);
     aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetDstAddr(mMacDest);
-    aFrame.SetSrcAddr(mMacSource);
+    aFrame.SetDstAddr(aMacDest);
+    aFrame.SetSrcAddr(aMacSource);
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-
     if (aMessage.IsTimeSync())
     {
-        Mac::TimeIe *ie;
-        uint8_t *    cur = NULL;
+        Mac::TimeIe * ie;
+        uint8_t *     cur = NULL;
+        Mac::HeaderIe ieList[2];
 
         ieList[0].Init();
         ieList[0].SetId(Mac::Frame::kHeaderIeVendor);
@@ -754,8 +749,8 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
 #if OPENTHREAD_FTD
 
-    // initialize Mesh header
-    if (mAddMeshHeader)
+    // Initialize Mesh header
+    if (aAddMeshHeader)
     {
         Mle::MleRouter &   mle = Get<Mle::MleRouter>();
         Lowpan::MeshHeader meshHeader;
@@ -769,30 +764,30 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         else
         {
             // Calculate the number of predicted hops.
-            hopsLeft = mle.GetRouteCost(mMeshDest);
+            hopsLeft = mle.GetRouteCost(aMeshDest);
 
             if (hopsLeft != Mle::kMaxRouteCost)
             {
-                hopsLeft += mle.GetLinkCost(Mle::Mle::GetRouterId(mle.GetNextHop(mMeshDest)));
+                hopsLeft += mle.GetLinkCost(Mle::Mle::GetRouterId(mle.GetNextHop(aMeshDest)));
             }
             else
             {
                 // In case there is no route to the destination router (only link).
-                hopsLeft = mle.GetLinkCost(Mle::Mle::GetRouterId(mMeshDest));
+                hopsLeft = mle.GetLinkCost(Mle::Mle::GetRouterId(aMeshDest));
             }
         }
 
         // The hopsLft field MUST be incremented by one if the destination RLOC16
         // is not that of an active Router.
-        if (!Mle::Mle::IsActiveRouter(mMeshDest))
+        if (!Mle::Mle::IsActiveRouter(aMeshDest))
         {
             hopsLeft += 1;
         }
 
         meshHeader.Init();
         meshHeader.SetHopsLeft(hopsLeft + Lowpan::MeshHeader::kAdditionalHopsLeft);
-        meshHeader.SetSource(mMeshSource);
-        meshHeader.SetDestination(mMeshDest);
+        meshHeader.SetSource(aMeshSource);
+        meshHeader.SetDestination(aMeshDest);
         meshHeader.AppendTo(payload);
         payload += meshHeader.GetHeaderLength();
         headerLength += meshHeader.GetHeaderLength();
@@ -800,12 +795,25 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
 #endif
 
-    // copy IPv6 Header
+    // Compress IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
         Lowpan::BufferWriter buffer(payload, aFrame.GetMaxPayloadLength() - headerLength -
                                                  Lowpan::FragmentHeader::kInitialHeaderSize);
         uint8_t              hcLength;
+        Mac::Address         meshSource, meshDest;
+        otError              error;
+
+        if (aAddMeshHeader)
+        {
+            meshSource.SetShort(aMeshSource);
+            meshDest.SetShort(aMeshDest);
+        }
+        else
+        {
+            meshDest   = aMacDest;
+            meshSource = aMacSource;
+        }
 
         error = Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer);
         assert(error == OT_ERROR_NONE);
@@ -817,16 +825,20 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         if (payloadLength > fragmentLength)
         {
+            Lowpan::FragmentHeader *fragmentHeader;
+
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
+                // Enable security and try again.
                 aMessage.SetOffset(0);
-                ExitNow(error = OT_ERROR_NOT_CAPABLE);
+                aMessage.SetLinkSecurityEnabled(true);
+                goto start;
             }
 
-            // write Fragment header
+            // Write Fragment header
             if (aMessage.GetDatagramTag() == 0)
             {
-                // avoid using datagram tag value 0, which indicates the tag has not been set
+                // Avoid using datagram tag value 0, which indicates the tag has not been set
                 if (mFragTag == 0)
                 {
                     mFragTag++;
@@ -854,14 +866,16 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
         aFrame.SetPayloadLength(static_cast<uint8_t>(headerLength + payloadLength));
 
-        mMessageNextOffset = aMessage.GetOffset() + payloadLength;
+        nextOffset = aMessage.GetOffset() + payloadLength;
         aMessage.SetOffset(0);
     }
     else
     {
+        Lowpan::FragmentHeader *fragmentHeader;
+
         payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
-        // write Fragment header
+        // Write Fragment header
         fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
         fragmentHeader->Init();
         fragmentHeader->SetDatagramSize(aMessage.GetLength());
@@ -878,14 +892,14 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
             payloadLength = fragmentLength;
         }
 
-        // copy IPv6 Payload
+        // Copy IPv6 Payload
         aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
         aFrame.SetPayloadLength(static_cast<uint8_t>(headerLength + payloadLength));
 
-        mMessageNextOffset = aMessage.GetOffset() + payloadLength;
+        nextOffset = aMessage.GetOffset() + payloadLength;
     }
 
-    if (mMessageNextOffset < aMessage.GetLength())
+    if (nextOffset < aMessage.GetLength())
     {
         aFrame.SetFramePending(true);
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -893,9 +907,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 #endif
     }
 
-exit:
-
-    return error;
+    return nextOffset;
 }
 
 void MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
