@@ -171,14 +171,6 @@ exit:
     return;
 }
 
-otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &aAddress) const
-{
-    aAddress.mType       = Ip6::LinkAddress::kEui64;
-    aAddress.mLength     = sizeof(aAddress.mExtAddress);
-    aAddress.mExtAddress = Get<Mac::Mac>().GetExtAddress();
-    return OT_ERROR_NONE;
-}
-
 otError ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
 {
     otError  error;
