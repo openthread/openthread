@@ -14,7 +14,7 @@ for an example using basic OpenThread capabilities.
 
 Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
-[gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
+[gnu-toolchain]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
 
 In a Bash terminal, follow these instructions to install the GNU toolchain and
 other dependencies.

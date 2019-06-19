@@ -20,7 +20,7 @@ Before you start building the examples, you must download and install the toolch
 
 Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
-[gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
+[gnu-toolchain]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
 
 To install the GNU toolchain and its dependencies, run the following commands in Bash:
 
