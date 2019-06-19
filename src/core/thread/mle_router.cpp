@@ -1394,7 +1394,6 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
             router->ResetLinkFailures();
             router->SetLastHeard(TimerMilli::GetNow());
             router->SetState(Neighbor::kStateLinkRequest);
-            router->SetDataRequestPending(false);
             SendLinkRequest(router);
             ExitNow(error = OT_ERROR_NO_ROUTE);
         }
@@ -1638,7 +1637,6 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
-        child->SetDataRequestPending(false);
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
         if (Tlv::GetTlv(aMessage, Tlv::kTimeRequest, sizeof(timeRequest), timeRequest) == OT_ERROR_NONE)
         {

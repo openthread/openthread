@@ -45,6 +45,20 @@
 
 namespace ot {
 
+const Mac::Address &IndirectSender::ChildInfo::GetMacAddress(Mac::Address &aMacAddress) const
+{
+    if (mUseShortAddress)
+    {
+        aMacAddress.SetShort(static_cast<const Child *>(this)->GetRloc16());
+    }
+    else
+    {
+        aMacAddress.SetExtended(static_cast<const Child *>(this)->GetExtAddress());
+    }
+
+    return aMacAddress;
+}
+
 IndirectSender::IndirectSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
