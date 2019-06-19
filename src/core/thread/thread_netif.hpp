@@ -129,14 +129,6 @@ public:
     bool IsUp(void) const { return mIsUp; }
 
     /**
-     * This method retrieves the link address.
-     *
-     * @param[out]  aAddress  A reference to the link address.
-     *
-     */
-    virtual otError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
-
-    /**
      * This method submits a message to the network interface.
      *
      * @param[in]  aMessage  A reference to the message.
@@ -144,7 +136,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
      *
      */
-    virtual otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -157,7 +149,7 @@ public:
      * @retval OT_ERROR_NO_ROUTE  Could not find a valid route.
      *
      */
-    virtual otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
      * This method returns whether Thread Management Framework Addressing Rules are met.

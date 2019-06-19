@@ -401,53 +401,6 @@ public:
      */
     void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
-    /**
-     * This virtual method enqueues an IPv6 messages on this network interface.
-     *
-     * @param[in]  aMessage  A reference to the IPv6 message.
-     *
-     * @retval OT_ERROR_NONE  Successfully enqueued the IPv6 message.
-     *
-     */
-    virtual otError SendMessage(Message &aMessage)
-    {
-        OT_UNUSED_VARIABLE(aMessage);
-        return OT_ERROR_NOT_IMPLEMENTED;
-    }
-
-    /**
-     * This virtual method fills out @p aAddress with the link address.
-     *
-     * @param[out]  aAddress  A reference to the link address.
-     *
-     * @retval OT_ERROR_NONE  Successfully retrieved the link address.
-     *
-     */
-    virtual otError GetLinkAddress(LinkAddress &aAddress) const
-    {
-        OT_UNUSED_VARIABLE(aAddress);
-        return OT_ERROR_NOT_IMPLEMENTED;
-    }
-
-    /**
-     * This virtual method performs a source-destination route lookup.
-     *
-     * @param[in]   aSource       A reference to the IPv6 source address.
-     * @param[in]   aDestination  A reference to the IPv6 destination address.
-     * @param[out]  aPrefixMatch  The longest prefix match result.
-     *
-     * @retval OT_ERROR_NONE      Successfully found a route.
-     * @retval OT_ERROR_NO_ROUTE  No route to destination.
-     *
-     */
-    virtual otError RouteLookup(const Address &aSource, const Address &aDestination, uint8_t *aPrefixMatch)
-    {
-        OT_UNUSED_VARIABLE(aSource);
-        OT_UNUSED_VARIABLE(aDestination);
-        OT_UNUSED_VARIABLE(aPrefixMatch);
-        return OT_ERROR_NOT_IMPLEMENTED;
-    }
-
 protected:
     /**
      * This method subscribes the network interface to the realm-local all MPL forwarders, link-local and
