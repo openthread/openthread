@@ -3150,7 +3150,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
             aNeighbor.SetState(Neighbor::kStateInvalid);
 
-            Get<MeshForwarder>().ClearChildIndirectMessages(static_cast<Child &>(aNeighbor));
+            Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
             Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
 
             if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFullThreadDevice)

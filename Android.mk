@@ -191,6 +191,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
     src/core/thread/energy_scan_server.cpp                  \
+    src/core/thread/indirect_sender.cpp                     \
     src/core/thread/key_manager.cpp                         \
     src/core/thread/link_quality.cpp                        \
     src/core/thread/lowpan.cpp                              \

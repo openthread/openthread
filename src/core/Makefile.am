@@ -197,6 +197,7 @@ SOURCES_COMMON                      = \
     thread/announce_sender.cpp        \
     thread/child_table.cpp            \
     thread/energy_scan_server.cpp     \
+    thread/indirect_sender.cpp        \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
@@ -364,6 +365,7 @@ HEADERS_COMMON                      = \
     thread/announce_sender.hpp        \
     thread/child_table.hpp            \
     thread/energy_scan_server.hpp     \
+    thread/indirect_sender.hpp        \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \

@@ -76,7 +76,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
 #if OPENTHREAD_FTD
-    , mSourceMatchController(aInstance)
+    , mIndirectSender(aInstance)
     , mSendMessageFrameCounter(0)
     , mSendMessageKeyId(0)
     , mSendMessageDataSequenceNumber(0)
@@ -101,6 +101,10 @@ void MeshForwarder::Start(void)
     if (mEnabled == false)
     {
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
+#if OPENTHREAD_FTD
+        mIndirectSender.Start();
+#endif
+
         mEnabled = true;
     }
 }
@@ -132,12 +136,7 @@ void MeshForwarder::Stop(void)
     }
 
 #if OPENTHREAD_FTD
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
-    {
-        iter.GetChild()->SetIndirectMessage(NULL);
-        Get<SourceMatchController>().ResetMessageCount(*iter.GetChild());
-    }
-
+    mIndirectSender.Stop();
     memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
 #endif
 
@@ -154,7 +153,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
 #if OPENTHREAD_FTD
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
-        IgnoreReturnValue(RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
+        IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
 #endif
 
@@ -180,7 +179,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
     mSendMessageIsARetransmission = false;
 
 #if OPENTHREAD_FTD
-    if (GetIndirectTransmission() == OT_ERROR_NONE)
+    if (mIndirectSender.GetIndirectTransmission() == OT_ERROR_NONE)
     {
         ExitNow();
     }
@@ -992,7 +991,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
     neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
 
 #if OPENTHREAD_FTD
-    HandleSentFrameToChild(aFrame, aError, macDest);
+    mIndirectSender.HandleSentFrameToChild(aFrame, aError, macDest);
 #endif
 
     VerifyOrExit(mSendMessage != NULL);
@@ -1217,7 +1216,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
         if (commandId == Mac::Frame::kMacCmdDataRequest)
         {
-            HandleDataRequest(aFrame, macSource, linkInfo);
+            mIndirectSender.HandleDataPoll(aFrame, macSource, linkInfo);
         }
         else
         {
