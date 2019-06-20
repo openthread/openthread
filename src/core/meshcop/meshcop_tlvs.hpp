@@ -607,6 +607,14 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
+     * This method returns the size (in bytes) of the Mesh Local Prefix field.
+     *
+     * @returns The size (in bytes) of the Mesh Local Prefix field (8 bytes).
+     *
+     */
+    uint8_t GetMeshLocalPrefixLength(void) const { return sizeof(mMeshLocalPrefix); }
+
+    /**
      * This method returns the Mesh Local Prefix value.
      *
      * @returns The Mesh Local Prefix value.
