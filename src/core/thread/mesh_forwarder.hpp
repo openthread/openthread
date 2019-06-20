@@ -503,8 +503,6 @@ private:
 
     Message *mSendMessage;
     bool     mSendMessageIsARetransmission;
-    uint8_t  mSendMessageMaxCsmaBackoffs;
-    uint8_t  mSendMessageMaxFrameRetries;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -532,7 +530,6 @@ private:
     uint32_t              mSendMessageFrameCounter;
     uint8_t               mSendMessageKeyId;
     uint8_t               mSendMessageDataSequenceNumber;
-    Child *               mIndirectStartingChild;
 #endif
 
     DataPollSender mDataPollSender;

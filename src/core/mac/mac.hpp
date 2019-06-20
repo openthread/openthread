@@ -208,14 +208,26 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method requests a new MAC frame transmission.
+     * This method requests a direct data frame transmission.
      *
      * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
      * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
      * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
      *
      */
-    otError RequestFrameTransmission(void);
+    otError RequestDirectFrameTransmission(void);
+
+#if OPENTHREAD_FTD
+    /**
+     * This method requests an indirect data frame transmission.
+     *
+     * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
+     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
+     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+     *
+     */
+    otError RequestIndirectFrameTransmission(void);
+#endif
 
     /**
      * This method requests an Out of Band frame for MAC Transmission.
@@ -600,7 +612,10 @@ private:
         kOperationActiveScan,
         kOperationEnergyScan,
         kOperationTransmitBeacon,
-        kOperationTransmitData,
+        kOperationTransmitDataDirect,
+#if OPENTHREAD_FTD
+        kOperationTransmitDataIndirect,
+#endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
@@ -662,7 +677,10 @@ private:
     bool mPendingActiveScan : 1;
     bool mPendingEnergyScan : 1;
     bool mPendingTransmitBeacon : 1;
-    bool mPendingTransmitData : 1;
+    bool mPendingTransmitDataDirect : 1;
+#if OPENTHREAD_FTD
+    bool mPendingTransmitDataIndirect : 1;
+#endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
     bool mPendingWaitingForData : 1;
