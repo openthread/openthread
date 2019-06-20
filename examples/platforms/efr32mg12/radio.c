@@ -497,52 +497,45 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     efr32BandConfig * config;
     RAIL_Status_t     status;
 
-    if (sTransmitBusy)
+    assert(sTransmitBusy == false);
+
+    otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
+                    error = OT_ERROR_INVALID_STATE);
+
+    config = efr32RadioGetBandConfig(aFrame->mChannel);
+    otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    sState         = OT_RADIO_STATE_TRANSMIT;
+    sTransmitError = OT_ERROR_NONE;
+    sTransmitBusy  = true;
+
+    if (sCurrentBandConfig != config)
     {
-        // If the radio is already transmitting something, dont attempt to send a new packet.
-        // Let the upper layer know about the failure immediately.
-        otPlatRadioTxDone(aInstance, aFrame, NULL, OT_ERROR_BUSY);
+        RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
+        efr32RailConfigLoad(config);
+        sCurrentBandConfig = config;
+    }
+
+    RAIL_WriteTxFifo(gRailHandle, &aFrame->mLength, sizeof(aFrame->mLength), true);
+    RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
+
+    if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
+    {
+        txOptions |= RAIL_TX_OPTION_WAIT_FOR_ACK;
+    }
+
+    if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
+    {
+        status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, NULL);
     }
     else
     {
-        otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
-                        error = OT_ERROR_INVALID_STATE);
-
-        config = efr32RadioGetBandConfig(aFrame->mChannel);
-        otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
-
-        sState         = OT_RADIO_STATE_TRANSMIT;
-        sTransmitError = OT_ERROR_NONE;
-        sTransmitBusy  = true;
-
-        if (sCurrentBandConfig != config)
-        {
-            RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
-            efr32RailConfigLoad(config);
-            sCurrentBandConfig = config;
-        }
-
-        RAIL_WriteTxFifo(gRailHandle, &aFrame->mLength, sizeof(aFrame->mLength), true);
-        RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
-
-        if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
-        {
-            txOptions |= RAIL_TX_OPTION_WAIT_FOR_ACK;
-        }
-
-        if (aFrame->mInfo.mTxInfo.mCsmaCaEnabled)
-        {
-            status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, NULL);
-        }
-        else
-        {
-            status = RAIL_StartTx(gRailHandle, aFrame->mChannel, txOptions, NULL);
-        }
-
-        assert(status == RAIL_STATUS_NO_ERROR);
-
-        otPlatRadioTxStarted(aInstance, aFrame);
+        status = RAIL_StartTx(gRailHandle, aFrame->mChannel, txOptions, NULL);
     }
+
+    assert(status == RAIL_STATUS_NO_ERROR);
+
+    otPlatRadioTxStarted(aInstance, aFrame);
 
 exit:
     return error;
