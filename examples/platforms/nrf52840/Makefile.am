@@ -85,6 +85,7 @@ PLATFORM_COMMON_SOURCES                                                         
     flash.c                                                                                                  \
     logging.c                                                                                                \
     misc.c                                                                                                   \
+    openthread-core-nrf52840-config.h                                                                        \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
@@ -102,6 +103,7 @@ SINGLEPHY_SOURCES                                                               
 
 SOFTDEVICE_SOURCES                                                                                         = \
     flash_sd.c                                                                                               \
+    platform-softdevice.h                                                                                    \
     softdevice.c                                                                                             \
     softdevice.h                                                                                             \
     $(NULL)

@@ -77,6 +77,7 @@ PLATFORM_COMMON_SOURCES                                                         
     flash.c                                                                                                  \
     logging.c                                                                                                \
     misc.c                                                                                                   \
+    openthread-core-nrf52811-config.h                                                                        \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \

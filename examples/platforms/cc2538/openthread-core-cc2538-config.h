@@ -40,7 +40,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                        "CC2538"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "CC2538"
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
@@ -48,7 +48,7 @@
  * Define to 1 if you want to enable software ACK timeout logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT          1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -56,7 +56,7 @@
  * Define to 1 if you want to enable software retransmission logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT           1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
@@ -64,7 +64,7 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF         1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
 
 /**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -72,7 +72,7 @@
  * Define to 1 if you want to enable software energy scanning logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN          1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN 1
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -82,7 +82,7 @@
  * in the linker file.
  *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                           0
+#define SETTINGS_CONFIG_BASE_ADDRESS 0
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -90,7 +90,7 @@
  * The CC2538 linker script sets aside 2 pages.
  *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                               2
+#define SETTINGS_CONFIG_PAGE_NUM 2
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -98,7 +98,7 @@
  * The page size of settings, 2K bytes
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                              2048
+#define SETTINGS_CONFIG_PAGE_SIZE 2048
 
 /**
  * @def OPENTHREAD_CONFIG_CC2538_WITH_CC2592
@@ -115,7 +115,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2538_WITH_CC2592
-#define OPENTHREAD_CONFIG_CC2538_WITH_CC2592                    0
+#define OPENTHREAD_CONFIG_CC2538_WITH_CC2592 0
 #endif
 
 /**
@@ -132,7 +132,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_PA_EN_PIN
-#define OPENTHREAD_CONFIG_CC2592_PA_EN_PIN                      3
+#define OPENTHREAD_CONFIG_CC2592_PA_EN_PIN 3
 #endif
 
 /**
@@ -149,7 +149,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN
-#define OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN                     2
+#define OPENTHREAD_CONFIG_CC2592_LNA_EN_PIN 2
 #endif
 
 /**
@@ -166,7 +166,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_USE_HGM
-#define OPENTHREAD_CONFIG_CC2592_USE_HGM                        1
+#define OPENTHREAD_CONFIG_CC2592_USE_HGM 1
 #endif
 
 /**
@@ -181,7 +181,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY
-#define OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY            -88
+#define OPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY -88
 #endif
 
 /**
@@ -197,7 +197,7 @@
  * this calibrates the RSSI value accordingly.
  */
 #ifndef OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET
-#define OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET                    73
+#define OPENTHREAD_CONFIG_CC2538_RSSI_OFFSET 73
 #endif
 
 /**
@@ -210,7 +210,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_PORT
-#define OPENTHREAD_CONFIG_CC2592_HGM_PORT                       GPIO_D_BASE
+#define OPENTHREAD_CONFIG_CC2592_HGM_PORT GPIO_D_BASE
 #endif
 
 /**
@@ -223,7 +223,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_PIN
-#define OPENTHREAD_CONFIG_CC2592_HGM_PIN                        2
+#define OPENTHREAD_CONFIG_CC2592_HGM_PIN 2
 #endif
 
 /**
@@ -235,7 +235,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE
-#define OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE              true
+#define OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE true
 #endif
 
-#endif  // OPENTHREAD_CORE_CC2538_CONFIG_H_
+#endif // OPENTHREAD_CORE_CC2538_CONFIG_H_

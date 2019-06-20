@@ -47,11 +47,14 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
 
 PLATFORM_SOURCES                                      = \
     alarm.c                                             \
+    cc2650_radio.h                                      \
     diag.c                                              \
     entropy.c                                           \
     flash.c                                             \
     misc.c                                              \
     logging.c                                           \
+    openthread-core-cc2650-config.h                     \
+    platform-cc2650.h                                   \
     radio.c                                             \
     system.c                                            \
     uart.c                                              \
@@ -70,13 +73,8 @@ libopenthread_cc2650_a_DEPENDENCIES                   =                       \
     $(top_srcdir)/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-noinst_HEADERS                                        = \
-    platform-cc2650.h                                   \
-    $(NULL)
-
 PRETTY_FILES                                          = \
     $(PLATFORM_SOURCES)                                 \
-    $(noinst_HEADERS)                                   \
     $(NULL)
 
 Dash                                                  = -

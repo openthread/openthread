@@ -43,13 +43,21 @@ CLEANFILES =
 
 libopenthread_qpg6095_a_SOURCES             = \
     alarm.c                                   \
+    alarm_qorvo.h                             \
     entropy.c                                 \
     logging.c                                 \
     misc.c                                    \
+    misc_qorvo.h                              \
+    openthread-core-qpg6095-config.h          \
     platform.c                                \
+    platform_qorvo.h                          \
     radio.c                                   \
+    radio_qorvo.h                             \
+    random_qorvo.h                            \
     settings.cpp                              \
+    settings_qorvo.h                          \
     uart.c                                    \
+    uart_qorvo.h                              \
     $(NULL)
 
 libopenthread_qpg6095_a_LIBADD              = \

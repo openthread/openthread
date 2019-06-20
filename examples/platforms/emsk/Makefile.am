@@ -71,6 +71,8 @@ PLATFORM_SOURCES                                                                
     flash.c                                                                                         \
     logging.c                                                                                       \
     misc.c                                                                                          \
+    openthread-core-emsk-config.h                                                                   \
+    platform-emsk.h                                                                                 \
     radio.c                                                                                         \
     system.c                                                                                        \
     uart.c                                                                                          \

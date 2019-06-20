@@ -35,14 +35,14 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                    "CC1352"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "CC1352"
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
  * The base address of the pages to be used for non-volatile-settings storage.
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                       (0x52000)
+#define SETTINGS_CONFIG_BASE_ADDRESS (0x52000)
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -51,14 +51,13 @@
  *
  * @note *MUST BE* 8K.
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                          (0x2000)
+#define SETTINGS_CONFIG_PAGE_SIZE (0x2000)
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
  *
  * The number of flash pages to use for non-volatile settings storage.
  */
-#define SETTINGS_CONFIG_PAGE_NUM                           (2)
+#define SETTINGS_CONFIG_PAGE_NUM (2)
 
 #endif /* OPENTHREAD_CORE_CC1352_CONFIG_H_ */
-

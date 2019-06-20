@@ -35,8 +35,8 @@
 #ifndef PLATFORM_KW41Z_H_
 #define PLATFORM_KW41Z_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdint.h>
 
@@ -81,4 +81,4 @@ void kw41zRandomInit(void);
  *
  */
 void kw41zUartProcess(void);
-#endif  // PLATFORM_KW41Z_H_
+#endif // PLATFORM_KW41Z_H_

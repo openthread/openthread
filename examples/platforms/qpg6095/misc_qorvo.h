@@ -35,9 +35,9 @@
 #ifndef MISC_QORVO_H_
 #define MISC_QORVO_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 void qorvoPlatReset(void);
 
-#endif  // MISC_QORVO_H_
+#endif // MISC_QORVO_H_

@@ -47,11 +47,14 @@ libopenthread_cc2652_a_CPPFLAGS                                                 
 
 PLATFORM_SOURCES                                                                        = \
     alarm.c                                                                               \
+    cc2652_radio.h                                                                        \
     diag.c                                                                                \
     entropy.c                                                                             \
     flash.c                                                                               \
     logging.c                                                                             \
     misc.c                                                                                \
+    openthread-core-cc2652-config.h                                                       \
+    platform-cc2652.h                                                                     \
     radio.c                                                                               \
     system.c                                                                              \
     uart.c                                                                                \
@@ -69,13 +72,8 @@ libopenthread_cc2652_a_DEPENDENCIES                                             
     $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a      \
     $(NULL)
 
-noinst_HEADERS                                                                          = \
-    platform-cc2652.h                                                                     \
-    $(NULL)
-
 PRETTY_FILES                                                                            = \
     $(PLATFORM_SOURCES)                                                                   \
-    $(noinst_HEADERS)                                                                     \
     $(NULL)
 
 Dash = -
