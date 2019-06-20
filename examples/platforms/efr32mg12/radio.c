@@ -280,11 +280,11 @@ void efr32RadioInit(void)
 {
     RAIL_Status_t status;
 
-    //check if RAIL_TX_FIFO_SIZE is power of two..
+    // check if RAIL_TX_FIFO_SIZE is power of two..
     assert((RAIL_TX_FIFO_SIZE & (RAIL_TX_FIFO_SIZE - 1)) == 0);
 
-    //check the limits of the RAIL_TX_FIFO_SIZE.
-    assert((RAIL_TX_FIFO_SIZE >= 64 ) || (RAIL_TX_FIFO_SIZE <= 4096));
+    // check the limits of the RAIL_TX_FIFO_SIZE.
+    assert((RAIL_TX_FIFO_SIZE >= 64) || (RAIL_TX_FIFO_SIZE <= 4096));
 
     efr32ConfigInit(RAILCb_Generic);
 
