@@ -62,8 +62,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
     , mSendMessageIsARetransmission(false)
-    , mSendMessageMaxCsmaBackoffs(Mac::kMaxCsmaBackoffsDirect)
-    , mSendMessageMaxFrameRetries(Mac::kMaxFrameRetriesDirect)
     , mMeshSource()
     , mMeshDest()
     , mAddMeshHeader(false)
@@ -80,7 +78,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mSendMessageFrameCounter(0)
     , mSendMessageKeyId(0)
     , mSendMessageDataSequenceNumber(0)
-    , mIndirectStartingChild(NULL)
 #endif
     , mDataPollSender(aInstance)
 {
@@ -192,9 +189,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             mSendMessage->SetTxSuccess(true);
         }
 
-        mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsDirect;
-        mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesDirect;
-        Get<Mac::Mac>().RequestFrameTransmission();
+        Get<Mac::Mac>().RequestDirectFrameTransmission();
         ExitNow();
     }
 
@@ -503,8 +498,6 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     {
         SendEmptyFrame(aFrame, false);
         aFrame.SetIsARetransmission(false);
-        aFrame.SetMaxCsmaBackoffs(Mac::kMaxCsmaBackoffsDirect);
-        aFrame.SetMaxFrameRetries(Mac::kMaxFrameRetriesDirect);
         ExitNow();
     }
 
@@ -574,8 +567,6 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     assert(error == OT_ERROR_NONE);
 
     aFrame.SetIsARetransmission(mSendMessageIsARetransmission);
-    aFrame.SetMaxCsmaBackoffs(mSendMessageMaxCsmaBackoffs);
-    aFrame.SetMaxFrameRetries(mSendMessageMaxFrameRetries);
 
 #if OPENTHREAD_FTD
 

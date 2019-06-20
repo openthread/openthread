@@ -150,6 +150,16 @@ exit:
     return;
 }
 
+otError IndirectSender::HandleFrameRequest(Mac::Frame &aFrame)
+{
+    return Get<MeshForwarder>().HandleFrameRequest(aFrame);
+}
+
+void IndirectSender::HandleSentFrame(Mac::Frame &aFrame, otError aError)
+{
+    Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
+}
+
 void IndirectSender::HandleDataPoll(const Mac::Frame &      aFrame,
                                     const Mac::Address &    aMacSource,
                                     const otThreadLinkInfo &aLinkInfo)
@@ -200,9 +210,7 @@ otError IndirectSender::GetIndirectTransmission(void)
             continue;
         }
 
-        Get<MeshForwarder>().mSendMessage                = child.GetIndirectMessage();
-        Get<MeshForwarder>().mSendMessageMaxCsmaBackoffs = Mac::kMaxCsmaBackoffsIndirect;
-        Get<MeshForwarder>().mSendMessageMaxFrameRetries = Mac::kMaxFrameRetriesIndirect;
+        Get<MeshForwarder>().mSendMessage = child.GetIndirectMessage();
 
         if (Get<MeshForwarder>().mSendMessage == NULL)
         {
@@ -234,7 +242,7 @@ otError IndirectSender::GetIndirectTransmission(void)
 
         mIndirectStartingChild = &child;
 
-        Get<Mac::Mac>().RequestFrameTransmission();
+        Get<Mac::Mac>().RequestIndirectFrameTransmission();
         ExitNow(error = OT_ERROR_NONE);
     }
 

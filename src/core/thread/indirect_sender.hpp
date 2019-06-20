@@ -194,6 +194,10 @@ public:
     otError GetIndirectTransmission(void);
     void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
 
+    // Callbacks from MAC layer
+    void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
+    otError HandleFrameRequest(Mac::Frame &aFrame);
+
 private:
     enum
     {
