@@ -227,13 +227,13 @@ class Node:
         return commands
 
     def set_mode(self, mode):
-        cmd = 'mode ' + mode
+        cmd = 'mode %s' % mode
         self.send_command(cmd)
         self._expect('Done')
 
     def debug(self, level):
         # `debug` command will not trigger interaction with simulator
-        self.send_command('debug '+ str(level), go=False)
+        self.send_command('debug %d' % level, go=False)
 
     def start(self):
         self.interface_up()
@@ -265,12 +265,12 @@ class Node:
         self._expect('Done')
 
     def commissioner_add_joiner(self, addr, psk):
-        cmd = 'commissioner joiner add ' + addr + ' ' + psk
+        cmd = 'commissioner joiner add %s %s' % (addr, psk)
         self.send_command(cmd)
         self._expect('Done')
 
     def joiner_start(self, pskd='', provisioning_url=''):
-        cmd = 'joiner start ' + pskd + ' ' + provisioning_url
+        cmd = 'joiner start %s %s' % (pskd, provisioning_url)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -290,16 +290,16 @@ class Node:
         self._expect('Done')
 
     def add_whitelist(self, addr, rssi=None):
-        cmd = 'macfilter addr add ' + addr
+        cmd = 'macfilter addr add %s' % addr
 
         if rssi != None:
-            cmd += ' ' + str(rssi)
+            cmd += ' %s' % rssi
 
         self.send_command(cmd)
         self._expect('Done')
 
     def remove_whitelist(self, addr):
-        cmd = 'macfilter addr remove ' + addr
+        cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
         self._expect('Done')
 
@@ -363,7 +363,7 @@ class Node:
         return masterkey
 
     def set_masterkey(self, masterkey):
-        cmd = 'masterkey ' + masterkey
+        cmd = 'masterkey %s' % masterkey
         self.send_command(cmd)
         self._expect('Done')
 
@@ -401,7 +401,7 @@ class Node:
         return network_name
 
     def set_network_name(self, network_name):
-        cmd = 'networkname ' + network_name
+        cmd = 'networkname %s' % network_name
         self.send_command(cmd)
         self._expect('Done')
 
@@ -454,7 +454,7 @@ class Node:
         return states[match]
 
     def set_state(self, state):
-        cmd = 'state ' + state
+        cmd = 'state %s' % state
         self.send_command(cmd)
         self._expect('Done')
 
@@ -490,7 +490,7 @@ class Node:
         self._expect('Done')
 
     def add_ipaddr(self, ipaddr):
-        cmd = 'ipaddr add ' + ipaddr
+        cmd = 'ipaddr add %s' % ipaddr
         self.send_command(cmd)
         self._expect('Done')
 
@@ -554,12 +554,12 @@ class Node:
         return eidcaches
 
     def add_service(self, enterpriseNumber, serviceData, serverData):
-        cmd = 'service add ' + enterpriseNumber + ' ' + serviceData+ ' '  + serverData
+        cmd = 'service add %s %s %s' % (enterpriseNumber, serviceData, serverData)
         self.send_command(cmd)
         self._expect('Done')
 
     def remove_service(self, enterpriseNumber, serviceData):
-        cmd = 'service remove ' + enterpriseNumber + ' ' + serviceData
+        cmd = 'service remove %s %s' % (enterpriseNumber, serviceData)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -644,22 +644,22 @@ class Node:
         self._expect('Done')
 
     def add_prefix(self, prefix, flags, prf = 'med'):
-        cmd = 'prefix add ' + prefix + ' ' + flags + ' ' + prf
+        cmd = 'prefix add %s %s %s' % (prefix, flags, prf)
         self.send_command(cmd)
         self._expect('Done')
 
     def remove_prefix(self, prefix):
-        cmd = 'prefix remove ' + prefix
+        cmd = 'prefix remove %s' % prefix
         self.send_command(cmd)
         self._expect('Done')
 
     def add_route(self, prefix, prf = 'med'):
-        cmd = 'route add ' + prefix + ' ' + prf
+        cmd = 'route add %s %s' % (prefix, prf)
         self.send_command(cmd)
         self._expect('Done')
 
     def remove_route(self, prefix):
-        cmd = 'route remove ' + prefix
+        cmd = 'route remove %s' % prefix
         self.send_command(cmd)
         self._expect('Done')
 
@@ -668,7 +668,7 @@ class Node:
         self._expect('Done')
 
     def energy_scan(self, mask, count, period, scan_duration, ipaddr):
-        cmd = 'commissioner energy ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + str(scan_duration) + ' ' + ipaddr
+        cmd = 'commissioner energy %d %d %d %d %s' % (mask, count, period, scan_duration, ipaddr)
         self.send_command(cmd)
 
         if isinstance(self.simulator, simulator.VirtualTime):
@@ -680,7 +680,7 @@ class Node:
         self._expect('Energy:', timeout=timeout)
 
     def panid_query(self, panid, mask, ipaddr):
-        cmd = 'commissioner panid ' + str(panid) + ' ' + str(mask) + ' ' + ipaddr
+        cmd = 'commissioner panid %d %d %s' % (panid, mask, ipaddr)
         self.send_command(cmd)
 
         if isinstance(self.simulator, simulator.VirtualTime):
@@ -706,9 +706,9 @@ class Node:
         return results
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
-        cmd = 'ping ' + ipaddr
+        cmd = 'ping %s' % ipaddr
         if size != None:
-            cmd += ' ' + str(size)
+            cmd += ' %d' % size
 
         self.send_command(cmd)
 
@@ -763,7 +763,7 @@ class Node:
             self._expect('Done')
 
         if master_key != None:
-            cmd = 'dataset masterkey ' + master_key
+            cmd = 'dataset masterkey %s' % master_key
             self.send_command(cmd)
             self._expect('Done')
 
@@ -796,7 +796,7 @@ class Node:
         self._expect('Done')
 
     def announce_begin(self, mask, count, period, ipaddr):
-        cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
+        cmd = 'commissioner announce %d %d %d %s' % (mask, count, period, ipaddr)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -814,22 +814,22 @@ class Node:
             cmd += 'channelmask %d ' % channel_mask
 
         if extended_panid != None:
-            cmd += 'extpanid ' + extended_panid + ' '
+            cmd += 'extpanid %s ' % extended_panid
 
         if panid != None:
             cmd += 'panid %d ' % panid
 
         if master_key != None:
-            cmd += 'masterkey ' + master_key + ' '
+            cmd += 'masterkey %s ' % master_key
 
         if mesh_local != None:
-            cmd += 'localprefix ' + mesh_local + ' '
+            cmd += 'localprefix %s ' % mesh_local
 
         if network_name != None:
-            cmd += 'networkname ' + network_name + ' '
+            cmd += 'networkname %s ' % network_name
 
         if binary != None:
-            cmd += 'binary ' + binary + ' '
+            cmd += 'binary %s ' % binary
 
         self.send_command(cmd)
         self._expect('Done')
@@ -853,19 +853,19 @@ class Node:
             cmd += 'panid %d ' % panid
 
         if master_key != None:
-            cmd += 'masterkey ' + master_key + ' '
+            cmd += 'masterkey %s ' % master_key
 
         if mesh_local != None:
-            cmd += 'localprefix ' + mesh_local + ' '
+            cmd += 'localprefix %s ' % mesh_local
 
         if network_name != None:
-            cmd += 'networkname ' + network_name + ' '
+            cmd += 'networkname %s ' % network_name
 
         self.send_command(cmd)
         self._expect('Done')
 
     def coaps_start_psk(self, psk, pskIdentity):
-        cmd = 'coaps psk ' + psk + ' ' + pskIdentity
+        cmd = 'coaps psk %s %s' % (psk, pskIdentity)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -883,7 +883,7 @@ class Node:
         self._expect('Done')
 
     def coaps_set_resource_path(self, path):
-        cmd = 'coaps resource ' + path
+        cmd = 'coaps resource %s' % path
         self.send_command(cmd)
         self._expect('Done')
 
@@ -900,7 +900,7 @@ class Node:
         self._expect('Done', timeout=timeout)
 
     def coaps_connect(self, ipaddr):
-        cmd = 'coaps connect ' + ipaddr
+        cmd = 'coaps connect %s' % ipaddr
         self.send_command(cmd)
 
         if isinstance(self.simulator, simulator.VirtualTime):
@@ -930,7 +930,7 @@ class Node:
         self._expect('coaps response', timeout=timeout)
 
     def commissioner_mgmtset(self, tlvs_binary):
-        cmd = 'commissioner mgmtset binary ' + tlvs_binary
+        cmd = 'commissioner mgmtset binary %s' % tlvs_binary
         self.send_command(cmd)
         self._expect('Done')
 
