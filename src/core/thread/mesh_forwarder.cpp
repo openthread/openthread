@@ -82,7 +82,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mSendMessageDataSequenceNumber(0)
     , mIndirectStartingChild(NULL)
 #endif
-    , mDataPollManager(aInstance)
+    , mDataPollSender(aInstance)
 {
     mFragTag = Random::NonCrypto::GetUint16();
 
@@ -111,7 +111,7 @@ void MeshForwarder::Stop(void)
 
     VerifyOrExit(mEnabled == true);
 
-    mDataPollManager.StopPolling();
+    mDataPollSender.StopPolling();
     mUpdateTimer.Stop();
 
     if (mScanning)
@@ -367,12 +367,12 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     if (aRxOnWhenIdle)
     {
-        mDataPollManager.StopPolling();
+        mDataPollSender.StopPolling();
         Get<Utils::SupervisionListener>().Stop();
     }
     else
     {
-        mDataPollManager.StartPolling();
+        mDataPollSender.StartPolling();
         Get<Utils::SupervisionListener>().Start();
     }
 }

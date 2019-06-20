@@ -39,10 +39,10 @@
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "mac/channel_mask.hpp"
+#include "mac/data_poll_sender.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6.hpp"
 #include "thread/address_resolver.hpp"
-#include "thread/data_poll_manager.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/src_match_controller.hpp"
@@ -169,7 +169,7 @@ class MeshForwarder : public InstanceLocator
 {
     friend class Mac::Mac;
     friend class Instance;
-    friend class DataPollManager;
+    friend class DataPollSender;
 
 public:
     /**
@@ -556,7 +556,7 @@ private:
     Child *               mIndirectStartingChild;
 #endif
 
-    DataPollManager mDataPollManager;
+    DataPollSender mDataPollSender;
 };
 
 /**

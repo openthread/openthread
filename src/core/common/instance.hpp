@@ -484,9 +484,9 @@ template <> inline AnnounceBeginServer &Instance::Get(void)
     return mThreadNetif.mAnnounceBegin;
 }
 
-template <> inline DataPollManager &Instance::Get(void)
+template <> inline DataPollSender &Instance::Get(void)
 {
-    return mThreadNetif.mMeshForwarder.mDataPollManager;
+    return mThreadNetif.mMeshForwarder.mDataPollSender;
 }
 
 template <> inline EnergyScanServer &Instance::Get(void)

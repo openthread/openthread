@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for data poll (mac data request command) manager.
+ *   This file includes definitions for data poll (mac data request command) sender.
  */
 
 #ifndef DATA_POLL_MANAGER_HPP_
@@ -44,20 +44,20 @@
 namespace ot {
 
 /**
- * @addtogroup core-data-poll-manager
+ * @addtogroup core-data-poll-sender
  *
  * @brief
- *   This module includes definitions for data poll manager.
+ *   This module includes definitions for data poll sender.
  *
  * @{
  */
 
 /**
- * This class implements the data poll (mac data request command) manager.
+ * This class implements the data poll (mac data request command) sender.
  *
  */
 
-class DataPollManager : public InstanceLocator
+class DataPollSender : public InstanceLocator
 {
 public:
     enum
@@ -68,15 +68,15 @@ public:
     };
 
     /**
-     * This constructor initializes the data poll manager object.
+     * This constructor initializes the data poll sender object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
      */
-    explicit DataPollManager(Instance &aInstance);
+    explicit DataPollSender(Instance &aInstance);
 
     /**
-     * This method instructs the data poll manager to start sending periodic data polls.
+     * This method instructs the data poll sender to start sending periodic data polls.
      *
      * @retval OT_ERROR_NONE            Successfully started sending periodic data polls.
      * @retval OT_ERROR_ALREADY         Periodic data poll transmission is already started/enabled.
@@ -86,7 +86,7 @@ public:
     otError StartPolling(void);
 
     /**
-     * This method instructs the data poll manager to stop sending periodic data polls.
+     * This method instructs the data poll sender to stop sending periodic data polls.
      *
      */
     void StopPolling(void);
@@ -132,10 +132,10 @@ public:
     uint32_t GetExternalPollPeriod(void) const { return mExternalPollPeriod; }
 
     /**
-     * This method informs the data poll manager of success/error status of a previously requested poll frame
+     * This method informs the data poll sender of success/error status of a previously requested poll frame
      * transmission.
      *
-     * In case of transmit failure, the data poll manager may choose to send the next data poll more quickly (up to
+     * In case of transmit failure, the data poll sender may choose to send the next data poll more quickly (up to
      * some fixed number of attempts).
      *
      * @param[in] aFrame     The data poll frame.
@@ -145,35 +145,35 @@ public:
     void HandlePollSent(Mac::Frame &aFrame, otError aError);
 
     /**
-     * This method informs the data poll manager that a data poll timeout happened, i.e., when the ack in response to
+     * This method informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
      * a data request command indicated that a frame was pending, but no frame was received after timeout interval.
      *
-     * Data poll manager may choose to transmit another data poll immediately (up to some fixed number of attempts).
+     * Data poll sender may choose to transmit another data poll immediately (up to some fixed number of attempts).
      *
      */
     void HandlePollTimeout(void);
 
     /**
-     * This method informs the data poll manager that a mac frame has been received. It checks the "frame pending" in
-     * the received frame header and if it is set, data poll manager will send an immediate data poll to retrieve the
+     * This method informs the data poll sender that a mac frame has been received. It checks the "frame pending" in
+     * the received frame header and if it is set, data poll sender will send an immediate data poll to retrieve the
      * pending frame.
      *
      */
     void CheckFramePending(Mac::Frame &aFrame);
 
     /**
-     * This method asks the data poll manager to recalculate the poll period.
+     * This method asks the data poll sender to recalculate the poll period.
      *
-     * This is mainly used to inform the poll manager that a parameter impacting the poll period (e.g., the child's
+     * This is mainly used to inform the poll sender that a parameter impacting the poll period (e.g., the child's
      * timeout value which is used to determine the default data poll period) is modified.
      *
      */
     void RecalculatePollPeriod(void);
 
     /**
-     * This method sets/clears the attach mode on data poll manager.
+     * This method sets/clears the attach mode on data poll sender.
      *
-     * When attach mode is enabled, the data poll manager will send data polls at a faster rate determined by
+     * When attach mode is enabled, the data poll sender will send data polls at a faster rate determined by
      * poll period configuration option `OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD`.
      *
      * @param[in]  aMode  The mode value.
@@ -182,7 +182,7 @@ public:
     void SetAttachMode(bool aMode);
 
     /**
-     * This method asks data poll manager to send the next given number of polls at a faster rate (poll period defined
+     * This method asks data poll sender to send the next given number of polls at a faster rate (poll period defined
      * by `kFastPollPeriod`). This is used by OpenThread stack when it expects a response from the parent/sender.
      *
      * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead. The number of
@@ -200,7 +200,7 @@ public:
     void SendFastPolls(uint8_t aNumFastPolls);
 
     /**
-     * This method asks data poll manager to stop fast polls when the expecting response is received.
+     * This method asks data poll sender to stop fast polls when the expecting response is received.
      *
      * @retval OT_ERROR_NONE            Successfully stopped fast polls when no other responses are expected.
      * @retval OT_ERROR_BUSY            There are other callers who are waiting for responses.

@@ -806,7 +806,7 @@ void Mle::SetTimeout(uint32_t aTimeout)
 
     mTimeout = aTimeout;
 
-    Get<DataPollManager>().RecalculatePollPeriod();
+    Get<DataPollSender>().RecalculatePollPeriod();
 
     if (mRole == OT_DEVICE_ROLE_CHILD)
     {
@@ -1862,7 +1862,7 @@ uint32_t Mle::Reattach(void)
         else if (!IsRxOnWhenIdle())
         {
             // return to sleepy operation
-            Get<DataPollManager>().SetAttachMode(false);
+            Get<DataPollSender>().SetAttachMode(false);
             Get<MeshForwarder>().SetRxOnWhenIdle(false);
         }
 
@@ -1930,7 +1930,7 @@ void Mle::HandleDelayedResponseTimer(void)
                 // for Rx-Off-when-idle device.
                 if (!IsRxOnWhenIdle())
                 {
-                    Get<DataPollManager>().SendFastPolls(DataPollManager::kDefaultFastPolls);
+                    Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
                 }
             }
             else
@@ -2102,7 +2102,7 @@ otError Mle::SendChildIdRequest(void)
 
     if (!IsRxOnWhenIdle())
     {
-        Get<DataPollManager>().SetAttachMode(true);
+        Get<DataPollSender>().SetAttachMode(true);
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
 
@@ -2142,7 +2142,7 @@ otError Mle::SendDataRequest(const Ip6::Address &aDestination,
 
         if (!IsRxOnWhenIdle())
         {
-            Get<DataPollManager>().SendFastPolls(DataPollManager::kDefaultFastPolls);
+            Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
         }
     }
 
@@ -2331,7 +2331,7 @@ otError Mle::SendChildUpdateRequest(void)
 
     if (!IsRxOnWhenIdle())
     {
-        Get<DataPollManager>().SetAttachMode(true);
+        Get<DataPollSender>().SetAttachMode(true);
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
     else
@@ -2966,7 +2966,7 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
         // running out the specified number. E.g. other component also trigger fast poll, and
         // is waiting for response; or the corner case where multiple Mle Data Request attempts
         // happened due to the retransmission mechanism.
-        IgnoreReturnValue(Get<DataPollManager>().StopFastPolls());
+        IgnoreReturnValue(Get<DataPollSender>().StopFastPolls());
     }
 
     return error;
@@ -3470,7 +3470,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
 
     if (!IsRxOnWhenIdle())
     {
-        Get<DataPollManager>().SetAttachMode(false);
+        Get<DataPollSender>().SetAttachMode(false);
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
     else
@@ -3654,7 +3654,7 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
 
         if (!IsRxOnWhenIdle())
         {
-            Get<DataPollManager>().SetAttachMode(false);
+            Get<DataPollSender>().SetAttachMode(false);
             Get<MeshForwarder>().SetRxOnWhenIdle(false);
         }
         else
