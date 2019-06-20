@@ -261,7 +261,15 @@ const otCoapOption *Message::GetNextOption(void)
     }
     else
     {
+        // RFC7252 (Section 3):
+        // Reserved for payload marker.
         VerifyOrExit(optionLength == 0xf, error = OT_ERROR_PARSE);
+
+        // The presence of a marker followed by a zero-length payload MUST be processed
+        // as a message format error.
+        VerifyOrExit((GetHelpData().mNextOptionOffset - GetHelpData().mHeaderOffset) < GetLength(),
+                     error = OT_ERROR_PARSE);
+
         ExitNow(error = OT_ERROR_NOT_FOUND);
     }
 
@@ -323,6 +331,9 @@ otError Message::SetPayloadMarker(void)
     VerifyOrExit(GetLength() < kMaxHeaderLength, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = Append(&marker, sizeof(marker)));
     GetHelpData().mHeaderLength = GetLength();
+
+    // Set offset to the start of payload.
+    SetOffset(GetHelpData().mHeaderLength);
 
 exit:
     return error;
