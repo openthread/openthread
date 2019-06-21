@@ -136,6 +136,9 @@ ifeq ($(ECDSA),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
+ifeq ($(EST_CLIENT),1)
+configure_OPTIONS              += --enable-est-client
+
 ifeq ($(EXTERNAL_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
 endif

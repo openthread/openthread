@@ -41,10 +41,33 @@
 #include "common/debug.hpp"
 #include "common/random.hpp"
 
+#include "openthread/entropy.h"
+#include "openthread/random_crypto.h"
+
 namespace ot {
 namespace Crypto {
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
+
+#define ECP_RANDOM_THRESHOLD    32
+
+static int EntropyPollHandle(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen)
+{
+    int error = 0;
+    OT_UNUSED_VARIABLE(aData);
+
+    VerifyOrExit(otRandomCryptoFillBuffer((uint8_t*)aOutput, (uint16_t)aInLen) == OT_ERROR_NONE,
+                 error = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+
+    if(aOutLen != NULL)
+    {
+        *aOutLen = aInLen;
+    }
+
+exit:
+
+    return error;
+}
 
 otError Ecp::KeyPairGeneration(const uint8_t *aPersonalSeed,
                                uint32_t       aPersonalSeedLength,
@@ -53,18 +76,50 @@ otError Ecp::KeyPairGeneration(const uint8_t *aPersonalSeed,
                                uint8_t *      aPublicKey,
                                uint32_t *     aPublicKeyLength)
 {
-    OT_UNUSED_VARIABLE(aPersonalSeed);
-    OT_UNUSED_VARIABLE(aPersonalSeedLength);
-    OT_UNUSED_VARIABLE(aPrivateKey);
-    OT_UNUSED_VARIABLE(aPrivateKeyLength);
-    OT_UNUSED_VARIABLE(aPublicKey);
-    OT_UNUSED_VARIABLE(aPublicKeyLength);
+    otError error = OT_ERROR_NONE;
+    mbedtls_entropy_context *entropyCtx;
+    mbedtls_ctr_drbg_context *ctrDrbgCtx;
+    mbedtls_pk_context keypair;
 
-    otError error = OT_ERROR_NOT_IMPLEMENTED;
+    entropyCtx = otEntropyMbedTlsContextGet();
+    ctrDrbgCtx = otRandomCryptoMbedTlsContextGet();
+    mbedtls_pk_init(&keypair);
 
-    VerifyOrExit(error);
+    // Setup entropy
+    VerifyOrExit(mbedtls_entropy_add_source(entropyCtx, &EntropyPollHandle,
+                                            NULL, ECP_RANDOM_THRESHOLD,
+                                            MBEDTLS_ENTROPY_SOURCE_STRONG) == 0,
+                 error = OT_ERROR_FAILED);
+
+    // Setup CTR_DRBG context
+    mbedtls_ctr_drbg_set_prediction_resistance(ctrDrbgCtx, MBEDTLS_CTR_DRBG_PR_ON);
+
+    VerifyOrExit(mbedtls_ctr_drbg_seed(ctrDrbgCtx, mbedtls_entropy_func, entropyCtx,
+                                       aPersonalSeed, aPersonalSeedLength) == 0,
+                 error = OT_ERROR_FAILED);
+
+    // Generate keypair
+    VerifyOrExit(mbedtls_pk_setup(&keypair, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)),
+                 error = OT_ERROR_FAILED);
+
+    VerifyOrExit(mbedtls_ecp_group_load(&mbedtls_pk_ec(keypair)->grp, MBEDTLS_ECP_DP_SECP256R1) == 0,
+                 error = OT_ERROR_FAILED);
+
+    VerifyOrExit(mbedtls_ecp_gen_keypair(&mbedtls_pk_ec(keypair)->grp, &mbedtls_pk_ec(keypair)->d,
+                                         &mbedtls_pk_ec(keypair)->Q, mbedtls_ctr_drbg_random,
+                                         ctrDrbgCtx) == 0,
+                 error = OT_ERROR_FAILED);
+
+    VerifyOrExit(mbedtls_pk_write_pubkey_pem(&keypair, (unsigned char*)aPublicKey,
+                                             *aPublicKeyLength) == 0,
+                 error = OT_ERROR_INVALID_ARGS);
+
+    VerifyOrExit(mbedtls_pk_write_key_pem(&keypair, (unsigned char*)aPrivateKey,
+                                          *aPrivateKeyLength) == 0,
+                 error = OT_ERROR_INVALID_ARGS);
 
 exit:
+    mbedtls_pk_free(&keypair);
 
     return error;
 }
