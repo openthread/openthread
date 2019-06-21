@@ -30,7 +30,7 @@ language: python
 python: "3.6"
 
 sudo: required
-dist: trusty
+dist: xenial
 
 before_install:
   - travis_retry .travis/before_install.sh
@@ -51,7 +51,7 @@ matrix:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-app-pty" CC=clang CXX=clang++ VERBOSE=1 COVERAGE=1
+    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1 COVERAGE=1
       os: linux
       compiler: clang
     - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
@@ -59,16 +59,11 @@ matrix:
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
+      dist: trusty
       python: "2.7"
-    - env: BUILD_TARGET="posix-distcheck" CC=clang-6.0 CXX=clang++-6.0 VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      compiler: clang
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
@@ -91,19 +86,13 @@ matrix:
       addons:
         apt:
           sources:
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           packages:
             - clang-format-6.0
-    - env: BUILD_TARGET="scan-build" CC="clang-6.0" CXX="clang++-6.0"
+    - env: BUILD_TARGET="scan-build"
       os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      compiler: clang
     - env: BUILD_TARGET="arm-gcc-4"
       os: linux
       compiler: gcc
@@ -119,15 +108,6 @@ matrix:
     - env: BUILD_TARGET="arm-gcc-8"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC=clang-6.0 CXX=clang++-6.0
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
     - env: BUILD_TARGET="posix" CC="gcc-5" CXX="g++-5"
       os: linux
       compiler: gcc

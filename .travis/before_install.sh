@@ -85,10 +85,6 @@ cd /tmp || die
         ) || die
     }
 
-    [ $BUILD_TARGET != scan-build ] || {
-        sudo apt-get install clang || die
-    }
-
     [ $BUILD_TARGET != arm-gcc-4 ] || {
         sudo apt-get install lib32z1 || die
         wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
@@ -136,12 +132,7 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != posix-distcheck ] || {
-        sudo apt-get install clang || die
-        sudo apt-get install llvm-3.4-runtime || die
-    }
-
-    [ $BUILD_TARGET != posix -o "$CC" != clang ] || {
-        sudo apt-get install clang || die
+        sudo apt-get install llvm-runtime || die
     }
 
     [ $BUILD_TARGET != toranj-test-framework ] || {
