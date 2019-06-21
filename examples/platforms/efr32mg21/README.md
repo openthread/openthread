@@ -59,6 +59,22 @@ $ cd <path-to-openthread>/third_party
 $ ln -s <path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite silabs/gecko_sdk_suite
 ```
 
+Note: Due to an error in the core_cm33.h file provided by ARM, the compiler will throw an error when pedantic
+option is used on the builds. To avoid this, please add the following lines of code at the top of the
+file core_cm33.h:
+
+```
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+```
+
+core_cm33.h can be found at:
+
+```
+<path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite/v2.6/platform/CMSIS/Include
+```
+
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.
 ```bash
 $ cd <path-to-openthread>
