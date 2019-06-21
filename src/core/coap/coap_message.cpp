@@ -267,8 +267,7 @@ const otCoapOption *Message::GetNextOption(void)
 
         // The presence of a marker followed by a zero-length payload MUST be processed
         // as a message format error.
-        VerifyOrExit((GetHelpData().mNextOptionOffset - GetHelpData().mHeaderOffset) < GetLength(),
-                     error = OT_ERROR_PARSE);
+        VerifyOrExit(GetHelpData().mNextOptionOffset < GetLength(), error = OT_ERROR_PARSE);
 
         ExitNow(error = OT_ERROR_NOT_FOUND);
     }
