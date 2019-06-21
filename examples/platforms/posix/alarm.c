@@ -34,6 +34,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "utils/code_utils.h"
+
+// linux microsecond timer
+#if __linux__
+
+#include <signal.h>
+#include <time.h>
+
+#ifndef OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL
+#define OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL SIGRTMIN
+#endif
+
+timer_t sMicroTimer;
+#endif // __linux__
+
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -53,9 +68,46 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
+#if __linux__
+static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserContext)
+{
+    assert(aSignal == OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL);
+    assert(aSignalInfo->si_value.sival_ptr == &sMicroTimer);
+    (void)aUserContext;
+}
+#endif
+
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
     sSpeedUpFactor = aSpeedUpFactor;
+
+#if __linux__
+    {
+        struct sigaction sa;
+
+        sa.sa_flags     = SA_SIGINFO;
+        sa.sa_sigaction = microTimerHandler;
+        sigemptyset(&sa.sa_mask);
+
+        if (sigaction(OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL, &sa, NULL) == -1)
+        {
+            perror("sigaction");
+            exit(EXIT_FAILURE);
+        }
+
+        struct sigevent sev;
+
+        sev.sigev_notify          = SIGEV_SIGNAL;
+        sev.sigev_signo           = OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL;
+        sev.sigev_value.sival_ptr = &sMicroTimer;
+
+        if (-1 == timer_create(CLOCK_REALTIME, &sev, &sMicroTimer))
+        {
+            perror("timer_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+#endif
 }
 
 #if defined(CLOCK_MONOTONIC_RAW) || defined(CLOCK_MONOTONIC)
@@ -119,6 +171,25 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
     sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
+
+#if __linux__
+    {
+        struct itimerspec its;
+        uint32_t          diff = sUsAlarm - otPlatAlarmMicroGetNow();
+
+        its.it_value.tv_sec  = diff / US_PER_S;
+        its.it_value.tv_nsec = (diff % US_PER_S) * NS_PER_US;
+
+        its.it_interval.tv_sec  = 0;
+        its.it_interval.tv_nsec = 0;
+
+        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        {
+            perror("otPlatAlarmMicroStartAt timer_settime()");
+            exit(EXIT_FAILURE);
+        }
+    }
+#endif // __linux__
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
@@ -126,6 +197,18 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     sIsUsRunning = false;
+
+#if __linux__
+    {
+        struct itimerspec its = {{0, 0}, {0, 0}};
+
+        if (-1 == timer_settime(sMicroTimer, 0, &its, NULL))
+        {
+            perror("otPlatAlarmMicroStop timer_settime()");
+            exit(EXIT_FAILURE);
+        }
+    }
+#endif // __linux__
 }
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
