@@ -50,12 +50,16 @@ python --version || die
     ./bootstrap || die
 
     export CPPFLAGS="-DMBEDTLS_DEBUG_C"
+    export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/third_party/mbedtls"
+    export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/third_party/mbedtls/repo/include"
+    export CPPFLAGS="${CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
         --enable-border-agent             \
         --enable-border-router            \
+        --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-channel-manager          \
         --enable-channel-monitor          \
@@ -67,6 +71,7 @@ python --version || die
         --enable-diag                     \
         --enable-dns-client               \
         --enable-ecdsa                    \
+        --enable-executable=no            \
         --enable-ftd                      \
         --enable-jam-detection            \
         --enable-joiner                   \
@@ -83,7 +88,7 @@ python --version || die
         --enable-udp-forward              \
         --with-examples=posix || die
 
-    scan-build --status-bugs -analyze-headers -v make || die
+    scan-build --status-bugs -analyze-headers -v make -j2 || die
 }
 
 [ $BUILD_TARGET != android-build ] || {
@@ -324,9 +329,6 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix ] || {
-    sh -c '$CC --version' || die
-    sh -c '$CXX --version' || die
-
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -394,7 +396,7 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
-    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-5.0` || die
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer` || die
     export ASAN_OPTIONS=symbolize=1 || die
     export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 || die
     ./bootstrap || die
