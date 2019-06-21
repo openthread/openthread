@@ -1050,14 +1050,12 @@ void Frame::CopyFrom(const Frame &aFromFrame)
 
 uint16_t Frame::GetMtu(void) const
 {
-    uint16_t mtu = kMTU;
-    return mtu;
+    return kMTU;
 }
 
 uint16_t Frame::GetFcsSize(void) const
 {
-    uint16_t fcsSize = kFcsSize;
-    return fcsSize;
+    return kFcsSize;
 }
 
 Frame::InfoString Frame::ToInfoString(void) const
