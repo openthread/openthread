@@ -132,6 +132,12 @@ void MeshForwarder::Stop(void)
     }
 
 #if OPENTHREAD_FTD
+    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    {
+        iter.GetChild()->SetIndirectMessage(NULL);
+        Get<SourceMatchController>().ResetMessageCount(*iter.GetChild());
+    }
+
     memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
 #endif
 
