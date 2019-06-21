@@ -509,7 +509,6 @@ private:
     uint16_t      mMessageNextOffset;
 
     Message *mSendMessage;
-    bool     mSendMessageIsARetransmission;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -534,9 +533,6 @@ private:
     FragmentPriorityEntry mFragmentEntries[kNumFragmentPriorityEntries];
     MessageQueue          mResolvingQueue;
     IndirectSender        mIndirectSender;
-    uint32_t              mSendMessageFrameCounter;
-    uint8_t               mSendMessageKeyId;
-    uint8_t               mSendMessageDataSequenceNumber;
 #endif
 
     DataPollSender mDataPollSender;

@@ -35,6 +35,7 @@
 
 #include <string.h>
 #include <openthread/diag.h>
+#include <openthread/thread.h>
 #include <openthread/platform/diag.h>
 
 #include "common/debug.hpp"

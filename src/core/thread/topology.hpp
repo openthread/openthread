@@ -374,7 +374,7 @@ private:
  * This class represents a Thread Child.
  *
  */
-class Child : public Neighbor, public IndirectSender::ChildInfo
+class Child : public Neighbor, public IndirectSender::ChildInfo, public DataPollHandler::ChildInfo
 {
 public:
     enum

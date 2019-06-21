@@ -61,7 +61,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mUpdateTimer(aInstance, &MeshForwarder::HandleUpdateTimer, this)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
-    , mSendMessageIsARetransmission(false)
     , mMeshSource()
     , mMeshDest()
     , mAddMeshHeader(false)
@@ -75,9 +74,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mScanning(false)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
-    , mSendMessageFrameCounter(0)
-    , mSendMessageKeyId(0)
-    , mSendMessageDataSequenceNumber(0)
 #endif
     , mDataPollSender(aInstance)
 {
@@ -173,25 +169,15 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 {
     VerifyOrExit(mSendBusy == false);
 
-    mSendMessageIsARetransmission = false;
+    mSendMessage = GetDirectTransmission();
+    VerifyOrExit(mSendMessage != NULL);
 
-#if OPENTHREAD_FTD
-    if (mIndirectSender.GetIndirectTransmission() == OT_ERROR_NONE)
+    if (mSendMessage->GetOffset() == 0)
     {
-        ExitNow();
+        mSendMessage->SetTxSuccess(true);
     }
-#endif // OPENTHREAD_FTD
 
-    if ((mSendMessage = GetDirectTransmission()) != NULL)
-    {
-        if (mSendMessage->GetOffset() == 0)
-        {
-            mSendMessage->SetTxSuccess(true);
-        }
-
-        Get<Mac::Mac>().RequestDirectFrameTransmission();
-        ExitNow();
-    }
+    Get<Mac::Mac>().RequestDirectFrameTransmission();
 
 exit:
     return;
@@ -491,15 +477,9 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
+    VerifyOrExit(mSendMessage != NULL, error = OT_ERROR_ABORT);
 
     mSendBusy = true;
-
-    if (mSendMessage == NULL)
-    {
-        SendEmptyFrame(aFrame, false);
-        aFrame.SetIsARetransmission(false);
-        ExitNow();
-    }
 
     switch (mSendMessage->GetType())
     {
@@ -555,47 +535,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 #endif
     }
 
-    assert(error == OT_ERROR_NONE);
-
-    aFrame.SetIsARetransmission(mSendMessageIsARetransmission);
-
-#if OPENTHREAD_FTD
-
-    {
-        Mac::Address macDest;
-        Child *      child = NULL;
-
-        if (mSendMessageIsARetransmission)
-        {
-            // If this is the re-transmission of an indirect frame to a sleepy child, we
-            // ensure to use the same frame counter, key id, and data sequence number as
-            // the last attempt.
-
-            aFrame.SetSequence(mSendMessageDataSequenceNumber);
-
-            if (aFrame.GetSecurityEnabled())
-            {
-                aFrame.SetFrameCounter(mSendMessageFrameCounter);
-                aFrame.SetKeyId(mSendMessageKeyId);
-            }
-        }
-
-        aFrame.GetDstAddr(macDest);
-
-        // Set `FramePending` if there are more queued messages (excluding
-        // the current one being sent out) for the child (note `> 1` check).
-        // The case where the current message requires fragmentation is
-        // already checked and handled in `SendFragment()` method.
-
-        child = Get<ChildTable>().FindChild(macDest, ChildTable::kInStateValidOrRestoring);
-
-        if ((child != NULL) && !child->IsRxOnWhenIdle() && (child->GetIndirectMessageCount() > 1))
-        {
-            aFrame.SetFramePending(true);
-        }
-    }
-
-#endif
+    aFrame.SetIsARetransmission(false);
 
 exit:
     return error;
@@ -993,83 +933,77 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
     aFrame.GetDstAddr(macDest);
     neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
 
-#if OPENTHREAD_FTD
-    mIndirectSender.HandleSentFrameToChild(aFrame, aError, macDest);
-#endif
-
     VerifyOrExit(mSendMessage != NULL);
+    assert(mSendMessage->GetDirectTransmission());
 
-    if (mSendMessage->GetDirectTransmission())
+    if (aError != OT_ERROR_NONE)
     {
-        if (aError != OT_ERROR_NONE)
-        {
-            // If the transmission of any fragment frame fails,
-            // the overall message transmission is considered
-            // as failed
+        // If the transmission of any fragment frame fails,
+        // the overall message transmission is considered
+        // as failed
 
-            mSendMessage->SetTxSuccess(false);
+        mSendMessage->SetTxSuccess(false);
 
 #if OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 
-            // We set the NextOffset to end of message to avoid sending
-            // any remaining fragments in the message.
+        // We set the NextOffset to end of message to avoid sending
+        // any remaining fragments in the message.
 
-            mMessageNextOffset = mSendMessage->GetLength();
+        mMessageNextOffset = mSendMessage->GetLength();
 #endif
-        }
+    }
 
-        if (mMessageNextOffset < mSendMessage->GetLength())
+    if (mMessageNextOffset < mSendMessage->GetLength())
+    {
+        mSendMessage->SetOffset(mMessageNextOffset);
+    }
+    else
+    {
+        otError txError = aError;
+
+        mSendMessage->ClearDirectTransmission();
+        mSendMessage->SetOffset(0);
+
+        if (neighbor != NULL)
         {
-            mSendMessage->SetOffset(mMessageNextOffset);
+            neighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
         }
-        else
-        {
-            otError txError = aError;
-
-            mSendMessage->ClearDirectTransmission();
-            mSendMessage->SetOffset(0);
-
-            if (neighbor != NULL)
-            {
-                neighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
-            }
 
 #if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 
-            // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
-            // disabled, all fragment frames of a larger message are
-            // sent even if the transmission of an earlier fragment fail.
-            // Note that `GetTxSuccess() tracks the tx success of the
-            // entire message, while `aError` represents the error
-            // status of the last fragment frame transmission.
+        // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
+        // disabled, all fragment frames of a larger message are
+        // sent even if the transmission of an earlier fragment fail.
+        // Note that `GetTxSuccess() tracks the tx success of the
+        // entire message, while `aError` represents the error
+        // status of the last fragment frame transmission.
 
-            if (!mSendMessage->GetTxSuccess() && (txError == OT_ERROR_NONE))
-            {
-                txError = OT_ERROR_FAILED;
-            }
+        if (!mSendMessage->GetTxSuccess() && (txError == OT_ERROR_NONE))
+        {
+            txError = OT_ERROR_FAILED;
+        }
 #endif
 
-            LogMessage(kMessageTransmit, *mSendMessage, &macDest, txError);
+        LogMessage(kMessageTransmit, *mSendMessage, &macDest, txError);
 
-            if (mSendMessage->GetType() == Message::kTypeIp6)
+        if (mSendMessage->GetType() == Message::kTypeIp6)
+        {
+            if (mSendMessage->GetTxSuccess())
             {
-                if (mSendMessage->GetTxSuccess())
-                {
-                    mIpCounters.mTxSuccess++;
-                }
-                else
-                {
-                    mIpCounters.mTxFailure++;
-                }
+                mIpCounters.mTxSuccess++;
+            }
+            else
+            {
+                mIpCounters.mTxFailure++;
             }
         }
+    }
 
-        if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
-        {
-            mSendBusy = true;
-            mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
-            ExitNow();
-        }
+    if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
+    {
+        mSendBusy = true;
+        mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
+        ExitNow();
     }
 
     if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
@@ -1208,28 +1142,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         }
 
         break;
-
-#if OPENTHREAD_FTD
-
-    case Mac::Frame::kFcfFrameMacCmd:
-    {
-        uint8_t commandId;
-
-        aFrame.GetCommandId(commandId);
-
-        if (commandId == Mac::Frame::kMacCmdDataRequest)
-        {
-            mIndirectSender.HandleDataPoll(aFrame, macSource, linkInfo);
-        }
-        else
-        {
-            error = OT_ERROR_DROP;
-        }
-
-        break;
-    }
-
-#endif
 
     case Mac::Frame::kFcfFrameBeacon:
         break;

@@ -48,9 +48,10 @@
 #include "mac/sub_mac.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
+
+class Neighbor;
 
 /**
  * @addtogroup core-mac
@@ -496,6 +497,16 @@ public:
      */
     bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
 
+#if OPENTHREAD_FTD
+    /**
+     * This method indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
+     *
+     * @returns TRUE if in middle of an indirect transmission, FALSE otherwise.
+     *
+     */
+    bool IsPerformingIndirectTransmit(void) const { return (mOperation == kOperationTransmitDataIndirect); }
+#endif
+
     /**
      * This method returns if the MAC layer is in transmit state.
      *
@@ -649,7 +660,7 @@ private:
     void    PrepareBeacon(Frame &aFrame);
     bool    ShouldSendBeacon(void) const;
     void    BeginTransmit(void);
-    otError HandleMacCommand(Frame &aFrame);
+    bool    HandleMacCommand(Frame &aFrame);
     Frame * GetOperationFrame(void);
 
     static void HandleTimer(Timer &aTimer);

@@ -50,6 +50,10 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     otError         error = OT_ERROR_NONE;
     Neighbor *      neighbor;
 
+    aMessage.SetOffset(0);
+    aMessage.SetDatagramTag(0);
+    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+
     switch (aMessage.GetType())
     {
     case Message::kTypeIp6:
@@ -122,9 +126,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     case Message::kTypeSupervision:
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
-        VerifyOrExit(child != NULL, error = OT_ERROR_DROP);
-        VerifyOrExit(!child->IsRxOnWhenIdle(), error = OT_ERROR_DROP);
-
+        assert((child != NULL) && !child->IsRxOnWhenIdle());
         mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
@@ -134,9 +136,6 @@ otError MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
-    aMessage.SetOffset(0);
-    aMessage.SetDatagramTag(0);
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
     mScheduleTransmissionTask.Post();
 
 exit:

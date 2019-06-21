@@ -152,6 +152,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/crypto/pbkdf2_cmac.cpp                         \
     src/core/crypto/sha256.cpp                              \
     src/core/mac/channel_mask.cpp                           \
+    src/core/mac/data_poll_handler.cpp                      \
     src/core/mac/data_poll_sender.cpp                       \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \

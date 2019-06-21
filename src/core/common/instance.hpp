@@ -458,6 +458,7 @@ template <> inline Ip6::Filter &Instance::Get(void)
 }
 
 #if OPENTHREAD_FTD
+
 template <> inline IndirectSender &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender;
@@ -466,6 +467,11 @@ template <> inline IndirectSender &Instance::Get(void)
 template <> inline SourceMatchController &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender.mSourceMatchController;
+}
+
+template <> inline DataPollHandler &Instance::Get(void)
+{
+    return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
 template <> inline AddressResolver &Instance::Get(void)

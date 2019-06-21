@@ -50,6 +50,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1067,7 +1068,7 @@ void Mac::BeginTransmit(void)
         sendFrame.SetChannel(mRadioChannel);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsIndirect);
         sendFrame.SetMaxFrameRetries(kMaxFrameRetriesIndirect);
-        SuccessOrExit(error = Get<IndirectSender>().HandleFrameRequest(sendFrame));
+        SuccessOrExit(error = Get<DataPollHandler>().HandleFrameRequest(sendFrame));
 
         // If the frame is marked as a retransmission, then data sequence number is already set.
         if (!sendFrame.IsARetransmission())
@@ -1328,7 +1329,7 @@ void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
         mCounters.mTxData++;
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
-        Get<IndirectSender>().HandleSentFrame(aFrame, aError);
+        Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
         break;
 #endif
@@ -1763,7 +1764,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     switch (aFrame->GetType())
     {
     case Frame::kFcfFrameMacCmd:
-        if (HandleMacCommand(*aFrame) == OT_ERROR_DROP)
+        if (HandleMacCommand(*aFrame)) // returns `true` when handled
         {
             ExitNow(error = OT_ERROR_NONE);
         }
@@ -1833,9 +1834,9 @@ exit:
     }
 }
 
-otError Mac::HandleMacCommand(Frame &aFrame)
+bool Mac::HandleMacCommand(Frame &aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    bool    didHandle = false;
     uint8_t commandId;
 
     aFrame.GetCommandId(commandId);
@@ -1850,11 +1851,15 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         {
             StartOperation(kOperationTransmitBeacon);
         }
-
-        ExitNow(error = OT_ERROR_DROP);
+        didHandle = true;
+        break;
 
     case Frame::kMacCmdDataRequest:
         mCounters.mRxDataPoll++;
+#if OPENTHREAD_FTD
+        Get<DataPollHandler>().HandleDataPoll(aFrame);
+        didHandle = true;
+#endif
         break;
 
     default:
@@ -1862,8 +1867,7 @@ otError Mac::HandleMacCommand(Frame &aFrame)
         break;
     }
 
-exit:
-    return error;
+    return didHandle;
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)

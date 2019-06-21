@@ -2271,7 +2271,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         if (!(mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) && (child->GetState() == Neighbor::kStateValid))
         {
-            Get<SourceMatchController>().SetSrcMatchAsShort(*child, true);
+            Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         }
     }
 
@@ -2860,7 +2860,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
 
     if (!aChild.IsRxOnWhenIdle())
     {
-        Get<SourceMatchController>().SetSrcMatchAsShort(aChild, false);
+        Get<IndirectSender>().SetChildUseShortAddress(aChild, false);
     }
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
@@ -3522,7 +3522,7 @@ void MleRouter::RestoreChildren(void)
         child->SetDeviceMode(childInfo.mMode);
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
-        Get<SourceMatchController>().SetSrcMatchAsShort(*child, true);
+        Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         numChildren++;
     }
 
