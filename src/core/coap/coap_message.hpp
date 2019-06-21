@@ -589,7 +589,7 @@ private:
         otCoapOption mOption;
         uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
         uint16_t     mOptionLast;
-        uint16_t     mHeaderOffset;
+        uint16_t     mHeaderOffset; ///< The byte offset for the CoAP Header
         uint16_t     mHeaderLength;
     };
 

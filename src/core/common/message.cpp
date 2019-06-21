@@ -286,6 +286,12 @@ otError Message::SetLength(uint16_t aLength)
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mBuffer.mHead.mInfo.mLength = aLength;
 
+    // Correct offset in case shorter length is set.
+    if (GetOffset() > aLength)
+    {
+        SetOffset(aLength);
+    }
+
 exit:
     return error;
 }
