@@ -513,6 +513,8 @@ public:
     {
         SetType(kRoute);
         SetLength(sizeof(*this) - sizeof(Tlv));
+        memset(mRouterIdMask, 0, sizeof(mRouterIdMask));
+        memset(mRouteData, 0, sizeof(mRouteData));
     }
 
     /**
@@ -1342,7 +1344,7 @@ public:
      */
     void SetParentPriority(int8_t aParentPriority)
     {
-        mParentPriority = (aParentPriority << kParentPriorityOffset) & kParentPriorityMask;
+        mParentPriority = (static_cast<uint8_t>(aParentPriority) << kParentPriorityOffset) & kParentPriorityMask;
     }
 
     /**
