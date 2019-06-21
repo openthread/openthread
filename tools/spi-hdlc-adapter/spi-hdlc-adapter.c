@@ -1562,6 +1562,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_ALIGN_ALLOWANCE:
+                assert(optarg);
+
                 errno                = 0;
                 sSpiRxAlignAllowance = atoi(optarg);
 
@@ -1581,6 +1583,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_MODE:
+                assert(optarg);
+
                 if (!update_spi_mode(atoi(optarg)))
                 {
                     syslog(LOG_ERR, "Unable to set SPI mode to \"%s\", %s", optarg, strerror(errno));
@@ -1589,6 +1593,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_SPEED:
+                assert(optarg);
+
                 if (!update_spi_speed(atoi(optarg)))
                 {
                     syslog(LOG_ERR, "Unable to set SPI speed to \"%s\", %s", optarg, strerror(errno));
@@ -1597,6 +1603,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_SMALL_PACKET:
+                assert(optarg);
+
                 sSpiSmallPacketSize = atoi(optarg);
                 if (sSpiSmallPacketSize > MAX_FRAME_SIZE - HEADER_LEN)
                 {
@@ -1613,6 +1621,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_CS_DELAY:
+                assert(optarg);
+
                 sSpiCsDelay = atoi(optarg);
                 if (sSpiCsDelay < 0)
                 {
@@ -1628,6 +1638,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_MTU:
+                assert(optarg);
+
                 sMTU = atoi(optarg);
                 if (sMTU > MAX_FRAME_SIZE - HEADER_LEN)
                 {
