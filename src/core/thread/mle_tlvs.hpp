@@ -411,7 +411,7 @@ public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
-     * OpenThread only generates Challenge values with 8-byte length. As a result, a Response value lengths must also
+     * OpenThread only generates Challenge values with 8-byte length. As a result, Response value lengths must also
      * have 8-byte length.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
@@ -419,6 +419,14 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Response length.
+     *
+     * @returns The Response length.
+     *
+     */
+    uint8_t GetResponseLength(void) const { return GetLength() <= sizeof(mResponse) ? GetLength() : sizeof(mResponse); }
 
     /**
      * This method returns a pointer to the Response value.
@@ -434,7 +442,7 @@ public:
      * @param[in]  aResponse  A pointer to the Response value.
      *
      */
-    void SetResponse(const uint8_t *aResponse) { memcpy(mResponse, aResponse, GetLength()); }
+    void SetResponse(const uint8_t *aResponse) { memcpy(mResponse, aResponse, GetResponseLength()); }
 
 private:
     uint8_t mResponse[kMaxSize];
