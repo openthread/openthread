@@ -156,6 +156,7 @@ SOURCES_COMMON                      = \
     crypto/pbkdf2_cmac.cpp            \
     crypto/sha256.cpp                 \
     mac/channel_mask.cpp              \
+    mac/data_poll_handler.cpp         \
     mac/data_poll_sender.cpp          \
     mac/link_raw.cpp                  \
     mac/mac.cpp                       \
@@ -322,6 +323,7 @@ HEADERS_COMMON                      = \
     crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
     mac/channel_mask.hpp              \
+    mac/data_poll_handler.hpp         \
     mac/data_poll_sender.hpp          \
     mac/link_raw.hpp                  \
     mac/mac.hpp                       \

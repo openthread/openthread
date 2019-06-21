@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/src_match_controller.hpp"
 
@@ -61,12 +62,14 @@ class Child;
 class IndirectSender : public InstanceLocator
 {
     friend class Instance;
+    friend class DataPollHandler::Callbacks;
 
 public:
     /**
      * This class defines all the child info required for indirect transmission.
      *
      * `Child` class publicly inherits from this class.
+     *
      */
     class ChildInfo
     {
@@ -83,9 +86,6 @@ public:
         uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
 
     private:
-        bool IsDataRequestPending(void) const { return mDataRequestPendig; }
-        void SetDataRequestPending(bool aPending) { mDataRequestPendig = aPending; }
-
         Message *GetIndirectMessage(void) { return mIndirectMessage; }
         void     SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
 
@@ -94,19 +94,6 @@ public:
 
         bool GetIndirectTxSuccess(void) const { return mIndirectTxSuccess; }
         void SetIndirectTxSuccess(bool aTxStatus) { mIndirectTxSuccess = aTxStatus; }
-
-        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
-
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
-
-        uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
-        void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
-        void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
-
-        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
 
         bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
         void SetIndirectSourceMatchShort(bool aShort) { mUseShortAddress = aShort; }
@@ -118,21 +105,21 @@ public:
         void DecrementIndirectMessageCount(void) { mQueuedMessageCount--; }
         void ResetIndirectMessageCount(void) { mQueuedMessageCount = 0; }
 
+        bool IsWaitingForMessageUpdate(void) const { return mWaitingForMessageUpdate; }
+        void SetWaitingForMessageUpdate(bool aNeedsUpdate) { mWaitingForMessageUpdate = aNeedsUpdate; }
+
         const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
         Message *mIndirectMessage;             // Current indirect message.
-        uint16_t mIndirectFragmentOffset : 15; // 6LoWPAN fragment offset for the indirect message.
+        uint16_t mIndirectFragmentOffset : 14; // 6LoWPAN fragment offset for the indirect message.
         bool     mIndirectTxSuccess : 1;       // Indicates tx success/failure of current indirect message.
-        uint16_t mQueuedMessageCount : 13;     // Number of queued indirect messages for the child.
+        bool     mWaitingForMessageUpdate : 1; // Indicates waiting for updating the indirect message.
+        uint16_t mQueuedMessageCount : 14;     // Number of queued indirect messages for the child.
         bool     mUseShortAddress : 1;         // Indicates whether to use short or extended address.
         bool     mSourceMatchPending : 1;      // Indicates whether or not pending to add to src match table.
-        bool     mDataRequestPendig : 1;       // Indicates whether or not a Data Poll was received,
-        uint32_t mIndirectFrameCounter;        // Frame counter for current indirect message (used fore retx).
-        uint8_t  mIndirectKeyId;               // Key Id for current indirect message (used for retx).
-        uint8_t  mIndirectTxAttempts;          // Number of data poll triggered tx attempts.
-        uint8_t  mIndirectDsn;                 // MAC level Data Sequence Number (DSN) for retx attempts.
 
-        OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
+        OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < (1UL << 14),
+                         "mQueuedMessageCount cannot fit max required!");
     };
 
     /**
@@ -190,34 +177,41 @@ public:
      */
     void ClearAllMessagesForSleepyChild(Child &aChild);
 
-    void    HandleDataPoll(const Mac::Frame &aFrame, const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
-    otError GetIndirectTransmission(void);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
-
-    // Callbacks from MAC layer
-    void    HandleSentFrame(Mac::Frame &aFrame, otError aError);
-    otError HandleFrameRequest(Mac::Frame &aFrame);
+    /**
+     * This method sets whether to use the extended or short address for a child.
+     *
+     * @param[in] aChild            A reference to the child.
+     * @param[in] aUseShortAddress  `true` to use short address, `false` to use extended address.
+     *
+     */
+    void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
 
 private:
     enum
     {
         /**
-         * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
-         * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
-         * the sleepy child.
+         * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
          *
          */
-        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+        kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
-    Message *GetIndirectTransmission(Child &aChild);
-    void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
-    void     UpdateIndirectMessages(void);
+    // Callbacks from DataPollHandler
+    otError PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild);
+    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild);
+    void    HandleFrameChangeDone(Child &aChild);
 
-    bool mEnabled;
+    void     UpdateIndirectMessage(Child &aChild);
+    Message *FindIndirectMessage(Child &aChild);
+    void     RequestMessageUpdate(Child &aChild);
+    uint16_t PrepareDataFrame(Mac::Frame &aFrame, Child &aChild, Message &aMessage);
+    void     PrepareEmptyFrame(Mac::Frame &aFrame, Child &aChild, bool aAckRequest);
+    void     ClearMessagesForRemovedChildren(void);
 
+    bool                  mEnabled;
     SourceMatchController mSourceMatchController;
-    Child *               mIndirectStartingChild;
+    DataPollHandler       mDataPollHandler;
+    uint16_t              mMessageNextOffset;
 };
 
 /**
