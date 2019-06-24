@@ -88,6 +88,14 @@ libmbedcrypto_a_SOURCES                      += \
 endif
 endif
 
+if OPENTHREAD_ENABLE_EST_CLIENT
+libmbedcrypto_a_SOURCES                      += \
+    repo/library/pkwrite.c                      \
+    repo/library/x509write_csr.c                \
+    repo/library/x509_create.c                  \
+    $(NULL)
+endif
+
 if OPENTHREAD_BUILD_COVERAGE
 Dash                                          = -
 CLEANFILES                                    = $(shell find $(top_builddir)/third_party/mbedtls $(Dash)name "*.gcda" $(Dash)o $(Dash)name "*.gcno")

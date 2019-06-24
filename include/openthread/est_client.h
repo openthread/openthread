@@ -58,17 +58,14 @@ extern "C" {
  *
  */
 
-#define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6 "2001:620:190:ffa1::1234:4321"
+#define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6 "2001:620:190:ffa1:21b:21ff:fe70:9240"
 #define OT_EST_COAPS_DEFAULT_EST_SERVER_PORT 5684
 
-/**
- * ToDo: bring down to a lower layer
- */
-#define OT_EST_COAPS_SHORT_URI_CA_CERTS "/crts"        ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL "/sen"    ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL "/sren" ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS "/att"        ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN "/skg"   ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CA_CERTS ".well-known/est/crts"        ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL ".well-known/est/sen"    ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL ".well-known/est/sren" ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS ".well-known/est/att"        ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN ".well-known/est/skg"   ///< Specified in draft-ietf-ace-coap-est-12
 
 /**
  * Key usage type for the X.509 certificate used in the EST client.
@@ -88,6 +85,7 @@ extern "C" {
  */
 typedef enum otEstType
 {
+    OT_EST_TYPE_NONE,
     OT_EST_TYPE_SIMPLE_ENROLL,
     OT_EST_TYPE_SIMPLE_REENROLL,
     OT_EST_TYPE_CA_CERTS,
@@ -102,11 +100,11 @@ typedef enum otEstType
  */
 typedef enum otMdType
 {
-    OT_MD_TYPE_NONE = 0,
-    OT_MD_TYPE_MD5 = MBEDTLS_MD_MD5,
-    OT_MD_TYPE_SHA256 = MBEDTLS_MD_SHA256,
-    OT_MD_TYPE_SHA384 = MBEDTLS_MD_SHA384,
-    OT_MD_TYPE_SHA512 = MBEDTLS_MD_SHA512,
+    OT_MD_TYPE_NONE      = 0,
+    OT_MD_TYPE_MD5       = MBEDTLS_MD_MD5,
+    OT_MD_TYPE_SHA256    = MBEDTLS_MD_SHA256,
+    OT_MD_TYPE_SHA384    = MBEDTLS_MD_SHA384,
+    OT_MD_TYPE_SHA512    = MBEDTLS_MD_SHA512,
     OT_MD_TYPE_RIPEMD160 = MBEDTLS_MD_RIPEMD160
 } otMdType;
 
@@ -238,11 +236,8 @@ bool otEstClientIsConnected(otInstance *aInstance);
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
  * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
- * @param[in]  aPublicKey         A pointer to a buffer that contains the EC public key.
- * @param[in]  aPublicKeyLength   The length of the buffer @p aPublicKey
  * @param[in]  aMdType            The message digest type to be used for simple enrollment.
  * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
- * @param[in]  aPemFormat         true for PEM formatted X.509 certificate, false for DER format.
  *
  * @retval OT_ERROR_NONE           Successfully sent request.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -252,11 +247,8 @@ bool otEstClientIsConnected(otInstance *aInstance);
 otError otEstClientSimpleEnroll(otInstance *   aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateLeyLength,
-                                const uint8_t *aPublicKey,
-                                uint32_t       aPublicKeyLength,
                                 otMdType       aMdType,
-                                uint8_t        aKeyUsageFlags,
-                                bool           aPemFormat);
+                                uint8_t        aKeyUsageFlags);
 
 /**
  * This method process a simple re-enrollment over CoAP Secure.
@@ -266,11 +258,8 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
  * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
- * @param[in]  aPublicKey         A pointer to a buffer that contains the EC public key.
- * @param[in]  aPublicKeyLength   The length of the buffer @p aPublicKey
  * @param[in]  aMdType            The message digest type to be used for simple enrollment.
  * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
- * @param[in]  aPemFormat         true for PEM formatted X.509 certificate, false for DER format.
  *
  * @retval OT_ERROR_NONE           Successfully sent request.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -280,11 +269,8 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
 otError otEstClientSimpleReEnroll(otInstance *   aInstance,
                                   const uint8_t *aPrivateKey,
                                   uint32_t       aPrivateLeyLength,
-                                  const uint8_t *aPublicKey,
-                                  uint32_t       aPublicKeyLength,
                                   otMdType       aMdType,
-                                  uint8_t        aKeyUsageFlags,
-                                  bool           aPemFormat);
+                                  uint8_t        aKeyUsageFlags);
 
 /**
  * ToDo: Optionally

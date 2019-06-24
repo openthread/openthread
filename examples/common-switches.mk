@@ -138,6 +138,8 @@ endif
 
 ifeq ($(EST_CLIENT),1)
 configure_OPTIONS              += --enable-est-client
+configure_OPTIONS              += --enable-application-coap-secure
+endif
 
 ifeq ($(EXTERNAL_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1

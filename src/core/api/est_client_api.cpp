@@ -106,31 +106,23 @@ bool otEstClientIsConnected(otInstance *aInstance)
 otError otEstClientSimpleEnroll(otInstance *   aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateLeyLength,
-                                const uint8_t *aPublicKey,
-                                uint32_t       aPublicKeyLength,
                                 otMdType       aMdType,
-                                uint8_t        aKeyUsageFlags,
-                                bool           aPemFormat)
+                                uint8_t        aKeyUsageFlags)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength, aPublicKey, aPublicKeyLength,
-                                                    aMdType, aKeyUsageFlags, aPemFormat);
+    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags);
 }
 
 otError otEstClientSimpleReEnroll(otInstance *   aInstance,
                                   const uint8_t *aPrivateKey,
                                   uint32_t       aPrivateLeyLength,
-                                  const uint8_t *aPublicKey,
-                                  uint32_t       aPublicKeyLength,
                                   otMdType       aMdType,
-                                  uint8_t        aKeyUsageFlags,
-                                  bool           aPemFormat)
+                                  uint8_t        aKeyUsageFlags)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength, aPublicKey, aPublicKeyLength,
-                                                      aMdType, aKeyUsageFlags, aPemFormat);
+    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags);
 }
 
 otError otEstClientGetCsrAttributes(otInstance *aInstance)

@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * place your X.509 certificate (PEM format) for ssl session
+ * Place your X.509 certificate (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
 #define OT_CLI_COAPS_X509_CERT                                             \
@@ -71,7 +71,7 @@ extern "C" {
     "-----END CERTIFICATE-----\r\n"
 
 /**
- * place your private key (PEM format) for ssl session
+ * Place your private key (PEM format) for ssl session
  * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
  */
 #define OT_CLI_COAPS_PRIV_KEY                                              \
@@ -102,6 +102,55 @@ extern "C" {
     "JXk3\r\n"                                                             \
     "-----END CERTIFICATE-----\r\n"
 
+#if OPENTHREAD_ENABLE_EST_CLIENT
+
+/**
+ * Place your X.509 certificate (PEM format) for EST session
+ * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
+ */
+#define OT_CLI_EST_CLIENT_X509_CERT                                        \
+    "-----BEGIN CERTIFICATE-----\r\n"                                      \
+    "MIIBzjCCAXSgAwIBAgIFAN6tvu8wCgYIKoZIzj0EAwIwLDESMBAGA1UECgwJVmVu\r\n" \
+    "ZG9yIENBMRYwFAYDVQQDDA1EdW1teVZlbmRvckNBMCAXDTE5MDYyNzE0NTQwNFoY\r\n" \
+    "Dzk5OTkxMjMxMjM1OTU5WjBNMQswCQYDVQQGEwJDSDETMBEGA1UECgwKU2llbWVu\r\n" \
+    "cyBCVDEWMBQGA1UEAwwNUFhDMy5FNzUtMTAwQTERMA8GA1UEBRMIdGVzdENlcnQw\r\n" \
+    "WTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASNqhfnLteeFQtVZ1sPJ4czAaIxT03o\r\n" \
+    "B4aGzPFYG6DVTsrMiQBOsTQODOu17qE+BWALYXPZ7uqFb6QCEq0njaUCo2AwXjAT\r\n" \
+    "BgNVHSUEDDAKBggrBgEFBQcDAjAOBgNVHQ8BAf8EBAMCB4AwFAYDVR0gBA0wCzAJ\r\n" \
+    "BgcrBgEEAaFpMCEGCisGAQUFBwCGjR8EEwwRbWFzYS56aGF3LmNoOjk0NDMwCgYI\r\n" \
+    "KoZIzj0EAwIDSAAwRQIgbkQbH/WAXLo7GUMjWxenxrP+0UtUrL9hzaG6SJeDaWgC\r\n" \
+    "IQC9TdQantCfGtVjPWAG/tBNGR6lNb6WQ3Sjv5GePDkcSQ==\r\n"                 \
+    "-----END CERTIFICATE-----\r\n"
+
+/**
+ * Place your private key (PEM format) for EST session
+ * with ECDHE_ECDSA_WITH_AES_128_CCM_8 here.
+ */
+#define OT_CLI_EST_CLIENT_PRIV_KEY                                         \
+    "-----BEGIN PRIVATE KEY-----\r\n"                                      \
+    "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgL10sZ5/emVL1G2PH\r\n" \
+    "l3DL53C9NXAN1Y+BYhUGVngmbrKhRANCAASNqhfnLteeFQtVZ1sPJ4czAaIxT03o\r\n" \
+    "B4aGzPFYG6DVTsrMiQBOsTQODOu17qE+BWALYXPZ7uqFb6QCEq0njaUC\r\n"         \
+    "-----END PRIVATE KEY-----\r\n"
+
+/**
+ * Place peers CA certificate (PEM format) here.
+ * It isn't necessary to validate the peers certificate. If you want to validate
+ * the peer with a CA certificate, you have to set the flag when starting the EST client.
+ */
+#define OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE                         \
+    "-----BEGIN CERTIFICATE-----\r\n"                                      \
+    "MIIBejCCASCgAwIBAgIUQVyXXQzaliBh18c5Ioom0pseB/cwCgYIKoZIzj0EAwIw\r\n" \
+    "LDESMBAGA1UECgwJVmVuZG9yIENBMRYwFAYDVQQDDA1EdW1teVZlbmRvckNBMB4X\r\n" \
+    "DTE5MDYyNzE0MzYxNloXDTQ2MTExMTE0MzYxNlowLDESMBAGA1UECgwJVmVuZG9y\r\n" \
+    "IENBMRYwFAYDVQQDDA1EdW1teVZlbmRvckNBMFkwEwYHKoZIzj0CAQYIKoZIzj0D\r\n" \
+    "AQcDQgAEUO/07NxDRKskiETJNOlBELRGz0mvd8GpXrL2/wm7BeaplGYZJayjjS2M\r\n" \
+    "fzHdaMu5QzKgpqMZsCT5HIVadIxpCaMgMB4wDwYDVR0TBAgwBgEB/wIBATALBgNV\r\n" \
+    "HQ8EBAMCAQYwCgYIKoZIzj0EAwIDSAAwRQIgJuXQEiK4SAxyDxW7RPqebT5F472z\r\n" \
+    "u/fS4xwQsOqQzuECIQCWQbzbr8P577w/AgQbnageY28keimterxuOgy01SBbpg==\r\n" \
+    "-----END CERTIFICATE-----\r\n"
+
+#endif // OPENTHREAD_ENABLE_EST_CLIENT
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 

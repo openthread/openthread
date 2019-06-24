@@ -98,17 +98,14 @@ exit:
 
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
-otError otCryptoEcpGenenrateKey(const uint8_t *aPersonalSeed,
-                                uint32_t       aPersonalSeedLength,
-                                uint8_t *      aPrivateKey,
-                                uint32_t *     aPrivateKeyLength,
-                                uint8_t *      aPublicKey,
-                                uint32_t *     aPublicKeyLength)
+otError otCryptoEcpGenenrateKey(uint8_t * aPrivateKey,
+                                uint32_t *aPrivateKeyLength,
+                                uint8_t * aPublicKey,
+                                uint32_t *aPublicKeyLength)
 {
     assert((aPrivateKey != NULL) && (aPrivateKeyLength != NULL) && (aPublicKey != NULL) && (aPublicKeyLength != NULL));
 
-    return Ecp::KeyPairGeneration(aPersonalSeed, aPersonalSeedLength, aPrivateKey, aPrivateKeyLength, aPublicKey,
-                                  aPublicKeyLength);
+    return Ecp::KeyPairGeneration(aPrivateKey, aPrivateKeyLength, aPublicKey, aPublicKeyLength);
 }
 
 #endif // OPENTHREAD_ENABLE_EST_CLIENT

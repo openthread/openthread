@@ -90,6 +90,7 @@ python --version || die
         --enable-cli                      \
         --enable-executable=no            \
         --enable-est-client               \
+        --enable-executable=no            \
         --enable-ftd                      \
         --enable-mtd                      \
         --enable-ncp                      \
