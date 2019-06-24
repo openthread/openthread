@@ -107,6 +107,15 @@
 #define MBEDTLS_PEM_PARSE_C
 #endif
 
+#if OPENTHREAD_ENABLE_EST_CLIENT
+#define MBEDTLS_PK_WRITE_C
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PEM_WRITE_C
+#define MBEDTLS_X509_CSR_WRITE_C
+#define MBEDTLS_X509_CREATE_C
+#endif
+
 #define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */
 #define MBEDTLS_MPI_MAX_SIZE              32 /**< Maximum number of bytes for usable MPIs. */
 #define MBEDTLS_ECP_MAX_BITS             256 /**< Maximum bit size of groups */

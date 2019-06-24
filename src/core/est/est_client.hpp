@@ -212,6 +212,28 @@ private:
 
     static void CoapSecureConnectedHandle(bool aConnected, void *aContext);
     void        CoapSecureConnectedHandle(bool aConnected);
+    otError     CmsReadSignedData(uint8_t       *aMessage,
+                                  uint32_t       aMessageLength,
+                                  uint8_t      **aPayload,
+                                  uint32_t      *aPayloadLength);
+    static void SimpleEnrollResponseHandler(void *               aContext,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aResult);
+    void        SimpleEnrollResponseHandler(otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aResult);
+    static void SimpleReEnrollResponseHandler(void *               aContext,
+                                              otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              otError              aResult);
+    void        SimpleReEnrollResponseHandler(otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              otError              aResult);
+    static int  EntropyPollHandle(void *         aData,
+                                  unsigned char *aOutput,
+                                  size_t         aInLen,
+                                  size_t *       aOutLen);
 
     bool                      mIsConnected;
     bool                      mStarted;
