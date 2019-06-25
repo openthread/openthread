@@ -1480,8 +1480,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     Address   dstaddr;
     PanId     panid;
     Neighbor *neighbor;
-    bool      receive = false;
-    otError   error   = aError;
+    otError   error = aError;
 #if OPENTHREAD_ENABLE_MAC_FILTER
     int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
@@ -1714,29 +1713,23 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             ExitNow(error = OT_ERROR_NONE);
         }
 
-        receive = true;
         break;
 
     case Frame::kFcfFrameBeacon:
         mCounters.mRxBeacon++;
-        receive = true;
         break;
 
     case Frame::kFcfFrameData:
         mCounters.mRxData++;
-        receive = true;
         break;
 
     default:
         mCounters.mRxOther++;
-        break;
+        ExitNow();
     }
 
-    if (receive)
-    {
-        otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
-        Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
-    }
+    otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+    Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
 
 exit:
 
