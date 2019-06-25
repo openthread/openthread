@@ -637,6 +637,7 @@ Message *Message::Clone(uint16_t aLength) const
 {
     otError  error = OT_ERROR_NONE;
     Message *messageCopy;
+    uint16_t offset;
 
     VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved(), GetPriority())) != NULL,
                  error = OT_ERROR_NO_BUFS);
@@ -644,7 +645,9 @@ Message *Message::Clone(uint16_t aLength) const
     CopyTo(0, 0, aLength, *messageCopy);
 
     // Copy selected message information.
-    messageCopy->SetOffset(GetOffset());
+    offset = GetOffset() < aLength ? GetOffset() : aLength;
+    messageCopy->SetOffset(offset);
+
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
