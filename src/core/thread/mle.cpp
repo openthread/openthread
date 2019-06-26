@@ -4190,7 +4190,10 @@ const char *Mle::RoleToString(otDeviceRole aRole)
     return roleString;
 }
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
     const char *str = "unknown";
@@ -4286,6 +4289,8 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 }
 
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
+// LCOV_EXCL_STOP
 
 void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
 {

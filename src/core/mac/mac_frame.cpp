@@ -1058,6 +1058,10 @@ uint16_t Frame::GetFcsSize(void) const
     return kFcsSize;
 }
 
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
 Frame::InfoString Frame::ToInfoString(void) const
 {
     InfoString string;
@@ -1131,6 +1135,10 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
                       xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
                       IsNative() ? "yes" : "no");
 }
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace Mac
 } // namespace ot

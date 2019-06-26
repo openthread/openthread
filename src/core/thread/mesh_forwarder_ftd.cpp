@@ -1228,6 +1228,8 @@ exit:
 }
 #endif // OPENTHREAD_ENABLE_SERVICE
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
@@ -1407,6 +1409,8 @@ exit:
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace ot
 
