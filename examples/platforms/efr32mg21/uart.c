@@ -67,7 +67,7 @@ enum
             (USART_Parity_TypeDef)USART_FRAME_PARITY_NONE,    /* Parity */                \
             (USART_OVS_TypeDef)USART_CTRL_OVS_X16,            /* Oversampling mode*/      \
             false,                                            /* Majority vote disable */ \
-            uartdrvFlowControlHwUart,                         /* Flow control */          \
+            HAL_SERIAL_APP_FLOW_CONTROL,                      /* Flow control */          \
             BSP_SERIAL_APP_CTS_PORT,                          /* CTS port number */       \
             BSP_SERIAL_APP_CTS_PIN,                           /* CTS pin number */        \
             BSP_SERIAL_APP_RTS_PORT,                          /* RTS port number */       \
