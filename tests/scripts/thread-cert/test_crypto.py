@@ -35,7 +35,6 @@ import ipaddress
 
 import common
 import net_crypto
-import mle
 
 master_key = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
@@ -306,7 +305,7 @@ class TestMleCryptoMaterialCreator(unittest.TestCase):
         self.assertEqual(destination_address.packed, authenticated_data_bytes.read(16))
         self.assertEqual(auxiliary_security_header_bytes, authenticated_data_bytes.read(10))
 
-    def test_should_create_key_and_nonce_and_authenticated_data_when_create_key_and_nonce_and_authenticated_data_is_called(self):
+    def test_should_create_key_and_nonce_and_auth_data_when_create_key_and_nonce_and_auth_data_is_called(self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_mac_address = common.MacAddress.from_eui64(any_eui64())
@@ -323,14 +322,22 @@ class TestMleCryptoMaterialCreator(unittest.TestCase):
         key, nonce, auth_data = creator.create_key_and_nonce_and_authenticated_data(message_info)
 
         # THEN
-        self.assertEqual(message_info.source_mac_address.mac_address +
-                         struct.pack(">LB",
-                                     message_info.aux_sec_hdr.frame_counter,
-                                     message_info.aux_sec_hdr.security_level), nonce)
+        self.assertEqual(
+            message_info.source_mac_address.mac_address
+            + struct.pack(
+                ">LB",
+                message_info.aux_sec_hdr.frame_counter,
+                message_info.aux_sec_hdr.security_level
+            ),
+            nonce
+        )
 
-        self.assertEqual(message_info.source_ipv6.packed +
-                         message_info.destination_ipv6.packed +
-                         message_info.aux_sec_hdr_bytes, auth_data)
+        self.assertEqual(
+            message_info.source_ipv6.packed
+            + message_info.destination_ipv6.packed
+            + message_info.aux_sec_hdr_bytes,
+            auth_data
+        )
 
 
 class TestAuxiliarySecurityHeader(unittest.TestCase):
@@ -426,6 +433,7 @@ class TestAuxiliarySecurityHeaderFactory(unittest.TestCase):
         self.assertEqual(key_id_mode, aux_sec_hdr.key_id_mode)
         self.assertEqual(sec_lvl, aux_sec_hdr.security_level)
         self.assertEqual(frame_counter, aux_sec_hdr.frame_counter)
+
 
 if __name__ == "__main__":
     unittest.main()

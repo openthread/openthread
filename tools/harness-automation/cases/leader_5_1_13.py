@@ -29,20 +29,24 @@
 
 
 from autothreadharness.harness_case import HarnessCase
+import time
 import unittest
+
 
 class Leader_5_1_13(HarnessCase):
     role = HarnessCase.ROLE_LEADER
     case = '5 1 13'
     golden_devices_required = 1
+
     def on_dialog(self, dialog, title):
         if title.startswith('User Input Required'):
-            #body = dialog.find_element_by_id('cnfrmMsg').text
-            #if body.startswith('Reset Leader'):
+            # body = dialog.find_element_by_id('cnfrmMsg').text
+            # if body.startswith('Reset Leader'):
             self.dut.stop()
             time.sleep(1)
             self.dut.start()
             return False
+
 
 if __name__ == '__main__':
     unittest.main()

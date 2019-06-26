@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -40,13 +39,16 @@ ROUTER_1 = 2
 ROUTER_31 = 32
 ROUTER_32 = 33
 
+
 class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
 
-        self.nodes[DUT_LEADER] = node.Node(DUT_LEADER, simulator=self.simulator)
+        self.nodes[DUT_LEADER] = node.Node(
+            DUT_LEADER, simulator=self.simulator
+        )
         self.nodes[DUT_LEADER].set_panid(0xface)
         self.nodes[DUT_LEADER].set_mode('rsdn')
         self.nodes[DUT_LEADER].enable_whitelist()
@@ -75,9 +77,9 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         self.nodes[ROUTER_32].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -99,7 +101,8 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER_31].get_state(), 'router')
 
         # 3 - DUT_LEADER
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.next_coap_message('2.04')
         msg.assertCoapMessageContainsTlv(network_layer.Status)
@@ -123,7 +126,10 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         msg.assertCoapMessageContainsTlv(network_layer.Status)
 
         status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.NO_ADDRESS_AVAILABLE, status_tlv.status)
+        self.assertEqual(
+            network_layer.StatusValues.NO_ADDRESS_AVAILABLE, status_tlv.status
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

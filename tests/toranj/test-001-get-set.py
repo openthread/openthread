@@ -28,31 +28,31 @@
 
 from wpan import verify
 import wpan
-import time
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: simple wpanctl get and set commands
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 node = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 
-# set some of properties and check and verify that the value is indeed changed...
+# set some of properties and check and verify that the value is indeed
+# changed...
 
 node.set(wpan.WPAN_NAME, 'test-network')
 verify(node.get(wpan.WPAN_NAME) == '"test-network"')
@@ -171,12 +171,10 @@ all_gettable_props = [
     wpan.WPAN_THREAD_LEADER_WEIGHT,
     wpan.WPAN_THREAD_LEADER_LOCAL_WEIGHT,
     wpan.WPAN_THREAD_LEADER_NETWORK_DATA,
-    wpan.WPAN_THREAD_STABLE_LEADER_NETWORK_DATA
+    wpan.WPAN_THREAD_STABLE_LEADER_NETWORK_DATA,
 ]
 
-all_posix_app_gettable_props = [
-    wpan.WPAN_RCP_VERSION
-]
+all_posix_app_gettable_props = [wpan.WPAN_RCP_VERSION]
 
 node.form('get-set')
 
@@ -187,9 +185,9 @@ if node.using_posix_app_with_rcp:
     for prop in all_posix_app_gettable_props:
         node.get(prop)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

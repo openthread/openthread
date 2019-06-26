@@ -43,7 +43,7 @@ python --version || die
 }
 
 [ $BUILD_TARGET != py-pretty-check ] || {
-    flake8 --config=script/pystyle.cfg tools/harness-thci/ || die
+    flake8 --config=script/pystyle.cfg tests tools || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {

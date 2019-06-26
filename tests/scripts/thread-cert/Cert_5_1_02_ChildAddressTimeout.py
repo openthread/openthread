@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -41,8 +40,8 @@ SED = 4
 
 MTDS = [ED, SED]
 
-class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
+class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -76,9 +75,9 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         self.nodes[SED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):

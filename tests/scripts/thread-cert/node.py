@@ -39,6 +39,7 @@ import socket
 import time
 import unittest
 
+
 class Node:
     def __init__(self, nodeid, is_mtd=False, simulator=None):
         self.nodeid = nodeid
@@ -48,7 +49,7 @@ class Node:
         if self.simulator:
             self.simulator.add_node(self)
 
-        mode = os.environ.get('USE_MTD') is '1' and is_mtd and 'mtd' or 'ftd'
+        mode = os.environ.get('USE_MTD') == '1' and is_mtd and 'mtd' or 'ftd'
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
@@ -81,7 +82,7 @@ class Node:
             os.environ['NODE_ID'] = str(nodeid)
 
         cmd += ' %d' % nodeid
-        print ("%s" % cmd)
+        print("%s" % cmd)
 
         self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=4)
 
@@ -104,14 +105,21 @@ class Node:
             args = ''
 
         if 'OT_NCP_PATH' in os.environ.keys():
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (os.environ['OT_NCP_PATH'], args)
+            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                os.environ['OT_NCP_PATH'],
+                args,
+            )
         elif "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (builddir, mode, args)
+            cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (
+                builddir,
+                mode,
+                args,
+            )
         else:
             cmd = 'spinel-cli.py -p "./ot-ncp-%s%s" -n' % (mode, args)
         cmd += ' %d' % nodeid
-        print ("%s" % cmd)
+        print("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
 
@@ -139,8 +147,11 @@ class Node:
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
         import fdpexpect
-        serialPort = '/dev/ttyUSB%d' % ((nodeid-1)*2)
-        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
+
+        serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
+        self.pexpect = fdpexpect.fdspawn(
+            os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY)
+        )
 
     def __del__(self):
         self.destroy()
@@ -149,8 +160,12 @@ class Node:
         if not self._initialized:
             return
 
-        if hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None or \
-                not hasattr(self.pexpect, 'proc') and self.pexpect.isalive():
+        if (
+            hasattr(self.pexpect, 'proc')
+            and self.pexpect.proc.poll() is None
+            or not hasattr(self.pexpect, 'proc')
+            and self.pexpect.isalive()
+        ):
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
@@ -166,7 +181,17 @@ class Node:
         dummy_format_str = br"\[THCI\].*?type=%s.*?"
         join_ent_ntf = dummy_format_str % br"JOIN_ENT\.ntf"
         join_ent_rsp = dummy_format_str % br"JOIN_ENT\.rsp"
-        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|("+ join_ent_ntf + b")|(" + join_ent_rsp + b")")
+        pattern = (
+            b"("
+            + join_fin_req
+            + b")|("
+            + join_fin_rsp
+            + b")|("
+            + join_ent_ntf
+            + b")|("
+            + join_ent_rsp
+            + b")"
+        )
 
         messages = []
         # There are at most 4 cert messages both for joiner and commissioner
@@ -175,7 +200,7 @@ class Node:
                 self._expect(pattern, timeout=timeout)
                 log = self.pexpect.match.group(0)
                 messages.append(self._extract_cert_message(log))
-            except:
+            except BaseException:
                 break
         return messages
 
@@ -200,9 +225,13 @@ class Node:
                 res = re.search(hex_pattern, log)
                 if not res:
                     break
-                data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
+                data = [
+                    int(hex, 16)
+                    for hex in res.group(0)[1:-1].split(b' ')
+                    if hex and hex != b'..'
+                ]
                 payload += bytearray(data)
-                log = log[res.end()-1:]
+                log = log[res.end() - 1:]
 
         assert len(payload) == payload_len
         return (direction, type, payload)
@@ -292,7 +321,7 @@ class Node:
     def add_whitelist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
 
-        if rssi != None:
+        if rssi is not None:
             cmd += ' %s' % rssi
 
         self.send_command(cmd)
@@ -313,7 +342,7 @@ class Node:
 
     def get_router_id(self):
         rloc16 = self.get_addr16()
-        return (rloc16 >> 10)
+        return rloc16 >> 10
 
     def get_addr64(self):
         self.send_command('extaddr')
@@ -413,7 +442,7 @@ class Node:
         self._expect('Done')
         return panid
 
-    def set_panid(self, panid = config.PANID):
+    def set_panid(self, panid=config.PANID):
         cmd = 'panid %d' % panid
         self.send_command(cmd)
         self._expect('Done')
@@ -526,7 +555,12 @@ class Node:
         addrs = self.get_addrs()
         for addr in addrs:
             segs = addr.split(':')
-            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] != 'fc00':
+            if (
+                segs[4] == '0'
+                and segs[5] == 'ff'
+                and segs[6] == 'fe00'
+                and segs[7] != 'fc00'
+            ):
                 return addr
         return None
 
@@ -534,7 +568,12 @@ class Node:
         addrs = self.get_addrs()
         for addr in addrs:
             segs = addr.split(':')
-            if segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] == 'fc00':
+            if (
+                segs[4] == '0'
+                and segs[5] == 'ff'
+                and segs[6] == 'fe00'
+                and segs[7] == 'fc00'
+            ):
                 return addr
         return None
 
@@ -554,7 +593,11 @@ class Node:
         return eidcaches
 
     def add_service(self, enterpriseNumber, serviceData, serverData):
-        cmd = 'service add %s %s %s' % (enterpriseNumber, serviceData, serverData)
+        cmd = 'service add %s %s %s' % (
+            enterpriseNumber,
+            serviceData,
+            serverData,
+        )
         self.send_command(cmd)
         self._expect('Done')
 
@@ -573,35 +616,58 @@ class Node:
     def __getGlobalAddress(self):
         global_address = []
         for ip6Addr in self.get_addrs():
-            if (not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I)) and \
-                    (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)) and \
-                    (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
+            if (
+                (not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I))
+                and (
+                    not re.match(
+                        config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I
+                    )
+                )
+                and (
+                    not re.match(
+                        config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
+                    )
+                )
+            ):
                 global_address.append(ip6Addr)
 
         return global_address
 
     def __getRloc(self):
         for ip6Addr in self.get_addrs():
-            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
-                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and \
-                    not(re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)):
+            if (
+                re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
+                and re.match(
+                    config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
+                )
+                and not (
+                    re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)
+                )
+            ):
                 return ip6Addr
         return None
 
     def __getAloc(self):
         aloc = []
         for ip6Addr in self.get_addrs():
-            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
-                    re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I) and \
-                    re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I):
+            if (
+                re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
+                and re.match(
+                    config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
+                )
+                and re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)
+            ):
                 aloc.append(ip6Addr)
 
         return aloc
 
     def __getMleid(self):
         for ip6Addr in self.get_addrs():
-            if re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I) and \
-                    not(re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
+            if re.match(
+                config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I
+            ) and not (
+                re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)
+            ):
                 return ip6Addr
 
         return None
@@ -643,7 +709,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_prefix(self, prefix, flags, prf = 'med'):
+    def add_prefix(self, prefix, flags, prf='med'):
         cmd = 'prefix add %s %s %s' % (prefix, flags, prf)
         self.send_command(cmd)
         self._expect('Done')
@@ -653,7 +719,7 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def add_route(self, prefix, prf = 'med'):
+    def add_route(self, prefix, prf='med'):
         cmd = 'route add %s %s' % (prefix, prf)
         self.send_command(cmd)
         self._expect('Done')
@@ -668,7 +734,13 @@ class Node:
         self._expect('Done')
 
     def energy_scan(self, mask, count, period, scan_duration, ipaddr):
-        cmd = 'commissioner energy %d %d %d %d %s' % (mask, count, period, scan_duration, ipaddr)
+        cmd = 'commissioner energy %d %d %d %d %s' % (
+            mask,
+            count,
+            period,
+            scan_duration,
+            ipaddr,
+        )
         self.send_command(cmd)
 
         if isinstance(self.simulator, simulator.VirtualTime):
@@ -696,8 +768,12 @@ class Node:
 
         results = []
         while True:
-            i = self._expect([r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
-                                        'Done'])
+            i = self._expect(
+                [
+                    r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
+                    'Done',
+                ]
+            )
             if i == 0:
                 results.append(self.pexpect.match.groups())
             else:
@@ -707,7 +783,7 @@ class Node:
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         cmd = 'ping %s' % ipaddr
-        if size != None:
+        if size is not None:
             cmd += ' %d' % size
 
         self.send_command(cmd)
@@ -739,7 +815,14 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-    def set_active_dataset(self, timestamp, panid=None, channel=None, channel_mask=None, master_key=None):
+    def set_active_dataset(
+        self,
+        timestamp,
+        panid=None,
+        channel=None,
+        channel_mask=None,
+        master_key=None,
+    ):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -747,22 +830,22 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-        if panid != None:
+        if panid is not None:
             cmd = 'dataset panid %d' % panid
             self.send_command(cmd)
             self._expect('Done')
 
-        if channel != None:
+        if channel is not None:
             cmd = 'dataset channel %d' % channel
             self.send_command(cmd)
             self._expect('Done')
 
-        if channel_mask != None:
+        if channel_mask is not None:
             cmd = 'dataset channelmask %d' % channel_mask
             self.send_command(cmd)
             self._expect('Done')
 
-        if master_key != None:
+        if master_key is not None:
             cmd = 'dataset masterkey %s' % master_key
             self.send_command(cmd)
             self._expect('Done')
@@ -770,7 +853,9 @@ class Node:
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+    def set_pending_dataset(
+        self, pendingtimestamp, activetimestamp, panid=None, channel=None
+    ):
         self.send_command('dataset clear')
         self._expect('Done')
 
@@ -782,12 +867,12 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
-        if panid != None:
+        if panid is not None:
             cmd = 'dataset panid %d' % panid
             self.send_command(cmd)
             self._expect('Done')
 
-        if channel != None:
+        if channel is not None:
             cmd = 'dataset channel %d' % channel
             self.send_command(cmd)
             self._expect('Done')
@@ -796,69 +881,93 @@ class Node:
         self._expect('Done')
 
     def announce_begin(self, mask, count, period, ipaddr):
-        cmd = 'commissioner announce %d %d %d %s' % (mask, count, period, ipaddr)
+        cmd = 'commissioner announce %d %d %d %s' % (
+            mask,
+            count,
+            period,
+            ipaddr,
+        )
         self.send_command(cmd)
         self._expect('Done')
 
-    def send_mgmt_active_set(self, active_timestamp=None, channel=None, channel_mask=None, extended_panid=None,
-                             panid=None, master_key=None, mesh_local=None, network_name=None, binary=None):
+    def send_mgmt_active_set(
+        self,
+        active_timestamp=None,
+        channel=None,
+        channel_mask=None,
+        extended_panid=None,
+        panid=None,
+        master_key=None,
+        mesh_local=None,
+        network_name=None,
+        binary=None,
+    ):
         cmd = 'dataset mgmtsetcommand active '
 
-        if active_timestamp != None:
+        if active_timestamp is not None:
             cmd += 'activetimestamp %d ' % active_timestamp
 
-        if channel != None:
+        if channel is not None:
             cmd += 'channel %d ' % channel
 
-        if channel_mask != None:
+        if channel_mask is not None:
             cmd += 'channelmask %d ' % channel_mask
 
-        if extended_panid != None:
+        if extended_panid is not None:
             cmd += 'extpanid %s ' % extended_panid
 
-        if panid != None:
+        if panid is not None:
             cmd += 'panid %d ' % panid
 
-        if master_key != None:
+        if master_key is not None:
             cmd += 'masterkey %s ' % master_key
 
-        if mesh_local != None:
+        if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local
 
-        if network_name != None:
+        if network_name is not None:
             cmd += 'networkname %s ' % network_name
 
-        if binary != None:
+        if binary is not None:
             cmd += 'binary %s ' % binary
 
         self.send_command(cmd)
         self._expect('Done')
 
-    def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
-                              panid=None, master_key=None, mesh_local=None, network_name=None):
+    def send_mgmt_pending_set(
+        self,
+        pending_timestamp=None,
+        active_timestamp=None,
+        delay_timer=None,
+        channel=None,
+        panid=None,
+        master_key=None,
+        mesh_local=None,
+        network_name=None,
+    ):
         cmd = 'dataset mgmtsetcommand pending '
-        if pending_timestamp != None:
+        if pending_timestamp is not None:
             cmd += 'pendingtimestamp %d ' % pending_timestamp
 
-        if active_timestamp != None:
+        if active_timestamp is not None:
             cmd += 'activetimestamp %d ' % active_timestamp
 
-        if delay_timer != None:
+        if delay_timer is not None:
             cmd += 'delaytimer %d ' % delay_timer
 
-        if channel != None:
+        if channel is not None:
             cmd += 'channel %d ' % channel
 
-        if panid != None:
+        if panid is not None:
             cmd += 'panid %d ' % panid
 
-        if master_key != None:
+        if master_key is not None:
             cmd += 'masterkey %s ' % master_key
 
-        if mesh_local != None:
+        if mesh_local is not None:
             cmd += 'localprefix %s ' % mesh_local
 
-        if network_name != None:
+        if network_name is not None:
             cmd += 'networkname %s ' % network_name
 
         self.send_command(cmd)
@@ -942,6 +1051,7 @@ class Node:
         for tlv in tlvs:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
+
 
 if __name__ == '__main__':
     unittest.main()

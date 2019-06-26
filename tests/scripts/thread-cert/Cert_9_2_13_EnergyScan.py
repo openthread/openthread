@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -38,12 +37,13 @@ LEADER = 2
 ROUTER1 = 3
 ED1 = 4
 
+
 class Cert_9_2_13_EnergyScan(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
@@ -71,9 +71,9 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[ED1].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -101,7 +101,9 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
+        self.nodes[COMMISSIONER].energy_scan(
+            0x50000, 0x02, 0x20, 0x3E8, ipaddr
+        )
 
         ipaddrs = self.nodes[ED1].get_addrs()
         for ipaddr in ipaddrs:
@@ -109,11 +111,16 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
+        self.nodes[COMMISSIONER].energy_scan(
+            0x50000, 0x02, 0x20, 0x3E8, ipaddr
+        )
 
-        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, 'ff33:0040:fdde:ad00:beef:0:0:1')
+        self.nodes[COMMISSIONER].energy_scan(
+            0x50000, 0x02, 0x20, 0x3E8, 'ff33:0040:fdde:ad00:beef:0:0:1'
+        )
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -35,11 +35,33 @@ import unittest
 
 from ipaddress import ip_address
 
-from ipv6 import ICMPv6Header, UDPHeader, IPv6Header, IPv6PacketFactory, UDPDatagram, \
-    UDPDatagramFactory, ICMPv6Factory, HopByHopFactory, MPLOptionFactory, ICMPv6, HopByHopOptionHeader, HopByHopOption, \
-    HopByHop, MPLOption, HopByHopFactory, IPv6Packet, ICMPv6EchoBody, BytesPayload, ICMPv6EchoBodyFactory, \
-    UpperLayerProtocol, UDPHeaderFactory, HopByHopOptionsFactory, ICMPv6DestinationUnreachableFactory, \
-    BytesPayloadFactory, ICMPv6DestinationUnreachable, UdpBasedOnSrcDstPortsPayloadFactory
+from ipv6 import (
+    ICMPv6Header,
+    UDPHeader,
+    IPv6Header,
+    IPv6PacketFactory,
+    UDPDatagram,
+    UDPDatagramFactory,
+    ICMPv6Factory,
+    HopByHopFactory,
+    MPLOptionFactory,
+    ICMPv6,
+    HopByHopOptionHeader,
+    HopByHopOption,
+    HopByHop,
+    MPLOption,
+    IPv6Packet,
+    ICMPv6EchoBody,
+    BytesPayload,
+    ICMPv6EchoBodyFactory,
+    UpperLayerProtocol,
+    UDPHeaderFactory,
+    HopByHopOptionsFactory,
+    ICMPv6DestinationUnreachableFactory,
+    BytesPayloadFactory,
+    ICMPv6DestinationUnreachable,
+    UdpBasedOnSrcDstPortsPayloadFactory,
+)
 
 import common
 
@@ -136,15 +158,15 @@ def any_checksum():
 
 
 def any_icmp_payload(_type, code, checksum, body):
-    return bytearray([_type, code, (checksum >> 8) & 0xFF, checksum & 0xFF]) + body
+    return bytearray([_type, code, (checksum >> 8) & 0xff, checksum & 0xff]) + body
 
 
 def any_udp_payload(src_port, dst_port, payload, checksum):
     payload_len = len(payload) + 8
-    return bytearray([(src_port >> 8) & 0xFF, src_port & 0xFF,
-                      (dst_port >> 8) & 0xFF, dst_port & 0xFF,
-                      (payload_len >> 8) & 0xFF, payload_len & 0xFF,
-                      (checksum >> 8) & 0xFF, checksum & 0xFF]) + payload
+    return bytearray([(src_port >> 8) & 0xff, src_port & 0xff,
+                      (dst_port >> 8) & 0xff, dst_port & 0xff,
+                      (payload_len >> 8) & 0xff, payload_len & 0xff,
+                      (checksum >> 8) & 0xff, checksum & 0xff]) + payload
 
 
 def any_hop_by_hop_payload(next_header, hdr_ext_len, payload):
@@ -326,9 +348,10 @@ class TestIPv6Header(unittest.TestCase):
 
         # THEN
         self.assertEqual(6, data[0] >> 4)
-        self.assertEqual(traffic_class, ((data[0] << 8 | data[1]) >> 4) & 0xFF)
-        self.assertEqual(flow_label, ((data[1] & 0x0F) << 16) |
-                         (data[2] << 8) | data[3])
+        self.assertEqual(traffic_class, ((data[0] << 8 | data[1]) >> 4) & 0xff)
+        self.assertEqual(
+            flow_label, ((data[1] & 0x0F) << 16) | (data[2] << 8) | data[3]
+        )
         self.assertEqual(payload_length, struct.unpack("!H", data[4:6])[0])
         self.assertEqual(next_header, data[6])
         self.assertEqual(hop_limit, data[7])
@@ -347,8 +370,8 @@ class TestIPv6Header(unittest.TestCase):
 
         data = bytearray([(6 << 4) | (traffic_class >> 4),
                           (traffic_class & 0xF) << 4 | (flow_label >> 16) & 0xF,
-                          (flow_label >> 8) & 0xFF, flow_label & 0xFF,
-                          payload_length >> 8, payload_length & 0xFF,
+                          (flow_label >> 8) & 0xff, flow_label & 0xff,
+                          payload_length >> 8, payload_length & 0xff,
                           next_header, hop_limit])
         data += ip_address(bytes(source_address)).packed + ip_address(bytes(destination_address)).packed
 
@@ -484,31 +507,55 @@ class TestIPv6Packet(unittest.TestCase):
     def test_should_build_IPv6Packet_with_ICMP_payload_from_well_know_values_when_to_bytes_method_is_called(self):
         # GIVEN
 
-        ipv6_packet = IPv6Packet(IPv6Header(source_address="fd00:1234:4555::ff:fe00:1800",
-                                            destination_address="ff03::1"),
-                                 ICMPv6(ICMPv6Header(128, 0),
-                                        ICMPv6EchoBody(0, 2, bytearray([0x80, 0x00, 0xc7, 0xbf, 0x00, 0x00, 0x00, 0x01,
-                                                                        0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
-                                                                        0x41, 0x41]))),
-                                 [HopByHop(options=[
-                                     HopByHopOption(HopByHopOptionHeader(_type=0x6d),
-                                                    MPLOption(S=1, M=0, V=0, sequence=2, seed_id=bytearray([0x00, 0x18])))
-                                 ])])
+        ipv6_packet = IPv6Packet(
+            IPv6Header(
+                source_address="fd00:1234:4555::ff:fe00:1800",
+                destination_address="ff03::1"
+            ),
+            ICMPv6(
+                ICMPv6Header(128, 0),
+                ICMPv6EchoBody(
+                    0,
+                    2,
+                    bytearray(
+                        [
+                            0x80, 0x00, 0xc7, 0xbf, 0x00, 0x00, 0x00, 0x01,
+                            0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
+                            0x41, 0x41
+                        ]
+                    )
+                )
+            ),
+            [
+                HopByHop(
+                    options=[
+                        HopByHopOption(
+                            HopByHopOptionHeader(_type=0x6d),
+                            MPLOption(S=1, M=0, V=0, sequence=2, seed_id=bytearray([0x00, 0x18]))
+                        )
+                    ]
+                )
+            ]
+        )
 
         # WHEN
         ipv6_packet_bytes = ipv6_packet.to_bytes()
 
         # THEN
-        expected_ipv6_packet_bytes = bytearray([0x60, 0x00, 0x00, 0x00, 0x00, 0x22, 0x00, 0x40,
-                                                0xfd, 0x00, 0x12, 0x34, 0x45, 0x55, 0x00, 0x00,
-                                                0x00, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x18, 0x00,
-                                                0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-                                                0x3a, 0x00, 0x6d, 0x04, 0x40, 0x02, 0x00, 0x18,
-                                                0x80, 0x00, 0x87, 0x12, 0x00, 0x00, 0x00, 0x02,
-                                                0x80, 0x00, 0xc7, 0xbf, 0x00, 0x00, 0x00, 0x01,
-                                                0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
-                                                0x41, 0x41])
+        expected_ipv6_packet_bytes = bytearray(
+            [
+                0x60, 0x00, 0x00, 0x00, 0x00, 0x22, 0x00, 0x40,
+                0xfd, 0x00, 0x12, 0x34, 0x45, 0x55, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x18, 0x00,
+                0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x3a, 0x00, 0x6d, 0x04, 0x40, 0x02, 0x00, 0x18,
+                0x80, 0x00, 0x87, 0x12, 0x00, 0x00, 0x00, 0x02,
+                0x80, 0x00, 0xc7, 0xbf, 0x00, 0x00, 0x00, 0x01,
+                0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
+                0x41, 0x41
+            ]
+        )
 
         self.assertEqual(expected_ipv6_packet_bytes, ipv6_packet_bytes)
 
@@ -518,11 +565,19 @@ class TestIPv6Packet(unittest.TestCase):
                                  destination_address="ff02::2",
                                  hop_limit=255)
 
-        udp_dgram = UDPDatagram(UDPHeader(src_port=19788, dst_port=19788),
-                                BytesPayload(bytearray([0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                           0x00, 0x00, 0x01, 0x09, 0x01, 0x01, 0x0b, 0x03,
-                                                           0x04, 0xc6, 0x69, 0x73, 0x51, 0x0e, 0x01, 0x80,
-                                                           0x12, 0x02, 0x00, 0x01, 0xde, 0xad, 0xbe, 0xef])))
+        udp_dgram = UDPDatagram(
+            UDPHeader(src_port=19788, dst_port=19788),
+            BytesPayload(
+                bytearray(
+                    [
+                        0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x01, 0x09, 0x01, 0x01, 0x0b, 0x03,
+                        0x04, 0xc6, 0x69, 0x73, 0x51, 0x0e, 0x01, 0x80,
+                        0x12, 0x02, 0x00, 0x01, 0xde, 0xad, 0xbe, 0xef
+                    ]
+                )
+            )
+        )
 
         ipv6_packet = IPv6Packet(ipv6_header, udp_dgram)
 
@@ -546,7 +601,7 @@ class TestIPv6Packet(unittest.TestCase):
 
 class TestIPv6PacketFactory(unittest.TestCase):
 
-    def test_should_create_IPv6Packet_with_MPL_extension_header_and_ICMP_upper_layer_protocol_when_to_bytes_method_is_called(self):
+    def test_should_create_IPv6Packet_with_MPL_and_ICMP_when_to_bytes_method_is_called(self):
         # GIVEN
         ipv6_packet_bytes = bytearray([0x60, 0x00, 0x00, 0x00, 0x00, 0x22, 0x00, 0x40,
                                        0xfd, 0x00, 0x12, 0x34, 0x45, 0x55, 0x00, 0x00,
@@ -579,7 +634,7 @@ class TestIPv6PacketFactory(unittest.TestCase):
         ipv6_packet = ipv6_factory.parse(io.BytesIO(ipv6_packet_bytes), any_message_info())
 
         # THEN
-        self.assertEqual('fd00:1234:4555::ff:fe00:1800',  ipv6_packet.ipv6_header.source_address.compressed)
+        self.assertEqual('fd00:1234:4555::ff:fe00:1800', ipv6_packet.ipv6_header.source_address.compressed)
         self.assertEqual('ff03::1', ipv6_packet.ipv6_header.destination_address.compressed)
         self.assertEqual(64, ipv6_packet.ipv6_header.hop_limit)
         self.assertEqual(0, ipv6_packet.ipv6_header.next_header)
@@ -601,7 +656,7 @@ class TestIPv6PacketFactory(unittest.TestCase):
         self.assertEqual(2, ipv6_packet.upper_layer_protocol.body.sequence_number)
         self.assertEqual(b'\x80\x00\xc7\xbf\x00\x00\x00\x01AAAAAAAAAA', ipv6_packet.upper_layer_protocol.body.data)
 
-    def test_should_create_IPv6Packet_without_any_extension_header_with_ICMP_upper_layer_protocol_when_to_bytes_method_is_called(self):
+    def test_should_create_IPv6Packet_without_any_extension_header_with_ICMP_when_to_bytes_method_is_called(self):
         # GIVEN
         ipv6_packet_bytes = bytearray([0x60, 0x00, 0x00, 0x00, 0x00, 0x1A, 0x3A, 0x40,
                                        0xfd, 0x00, 0x12, 0x34, 0x45, 0x55, 0x00, 0x00,
@@ -967,7 +1022,6 @@ class TestHopByHopFactory(unittest.TestCase):
     def test_should_raise_RuntimeError_when_no_option_factory_is_set_and_parse_method_is_called(self):
         # GIVEN
         hop_by_hop_option = any_hop_by_hop_mpl_option()
-        hop_by_hop_option_type = hop_by_hop_option.header.type
 
         next_header = any_next_header()
         hdr_ext_len = self._calculate_hdr_ext_len(2 + len(hop_by_hop_option))
@@ -1072,10 +1126,10 @@ class TestUDPDatagramFactory(unittest.TestCase):
         payload = any_payload()
         payload_length = len(payload) + len(UDPHeader(0, 0))
 
-        data = bytearray([(src_port >> 8), (src_port & 0xFF),
-                          (dst_port >> 8), (dst_port & 0xFF),
-                          (payload_length >> 8), (payload_length & 0xFF),
-                          (checksum >> 8), (checksum & 0xFF)]) + payload
+        data = bytearray([(src_port >> 8), (src_port & 0xff),
+                          (dst_port >> 8), (dst_port & 0xff),
+                          (payload_length >> 8), (payload_length & 0xff),
+                          (checksum >> 8), (checksum & 0xff)]) + payload
 
         factory = UDPDatagramFactory(UDPHeaderFactory(), BytesPayloadFactory())
 
@@ -1100,15 +1154,26 @@ class TestUDPDatagramFactory(unittest.TestCase):
         payload = any_payload()
         payload_length = len(payload) + len(UDPHeader(0, 0))
 
-        data = bytearray([(src_port >> 8), (src_port & 0xFF),
-                          (dst_port >> 8), (dst_port & 0xFF),
-                          (payload_length >> 8), (payload_length & 0xFF),
-                          (checksum >> 8), (checksum & 0xFF)]) + payload
+        data = (
+            bytearray(
+                [
+                    (src_port >> 8),
+                    (src_port & 0xff),
+                    (dst_port >> 8),
+                    (dst_port & 0xff),
+                    (payload_length >> 8),
+                    (payload_length & 0xff),
+                    (checksum >> 8),
+                    (checksum & 0xff),
+                ]
+            )
+            + payload
+        )
 
         factory = UDPDatagramFactory(UDPHeaderFactory(), BytesPayloadFactory())
 
         # WHEN
-        udp_dgram = factory.parse(io.BytesIO(data), message_info)
+        factory.parse(io.BytesIO(data), message_info)
 
         # THEN
         self.assertEqual(src_port, message_info.src_port)
@@ -1124,7 +1189,7 @@ class TestICMPv6Factory(unittest.TestCase):
         checksum = any_checksum()
         body = any_body()
 
-        data = bytearray([_type, code, (checksum >> 8), (checksum & 0xFF)]) + body
+        data = bytearray([_type, code, (checksum >> 8), (checksum & 0xff)]) + body
 
         factory = ICMPv6Factory(body_factories={_type: ICMPv6BytesBodyFactory()})
 
@@ -1144,7 +1209,7 @@ class TestICMPv6Factory(unittest.TestCase):
         checksum = any_checksum()
         body = any_body()
 
-        data = bytes([_type, code, (checksum >> 8), (checksum & 0xFF)]) + body
+        data = bytes([_type, code, (checksum >> 8), (checksum & 0xff)]) + body
 
         factory = ICMPv6Factory()
 
@@ -1175,7 +1240,7 @@ class TestBytesPayload(unittest.TestCase):
         # THEN
         self.assertEqual(data, actual)
 
-    def test_should_return_the_same_length_as_data_passed_to_constructor_when_len_is_called_on_BytesPayload_object(self):
+    def test_should_return_the_same_len_as_data_passed_to_constructor_when_len_is_called_on_BytesPayload_object(self):
         # GIVEN
         data = any_data()
         payload = BytesPayload(data)
@@ -1201,7 +1266,7 @@ class TestICMPv6EchoBody(unittest.TestCase):
         actual = body.to_bytes()
 
         # THEN
-        expected = bytearray([identifier >> 8, identifier & 0xFF, sequence_number >> 8, sequence_number & 0xFF]) + data
+        expected = bytearray([identifier >> 8, identifier & 0xff, sequence_number >> 8, sequence_number & 0xff]) + data
         self.assertEqual(expected, actual)
 
     def test_should_create_ICMPv6EchoBody_from_data_when_from_bytes_classmethod_is_called(self):
@@ -1211,9 +1276,9 @@ class TestICMPv6EchoBody(unittest.TestCase):
         body_data = any_data()
 
         data = bytearray([(identifier >> 8),
-                          (identifier & 0xFF),
+                          (identifier & 0xff),
                           (sequence_number >> 8),
-                          (sequence_number & 0xFF)])
+                          (sequence_number & 0xff)])
         data += body_data
 
         # WHEN
@@ -1249,8 +1314,8 @@ class TestICMPv6EchoBodyFactory(unittest.TestCase):
         sequence_number = any_sequence_number()
         body_data = any_data()
 
-        data = bytearray([(identifier >> 8) & 0xFF, identifier & 0xFF,
-                          (sequence_number >> 8) & 0xFF, sequence_number & 0xFF]) + body_data
+        data = bytearray([(identifier >> 8) & 0xff, identifier & 0xff,
+                          (sequence_number >> 8) & 0xff, sequence_number & 0xff]) + body_data
 
         factory = ICMPv6EchoBodyFactory()
 
@@ -1312,7 +1377,7 @@ class TestICMPv6DestinationUnreachableFactory(unittest.TestCase):
         data = bytearray([0x00, 0x00, 0x00, 0x00]) + icmp_data
 
         # WHEN
-        icmpv6_dest_unreachable=factory.parse(io.BytesIO(data), any_message_info())
+        icmpv6_dest_unreachable = factory.parse(io.BytesIO(data), any_message_info())
 
         # THEN
         self.assertEqual(icmp_data, icmpv6_dest_unreachable.data)
@@ -1322,18 +1387,18 @@ class TestUDPHeaderFactory(unittest.TestCase):
 
     def test_should_create_UDPHeader_when_to_bytes_method_is_called(self):
         # GIVEN
-        factory=UDPHeaderFactory()
+        factory = UDPHeaderFactory()
 
-        src_port=any_port()
-        dst_port=any_port()
-        payload_length=any_payload_length()
-        checksum=any_checksum()
+        src_port = any_port()
+        dst_port = any_port()
+        payload_length = any_payload_length()
+        checksum = any_checksum()
 
-        data=struct.pack("!H", src_port) + struct.pack("!H", dst_port) + \
+        data = struct.pack("!H", src_port) + struct.pack("!H", dst_port) + \
             struct.pack("!H", payload_length) + struct.pack("!H", checksum)
 
         # WHEN
-        udp_header=factory.parse(io.BytesIO(data), any_message_info())
+        udp_header = factory.parse(io.BytesIO(data), any_message_info())
 
         # THEN
         self.assertEqual(src_port, udp_header.src_port)
@@ -1352,12 +1417,12 @@ class TestHopByHopOptionsFactory(unittest.TestCase):
             def parse(self, data, message_info):
                 return data.read()
 
-        factory=HopByHopOptionsFactory(options_factories = {2: DummyOptionFactory()})
+        factory = HopByHopOptionsFactory(options_factories={2: DummyOptionFactory()})
 
-        data=bytearray([0x02, 0x03, 0x11, 0x22, 0x33, 0x01, 0x00])
+        data = bytearray([0x02, 0x03, 0x11, 0x22, 0x33, 0x01, 0x00])
 
         # WHEN
-        actual_options=factory.parse(io.BytesIO(data), any_message_info())
+        actual_options = factory.parse(io.BytesIO(data), any_message_info())
 
         # THEN
         self.assertEqual(1, len(actual_options))

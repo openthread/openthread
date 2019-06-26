@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -35,13 +34,12 @@ import mle
 import config
 import command
 
-import shutil
-import os
 
 LEADER = 1
 DUT_ROUTER1 = 2
 REED1 = 3
 MED1 = 4
+
 
 class Cert_5_2_01_REEDAttach(unittest.TestCase):
     def setUp(self):
@@ -77,9 +75,9 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         self.nodes[MED1].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -104,12 +102,16 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
 
         # 3 DUT_ROUTER1: Verify MLE Parent Response
         router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.PARENT_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[REED1])
         command.check_parent_response(msg)
 
         # 4 DUT_ROUTER1: Verify MLE Child ID Response
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[REED1])
         command.check_child_id_response(msg)
 
@@ -123,26 +125,32 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         # 7 REED1: Verify sending Address Solicit Request to DUT_ROUTER1
         reed1_messages = self.simulator.get_messages_sent_by(REED1)
         msg = reed1_messages.next_coap_message('0.02')
-        reed1_ipv6_address = msg.ipv6_packet.ipv6_header.source_address.compressed
-        msg.assertSentToNode(self.nodes[DUT_ROUTER1]);
+        reed1_ipv6_address = (
+            msg.ipv6_packet.ipv6_header.source_address.compressed
+        )
+        msg.assertSentToNode(self.nodes[DUT_ROUTER1])
         msg.assertCoapMessageRequestUriPath('/a/as')
 
-        # 8 DUT_ROUTER1: Verify forwarding REED1's Address Solicit Request to LEADER
+        # 8 DUT_ROUTER1: Verify forwarding REED1's Address Solicit Request to
+        # LEADER
         router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = router1_messages.next_coap_message('0.02')
-        msg.assertSentToNode(self.nodes[LEADER]);
+        msg.assertSentToNode(self.nodes[LEADER])
         msg.assertCoapMessageRequestUriPath('/a/as')
 
-        # DUT_ROUTER1: Verify forwarding LEADER's Address Solicit Response to REED1
+        # DUT_ROUTER1: Verify forwarding LEADER's Address Solicit Response to
+        # REED1
         msg = router1_messages.next_coap_message('2.04')
         msg.assertSentToDestinationAddress(reed1_ipv6_address)
 
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
-        # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to REED1
+        # 9 LEADER: Verify connectivity by sending an ICMPv6 Echo Request to
+        # REED1
         for addr in self.nodes[REED1].get_addrs():
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

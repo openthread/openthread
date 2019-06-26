@@ -27,24 +27,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
 import config
-import command
 
 LEADER = 1
 ROUTER1 = 2
 DUT_ROUTER2 = 3
 SED1 = 4
 
+
 class Cert_5_3_2_RealmLocal(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i == SED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -73,9 +72,9 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -97,12 +96,16 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         # 2 & 3
-        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        mleid = self.nodes[DUT_ROUTER2].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID
+        )
         self.assertTrue(self.nodes[LEADER].ping(mleid, size=256))
         self.assertTrue(self.nodes[LEADER].ping(mleid))
 
         # 4 & 5
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
+        self.assertTrue(
+            self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256)
+        )
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -111,7 +114,9 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 6 & 7
-        self.assertTrue(self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256))
+        self.assertTrue(
+            self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256)
+        )
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -120,15 +125,27 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 8
-        self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3, size=256))
+        self.assertTrue(
+            self.nodes[LEADER].ping(
+                config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                num_responses=3,
+                size=256,
+            )
+        )
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
 
-        self.assertTrue(self.nodes[LEADER].ping(config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS, num_responses=3))
+        self.assertTrue(
+            self.nodes[LEADER].ping(
+                config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+                num_responses=3,
+            )
+        )
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
+
 
 if __name__ == '__main__':
     unittest.main()

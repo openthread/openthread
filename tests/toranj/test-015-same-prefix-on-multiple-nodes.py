@@ -26,39 +26,39 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Adding addresses with same prefix on multiple nodes.
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
 wpan.Node.set_time_speedup_factor(speedup)
 
-r1   = wpan.Node()
-r2   = wpan.Node()
+r1 = wpan.Node()
+r2 = wpan.Node()
 sed2 = wpan.Node()
 
 all_nodes = [r1, r2, sed2]
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
-# Two routers r1 and r2 (sed2 is used for quick promotion of r2 to router status).
+# Two routers r1 and r2 (sed2 is used for quick promotion of r2 to router
+# status).
 
 r1.whitelist_node(r2)
 r2.whitelist_node(r1)
@@ -75,13 +75,13 @@ sed2.set(wpan.WPAN_POLL_INTERVAL, '500')
 
 r2.status()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 IP6_PREFIX = "fd00:abba::"
 
-IP6_ADDR_1  = IP6_PREFIX + "1"
-IP6_ADDR_2  = IP6_PREFIX + "2"
+IP6_ADDR_1 = IP6_PREFIX + "1"
+IP6_ADDR_2 = IP6_PREFIX + "2"
 
 # Add IP6_ADDR_2 to r2.
 
@@ -89,17 +89,32 @@ r2.add_ip6_address_on_interface(IP6_ADDR_2, prefix_len=64)
 
 # Verify (within 5 seconds) that corresponding prefix is seen on both nodes.
 
+
 def check_prefix():
     for node in [r1, r2]:
-        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
+        )
         for p in prefixes:
             if p.prefix == IP6_PREFIX:
-                if (p.origin == 'ncp' and p.prefix_len == '64' and p.is_stable() and p.is_on_mesh() and p.is_preferred()
-                        and not p.is_def_route() and not p.is_slaac() and not p.is_dhcp() and not p.is_config() and
-                        p.priority == "med"):
+                if (
+                    p.origin == 'ncp'
+                    and p.prefix_len == '64'
+                    and p.is_stable()
+                    and p.is_on_mesh()
+                    and p.is_preferred()
+                    and not p.is_def_route()
+                    and not p.is_slaac()
+                    and not p.is_dhcp()
+                    and not p.is_config()
+                    and p.priority == "med"
+                ):
                     break
-        else: # `for` loop finished without finding the prefix.
-            raise wpan.VerifyError('Did not find prefix {} on node {}'.format(IP6_PREFIX, r1))
+        else:  # `for` loop finished without finding the prefix.
+            raise wpan.VerifyError(
+                'Did not find prefix {} on node {}'.format(IP6_PREFIX, r1)
+            )
+
 
 wpan.verify_within(check_prefix, 5)
 
@@ -110,7 +125,8 @@ r1.add_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 wpan.verify_within(check_prefix, 5)
 
 # Remove the address from r2 which should remove the corresponding the prefix as well
-# After this since r1 still has the address, the prefix should be present on both nodes.
+# After this since r1 still has the address, the prefix should be present
+# on both nodes.
 r2.remove_ip6_address_on_interface(IP6_ADDR_2, prefix_len=64)
 wpan.verify_within(check_prefix, 5)
 
@@ -121,21 +137,26 @@ wpan.verify_within(check_prefix, 8)
 # Remove the address on r1. Verify that prefix list is empty.
 r1.remove_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 
+
 def check_empty_prefix_list():
     for node in [r1, r2]:
-        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
+        )
         verify(len(prefixes) == 0)
+
 
 wpan.verify_within(check_empty_prefix_list, 5)
 
-# Add both addresses back-to-back and check the prefix list to contain the prefix.
+# Add both addresses back-to-back and check the prefix list to contain the
+# prefix.
 r1.add_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 r2.add_ip6_address_on_interface(IP6_ADDR_2, prefix_len=64)
 wpan.verify_within(check_prefix, 5)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

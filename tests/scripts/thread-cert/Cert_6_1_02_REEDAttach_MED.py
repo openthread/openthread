@@ -41,12 +41,13 @@ LEADER = 1
 REED = 2
 MED = 3
 
+
 class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, (i == MED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -68,9 +69,9 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         self.nodes[MED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -98,24 +99,38 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
-        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED])
-        check_child_id_request(msg, address_registration=CheckType.CONTAIN,
-            tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
-            route64=CheckType.OPTIONAL)
+        msg = med_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED]
+        )
+        check_child_id_request(
+            msg,
+            address_registration=CheckType.CONTAIN,
+            tlv_request=CheckType.CONTAIN,
+            mle_frame_counter=CheckType.OPTIONAL,
+            route64=CheckType.OPTIONAL,
+        )
 
-        # Wait additional DEFAULT_CHILD_TIMEOUT to ensure the keep-alive message (child update request from MED) happens.
+        # Wait additional DEFAULT_CHILD_TIMEOUT to ensure the keep-alive
+        # message (child update request from MED) happens.
         self.simulator.go(config.DEFAULT_CHILD_TIMEOUT)
         med_messages = self.simulator.get_messages_sent_by(MED)
 
         # Step 8 - DUT sends Child Update messages
-        msg = med_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        check_child_update_request_from_child(msg, source_address=CheckType.CONTAIN, leader_data=CheckType.CONTAIN)
+        msg = med_messages.next_mle_message(
+            mle.CommandType.CHILD_UPDATE_REQUEST
+        )
+        check_child_update_request_from_child(
+            msg,
+            source_address=CheckType.CONTAIN,
+            leader_data=CheckType.CONTAIN,
+        )
 
         # Step 10 - Leader sends ICMPv6 echo request, to DUT link local address
         med_addrs = self.nodes[MED].get_addrs()
         for addr in med_addrs:
             if addr[0:4] == 'fe80':
                 self.assertTrue(self.nodes[REED].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

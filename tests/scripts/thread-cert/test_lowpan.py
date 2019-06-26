@@ -230,7 +230,7 @@ def any_datagram_offset():
 
 class TestLowpanIPHC(unittest.TestCase):
 
-    def test_should_create_LowpanIPHC_object_when_from_bytes_classmethod_is_called(self):
+    def test_should_create_LowpanIPHC_object_when_from_bytes_classmethod_called(self):
         # GIVEN
         tf = any_tf()
         nh = any_nh()
@@ -264,7 +264,7 @@ class TestLowpanIPHC(unittest.TestCase):
 
 class TestLowpanParser(unittest.TestCase):
 
-    def test_should_parse_6lowpan_packet_with_mesh_header_that_contains_hop_limit_stored_on_two_bytes_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_mesh_hdr_that_contains_hlim_stored_on_2_bytes_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0xbf, 0x13, 0x90, 0x00, 0x48, 0x01, 0x7c, 0x77,
                                    0x3f, 0xf2, 0xbf, 0xc0, 0x00, 0x24, 0xb1, 0x62,
@@ -300,7 +300,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_not_compressed_udp_and_without_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_uncompressed_udp_and_without_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0x33, 0x11, 0x16, 0x33, 0x16, 0x34, 0x00,
                                    0x14, 0xcf, 0x63, 0x80, 0x00, 0xfa, 0xa5, 0x0b,
@@ -329,7 +329,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_udp_and_without_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_compressed_udp_and_without_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7e, 0x33, 0xf0, 0x16, 0x33, 0x16, 0x34, 0x04,
                                    0xd2, 0x80, 0x00, 0xfa, 0xa5, 0x0b, 0xc0, 0x00,
@@ -358,7 +358,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_not_compressed_udp_and_with_not_compressed_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_uncompressed_udp_and_with_uncompressed_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0x33, 0x00, 0x11, 0x00, 0x6d, 0x04, 0x40,
                                    0x02, 0x00, 0x18, 0x16, 0x33, 0x16, 0x34, 0x00,
@@ -389,7 +389,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_not_compressed_udp_and_with_compressed_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_uncompressed_udp_and_with_compressed_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7e, 0x33, 0xe0, 0x11, 0x06, 0x6d, 0x04, 0x40,
                                    0x02, 0x00, 0x18, 0x16, 0x33, 0x16, 0x34, 0x00,
@@ -420,7 +420,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_udp_and_with_compressed_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_compressed_udp_and_with_compressed_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7e, 0x33, 0xe1, 0x06, 0x6d, 0x04, 0x40, 0x02,
                                    0x00, 0x18, 0xf0, 0x16, 0x33, 0x16, 0x34, 0x04,
@@ -451,7 +451,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xd5, 0xaa, 0x3a, 0x02, 0x99, 0x99, 0xff,
                                    0xfe, 0x22, 0x11, 0x01, 0x36, 0x29, 0x96, 0xff,
@@ -483,7 +483,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_1(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_1(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xd5, 0xaa, 0x3a, 0x02, 0x99, 0x99, 0xff,
                                    0xfe, 0x22, 0x11, 0x01, 0x36, 0x29, 0x96, 0xff,
@@ -515,7 +515,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_2(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_2(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf0, 0xa0, 0x3a, 0x20, 0x0d, 0x14, 0x56,
                                    0x12, 0x55, 0x00, 0x00, 0x25, 0x14, 0x46, 0xff,
@@ -547,7 +547,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_3(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_3(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xd5, 0xaa, 0x3a, 0x02, 0x99, 0x99, 0xff,
                                    0xfe, 0x22, 0x11, 0x01, 0x36, 0x29, 0x96, 0xff,
@@ -579,7 +579,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_4(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_4(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf5, 0xaa, 0x3a, 0x36, 0x29, 0x96, 0xff,
                                    0xfe, 0xac, 0xff, 0x18, 0x80, 0x00, 0xfa, 0xa5,
@@ -610,7 +610,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_5(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_5(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf7, 0xac, 0x3a, 0x80, 0x00, 0xfa, 0xa5,
                                    0x0b, 0xc0, 0x00, 0x04, 0x4e, 0x92, 0xbb, 0x53])
@@ -641,7 +641,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_6(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_6(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf0, 0xc0, 0x3a, 0x20, 0x0d, 0x14, 0x56,
                                    0x12, 0x54, 0x00, 0x00, 0x12, 0x54, 0x11, 0xff,
@@ -673,7 +673,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_7(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_7(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xd0, 0xd0, 0x3a, 0x00, 0x02, 0x98, 0xff,
                                    0xfe, 0x22, 0x12, 0x00, 0x20, 0x0d, 0x14, 0x56,
@@ -706,7 +706,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_8(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_8(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf0, 0xd0, 0x3a, 0x20, 0x0d, 0x14, 0x56,
                                    0x12, 0x55, 0x00, 0x00, 0x25, 0x14, 0x46, 0xff,
@@ -738,7 +738,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_parse_6lowpan_packet_with_compressed_icmp_and_without_compressed_hop_by_hop_extension_header_when_decompress_method_is_called_9(self):
+    def test_should_parse_6lo_with_compressed_icmp_and_without_compressed_hbh_when_decompress_method_called_9(self):
         # GIVEN
         lowpan_packet = bytearray([0x7a, 0xf0, 0xd0, 0x3a, 0x20, 0x0d, 0x14, 0x56,
                                    0x12, 0x55, 0x00, 0x00, 0x25, 0x14, 0x46, 0xff,
@@ -769,7 +769,7 @@ class TestLowpanParser(unittest.TestCase):
         # THEN
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_defragment_big_IPv6_packet_when_parse_method_is_called_with_fragments_in_random_order(self):
+    def test_should_defragment_big_IPv6_packet_when_parse_method_called_with_fragments_in_random_order(self):
         # GIVEN
         fragment_1 = bytearray([0xC5, 0x00, 0x31, 0x9F, 0x7A, 0x33, 0x3A,
                                 0x80, 0x00, 0xFA, 0xA5, 0x0B, 0xC0, 0x00, 0x04,
@@ -1138,7 +1138,7 @@ class TestLowpanParser(unittest.TestCase):
                                  0x44, 0x54, 0x12, 0xD3, 0x53, 0x11, 0x44, 0x66])
         self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
-    def test_should_defragment_IPv6_packet_when_parse_method_is_called_with_fragments(self):
+    def test_should_defragment_IPv6_packet_when_parse_method_called_with_fragments(self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_mac_address = common.MacAddress.from_eui64(
@@ -1171,7 +1171,7 @@ class TestLowpanParser(unittest.TestCase):
 
 class TestLowpanUdpHeaderFactory(unittest.TestCase):
 
-    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_is_called_with_udphc_p_equal_0(self):
+    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_called_with_udphc_p_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1192,7 +1192,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         self.assertEqual(dst_port, actual_dst_port)
         self.assertEqual(0, p)
 
-    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_is_called_with_udphc_p_equal_1(self):
+    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_called_with_udphc_p_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1213,7 +1213,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         self.assertEqual(src_port, actual_src_port)
         self.assertEqual(dst_port, actual_dst_port)
 
-    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_is_called_with_udphc_p_equal_2(self):
+    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_called_with_udphc_p_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1234,7 +1234,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         self.assertEqual(src_port, actual_src_port)
         self.assertEqual(dst_port, actual_dst_port)
 
-    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_is_called_with_udphc_p_equal_3(self):
+    def test_should_parse_udp_datagram_ports_when_decompress_udp_ports_method_called_with_udphc_p_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1255,7 +1255,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         self.assertEqual(src_port, actual_src_port)
         self.assertEqual(dst_port, actual_dst_port)
 
-    def test_should_parse_udp_datagram_checksum_when_decompress_udp_checksum_is_called_with_udphc_c_equal_0(self):
+    def test_should_parse_udp_datagram_checksum_when_decompress_udp_checksum_called_with_udphc_c_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1274,7 +1274,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         self.assertEqual(0, c)
         self.assertEqual(checksum, actual_checksum)
 
-    def test_should_parse_udp_datagram_checksum_when_decompress_udp_checksum_is_called_with_udphc_c_equal_1(self):
+    def test_should_parse_udp_datagram_checksum_when_decompress_udp_checksum_called_with_udphc_c_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanUdpHeaderFactory()
 
@@ -1296,7 +1296,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
 
     IPV6_LINKLOCAL_PREFIX = bytearray([0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_is_called_with_iphc_tf_equal_0(self):
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_called_with_iphc_tf_eq_0(self):
         # GIVEN
         ecn = any_ecn()
         dscp = any_dscp()
@@ -1322,7 +1322,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual((dscp << 2) | ecn, actual_traffic_class)
         self.assertEqual(flow_label, actual_flow_label)
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_is_called_with_iphc_tf_equal_1(self):
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_called_with_iphc_tf_eq_1(self):
         # GIVEN
         ecn = any_ecn()
         flow_label = any_flow_label()
@@ -1346,11 +1346,10 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(ecn, actual_traffic_class)
         self.assertEqual(flow_label, actual_flow_label)
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_is_called_with_iphc_tf_equal_2(self):
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_called_with_iphc_tf_eq_2(self):
         # GIVEN
         ecn = any_ecn()
         dscp = any_dscp()
-        flow_label = any_flow_label()
 
         data_bytes = bytearray([(ecn << 6) | dscp])
 
@@ -1368,10 +1367,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual((dscp << 2) | ecn, actual_traffic_class)
         self.assertEqual(0, actual_flow_label)
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_is_called_with_iphc_tf_equal_3(self):
-        # GIVEN
-        flow_label = any_flow_label()
-
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_tf_method_called_with_iphc_tf_eq_3(self):
         data_bytes = bytearray()
 
         factory = lowpan.LowpanIpv6HeaderFactory()
@@ -1388,7 +1384,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, actual_traffic_class)
         self.assertEqual(0, actual_flow_label)
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_nh_method_is_called_with_iphc_nh_equal_0(self):
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_nh_method_called_with_iphc_nh_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1407,7 +1403,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, nh)
         self.assertEqual(next_header, actual_next_header)
 
-    def test_should_parse_traffic_class_and_flow_label_when_decompress_nh_method_is_called_with_iphc_nh_equal_1(self):
+    def test_should_parse_traffic_class_and_flow_label_when_decompress_nh_method_called_with_iphc_nh_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1424,7 +1420,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, nh)
         self.assertEqual(None, actual_next_header)
 
-    def test_should_parse_hop_limit_when_decompress_hlim_is_called_with_iphc_hlim_equal_0(self):
+    def test_should_parse_hop_limit_when_decompress_hlim_called_with_iphc_hlim_eq_0(self):
         # GIVEN
         hop_limit = any_hop_limit()
 
@@ -1443,7 +1439,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, hlim)
         self.assertEqual(hop_limit, actual_hop_limit)
 
-    def test_should_parse_hop_limit_when_decompress_hlim_is_called_with_iphc_hlim_equal_1(self):
+    def test_should_parse_hop_limit_when_decompress_hlim_called_with_iphc_hlim_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1460,7 +1456,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, hlim)
         self.assertEqual(1, actual_hop_limit)
 
-    def test_should_parse_hop_limit_when_decompress_hlim_is_called_with_iphc_hlim_equal_2(self):
+    def test_should_parse_hop_limit_when_decompress_hlim_called_with_iphc_hlim_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1477,7 +1473,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(2, hlim)
         self.assertEqual(64, actual_hop_limit)
 
-    def test_should_parse_hop_limit_when_decompress_hlim_is_called_with_iphc_hlim_equal_3(self):
+    def test_should_parse_hop_limit_when_decompress_hlim_called_with_iphc_hlim_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1494,7 +1490,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(3, hlim)
         self.assertEqual(255, actual_hop_limit)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_0_and_sam_equal_0(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_0_and_sam_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1514,7 +1510,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, sam)
         self.assertEqual(bytes(src_addr), actual_src_addr)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_0_and_sam_equal_1(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_0_and_sam_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1534,7 +1530,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, sam)
         self.assertEqual(self.IPV6_LINKLOCAL_PREFIX + eui64, actual_src_addr)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_0_and_sam_equal_2(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_0_and_sam_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1552,10 +1548,14 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         # THEN
         self.assertEqual(0, sac)
         self.assertEqual(2, sam)
-        self.assertEqual(self.IPV6_LINKLOCAL_PREFIX +
-                         bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + rloc16, actual_src_addr)
+        self.assertEqual(
+            self.IPV6_LINKLOCAL_PREFIX
+            + bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00])
+            + rloc16,
+            actual_src_addr
+        )
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_0_and_sam_equal_3(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_0_and_sam_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1575,9 +1575,12 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         # THEN
         self.assertEqual(0, sac)
         self.assertEqual(3, sam)
-        self.assertEqual(self.IPV6_LINKLOCAL_PREFIX +
-                         bytearray([src_mac_addr.mac_address[0] ^ 0x02]) +
-                         src_mac_addr.mac_address[1:], actual_src_addr)
+        self.assertEqual(
+            self.IPV6_LINKLOCAL_PREFIX
+            + bytearray([src_mac_addr.mac_address[0] ^ 0x02])
+            + src_mac_addr.mac_address[1:],
+            actual_src_addr
+        )
 
     def _merge_prefix_and_address(self, prefix, prefix_length, address):
         total_bytes = 16
@@ -1595,7 +1598,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
 
             return prefix[:prefix_length_in_bytes] + bytearray([0x00] * total_bytes) + address
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_1_and_sam_equal_0(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_1_and_sam_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory(None)
 
@@ -1615,7 +1618,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, sam)
         self.assertEqual(bytearray([0x00] * 16), actual_src_addr)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_1_and_sam_equal_1(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_1_and_sam_eq_1(self):
         # GIVEN
         sci = any_sci()
 
@@ -1644,7 +1647,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, sam)
         self.assertEqual(src_addr, actual_src_addr)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_1_and_sam_equal_2(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_1_and_sam_eq_2(self):
         # GIVEN
         sci = any_sci()
 
@@ -1675,7 +1678,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(2, sam)
         self.assertEqual(src_addr, actual_src_addr)
 
-    def test_should_parse_source_address_when_decompress_src_addr_is_called_with_sac_equal_1_and_sam_equal_3(self):
+    def test_should_parse_source_address_when_decompress_src_addr_called_with_sac_eq_1_and_sam_eq_3(self):
         # GIVEN
         sci = any_sci()
 
@@ -1708,7 +1711,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(3, sam)
         self.assertEqual(src_addr, actual_src_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_0_and_dam_equal_0(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_0_and_dam_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1732,7 +1735,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, dam)
         self.assertEqual(ipv6_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_0_and_dam_equal_1(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_0_and_dam_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1754,7 +1757,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, dam)
         self.assertEqual(self.IPV6_LINKLOCAL_PREFIX + eui64, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_0_and_dam_equal_2(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_0_and_dam_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1774,10 +1777,14 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, m)
         self.assertEqual(0, dac)
         self.assertEqual(2, dam)
-        self.assertEqual(self.IPV6_LINKLOCAL_PREFIX +
-                         bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + rloc16, actual_dst_addr)
+        self.assertEqual(
+            self.IPV6_LINKLOCAL_PREFIX
+            + bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00])
+            + rloc16,
+            actual_dst_addr
+        )
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_0_and_dam_equal_3(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_0_and_dam_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1799,11 +1806,14 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, m)
         self.assertEqual(0, dac)
         self.assertEqual(3, dam)
-        self.assertEqual(self.IPV6_LINKLOCAL_PREFIX +
-                         bytearray([dst_mac_addr.mac_address[0] ^ 0x02]) +
-                         dst_mac_addr.mac_address[1:], actual_dst_addr)
+        self.assertEqual(
+            self.IPV6_LINKLOCAL_PREFIX
+            + bytearray([dst_mac_addr.mac_address[0] ^ 0x02])
+            + dst_mac_addr.mac_address[1:],
+            actual_dst_addr
+        )
 
-    def test_should_raise_RuntimeError_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_1_and_dam_equal_0(self):
+    def test_should_raise_RuntimeError_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_1_and_dam_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1820,7 +1830,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertRaises(RuntimeError, factory._decompress_dst_addr, iphc,
                           any_dst_mac_addr(), any_dci(), io.BytesIO(ipv6_addr))
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_1_and_dam_equal_1(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_1_and_dam_eq_1(self):
         # GIVEN
         dci = any_dci()
 
@@ -1851,7 +1861,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, dam)
         self.assertEqual(dst_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_1_and_dam_equal_2(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_1_and_dam_eq_2(self):
         # GIVEN
         dci = any_dci()
 
@@ -1884,7 +1894,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(2, dam)
         self.assertEqual(dst_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_0_and_dac_equal_1_and_dam_equal_3(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_0_and_dac_eq_1_and_dam_eq_3(self):
         # GIVEN
         dci = any_dci()
 
@@ -1919,7 +1929,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(3, dam)
         self.assertEqual(dst_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_0_and_dam_equal_0(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_0_and_dam_eq_0(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1941,7 +1951,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, dam)
         self.assertEqual(ipv6_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_0_and_dam_equal_1(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_0_and_dam_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1966,7 +1976,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(1, dam)
         self.assertEqual(expected_dst_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_0_and_dam_equal_2(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_0_and_dam_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -1991,7 +2001,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(2, dam)
         self.assertEqual(expected_dst_addr, actual_dst_addr)
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_0_and_dam_equal_3(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_0_and_dam_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2016,7 +2026,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(3, dam)
         self.assertEqual(expected_dst_addr, actual_dst_addr)
 
-    def test_should_raise_RuntimeError_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_1_and_dam_equal_0(self):
+    def test_should_raise_RuntimeError_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_1_and_dam_eq_0(self):
         # GIVEN
         dci = any_dci()
 
@@ -2055,7 +2065,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         self.assertEqual(0, dam)
         self.assertEqual(dst_addr, actual_dst_addr)
 
-    def test_should_raise_RuntimeError_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_1_and_dam_equal_1(self):
+    def test_should_raise_RuntimeError_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_1_and_dam_eq_1(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2068,14 +2078,11 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         iphc = lowpan.LowpanIPHC(any_tf(), any_nh(), any_hlim(), any_cid(), any_sac(),
                                  any_sam(), m, dac, dam)
 
-        expected_dst_addr = bytearray([0xff, addr48b[0], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x00, 0x00, addr48b[1], addr48b[2], addr48b[3], addr48b[4], addr48b[5]])
-
         # WHEN
         self.assertRaises(RuntimeError, factory._decompress_dst_addr, iphc,
                           any_dst_mac_addr(), any_dci(), io.BytesIO(addr48b))
 
-    def test_should_raise_RuntimeError_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_1_and_dam_equal_2(self):
+    def test_should_raise_RuntimeError_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_1_and_dam_eq_2(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2088,14 +2095,11 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         iphc = lowpan.LowpanIPHC(any_tf(), any_nh(), any_hlim(), any_cid(), any_sac(),
                                  any_sam(), m, dac, dam)
 
-        expected_dst_addr = bytearray([0xff, addr32b[0], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x00, 0x00, 0x00, 0x00, addr32b[1], addr32b[2], addr32b[3]])
-
         # WHEN
         self.assertRaises(RuntimeError, factory._decompress_dst_addr, iphc,
                           any_dst_mac_addr(), any_dci(), io.BytesIO(addr32b))
 
-    def test_should_parse_destination_address_when_decompress_dst_addr_is_called_with_m_equal_1_and_dac_equal_1_and_dam_equal_3(self):
+    def test_should_parse_dst_addr_when_decompress_dst_addr_called_with_m_eq_1_and_dac_eq_1_and_dam_eq_3(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2108,14 +2112,11 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         iphc = lowpan.LowpanIPHC(any_tf(), any_nh(), any_hlim(), any_cid(), any_sac(),
                                  any_sam(), m, dac, dam)
 
-        expected_dst_addr = bytearray([0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, addr8b[0]])
-
         # WHEN
         self.assertRaises(RuntimeError, factory._decompress_dst_addr, iphc,
                           any_dst_mac_addr(), any_dci(), io.BytesIO(addr8b))
 
-    def test_should_merge_prefix_with_address_bytes_when_merge_method_is_called_with_prefix_shorter_than_missing_bits(self):
+    def test_should_merge_pfx_with_addr_bytes_when_merge_method_called_with_pfx_shorter_than_missing_bits(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2132,7 +2133,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         # THEN
         self.assertEqual(addr, actual_addr)
 
-    def test_should_merge_prefix_with_address_bytes_when_merge_method_is_called_with_prefix_longer_than_missing_bits_overlapping(self):
+    def test_should_merge_pfx_with_addr_bytes_when_merge_method_called_with_pfx_longer_than_missing_bits_overlap(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2149,7 +2150,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
         # THEN
         self.assertEqual(addr, actual_addr)
 
-    def test_should_merge_prefix_with_address_bytes_when_merge_method_is_called_with_prefix_longer_than_missing_bits(self):
+    def test_should_merge_pfx_with_address_bytes_when_merge_method_called_with_pfx_longer_than_missing_bits(self):
         # GIVEN
         factory = lowpan.LowpanIpv6HeaderFactory()
 
@@ -2170,7 +2171,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
 
 class TestContext(unittest.TestCase):
 
-    def test_should_extract_context_from_str_representation_when_constructor_is_called(self):
+    def test_should_extract_context_from_str_representation_when_constructor_called(self):
         # GIVEN
         prefix = "2000:db8::/64"
 
@@ -2182,7 +2183,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(64, c.prefix_length)
         self.assertEqual(8, c.prefix_length_full_bytes)
 
-    def test_should_extract_context_from_bytearray_when_construct_is_called(self):
+    def test_should_extract_context_from_bytearray_when_construct_called(self):
         # GIVEN
         prefix = bytearray([0x20, 0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00])
 
@@ -2228,7 +2229,7 @@ class TestContextManager(unittest.TestCase):
 
 class TestLowpanMeshHeader(unittest.TestCase):
 
-    def test_should_return_hops_left_value_when_hops_left_property_is_called(self):
+    def test_should_return_hops_left_value_when_hops_left_property_called(self):
         # GIVEN
         hops_left = any_hops_left()
 
@@ -2240,7 +2241,7 @@ class TestLowpanMeshHeader(unittest.TestCase):
         # THEN
         self.assertEqual(hops_left, actual_hops_left)
 
-    def test_should_return_originator_address_value_when_originator_address_property_is_called(self):
+    def test_should_return_originator_address_value_when_originator_address_property_called(self):
         # GIVEN
         originator_address = any_mac_address()
 
@@ -2252,7 +2253,7 @@ class TestLowpanMeshHeader(unittest.TestCase):
         # THEN
         self.assertEqual(originator_address, actual_originator_address)
 
-    def test_should_return_final_destination_address_value_when_final_destination_address_property_is_called(self):
+    def test_should_return_final_destination_address_value_when_final_destination_address_property_called(self):
         # GIVEN
         final_destination_address = any_mac_address()
 
@@ -2267,7 +2268,7 @@ class TestLowpanMeshHeader(unittest.TestCase):
 
 class TestLowpanMeshHeaderFactory(unittest.TestCase):
 
-    def test_should_create_LowpanMeshHeader_when_parse_method_is_called(self):
+    def test_should_create_LowpanMeshHeader_when_parse_method_called(self):
         # GIVEN
         hops_left = any_hops_left()
 
@@ -2299,7 +2300,7 @@ class TestLowpanMeshHeaderFactory(unittest.TestCase):
 
 class TestLowpanFragmentationHeader(unittest.TestCase):
 
-    def test_should_return_datagram_size_value_when_datagram_size_property_is_called(self):
+    def test_should_return_datagram_size_value_when_datagram_size_property_called(self):
         # GIVEN
         datagram_size = any_datagram_size()
 
@@ -2312,7 +2313,7 @@ class TestLowpanFragmentationHeader(unittest.TestCase):
         # THEN
         self.assertEqual(datagram_size, actual_datagram_size)
 
-    def test_should_return_datagram_tag_value_when_datagram_tag_property_is_called(self):
+    def test_should_return_datagram_tag_value_when_datagram_tag_property_called(self):
         # GIVEN
         datagram_tag = any_datagram_tag()
 
@@ -2325,7 +2326,7 @@ class TestLowpanFragmentationHeader(unittest.TestCase):
         # THEN
         self.assertEqual(datagram_tag, actual_datagram_tag)
 
-    def test_should_return_datagram_offset_value_when_datagram_offset_property_is_called(self):
+    def test_should_return_datagram_offset_value_when_datagram_offset_property_called(self):
         # GIVEN
         datagram_offset = any_datagram_offset()
 
@@ -2338,7 +2339,7 @@ class TestLowpanFragmentationHeader(unittest.TestCase):
         # THEN
         self.assertEqual(datagram_offset, actual_datagram_offset)
 
-    def test_should_return_False_when_is_first_property_is_called_and_datagram_offset_is_not_equal_0(self):
+    def test_should_return_False_when_is_first_property_called_and_datagram_offset_is_not_eq_0(self):
         # GIVEN
         datagram_offset = random.randint(1, (1 << 8) - 1)
 
@@ -2351,7 +2352,7 @@ class TestLowpanFragmentationHeader(unittest.TestCase):
         # THEN
         self.assertFalse(is_first)
 
-    def test_should_to_bytes_LowpanFragmentationHeader_from_bytes_when_from_bytes_class_method_is_called(self):
+    def test_should_to_bytes_LowpanFragmentationHeader_from_bytes_when_from_bytes_class_method_called(self):
         # GIVEN
         datagram_size = any_datagram_size()
         datagram_tag = any_datagram_tag()
@@ -2371,7 +2372,7 @@ class TestLowpanFragmentationHeader(unittest.TestCase):
 
 class TestLowpanDecompressor(unittest.TestCase):
 
-    def test_should_parse_parent_request_when_decompress_method_is_called(self):
+    def test_should_parse_parent_request_when_decompress_method_called(self):
         # GIVEN
         data = bytearray([0x7f, 0x3b, 0x02, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c,
                           0x5e, 0xaf, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00,
@@ -2397,7 +2398,7 @@ class TestLowpanDecompressor(unittest.TestCase):
 
         self.assertEqual([], extension_headers)
 
-    def test_should_parse_parent_response_when_decompress_method_is_called(self):
+    def test_should_parse_parent_response_when_decompress_method_called(self):
         # GIVEN
         data = bytearray([0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c, 0x0f,
                           0xe8, 0x00, 0x15, 0x04, 0x00, 0x00, 0x00, 0x00,
@@ -2434,7 +2435,7 @@ class TestLowpanDecompressor(unittest.TestCase):
         self.assertEqual(19788, udp_header.src_port)
         self.assertEqual(19788, udp_header.dst_port)
 
-    def test_should_parse_child_id_request_when_decompress_method_is_called(self):
+    def test_should_parse_child_id_request_when_decompress_method_called(self):
         # GIVEN
         data = bytearray([0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c, 0x9a,
                           0x62, 0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00,
@@ -2469,7 +2470,7 @@ class TestLowpanDecompressor(unittest.TestCase):
         self.assertEqual(19788, udp_header.src_port)
         self.assertEqual(19788, udp_header.dst_port)
 
-    def test_should_parse_child_id_response_when_decompress_method_is_called(self):
+    def test_should_parse_child_id_response_when_decompress_method_called(self):
         # GIVEN
         data = bytearray([0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c, 0x7b,
                           0xe3, 0x00, 0x15, 0x05, 0x00, 0x00, 0x00, 0x00,
@@ -2503,7 +2504,7 @@ class TestLowpanDecompressor(unittest.TestCase):
         self.assertEqual(19788, udp_header.src_port)
         self.assertEqual(19788, udp_header.dst_port)
 
-    def test_should_parse_advertisement_when_decompress_method_is_called(self):
+    def test_should_parse_advertisement_when_decompress_method_called(self):
         # GIVEN
         data = bytearray([0x7f, 0x3b, 0x01, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c,
                           0x35, 0x9f, 0x00, 0x15, 0x07, 0x00, 0x00, 0x00,
@@ -2536,7 +2537,7 @@ class TestLowpanDecompressor(unittest.TestCase):
 
 class TestLowpanFragmentsBuffer(unittest.TestCase):
 
-    def test_should_raise_ValueError_when_write_method_is_called_with_data_length_bigger_than_buffer_length(self):
+    def test_should_raise_ValueError_when_write_method_called_with_data_length_bigger_than_buffer_length(self):
         # GIVEN
         length = random.randint(1, 1280)
 
@@ -2545,7 +2546,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # THEN
         self.assertRaises(ValueError, fragments_buffer.write, any_data(length))
 
-    def test_should_move_write_position_by_the_data_length_when_write_method_is_called(self):
+    def test_should_move_write_position_by_the_data_length_when_write_method_called(self):
         # GIVEN
         length = random.randint(1, 1280)
 
@@ -2561,7 +2562,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # THEN
         self.assertEqual(fragments_buffer.tell() - start_position, len(data))
 
-    def test_should_raise_ValueError_when_read_method_is_called_but_not_whole_packet_has_been_stored_in_buffer(self):
+    def test_should_raise_ValueError_when_read_method_called_but_not_whole_packet_has_been_stored_in_buffer(self):
         # GIVEN
         data = any_data(length=3)
 
@@ -2571,7 +2572,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # WHEN
         self.assertRaises(ValueError, fragments_buffer.read)
 
-    def test_should_raise_ValueError_when_seek_method_is_called_with_offset_bigger_than_buffer_length(self):
+    def test_should_raise_ValueError_when_seek_method_called_with_offset_bigger_than_buffer_length(self):
         # GIVEN
         offset = random.randint(1281, 2500)
 
@@ -2580,7 +2581,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # THEN
         self.assertRaises(ValueError, fragments_buffer.seek, offset)
 
-    def test_should_set_write_position_when_seek_method_is_called(self):
+    def test_should_set_write_position_when_seek_method_called(self):
         # GIVEN
         length = random.randint(1, 1280)
         offset = random.randint(0, length - 1)
@@ -2593,7 +2594,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # THEN
         self.assertEqual(offset, fragments_buffer.tell())
 
-    def test_should_write_whole_packet_to_buffer_when_write_method_is_called(self):
+    def test_should_write_whole_packet_to_buffer_when_write_method_called(self):
         # GIVEN
         data = any_data(length=random.randint(1, 1280))
 
@@ -2605,7 +2606,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
         # THEN
         self.assertEqual(data, fragments_buffer.read())
 
-    def test_should_write_many_fragments_to_the_buffer_and_return_whole_message_when_write_method_is_called_many_times(self):
+    def test_should_write_many_frags_to_the_buffer_and_return_whole_message_when_write_method_called_many_times(self):
         # GIVEN
         buffer_size = 42
         fragments_buffer = lowpan.LowpanFragmentsBuffer(buffer_size=buffer_size)
@@ -2659,7 +2660,7 @@ class TestLowpanFragmentsBuffer(unittest.TestCase):
 
 class TestLowpanFragmentsBuffersManager(unittest.TestCase):
 
-    def test_should_raise_ValueError_when_get_fragments_buffer_method_is_called_with_invalid_datagram_size(self):
+    def test_should_raise_ValueError_when_get_fragments_buffer_method_called_with_invalid_dgram_size(self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_mac_address = any_mac_address()
@@ -2673,7 +2674,7 @@ class TestLowpanFragmentsBuffersManager(unittest.TestCase):
         self.assertRaises(ValueError, manager.get_fragments_buffer, message_info, any_datagram_tag(), None)
         self.assertRaises(ValueError, manager.get_fragments_buffer, message_info, any_datagram_tag(), negative_int)
 
-    def test_should_return_LowpanFragmentsBuffer_when_get_fragments_buffer_method_is_called_with_valid_datagram_size(self):
+    def test_should_return_LowpanFragmentsBuffer_when_get_fragments_buffer_method_called_with_valid_dgram_size(self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_mac_address = any_mac_address()
@@ -2689,6 +2690,7 @@ class TestLowpanFragmentsBuffersManager(unittest.TestCase):
         # THEN
         self.assertIsInstance(fragments_buffer, lowpan.LowpanFragmentsBuffer)
         self.assertEqual(datagram_size, len(fragments_buffer))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

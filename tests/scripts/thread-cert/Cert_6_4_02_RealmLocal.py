@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -37,12 +36,13 @@ LEADER = 1
 ROUTER = 2
 ED = 3
 
+
 class Cert_5_3_2_RealmLocal(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -63,9 +63,9 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -87,11 +87,22 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
                 self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256))
+        self.assertTrue(
+            self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256)
+        )
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
 
-        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2, size=256))
-        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2))
+        self.assertTrue(
+            self.nodes[LEADER].ping(
+                'ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2, size=256
+            )
+        )
+        self.assertTrue(
+            self.nodes[LEADER].ping(
+                'ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2
+            )
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
