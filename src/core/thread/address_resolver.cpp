@@ -371,9 +371,11 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid());
+    targetTlv.Init(); // reset TLV length
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
     VerifyOrExit(mlIidTlv.IsValid());
+    mlIidTlv.Init(); // reset TLV length
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
     VerifyOrExit(rloc16Tlv.IsValid());
@@ -520,9 +522,11 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), error = OT_ERROR_PARSE);
+    targetTlv.Init(); // reset TLV length
 
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
     VerifyOrExit(mlIidTlv.IsValid(), error = OT_ERROR_PARSE);
+    mlIidTlv.Init(); // reset TLV length
 
     for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
          address                                 = address->GetNext())
@@ -589,6 +593,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid());
+    targetTlv.Init(); // reset TLV length
 
     mlIidTlv.Init();
 
