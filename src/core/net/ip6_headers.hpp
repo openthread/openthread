@@ -610,6 +610,21 @@ public:
      */
     void SetMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
 
+    /**
+     * This method returns the frame identification.
+     *
+     * @returns The frame identification.
+     *
+     */
+    uint32_t GetIdentification(void) { return mIdentification; }
+
+    /**
+     * This method sets the frame identification.
+     *
+     * @param[in]  aIdentification  The fragment identification value.
+     */
+    void SetIdentification(uint32_t aIdentification) { mIdentification = aIdentification; }
+
 private:
     uint8_t mNextHeader;
     uint8_t mReserved;

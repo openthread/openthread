@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
@@ -106,6 +107,10 @@ public:
     {
         kDefaultHopLimit   = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
         kMaxDatagramLength = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
+#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IPV6_MAX_ASSEMBLED_DATAGRAM,
+        kIp6ReassemblyTimeoutMilli  = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     };
 
     /**
@@ -335,6 +340,19 @@ private:
         kDefaultIp6MessagePriority = Message::kPriorityNormal,
     };
 
+#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+    struct FragmentBuffer
+    {
+        Message *   mIp6MsgBuffer;              ///< Pointer to message buffer for reassembly
+        uint32_t    mReassemblyPayloadTotal;    ///< Total payload of the reassembled message
+        uint32_t    mReassemblyPayloadReceived; ///< Payload counter of currently received fragments
+        uint32_t    mFragmentIdentification;    ///< Fragment identification
+        uint8_t     mFragmentNextHeader;        ///< Next header of the fragmented payload
+        MessageInfo mMessageInfo;               ///< Address information of the sender of the fragments
+        Header      mHeader;                    ///< Header of the original message
+    };
+#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
@@ -344,12 +362,19 @@ private:
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,
                                    bool               aFromNcpHost);
-    otError HandleExtensionHeaders(Message &aMessage,
-                                   Header & aHeader,
-                                   uint8_t &aNextHeader,
-                                   bool     aForward,
-                                   bool     aReceive);
-    otError HandleFragment(Message &aMessage);
+    otError HandleExtensionHeaders(Message &    aMessage,
+                                   MessageInfo &aMessageInfo,
+                                   Header &     aHeader,
+                                   uint8_t &    aNextHeader,
+                                   bool         aForward,
+                                   bool         aReceive);
+    otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
+    otError HandleFragment(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+    void        CleanupFragmentationBuffer(void);
+    void        HandleReassemblyTimeout(void);
+    static void HandleTimer(Timer &aTimer);
+#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -370,6 +395,11 @@ private:
     Icmp mIcmp;
     Udp  mUdp;
     Mpl  mMpl;
+
+#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+    TimerMilli     mTimer;
+    FragmentBuffer mFragmentBuffer;
+#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 };
 
 /**

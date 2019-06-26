@@ -42,6 +42,7 @@ DEBUG               ?= 0
 DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
+IP6_FRAGM           ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
@@ -116,6 +117,10 @@ endif
 
 ifeq ($(DIAGNOSTIC),1)
 configure_OPTIONS              += --enable-diag
+endif
+
+ifeq ($(IP6_FRAGM),1)
+configure_OPTIONS              += --enable-ip6-fragmentation
 endif
 
 ifeq ($(DISABLE_DOC),1)
