@@ -171,8 +171,8 @@ void HdlcInterface::Deinit(void)
 {
     VerifyOrExit(mSockFd != -1);
 
-    VerifyOrExit(0 == close(mSockFd), perror("close NCP"));
-    VerifyOrExit(-1 != wait(NULL), perror("wait NCP"));
+    VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
+    VerifyOrExit(-1 != wait(NULL) || errno == ECHILD, perror("wait RCP"));
 
     mSockFd = -1;
 
