@@ -616,7 +616,7 @@ public:
      * @returns The frame identification.
      *
      */
-    uint32_t GetIdentification(void) { return mIdentification; }
+    uint32_t GetIdentification(void) const { return mIdentification; }
 
     /**
      * This method sets the frame identification.

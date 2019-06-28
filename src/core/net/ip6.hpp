@@ -94,6 +94,8 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
+#define MAKE_DIVIDABLE_BY_EIGHT(length) (length) & 0xfff8
+
 /**
  * This class implements the core IPv6 message processing.
  *
@@ -105,12 +107,11 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
-        kMaxDatagramLength = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+        kDefaultHopLimit            = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
+        kMaxDatagramLength          = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
         kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IPV6_MAX_ASSEMBLED_DATAGRAM,
         kIp6ReassemblyTimeoutMilli  = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+        kMinimalMtu                 = 1280,
     };
 
     /**
@@ -344,8 +345,8 @@ private:
     struct FragmentBuffer
     {
         Message *   mIp6MsgBuffer;              ///< Pointer to message buffer for reassembly
-        uint32_t    mReassemblyPayloadTotal;    ///< Total payload of the reassembled message
-        uint32_t    mReassemblyPayloadReceived; ///< Payload counter of currently received fragments
+        uint16_t    mReassemblyPayloadTotal;    ///< Total payload of the reassembled message
+        uint16_t    mReassemblyPayloadReceived; ///< Payload counter of currently received fragments
         uint32_t    mFragmentIdentification;    ///< Fragment identification
         uint8_t     mFragmentNextHeader;        ///< Next header of the fragmented payload
         MessageInfo mMessageInfo;               ///< Address information of the sender of the fragments
@@ -363,15 +364,21 @@ private:
                                    uint8_t            aIpProto,
                                    bool               aFromNcpHost);
     otError HandleExtensionHeaders(Message &    aMessage,
+                                   Netif *      aNetif,
                                    MessageInfo &aMessageInfo,
                                    Header &     aHeader,
                                    uint8_t &    aNextHeader,
                                    bool         aForward,
+                                   bool         aFromNcpHost,
                                    bool         aReceive);
     otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
-    otError HandleFragment(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    otError HandleFragment(Message &    aMessage,
+                           Netif *      aNetif,
+                           Header &     aHeader,
+                           MessageInfo &aMessageInfo,
+                           bool         aFromNcpHost);
 #if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-    void        CleanupFragmentationBuffer(void);
+    void        CleanupFragmentationBuffer(bool aDropMessageBuffer);
     void        HandleReassemblyTimeout(void);
     static void HandleTimer(Timer &aTimer);
 #endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION

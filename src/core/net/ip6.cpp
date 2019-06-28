@@ -66,7 +66,7 @@ Ip6::Ip6(Instance &aInstance)
 {
 #if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     mFragmentBuffer.mHeader.Init();
-    CleanupFragmentationBuffer();
+    CleanupFragmentationBuffer(true);
 #endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 }
 
@@ -526,7 +526,6 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
         if (aMessage.GetLength() > kMaxDatagramLength)
         {
             HandleFragmentation(aMessage, aIpProto);
@@ -535,9 +534,6 @@ exit:
         {
             EnqueueDatagram(aMessage);
         }
-#else
-        EnqueueDatagram(aMessage);
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     }
 
     return error;
@@ -622,19 +618,20 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
 {
-    otError error = OT_ERROR_NONE;
-
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+    otError        error = OT_ERROR_NONE;
     Header         header;
     FragmentHeader fragmentHeader;
-    Message *      fragment           = NULL;
-    uint16_t       fragmentCnt        = 0;
-    uint16_t       payloadFragment    = 0;
-    uint16_t       offset             = 0;
-    uint16_t       maxPayloadFragment = (1028 - aMessage.GetOffset() - sizeof(fragmentHeader)) & 0xfffffff8;
-    uint16_t       payloadLeft        = aMessage.GetLength() - aMessage.GetOffset();
+    Message *      fragment        = NULL;
+    uint16_t       fragmentCnt     = 0;
+    uint16_t       payloadFragment = 0;
+    uint16_t       offset          = 0;
+    int            assertValue     = 0;
+
+    uint16_t maxPayloadFragment = MAKE_DIVIDABLE_BY_EIGHT(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
+    uint16_t payloadLeft        = aMessage.GetLength() - aMessage.GetOffset();
 
     if (aMessage.GetLength() > kMaxAssembledDatagramLength)
     {
@@ -668,12 +665,12 @@ otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
         VerifyOrExit((fragment = NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
-        VerifyOrExit(fragment->Write(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_NO_BUFS);
+        assertValue = fragment->Write(0, sizeof(header), &header);
+        assert(assertValue == sizeof(header));
         SuccessOrExit(error = fragment->SetOffset(aMessage.GetOffset()));
-        VerifyOrExit(fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) ==
-                         sizeof(fragmentHeader),
-                     error = OT_ERROR_NO_BUFS);
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + (offset << 3),
+        assertValue = fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
+        assert(assertValue == sizeof(fragmentHeader));
+        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + (uint16_t)(offset << 3),
                                      aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
                                      *fragment) == (int)payloadFragment,
                      error = OT_ERROR_NO_BUFS);
@@ -695,35 +692,37 @@ exit:
     {
         fragment->Free();
     }
-#else
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aIpProto);
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+
     return error;
 }
 
-otError Ip6::HandleFragment(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
+otError Ip6::HandleFragment(Message &    aMessage,
+                            Netif *      aNetif,
+                            Header &     aHeader,
+                            MessageInfo &aMessageInfo,
+                            bool         aFromNcpHost)
 {
     otError        error = OT_ERROR_NONE;
+    Header         header;
     FragmentHeader fragmentHeader;
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-    uint16_t offset          = 0;
-    uint16_t payloadFragment = 0;
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+    uint16_t       offset          = 0;
+    uint16_t       payloadFragment = 0;
+    int            assertValue     = 0;
+    bool           isFragmented    = true;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
                  error = OT_ERROR_PARSE);
 
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     if (fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false)
     {
-        error = aMessage.MoveOffset(sizeof(fragmentHeader));
+        isFragmented = false;
+        error        = aMessage.MoveOffset(sizeof(fragmentHeader));
     }
     else if (mFragmentBuffer.mFragmentIdentification == 0 ||
              (fragmentHeader.GetIdentification() == mFragmentBuffer.mFragmentIdentification &&
               fragmentHeader.GetNextHeader() == mFragmentBuffer.mFragmentNextHeader))
     {
-        offset          = fragmentHeader.GetOffset() << 3;
+        offset          = (uint16_t)(fragmentHeader.GetOffset() << 3);
         payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
         mFragmentBuffer.mReassemblyPayloadReceived += payloadFragment;
 
@@ -737,11 +736,12 @@ otError Ip6::HandleFragment(Message &aMessage, Header &aHeader, MessageInfo &aMe
             memcpy(&mFragmentBuffer.mHeader, &aHeader, sizeof(Header));
 
             mFragmentBuffer.mFragmentIdentification = fragmentHeader.GetIdentification();
-            mFragmentBuffer.mFragmentNextHeader     = fragmentHeader.GetNextHeader();
+            mFragmentBuffer.mFragmentNextHeader     = static_cast<uint8_t>(fragmentHeader.GetNextHeader());
 
             VerifyOrExit((mFragmentBuffer.mIp6MsgBuffer = NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
             SuccessOrExit(error = mFragmentBuffer.mIp6MsgBuffer->SetLength(aMessage.GetOffset()));
-            SuccessOrExit(error = mFragmentBuffer.mIp6MsgBuffer->SetOffset(aMessage.GetOffset()));
+            error = mFragmentBuffer.mIp6MsgBuffer->SetOffset(aMessage.GetOffset());
+            assert(error == OT_ERROR_NONE);
             // copying the non-fragmentable header to the fragmentation buffer
             VerifyOrExit(aMessage.CopyTo(0, 0, aMessage.GetOffset(), *mFragmentBuffer.mIp6MsgBuffer) ==
                              aMessage.GetOffset(),
@@ -784,61 +784,56 @@ otError Ip6::HandleFragment(Message &aMessage, Header &aHeader, MessageInfo &aMe
             // ip6 reassembly complete
             offset = 0;
 
-            aMessage.SetLength(mFragmentBuffer.mIp6MsgBuffer->GetLength());
-            mFragmentBuffer.mIp6MsgBuffer->CopyTo(0, 0, mFragmentBuffer.mIp6MsgBuffer->GetLength(), aMessage);
-            CleanupFragmentationBuffer();
+            // creates the header for the reassembled ipv6 package
+            VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
+            header.SetPayloadLength(mFragmentBuffer.mIp6MsgBuffer->GetLength() - sizeof(header));
+            header.SetNextHeader(static_cast<IpProto>(mFragmentBuffer.mFragmentNextHeader));
+            assertValue = mFragmentBuffer.mIp6MsgBuffer->Write(0, sizeof(header), &header);
+            assert(assertValue == sizeof(header));
+
             mTimer.Stop();
-            error = OT_ERROR_NONE;
             otLogDebgIp6("Reassembly complete.");
-        }
-        else
-        {
-            // drop all fragments until the reassembly is complete
-            error = OT_ERROR_DROP;
+
+            HandleDatagram(*mFragmentBuffer.mIp6MsgBuffer, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost);
+
+            CleanupFragmentationBuffer(false);
         }
     }
-#else
-    VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
-
-    OT_UNUSED_VARIABLE(aHeader);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
-    aMessage.MoveOffset(sizeof(fragmentHeader));
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 
 exit:
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     if (error != OT_ERROR_DROP && error != OT_ERROR_NONE)
     {
         mTimer.Stop();
-        CleanupFragmentationBuffer();
+        CleanupFragmentationBuffer(true);
         otLogWarnIp6("Reassembly failed: %s", otThreadErrorToString(error));
+    }
+    if (isFragmented)
+    {
+        // drop all fragments, the payload is stored in the fragment buffer
         error = OT_ERROR_DROP;
     }
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 
     return error;
 }
 
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-void Ip6::CleanupFragmentationBuffer(void)
+void Ip6::CleanupFragmentationBuffer(bool aDropMessageBuffer)
 {
     mFragmentBuffer.mReassemblyPayloadTotal    = 0;
     mFragmentBuffer.mReassemblyPayloadReceived = 0;
     mFragmentBuffer.mFragmentIdentification    = 0;
     mFragmentBuffer.mFragmentNextHeader        = 0;
 
-    if (mFragmentBuffer.mIp6MsgBuffer != NULL)
+    if (mFragmentBuffer.mIp6MsgBuffer != NULL && aDropMessageBuffer)
     {
         mFragmentBuffer.mIp6MsgBuffer->Free();
-        mFragmentBuffer.mIp6MsgBuffer = NULL;
     }
+    mFragmentBuffer.mIp6MsgBuffer = NULL;
 }
 
 void Ip6::HandleReassemblyTimeout(void)
 {
     mTimer.Stop();
-    CleanupFragmentationBuffer();
+    CleanupFragmentationBuffer(true);
     otLogNoteIp6("Reassembly timeout.");
     mIcmp.SendError(IcmpHeader::kTypeTimeExceeded, IcmpHeader::kCodeFragmReasTimeEx, mFragmentBuffer.mMessageInfo,
                     mFragmentBuffer.mHeader);
@@ -848,13 +843,49 @@ void Ip6::HandleTimer(Timer &aTimer)
 {
     aTimer.GetOwner<Ip6>().HandleReassemblyTimeout();
 }
+#else
+otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
+{
+    EnqueueDatagram(aMessage);
+
+    OT_UNUSED_VARIABLE(aIpProto);
+
+    return OT_ERROR_NONE;
+}
+
+otError Ip6::HandleFragment(Message &    aMessage,
+                            Netif *      aNetif,
+                            Header &     aHeader,
+                            MessageInfo &aMessageInfo,
+                            bool         aFromNcpHost)
+{
+    otError        error = OT_ERROR_NONE;
+    FragmentHeader fragmentHeader;
+
+    OT_UNUSED_VARIABLE(aNetif);
+    OT_UNUSED_VARIABLE(aHeader);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aFromNcpHost);
+
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
+                 error = OT_ERROR_PARSE);
+
+    VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
+
+    aMessage.MoveOffset(sizeof(fragmentHeader));
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 
 otError Ip6::HandleExtensionHeaders(Message &    aMessage,
+                                    Netif *      aNetif,
                                     MessageInfo &aMessageInfo,
                                     Header &     aHeader,
                                     uint8_t &    aNextHeader,
                                     bool         aForward,
+                                    bool         aFromNcpHost,
                                     bool         aReceive)
 {
     otError         error = OT_ERROR_NONE;
@@ -872,7 +903,7 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoFragment:
-            SuccessOrExit(error = HandleFragment(aMessage, aHeader, aMessageInfo));
+            SuccessOrExit(error = HandleFragment(aMessage, aNetif, aHeader, aMessageInfo, aFromNcpHost));
             break;
 
         case kProtoDstOpts:
@@ -907,7 +938,7 @@ otError Ip6::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t
         error = mUdp.HandleMessage(aMessage, aMessageInfo);
         if (error == OT_ERROR_DROP)
         {
-            otLogCritIp6("Error UDP Checksum");
+            otLogNoteIp6("Error UDP Checksum");
         }
         ExitNow();
 
@@ -1119,7 +1150,8 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
 
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
-    SuccessOrExit(error = HandleExtensionHeaders(aMessage, messageInfo, header, nextHeader, forward, receive));
+    SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, forward,
+                                                 aFromNcpHost, receive));
 
     // process IPv6 Payload
     if (receive)
