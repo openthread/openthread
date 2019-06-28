@@ -493,7 +493,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sTxBandConfig = config;
     }
 
-    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, &aFrame->mLength, sizeof(aFrame->mLength), true);
+    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, (uint8_t *)&aFrame->mLength, sizeof(aFrame->mLength), true);
     RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
 
     if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
