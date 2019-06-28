@@ -877,7 +877,7 @@ exit:
 }
 
 otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
-                                    uint8_t             aFrameLength,
+                                    uint16_t            aFrameLength,
                                     const Mac::Address &aMacSource,
                                     const Mac::Address &aMacDest,
                                     Ip6::Header &       aIp6Header)
@@ -890,7 +890,7 @@ otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
 }
 
 otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
-                                         uint8_t             aFrameLength,
+                                         uint16_t            aFrameLength,
                                          const Mac::Address &aMeshSource,
                                          const Mac::Address &aMeshDest)
 {
@@ -915,7 +915,7 @@ exit:
 }
 
 void MeshForwarder::HandleMesh(uint8_t *               aFrame,
-                               uint8_t                 aFrameLength,
+                               uint16_t                aFrameLength,
                                const Mac::Address &    aMacSource,
                                const otThreadLinkInfo &aLinkInfo)
 {
@@ -995,7 +995,7 @@ exit:
 }
 
 void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
-                                 uint8_t             aFrameLength,
+                                 uint16_t            aFrameLength,
                                  const Mac::Address &aMeshSource,
                                  const Mac::Address &aMeshDest)
 {
@@ -1040,7 +1040,7 @@ bool MeshForwarder::UpdateFragmentLifetime(void)
 }
 
 void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
-                                           uint8_t                 aFragmentLength,
+                                           uint16_t                aFragmentLength,
                                            uint16_t                aSrcRloc16,
                                            uint8_t                 aPriority)
 {
@@ -1123,7 +1123,7 @@ exit:
 }
 
 otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
-                                               uint8_t             aFrameLength,
+                                               uint16_t            aFrameLength,
                                                const Mac::Address &aMacDest,
                                                const Mac::Address &aMacSource,
                                                uint8_t &           aPriority)

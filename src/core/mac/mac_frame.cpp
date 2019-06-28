@@ -763,22 +763,22 @@ uint8_t Frame::GetFooterLength(void) const
 
 exit:
     // Frame Check Sequence
-    footerLength += kFcsSize;
+    footerLength += GetFcsSize();
 
     return footerLength;
 }
 
-uint8_t Frame::GetMaxPayloadLength(void) const
+uint16_t Frame::GetMaxPayloadLength(void) const
 {
-    return kMTU - (GetHeaderLength() + GetFooterLength());
+    return GetMtu() - (GetHeaderLength() + GetFooterLength());
 }
 
-uint8_t Frame::GetPayloadLength(void) const
+uint16_t Frame::GetPayloadLength(void) const
 {
     return GetPsduLength() - (GetHeaderLength() + GetFooterLength());
 }
 
-void Frame::SetPayloadLength(uint8_t aLength)
+void Frame::SetPayloadLength(uint16_t aLength)
 {
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
 }
@@ -793,7 +793,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
     // Sequence Number
     index += kDsnSize;
 
-    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
 
     fcf = GetFrameControlField();
 
@@ -839,7 +839,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
         ExitNow(index = kInvalidIndex);
     }
 
-    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
 
     // Security Control + Frame Counter + Key Identifier
     if ((fcf & kFcfSecurityEnabled) != 0)
@@ -1046,6 +1046,16 @@ void Frame::CopyFrom(const Frame &aFromFrame)
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
     memcpy(mIeInfo, aFromFrame.mIeInfo, sizeof(otRadioIeInfo));
+}
+
+uint16_t Frame::GetMtu(void) const
+{
+    return kMTU;
+}
+
+uint16_t Frame::GetFcsSize(void) const
+{
+    return kFcsSize;
 }
 
 Frame::InfoString Frame::ToInfoString(void) const

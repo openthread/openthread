@@ -355,25 +355,25 @@ private:
     };
 
     otError CheckReachability(uint8_t *           aFrame,
-                              uint8_t             aFrameLength,
+                              uint16_t            aFrameLength,
                               const Mac::Address &aMeshSource,
                               const Mac::Address &aMeshDest);
     void    UpdateRoutes(uint8_t *           aFrame,
-                         uint8_t             aFrameLength,
+                         uint16_t            aFrameLength,
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
-    otError  GetMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader);
-    otError  SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength);
+    otError  GetMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader);
+    otError  SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
-                                 uint8_t             aFrameLength,
+                                 uint16_t            aFrameLength,
                                  const Mac::Address &aMacSource,
                                  const Mac::Address &aMacDest,
                                  Ip6::Header &       aIp6Header,
                                  uint8_t &           aHeaderLength,
                                  bool &              aNextHeaderCompressed);
     otError  GetIp6Header(const uint8_t *     aFrame,
-                          uint8_t             aFrameLength,
+                          uint16_t            aFrameLength,
                           const Mac::Address &aMacSource,
                           const Mac::Address &aMacDest,
                           Ip6::Header &       aIp6Header);
@@ -385,23 +385,23 @@ private:
     otError  PrepareDiscoverRequest(void);
     void     PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void     HandleMesh(uint8_t *               aFrame,
-                        uint8_t                 aFrameLength,
+                        uint16_t                aFrameLength,
                         const Mac::Address &    aMacSource,
                         const otThreadLinkInfo &aLinkInfo);
     void     HandleFragment(uint8_t *               aFrame,
-                            uint8_t                 aFrameLength,
+                            uint16_t                aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
     void     HandleLowpanHC(uint8_t *               aFrame,
-                            uint8_t                 aFrameLength,
+                            uint16_t                aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
     void HandleDataRequest(const Mac::Frame &aFrame, const Mac::Address &aMacSource, const otThreadLinkInfo &aLinkInfo);
 
     static otError GetFragmentHeader(const uint8_t *         aFrame,
-                                     uint8_t                 aFrameLength,
+                                     uint16_t                aFrameLength,
                                      Lowpan::FragmentHeader &aFragmentHeader);
 
     void    SendMesh(Message &aMessage, Mac::Frame &aFrame);
@@ -413,7 +413,7 @@ private:
     bool    UpdateReassemblyList(void);
     bool    UpdateFragmentLifetime(void);
     void    UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
-                                   uint8_t                 aFragmentLength,
+                                   uint16_t                aFragmentLength,
                                    uint16_t                aSrcRloc16,
                                    uint8_t                 aPriority);
     otError HandleDatagram(Message &aMessage, const otThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
@@ -436,13 +436,13 @@ private:
     void        ScheduleTransmissionTask(void);
 
     otError GetFramePriority(const uint8_t *     aFrame,
-                             uint8_t             aFrameLength,
+                             uint16_t            aFrameLength,
                              const Mac::Address &aMacSource,
                              const Mac::Address &aMacDest,
                              uint8_t &           aPriority);
     otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint16_t aSrcRloc16, uint8_t &aPriority);
     otError GetForwardFramePriority(const uint8_t *     aFrame,
-                                    uint8_t             aFrameLength,
+                                    uint16_t            aFrameLength,
                                     const Mac::Address &aMacDest,
                                     const Mac::Address &aMacSource,
                                     uint8_t &           aPriority);
@@ -455,13 +455,13 @@ private:
     void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, otError aError);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, otError aError);
     void LogFragmentFrameDrop(otError                       aError,
-                              uint8_t                       aFrameLength,
+                              uint16_t                      aFrameLength,
                               const Mac::Address &          aMacSource,
                               const Mac::Address &          aMacDest,
                               const Lowpan::FragmentHeader &aFragmentHeader,
                               bool                          aIsSecure);
     void LogLowpanHcFrameDrop(otError             aError,
-                              uint8_t             aFrameLength,
+                              uint16_t            aFrameLength,
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
