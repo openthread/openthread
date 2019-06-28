@@ -133,14 +133,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
     src/core/common/crc16.cpp                               \
-    src/core/common/entropy.cpp                             \
     src/core/common/instance.cpp                            \
     src/core/common/logging.cpp                             \
     src/core/common/message.cpp                             \
     src/core/common/notifier.cpp                            \
-    src/core/common/random_crypto.cpp                       \
     src/core/common/random_manager.cpp                      \
-    src/core/common/random_noncrypto.cpp                    \
     src/core/common/settings.cpp                            \
     src/core/common/string.cpp                              \
     src/core/common/tasklet.cpp                             \
