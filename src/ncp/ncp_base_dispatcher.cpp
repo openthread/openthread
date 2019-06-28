@@ -883,6 +883,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>;
         break;
+    case SPINEL_PROP_NET_PARTITION_ID:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>;
+        break;
     case SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT>;
         break;
