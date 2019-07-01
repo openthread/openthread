@@ -637,6 +637,8 @@ void Joiner::HandleTimer(void)
     Finish(error);
 }
 
+// LOCV_EXCL_START
+
 const char *Joiner::JoinerStateToString(otJoinerState aState)
 {
     const char *str = "Unknown";
@@ -680,6 +682,8 @@ exit:
     return;
 }
 #endif
+
+// LCOV_EXCL_STOP
 
 } // namespace MeshCoP
 } // namespace ot

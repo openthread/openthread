@@ -1835,6 +1835,10 @@ int8_t Mac::GetNoiseFloor(void)
     return otPlatRadioGetReceiveSensitivity(&GetInstance());
 }
 
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
 const char *Mac::OperationToString(Operation aOperation)
 {
     const char *retval = "";
@@ -1876,8 +1880,6 @@ const char *Mac::OperationToString(Operation aOperation)
 
     return retval;
 }
-
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
 {
@@ -1933,6 +1935,8 @@ void Mac::LogFrameTxFailure(const Frame &, otError, uint8_t) const
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+// LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 void Mac::ProcessTimeIe(Frame &aFrame)

@@ -1080,6 +1080,8 @@ exit:
     return rval;
 }
 
+// LCOV_EXCL_START
+
 const char *Ip6::IpProtoToString(IpProto aIpProto)
 {
     const char *retval;
@@ -1129,6 +1131,8 @@ const char *Ip6::IpProtoToString(IpProto aIpProto)
 
     return retval;
 }
+
+// LCOV_EXCL_STOP
 
 } // namespace Ip6
 } // namespace ot

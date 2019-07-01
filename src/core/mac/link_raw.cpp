@@ -206,7 +206,10 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
 }
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
 void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
                                         const Frame *aAckFrame,
                                         otError      aError,
@@ -222,7 +225,10 @@ void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
                      aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
     }
 }
+
 #endif
+
+// LCOV_EXCL_STOP
 
 } // namespace Mac
 } // namespace ot

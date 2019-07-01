@@ -574,6 +574,8 @@ void SubMac::SetState(State aState)
     }
 }
 
+// LCOV_EXCL_START
+
 const char *SubMac::StateToString(State aState)
 {
     const char *str = "Unknown";
@@ -602,6 +604,8 @@ const char *SubMac::StateToString(State aState)
 
     return str;
 }
+
+// LCOV_EXCL_STOP
 
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatRadio callbacks

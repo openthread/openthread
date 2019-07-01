@@ -1549,6 +1549,8 @@ exit:
     return error;
 }
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 otError MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
@@ -1802,7 +1804,7 @@ void MeshForwarder::LogLowpanHcFrameDrop(otError             aError,
                  aIsSecure ? "yes" : "no");
 }
 
-#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 void MeshForwarder::LogMessage(MessageAction, const Message &, const Mac::Address *, otError)
 {
@@ -1825,6 +1827,8 @@ void MeshForwarder::LogLowpanHcFrameDrop(otError, uint16_t, const Mac::Address &
 {
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace ot
