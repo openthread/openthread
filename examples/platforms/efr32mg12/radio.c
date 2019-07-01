@@ -303,7 +303,9 @@ void efr32RadioInit(void)
 
     efr32RadioSetTxPower(sTxPowerDbm);
 
-    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+    sEnergyScanStatus   = ENERGY_SCAN_STATUS_IDLE;
+    sTransmitError      = OT_ERROR_NONE;
+    sTransmitBusy       = false;
 
     otLogInfoPlat("Initialized", NULL);
 }
@@ -312,9 +314,9 @@ void efr32RadioDeinit(void)
 {
     RAIL_Status_t status;
 
+    RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
     status = RAIL_ConfigEvents(gRailHandle, RAIL_EVENTS_ALL, 0);
     assert(status == RAIL_STATUS_NO_ERROR);
-    RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
 
     sCurrentBandConfig = NULL;
 }
