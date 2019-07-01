@@ -476,6 +476,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_SchedulerInfo_t schedulerInfo = {.priority = EFR32_SCHEDULER_TX_PRIORITY};
     efr32BandConfig *    config;
     RAIL_Status_t        status;
+    uint8_t              frameLength;
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
                     error = OT_ERROR_INVALID_STATE);
@@ -493,8 +494,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sTxBandConfig = config;
     }
 
-    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, (uint8_t *)&aFrame->mLength, sizeof(aFrame->mLength), true);
-    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
+    otEXPECT(aFrame->mLength >= IEEE802154_MIN_LENGTH && aFrame->mLength <= IEEE802154_MAX_LENGTH);
+    frameLength = (uint8_t)aFrame->mLength;
+    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, &frameLength, sizeof frameLength, true);
+    RAIL_WriteTxFifo(sTxBandConfig->mRailHandle, aFrame->mPsdu, frameLength - 2, false);
 
     if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
     {

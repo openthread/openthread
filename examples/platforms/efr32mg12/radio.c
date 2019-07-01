@@ -303,9 +303,9 @@ void efr32RadioInit(void)
 
     efr32RadioSetTxPower(sTxPowerDbm);
 
-    sEnergyScanStatus   = ENERGY_SCAN_STATUS_IDLE;
-    sTransmitError      = OT_ERROR_NONE;
-    sTransmitBusy       = false;
+    sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
+    sTransmitError    = OT_ERROR_NONE;
+    sTransmitBusy     = false;
 
     otLogInfoPlat("Initialized", NULL);
 }
@@ -498,6 +498,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_DEFAULT;
     efr32BandConfig * config;
     RAIL_Status_t     status;
+    uint8_t           frameLength;
 
     assert(sTransmitBusy == false);
 
@@ -518,8 +519,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sCurrentBandConfig = config;
     }
 
-    RAIL_WriteTxFifo(gRailHandle, (uint8_t *)&aFrame->mLength, sizeof(aFrame->mLength), true);
-    RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, aFrame->mLength - 2, false);
+    otEXPECT(aFrame->mLength >= IEEE802154_MIN_LENGTH && aFrame->mLength <= IEEE802154_MAX_LENGTH);
+    frameLength = (uint8_t)aFrame->mLength;
+    RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
+    RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, frameLength - 2, false);
 
     if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
     {
