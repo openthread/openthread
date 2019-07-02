@@ -301,7 +301,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 
     platformAlarmProcess(aInstance);
-    platformRadioProcess(aInstance);
+    platformRadioProcess(aInstance, &read_fds, &write_fds);
 #if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
     platformUartProcess();
 #endif
