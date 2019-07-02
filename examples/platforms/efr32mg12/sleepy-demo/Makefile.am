@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,56 +28,27 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-EXTRA_DIST                              = \
-    nxp                                   \
-    nlbuild-autotools                     \
-    openthread-test-driver                \
-    NordicSemiconductor                   \
-    silabs                                \
-    synopsys                              \
-    $(NULL)
-
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    jlink                                 \
-    mbedtls                               \
+    sleepy-demo-mtd                       \
+    sleepy-demo-ftd                       \
     $(NULL)
 
-SUBDIRS =
+# Always build (e.g. for 'make all') these subdirectories.
 
-if OPENTHREAD_EXAMPLES_EFR32MG12
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
+SUBDIRS                                 = \
     $(NULL)
+
+if OPENTHREAD_ENABLE_EXECUTABLE
+SUBDIRS                                += sleepy-demo-mtd sleepy-demo-ftd
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32MG21
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
+# Always pretty (e.g. for 'make pretty') these subdirectories.
 
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += \
-    jlink                                 \
-    NordicSemiconductor                   \
+PRETTY_SUBDIRS                          = \
+    sleepy-demo-mtd                       \
+    sleepy-demo-ftd                       \
     $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52811
-SUBDIRS                                += \
-    jlink                                 \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-SUBDIRS                                += \
-    mbedtls                               \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
