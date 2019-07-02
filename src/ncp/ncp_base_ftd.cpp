@@ -333,8 +333,8 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)
 {
-    uint32_t paritionId = 0;
-    otError  error      = OT_ERROR_NONE;
+    uint32_t partitionId = 0;
+    otError  error       = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint32(partitionId));
 
