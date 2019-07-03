@@ -48,12 +48,10 @@
 #include "cli/cli_udp.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-#include <coap/coap_message.hpp>
 #include "cli/cli_coap.hpp"
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <coap/coap_message.hpp>
 #include "cli/cli_coap_secure.hpp"
 #endif
 
