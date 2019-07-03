@@ -137,14 +137,11 @@ SOURCES_COMMON                      = \
     coap/coap_message.cpp             \
     coap/coap_secure.cpp              \
     common/crc16.cpp                  \
-    common/entropy.cpp                \
     common/instance.cpp               \
     common/logging.cpp                \
     common/message.cpp                \
     common/notifier.cpp               \
-    common/random_crypto.cpp          \
     common/random_manager.cpp         \
-    common/random_noncrypto.cpp       \
     common/settings.cpp               \
     common/string.cpp                 \
     common/tasklet.cpp                \
@@ -241,11 +238,9 @@ libopenthread_radio_a_SOURCES       = \
     api/logging_api.cpp               \
     api/random_noncrypto_api.cpp      \
     api/tasklet_api.cpp               \
-    common/entropy.cpp                \
     common/instance.cpp               \
     common/logging.cpp                \
     common/random_manager.cpp         \
-    common/random_noncrypto.cpp       \
     common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
@@ -302,7 +297,6 @@ HEADERS_COMMON                      = \
     common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
-    common/entropy.hpp                \
     common/extension.hpp              \
     common/instance.hpp               \
     common/locator.hpp                \

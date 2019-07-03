@@ -39,13 +39,8 @@
 #include <openthread/error.h>
 
 #include "common/debug.hpp"
+#include "common/random_manager.hpp"
 #include "utils/wrap_stdint.h"
-
-#ifndef OPENTHREAD_RADIO
-
-#include <mbedtls/ctr_drbg.h>
-
-#endif // OPENTHREAD_RADIO
 
 namespace ot {
 namespace Random {
@@ -57,7 +52,10 @@ namespace NonCrypto {
  * @returns    A random `uint32_t` value.
  *
  */
-uint32_t GetUint32(void);
+inline uint32_t GetUint32(void)
+{
+    return ot::RandomManager::NonCryptoGetUint32();
+}
 
 /**
  * This function generates and returns a random byte.
@@ -159,31 +157,11 @@ inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
     return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
 }
 
-/**
- * This function seeds a software random generator.
- *
- * @param[in]  aSeed  Seed value.
- *
- */
-void Seed(uint32_t aSeed);
-
 } // namespace NonCrypto
 
 #ifndef OPENTHREAD_RADIO
 
 namespace Crypto {
-
-/**
- * This function initializes cryptographic random number generator.
- *
- */
-void Init(void);
-
-/**
- * This function deinitializes cryptographic random number generator.
- *
- */
-void Deinit(void);
 
 /**
  * This function fills a given buffer with cryptographically secure random bytes.
@@ -194,7 +172,10 @@ void Deinit(void);
  * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
  *
  */
-otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
+inline otError FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    return RandomManager::CryptoFillBuffer(aBuffer, aSize);
+}
 
 /**
  * This function returns initialized mbedtls_ctr_drbg_context.
@@ -202,7 +183,10 @@ otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
  * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
  *
  */
-mbedtls_ctr_drbg_context *MbedTlsContextGet(void);
+inline mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
+{
+    return RandomManager::GetMbedTlsCtrDrbgContext();
+}
 
 } // namespace Crypto
 
