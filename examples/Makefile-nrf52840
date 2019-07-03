@@ -86,7 +86,7 @@ COMMONCFLAGS                   := \
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
-ifneq ($(CERT_LOG),1)
+ifneq ($(REFERENCE_DEVICE),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
 

@@ -162,7 +162,7 @@ private:
     void    SendJoinerFinalize(void);
     void    SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
 
-#if OPENTHREAD_ENABLE_CERT_LOG
+#if OPENTHREAD_ENABLE_REFERENCE_DEVICE
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
 

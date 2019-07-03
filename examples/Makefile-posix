@@ -37,7 +37,7 @@ DEBUG                          ?= 0
 
 BORDER_AGENT                   ?= 1
 BORDER_ROUTER                  ?= 1
-CERT_LOG                       ?= 1
+REFERENCE_DEVICE               ?= 1
 COAP                           ?= 1
 COAPS                          ?= 1
 COMMISSIONER                   ?= 1
