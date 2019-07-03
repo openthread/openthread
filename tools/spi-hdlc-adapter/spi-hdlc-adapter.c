@@ -171,6 +171,18 @@ static int sSpiSmallPacketSize  = 32; // in bytes
 
 static bool sSlaveDidReset = false;
 
+typedef enum SignalType
+{
+    SIGNAL_INT,
+    SIGNAL_TERM,
+    SIGNAL_HUP,
+    SIGNAL_INVALID,
+} SignalType;
+
+static const char sSignalMessages[][20] = {"\nCaught SIGINT!\n", "\nCaught SIGTERM!\n", "\nCaught SIGHUP!\n"};
+
+static SignalType sCaughtSignal = SIGNAL_INVALID;
+
 // If sUseRawFrames is set to true, HDLC encoding/encoding
 // is skipped and the raw frames are read-from/written-to
 // the sHdlcInputFd/sHdlcOutputFd whole. See `--raw`.
@@ -205,13 +217,12 @@ static uint64_t sHdlcRxBadCrcCount         = 0;
 
 static void signal_SIGINT(int sig)
 {
-    static const char message[] = "\nCaught SIGINT!\n";
-
     sRet = EXIT_QUIT;
 
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
-    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, sSignalMessages[SIGNAL_INT], strlen(sSignalMessages[SIGNAL_INT])));
+    sCaughtSignal = SIGNAL_INT;
 
     // Restore the previous handler so that if we end up getting
     // this signal again we perform the system default action.
@@ -224,18 +235,18 @@ static void signal_SIGINT(int sig)
 
 static void signal_SIGTERM(int sig)
 {
-    static const char message[] = "\nCaught SIGTERM!\n";
-
     sRet = EXIT_QUIT;
 
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
-    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, sSignalMessages[SIGNAL_TERM], strlen(sSignalMessages[SIGNAL_TERM])));
+    sCaughtSignal = SIGNAL_TERM;
 
     // Restore the previous handler so that if we end up getting
     // this signal again we perform the system default action.
     signal(SIGTERM, sPreviousHandlerForSIGTERM);
     sPreviousHandlerForSIGTERM = NULL;
+    sCaughtSignal              = SIGNAL_INT;
 
     // Ignore signal argument.
     (void)sig;
@@ -243,13 +254,12 @@ static void signal_SIGTERM(int sig)
 
 static void signal_SIGHUP(int sig)
 {
-    static const char message[] = "\nCaught SIGHUP!\n";
-
     sRet = EXIT_FAILURE;
 
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
-    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, sSignalMessages[SIGNAL_HUP], strlen(sSignalMessages[SIGNAL_HUP])));
+    sCaughtSignal = SIGNAL_HUP;
 
     // We don't restore the "previous handler"
     // because we always want to let the main
@@ -569,7 +579,8 @@ static int push_pull_spi(void)
 
     if (ret < 0)
     {
-        perror("do_spi_xfer");
+        perror("push_pull_spi:do_spi_xfer");
+        syslog(LOG_ERR, "push_pull_spi:do_spi_xfer: errno=%d (%s)", errno, strerror(errno));
 
         // Print out a helpful error message for
         // a common error.
@@ -1993,6 +2004,11 @@ int main(int argc, char *argv[])
     // SHUTDOWN
 
 bail:
+    if (sCaughtSignal != SIGNAL_INVALID)
+    {
+        syslog(LOG_ERR, "%s", sSignalMessages[sCaughtSignal]);
+    }
+
     syslog(LOG_NOTICE, "Shutdown. (sRet = %d)", sRet);
 
     syslog(LOG_NOTICE, "Reset NCP/RCP");
