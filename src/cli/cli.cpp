@@ -68,14 +68,6 @@
 
 #include "cli_dataset.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-#include "cli_coap.hpp"
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include "cli_coap_secure.hpp"
-#endif
-
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
 #include <openthread/channel_manager.h>
 #endif
