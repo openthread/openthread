@@ -365,6 +365,7 @@ int main()
         data[i] = i;
     }
 
+    platformSettingsInit();
     otPlatSettingsInit(instance);
 
     // verify empty situation
@@ -490,6 +491,8 @@ int main()
         assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
+
+    platformSettingsDeinit();
 
     return 0;
 }
