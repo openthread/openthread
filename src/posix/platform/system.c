@@ -150,6 +150,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     otSimInit();
 #endif
+    platformSettingInit();
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig, reset);
     platformRandomInit();
@@ -186,6 +187,7 @@ void otSysDeinit(void)
     otSimDeinit();
 #endif
     platformRadioDeinit();
+    platformSettingDeinit();
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

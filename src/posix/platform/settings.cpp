@@ -71,6 +71,28 @@ static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
              offset == NULL ? "0" : offset, gNodeId, (aSwap ? "swap" : "data"));
 }
 
+void platformSettingInit(void)
+{
+    struct stat st;
+    char        fileName[kMaxFileNameSize];
+
+    if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
+    {
+        mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
+    }
+
+    getSettingsFileName(fileName, false);
+    sSettingsFd = open(fileName, O_RDWR | O_CREAT, 0600);
+
+    VerifyOrDie(sSettingsFd != -1);
+}
+
+void platformSettingDeinit(void)
+{
+    assert(sSettingsFd != -1);
+    VerifyOrDie(close(sSettingsFd) == 0);
+}
+
 static int swapOpen(void)
 {
     char fileName[kMaxFileNameSize];
@@ -139,23 +161,7 @@ void otPlatSettingsInit(otInstance *aInstance)
 
     otError error = OT_ERROR_NONE;
 
-    {
-        struct stat st;
-
-        if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
-        {
-            mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
-        }
-    }
-
-    {
-        char fileName[kMaxFileNameSize];
-
-        getSettingsFileName(fileName, false);
-        sSettingsFd = open(fileName, O_RDWR | O_CREAT, 0600);
-    }
-
-    VerifyOrDie(sSettingsFd != -1);
+    assert(sSettingsFd != -1);
 
     for (off_t size = lseek(sSettingsFd, 0, SEEK_END), offset = lseek(sSettingsFd, 0, SEEK_SET); offset < size;)
     {
