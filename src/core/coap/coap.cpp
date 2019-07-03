@@ -649,7 +649,7 @@ exit:
     {
         otLogInfoCoapErr(error, "Failed to process request");
 
-        if (error == OT_ERROR_NOT_FOUND)
+        if (error == OT_ERROR_NOT_FOUND && !aMessageInfo.GetSockAddr().IsMulticast())
         {
             SendNotFound(aMessage, aMessageInfo);
         }
