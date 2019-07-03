@@ -331,6 +331,19 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)
+{
+    uint32_t partitionId = 0;
+    otError  error       = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(partitionId));
+
+    otThreadSetLocalLeaderPartitionId(mInstance, partitionId);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {
     return mEncoder.WriteUint8(otThreadGetMaxAllowedChildren(mInstance));
