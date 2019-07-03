@@ -71,7 +71,7 @@ static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
              offset == NULL ? "0" : offset, gNodeId, (aSwap ? "swap" : "data"));
 }
 
-void platformSettingInit(void)
+void platformSettingsInit(void)
 {
     struct stat st;
     char        fileName[kMaxFileNameSize];
@@ -87,7 +87,7 @@ void platformSettingInit(void)
     VerifyOrDie(sSettingsFd != -1);
 }
 
-void platformSettingDeinit(void)
+void platformSettingsDeinit(void)
 {
     assert(sSettingsFd != -1);
     VerifyOrDie(close(sSettingsFd) == 0);
