@@ -87,10 +87,11 @@ struct MessageInfo
         PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
     } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
 
-    uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
-    uint16_t    mLength;      ///< Number of bytes within the message.
-    uint16_t    mOffset;      ///< A byte offset within the message.
-    uint16_t    mDatagramTag; ///< The datagram tag used for 6LoWPAN fragmentation.
+    uint16_t mReserved;       ///< Number of header bytes reserved for the message.
+    uint16_t mLength;         ///< Number of bytes within the message.
+    uint16_t mOffset;         ///< A byte offset within the message.
+    uint32_t mDatagramTag;    ///< The datagram tag used for 6LoWPAN fragmentation or identification used for IPv6
+                              ///< fragmentation.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
     uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
@@ -476,12 +477,13 @@ public:
     Message *Clone(void) const { return Clone(GetLength()); };
 
     /**
-     * This method returns the datagram tag used for 6LoWPAN fragmentation.
+     * This method returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
+     * fragmentation.
      *
      * @returns The 6LoWPAN datagram tag.
      *
      */
-    uint16_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
+    uint32_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -489,7 +491,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint32_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.

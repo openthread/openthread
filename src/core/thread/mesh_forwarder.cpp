@@ -850,7 +850,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
             fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
             fragmentHeader->Init();
             fragmentHeader->SetDatagramSize(aMessage.GetLength());
-            fragmentHeader->SetDatagramTag(aMessage.GetDatagramTag());
+            fragmentHeader->SetDatagramTag(static_cast<uint16_t>(aMessage.GetDatagramTag()));
             fragmentHeader->SetDatagramOffset(0);
 
             payload += fragmentHeader->GetHeaderLength();
@@ -875,7 +875,7 @@ otError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
         fragmentHeader->Init();
         fragmentHeader->SetDatagramSize(aMessage.GetLength());
-        fragmentHeader->SetDatagramTag(aMessage.GetDatagramTag());
+        fragmentHeader->SetDatagramTag(static_cast<uint16_t>(aMessage.GetDatagramTag()));
         fragmentHeader->SetDatagramOffset(aMessage.GetOffset());
 
         payload += fragmentHeader->GetHeaderLength();

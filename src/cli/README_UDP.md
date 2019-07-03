@@ -115,7 +115,6 @@ Send a UDP message.
 > udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 hello
 ```
 
-
 ### send \-s \<message_size\> \<ip\> \<port\>
 
 Send a few bytes over UDP.

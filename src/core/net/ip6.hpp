@@ -110,8 +110,9 @@ public:
         kDefaultHopLimit            = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
         kMaxDatagramLength          = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
         kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IPV6_MAX_ASSEMBLED_DATAGRAM,
-        kIp6ReassemblyTimeoutMilli  = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+        kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
         kMinimalMtu                 = 1280,
+        kStateUpdatePeriod          = 1000,
     };
 
     /**
@@ -341,19 +342,6 @@ private:
         kDefaultIp6MessagePriority = Message::kPriorityNormal,
     };
 
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-    struct FragmentBuffer
-    {
-        Message *   mIp6MsgBuffer;              ///< Pointer to message buffer for reassembly
-        uint16_t    mReassemblyPayloadTotal;    ///< Total payload of the reassembled message
-        uint16_t    mReassemblyPayloadReceived; ///< Payload counter of currently received fragments
-        uint32_t    mFragmentIdentification;    ///< Fragment identification
-        uint8_t     mFragmentNextHeader;        ///< Next header of the fragmented payload
-        MessageInfo mMessageInfo;               ///< Address information of the sender of the fragments
-        Header      mHeader;                    ///< Header of the original message
-    };
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
@@ -372,14 +360,12 @@ private:
                                    bool         aFromNcpHost,
                                    bool         aReceive);
     otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
-    otError HandleFragment(Message &    aMessage,
-                           Netif *      aNetif,
-                           Header &     aHeader,
-                           MessageInfo &aMessageInfo,
-                           bool         aFromNcpHost);
+    otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
 #if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-    void        CleanupFragmentationBuffer(bool aDropMessageBuffer);
-    void        HandleReassemblyTimeout(void);
+    void        CleanupFragmentationBuffer(void);
+    void        HandleUpdateTimer(void);
+    bool        UpdateReassemblyList(void);
+    otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
     static void HandleTimer(Timer &aTimer);
 #endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
     otError AddMplOption(Message &aMessage, Header &aHeader);
@@ -404,8 +390,8 @@ private:
     Mpl  mMpl;
 
 #if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
-    TimerMilli     mTimer;
-    FragmentBuffer mFragmentBuffer;
+    TimerMilli   mTimer;
+    MessageQueue mReassemblyList;
 #endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
 };
 

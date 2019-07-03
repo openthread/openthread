@@ -1925,13 +1925,13 @@
 /**
  * @def OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT
  *
- * This setting configures the reassembly timeout for IPv6 in milliseconds.
+ * This setting configures the reassembly timeout for IPv6 in seconds.
  *
  * RFC 2460 \> 60 seconds
  *
  */
 #ifndef OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT
-#define OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT 60000
+#define OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT 60
 #endif
 
 /**
