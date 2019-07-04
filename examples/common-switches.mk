@@ -153,7 +153,7 @@ ifeq ($(PLATFORM_UDP),1)
 configure_OPTIONS              += --enable-platform-udp
 endif
 
-# Enable trial features only required for reference device during certification.
+# Enable features only required for reference device during certification.
 ifeq ($(REFERENCE_DEVICE),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 COMMONCFLAGS                   += -DOPENTHREAD_ENABLE_REFERENCE_DEVICE=1
