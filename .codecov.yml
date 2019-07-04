@@ -7,4 +7,5 @@ ignore:
   - "tests/*"
   - "third_party/*"
 
-comment: off
+comment:
+  layout: "diff, flags, files"
