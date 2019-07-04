@@ -1642,7 +1642,7 @@ int main(int argc, char *argv[])
                 sSpiResetDelay = atoi(optarg);
                 if (sSpiResetDelay < 0)
                 {
-                    syslog(LOG_ERR, "Negative values (%d) for --spi-reset-delay are invalid.", sSpiResetDelay);
+                    syslog(LOG_ERR, "Negative value (%d) for --spi-reset-delay is invalid.", sSpiResetDelay);
                     exit(EXIT_FAILURE);
                 }
                 syslog(LOG_NOTICE, "SPI RESET Delay set to %d ms", sSpiResetDelay);
