@@ -144,6 +144,7 @@ int main(int argc, char *argv[])
     otxConsoleDeinit();
 #endif
     otInstanceFinalize(instance);
+    otSysDeinit();
 
     return 0;
 }

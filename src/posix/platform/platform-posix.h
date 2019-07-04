@@ -382,18 +382,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function initializes platform Settings driver.
- *
- */
-void platformSettingsInit(void);
-
-/**
- * This function shuts down the platform Settings driver.
- *
- */
-void platformSettingsDeinit(void);
-
-/**
  * This function ends the current process with exit code @p aExitCode if @p aCondition is false.
  *
  * @param[in]   aCondition  The condition to verify

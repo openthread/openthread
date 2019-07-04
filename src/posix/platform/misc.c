@@ -45,8 +45,7 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
+    otInstanceFinalize(aInstance);
     otSysDeinit();
 
     longjmp(gResetJump, 1);

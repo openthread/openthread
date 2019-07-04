@@ -153,7 +153,6 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig, reset);
     platformRandomInit();
-    platformSettingsInit();
 #if OPENTHREAD_ENABLE_PLATFORM_UDP && OPENTHREAD_ENABLE_PLATFORM_NETIF == 0
     platformUdpInit(getenv("PLATFORM_NETIF"));
 #endif
@@ -186,7 +185,6 @@ void otSysDeinit(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     otSimDeinit();
 #endif
-    platformSettingsDeinit();
     platformRadioDeinit();
 }
 

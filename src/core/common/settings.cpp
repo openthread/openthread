@@ -97,6 +97,11 @@ void Settings::Init(void)
     otPlatSettingsInit(&GetInstance());
 }
 
+void Settings::Deinit(void)
+{
+    otPlatSettingsDeinit(&GetInstance());
+}
+
 void Settings::Wipe(void)
 {
     otPlatSettingsWipe(&GetInstance());

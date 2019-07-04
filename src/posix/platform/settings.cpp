@@ -71,28 +71,6 @@ static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
              offset == NULL ? "0" : offset, gNodeId, (aSwap ? "swap" : "data"));
 }
 
-void platformSettingsInit(void)
-{
-    struct stat st;
-    char        fileName[kMaxFileNameSize];
-
-    if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
-    {
-        mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
-    }
-
-    getSettingsFileName(fileName, false);
-    sSettingsFd = open(fileName, O_RDWR | O_CREAT, 0600);
-
-    VerifyOrDie(sSettingsFd != -1);
-}
-
-void platformSettingsDeinit(void)
-{
-    assert(sSettingsFd != -1);
-    VerifyOrDie(close(sSettingsFd) == 0);
-}
-
 static int swapOpen(void)
 {
     char fileName[kMaxFileNameSize];
@@ -161,7 +139,23 @@ void otPlatSettingsInit(otInstance *aInstance)
 
     otError error = OT_ERROR_NONE;
 
-    assert(sSettingsFd != -1);
+    {
+        struct stat st;
+
+        if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
+        {
+            mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
+        }
+    }
+
+    {
+        char fileName[kMaxFileNameSize];
+
+        getSettingsFileName(fileName, false);
+        sSettingsFd = open(fileName, O_RDWR | O_CREAT, 0600);
+    }
+
+    VerifyOrDie(sSettingsFd != -1);
 
     for (off_t size = lseek(sSettingsFd, 0, SEEK_END), offset = lseek(sSettingsFd, 0, SEEK_SET); offset < size;)
     {
@@ -184,6 +178,14 @@ exit:
     {
         VerifyOrDie(ftruncate(sSettingsFd, 0) == 0);
     }
+}
+
+void otPlatSettingsDeinit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(sSettingsFd != -1);
+    VerifyOrDie(close(sSettingsFd) == 0);
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -365,7 +367,6 @@ int main()
         data[i] = i;
     }
 
-    platformSettingsInit();
     otPlatSettingsInit(instance);
 
     // verify empty situation
@@ -491,8 +492,7 @@ int main()
         assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
-
-    platformSettingsDeinit();
+    otPlatSettingsDeinit(instance);
 
     return 0;
 }
