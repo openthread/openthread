@@ -399,6 +399,20 @@ void VerifyOrDie(bool aCondition, int aExitCode);
  */
 void SuccessOrDie(otError aError);
 
+/**
+ * This function creates a socket with SOCK_CLOEXEC flag set.
+ *
+ * @param[in]   aDomain     The communication domain.
+ * @param[in]   aType       The semantics of communication.
+ * @param[in]   aProtocol   The protocol to use.
+ *
+ * @returns The file descriptor of the created socket.
+ *
+ * @retval  -1  Failed to create socket.
+ *
+ */
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol);
+
 #ifdef __cplusplus
 }
 #endif

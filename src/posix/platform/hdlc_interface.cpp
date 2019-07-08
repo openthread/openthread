@@ -320,7 +320,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
     int fd   = -1;
     int rval = 0;
 
-    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
     {
         perror("open uart failed");
@@ -480,8 +480,9 @@ exit:
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
 int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
 {
-    int fd  = -1;
-    int pid = -1;
+    int fd   = -1;
+    int pid  = -1;
+    int rval = -1;
 
     {
         struct termios tios;
@@ -490,54 +491,30 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         cfmakeraw(&tios);
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        pid = forkpty(&fd, NULL, &tios, NULL);
-        VerifyOrExit(pid >= 0);
+        VerifyOrExit((pid = forkpty(&fd, NULL, &tios, NULL)) != -1, perror("forkpty()"));
     }
 
     if (0 == pid)
     {
-        const int     kMaxCommand = 255;
-        char          cmd[kMaxCommand];
-        int           rval;
-        struct rlimit limit;
-
-        rval = getrlimit(RLIMIT_NOFILE, &limit);
-        rval = setenv("SHELL", SOCKET_UTILS_DEFAULT_SHELL, 0);
-
-        VerifyOrExit(rval == 0, perror("setenv failed"));
-
-        // Close all file descriptors larger than STDERR_FILENO.
-        for (rlim_t i = (STDERR_FILENO + 1); i < limit.rlim_cur; i++)
-        {
-            close(static_cast<int>(i));
-        }
+        const int kMaxCommand = 255;
+        char      cmd[kMaxCommand];
 
         rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
-                     otLogCritPlat("NCP file and configuration is too long!"));
+                     fprintf(stderr, "NCP file and configuration is too long!");
+                     rval = -1);
 
-        execl(getenv("SHELL"), getenv("SHELL"), "-c", cmd, NULL);
-        perror("open pty failed");
-        exit(OT_EXIT_INVALID_ARGUMENTS);
+        VerifyOrExit((rval = execl(SOCKET_UTILS_DEFAULT_SHELL, SOCKET_UTILS_DEFAULT_SHELL, "-c", cmd, NULL)) != -1,
+                     perror("execl(OT_RCP)"));
     }
     else
     {
-        int rval = fcntl(fd, F_GETFL);
-
-        if (rval != -1)
-        {
-            rval = fcntl(fd, F_SETFL, rval | O_NONBLOCK);
-        }
-
-        if (rval == -1)
-        {
-            perror("set nonblock failed");
-            close(fd);
-            fd = -1;
-        }
+        VerifyOrExit((rval = fcntl(fd, F_GETFL)) != -1, perror("fcntl(F_GETFL)"));
+        VerifyOrExit((rval = fcntl(fd, F_SETFL, rval | O_NONBLOCK | O_CLOEXEC)) != -1, perror("fcntl(F_SETFL)"));
     }
 
 exit:
+    VerifyOrDie(rval == 0, OT_EXIT_FAILURE);
     return fd;
 }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE

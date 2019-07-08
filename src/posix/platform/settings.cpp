@@ -77,7 +77,7 @@ static int swapOpen(void)
     int  fd;
 
     getSettingsFileName(fileName, true);
-    fd = open(fileName, O_RDWR | O_CREAT | O_TRUNC, 0600);
+    fd = open(fileName, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     VerifyOrDie(fd != -1);
 
     return fd;
@@ -152,7 +152,7 @@ void otPlatSettingsInit(otInstance *aInstance)
         char fileName[kMaxFileNameSize];
 
         getSettingsFileName(fileName, false);
-        sSettingsFd = open(fileName, O_RDWR | O_CREAT, 0600);
+        sSettingsFd = open(fileName, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     }
 
     VerifyOrDie(sSettingsFd != -1);

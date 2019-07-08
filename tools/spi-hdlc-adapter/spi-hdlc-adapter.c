@@ -1131,7 +1131,7 @@ static bool setup_spi_dev(const char *path)
     int           ret;
     sSpiDevPath = path;
 
-    fd = open(path, O_RDWR);
+    fd = open(path, O_RDWR | O_CLOEXEC);
     if (fd < 0)
     {
         perror("open");
@@ -1205,7 +1205,7 @@ static bool setup_res_gpio(const char *path)
         goto bail;
     }
 
-    setup_fd = open(dir_path, O_WRONLY);
+    setup_fd = open(dir_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1216,7 +1216,7 @@ static bool setup_res_gpio(const char *path)
         }
     }
 
-    sResGpioValueFd = open(value_path, O_WRONLY);
+    sResGpioValueFd = open(value_path, O_WRONLY | O_CLOEXEC);
 
 bail:
 
@@ -1301,7 +1301,7 @@ static bool setup_int_gpio(const char *path)
         goto bail;
     }
 
-    setup_fd = open(dir_path, O_WRONLY);
+    setup_fd = open(dir_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1315,7 +1315,7 @@ static bool setup_int_gpio(const char *path)
         close(setup_fd);
     }
 
-    setup_fd = open(edge_path, O_WRONLY);
+    setup_fd = open(edge_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1332,7 +1332,7 @@ static bool setup_int_gpio(const char *path)
         setup_fd = -1;
     }
 
-    sIntGpioValueFd = open(value_path, O_RDONLY);
+    sIntGpioValueFd = open(value_path, O_RDONLY | O_CLOEXEC);
 
 bail:
 
