@@ -63,8 +63,7 @@ void otPlatSettingsInit(otInstance *aInstance);
 /**
  * Performs any de-initialization for the settings subsystem, if necessary.
  *
- * @param[in]  aInstance
- *             The OpenThread instance structure.
+ * @param[in]  aInstance The OpenThread instance structure.
  *
  */
 void otPlatSettingsDeinit(otInstance *aInstance);
