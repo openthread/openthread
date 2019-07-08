@@ -198,7 +198,7 @@ class TestMacParser(unittest.TestCase):
         self.assertEqual(0xface, frame.header.src_pan_id)
         self.assertEqual(0xf00d, frame.header.src_address.rloc)
 
-        self.assertEqual(bytearray([]), frame.payload.data)
+        self.assertEqual(bytearray([0x4]), frame.payload.data)
 
     def test_should_decrypt_data_frame(self):
 
