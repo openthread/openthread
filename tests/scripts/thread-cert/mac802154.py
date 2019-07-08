@@ -66,6 +66,27 @@ class DeviceDescriptors:
         return short_address
 
 
+class InformationElement:
+
+    """Class representing 802.15.4 MAC Information Element."""
+    def __init__(self, id, length, content):
+        self._id = id
+        self._length = length
+        self._content = content
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def length(self):
+        return self._length
+
+    @property
+    def content(self):
+        return self._content
+
+
 class MacHeader:
 
     """Class representing 802.15.4 MAC header."""
@@ -138,7 +159,33 @@ class MacFrame:
     IEEE802154_HEADER_IE_HT1 = 0x7E
     IEEE802154_HEADER_IE_HT2 = 0x7F
 
+    IEEE802154_VERSION_2015 = 0x02
+
     def parse(self, data):
+        """Parse a MAC 802.15.4 frame
+
+        Format of MAC 802.15.4 Frame:
+        | Frame Header | ASH | IE | Frame Payload | MIC | FCS |
+
+        Frame Header:  Frame Control | Sequence Number | Addressing Field
+        ASH: Auxiliary Security Header (optional)
+        IE: Header IE | Payload IE (optional)
+        Frame Payload: Data payload (optional)
+        MIC: To authenticate the frame (optional)
+
+        In the parsing process, Frame Header is parsed first. Then it can be
+        determined if security is enabled for this frame. If it's enabled,
+        then ASH should be parsed.
+        After that, go directly to the end to parse FCS first instead
+        of parsing IE or Frame Payload. This is because sometimes, IE doesn't
+        have a termination IE and parsing needs to know the start of MIC to determine
+        where's the end of IEs(In such cases there are no payload).
+        After parsing FCS, MIC is parsed if security is enabled.
+        Then the end of IE(or payload) is known. And at last IEs and payload
+        are parsed.
+        And after parsing everything, build MacHeader and MacPayload with
+        the things parsed.
+        """
         mhr_start = data.tell()
 
         fc, seq = struct.unpack("<HB", data.read(3))
@@ -201,46 +248,108 @@ class MacFrame:
         else:
             aux_sec_header = None
 
-        # skip header ie
-        header_ie_start = data.tell()
-        while ie_present:
-            header_ie = struct.unpack("<H", data.read(2))[0]
-            header_ie_id = (
-                header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK
-            ) >> 7
-            header_ie_length = (
-                header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK
-            )
-            if header_ie_length:
-                data.read(header_ie_length)
-
-            if header_ie_id in [
-                MacFrame.IEEE802154_HEADER_IE_HT1,
-                MacFrame.IEEE802154_HEADER_IE_HT2,
-            ]:
-                break
-        header_ie_end = data.tell()
-
-        # Check end of MAC frame
-        if frame_type == MacHeader.FrameType.COMMAND:
-            command_type = ord(data.read(1))
-        else:
-            command_type = None
-
-        payload_pos = data.tell()
+        # Record the beginning position of header IE.
+        # Or the position of payload if there is no header IE.
+        cur_pos = data.tell()
+        header_ie_start = cur_pos
 
         data.seek(-2, io.SEEK_END)
         fcs_start = data.tell()
+        fcs = self._parse_fcs(data, fcs_start)
 
+        data.seek(fcs_start) # Set it back to the beginning pos of fcs
         if aux_sec_header and aux_sec_header.security_level:
             mic, payload_end = self._parse_mic(
                 data, aux_sec_header.security_level
             )
         else:
-            payload_end = data.tell()
+            payload_end = fcs_start # When there is no MIC, paylaod end is the beginning pos of fcs
             mic = None
 
-        fcs = self._parse_fcs(data, fcs_start)
+        # There may be no termination IE. In such case, there is no payload, get
+        # IE until the beginning position of MIC or a termination IE.
+        header_ie_list = []
+        data.seek(cur_pos)
+        while ie_present and cur_pos + 2 < payload_end:
+            header_ie = struct.unpack("<H", data.read(2))[0]
+            id = (
+                header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK
+            ) >> 7
+            assert id != MacFrame.IEEE802154_HEADER_IE_HT1, \
+                'Currently there should be no HT1!' # TODO: support HT1 when there are Payload IEs in our code
+            header_ie_length = (
+                header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK
+            )
+            assert cur_pos + 2 + header_ie_length <= payload_end, \
+                'Parsing Header IE error, IE id:{} length:{}'.format(id, header_ie_length)
+            header_ie_content = data.read(header_ie_length)
+            header_ie_list.append(
+                InformationElement(id, header_ie_length, header_ie_content)
+            )
+            cur_pos += 2 + header_ie_length
+            if id == MacFrame.IEEE802154_HEADER_IE_HT2: # Currently, payload IE doesn't exist in the code. So only HT2 is required.
+                break
+        header_ie_end = cur_pos
+
+        payload_pos = cur_pos
+        payload_len = payload_end - payload_pos
+        data.seek(payload_pos)
+        payload = data.read(payload_len)
+
+        if security_enabled:
+            mhr_len = mhr_end - mhr_start
+            data.seek(mhr_start)
+            mhr_bytes = data.read(mhr_len)
+
+            aux_sec_header_len = aux_sec_header_end - mhr_end
+            aux_sec_hdr_bytes = data.read(aux_sec_header_len)
+
+            extra_open_fields = bytearray([])
+
+            if ie_present:
+                data.seek(header_ie_start)
+                extra_open_fields += data.read(
+                    header_ie_end - header_ie_start
+                )
+
+            message_info = MessageInfo()
+            message_info.aux_sec_hdr = aux_sec_header
+            message_info.aux_sec_hdr_bytes = aux_sec_hdr_bytes
+            message_info.extra_open_fields = extra_open_fields
+            message_info.mhr_bytes = mhr_bytes
+
+            open_payload = []
+            private_payload = payload
+
+            # Check end of MAC frame
+            if frame_type == MacHeader.FrameType.COMMAND:
+                if frame_version < MacFrame.IEEE802154_VERSION_2015:
+                    extra_open_fields.append(payload[0])
+                    open_payload = payload[0:1]
+                    private_payload = payload[1:]
+                    message_info.open_payload_length = 1
+
+            if src_address.type == MacAddressType.SHORT:
+                message_info.source_mac_address = DeviceDescriptors.get_extended(
+                    src_address).mac_address
+            else:
+                message_info.source_mac_address = src_address.mac_address
+
+            sec_obj = CryptoEngine(
+                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY)
+            )
+            self.payload = MacPayload(
+                bytearray(open_payload) +
+                sec_obj.decrypt(private_payload, mic, message_info)
+            )
+
+        else:
+            self.payload = MacPayload(payload)
+
+        if frame_type == MacHeader.FrameType.COMMAND:
+            command_type = self.payload.data[0]
+        else:
+            command_type = None
 
         # Create Header object
         self.header = MacHeader(
@@ -258,51 +367,6 @@ class MacFrame:
             mic,
             fcs,
         )
-
-        # Create Payload object
-        payload_len = payload_end - payload_pos
-        data.seek(payload_pos)
-
-        payload = data.read(payload_len)
-
-        if security_enabled:
-            mhr_len = mhr_end - mhr_start
-            data.seek(mhr_start)
-            mhr_bytes = data.read(mhr_len)
-
-            aux_sec_header_len = aux_sec_header_end - mhr_end
-            aux_sec_hdr_bytes = data.read(aux_sec_header_len)
-
-            non_payload_fields = bytearray([])
-
-            if ie_present:
-                data.seek(header_ie_start)
-                non_payload_fields += data.read(
-                    header_ie_end - header_ie_start
-                )
-            if command_type is not None:
-                non_payload_fields.append(command_type)
-
-            message_info = MessageInfo()
-            message_info.aux_sec_hdr = aux_sec_header
-            message_info.aux_sec_hdr_bytes = aux_sec_hdr_bytes
-            message_info.nonpayload_fields = non_payload_fields
-            message_info.mhr_bytes = mhr_bytes
-            if src_address.type == MacAddressType.SHORT:
-                message_info.source_mac_address = DeviceDescriptors.get_extended(
-                    src_address).mac_address
-            else:
-                message_info.source_mac_address = src_address.mac_address
-
-            sec_obj = CryptoEngine(
-                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY)
-            )
-            self.payload = MacPayload(
-                sec_obj.decrypt(payload, mic, message_info)
-            )
-
-        else:
-            self.payload = MacPayload(payload)
 
     def _parse_address(self, data, mode):
         if mode == MacHeader.AddressMode.SHORT:

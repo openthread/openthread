@@ -159,7 +159,7 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         return bytes(eui64 + struct.pack(">LB", frame_counter, security_level))
 
     def _create_authenticated_data(
-        self, mhr, auxiliary_security_header, nonpayload_fields
+        self, mhr, auxiliary_security_header, extra_open_fields
     ):
         """ Create Authenticated Data
 
@@ -168,13 +168,13 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         Args:
             mhr (bytes)
             auxiliary_security_header (bytes)
-            nonpayload_fields (bytes)
+            extra_open_fields (bytes)
 
         Returns:
             bytes: Authenticated Data
 
         """
-        return bytes(mhr + auxiliary_security_header + nonpayload_fields)
+        return bytes(mhr + auxiliary_security_header + extra_open_fields)
 
     def create_key_and_nonce_and_authenticated_data(self, message_info):
         _, mac_key = self._generate_keys(
@@ -190,7 +190,7 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         auth_data = self._create_authenticated_data(
             message_info.mhr_bytes,
             message_info.aux_sec_hdr_bytes,
-            message_info.nonpayload_fields,
+            message_info.extra_open_fields,
         )
 
         return mac_key, nonce, auth_data
