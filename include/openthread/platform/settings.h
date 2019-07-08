@@ -104,7 +104,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
  *
  *  @param[in]  aInstance     The OpenThread instance structure.
  *  @param[in]  aKey          The key associated with the setting to change.
- *  @param[out] aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL if
+ *  @param[in]  aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL if
  *                            aValueLength is non-zero.
  *  @param[in]  aValueLength  The length of the data pointed to by aValue. May be zero.
  *
@@ -128,11 +128,11 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
  *  Calling this function successfully may cause unrelated
  *  settings with multiple values to be reordered.
  *
- * @param[in]     aInstance     The OpenThread instance structure.
- * @param[in]     aKey          The key associated with the setting to change.
- * @param[out]    aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL
- *                              if aValueLength is non-zero.
- * @param[inout]  aValueLength  The length of the data pointed to by aValue. May be zero.
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aKey          The key associated with the setting to change.
+ * @param[in]  aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL
+ *                           if aValueLength is non-zero.
+ * @param[in]  aValueLength  The length of the data pointed to by aValue. May be zero.
  *
  * @retval OT_ERROR_NONE             The given setting was added or staged to be added.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
