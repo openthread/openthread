@@ -218,38 +218,6 @@ const struct Command Interpreter::sCommands[] = {
     {"version", &Interpreter::ProcessVersion},
 };
 
-void otFreeMemory(const void *)
-{
-    // No-op on systems running OpenThread in-proc
-}
-
-template <class T> class otPtr
-{
-    T *ptr;
-
-public:
-    explicit otPtr(T *_ptr)
-        : ptr(_ptr)
-    {
-    }
-    ~otPtr()
-    {
-        if (ptr)
-        {
-            otFreeMemory(ptr);
-        }
-    }
-    T *get() const { return ptr; }
-       operator T *() const { return ptr; }
-    T *operator->() const { return ptr; }
-};
-
-typedef otPtr<const otMacCounters>  otMacCountersPtr;
-typedef otPtr<const otMleCounters>  otMleCountersPtr;
-typedef otPtr<const otNetifAddress> otNetifAddressPtr;
-typedef otPtr<const uint8_t>        otBufferPtr;
-typedef otPtr<const char>           otStringPtr;
-
 Interpreter::Interpreter(Instance *aInstance)
     : mUserCommands(NULL)
     , mUserCommandsLength(0)
@@ -847,7 +815,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     {
         if (strcmp(argv[0], "mac") == 0)
         {
-            otMacCountersPtr macCounters(otLinkGetCounters(mInstance));
+            const otMacCounters *macCounters = otLinkGetCounters(mInstance);
 
             mServer->OutputFormat("TxTotal: %d\r\n", macCounters->mTxTotal);
             mServer->OutputFormat("    TxUnicast: %d\r\n", macCounters->mTxUnicast);
@@ -883,7 +851,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         }
         else if (strcmp(argv[0], "mle") == 0)
         {
-            otMleCountersPtr mleCounters(otThreadGetMleCounters(mInstance));
+            const otMleCounters *mleCounters = otThreadGetMleCounters(mInstance);
 
             mServer->OutputFormat("Role Disabled: %d\r\n", mleCounters->mDisabledRole);
             mServer->OutputFormat("Role Detached: %d\r\n", mleCounters->mDetachedRole);
@@ -1092,7 +1060,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extAddress(reinterpret_cast<const uint8_t *>(otLinkGetExtendedAddress(mInstance)));
+        const uint8_t *extAddress = reinterpret_cast<const uint8_t *>(otLinkGetExtendedAddress(mInstance));
         OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
         mServer->OutputFormat("\r\n");
     }
@@ -1140,7 +1108,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extPanId(reinterpret_cast<const uint8_t *>(otThreadGetExtendedPanId(mInstance)));
+        const uint8_t *extPanId = reinterpret_cast<const uint8_t *>(otThreadGetExtendedPanId(mInstance));
         OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
         mServer->OutputFormat("\r\n");
     }
@@ -1234,7 +1202,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otNetifAddressPtr unicastAddrs(otIp6GetUnicastAddresses(mInstance));
+        const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
 
         for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
         {
@@ -1511,7 +1479,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr key(reinterpret_cast<const uint8_t *>(otThreadGetMasterKey(mInstance)));
+        const uint8_t *key = reinterpret_cast<const uint8_t *>(otThreadGetMasterKey(mInstance));
 
         for (int i = 0; i < OT_MASTER_KEY_SIZE; i++)
         {
@@ -1776,7 +1744,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otStringPtr networkName(otThreadGetNetworkName(mInstance));
+        const char *networkName = otThreadGetNetworkName(mInstance);
         mServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, static_cast<const char *>(networkName));
     }
     else
@@ -3097,7 +3065,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    otStringPtr version(otGetVersionString());
+    const char *version = otGetVersionString();
     mServer->OutputFormat("%s\r\n", static_cast<const char *>(version));
     AppendResult(OT_ERROR_NONE);
 }
