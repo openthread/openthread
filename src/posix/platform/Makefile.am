@@ -53,18 +53,6 @@ libopenthread_posix_a_SOURCES             = \
     uart.c                                  \
     $(NULL)
 
-INC_NCP_SOURCES                           = \
-    inc_spinel.c                            \
-    inc_hdlc.cpp                            \
-    $(NULL)
-
-nodist_libopenthread_posix_a_SOURCES      = \
-    $(INC_NCP_SOURCES)                      \
-    $(NULL)
-
-inc_%: ../../ncp/%
-	echo '#include "$<"' > $@
-
 if OPENTHREAD_ENABLE_PLATFORM_UDP
 libopenthread_posix_a_SOURCES            += \
     udp.cpp                                 \
