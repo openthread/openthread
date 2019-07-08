@@ -3643,17 +3643,17 @@ exit:
 } // namespace ot
 
 #if OPENTHREAD_ENABLE_LEGACY
-extern "C" void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
+OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
     OT_UNUSED_VARIABLE(aHandlers);
 }
 
-extern "C" void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
+OT_TOOL_WEAK void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
     OT_UNUSED_VARIABLE(aUlaPrefix);
 }
 
-extern "C" void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
+OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aExtAddr);
 }
