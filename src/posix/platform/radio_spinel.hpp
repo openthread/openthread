@@ -37,7 +37,7 @@
 #include <openthread/platform/radio.h>
 
 #include "hdlc_interface.hpp"
-#include "spinel.h"
+#include "ncp/spinel.h"
 
 namespace ot {
 namespace PosixApp {

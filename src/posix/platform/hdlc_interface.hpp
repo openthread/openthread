@@ -36,7 +36,7 @@
 
 #include "platform-config.h"
 
-#include "hdlc.hpp"
+#include "ncp/hdlc.hpp"
 
 namespace ot {
 namespace PosixApp {
