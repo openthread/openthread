@@ -183,6 +183,14 @@ public:
     void Init(void);
 
     /**
+     * This method de-initializes the platform settings (non-volatile) module.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Deinit(void);
+
+    /**
      * This method removes all settings from the non-volatile store.
      *
      */

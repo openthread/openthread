@@ -180,6 +180,14 @@ exit:
     }
 }
 
+void otPlatSettingsDeinit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(sSettingsFd != -1);
+    VerifyOrDie(close(sSettingsFd) == 0);
+}
+
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -484,6 +492,7 @@ int main()
         assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
     }
     otPlatSettingsWipe(instance);
+    otPlatSettingsDeinit(instance);
 
     return 0;
 }

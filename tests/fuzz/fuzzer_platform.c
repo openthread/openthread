@@ -353,6 +353,11 @@ void otPlatSettingsInit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
+void otPlatSettingsDeinit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
 otError otPlatSettingsBeginChange(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
