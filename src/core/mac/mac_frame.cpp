@@ -1060,7 +1060,8 @@ uint16_t Frame::GetFcsSize(void) const
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO || OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL) \
+    && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 Frame::InfoString Frame::ToInfoString(void) const
 {
@@ -1136,7 +1137,8 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
                       IsNative() ? "yes" : "no");
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO || OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL) \
+              && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 // LCOV_EXCL_STOP
 
