@@ -37,7 +37,6 @@ DEBUG                          ?= 0
 
 BORDER_AGENT                   ?= 1
 BORDER_ROUTER                  ?= 1
-CERT_LOG                       ?= 1
 COAP                           ?= 1
 COAPS                          ?= 1
 COMMISSIONER                   ?= 1
@@ -55,6 +54,7 @@ LEGACY                         ?= 1
 LINK_RAW                       ?= 1
 MAC_FILTER                     ?= 1
 MTD_NETDIAG                    ?= 1
+REFERENCE_DEVICE               ?= 1
 SERVICE                        ?= 1
 SNTP_CLIENT                    ?= 1
 UDP_FORWARD                    ?= 1

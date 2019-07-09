@@ -30,7 +30,6 @@
 
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
-CERT_LOG            ?= 0
 COAP                ?= 0
 COAPS               ?= 0
 COMMISSIONER        ?= 0
@@ -52,6 +51,7 @@ LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
+REFERENCE_DEVICE    ?= 0
 SERVICE             ?= 0
 SETTINGS_RAM        ?= 0
 # SLAAC is enabled by default
@@ -67,11 +67,6 @@ endif
 
 ifeq ($(BORDER_ROUTER),1)
 configure_OPTIONS              += --enable-border-router
-endif
-
-ifeq ($(CERT_LOG),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-configure_OPTIONS              += --enable-cert-log
 endif
 
 ifeq ($(COAP),1)
@@ -156,6 +151,12 @@ endif
 
 ifeq ($(PLATFORM_UDP),1)
 configure_OPTIONS              += --enable-platform-udp
+endif
+
+# Enable features only required for reference device during certification.
+ifeq ($(REFERENCE_DEVICE),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+COMMONCFLAGS                   += -DOPENTHREAD_ENABLE_REFERENCE_DEVICE=1
 endif
 
 ifeq ($(SERVICE),1)
