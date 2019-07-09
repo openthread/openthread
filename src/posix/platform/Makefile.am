@@ -32,8 +32,8 @@ lib_LIBRARIES                             = libopenthread-posix.a
 
 libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src                     \
     -I$(top_srcdir)/src/core                \
-    -I$(top_srcdir)/src/ncp                 \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
     $(OPENTHREAD_TARGET_DEFINES)            \
@@ -52,18 +52,6 @@ libopenthread_posix_a_SOURCES             = \
     system.c                                \
     uart.c                                  \
     $(NULL)
-
-INC_NCP_SOURCES                           = \
-    inc_spinel.c                            \
-    inc_hdlc.cpp                            \
-    $(NULL)
-
-nodist_libopenthread_posix_a_SOURCES      = \
-    $(INC_NCP_SOURCES)                      \
-    $(NULL)
-
-inc_%: ../../ncp/%
-	echo '#include "$<"' > $@
 
 if OPENTHREAD_ENABLE_PLATFORM_UDP
 libopenthread_posix_a_SOURCES            += \
