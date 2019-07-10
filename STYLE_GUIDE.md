@@ -33,7 +33,7 @@
 - Non-local Goto
   - There should be no calls to the functions `setjmp` or `longjmp`.
 - Local Goto
-  - There should be no calls to the C/C++ keyword goto.  Exception: The use of local gotos for the purposes of common error handling blocks and single points of function return at the bottom of a function.
+  - The use of C/C++ keyword goto should be avoided.  Exception: The use of local gotos for the purposes of common error handling blocks and single points of function return at the bottom of a function.
 - C Preprocessor
   - Use of the C preprocessor should be limited to file inclusion and simple macros.
   - Macros shall not be defined within a function or a block and should be defined at the top of a file.
