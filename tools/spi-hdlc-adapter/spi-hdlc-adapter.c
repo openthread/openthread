@@ -154,9 +154,10 @@ static int sIntGpioValueFd = -1;
 static int sHdlcInputFd  = -1;
 static int sHdlcOutputFd = -1;
 
-static int     sSpiSpeed   = 1000000; // in Hz (default: 1MHz)
-static uint8_t sSpiMode    = 0;
-static int     sSpiCsDelay = 20; // in microseconds
+static int     sSpiSpeed      = 1000000; // in Hz (default: 1MHz)
+static uint8_t sSpiMode       = 0;
+static int     sSpiCsDelay    = 20; // in microseconds
+static int     sSpiResetDelay = 0;  // in milliseconds
 
 static uint16_t sSpiRxPayloadSize;
 static uint8_t  sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
@@ -1410,6 +1411,7 @@ static void print_help(void)
                        "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
                        "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
                        "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
+                       "    --spi-reset-delay[=ms] ....... Specify the delay after R̅E̅S̅E̅T̅ assertion, in miliseconds\n"
                        "    --spi-align-allowance[=n] .... Specify the maximum number of 0xFF bytes to\n"
                        "                                   clip from start of MISO frame. Max value is 16.\n"
                        "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
@@ -1493,6 +1495,7 @@ int main(int argc, char *argv[])
         ARG_RAW                 = 1006,
         ARG_MTU                 = 1007,
         ARG_SPI_SMALL_PACKET    = 1008,
+        ARG_SPI_RESET_DELAY     = 1009,
     };
 
     static struct option options[] = {
@@ -1510,6 +1513,7 @@ int main(int argc, char *argv[])
         {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
         {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
         {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
+        {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
         {NULL, 0, NULL, 0},
     };
 
@@ -1636,6 +1640,18 @@ int main(int argc, char *argv[])
                     exit(EXIT_FAILURE);
                 }
                 syslog(LOG_NOTICE, "SPI CS Delay set to %d usec", sSpiCsDelay);
+                break;
+
+            case ARG_SPI_RESET_DELAY:
+                assert(optarg);
+
+                sSpiResetDelay = atoi(optarg);
+                if (sSpiResetDelay < 0)
+                {
+                    syslog(LOG_ERR, "Negative value (%d) for --spi-reset-delay is invalid.", sSpiResetDelay);
+                    exit(EXIT_FAILURE);
+                }
+                syslog(LOG_NOTICE, "SPI RESET Delay set to %d ms", sSpiResetDelay);
                 break;
 
             case ARG_RAW:
@@ -1809,6 +1825,8 @@ int main(int argc, char *argv[])
     }
 
     trigger_reset();
+
+    usleep(sSpiResetDelay * USEC_PER_MSEC);
 
     // ========================================================================
     // MAIN LOOP
