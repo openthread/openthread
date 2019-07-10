@@ -308,27 +308,6 @@ void otPlatSettingsDeinit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatSettingsBeginChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsCommitChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsAbandonChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
-}
-
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
