@@ -157,7 +157,7 @@ static int sHdlcOutputFd = -1;
 static int     sSpiSpeed      = 1000000; // in Hz (default: 1MHz)
 static uint8_t sSpiMode       = 0;
 static int     sSpiCsDelay    = 20; // in microseconds
-static int     sSpiResetDelay = 1;  // in milliseconds
+static int     sSpiResetDelay = 0;  // in milliseconds
 
 static uint16_t sSpiRxPayloadSize;
 static uint8_t  sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
