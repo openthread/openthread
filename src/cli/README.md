@@ -37,7 +37,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
-* [logfilename](#logfilename)
+* [logfilename](#logfilename-filename)
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
@@ -64,7 +64,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan)
+* [scan](#scan-channel)
 * [singleton](#singleton)
 * [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 * [state](#state)
@@ -684,7 +684,7 @@ Set the link quality on the link to a given extended address.
 Done
 ```
 
-### logfilename FILENAME
+### logfilename \<filename\>
 
 - Note: POSIX Platform Only, ie: `OPENTHREAD_EXAMPLES_POSIX`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
