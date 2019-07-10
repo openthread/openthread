@@ -143,7 +143,6 @@ otError EstClient::ProcessConnect(int argc, char *argv[])
     otError    mError;
     otSockAddr mServerAddress;
 
-    mServerAddress.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
     memset(&mServerAddress, 0, sizeof(mServerAddress));
 
     // Destination IPv6 address

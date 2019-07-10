@@ -40,11 +40,11 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #     cli.cpp includes:
 #            src/core/common/instance.hpp
 # Which Includes:
-#            src/core/therad/thread_netif.hpp
+#            src/core/thread/thread_netif.hpp
 # Which Includes:
 #            src/core/meshcop/dataset_manager.hpp
 # Which Includes:
-#            src/core/threadnetwork_data_leader.hpp
+#            src/core/thread/network_data_leader.hpp
 #
 # That header (and others) is either an MTD or FTD class flavor.
 #
