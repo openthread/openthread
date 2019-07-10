@@ -54,8 +54,7 @@ extern "C" {
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *
- * @param[in]  aInstance
- *             The OpenThread instance structure.
+ * @param[in]  aInstance The OpenThread instance structure.
  *
  */
 void otPlatSettingsInit(otInstance *aInstance);
@@ -86,30 +85,19 @@ void otPlatSettingsDeinit(otInstance *aInstance);
  *  values. The order of such values MAY change after ANY
  *  write operation to the store.
  *
- *  @param[in]     aInstance
- *                 The OpenThread instance structure.
- *  @param[in]     aKey
- *                 The key associated with the requested setting.
- *  @param[in]     aIndex
- *                 The index of the specific item to get.
- *  @param[out]    aValue
- *                 A pointer to where the value of the setting
- *                 should be written. May be set to NULL if just
- *                 testing for the presence or length of a setting.
- *  @param[inout]  aValueLength
- *                 A pointer to the length of the value. When
- *                 called, this pointer should point to an
- *                 integer containing the maximum value size that
- *                 can be written to aValue. At return, the actual
- *                 length of the setting is written. This may be
- *                 set to NULL if performing a presence check.
+ *  @param[in]     aInstance     The OpenThread instance structure.
+ *  @param[in]     aKey          The key associated with the requested setting.
+ *  @param[in]     aIndex        The index of the specific item to get.
+ *  @param[out]    aValue        A pointer to where the value of the setting should be written. May be set to NULL if
+ *                               just testing for the presence or length of a setting.
+ *  @param[inout]  aValueLength  A pointer to the length of the value. When called, this pointer should point to an
+ *                               integer containing the maximum value size that can be written to aValue. At return,
+ *                               the actual length of the setting is written. This may be set to NULL if performing
+ *                               a presence check.
  *
- *  @retval OT_ERROR_NONE
- *          The given setting was found and fetched successfully.
- *  @retval OT_ERROR_NOT_FOUND
- *          The given setting was not found in the setting store.
- *  @retval OT_ERROR_NOT_IMPLEMENTED
- *          This function is not implemented on this platform.
+ *  @retval OT_ERROR_NONE             The given setting was found and fetched successfully.
+ *  @retval OT_ERROR_NOT_FOUND        The given setting was not found in the setting store.
+ *  @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  */
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
 
@@ -122,24 +110,15 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
  *  Calling this function successfully may cause unrelated
  *  settings with multiple values to be reordered.
  *
- *  @param[in]  aInstance
- *              The OpenThread instance structure.
- *  @param[in]  aKey
- *              The key associated with the setting to change.
- *  @param[out] aValue
- *              A pointer to where the new value of the setting
- *              should be read from. MUST NOT be NULL if aValueLength
- *              is non-zero.
- *  @param[in]  aValueLength
- *              The length of the data pointed to by aValue.
- *              May be zero.
+ *  @param[in]  aInstance     The OpenThread instance structure.
+ *  @param[in]  aKey          The key associated with the setting to change.
+ *  @param[in]  aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL if
+ *                            aValueLength is non-zero.
+ *  @param[in]  aValueLength  The length of the data pointed to by aValue. May be zero.
  *
- *  @retval OT_ERROR_NONE
- *          The given setting was changed or staged.
- *  @retval OT_ERROR_NOT_IMPLEMENTED
- *          This function is not implemented on this platform.
- *  @retval OT_ERROR_NO_BUFS
- *          No space remaining to store the given setting.
+ *  @retval OT_ERROR_NONE             The given setting was changed or staged.
+ *  @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
+ *  @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
  */
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -157,24 +136,15 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
  *  Calling this function successfully may cause unrelated
  *  settings with multiple values to be reordered.
  *
- * @param[in]     aInstance
- *                The OpenThread instance structure.
- * @param[in]     aKey
- *                The key associated with the setting to change.
- * @param[out]    aValue
- *                A pointer to where the new value of the setting
- *                should be read from. MUST NOT be NULL if aValueLength
- *                is non-zero.
- * @param[inout]  aValueLength
- *                The length of the data pointed to by aValue.
- *                May be zero.
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aKey          The key associated with the setting to change.
+ * @param[in]  aValue        A pointer to where the new value of the setting should be read from. MUST NOT be NULL
+ *                           if aValueLength is non-zero.
+ * @param[in]  aValueLength  The length of the data pointed to by aValue. May be zero.
  *
- * @retval OT_ERROR_NONE
- *         The given setting was added or staged to be added.
- * @retval OT_ERROR_NOT_IMPLEMENTED
- *         This function is not implemented on this platform.
- * @retval OT_ERROR_NO_BUFS
- *         No space remaining to store the given setting.
+ * @retval OT_ERROR_NONE             The given setting was added or staged to be added.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
+ * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
  */
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
@@ -186,20 +156,13 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
  *  to maintain the order of the items associated with a
  *  specific key.
  *
- *  @param[in] aInstance
- *             The OpenThread instance structure.
- *  @param[in] aKey
- *             The key associated with the requested setting.
- *  @param[in] aIndex
- *             The index of the value to be removed. If set to
- *             -1, all values for this aKey will be removed.
+ *  @param[in] aInstance  The OpenThread instance structure.
+ *  @param[in] aKey       The key associated with the requested setting.
+ *  @param[in] aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
  *
- *  @retval OT_ERROR_NONE
- *          The given key and index was found and removed successfully.
- *  @retval OT_ERROR_NOT_FOUND
- *          The given key or index  was not found in the setting store.
- *  @retval OT_ERROR_NOT_IMPLEMENTED
- *          This function is not implemented on this platform.
+ *  @retval OT_ERROR_NONE             The given key and index was found and removed successfully.
+ *  @retval OT_ERROR_NOT_FOUND        The given key or index  was not found in the setting store.
+ *  @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  */
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
@@ -207,8 +170,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 /** This function deletes all settings from the settings
  *  store, resetting it to its initial factory state.
  *
- *  @param[in] aInstance
- *             The OpenThread instance structure.
+ *  @param[in] aInstance  The OpenThread instance structure.
  */
 void otPlatSettingsWipe(otInstance *aInstance);
 
