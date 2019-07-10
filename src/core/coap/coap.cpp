@@ -555,12 +555,21 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     case OT_COAP_TYPE_CONFIRMABLE:
         // Send empty ACK if it is a CON message.
         SendAck(aMessage, aMessageInfo);
-
-        // fall through
+        FinalizeCoapTransaction(*request, coapMetadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+        break;
 
     case OT_COAP_TYPE_NON_CONFIRMABLE:
         // Separate response.
-        FinalizeCoapTransaction(*request, coapMetadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+
+        if (coapMetadata.mDestinationAddress.IsMulticast() && coapMetadata.mResponseHandler != NULL)
+        {
+            // If multicast non-confirmable request, allow multiple responses
+            coapMetadata.mResponseHandler(coapMetadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+        }
+        else
+        {
+            FinalizeCoapTransaction(*request, coapMetadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+        }
 
         break;
     }
@@ -649,7 +658,7 @@ exit:
     {
         otLogInfoCoapErr(error, "Failed to process request");
 
-        if (error == OT_ERROR_NOT_FOUND)
+        if (error == OT_ERROR_NOT_FOUND && !aMessageInfo.GetSockAddr().IsMulticast())
         {
             SendNotFound(aMessage, aMessageInfo);
         }
