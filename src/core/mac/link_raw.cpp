@@ -59,7 +59,7 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mTransmitDoneCallback(NULL)
     , mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_RADIO
-    , mSubMac(aInstance, *this)
+    , mSubMac(aInstance)
 #elif OPENTHREAD_ENABLE_RAW_LINK_API
     , mSubMac(aInstance.Get<SubMac>())
 #endif

@@ -52,10 +52,6 @@ namespace Mac {
  *
  */
 class LinkRaw : public InstanceLocator
-#if OPENTHREAD_RADIO
-    ,
-                public SubMac::Callbacks
-#endif
 {
     friend class ot::Instance;
 

@@ -41,29 +41,30 @@
 namespace ot {
 namespace Mac {
 
+SubMac::Callbacks::Callbacks(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeReceiveDone(aFrame, aError);
+        Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif
     {
-        mac.HandleReceivedFrame(aFrame, aError);
+        Get<Mac>().HandleReceivedFrame(aFrame, aError);
     }
 }
 
 void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 {
-    static_cast<Mac *>(this)->RecordCcaStatus(aCcaSuccess, aChannel);
+    Get<Mac>().RecordCcaStatus(aCcaSuccess, aChannel);
 }
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
@@ -72,42 +73,34 @@ void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
                                                   uint8_t      aRetryCount,
                                                   bool         aWillRetx)
 {
-    static_cast<Mac *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<Mac>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeTransmitDone(aFrame, aAckFrame, aError);
+        Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
     }
     else
 #endif
     {
-        mac.HandleTransmitDone(aFrame, aAckFrame, aError);
+        Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
     }
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeEnergyScanDone(aMaxRssi);
+        Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
     }
     else
 #endif
     {
-        mac.EnergyScanDone(aMaxRssi);
+        Get<Mac>().EnergyScanDone(aMaxRssi);
     }
 }
 
@@ -120,13 +113,9 @@ void SubMac::Callbacks::FrameUpdated(Frame &aFrame)
      *
      */
 
-    Mac &mac = *static_cast<Mac *>(this);
-
     if (aFrame.GetSecurityEnabled())
     {
-        const ExtAddress &extAddress = mac.GetExtAddress();
-
-        mac.ProcessTransmitAesCcm(aFrame, &extAddress);
+        Get<Mac>().ProcessTransmitAesCcm(aFrame, &Get<Mac>().GetExtAddress());
     }
 }
 #endif
@@ -135,7 +124,7 @@ void SubMac::Callbacks::FrameUpdated(Frame &aFrame)
 
 void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
 {
-    static_cast<LinkRaw *>(this)->InvokeReceiveDone(aFrame, aError);
+    Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
 }
 
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t)
@@ -148,17 +137,17 @@ void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
                                                   uint8_t      aRetryCount,
                                                   bool         aWillRetx)
 {
-    static_cast<LinkRaw *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
 void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 {
-    static_cast<LinkRaw *>(this)->InvokeTransmitDone(aFrame, aAckFrame, aError);
+    Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-    static_cast<LinkRaw *>(this)->InvokeEnergyScanDone(aMaxRssi);
+    Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
 }
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
