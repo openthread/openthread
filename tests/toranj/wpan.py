@@ -792,7 +792,7 @@ class Node(object):
             sender.count)
         return receiver
 
-    def preapre_listener(self, local_port, timeout=1):
+    def prepare_listener(self, local_port, timeout=1):
         """Prepares a listener (an `AsyncReceiver`) listening on the given `local_port` for given `timeout` (sec)"""
         receiver = self._get_receiver(local_port)
         receiver._set_listen_timeout(timeout)
