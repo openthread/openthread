@@ -41,6 +41,7 @@
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "thread/mesh_forwarder.hpp"
+#include "thread/mle_tlvs.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -161,6 +162,45 @@ void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddres
 
 exit:
     return;
+}
+
+void IndirectSender::HandleChildModeChange(Child &aChild, uint8_t aOldMode)
+{
+    bool wasRxOnWhenIdle = ((aOldMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0);
+
+    if (!aChild.IsRxOnWhenIdle() && (aChild.GetState() == Neighbor::kStateValid))
+    {
+        SetChildUseShortAddress(aChild, true);
+    }
+
+    // On sleepy to non-sleepy mode change, convert indirect messages in
+    // the send queue destined to the child to direct.
+
+    if (!wasRxOnWhenIdle && aChild.IsRxOnWhenIdle() && (aChild.GetIndirectMessageCount() > 0))
+    {
+        uint8_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+
+        for (Message *message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
+        {
+            if (message->GetChildMask(childIndex))
+            {
+                message->ClearChildMask(childIndex);
+                message->SetDirectTransmission();
+            }
+        }
+
+        aChild.SetIndirectMessage(NULL);
+        mSourceMatchController.ResetMessageCount(aChild);
+
+        mDataPollHandler.RequestFrameChange(DataPollHandler::kPurgeFrame, aChild);
+    }
+
+    // Since the queuing delays for direct transmissions are expected to
+    // be relatively small especially when compared to indirect, for a
+    // non-sleepy to sleepy mode change, we allow any direct message
+    // (for the child) already in the send queue to remain as is. This
+    // is equivalent to dropping the already queued messages in this
+    // case.
 }
 
 Message *IndirectSender::FindIndirectMessage(Child &aChild)
