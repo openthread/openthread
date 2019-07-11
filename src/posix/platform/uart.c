@@ -71,21 +71,19 @@ otError otPlatUartEnable(void)
 
     if (sUartSocket == -1)
     {
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
 
     if (sUartLock == -1)
     {
-        perror("open");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("open", OT_EXIT_FAILURE);
     }
 
     if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
     {
-        perror("flock");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("flock", OT_EXIT_FAILURE);
     }
 
     memset(&sockname, 0, sizeof(struct sockaddr_un));
@@ -100,8 +98,7 @@ otError otPlatUartEnable(void)
 
     if (ret == -1)
     {
-        perror("bind");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("bind", OT_EXIT_FAILURE);
     }
 
     //
@@ -110,8 +107,7 @@ otError otPlatUartEnable(void)
     ret = listen(sUartSocket, 1);
     if (ret == -1)
     {
-        perror("listen");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("listen", OT_EXIT_FAILURE);
     }
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
@@ -219,8 +215,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
-        perror("socket error");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("socket", OT_EXIT_FAILURE);
     }
     else if (FD_ISSET(sUartSocket, aReadFdSet))
     {
@@ -249,14 +244,12 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 #else  // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(STDIN_FILENO, aErrorFdSet))
     {
-        perror("stdin");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("stdin", OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(STDOUT_FILENO, aErrorFdSet))
     {
-        perror("stdout");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("stdout", OT_EXIT_FAILURE);
     }
 
     fd = STDIN_FILENO;
@@ -274,16 +267,16 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         }
         else if (rval <= 0)
         {
+#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
             if (rval != 0)
             {
                 perror("read(UART)");
             }
-#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
             close(sSessionSocket);
             sSessionSocket = -1;
             otEXIT_NOW();
 #else
-            exit(OT_EXIT_FAILURE);
+            DieNowWithMessage("UART read", OT_EXIT_FAILURE);
 #endif
         }
     }
@@ -298,13 +291,13 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 
         if (rval < 0)
         {
-            perror("UART write");
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+            perror("UART write");
             close(sSessionSocket);
             sSessionSocket = -1;
             otEXIT_NOW();
 #else
-            exit(OT_EXIT_FAILURE);
+            DieNowWithMessage("UART write", OT_EXIT_FAILURE);
 #endif
         }
 

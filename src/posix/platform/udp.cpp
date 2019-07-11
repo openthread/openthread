@@ -388,7 +388,7 @@ void platformUdpInit(const char *aIfName)
 {
     if (aIfName == NULL)
     {
-        exit(OT_EXIT_INVALID_ARGUMENTS);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
     sPlatNetifIndex = if_nametoindex(aIfName);

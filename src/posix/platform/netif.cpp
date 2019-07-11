@@ -102,15 +102,8 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
                  error = OT_ERROR_FAILED);
 
 exit:
-    if (error == OT_ERROR_NONE)
-    {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogCritPlat("%s: %s", __func__, otThreadErrorToString(error));
-        exit(OT_EXIT_FAILURE);
-    }
+    SuccessOrDie(error);
+    otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
 }
 
 static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress, bool aIsAdded)
@@ -130,15 +123,8 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
         error = OT_ERROR_FAILED);
 
 exit:
-    if (error == OT_ERROR_NONE)
-    {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogCritPlat("%s: %s", __func__, otThreadErrorToString(error));
-        exit(OT_EXIT_FAILURE);
-    }
+    SuccessOrDie(error);
+    otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
 }
 
 static void UpdateLink(otInstance *aInstance)
@@ -454,7 +440,7 @@ exit:
             sNetlinkFd = -1;
         }
 
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 }
 
@@ -495,13 +481,13 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     if (FD_ISSET(sTunFd, aErrorFdSet))
     {
         close(sTunFd);
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(sNetlinkFd, aErrorFdSet))
     {
         close(sNetlinkFd);
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(sTunFd, aReadFdSet))

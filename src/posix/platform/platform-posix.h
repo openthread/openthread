@@ -35,12 +35,17 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #include "platform-config.h"
+#include "common/logging.hpp"
 
 /**
  * This is the socket name used by daemon mode.
@@ -101,6 +106,84 @@ enum
      */
     OT_EXIT_RADIO_SPINEL_RESET = 4,
 };
+
+/**
+ * This macro checks for the specified condition, which is expected to commonly be true,
+ * and both records exit status and terminates the program if the condition is false.
+ *
+ * @param[in]   aCondition  The condition to verify
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define VerifyOrDie(aCondition, aExitCode)                                                     \
+    do                                                                                         \
+    {                                                                                          \
+        if (!(aCondition))                                                                     \
+        {                                                                                      \
+            if (errno == 0)                                                                    \
+            {                                                                                  \
+                fprintf(stderr, "exit(%d): %s\r\n", aExitCode, __func__);                      \
+                otLogCritPlat("exit(%d): %s", aExitCode, __func__);                            \
+            }                                                                                  \
+            else                                                                               \
+            {                                                                                  \
+                fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, strerror(errno)); \
+                otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, strerror(errno));       \
+            }                                                                                  \
+            exit(aExitCode);                                                                   \
+        }                                                                                      \
+    } while (false)
+
+/**
+ * This macro checks for the specified error code, which is expected to commonly be successful,
+ * and both records exit status and terminates the program if the error code is unsuccessful.
+ *
+ * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
+ *
+ */
+#define SuccessOrDie(aError)                                                                            \
+    do                                                                                                  \
+    {                                                                                                   \
+        if (aError != OT_ERROR_NONE)                                                                    \
+        {                                                                                               \
+            uint8_t exitCode;                                                                           \
+            exitCode = (aError == OT_ERROR_INVALID_ARGS) ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE; \
+            fprintf(stderr, "exit(%d): %s: %s\r\n", exitCode, __func__, otThreadErrorToString(aError)); \
+            otLogCritPlat("exit(%d): %s: %s", exitCode, __func__, otThreadErrorToString(aError));       \
+            exit(exitCode);                                                                             \
+        }                                                                                               \
+    } while (false)
+
+/**
+ * This macro unconditionally both records exit status and terminates the program.
+ *
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNow(aExitCode) VerifyOrDie(false, aExitCode)
+
+/**
+ * This macro unconditionally both records exit status and exit message and terminates the program.
+ *
+ * @param[in]   aMessage    The exit message.
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNowWithMessage(aMessage, aExitCode)                                                           \
+    do                                                                                                   \
+    {                                                                                                    \
+        if (errno == 0)                                                                                  \
+        {                                                                                                \
+            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, aMessage);                      \
+            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, aMessage);                            \
+        }                                                                                                \
+        else                                                                                             \
+        {                                                                                                \
+            fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, strerror(errno)); \
+            otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, strerror(errno));       \
+        }                                                                                                \
+        exit(aExitCode);                                                                                 \
+    } while (false)
 
 /**
  * Unique node ID.
@@ -380,24 +463,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  */
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
-
-/**
- * This function ends the current process with exit code @p aExitCode if @p aCondition is false.
- *
- * @param[in]   aCondition  The condition to verify
- * @param[in]   aExitCode   The exit code if exits.
- *
- */
-void VerifyOrDie(bool aCondition, int aExitCode);
-
-/**
- * This function ends the current process if @p aError is not OT_ERROR_NONE.
- * The error code will be mapped from @p aError.
- *
- * @param[in]   aError  The OpenThread error code.
- *
- */
-void SuccessOrDie(otError aError);
 
 /**
  * This function creates a socket with SOCK_CLOEXEC flag set.
