@@ -30,12 +30,12 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: verifies `ChannelManager` channel change process
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
 
 def verify_channel(nodes, new_channel, wait_time=20):
@@ -45,15 +45,23 @@ def verify_channel(nodes, new_channel, wait_time=20):
     """
     start_time = time.time()
 
-    while not all([ (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0)) for node in nodes ]):
+    while not all(
+        [
+            (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0))
+            for node in nodes
+        ]
+    ):
         if time.time() - start_time > wait_time:
-            print 'Took too long to switch to channel {} ({}>{} sec)'.format(new_channel, time.time() - start_time,
-                                                                             wait_time)
+            print(
+                'Took too long to switch to channel {} ({}>{} sec)'.format(
+                    new_channel, time.time() - start_time, wait_time
+                )
+            )
             exit(1)
         time.sleep(0.1)
 
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -69,12 +77,12 @@ sc3 = wpan.Node()
 
 all_nodes = [r1, r2, r3, sc1, ec1, sc2, sc3]
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
 for node in all_nodes:
@@ -102,10 +110,11 @@ sc1.set(wpan.WPAN_POLL_INTERVAL, '500')
 sc2.set(wpan.WPAN_POLL_INTERVAL, '500')
 sc3.set(wpan.WPAN_POLL_INTERVAL, '500')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-# The channel manager delay is set from "openthread-core-toranj-config.h". Verify that it is 2 seconds.
+# The channel manager delay is set from "openthread-core-toranj-config.h".
+# Verify that it is 2 seconds.
 
 verify(int(r1.get(wpan.WPAN_CHANNEL_MANAGER_DELAY), 0) == 2)
 
@@ -133,16 +142,18 @@ verify_channel(all_nodes, 16)
 
 # Request different channels from two routers (r1 and r2)
 
-r1.set(wpan.WPAN_CHANNEL_MANAGER_DELAY, '20')          # increase the time to ensure r1 change is in process
+r1.set(
+    wpan.WPAN_CHANNEL_MANAGER_DELAY, '20'
+)  # increase the time to ensure r1 change is in process
 r1.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '17')
 time.sleep(10.5 / speedup)
 verify_channel(all_nodes, 16)
 r2.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '18')
 verify_channel(all_nodes, 18)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

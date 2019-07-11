@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,7 +39,6 @@ ROUTER1 = 2
 
 
 class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -63,9 +61,9 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):

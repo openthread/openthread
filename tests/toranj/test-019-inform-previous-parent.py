@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Test behavior of "Inform Previous Parent" feature
 #
 # With this feature enabled, when a child attaches to a new parent, it will send
@@ -59,10 +58,10 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -72,12 +71,12 @@ parent1 = wpan.Node()
 parent2 = wpan.Node()
 child = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 # `child` is first attached to `parent2`. It is then forced to switch to `parent1`.
@@ -95,10 +94,10 @@ parent2.whitelist_node(child)
 
 parent1.form("inform-parent")
 parent2.join_node(parent1, wpan.JOIN_TYPE_ROUTER)
-child.join_node(parent2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE);
+child.join_node(parent2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 child.set(wpan.WPAN_POLL_INTERVAL, '300')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 #
 
@@ -109,14 +108,20 @@ PARENT_SUPERVISION_INTERVAL = 1
 child_table = wpan.parse_list(parent2.get(wpan.WPAN_THREAD_CHILD_TABLE))
 verify(len(child_table) == 1)
 
-# Remove the `child` from whitelist of `parent2` and add it to whitelist of `parent1` instead.
+# Remove the `child` from whitelist of `parent2` and add it to whitelist
+# of `parent1` instead.
 parent1.whitelist_node(child)
 parent2.un_whitelist_node(child)
 
 # Enable supervision check on the `child` and also on `parent1`.
 
-child.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, str(CHILD_SUPERVISION_CHECK_TIMEOUT))
-parent1.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
+child.set(
+    wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+    str(CHILD_SUPERVISION_CHECK_TIMEOUT),
+)
+parent1.set(
+    wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL)
+)
 
 # Since child supervision is not enabled on `parent2` and the `child` is
 # removed from whitelist on `parent2`, after the supervision check timeout
@@ -130,12 +135,17 @@ parent1.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVA
 
 child_num_state_changes = len(wpan.parse_list(child.get("stat:ncp")))
 
+
 def check_child_is_reattached():
-    verify(len(wpan.parse_list(child.get("stat:ncp"))) > child_num_state_changes)
-    child_is_in_parent2_table = (len(wpan.parse_list(parent2.get(wpan.WPAN_THREAD_CHILD_TABLE)))==1)
+    verify(
+        len(wpan.parse_list(child.get("stat:ncp"))) > child_num_state_changes
+    )
     verify(child.is_associated())
 
-wpan.verify_within(check_child_is_reattached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup +  5)
+
+wpan.verify_within(
+    check_child_is_reattached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 5
+)
 
 # Verify that the `child` is now attached to `parent1`
 child_table = wpan.parse_list(parent1.get(wpan.WPAN_THREAD_CHILD_TABLE))
@@ -145,15 +155,17 @@ verify(len(child_table) == 1)
 # table (which indicates that the `child` did indeed inform its previous
 # parent).
 
+
 def check_child_is_removed_from_parent2_table():
     child_table = wpan.parse_list(parent2.get(wpan.WPAN_THREAD_CHILD_TABLE))
     verify(len(child_table) == 0)
 
+
 wpan.verify_within(check_child_is_removed_from_parent2_table, 1)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

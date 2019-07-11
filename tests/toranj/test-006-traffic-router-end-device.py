@@ -26,29 +26,29 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
-# Test description: Traffic between router and end-device (link-local and mesh-local IPv6 addresses)
+# -----------------------------------------------------------------------------------------------------------------------
+# Test description: Traffic between router and end-device (link-local and
+# mesh-local IPv6 addresses)
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 node1 = wpan.Node()
 node2 = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
 # Two-node network (node1 leader/router, node2 end-device)
@@ -61,7 +61,7 @@ verify(node2.get(wpan.WPAN_NAME) == node1.get(wpan.WPAN_NAME))
 verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
 verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # Get the link local addresses
@@ -77,7 +77,7 @@ MSG_LENS = [40, 100, 400, 800, 1000]
 PORT = 1234
 
 # all src and dst configuration (link-local and mesh-local)
-for src,dst in [ (ll1, ll2), (ll1, ml2), (ml1, ll2), (ml1, ml2) ]:
+for src, dst in [(ll1, ll2), (ll1, ml2), (ml1, ll2), (ml1, ml2)]:
 
     for msg_length in MSG_LENS:
         sender = node1.prepare_tx(src, dst, msg_length, NUM_MSGS)
@@ -92,7 +92,9 @@ for src,dst in [ (ll1, ll2), (ll1, ml2), (ml1, ll2), (ml1, ml2) ]:
 
     s1 = node1.prepare_tx((src, PORT), (dst, PORT), 'Hi there!', NUM_MSGS)
     r1 = node2.prepare_rx(s1)
-    s2 = node2.prepare_tx((dst, PORT), (src, PORT), 'Hello back to you!', NUM_MSGS)
+    s2 = node2.prepare_tx(
+        (dst, PORT), (src, PORT), 'Hello back to you!', NUM_MSGS
+    )
     r2 = node1.prepare_rx(s2)
 
     wpan.Node.perform_async_tx_rx()
@@ -100,9 +102,9 @@ for src,dst in [ (ll1, ll2), (ll1, ml2), (ml1, ll2), (ml1, ml2) ]:
     verify(s1.was_successful and r1.was_successful)
     verify(s2.was_successful and r2.was_successful)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

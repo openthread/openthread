@@ -35,10 +35,11 @@ import node
 LEADER = 1
 ROUTER = 2
 
+
 class Test_MacScan(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
-        for i in range(1,3):
+        for i in range(1, 3):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -56,9 +57,9 @@ class Test_MacScan(unittest.TestCase):
         self.nodes[ROUTER].set_network_name('OpenThread')
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -71,6 +72,7 @@ class Test_MacScan(unittest.TestCase):
 
         results = self.nodes[LEADER].scan()
         self.assertEqual(len(results), 16)
+
 
 if __name__ == '__main__':
     unittest.main()

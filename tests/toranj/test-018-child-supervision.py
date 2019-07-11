@@ -30,7 +30,7 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Child Supervision feature
 #
 # This test covers the behavior of Child Supervision feature.
@@ -50,10 +50,10 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 2
@@ -62,12 +62,12 @@ wpan.Node.set_time_speedup_factor(speedup)
 parent = wpan.Node()
 child = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
 CHILD_TIMEOUT = 6
@@ -80,7 +80,7 @@ child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(CHILD_TIMEOUT))
 parent.form("child-sup")
 child.join_node(parent, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # Disable child supervision on child and parent
@@ -94,7 +94,9 @@ verify(child.is_associated())
 verify(int(child.get(wpan.WPAN_THREAD_CHILD_TIMEOUT), 0) == CHILD_TIMEOUT)
 
 # Verify the child table on parent contains the child with correct timeout
-child_table = wpan.parse_child_table_result(parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
+child_table = wpan.parse_child_table_result(
+    parent.get(wpan.WPAN_THREAD_CHILD_TABLE)
+)
 verify(len(child_table) == 1)
 verify(int(child_table[0].timeout, 0) == CHILD_TIMEOUT)
 
@@ -108,36 +110,53 @@ verify(int(child_table[0].timeout, 0) == CHILD_TIMEOUT)
 
 parent.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '1')
 
+
 def check_child_is_removed_from_parent_child_table():
-	child_table = wpan.parse_child_table_result(parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
-	verify(len(child_table) == 0)
+    child_table = wpan.parse_child_table_result(
+        parent.get(wpan.WPAN_THREAD_CHILD_TABLE)
+    )
+    verify(len(child_table) == 0)
+
 
 # wait till child is removed from parent's child table
 # after this child should still be associated
-wpan.verify_within(check_child_is_removed_from_parent_child_table, CHILD_TIMEOUT / speedup + 2)
+wpan.verify_within(
+    check_child_is_removed_from_parent_child_table, CHILD_TIMEOUT / speedup + 2
+)
 verify(child.is_associated())
 
 # Enable supervision check on child and expect the child to
 # become detached after the check timeout
 
-child.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, str(CHILD_SUPERVISION_CHECK_TIMEOUT))
+child.set(
+    wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+    str(CHILD_SUPERVISION_CHECK_TIMEOUT),
+)
+
 
 def check_child_is_detached():
-	verify(not child.is_associated())
+    verify(not child.is_associated())
 
-wpan.verify_within(check_child_is_detached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 8)
 
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+wpan.verify_within(
+    check_child_is_detached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 8
+)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Enable child supervision on parent and disable white-listing
 
-parent.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
+parent.set(
+    wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL)
+)
 parent.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '0')
 
 # Wait for the child to attach back
 
+
 def check_child_is_attached():
-	verify(child.is_associated())
+    verify(child.is_associated())
+
 
 wpan.verify_within(check_child_is_attached, 5)
 
@@ -151,7 +170,10 @@ time.sleep(PARENT_SUPERVISION_INTERVAL * 1.2 / speedup)
 # messages to its child, MAC counter for number of unicast tx is
 # used. Note that supervision interval on parent is set to 1 sec.
 
-verify(int(parent.get("NCP:Counter:TX_PKT_UNICAST"), 0) >= parent_unicast_tx_count + 1)
+verify(
+    int(parent.get("NCP:Counter:TX_PKT_UNICAST"), 0)
+    >= parent_unicast_tx_count + 1
+)
 
 verify(child.is_associated())
 
@@ -161,9 +183,9 @@ parent.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, '0')
 time.sleep(CHILD_SUPERVISION_CHECK_TIMEOUT * 3 / speedup)
 verify(child.is_associated())
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

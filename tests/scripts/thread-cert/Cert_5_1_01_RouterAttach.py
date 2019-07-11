@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,7 +39,6 @@ ROUTER = 2
 
 
 class Cert_5_1_01_RouterAttach(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -60,9 +58,9 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -112,7 +110,9 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.Version)
 
         # 4 - Router
-        msg = router_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = router_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST
+        )
         msg.assertSentToNode(self.nodes[LEADER])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
@@ -124,7 +124,9 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
 
         # 5 - Leader
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[ROUTER])
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
@@ -159,7 +161,9 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         self.assertIn(mle.TlvType.LINK_MARGIN, tlv_request.tlvs)
 
         # 9 - Leader
-        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
+        msg = leader_messages.next_mle_message(
+            mle.CommandType.LINK_ACCEPT_AND_REQUEST
+        )
         msg.assertMleMessageContainsTlv(mle.SourceAddress)
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.Response)
@@ -180,6 +184,7 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         # 11 - Leader, Router1
         for addr in self.nodes[LEADER].get_addrs():
             self.assertTrue(self.nodes[ROUTER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

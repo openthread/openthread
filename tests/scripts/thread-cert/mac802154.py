@@ -32,12 +32,15 @@
 """
 
 import io
-import binascii
 import struct
 
 import config
 from common import MacAddress, MacAddressType, MessageInfo
-from net_crypto import AuxiliarySecurityHeader, CryptoEngine, MacCryptoMaterialCreator
+from net_crypto import (
+    AuxiliarySecurityHeader,
+    CryptoEngine,
+    MacCryptoMaterialCreator,
+)
 
 
 class DeviceDescriptors:
@@ -81,10 +84,22 @@ class MacHeader:
     class CommandIdentifier:
         DATA_REQUEST = 4
 
-    def __init__(self, frame_type, frame_pending, ack_request, frame_version, seq,
-                 dest_pan_id=None, dest_address=None, src_pan_id=None, src_address=None, command_type=None,
-                 aux_sec_header=None, mic=None,
-                 fcs=None):
+    def __init__(
+        self,
+        frame_type,
+        frame_pending,
+        ack_request,
+        frame_version,
+        seq,
+        dest_pan_id=None,
+        dest_address=None,
+        src_pan_id=None,
+        src_address=None,
+        command_type=None,
+        aux_sec_header=None,
+        mic=None,
+        fcs=None,
+    ):
 
         self.frame_type = frame_type
         self.frame_pending = frame_pending
@@ -117,11 +132,11 @@ class MacFrame:
     """Class representing 802.15.4 MAC frame."""
 
     IEEE802154_HEADER_IE_TYPE_MASK = 0x8000
-    IEEE802154_HEADER_IE_ID_MASK = 0x7f80
-    IEEE802154_HEADER_IE_LENGTH_MASK = 0x007f
+    IEEE802154_HEADER_IE_ID_MASK = 0x7F80
+    IEEE802154_HEADER_IE_LENGTH_MASK = 0x007F
 
-    IEEE802154_HEADER_IE_HT1 = 0x7e
-    IEEE802154_HEADER_IE_HT2 = 0x7f
+    IEEE802154_HEADER_IE_HT1 = 0x7E
+    IEEE802154_HEADER_IE_HT2 = 0x7F
 
     def parse(self, data):
         mhr_start = data.tell()
@@ -133,18 +148,26 @@ class MacFrame:
         frame_pending = bool(fc & 0x0010)
         ack_request = bool(fc & 0x0020)
         panid_compression = bool(fc & 0x0040)
-        dest_addr_mode = (fc & 0x0c00) >> 10
+        dest_addr_mode = (fc & 0x0C00) >> 10
         frame_version = (fc & 0x3000) >> 12
-        source_addr_mode = (fc & 0xc000) >> 14
+        source_addr_mode = (fc & 0xC000) >> 14
         ie_present = bool(fc & 0x0200)
 
         if frame_type == MacHeader.FrameType.ACK:
             fcs = self._parse_fcs(data, data.tell())
-            self.header = MacHeader(frame_type, frame_pending, ack_request, frame_version, seq, fcs=fcs)
+            self.header = MacHeader(
+                frame_type,
+                frame_pending,
+                ack_request,
+                frame_version,
+                seq,
+                fcs=fcs,
+            )
             self.payload = None
             return
 
-        # Presence of PAN Ids is not fully implemented yet but should be enough for Thread.
+        # Presence of PAN Ids is not fully implemented yet but should be enough
+        # for Thread.
         dest_pan_id = struct.unpack("<H", data.read(2))[0]
 
         dest_address = self._parse_address(data, dest_addr_mode)
@@ -154,7 +177,7 @@ class MacFrame:
             if frame_version < 2:
                 break
             if frame_version == 3:
-                assert(false)
+                assert False
             if dest_addr_mode == 0:
                 break
             if dest_addr_mode == 2:
@@ -182,12 +205,19 @@ class MacFrame:
         header_ie_start = data.tell()
         while ie_present:
             header_ie = struct.unpack("<H", data.read(2))[0]
-            header_ie_id = ((header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK) >> 7)
-            header_ie_length = (header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK)
+            header_ie_id = (
+                header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK
+            ) >> 7
+            header_ie_length = (
+                header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK
+            )
             if header_ie_length:
                 data.read(header_ie_length)
 
-            if header_ie_id in [MacFrame.IEEE802154_HEADER_IE_HT1, MacFrame.IEEE802154_HEADER_IE_HT2]:
+            if header_ie_id in [
+                MacFrame.IEEE802154_HEADER_IE_HT1,
+                MacFrame.IEEE802154_HEADER_IE_HT2,
+            ]:
                 break
         header_ie_end = data.tell()
 
@@ -203,7 +233,9 @@ class MacFrame:
         fcs_start = data.tell()
 
         if aux_sec_header and aux_sec_header.security_level:
-            mic, payload_end = self._parse_mic(data, aux_sec_header.security_level)
+            mic, payload_end = self._parse_mic(
+                data, aux_sec_header.security_level
+            )
         else:
             payload_end = data.tell()
             mic = None
@@ -211,10 +243,21 @@ class MacFrame:
         fcs = self._parse_fcs(data, fcs_start)
 
         # Create Header object
-        self.header = MacHeader(frame_type, frame_pending, ack_request, frame_version, seq,
-                                dest_pan_id, dest_address, src_pan_id, src_address, command_type,
-                                aux_sec_header, mic,
-                                fcs)
+        self.header = MacHeader(
+            frame_type,
+            frame_pending,
+            ack_request,
+            frame_version,
+            seq,
+            dest_pan_id,
+            dest_address,
+            src_pan_id,
+            src_address,
+            command_type,
+            aux_sec_header,
+            mic,
+            fcs,
+        )
 
         # Create Payload object
         payload_len = payload_end - payload_pos
@@ -234,7 +277,9 @@ class MacFrame:
 
             if ie_present:
                 data.seek(header_ie_start)
-                non_payload_fields += data.read(header_ie_end - header_ie_start)
+                non_payload_fields += data.read(
+                    header_ie_end - header_ie_start
+                )
             if command_type is not None:
                 non_payload_fields.append(command_type)
 
@@ -244,22 +289,31 @@ class MacFrame:
             message_info.nonpayload_fields = non_payload_fields
             message_info.mhr_bytes = mhr_bytes
             if src_address.type == MacAddressType.SHORT:
-                message_info.source_mac_address = DeviceDescriptors.get_extended(src_address).mac_address
+                message_info.source_mac_address = DeviceDescriptors.get_extended(
+                    src_address).mac_address
             else:
                 message_info.source_mac_address = src_address.mac_address
 
-            sec_obj = CryptoEngine(MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY))
-            self.payload = MacPayload(sec_obj.decrypt(payload, mic, message_info))
+            sec_obj = CryptoEngine(
+                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY)
+            )
+            self.payload = MacPayload(
+                sec_obj.decrypt(payload, mic, message_info)
+            )
 
         else:
             self.payload = MacPayload(payload)
 
     def _parse_address(self, data, mode):
         if mode == MacHeader.AddressMode.SHORT:
-            return MacAddress(data.read(2), MacAddressType.SHORT, big_endian=False)
+            return MacAddress(
+                data.read(2), MacAddressType.SHORT, big_endian=False
+            )
 
         if mode == MacHeader.AddressMode.EXTENDED:
-            return MacAddress(data.read(8), MacAddressType.LONG, big_endian=False)
+            return MacAddress(
+                data.read(8), MacAddressType.LONG, big_endian=False
+            )
 
         else:
             return None
@@ -277,10 +331,15 @@ class MacFrame:
         elif key_id_mode == 2:
             key_id = data.read(5)
         else:
-            key_source = None
-            key_index = None
+            pass
 
-        return AuxiliarySecurityHeader(key_id_mode, security_level, frame_counter, key_id, big_endian=False)
+        return AuxiliarySecurityHeader(
+            key_id_mode,
+            security_level,
+            frame_counter,
+            key_id,
+            big_endian=False,
+        )
 
     def _parse_mic(self, data, security_level):
         if security_level in (1, 5):

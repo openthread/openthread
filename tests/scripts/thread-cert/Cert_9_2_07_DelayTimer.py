@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -47,12 +46,13 @@ ROUTER_PENDING_ACTIVE_TIMESTAMP = 25
 COMMISSIONER_PENDING_CHANNEL = 20
 COMMISSIONER_PENDING_PANID = 0xafce
 
+
 class Cert_9_2_7_DelayTimer(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP)
@@ -70,7 +70,9 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.nodes[LEADER].set_router_selection_jitter(1)
 
         self.nodes[ROUTER].set_active_dataset(ROUTER_ACTIVE_TIMESTAMP)
-        self.nodes[ROUTER].set_pending_dataset(ROUTER_PENDING_TIMESTAMP, ROUTER_PENDING_ACTIVE_TIMESTAMP)
+        self.nodes[ROUTER].set_pending_dataset(
+            ROUTER_PENDING_TIMESTAMP, ROUTER_PENDING_ACTIVE_TIMESTAMP
+        )
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].set_panid(PANID_INIT)
         self.nodes[ROUTER].set_partition_id(0x1)
@@ -78,9 +80,9 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -112,25 +114,41 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=40,
-                                                       active_timestamp=80,
-                                                       delay_timer=10000,
-                                                       channel=COMMISSIONER_PENDING_CHANNEL,
-                                                       panid=COMMISSIONER_PENDING_PANID)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=40,
+            active_timestamp=80,
+            delay_timer=10000,
+            channel=COMMISSIONER_PENDING_CHANNEL,
+            panid=COMMISSIONER_PENDING_PANID,
+        )
         self.simulator.go(40)
-        self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
-        self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(
+            self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID
+        )
+        self.assertEqual(
+            self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID
+        )
+        self.assertEqual(
+            self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID
+        )
 
-        self.assertEqual(self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[COMMISSIONER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
-        self.assertEqual(self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(
+            self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL
+        )
+        self.assertEqual(
+            self.nodes[COMMISSIONER].get_channel(),
+            COMMISSIONER_PENDING_CHANNEL,
+        )
+        self.assertEqual(
+            self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL
+        )
 
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

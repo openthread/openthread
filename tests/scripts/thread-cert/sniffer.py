@@ -46,7 +46,9 @@ import sniffer_transport
 
 class Sniffer:
 
-    """ Class representing the Sniffing node, whose main task is listening and logging message exchange performed by other nodes. """
+    """ Class representing the Sniffing node, whose main task is listening
+        and logging message exchange performed by other nodes.
+    """
 
     logger = logging.getLogger("sniffer.Sniffer")
 
@@ -125,7 +127,8 @@ class Sniffer:
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
 
-        Note! This method flushes the message queue so calling this method again will return only the newly logged messages.
+        Note! This method flushes the message queue so calling this
+        method again will return only the newly logged messages.
 
         Args:
             nodeid (int): node id

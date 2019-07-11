@@ -34,11 +34,8 @@ import unittest
 
 import common
 import config
-import net_crypto
 import mle
 import network_data
-
-from ipaddress import ip_address
 
 
 def any_address():
@@ -59,6 +56,7 @@ def any_device_type():
 
 def any_network_data():
     return random.getrandbits(1)
+
 
 mode_map = {
     0x00: {"receiver": 0, "secure": 0, "device_type": 0, "network_data": 0},
@@ -118,10 +116,6 @@ def any_route():
     return random.getrandbits(4)
 
 
-def any_id_sequence():
-    return random.getrandbits(1)
-
-
 def any_router_id_mask():
     return random.getrandbits(64)
 
@@ -149,6 +143,7 @@ def any_stable_data_version():
 
 def any_leader_router_id():
     return random.getrandbits(8)
+
 
 scan_mask_map = {
     0x00: {"router": 0, "end_device": 0},
@@ -1188,8 +1183,8 @@ class TestConnectivityFactory(unittest.TestCase):
         leader_cost = any_leader_cost()
         id_sequence = any_id_sequence()
         active_routers = any_active_routers()
-        sed_buffer_size = any_sed_buffer_size()
-        sed_datagram_count = any_sed_datagram_count()
+        any_sed_buffer_size()
+        any_sed_datagram_count()
 
         factory = mle.ConnectivityFactory()
 

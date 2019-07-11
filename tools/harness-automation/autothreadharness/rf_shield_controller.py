@@ -39,7 +39,6 @@ logger = logging.getLogger(__name__)
 
 
 class RfShieldController(ABC):
-
     @abc.abstractmethod
     def shield(self):
         pass
@@ -58,7 +57,6 @@ class RfShieldController(ABC):
 
 
 class RfSwitchController(RfShieldController):
-
     def __init__(self, channel, port):
         self._channel = channel
         self._port = port
@@ -92,12 +90,12 @@ class RfSwitchController(RfShieldController):
             self._conn = None
 
 
-CONTROLLERS = {
-    'RF_SWITCH': RfSwitchController,
-}
+CONTROLLERS = {'RF_SWITCH': RfSwitchController}
 
 
 def get_rf_shield_controller(shield_type, params):
     if shield_type in CONTROLLERS:
         return CONTROLLERS[shield_type](**params)
-    logger.exception('Unknown RF shield controller type: {}'.format(shield_type))
+    logger.exception(
+        'Unknown RF shield controller type: {}'.format(shield_type)
+    )

@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Parent restoring children after reset
 #
 # This test covers the following:
@@ -43,10 +42,10 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 2
@@ -69,12 +68,12 @@ for num in range(NUM_RX_ON_CHILDREN):
 
 all_children = sleepy_children + rx_on_children
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 
@@ -87,7 +86,7 @@ for child in sleepy_children:
 for child in rx_on_children:
     child.join_node(parent, wpan.JOIN_TYPE_END_DEVICE)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # The test verifies that all children are recovered after the parent is reset.
@@ -126,10 +125,12 @@ for child in rx_on_children:
 #    ]
 #
 
+
 def check_child_table():
     # Checks the child table includes the expected number of children.
     child_table = wpan.parse_list(parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
     verify(len(child_table) == NUM_CHILDREN)
+
 
 # Verify that all children are present in the child table
 check_child_table()
@@ -142,21 +143,28 @@ for child in all_children:
 # Reset the parent
 parent.reset()
 
+
 def check_parent_is_associated():
     verify(parent.is_associated())
 
+
 wpan.verify_within(check_parent_is_associated, 5)
 
-# Verify that all the children are recovered and present in the parent's child table again (within 5 seconds).
+# Verify that all the children are recovered and present in the parent's
+# child table again (within 5 seconds).
 wpan.verify_within(check_child_table, 9)
 
-# Verify that number of state changes on all children stays as before (indicating they did not get detached).
+# Verify that number of state changes on all children stays as before
+# (indicating they did not get detached).
 for i in range(len(all_children)):
-    verify(child_num_state_changes[i] == len(wpan.parse_list(all_children[i].get("stat:ncp"))))
+    verify(
+        child_num_state_changes[i]
+        == len(wpan.parse_list(all_children[i].get("stat:ncp")))
+    )
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

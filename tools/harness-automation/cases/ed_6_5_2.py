@@ -28,16 +28,16 @@
 #
 
 
-import time
 import unittest
-import re
 
 from autothreadharness.harness_case import HarnessCase
+
 
 class ED_6_5_2(HarnessCase):
     role = HarnessCase.ROLE_ED
     case = '6 5 2'
     golden_devices_required = 2
+
     def on_dialog(self, dialog, title):
         if title.startswith('Reset DUT'):
             self.dut.stop()
@@ -46,7 +46,7 @@ class ED_6_5_2(HarnessCase):
         elif title.startswith('Rejoin Now'):
             self.dut.start()
             return False
-            
+
 
 if __name__ == '__main__':
     unittest.main()
