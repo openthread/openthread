@@ -186,6 +186,15 @@ public:
      */
     void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
 
+    /**
+     * This method handles a child mode change and updates any queued messages for the child accordingly.
+     *
+     * @param[in]  aChild    The child whose device mode was changed.
+     * @param[in]  aOldMode  The old device mode of the child.
+     *
+     */
+    void HandleChildModeChange(Child &aChild, uint8_t aOldMode);
+
 private:
     enum
     {

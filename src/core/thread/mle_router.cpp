@@ -2225,6 +2225,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     LeaderDataTlv   leaderData;
     TimeoutTlv      timeout;
     Child *         child;
+    uint8_t         oldMode;
     TlvRequestTlv   tlvRequest;
     uint8_t         tlvs[kMaxResponseTlvs];
     uint8_t         tlvslength                = 0;
@@ -2257,23 +2258,8 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         ExitNow();
     }
 
-    if (child->GetDeviceMode() != mode.GetMode())
-    {
-        otLogNoteMle("Child 0x%04x mode change 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ftd:%s, full-netdata:%s]",
-                     child->GetRloc16(), child->GetDeviceMode(), mode.GetMode(),
-                     (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) ? "yes" : " no",
-                     (mode.GetMode() & ModeTlv::kModeSecureDataRequest) ? "yes" : " no",
-                     (mode.GetMode() & ModeTlv::kModeFullThreadDevice) ? "yes" : "no",
-                     (mode.GetMode() & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
-
-        child->SetDeviceMode(mode.GetMode());
-        childDidChange = true;
-
-        if (!(mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) && (child->GetState() == Neighbor::kStateValid))
-        {
-            Get<IndirectSender>().SetChildUseShortAddress(*child, true);
-        }
-    }
+    oldMode = child->GetDeviceMode();
+    child->SetDeviceMode(mode.GetMode());
 
     tlvs[tlvslength++] = Tlv::kMode;
 
@@ -2336,6 +2322,25 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     }
 
     child->SetLastHeard(TimerMilli::GetNow());
+
+    if (oldMode != child->GetDeviceMode())
+    {
+        otLogNoteMle("Child 0x%04x mode change 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ftd:%s, full-netdata:%s]",
+                     child->GetRloc16(), oldMode, mode.GetMode(),
+                     (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) ? "yes" : "no",
+                     (mode.GetMode() & ModeTlv::kModeSecureDataRequest) ? "yes" : "no",
+                     (mode.GetMode() & ModeTlv::kModeFullThreadDevice) ? "yes" : "no",
+                     (mode.GetMode() & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
+
+        childDidChange = true;
+
+        // The `IndirectSender::HandleChildModeChange()` needs to happen
+        // after "Child Update" message is fully parsed to ensure that
+        // any registered IPv6 addresses included in the "Child Update"
+        // are added to the child.
+
+        Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
+    }
 
     if (child->IsStateRestoring())
     {
