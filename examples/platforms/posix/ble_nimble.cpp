@@ -43,10 +43,10 @@ extern "C" {
 #include <unistd.h>
 
 #include "platform-config.h"
+#include "platform-posix.h"
 
 #include <common/logging.hpp>
 #include <openthread/platform/ble.h>
-#include <openthread/platform/ble_hci.h>
 
 #include "ble_event.h"
 
@@ -315,7 +315,7 @@ static otError nimble_start(void)
         }
         else
         {
-            ble_hci_sock_set_device(otPlatBleHciGetDeviceId(NULL));
+            ble_hci_sock_set_device(platformBleHciGetDeviceId());
             ble_hci_sock_init();
             nimble_port_init();
             ble_svc_user_init();
@@ -1244,20 +1244,16 @@ otError otPlatBleL2capSduSend(otInstance *aInstance, uint16_t aLocalCid, uint16_
 
 extern uint32_t gNodeId;
 
-int otPlatBleHciGetDeviceId(otInstance *aInstance)
+int platformBleHciGetDeviceId(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     return gNodeId;
 }
 
-void otPlatBleHciSetDeviceId(otInstance *aInstance, int aDeviceId)
+void platformBleHciSetDeviceId(int aDeviceId)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     if (aDeviceId >= 0)
     {
-        otLogDebgBle("otPlatBleHciSetDeviceId: %d", aDeviceId);
+        otLogDebgBle("%s: %d", __func__, aDeviceId);
 
         gNodeId = aDeviceId;
 

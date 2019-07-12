@@ -11,9 +11,7 @@ In order to prepar the Bluez third_party repo, execute the following commands:
 ```
 # Clone bluez, install dependencies, manually configure
 sudo apt-get install automake libtool libglib2.0-dev libdbus-1-dev elfutils libudev-dev libical-dev libreadline-dev libusb-dev
-git submodule init
-git submodule update
-cd third_party/bluez/repo
+
 ./bootstrap
 ./configure
 # Note, on Ubuntu 14.04, you may need to configure as follows:
@@ -40,22 +38,4 @@ or
 
 ```./bootstrap
 BLE=1 BLE_HOST=nimble make -f examples/Makefile-posix
-```
-
-## Applications ##
-
-### lebeacon ###
-
-This app will send basic beacons that will be visible by a BLE scanner.
-
-```
-./examples/apps/ble/hci/lebeacon <hci#>
-```
-
-### lescan ###
-
-This app will scan for advertisements and display observed source device address.
-
-```
-./examples/apps/ble/hci/lescan <hci#>
 ```

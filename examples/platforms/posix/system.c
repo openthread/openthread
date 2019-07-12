@@ -50,7 +50,6 @@
 
 #if OPENTHREAD_ENABLE_BLE
 #include <openthread/platform/ble.h>
-#include <openthread/platform/ble_hci.h>
 #endif
 
 uint32_t gNodeId = 1;

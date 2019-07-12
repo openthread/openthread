@@ -136,12 +136,6 @@ uint64_t platformAlarmGetNow(void);
 void platformAlarmAdvanceNow(uint64_t aDelta);
 
 /**
- * This function initializes the Bluetooth service used by OpenThread.
- *
- */
-void platformBleInit(void);
-
-/**
  * This function initializes the radio service used by OpenThread.
  *
  */
@@ -210,6 +204,18 @@ void platformUartProcess(void);
 void platformUartRestore(void);
 
 /**
+ * This function initializes the Bluetooth service used by OpenThread.
+ *
+ */
+void platformBleInit(void);
+
+/**
+ * This function performs ble driver processing.
+ *
+ */
+void platformBleProcess(otInstance *aInstance);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the BLE driver.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
@@ -220,10 +226,18 @@ void platformUartRestore(void);
 void platformBleUpdateFdSet(fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function performs ble driver processing.
+ * Returns the HCI interface id for an OpenThread instance.
  *
+ * @retval   DeviceId for given OpenThread instance.
  */
-void platformBleProcess(otInstance *aInstance);
+int platformBleHciGetDeviceId(void);
+
+/**
+ * Sets the HCI interface id for an OpenThread instance.
+ *
+ * @param[in] aDevice    The interface identifier for the given OpenThread instance.
+ */
+void platformBleHciSetDeviceId(int aDeviceId);
 
 /**
  * This function sends a simulation event.
