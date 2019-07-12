@@ -64,7 +64,7 @@
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include "utils/channel_manager.hpp"
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -351,7 +351,7 @@ private:
     Utils::ChannelMonitor mChannelMonitor;
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     Utils::ChannelManager mChannelManager;
 #endif
 
@@ -650,7 +650,7 @@ template <> inline Utils::ChannelMonitor &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 template <> inline Utils::ChannelManager &Instance::Get(void)
 {
     return mChannelManager;

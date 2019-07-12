@@ -222,6 +222,14 @@
 #define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT  1
 
 /**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
+ *
+ * Define as 1 to enable Channel Manager support.
+ *
+ */
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE                1
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
  *
  * The minimum delay in seconds used by Channel Manager module for performing a channel change.
@@ -229,7 +237,7 @@
  * The minimum delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within
  * the Thread network.
  *
- * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
  *
  */
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY         2
@@ -245,7 +253,7 @@
  * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
  * a threshold). Value 0 maps to 0% and 0xffff maps to 100%.
  *
- * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
  *
  */
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED (0xffff * 7 / 100)
@@ -260,7 +268,7 @@
  * percentage of RSSI samples (within a time window) indicating that channel was busy (i.e., RSSI value higher than
  * a threshold). Value 0 maps to 0% rate and 0xffff maps to 100%.
  *
- * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_ENABLE_CHANNEL_MANAGER` is set).
+ * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
  *
  */
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)

@@ -68,7 +68,7 @@
 
 #include "cli_dataset.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include <openthread/channel_manager.h>
 #endif
 
@@ -496,7 +496,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
         }
     }
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else if (strcmp(argv[0], "manager") == 0)
     {
         if (argc == 1)

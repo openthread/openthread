@@ -46,6 +46,7 @@
 
 #include "config/announce_sender.h"
 #include "config/border_router.h"
+#include "config/channel_manager.h"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER

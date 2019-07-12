@@ -80,7 +80,7 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
     , mChannelMonitor(*this)
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     , mChannelManager(*this)
 #endif
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE

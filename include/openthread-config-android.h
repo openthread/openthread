@@ -33,7 +33,7 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /* Define to 1 if you want to enable channel manager feature */
-#define OPENTHREAD_ENABLE_CHANNEL_MANAGER 0
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 0
 
 /* Define to 1 if you want to use channel monitor feature */
 #define OPENTHREAD_ENABLE_CHANNEL_MONITOR 0
