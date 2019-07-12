@@ -30,11 +30,14 @@
 #include "platform-posix.h"
 
 #include <assert.h>
+#include <fcntl.h>
 #include <setjmp.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <openthread/platform/misc.h>
 
+#include "code_utils.h"
 #include "openthread-system.h"
 #include "common/logging.hpp"
 
@@ -122,4 +125,28 @@ void VerifyOrDie(bool aCondition, int aExitCode)
     {
         exit(aExitCode);
     }
+}
+
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol)
+{
+    int rval = 0;
+    int fd   = -1;
+
+#ifdef __APPLE__
+    otEXPECT_ACTION((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+
+    otEXPECT_ACTION((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
+    otEXPECT_ACTION((rval = fcntl(fd, F_SETFD, rval | FD_CLOEXEC)) != -1, perror("fcntl(F_SETFD)"));
+#else
+    otEXPECT_ACTION((fd = socket(aDomain, aType | SOCK_CLOEXEC, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+#endif
+
+exit:
+    if (rval == -1 && fd != -1)
+    {
+        VerifyOrDie(close(fd) == 0, OT_EXIT_FAILURE);
+        fd = -1;
+    }
+
+    return fd;
 }

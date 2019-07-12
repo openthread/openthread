@@ -386,8 +386,8 @@ void platformNetifInit(otInstance *aInstance)
 {
     struct ifreq ifr;
 
-    sIpFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-    VerifyOrExit(sIpFd > 0);
+    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    VerifyOrExit(sIpFd >= 0);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
     VerifyOrExit(sNetlinkFd > 0);
@@ -403,7 +403,7 @@ void platformNetifInit(otInstance *aInstance)
         VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0);
     }
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR);
+    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC);
     VerifyOrExit(sTunFd > 0, otLogCritPlat("Unable to open tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
 
     memset(&ifr, 0, sizeof(ifr));

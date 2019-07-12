@@ -60,17 +60,6 @@ static bool           sEnabled     = false;
 static const uint8_t *sWriteBuffer = NULL;
 static uint16_t       sWriteLength = 0;
 
-#if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-static void set_flag_cloexec(int a_fd)
-{
-    int ret = fcntl(a_fd, F_GETFD, 0);
-    VerifyOrDie(ret != -1, OT_EXIT_FAILURE);
-    ret |= FD_CLOEXEC;
-    ret = fcntl(a_fd, F_SETFD, ret);
-    VerifyOrDie(ret != -1, OT_EXIT_FAILURE);
-}
-#endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-
 otError otPlatUartEnable(void)
 {
     otError error = OT_ERROR_NONE;
@@ -78,25 +67,20 @@ otError otPlatUartEnable(void)
     struct sockaddr_un sockname;
     int                ret;
 
-    sUartSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0);
 
     if (sUartSocket == -1)
     {
-        perror("socket");
         exit(OT_EXIT_FAILURE);
     }
 
-    set_flag_cloexec(sUartSocket);
-
-    sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY, 0600);
+    sUartLock = open(OPENTHREAD_POSIX_APP_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
 
     if (sUartLock == -1)
     {
         perror("open");
         exit(OT_EXIT_FAILURE);
     }
-
-    set_flag_cloexec(sUartLock);
 
     if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
     {
@@ -290,7 +274,10 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         }
         else if (rval <= 0)
         {
-            perror("UART read");
+            if (rval != 0)
+            {
+                perror("read(UART)");
+            }
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
             close(sSessionSocket);
             sSessionSocket = -1;

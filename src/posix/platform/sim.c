@@ -84,7 +84,7 @@ void otSimInit(void)
     sockaddr.sin_port        = htons(kBasePort + sPortOffset + sNodeId);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sSockFd = SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sSockFd == -1)
     {
