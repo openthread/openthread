@@ -38,7 +38,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- * The emsk platform provides an otPlatLog() function.
+ * The kw41z platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
