@@ -38,7 +38,7 @@
 #include "common/logging.hpp"
 #include "common/random.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -235,4 +235,4 @@ Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask,
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

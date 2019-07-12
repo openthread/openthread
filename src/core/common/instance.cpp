@@ -77,7 +77,7 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     , mChannelMonitor(*this)
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE

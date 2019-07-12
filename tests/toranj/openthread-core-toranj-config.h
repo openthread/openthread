@@ -230,6 +230,14 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE                1
 
 /**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+ *
+ * Define as 1 to enable Channel Monitor support.
+ *
+ */
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE                1
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
  *
  * The minimum delay in seconds used by Channel Manager module for performing a channel change.
