@@ -30,7 +30,7 @@
  *   This file implements minimal thread device required Spinel interface to the OpenThread stack.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include "ncp_base.hpp"
 
