@@ -605,7 +605,7 @@ template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Server;

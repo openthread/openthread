@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,31 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for OpenThread.
+ *   This file includes compile-time configurations for DHCPv6 Server.
+ *
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef CONFIG_DHCP6_SERVER_H_
+#define CONFIG_DHCP6_SERVER_H_
 
-#include <openthread/config.h>
-
-#define OPENTHREAD_CORE_CONFIG_H_IN
-
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+/**
+ * @def OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+ *
+ * Define to 1 to enable DHCPv6 Server support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE 0
 #endif
 
-#include "config/openthread-core-default-config.h"
-
-#include "config/announce_sender.h"
-#include "config/border_router.h"
-#include "config/channel_manager.h"
-#include "config/channel_monitor.h"
-#include "config/child_supervision.h"
-#include "config/coap.h"
-#include "config/commissioner.h"
-#include "config/dhcp6_client.h"
-#include "config/dhcp6_server.h"
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-    OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_ENABLE_JOINER
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
+/**
+ * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
+ *
+ * The number of dhcp prefixes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES
+#define OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES 4
 #endif
 
-#undef OPENTHREAD_CORE_CONFIG_H_IN
-
-#include "config/openthread-core-config-check.h"
-
-#ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
-#include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
-#endif
-
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif // CONFIG_DHCP6_SERVER_H_
