@@ -42,11 +42,11 @@
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
 
-#include "openthread-core-default-config.h"
+#include "config/openthread-core-default-config.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 
-#include "openthread-core-config-check.h"
+#include "config/openthread-core-config-check.h"
 
 #ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
 #include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
