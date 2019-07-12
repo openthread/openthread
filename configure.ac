@@ -1144,36 +1144,6 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
-# DHCPv6 Client
-#
-
-AC_ARG_ENABLE(dhcp6_client,
-    [AS_HELP_STRING([--enable-dhcp6-client],[Enable DHCPv6 client support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_dhcp6_client=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_dhcp6_client} for --enable-dhcp6-client])
-            ;;
-        esac
-    ],
-    [enable_dhcp6_client=no])
-
-if test "$enable_dhcp6_client" = "yes"; then
-    OPENTHREAD_ENABLE_DHCP6_CLIENT=1
-else
-    OPENTHREAD_ENABLE_DHCP6_CLIENT=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_DHCP6_CLIENT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_CLIENT], [test "${enable_dhcp6_client}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_CLIENT],[${OPENTHREAD_ENABLE_DHCP6_CLIENT}],[Define to 1 if you want to enable DHCPv6 Client])
-
-#
 # DHCPv6 Server
 #
 
@@ -1788,7 +1758,6 @@ AC_MSG_NOTICE([
   OpenThread Factory Diagnostics support    : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
-  OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}

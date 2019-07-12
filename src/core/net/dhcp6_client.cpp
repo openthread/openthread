@@ -43,7 +43,7 @@
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -593,4 +593,4 @@ exit:
 } // namespace Dhcp6
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

@@ -164,9 +164,9 @@ private:
     static otError TmfFilter(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     Coap::Coap mCoap;
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Dhcp6Client mDhcp6Client;
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     Dhcp6::Dhcp6Server mDhcp6Server;
 #endif // OPENTHREAD_ENABLE_DHCP6_SERVER

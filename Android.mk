@@ -55,7 +55,7 @@ ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
-    -DOPENTHREAD_ENABLE_DHCP6_CLIENT=1                              \
+    -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
     -DOPENTHREAD_ENABLE_DHCP6_SERVER=1                              \
     -DOPENTHREAD_ENABLE_DNS_CLIENT=1                                \
     -DOPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1                    \
