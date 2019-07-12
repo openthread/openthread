@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,6 @@
  */
 
 #include "platform-posix.h"
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 
 #include <openthread/dataset.h>
 #include <openthread/random_noncrypto.h>
@@ -92,6 +90,14 @@ enum
     POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+extern int      sSockFd;
+extern uint16_t sPortOffset;
+#else
+static int      sSockFd;
+static uint16_t sPortOffset = 0;
+#endif
+
 enum
 {
     POSIX_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
@@ -105,7 +111,7 @@ struct RadioMessage
     uint8_t mPsdu[OT_RADIO_FRAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-static void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt);
+static void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame);
 static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
@@ -126,10 +132,8 @@ static otRadioIeInfo sReceivedIeInfo;
 static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
 static uint16_t sPanid;
-static uint16_t sPortOffset = 0;
-static int      sSockFd;
 static bool     sPromiscuous = false;
-static bool     sAckWait     = false;
+static bool     sTxWait      = false;
 static int8_t   sTxPower     = 0;
 
 static uint8_t      sShortAddressMatchTableCount = 0;
@@ -168,34 +172,34 @@ static bool findExtAddress(const otExtAddress *aExtAddress)
     return i < sExtAddressMatchTableCount;
 }
 
-static inline bool isFrameTypeAck(const uint8_t *frame)
+static inline bool isFrameTypeAck(const uint8_t *aFrame)
 {
-    return (frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK;
+    return (aFrame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK;
 }
 
-static inline bool isFrameTypeMacCmd(const uint8_t *frame)
+static inline bool isFrameTypeMacCmd(const uint8_t *aFrame)
 {
-    return (frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_MACCMD;
+    return (aFrame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_MACCMD;
 }
 
-static inline bool isSecurityEnabled(const uint8_t *frame)
+static inline bool isSecurityEnabled(const uint8_t *aFrame)
 {
-    return (frame[0] & IEEE802154_SECURITY_ENABLED) != 0;
+    return (aFrame[0] & IEEE802154_SECURITY_ENABLED) != 0;
 }
 
-static inline bool isAckRequested(const uint8_t *frame)
+static inline bool isAckRequested(const uint8_t *aFrame)
 {
-    return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
+    return (aFrame[0] & IEEE802154_ACK_REQUEST) != 0;
 }
 
-static inline bool isPanIdCompressed(const uint8_t *frame)
+static inline bool isPanIdCompressed(const uint8_t *aFrame)
 {
-    return (frame[0] & IEEE802154_PANID_COMPRESSION) != 0;
+    return (aFrame[0] & IEEE802154_PANID_COMPRESSION) != 0;
 }
 
-static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
+static inline bool isDataRequestAndHasFramePending(const uint8_t *aFrame)
 {
-    const uint8_t *cur = frame;
+    const uint8_t *cur = aFrame;
     uint8_t        securityControl;
     bool           isDataRequest   = false;
     bool           hasFramePending = false;
@@ -203,10 +207,10 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
     // FCF + DSN
     cur += 2 + 1;
 
-    otEXPECT(isFrameTypeMacCmd(frame));
+    otEXPECT(isFrameTypeMacCmd(aFrame));
 
     // Destination PAN + Address
-    switch (frame[1] & IEEE802154_DST_ADDR_MASK)
+    switch (aFrame[1] & IEEE802154_DST_ADDR_MASK)
     {
     case IEEE802154_DST_ADDR_SHORT:
         cur += sizeof(otPanId) + sizeof(otShortAddress);
@@ -221,10 +225,10 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
     }
 
     // Source PAN + Address
-    switch (frame[1] & IEEE802154_SRC_ADDR_MASK)
+    switch (aFrame[1] & IEEE802154_SRC_ADDR_MASK)
     {
     case IEEE802154_SRC_ADDR_SHORT:
-        if (!isPanIdCompressed(frame))
+        if (!isPanIdCompressed(aFrame))
         {
             cur += sizeof(otPanId);
         }
@@ -238,7 +242,7 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
         break;
 
     case IEEE802154_SRC_ADDR_EXT:
-        if (!isPanIdCompressed(frame))
+        if (!isPanIdCompressed(aFrame))
         {
             cur += sizeof(otPanId);
         }
@@ -256,7 +260,7 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *frame)
     }
 
     // Security Control + Frame Counter + Key Identifier
-    if (isSecurityEnabled(frame))
+    if (isSecurityEnabled(aFrame))
     {
         securityControl = *cur;
 
@@ -292,28 +296,28 @@ exit:
     return isDataRequest && hasFramePending;
 }
 
-static inline uint8_t getDsn(const uint8_t *frame)
+static inline uint8_t getDsn(const uint8_t *aFrame)
 {
-    return frame[IEEE802154_DSN_OFFSET];
+    return aFrame[IEEE802154_DSN_OFFSET];
 }
 
-static inline otPanId getDstPan(const uint8_t *frame)
+static inline otPanId getDstPan(const uint8_t *aFrame)
 {
-    return (otPanId)((frame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | frame[IEEE802154_DSTPAN_OFFSET]);
+    return (otPanId)((aFrame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | aFrame[IEEE802154_DSTPAN_OFFSET]);
 }
 
-static inline otShortAddress getShortAddress(const uint8_t *frame)
+static inline otShortAddress getShortAddress(const uint8_t *aFrame)
 {
-    return (otShortAddress)((frame[IEEE802154_DSTADDR_OFFSET + 1] << 8) | frame[IEEE802154_DSTADDR_OFFSET]);
+    return (otShortAddress)((aFrame[IEEE802154_DSTADDR_OFFSET + 1] << 8) | aFrame[IEEE802154_DSTADDR_OFFSET]);
 }
 
-static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
+static inline void getExtAddress(const uint8_t *aFrame, otExtAddress *aAddress)
 {
     size_t i;
 
     for (i = 0; i < sizeof(otExtAddress); i++)
     {
-        address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
+        aAddress->m8[i] = aFrame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
     }
 }
 
@@ -359,15 +363,16 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[7] = gNodeId & 0xff;
 }
 
-void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    sPanid = panid;
+    assert(aInstance != NULL);
+
+    sPanid = aPanid;
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     for (size_t i = 0; i < sizeof(sExtendedAddress); i++)
     {
@@ -375,21 +380,23 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
     }
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    sShortAddress = address;
+    assert(aInstance != NULL);
+
+    sShortAddress = aAddress;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     sPromiscuous = aEnable;
 }
 
 void platformRadioInit(void)
 {
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
     struct sockaddr_in sockaddr;
     char *             offset;
     memset(&sockaddr, 0, sizeof(sockaddr));
@@ -436,7 +443,7 @@ void platformRadioInit(void)
         perror("bind");
         exit(EXIT_FAILURE);
     }
-
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
@@ -448,11 +455,6 @@ void platformRadioInit(void)
     sTransmitFrame.mIeInfo = NULL;
     sReceiveFrame.mIeInfo  = NULL;
 #endif
-}
-
-void platformRadioDeinit(void)
-{
-    close(sSockFd);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -487,7 +489,7 @@ exit:
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
 
@@ -502,7 +504,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
 
@@ -510,7 +512,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     {
         error                  = OT_ERROR_NONE;
         sState                 = OT_RADIO_STATE_RECEIVE;
-        sAckWait               = false;
+        sTxWait                = false;
         sReceiveFrame.mChannel = aChannel;
     }
 
@@ -519,8 +521,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aRadio);
+    assert(aInstance != NULL);
+    assert(aRadio != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
 
@@ -535,14 +537,14 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     int8_t   rssi    = POSIX_LOW_RSSI_SAMPLE;
     uint8_t  channel = sReceiveFrame.mChannel;
@@ -567,57 +569,88 @@ exit:
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     return sPromiscuous;
 }
 
-void radioReceive(otInstance *aInstance)
+static void radioReceive(otInstance *aInstance)
 {
-    bool    isAck;
-    ssize_t rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    bool isTxDone = false;
+    bool isAck    = isFrameTypeAck(sReceiveFrame.mPsdu);
 
-    if (rval < 0)
-    {
-        perror("recvfrom");
-        exit(EXIT_FAILURE);
-    }
+    otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
+    otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
 
-    if (otPlatRadioGetPromiscuous(aInstance))
-    {
-        // Timestamp
-        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-    }
+    // Timestamp
+    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
+    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     sReceiveFrame.mIeInfo->mTimestamp = otPlatTimeGet();
 #endif
 
-    sReceiveFrame.mLength = (uint8_t)(rval - 1);
-
-    isAck = isFrameTypeAck(sReceiveFrame.mPsdu);
-
-    if (sAckWait && sTransmitFrame.mChannel == sReceiveMessage.mChannel && isAck &&
-        getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
+    if (sTxWait)
     {
-        sState   = OT_RADIO_STATE_RECEIVE;
-        sAckWait = false;
-
-        otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
+        if (isAckRequested(sTransmitFrame.mPsdu))
+        {
+            isTxDone = isAck && getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu);
+        }
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+        // Simulate tx done when receiving the echo frame.
+        else
+        {
+            isTxDone = !isAck && sTransmitFrame.mLength == sReceiveFrame.mLength &&
+                       memcmp(sTransmitFrame.mPsdu, sReceiveFrame.mPsdu, sTransmitFrame.mLength) == 0;
+        }
+#endif
     }
-    else if ((sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT) &&
-             (sReceiveFrame.mChannel == sReceiveMessage.mChannel) && (!isAck || sPromiscuous))
+
+    if (isTxDone)
+    {
+        sState  = OT_RADIO_STATE_RECEIVE;
+        sTxWait = false;
+
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
+        }
+        else
+#endif
+        {
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, (isAck ? &sReceiveFrame : NULL), OT_ERROR_NONE);
+        }
+    }
+    else if (!isAck || sPromiscuous)
     {
         radioProcessFrame(aInstance);
     }
+
+exit:
+    return;
+}
+
+static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
+{
+    uint16_t crc        = 0;
+    uint16_t crc_offset = aLength - sizeof(uint16_t);
+
+    for (uint16_t i = 0; i < crc_offset; i++)
+    {
+        crc = crc16_citt(crc, aMessage->mPsdu[i]);
+    }
+
+    aMessage->mPsdu[crc_offset]     = crc & 0xff;
+    aMessage->mPsdu[crc_offset + 1] = crc >> 8;
 }
 
 void radioSendMessage(otInstance *aInstance)
@@ -653,11 +686,13 @@ void radioSendMessage(otInstance *aInstance)
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
+    radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
-    sAckWait = isAckRequested(sTransmitFrame.mPsdu);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+    sTxWait = isAckRequested(sTransmitFrame.mPsdu);
 
-    if (!sAckWait)
+    if (!sTxWait)
     {
         sState = OT_RADIO_STATE_RECEIVE;
 
@@ -673,11 +708,32 @@ void radioSendMessage(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
         }
     }
+#else
+    // Wait for echo radio in virtual time mode.
+    sTxWait = true;
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 }
 
+bool platformRadioIsTransmitPending(void)
+{
+    return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait;
+}
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
+{
+    assert(sizeof(sReceiveMessage) >= aBufLength);
+
+    memcpy(&sReceiveMessage, aBuf, aBufLength);
+
+    sReceiveFrame.mLength = (uint8_t)(aBufLength - 1);
+
+    radioReceive(aInstance);
+}
+#else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sAckWait))
+    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sTxWait))
     {
         FD_SET(sSockFd, aReadFdSet);
 
@@ -687,7 +743,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
         }
     }
 
-    if (aWriteFdSet != NULL && sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if (aWriteFdSet != NULL && platformRadioIsTransmitPending())
     {
         FD_SET(sSockFd, aWriteFdSet);
 
@@ -698,52 +754,50 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     }
 }
 
+void platformRadioDeinit(void)
+{
+    close(sSockFd);
+}
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
 void platformRadioProcess(otInstance *aInstance)
 {
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
     const int     flags  = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = {sSockFd, flags, 0};
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
+        ssize_t rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+
+        if (rval < 0)
+        {
+            perror("recvfrom");
+            exit(EXIT_FAILURE);
+        }
+
+        sReceiveFrame.mLength = (uint8_t)(rval - 1);
+
         radioReceive(aInstance);
     }
+#endif
 
-    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
+    if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
     }
 }
 
-static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
-{
-    uint16_t i;
-    uint16_t crc        = 0;
-    uint16_t crc_offset = aLength - sizeof(uint16_t);
-
-    for (i = 0; i < crc_offset; i++)
-    {
-        crc = crc16_citt(crc, aMessage->mPsdu[i]);
-    }
-
-    aMessage->mPsdu[crc_offset]     = crc & 0xff;
-    aMessage->mPsdu[crc_offset + 1] = crc >> 8;
-}
-
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-    uint32_t           i;
+#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
     struct sockaddr_in sockaddr;
-
-    if (!sPromiscuous)
-    {
-        radioComputeCrc(aMessage, aFrame->mLength);
-    }
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
+    for (uint32_t i = 1; i <= WELLKNOWN_NODE_ID; i++)
     {
         ssize_t rval;
 
@@ -762,6 +816,16 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
             exit(EXIT_FAILURE);
         }
     }
+#else  // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+    struct Event event;
+
+    event.mDelay      = 1; // 1us for now
+    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
+    event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
+    memcpy(event.mData, aMessage, event.mDataLength);
+
+    otSimSendEvent(&event);
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 }
 
 void radioSendAck(void)
@@ -780,6 +844,7 @@ void radioSendAck(void)
 
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
+    radioComputeCrc(&sAckMessage, sAckFrame.mLength);
     radioTransmit(&sAckMessage, &sAckFrame);
 }
 
@@ -847,14 +912,14 @@ exit:
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     sSrcMatchEnabled = aEnable;
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_NONE;
     otEXPECT_ACTION(sShortAddressMatchTableCount < sizeof(sShortAddressMatchTable) / sizeof(uint16_t),
@@ -873,7 +938,7 @@ exit:
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_NONE;
 
@@ -894,7 +959,7 @@ exit:
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_NOT_FOUND;
     otEXPECT(sShortAddressMatchTableCount > 0);
@@ -915,7 +980,7 @@ exit:
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_NOT_FOUND;
 
@@ -937,30 +1002,30 @@ exit:
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     sShortAddressMatchTableCount = 0;
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     sExtAddressMatchTableCount = 0;
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aScanChannel);
-    OT_UNUSED_VARIABLE(aScanDuration);
+    assert(aInstance != NULL);
+    assert(aScanChannel >= POSIX_RADIO_CHANNEL_MIN && aScanChannel <= POSIX_RADIO_CHANNEL_MAX);
+    assert(aScanDuration > 0);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     *aPower = sTxPower;
 
@@ -969,7 +1034,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     sTxPower = aPower;
 
@@ -978,9 +1043,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     return POSIX_RECEIVE_SENSITIVITY;
 }
-
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
