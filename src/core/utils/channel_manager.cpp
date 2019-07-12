@@ -41,7 +41,7 @@
 #include "common/random.hpp"
 #include "phy/phy.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Utils {
@@ -459,4 +459,4 @@ void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE

@@ -47,8 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for Channel Manager.
  *
- *   The functions in this module are available when Channel Manager feature (`OPENTHREAD_ENABLE_CHANNEL_MANAGER`)
- *   is enabled. Channel Manager is available only on an FTD build.
+ *   The functions in this module are available when Channel Manager feature
+ *   (`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE`) is enabled. Channel Manager is available only on an FTD build.
  *
  * @{
  *

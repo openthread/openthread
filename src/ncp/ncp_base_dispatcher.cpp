@@ -613,7 +613,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL>;
         break;
@@ -951,7 +951,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL>;
         break;

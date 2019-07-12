@@ -91,7 +91,7 @@ configure_OPTIONS              += --enable-coverage
 endif
 
 ifeq ($(CHANNEL_MANAGER),1)
-configure_OPTIONS              += --enable-channel-manager
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1
 endif
 
 ifeq ($(CHANNEL_MONITOR),1)

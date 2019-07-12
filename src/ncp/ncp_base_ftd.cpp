@@ -33,7 +33,7 @@
 #include "ncp_base.hpp"
 #include <openthread/config.h>
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include <openthread/channel_manager.h>
 #endif
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
@@ -924,7 +924,7 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL>(void)
 {
@@ -1047,7 +1047,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TIME_SYNC_PERIOD>(void)

@@ -57,14 +57,14 @@ python --version || die
     # UART transport
     export CPPFLAGS="${CPPFLAGS} \
         -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
 
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
-        --enable-channel-manager          \
         --enable-channel-monitor          \
         --enable-child-supervision        \
         --enable-cli                      \
@@ -363,7 +363,8 @@ build_samr21() {
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 
     export CPPFLAGS=" \
-        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -380,7 +381,6 @@ build_samr21() {
         --enable-legacy                     \
         --enable-mac-filter                 \
         --enable-service                    \
-        --enable-channel-manager            \
         --enable-channel-monitor            \
         --disable-docs                      \
         --disable-tests                     \
