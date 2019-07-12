@@ -107,7 +107,7 @@ configure_OPTIONS              += --enable-debug --disable-optimization
 endif
 
 ifeq ($(DHCP6_CLIENT),1)
-configure_OPTIONS              += --enable-dhcp6-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1
 endif
 
 ifeq ($(DHCP6_SERVER),1)

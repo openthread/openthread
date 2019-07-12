@@ -598,7 +598,7 @@ template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Client;
