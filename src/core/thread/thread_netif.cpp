@@ -62,9 +62,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mDnsClient(Get<ThreadNetif>())
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
@@ -131,7 +131,7 @@ void ThreadNetif::Up(void)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Start();
 #endif
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Get<Sntp::Client>().Start();
 #endif
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETIF_STATE);
@@ -147,7 +147,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Stop();
 #endif
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Get<Sntp::Client>().Stop();
 #endif
 #if OPENTHREAD_CONFIG_DTLS_ENABLE

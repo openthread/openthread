@@ -947,36 +947,6 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
-# SNTP Client
-#
-
-AC_ARG_ENABLE(sntp_client,
-    [AS_HELP_STRING([--enable-sntp-client],[Enable SNTP client support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_sntp_client=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_sntp_client} for --enable-sntp-client])
-            ;;
-        esac
-    ],
-    [enable_sntp_client=no])
-
-if test "$enable_sntp_client" = "yes"; then
-    OPENTHREAD_ENABLE_SNTP_CLIENT=1
-else
-    OPENTHREAD_ENABLE_SNTP_CLIENT=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_SNTP_CLIENT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SNTP_CLIENT], [test "${enable_sntp_client}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SNTP_CLIENT],[${OPENTHREAD_ENABLE_SNTP_CLIENT}],[Define to 1 if you want to enable SNTP Client])
-
-#
 # Service
 #
 
@@ -1466,7 +1436,6 @@ AC_MSG_NOTICE([
   OpenThread UDP forward support            : ${enable_udp_forward}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Legacy network support         : ${enable_legacy}
-  OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}

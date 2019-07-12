@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,33 +28,41 @@
 
 /**
  * @file
- *   This file implements the OpenThread SNTP API.
+ *   This file includes compile-time configurations for the SNTP Client.
+ *
  */
 
-#include "openthread-core-config.h"
+#ifndef CONFIG_SNTP_CLIENT_H_
+#define CONFIG_SNTP_CLIENT_H_
 
-#include <openthread/sntp.h>
-
-#include "common/instance.hpp"
-#include "common/locator-getters.hpp"
-
-using namespace ot;
-
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-otError otSntpClientQuery(otInstance *          aInstance,
-                          const otSntpQuery *   aQuery,
-                          otSntpResponseHandler aHandler,
-                          void *                aContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Sntp::Client>().Query(aQuery, aHandler, aContext);
-}
-
-void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Sntp::Client>().SetUnixEra(aUnixEra);
-}
+/**
+ * @def OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+ *
+ * Define to 1 to enable SNTP Client support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT
+ *
+ * Maximum time that SNTP Client waits for response in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT 3000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for SNTP client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT 2
+#endif
+
+#endif // CONFIG_SNTP_CLIENT_H_

@@ -85,7 +85,7 @@ typedef void (*otSntpResponseHandler)(void *aContext, uint64_t aTime, otError aR
 /**
  * This function sends a SNTP query.
  *
- * This function is available only if feature `OPENTHREAD_ENABLE_SNTP_CLIENT` is enabled.
+ * This function is available only if feature `OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE_CLIENT` is enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aQuery      A pointer to specify SNTP query parameters.

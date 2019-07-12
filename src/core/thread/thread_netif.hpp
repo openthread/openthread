@@ -176,9 +176,9 @@ private:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Dns::Client mDnsClient;
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
-#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter             mIp6Filter;

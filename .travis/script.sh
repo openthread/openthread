@@ -71,7 +71,8 @@ python --version || die
         -DOPENTHREAD_CONFIG_JOINER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1 \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -87,7 +88,6 @@ python --version || die
         --enable-ncp                      \
         --enable-radio-only               \
         --enable-service                  \
-        --enable-sntp-client              \
         --enable-udp-forward              \
         --with-examples=posix || die
 
@@ -108,7 +108,6 @@ python --version || die
         --enable-ncp                      \
         --enable-radio-only               \
         --enable-service                  \
-        --enable-sntp-client              \
         --enable-udp-forward              \
         --with-examples=posix || die
 
