@@ -86,11 +86,17 @@ public:
      * This class defines the callbacks notifying `SubMac` user of changes and events.
      *
      */
-    class Callbacks
+    class Callbacks : public InstanceLocator
     {
-        friend class SubMac;
+    public:
+        /**
+         * This constructor initializes the `Callbacks` object.
+         *
+         * @param[in]  aInstance  A reference to the OpenThread instance.
+         *
+         */
+        explicit Callbacks(Instance &aInstance);
 
-    protected:
         /**
          * This method notifies user of `SubMac` of a received frame.
          *
@@ -173,22 +179,15 @@ public:
          */
         void FrameUpdated(Frame &aFrame);
 #endif
-
-        /**
-         * This constructor initializes the `Callbacks` object.
-         *
-         */
-        Callbacks(void) {}
     };
 
     /**
      * This constructor initializes the `SubMac` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     * @param[in]  aCallbacks A reference to the `Callbacks` object.
      *
      */
-    SubMac(Instance &aInstance, Callbacks &aCallbacks);
+    explicit SubMac(Instance &aInstance);
 
     /**
      * This method gets the capabilities provided by platform radio.
@@ -465,7 +464,7 @@ private:
     int8_t             mEnergyScanMaxRssi;
     uint32_t           mEnergyScanEndTime;
     Frame &            mTransmitFrame;
-    Callbacks &        mCallbacks;
+    Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER

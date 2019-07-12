@@ -96,7 +96,7 @@ Mac::Mac(Instance &aInstance)
     , mScanDuration(0)
     , mScanChannelMask()
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
-    , mSubMac(aInstance, *this)
+    , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
     , mTimer(aInstance, &Mac::HandleTimer, this)
     , mOobFrame(NULL)

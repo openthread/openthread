@@ -45,7 +45,7 @@
 namespace ot {
 namespace Mac {
 
-SubMac::SubMac(Instance &aInstance, Callbacks &aCallbacks)
+SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(otPlatRadioGetCaps(&aInstance))
     , mState(kStateDisabled)
@@ -56,7 +56,7 @@ SubMac::SubMac(Instance &aInstance, Callbacks &aCallbacks)
     , mEnergyScanMaxRssi(kInvalidRssiValue)
     , mEnergyScanEndTime(0)
     , mTransmitFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
-    , mCallbacks(aCallbacks)
+    , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
     , mTimer(aInstance, &SubMac::HandleTimer, this)

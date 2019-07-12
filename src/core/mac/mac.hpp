@@ -93,7 +93,7 @@ enum
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac : public InstanceLocator, public SubMac::Callbacks
+class Mac : public InstanceLocator
 {
     friend class ot::Instance;
 
