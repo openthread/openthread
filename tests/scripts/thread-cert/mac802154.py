@@ -257,13 +257,13 @@ class MacFrame:
         fcs_start = data.tell()
         fcs = self._parse_fcs(data, fcs_start)
 
-        data.seek(fcs_start) # Set it back to the beginning pos of fcs
+        data.seek(fcs_start)
         if aux_sec_header and aux_sec_header.security_level:
             mic, payload_end = self._parse_mic(
                 data, aux_sec_header.security_level
             )
         else:
-            payload_end = fcs_start # When there is no MIC, paylaod end is the beginning pos of fcs
+            payload_end = fcs_start
             mic = None
 
         # There may be no termination IE. In such case, there is no payload, get
@@ -275,8 +275,10 @@ class MacFrame:
             id = (
                 header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK
             ) >> 7
+            # Currently, payload IE doesn't exist in the code. So only HT2 is required.
+            # TODO: support HT1 when there are Payload IEs in our code
             assert id != MacFrame.IEEE802154_HEADER_IE_HT1, \
-                'Currently there should be no HT1!' # TODO: support HT1 when there are Payload IEs in our code
+                'Currently there should be no HT1!'
             header_ie_length = (
                 header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK
             )
@@ -287,7 +289,7 @@ class MacFrame:
                 InformationElement(id, header_ie_length, header_ie_content)
             )
             cur_pos += 2 + header_ie_length
-            if id == MacFrame.IEEE802154_HEADER_IE_HT2: # Currently, payload IE doesn't exist in the code. So only HT2 is required.
+            if id == MacFrame.IEEE802154_HEADER_IE_HT2:
                 break
         header_ie_end = cur_pos
 
