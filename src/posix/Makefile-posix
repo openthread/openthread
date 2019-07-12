@@ -78,8 +78,12 @@ configure_OPTIONS                   = \
 
 # Platform specific switches
 
-ifeq (${DAEMON},1)
+ifeq ($(DAEMON),1)
 configure_OPTIONS              += --enable-posix-app-daemon
+endif
+
+ifneq ($(HOST),)
+configure_OPTIONS              += --host=$(HOST)
 endif
 
 ifneq ($(DEBUG),1)
