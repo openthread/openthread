@@ -36,7 +36,7 @@ EXTRA_DIST                                                         = \
     test_gatt_read.py                                                \
     test_gatt_discover.py                                            \
     test_l2cap.py                                                    \
-    node_cli.py                                                      \
+    node_ble.py                                                      \
     $(NULL)
 
 if OPENTHREAD_BUILD_TESTS

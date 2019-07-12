@@ -27,18 +27,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import os
-import sys
-import time
-import pexpect
 import unittest
-import subprocess
+from node_ble import Node
 
-from node_cli import Node
 
 CENTRAL = 1
 PERIPHERAL = 2
 NODE_COUNT = 2
+
 
 class test_conn(unittest.TestCase):
     def setUp(self):
@@ -72,6 +68,7 @@ class test_conn(unittest.TestCase):
         self.nodes[PERIPHERAL].ble_ch_tx("acacacac")
         self.nodes[CENTRAL].pexpect.expect("L2CAP sdu rx:")
         self.nodes[CENTRAL].pexpect.expect("data=acacacac")
+
 
 if __name__ == '__main__':
     unittest.main()

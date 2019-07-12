@@ -27,18 +27,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import os
-import sys
-import time
-import pexpect
 import unittest
-import subprocess
+from node_ble import Node
 
-from node_cli import Node
 
 SCANNER = 1
 BEACONER = 2
 NODE_COUNT = 2
+
 
 class test_beacon(unittest.TestCase):
     def setUp(self):
@@ -57,9 +53,10 @@ class test_beacon(unittest.TestCase):
         self.nodes[BEACONER].ble_adv_data("0201060302affe")
         self.nodes[BEACONER].ble_adv_start(500)
 
-        print "Expect: Got BLE_ADV from %s \[%s\] - 0201060302affe" % (addr, type)
-        rsp = "Got BLE_ADV from %s \[%s\] - 0201060302affe" % (addr, type)
+        print r"Expect: Got BLE_ADV from %s \[%s\] - 0201060302affe" % (addr, type)
+        rsp = r"Got BLE_ADV from %s \[%s\] - 0201060302affe" % (addr, type)
         self.nodes[SCANNER].pexpect.expect(rsp)
+
 
 if __name__ == '__main__':
     unittest.main()

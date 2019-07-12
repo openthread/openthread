@@ -27,14 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import os
-import sys
-import time
-import pexpect
 import unittest
-import subprocess
+from node_ble import Node
 
-from node_cli import Node
 
 CENTRAL = 1
 PERIPHERAL = 2
@@ -73,13 +68,14 @@ class test_gatt_discover(unittest.TestCase):
         self.nodes[CENTRAL].ble_gatt_discover_service(0x1800)
         self.nodes[CENTRAL].pexpect.expect("service: uuid=0x1800")
 
-        self.nodes[CENTRAL].ble_gatt_discover_characteristic(1,5)
+        self.nodes[CENTRAL].ble_gatt_discover_characteristic(1, 5)
 
         self.nodes[CENTRAL].pexpect.expect("characteristic: .* uuid=0x2a00")
 
-        self.nodes[CENTRAL].ble_gatt_discover_descriptor(1,5)
+        self.nodes[CENTRAL].ble_gatt_discover_descriptor(1, 5)
 
         self.nodes[CENTRAL].pexpect.expect("descriptor: .* uuid=0x2803")
+
 
 if __name__ == '__main__':
     unittest.main()

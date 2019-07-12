@@ -27,20 +27,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import os
-import sys
-import time
-import pexpect
 import unittest
-import subprocess
+from node_ble import Node
 
-from node_cli import Node
 
 CENTRAL = 1
 PERIPHERAL = 2
 NODE_COUNT = 2
 
 DEVICE_NAME_HANDLE = 3
+
 
 class test_gatt_read(unittest.TestCase):
     def setUp(self):
@@ -69,7 +65,8 @@ class test_gatt_read(unittest.TestCase):
         self.nodes[CENTRAL].ble_gatt_read(DEVICE_NAME_HANDLE)
         self.nodes[CENTRAL].pexpect.expect("6e696d626c65")
         self.nodes[CENTRAL].ble_gatt_write(DEVICE_NAME_HANDLE, "123456")
-        #self.nodes[PERIPHERAL].pexpect.expect("Got BLE_WRT_REQ: @handle=3 data=123456")
+        # self.nodes[PERIPHERAL].pexpect.expect("Got BLE_WRT_REQ: @handle=3 data=123456")
+
 
 if __name__ == '__main__':
     unittest.main()
