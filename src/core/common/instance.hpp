@@ -67,7 +67,7 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include "utils/channel_manager.hpp"
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -347,7 +347,7 @@ private:
     Coap::CoapSecure mApplicationCoapSecure;
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Utils::ChannelMonitor mChannelMonitor;
 #endif
 
@@ -643,7 +643,7 @@ template <> inline Utils::SupervisionListener &Instance::Get(void)
     return mThreadNetif.mSupervisionListener;
 }
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 template <> inline Utils::ChannelMonitor &Instance::Get(void)
 {
     return mChannelMonitor;

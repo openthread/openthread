@@ -67,7 +67,7 @@
  * by the Channel Manager module to (auto) select a better channel.
  *
  * Applicable only if Channel Manager and Channel Monitoring features are both enabled (i.e.,
- * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_ENABLE_CHANNEL_MONITOR` are set).
+ * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are set).
  *
  */
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT

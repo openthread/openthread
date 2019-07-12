@@ -36,7 +36,7 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 0
 
 /* Define to 1 if you want to use channel monitor feature */
-#define OPENTHREAD_ENABLE_CHANNEL_MONITOR 0
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
 
 /* Define to 1 if you want to use child supervision feature */
 #define OPENTHREAD_ENABLE_CHILD_SUPERVISION 1

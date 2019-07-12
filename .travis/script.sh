@@ -58,14 +58,14 @@ python --version || die
     export CPPFLAGS="${CPPFLAGS} \
         -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
 
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
-        --enable-channel-monitor          \
         --enable-child-supervision        \
         --enable-cli                      \
         --enable-commissioner             \
@@ -99,8 +99,6 @@ python --version || die
         --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
-        --enable-channel-manager          \
-        --enable-channel-monitor          \
         --enable-child-supervision        \
         --enable-cli                      \
         --enable-commissioner             \
@@ -364,7 +362,8 @@ build_samr21() {
 
     export CPPFLAGS=" \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -381,7 +380,6 @@ build_samr21() {
         --enable-legacy                     \
         --enable-mac-filter                 \
         --enable-service                    \
-        --enable-channel-monitor            \
         --disable-docs                      \
         --disable-tests                     \
         --with-vendor-extension=./src/core/common/extension_example.cpp || die

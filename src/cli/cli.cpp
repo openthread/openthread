@@ -72,7 +72,7 @@
 #include <openthread/channel_manager.h>
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include <openthread/channel_monitor.h>
 #endif
 
@@ -447,7 +447,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     {
         mServer->OutputFormat("%d\r\n", otLinkGetChannel(mInstance));
     }
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     else if (strcmp(argv[0], "monitor") == 0)
     {
         if (argc == 1)

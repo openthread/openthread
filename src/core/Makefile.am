@@ -321,6 +321,7 @@ HEADERS_COMMON                             = \
     config/announce_sender.h                 \
     config/border_router.h                   \
     config/channel_manager.h                 \
+    config/channel_monitor.h                 \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \

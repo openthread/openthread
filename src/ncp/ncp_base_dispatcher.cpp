@@ -333,7 +333,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     case SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_SAMPLE_INTERVAL>;
         break;
