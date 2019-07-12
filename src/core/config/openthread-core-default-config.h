@@ -814,16 +814,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
- *
- * The number of dhcp prefixes.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
-#define OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES 4
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
  *
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.

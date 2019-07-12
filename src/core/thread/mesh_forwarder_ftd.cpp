@@ -396,7 +396,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
             SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
         }
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
             uint16_t agentRloc16;
@@ -419,7 +419,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
             }
         }
 
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 #if OPENTHREAD_ENABLE_SERVICE
         else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
         {

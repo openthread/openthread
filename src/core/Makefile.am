@@ -326,6 +326,7 @@ HEADERS_COMMON                             = \
     config/coap.h                            \
     config/commissioner.h                    \
     config/dhcp6_client.h                    \
+    config/dhcp6_server.h                    \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \
