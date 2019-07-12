@@ -79,7 +79,7 @@ def send_mcast(
     )
     recvers = [node.prepare_rx(sender) for node in recving_nodes]
     listeners = [
-        node.preapre_listener(sender.dst_port, timeout=0.5)
+        node.prepare_listener(sender.dst_port, timeout=0.5)
         for node in non_recving_nodes
     ]
 
