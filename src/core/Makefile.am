@@ -340,6 +340,7 @@ HEADERS_COMMON                             = \
     config/openthread-core-default-config.h  \
     config/parent_search.h                   \
     config/platform.h                        \
+    config/sntp_client.h                     \
     crypto/aes_ccm.hpp                       \
     crypto/aes_ecb.hpp                       \
     crypto/ecdsa.hpp                         \

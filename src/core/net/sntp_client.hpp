@@ -596,8 +596,8 @@ private:
      */
     enum
     {
-        kResponseTimeout = OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT,
-        kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_MAX_RETRANSMIT,
+        kResponseTimeout = OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT,
+        kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT,
     };
 
     Message *NewMessage(const Header &aHeader);

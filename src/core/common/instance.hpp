@@ -626,7 +626,7 @@ template <> inline Utils::JamDetector &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 template <> inline Sntp::Client &Instance::Get(void)
 {
     return mThreadNetif.mSntpClient;

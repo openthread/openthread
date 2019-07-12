@@ -208,7 +208,7 @@ const struct Command Interpreter::sCommands[] = {
     {"service", &Interpreter::ProcessService},
 #endif
     {"singleton", &Interpreter::ProcessSingleton},
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     {"sntp", &Interpreter::ProcessSntp},
 #endif
     {"state", &Interpreter::ProcessState},
@@ -2857,7 +2857,7 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
     AppendResult(error);
 }
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 void Interpreter::ProcessSntp(int argc, char *argv[])
 {
     otError          error = OT_ERROR_NONE;

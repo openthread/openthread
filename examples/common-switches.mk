@@ -173,7 +173,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1
 endif
 
 ifeq ($(SNTP_CLIENT),1)
-configure_OPTIONS              += --enable-sntp-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1
 endif
 
 ifeq ($(TIME_SYNC),1)
