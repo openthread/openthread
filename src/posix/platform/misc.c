@@ -118,3 +118,40 @@ exit:
 
     return fd;
 }
+
+const char *platformExitCodeToString(uint8_t aExitCode)
+{
+    const char *retval = NULL;
+
+    switch (aExitCode)
+    {
+    case OT_EXIT_SUCCESS:
+        retval = "Success";
+        break;
+
+    case OT_EXIT_FAILURE:
+        retval = "Failure";
+        break;
+
+    case OT_EXIT_INVALID_ARGUMENTS:
+        retval = "InvalidArgument";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_INCOMPATIBLE:
+        retval = "RadioSpinelIncompatible";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_RESET:
+        retval = "RadioSpinelReset";
+        break;
+
+    case OT_EXIT_ERROR_ERRNO:
+        retval = "ErrorErrno";
+        break;
+    default:
+        retval = "UnknownExitCode";
+        break;
+    }
+
+    return retval;
+}

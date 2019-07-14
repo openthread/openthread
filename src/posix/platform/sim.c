@@ -91,12 +91,12 @@ void otSimInit(void)
 
     if (sSockFd == -1)
     {
-        DieNowWithMessage("socket", OT_EXIT_FAILURE);
+        DieNowWithMessage("socket", OT_EXIT_ERROR_ERRNO);
     }
 
     if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
     {
-        DieNowWithMessage("bind", OT_EXIT_FAILURE);
+        DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
     }
 }
 
@@ -123,7 +123,7 @@ static void otSimSendEvent(struct Event *aEvent, size_t aLength)
 
     if (rval < 0)
     {
-        DieNowWithMessage("sendto", OT_EXIT_FAILURE);
+        DieNowWithMessage("sendto", OT_EXIT_ERROR_ERRNO);
     }
 }
 
@@ -133,7 +133,7 @@ void otSimReceiveEvent(struct Event *aEvent)
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
-        DieNowWithMessage("recvfrom", OT_EXIT_FAILURE);
+        DieNowWithMessage("recvfrom", OT_EXIT_ERROR_ERRNO);
     }
 
     sNow += aEvent->mDelay;

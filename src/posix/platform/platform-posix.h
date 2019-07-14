@@ -105,7 +105,22 @@ enum
      * Unexpected radio spinel reset.
      */
     OT_EXIT_RADIO_SPINEL_RESET = 4,
+
+    /**
+     * System call or library function error.
+     */
+    OT_EXIT_ERROR_ERRNO = 5,
 };
+
+/**
+ * This function converts an exit code into a string.
+ *
+ * @param[in]  aExitCode  An exit code.
+ *
+ * @returns  A string representation of an exit code.
+ *
+ */
+const char *platformExitCodeToString(uint8_t aExitCode);
 
 /**
  * This macro checks for the specified condition, which is expected to commonly be true,
@@ -115,23 +130,17 @@ enum
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define VerifyOrDie(aCondition, aExitCode)                                                     \
-    do                                                                                         \
-    {                                                                                          \
-        if (!(aCondition))                                                                     \
-        {                                                                                      \
-            if (errno == 0)                                                                    \
-            {                                                                                  \
-                fprintf(stderr, "exit(%d): %s\r\n", aExitCode, __func__);                      \
-                otLogCritPlat("exit(%d): %s", aExitCode, __func__);                            \
-            }                                                                                  \
-            else                                                                               \
-            {                                                                                  \
-                fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, strerror(errno)); \
-                otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, strerror(errno));       \
-            }                                                                                  \
-            exit(aExitCode);                                                                   \
-        }                                                                                      \
+#define VerifyOrDie(aCondition, aExitCode)                                                                          \
+    do                                                                                                              \
+    {                                                                                                               \
+        if (!(aCondition))                                                                                          \
+        {                                                                                                           \
+            const char *errString;                                                                                  \
+            errString = (aExitCode == OT_EXIT_ERROR_ERRNO) ? strerror(errno) : platformExitCodeToString(aExitCode); \
+            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, errString);                                \
+            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, errString);                                      \
+            exit(aExitCode);                                                                                        \
+        }                                                                                                           \
     } while (false)
 
 /**
@@ -169,20 +178,14 @@ enum
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define DieNowWithMessage(aMessage, aExitCode)                                                           \
-    do                                                                                                   \
-    {                                                                                                    \
-        if (errno == 0)                                                                                  \
-        {                                                                                                \
-            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, aMessage);                      \
-            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, aMessage);                            \
-        }                                                                                                \
-        else                                                                                             \
-        {                                                                                                \
-            fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, strerror(errno)); \
-            otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, strerror(errno));       \
-        }                                                                                                \
-        exit(aExitCode);                                                                                 \
+#define DieNowWithMessage(aMessage, aExitCode)                                                                  \
+    do                                                                                                          \
+    {                                                                                                           \
+        const char *errString;                                                                                  \
+        errString = (aExitCode == OT_EXIT_ERROR_ERRNO) ? strerror(errno) : platformExitCodeToString(aExitCode); \
+        fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, errString);                  \
+        otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, errString);                        \
+        exit(aExitCode);                                                                                        \
     } while (false)
 
 /**
