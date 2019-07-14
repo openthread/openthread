@@ -180,6 +180,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
+        mPeerAddress.SetIsHostInterface(aMessageInfo.IsHostInterface());
 
         if (Get<ThreadNetif>().IsUnicastAddress(aMessageInfo.GetSockAddr()))
         {
