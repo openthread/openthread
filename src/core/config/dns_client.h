@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,41 @@
 
 /**
  * @file
- *   This file implements the OpenThread DNSv6 API.
+ *   This file includes compile-time configurations for the DNS Client.
+ *
  */
 
-#include "openthread-core-config.h"
+#ifndef CONFIG_DNS_CLIENT_H_
+#define CONFIG_DNS_CLIENT_H_
 
-#include <openthread/dns.h>
-
-#include "common/instance.hpp"
-#include "common/locator-getters.hpp"
-
-using namespace ot;
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Dns::Client>().Query(aQuery, aHandler, aContext);
-}
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+ *
+ * Define to 1 to enable DNS Client support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+ *
+ * Maximum time that DNS Client waits for response in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT 3000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for DNS client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT 2
+#endif
+
+#endif // CONFIG_DNS_CLIENT_H_

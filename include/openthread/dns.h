@@ -94,7 +94,7 @@ typedef void (*otDnsResponseHandler)(void *        aContext,
 /**
  * This function sends a DNS query for AAAA (IPv6) record.
  *
- * This function is available only if feature `OPENTHREAD_ENABLE_DNS_CLIENT` is enabled.
+ * This function is available only if feature `OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE` is enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aQuery      A pointer to specify DNS query parameters.

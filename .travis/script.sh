@@ -66,13 +66,13 @@ python --version || die
         -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-dns-client               \
         --enable-ecdsa                    \
         --enable-executable=no            \
         --enable-ftd                      \
@@ -98,7 +98,6 @@ python --version || die
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-dns-client               \
         --enable-ecdsa                    \
         --enable-executable=no            \
         --enable-ftd                      \

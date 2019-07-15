@@ -1112,36 +1112,6 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
-# DNS Client
-#
-
-AC_ARG_ENABLE(dns_client,
-    [AS_HELP_STRING([--enable-dns-client],[Enable DNS client support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_dns_client=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_dns_client} for --enable-dns-client])
-            ;;
-        esac
-    ],
-    [enable_dns_client=no])
-
-if test "$enable_dns_client" = "yes"; then
-    OPENTHREAD_ENABLE_DNS_CLIENT=1
-else
-    OPENTHREAD_ENABLE_DNS_CLIENT=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_DNS_CLIENT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_DNS_CLIENT], [test "${enable_dns_client}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DNS_CLIENT],[${OPENTHREAD_ENABLE_DNS_CLIENT}],[Define to 1 if you want to enable DNS Client])
-
-#
 # SNTP Client
 #
 
@@ -1694,7 +1664,6 @@ AC_MSG_NOTICE([
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Legacy network support         : ${enable_legacy}
-  OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Service support                : ${enable_service}

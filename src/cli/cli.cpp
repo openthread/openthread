@@ -121,7 +121,7 @@ const struct Command Interpreter::sCommands[] = {
     {"diag", &Interpreter::ProcessDiag},
 #endif
     {"discover", &Interpreter::ProcessDiscover},
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     {"dns", &Interpreter::ProcessDns},
 #endif
 #if OPENTHREAD_FTD
@@ -226,7 +226,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mCount(1)
     , mInterval(1000)
     , mPingTimer(*aInstance, &Interpreter::HandlePingTimer, this)
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mResolvingInProgress(0)
 #endif
     , mUdp(*this)
@@ -253,9 +253,9 @@ Interpreter::Interpreter(Instance *aInstance)
     mIcmpHandler.mContext         = this;
     otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -928,7 +928,7 @@ exit:
     AppendResult(error);
 }
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 void Interpreter::ProcessDns(int argc, char *argv[])
 {
     otError          error = OT_ERROR_NONE;
