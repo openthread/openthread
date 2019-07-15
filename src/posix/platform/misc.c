@@ -151,6 +151,7 @@ const char *otExitCodeToString(uint8_t aExitCode)
 
     default:
         assert(false);
+        retval = "UnknownExitCode";
         break;
     }
 
