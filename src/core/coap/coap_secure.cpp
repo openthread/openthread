@@ -35,7 +35,7 @@
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 /**
  * @file
@@ -265,4 +265,4 @@ exit:
 } // namespace Coap
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE

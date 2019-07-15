@@ -229,7 +229,7 @@ public:
 private:
     enum
     {
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
         kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE, ///< Size of memory buffer (bytes).
 #else
         kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).

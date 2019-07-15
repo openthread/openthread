@@ -51,7 +51,7 @@
 #include "crypto/sha256.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 namespace ot {
 namespace MeshCoP {
@@ -956,4 +956,4 @@ exit:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE

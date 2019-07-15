@@ -44,6 +44,11 @@
 
 #include "config/openthread-core-default-config.h"
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE || OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER || \
+    OPENTHREAD_ENABLE_JOINER
+#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
+#endif
+
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 
 #include "config/openthread-core-config-check.h"

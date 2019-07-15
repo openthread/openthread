@@ -86,7 +86,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     , mCommissioner(aInstance)
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     , mCoapSecure(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_JOINER
@@ -150,7 +150,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     Get<Sntp::Client>().Stop();
 #endif
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     Get<Coap::CoapSecure>().Stop();
 #endif
     Get<Coap::Coap>().Stop();

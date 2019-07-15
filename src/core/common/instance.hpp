@@ -546,7 +546,7 @@ template <> inline Coap::Coap &Instance::Get(void)
     return mThreadNetif.mCoap;
 }
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
 template <> inline Coap::CoapSecure &Instance::Get(void)
 {
     return mThreadNetif.mCoapSecure;
