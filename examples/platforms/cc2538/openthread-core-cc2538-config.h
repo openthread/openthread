@@ -101,6 +101,14 @@
 #define SETTINGS_CONFIG_PAGE_SIZE 2048
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_CC2538_WITH_CC2592
  *
  * Enable support for the CC2592 range-extender front-end.

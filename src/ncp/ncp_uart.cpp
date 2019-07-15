@@ -47,7 +47,7 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_UART
+#if OPENTHREAD_CONFIG_NCP_UART_ENABLE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
@@ -79,7 +79,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
 NcpUart::NcpUart(Instance *aInstance)
     : NcpBase(aInstance)
@@ -91,9 +91,9 @@ NcpUart::NcpUart(Instance *aInstance)
     , mRxBuffer()
     , mUartSendImmediate(false)
     , mUartSendTask(*aInstance, EncodeAndSendToUart, this)
-#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
     , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
@@ -133,11 +133,11 @@ void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
     bool     prevHostPowerState;
-#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
     NcpFrameBufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
 #else
     NcpFrameBuffer &txFrameBuffer = mTxFrameBuffer;
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
 
     while (!txFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
@@ -257,7 +257,7 @@ void NcpUart::HandleFrame(otError aError)
 
     if (aError == OT_ERROR_NONE)
     {
-#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
         size_t dataLen = bufLength;
         if (SpinelEncrypter::DecryptInbound(buf, kRxBufferSize, &dataLen))
         {
@@ -265,7 +265,7 @@ void NcpUart::HandleFrame(otError aError)
         }
 #else
         super_t::HandleReceive(buf, bufLength);
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
     }
     else
     {
@@ -308,7 +308,7 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
-#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
 
 NcpUart::NcpFrameBufferEncrypterReader::NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer)
     : mTxFrameBuffer(aTxFrameBuffer)
@@ -373,9 +373,9 @@ void NcpUart::NcpFrameBufferEncrypterReader::Reset(void)
     mDataBufferReadIndex = 0;
 }
 
-#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
 
 } // namespace Ncp
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_NCP_UART
+#endif // OPENTHREAD_CONFIG_NCP_UART_ENABLE

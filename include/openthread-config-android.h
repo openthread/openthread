@@ -54,7 +54,7 @@
 #define OPENTHREAD_ENABLE_LEGACY 1
 
 /* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_ENABLE_NCP_UART 1
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
 /* Define to 1 to build posix application. */
 #define OPENTHREAD_PLATFORM_POSIX_APP 1

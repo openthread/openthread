@@ -103,9 +103,9 @@ configure_OPTIONS              += --enable-ncp
 configure_OPTIONS              += --enable-radio-only
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1
-configure_OPTIONS              += --with-ncp-bus=spi
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
 else
-configure_OPTIONS              += --with-ncp-bus=uart
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 configure_OPTIONS              += --enable-cli
 ifeq ($(USB),1)
 COMMONCFLAGS                   += -DUSB_CDC_AS_SERIAL_TRANSPORT=1

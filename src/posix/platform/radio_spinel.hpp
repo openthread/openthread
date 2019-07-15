@@ -37,6 +37,7 @@
 #include <openthread/platform/radio.h>
 
 #include "hdlc_interface.hpp"
+#include "ncp/ncp_config.h"
 #include "ncp/spinel.h"
 
 namespace ot {

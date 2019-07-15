@@ -70,7 +70,8 @@ python --version || die
         -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_JOINER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -84,7 +85,6 @@ python --version || die
         --enable-mtd                      \
         --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
-        --with-ncp-bus=uart               \
         --enable-radio-only               \
         --enable-service                  \
         --enable-sntp-client              \
@@ -106,7 +106,6 @@ python --version || die
         --enable-mtd                      \
         --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
-        --with-ncp-bus=spi                \
         --enable-radio-only               \
         --enable-service                  \
         --enable-sntp-client              \
@@ -355,7 +354,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -364,7 +364,6 @@ build_samr21() {
         --enable-ncp                        \
         --enable-ftd                        \
         --enable-mtd                        \
-        --with-ncp-bus=spi                  \
         --with-examples=posix               \
         --enable-jam-detection              \
         --enable-legacy                     \
@@ -380,7 +379,6 @@ build_samr21() {
     ./configure                             \
         --enable-cli                        \
         --enable-mtd                        \
-        --with-ncp-bus=spi                  \
         --with-examples=posix               \
         --enable-legacy                     \
         --enable-service                    \
@@ -388,7 +386,10 @@ build_samr21() {
         --disable-tests || die
     make -j 8 || die
 
-    export CPPFLAGS="-DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1"
+    export CPPFLAGS=" \
+        -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -399,7 +400,6 @@ build_samr21() {
         --enable-ftd                        \
         --enable-mtd                        \
         --enable-radio-only                 \
-        --with-ncp-bus=uart                 \
         --with-examples=posix || die
     make -j 8 || die
 }
@@ -437,8 +437,10 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
+    CPPFLAGS="-DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
+
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-ncp-bus=spi --with-examples=posix" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-examples=posix" || die
 }
 
 [ $BUILD_TARGET != posix-app-ncp ] || {
