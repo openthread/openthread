@@ -49,11 +49,11 @@
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #include "cli/cli_coap_secure.hpp"
 #endif
 
@@ -202,12 +202,12 @@ private:
     void ProcessChildMax(int argc, char *argv[]);
 #endif
     void ProcessChildTimeout(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     void ProcessCoap(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif
@@ -389,11 +389,11 @@ private:
     UdpExample mUdp;
     Dataset    mDataset;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     CoapSecure mCoapSecure;
 #endif
 

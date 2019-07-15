@@ -100,10 +100,10 @@ const struct Command Interpreter::sCommands[] = {
     {"childmax", &Interpreter::ProcessChildMax},
 #endif
     {"childtimeout", &Interpreter::ProcessChildTimeout},
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     {"coap", &Interpreter::ProcessCoap},
 #endif
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -231,10 +231,10 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
     , mUdp(*this)
     , mDataset(*this)
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mCoapSecure(*this)
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -759,7 +759,7 @@ exit:
     AppendResult(error);
 }
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 void Interpreter::ProcessCoap(int argc, char *argv[])
 {
@@ -768,9 +768,9 @@ void Interpreter::ProcessCoap(int argc, char *argv[])
     AppendResult(error);
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 {
@@ -779,7 +779,7 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
     AppendResult(error);
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

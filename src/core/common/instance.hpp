@@ -259,7 +259,7 @@ public:
     Utils::Heap &GetHeap(void) { return mHeap; }
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
      * This method returns a reference to application COAP object.
      *
@@ -269,7 +269,7 @@ public:
     Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
      * This method returns a reference to application COAP Secure object.
      *
@@ -339,11 +339,11 @@ private:
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap::Coap mApplicationCoap;
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     Coap::CoapSecure mApplicationCoapSecure;
 #endif
 

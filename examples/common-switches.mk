@@ -75,11 +75,11 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
-configure_OPTIONS              += --enable-application-coap
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1
 endif
 
 ifeq ($(COAPS),1)
-configure_OPTIONS              += --enable-application-coap-secure
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
 endif
 
 ifeq ($(COMMISSIONER),1)

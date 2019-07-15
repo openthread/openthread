@@ -71,10 +71,10 @@ Instance::Instance(void)
     , mEnergyScanCallbackContext(NULL)
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mApplicationCoap(*this)
 #endif
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

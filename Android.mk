@@ -53,7 +53,7 @@ endif
 # Enable all optional features for CI tests.
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_COMMON_FLAGS                                          += \
-    -DOPENTHREAD_ENABLE_APPLICATION_COAP=1                          \
+    -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
     -DOPENTHREAD_ENABLE_COMMISSIONER=1                              \
     -DOPENTHREAD_ENABLE_DHCP6_CLIENT=1                              \
     -DOPENTHREAD_ENABLE_DHCP6_SERVER=1                              \
