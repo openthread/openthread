@@ -333,6 +333,7 @@ HEADERS_COMMON                             = \
     config/joiner.h                          \
     config/link_quality.h                    \
     config/link_raw.h                        \
+    config/logging.h                         \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \
