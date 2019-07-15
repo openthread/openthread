@@ -1024,20 +1024,6 @@ AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Define to 1 to enable the joiner role.])
 
-if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes" -o "${enable_border_agent}" = "yes" -o "${enable_application_coap_secure}" = "yes"; then
-    enable_dtls="yes"
-    OPENTHREAD_ENABLE_DTLS=1
-else
-    enable_dtls="no"
-    OPENTHREAD_ENABLE_DTLS=0
-fi
-
-AC_MSG_CHECKING([whether to enable DTLS due to joiner/commissioner])
-AC_MSG_RESULT(${enable_dtls})
-AC_SUBST(OPENTHREAD_ENABLE_DTLS)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
-
 #
 # Jam Detection
 #
@@ -2048,7 +2034,6 @@ AC_MSG_NOTICE([
   OpenThread UDP forward support            : ${enable_udp_forward}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
-  OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Channel Monitor support        : ${enable_channel_monitor}
   OpenThread Channel Manager support        : ${enable_channel_manager}

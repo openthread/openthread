@@ -42,7 +42,7 @@
 #define OPENTHREAD_ENABLE_CHILD_SUPERVISION 1
 
 /* Define to 1 to enable dtls support. */
-#define OPENTHREAD_ENABLE_DTLS 1
+#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
 
 /* Define to 1 if you want to use jam detection feature */
 #define OPENTHREAD_ENABLE_JAM_DETECTION 1

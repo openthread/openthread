@@ -196,7 +196,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     instance.Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
                                                                   aBufferInfo->mCoapSecureBuffers);
     instance.Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(messages, buffers);

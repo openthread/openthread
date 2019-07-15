@@ -203,9 +203,9 @@ private:
     MeshCoP::Commissioner mCommissioner;
 #endif // OPENTHREAD_ENABLE_COMMISSIONER
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     Coap::CoapSecure mCoapSecure;
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
 
 #if OPENTHREAD_ENABLE_JOINER
     MeshCoP::Joiner mJoiner;
