@@ -1065,49 +1065,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE], [test "${enable_ble}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE],[${OPENTHREAD_ENABLE_BLE}],[Define to 1 to enable BLE support.])
 
 #
-# BLE Host Implementations
-#
-
-AC_MSG_CHECKING([which Bluetooth host stack to use])
-AC_ARG_WITH(ble_host,
-    [AS_HELP_STRING([--with-ble-host=TARGET],
-        [Specify the ble host stack from one of: none, nimble @<:@default=none@:>@.])],
-    [
-        case "${with_ble_host}" in
-
-        none|nimble)
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${with_ble_host} for --with-ble-host])
-            ;;
-        esac
-    ],
-    [with_ble_host=none])
-
-OPENTHREAD_BLE_HOST=${with_ble_host}
-
-case ${with_ble_host} in
-
-    nimble)
-        OPENTHREAD_BLE_HOST_NIMBLE=1
-	AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST_NIMBLE],[${OPENTHREAD_BLE_HOST_NIMBLE}],[Define to 1 if you want to use NimBLE host examples])
-        ;;
-
-esac
-
-
-AC_MSG_RESULT(${OPENTHREAD_BLE_HOST})
-
-AC_SUBST(OPENTHREAD_BLE_HOST)
-AM_CONDITIONAL([OPENTHREAD_BLE_HOST], [test "${with_ble_host}" != "none"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST],[${OPENTHREAD_BLE_HOST}],[OpenThread ble_host])
-
-AC_SUBST(OPENTHREAD_BLE_HOST_NIMBLE)
-AM_CONDITIONAL([OPENTHREAD_BLE_HOST_NIMBLE], [test "${OPENTHREAD_BLE_HOST}" = "nimble"])
-
-
-#
 # Jam Detection
 #
 
@@ -2070,7 +2027,6 @@ tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/fuzz/Makefile
 tests/scripts/Makefile
-tests/scripts/ble/Makefile
 tests/scripts/thread-cert/Makefile
 tests/unit/Makefile
 doc/Makefile

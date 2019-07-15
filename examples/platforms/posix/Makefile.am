@@ -55,8 +55,7 @@ PLATFORM_SOURCES                          = \
     sim/radio-sim.c                         \
     $(NULL)
 
-
-if OPENTHREAD_BLE_HOST_NIMBLE
+if OPENTHREAD_ENABLE_BLE # Assume OPENTHREAD_BLE_HOST_NIMBLE
 PLATFORM_SOURCES                         += \
     ble_nimble.cpp                          \
     ble_event.cpp                           \
@@ -90,7 +89,7 @@ override CXXFLAGS    := $(filter-out -std=c99,$(CXXFLAGS))
 
 CFLAGS += -std=c11
 
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+endif # OPENTHREAD_ENABLE_BLE
 
 
 libopenthread_posix_a_SOURCES             = \

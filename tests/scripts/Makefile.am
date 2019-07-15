@@ -32,7 +32,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     thread-cert                           \
-    ble                                   \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -42,21 +41,12 @@ SUBDIRS                                 = \
 
 if OPENTHREAD_POSIX
 
-if OPENTHREAD_ENABLE_BLE
-
-SUBDIRS                                += \
-    ble                                   \
-    $(NULL)
-else
-
 if OPENTHREAD_ENABLE_CLI
 
 SUBDIRS                                += \
     thread-cert                           \
     $(NULL)
 endif # OPENTHREAD_ENABLE_CLI
-
-endif # OPENTHREAD_ENABLE_BLE
 
 endif # OPENTHREAD_POSIX
 

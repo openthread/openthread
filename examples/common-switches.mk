@@ -64,10 +64,6 @@ ifeq ($(BLE),1)
 configure_OPTIONS              += --enable-ble
 endif
 
-ifeq ($(BLE_HOST),nimble)
-configure_OPTIONS              += --with-ble-host=nimble
-endif
-
 ifeq ($(BORDER_AGENT),1)
 configure_OPTIONS              += --enable-border-agent
 endif

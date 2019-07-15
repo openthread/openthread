@@ -37,5 +37,5 @@ make
 or
 
 ```./bootstrap
-BLE=1 BLE_HOST=nimble make -f examples/Makefile-posix
+BLE=1 make -f examples/Makefile-posix
 ```

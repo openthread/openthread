@@ -34,12 +34,12 @@ LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     $(NULL)
 
-if OPENTHREAD_BLE_HOST_NIMBLE
+if OPENTHREAD_ENABLE_BLE # Assume OPENTHREAD_BLE_HOST_NIMBLE
 LDADD_COMMON                                                          += \
     -lrt -lpthread -lstdc++                                              \
     $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
     $(NULL)
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+endif # OPENTHREAD_ENABLE_BLE
 
 if OPENTHREAD_TARGET_LINUX
 LDADD_COMMON                                                          += \

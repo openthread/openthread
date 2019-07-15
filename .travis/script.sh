@@ -447,10 +447,7 @@ build_samr21() {
 
 [ $BUILD_TARGET != posix-ble ] || {
     ./bootstrap || die
-    # Virtual BLE interfaces require sudo.
-    sudo COVERAGE=1 BLE=1 BLE_HOST=nimble BuildJobs=1 make -f examples/Makefile-posix check || die
-    # Revert file permissions to allow codecov script to succeed.
-    sudo chown -R $USER build
+    COVERAGE=1 BLE=1 BLE_HOST=nimble BuildJobs=1 make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
