@@ -82,14 +82,14 @@ ifeq ($(DAEMON),1)
 configure_OPTIONS              += --enable-posix-app-daemon
 endif
 
-ifneq ($(HOST),)
-configure_OPTIONS              += --host=$(HOST)
-endif
-
 ifneq ($(DEBUG),1)
 COMMONCFLAGS                   += \
     -O2                           \
     $(NULL)
+endif
+
+ifneq ($(HOST),)
+configure_OPTIONS              += --host=$(HOST)
 endif
 
 ifeq ($(PLATFORM_NETIF),1)
