@@ -133,7 +133,7 @@ void otSimReceiveEvent(struct Event *aEvent)
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
-        DieNowWithMessage("recvfrom", OT_EXIT_ERROR_ERRNO);
+        DieNowWithMessage("recvfrom", (rval < 0) ? OT_EXIT_ERROR_ERRNO : OT_EXIT_FAILURE);
     }
 
     sNow += aEvent->mDelay;

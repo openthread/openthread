@@ -119,7 +119,7 @@ exit:
     return fd;
 }
 
-const char *platformExitCodeToString(uint8_t aExitCode)
+const char *otExitCodeToString(uint8_t aExitCode)
 {
     const char *retval = NULL;
 
@@ -146,10 +146,11 @@ const char *platformExitCodeToString(uint8_t aExitCode)
         break;
 
     case OT_EXIT_ERROR_ERRNO:
-        retval = "ErrorErrno";
+        retval = strerror(errno);
         break;
+
     default:
-        retval = "UnknownExitCode";
+        assert(false);
         break;
     }
 

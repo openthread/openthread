@@ -91,11 +91,11 @@ static void swapWrite(int aFd, uint16_t aLength)
         uint16_t count = aLength >= sizeof(buffer) ? sizeof(buffer) : aLength;
         ssize_t  rval  = read(sSettingsFd, buffer, count);
 
-        VerifyOrDie(rval > 0, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(rval > 0, OT_EXIT_FAILURE);
         count = static_cast<uint16_t>(rval);
         rval  = write(aFd, buffer, count);
         assert(rval == count);
-        VerifyOrDie(rval == count, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(rval == count, OT_EXIT_FAILURE);
         aLength -= count;
     }
 }
@@ -232,7 +232,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     }
 
 exit:
-    VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_FAILURE);
     return error;
 }
 
@@ -258,7 +258,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
                     write(swapFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
                     write(swapFd, aValue, aValueLength) == aValueLength,
-                OT_EXIT_ERROR_ERRNO);
+                OT_EXIT_FAILURE);
 
     swapPersist(swapFd);
 
@@ -315,17 +315,17 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
         rval = write(swapFd, &key, sizeof(key));
         assert(rval == sizeof(key));
-        VerifyOrDie(rval == sizeof(key), OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(rval == sizeof(key), OT_EXIT_FAILURE);
 
         rval = write(swapFd, &length, sizeof(length));
         assert(rval == sizeof(length));
-        VerifyOrDie(rval == sizeof(length), OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(rval == sizeof(length), OT_EXIT_FAILURE);
 
         swapWrite(swapFd, length);
     }
 
 exit:
-    VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_FAILURE);
 
     if (error == OT_ERROR_NONE)
     {

@@ -215,7 +215,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
-        DieNowWithMessage("socket", OT_EXIT_ERROR_ERRNO);
+        DieNowWithMessage("socket", OT_EXIT_FAILURE);
     }
     else if (FD_ISSET(sUartSocket, aReadFdSet))
     {
@@ -244,12 +244,12 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 #else  // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(STDIN_FILENO, aErrorFdSet))
     {
-        DieNowWithMessage("stdin", OT_EXIT_ERROR_ERRNO);
+        DieNowWithMessage("stdin", OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(STDOUT_FILENO, aErrorFdSet))
     {
-        DieNowWithMessage("stdout", OT_EXIT_ERROR_ERRNO);
+        DieNowWithMessage("stdout", OT_EXIT_FAILURE);
     }
 
     fd = STDIN_FILENO;
@@ -268,15 +268,15 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         else if (rval <= 0)
         {
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-            if (rval != 0)
+            if (rval < 0)
             {
-                perror("read(UART)");
+                perror("UART read");
             }
             close(sSessionSocket);
             sSessionSocket = -1;
             otEXIT_NOW();
 #else
-            DieNowWithMessage("UART read", OT_EXIT_ERROR_ERRNO);
+            DieNowWithMessage("UART read", (rval < 0) ? OT_EXIT_ERROR_ERRNO : OT_EXIT_FAILURE);
 #endif
         }
     }

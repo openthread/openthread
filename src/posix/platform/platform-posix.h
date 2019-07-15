@@ -120,7 +120,7 @@ enum
  * @returns  A string representation of an exit code.
  *
  */
-const char *platformExitCodeToString(uint8_t aExitCode);
+const char *otExitCodeToString(uint8_t aExitCode);
 
 /**
  * This macro checks for the specified condition, which is expected to commonly be true,
@@ -130,17 +130,15 @@ const char *platformExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define VerifyOrDie(aCondition, aExitCode)                                                                          \
-    do                                                                                                              \
-    {                                                                                                               \
-        if (!(aCondition))                                                                                          \
-        {                                                                                                           \
-            const char *errString;                                                                                  \
-            errString = (aExitCode == OT_EXIT_ERROR_ERRNO) ? strerror(errno) : platformExitCodeToString(aExitCode); \
-            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, errString);                                \
-            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, errString);                                      \
-            exit(aExitCode);                                                                                        \
-        }                                                                                                           \
+#define VerifyOrDie(aCondition, aExitCode)                                                               \
+    do                                                                                                   \
+    {                                                                                                    \
+        if (!(aCondition))                                                                               \
+        {                                                                                                \
+            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, otExitCodeToString(aExitCode)); \
+            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, otExitCodeToString(aExitCode));       \
+            exit(aExitCode);                                                                             \
+        }                                                                                                \
     } while (false)
 
 /**
@@ -178,14 +176,12 @@ const char *platformExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define DieNowWithMessage(aMessage, aExitCode)                                                                  \
-    do                                                                                                          \
-    {                                                                                                           \
-        const char *errString;                                                                                  \
-        errString = (aExitCode == OT_EXIT_ERROR_ERRNO) ? strerror(errno) : platformExitCodeToString(aExitCode); \
-        fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, errString);                  \
-        otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, errString);                        \
-        exit(aExitCode);                                                                                        \
+#define DieNowWithMessage(aMessage, aExitCode)                                                                     \
+    do                                                                                                             \
+    {                                                                                                              \
+        fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, otExitCodeToString(aExitCode)); \
+        otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, otExitCodeToString(aExitCode));       \
+        exit(aExitCode);                                                                                           \
     } while (false)
 
 /**
