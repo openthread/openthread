@@ -231,7 +231,7 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
     {
         BeginTransmit();
@@ -272,7 +272,7 @@ void SubMac::BeginTransmit(void)
 
     VerifyOrExit(mState == kStateCsmaBackoff);
 
-#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
     {
         mTransmitFrame.SetCsmaCaEnabled(false);
@@ -558,7 +558,7 @@ exit:
     return swEnergyScan;
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void SubMac::HandleFrameUpdated(Frame &aFrame)
 {
     mCallbacks.FrameUpdated(aFrame);
@@ -651,7 +651,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     }
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
 {
     Instance *instance = static_cast<Instance *>(aInstance);

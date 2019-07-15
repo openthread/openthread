@@ -87,7 +87,7 @@ enum
     kMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
 
-    kTxNumBcast = OPENTHREAD_CONFIG_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
+    kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
 
 /**
@@ -699,7 +699,7 @@ private:
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
     bool mBeaconsEnabled : 1;
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
@@ -733,9 +733,9 @@ private:
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 };
 
 /**

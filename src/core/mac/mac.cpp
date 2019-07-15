@@ -83,7 +83,7 @@ Mac::Mac(Instance &aInstance)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mBeaconsEnabled(false)
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
 #endif
@@ -106,7 +106,7 @@ Mac::Mac(Instance &aInstance)
     , mOobFrame(NULL)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     , mFilter()
 #endif
 {
@@ -349,7 +349,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
             mOperationTask.Post();
         }
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
         mShouldDelaySleep = false;
 #endif
@@ -556,7 +556,7 @@ void Mac::UpdateIdleMode(void)
 
     VerifyOrExit(mOperation == kOperationIdle);
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     if (mShouldDelaySleep)
     {
         mTimer.Start(kSleepDelay);
@@ -592,7 +592,7 @@ void Mac::StartOperation(Operation aOperation)
     {
         otLogDebgMac("Request to start operation \"%s\"", OperationToString(aOperation));
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         if (mDelayingSleep)
         {
             otLogDebgMac("Canceling sleep delay");
@@ -671,7 +671,7 @@ void Mac::PerformNextOperation(void)
 #endif
         mPendingTransmitPoll = false;
         mTimer.Stop();
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
         mShouldDelaySleep = false;
 #endif
@@ -888,7 +888,7 @@ bool Mac::ShouldSendBeacon(void) const
 
     shouldSend = IsBeaconEnabled();
 
-#if OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
+#if OPENTHREAD_CONFIG_MAC_BEACON_RSP_WHEN_JOINABLE_ENABLE
     if (!shouldSend)
     {
         // When `ENABLE_BEACON_RSP_WHEN_JOINABLE` feature is enabled,
@@ -1099,7 +1099,7 @@ void Mac::BeginTransmit(void)
 
     mBroadcastTransmitCount = 0;
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     if (!mRxOnWhenIdle && !mPromiscuous)
     {
         mShouldDelaySleep = sendFrame.GetFramePending();
@@ -1358,7 +1358,7 @@ void Mac::HandleTimer(void)
         PerformNextOperation();
         break;
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     case kOperationIdle:
         if (mDelayingSleep)
         {
@@ -1527,9 +1527,9 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
     PanId     panid;
     Neighbor *neighbor;
     otError   error = aError;
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
     mCounters.mRxTotal++;
 
@@ -1598,7 +1598,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
         }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
         // Source filter Processing. Check if filtered out by whitelist or blacklist.
         SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), rssi));
@@ -1609,7 +1609,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             aFrame->SetRssi(rssi);
         }
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
         break;
     }
@@ -1661,7 +1661,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
         // make assigned rssi to take effect quickly
         if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
@@ -1669,7 +1669,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
             neighbor->GetLinkInfo().Clear();
         }
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
@@ -1721,7 +1721,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
         {
             mTimer.Stop();
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
             if (!mRxOnWhenIdle && !mPromiscuous && aFrame->GetFramePending())
             {
                 mShouldDelaySleep = true;
@@ -1854,7 +1854,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     mPromiscuous = aPromiscuous;
     otPlatRadioSetPromiscuous(&GetInstance(), aPromiscuous);
 
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelayingSleep    = false;
     mShouldDelaySleep = false;
 #endif

@@ -324,12 +324,12 @@ private:
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     void    ProcessMacFilter(int argc, char *argv[]);
     void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(int argc, char *argv[]);
     otError ProcessMacFilterRss(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,

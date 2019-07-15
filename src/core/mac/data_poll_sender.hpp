@@ -109,8 +109,8 @@ public:
      * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
      * a control-message from a parent or in case of data poll transmission failures or timeouts.
      *
-     * Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear user-specified
-     * poll period.
+     * Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear
+     * user-specified poll period.
      *
      * User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed, otherwise it
      * would be cilpped by the maximal value.
@@ -185,7 +185,7 @@ public:
      * This method sets/clears the attach mode on data poll sender.
      *
      * When attach mode is enabled, the data poll sender will send data polls at a faster rate determined by
-     * poll period configuration option `OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD`.
+     * poll period configuration option `OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD`.
      *
      * @param[in]  aMode  The mode value.
      *
@@ -230,12 +230,12 @@ public:
 private:
     enum // Poll period under different conditions (in milliseconds).
     {
-        kAttachDataPollPeriod = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
-        kRetxPollPeriod       = OPENTHREAD_CONFIG_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
-        kFastPollPeriod       = 188,                                       ///< Period used for fast polls.
-        kMinPollPeriod        = OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
-        kMaxExternalPeriod    = ((1 << 26) - 1),                           ///< Maximum allowed user-specified period.
-                                                                           ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
+        kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
+        kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
+        kFastPollPeriod       = 188,                                           ///< Period used for fast polls.
+        kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
+        kMaxExternalPeriod    = ((1 << 26) - 1), ///< Maximum allowed user-specified period.
+                                                 ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
     };
 
     enum

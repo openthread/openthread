@@ -104,7 +104,7 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     }
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void SubMac::Callbacks::FrameUpdated(Frame &aFrame)
 {
     /**
@@ -150,7 +150,7 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void SubMac::Callbacks::FrameUpdated(Frame &)
 {
     /**

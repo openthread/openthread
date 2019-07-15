@@ -1329,7 +1329,7 @@ public:
     uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
      * This method appends Header IEs to MAC header.
      *
@@ -1364,7 +1364,7 @@ public:
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
-#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
      * This method copies the PSDU and all attributes from another frame.
@@ -1416,7 +1416,7 @@ private:
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
@@ -1580,9 +1580,9 @@ public:
     {
         mFlags |= kJoiningFlag;
 
-#if OPENTHREAD_CONFIG_JOIN_BEACON_VERSION != kProtocolVersion
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != kProtocolVersion
         mFlags &= ~kVersionMask;
-        mFlags |= OPENTHREAD_CONFIG_JOIN_BEACON_VERSION << kVersionOffset;
+        mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
 #endif
     }
 

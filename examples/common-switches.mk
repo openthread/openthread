@@ -147,7 +147,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
 
 ifeq ($(MAC_FILTER),1)
-configure_OPTIONS              += --enable-mac-filter
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
 ifeq ($(MTD_NETDIAG),1)
