@@ -30,7 +30,7 @@ import wpan
 from wpan import verify
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: Verify Thread mode change on children and recovery after parent reset
+# Test description: Verify Thread mode change on children and recovery after parent reset.
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
@@ -153,11 +153,22 @@ def check_child_table():
 
 wpan.verify_within(check_child_table, WAIT_INTERVAL)
 
-# Reset parent and verify all children are recovered
-parent.reset()
-wpan.verify_within(check_child_table, WAIT_INTERVAL)
+# Prepare a set of IP message tx to both children
+NUM_MSGS = 6
+
+parent_ml_address = parent.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
+child2_ml_address = child2.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
+
+sender = parent.prepare_tx(parent_ml_address, child2_ml_address, 800, NUM_MSGS)
+
+child2_rx_ip_counter = int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0)
+
+wpan.Node.perform_async_tx_rx()
+
+verify(sender.was_successful)
 
 # Change mode on both children (make child1 sleepy, and child2 non-sleepy)
+
 child1.set(wpan.WPAN_THREAD_DEVICE_MODE, str(DEVICE_MODE_SLEEPY_END_DEVICE))
 verify(
     int(child1.get(wpan.WPAN_THREAD_DEVICE_MODE), 0)
@@ -171,6 +182,16 @@ verify(
 
 # Verify that the child table on parent is also updated
 wpan.verify_within(check_child_table, WAIT_INTERVAL)
+
+
+def check_child2_received_msg():
+    verify(
+        int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0)
+        >= child2_rx_ip_counter + NUM_MSGS
+    )
+
+
+wpan.verify_within(check_child2_received_msg, WAIT_INTERVAL)
 
 # Reset parent and verify all children are recovered
 parent.reset()
