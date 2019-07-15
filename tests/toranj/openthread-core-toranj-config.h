@@ -282,6 +282,14 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
 
 /**
+ * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+ *
+ * Define to 1 to enable Child Supervision support.
+ *
+ */
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).

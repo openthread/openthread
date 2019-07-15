@@ -77,7 +77,6 @@ build_config=$1
 configure_options="                \
     --disable-docs                 \
     --disable-tests                \
-    --enable-child-supervision     \
     --enable-commissioner          \
     --enable-coverage=$coverage    \
     --enable-diag                  \
