@@ -83,7 +83,7 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
     , mChannelManager(*this)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

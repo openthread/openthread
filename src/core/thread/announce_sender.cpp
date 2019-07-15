@@ -110,7 +110,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
@@ -191,6 +191,6 @@ void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 } // namespace ot

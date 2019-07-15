@@ -1529,51 +1529,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
- *
- * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
- *
- * The list of channels is determined from the Operational Dataset's ChannelMask. The period intervals are determined
- * by `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` and `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED`
- * configuration options.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
-#define OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
- *
- * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in Router role.
- *
- * In a cycle, the `AnnounceSender` sends MLE Announcement on all channels in Active Operational Dataset's ChannelMask.
- * The transmissions on different channels happen uniformly over the given interval (i.e., if there are 16 channels,
- * there will be 16 MLE Announcement messages each on one channel with `interval / 16`  between two consecutive MLE
- * Announcement transmissions).
- *
- * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER`).
- *
- */
-#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
-#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER 688000 // 668 seconds = 11 min and 28 sec.
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
- *
- * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in REED role.
- *
- * This is similar to `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` but used when device is in REED role.
- *
- * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER`).
- *
- */
-#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
-#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED (668000 * 3)
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
  *
  * Define as 1 to enable peek/poke functionality on NCP.
