@@ -59,9 +59,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_ENABLE_SLAAC
     , mSlaac(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mDnsClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
     , mSntpClient(Get<ThreadNetif>())
 #endif // OPENTHREAD_ENABLE_SNTP_CLIENT
@@ -128,7 +128,7 @@ void ThreadNetif::Up(void)
     SubscribeAllNodesMulticast();
     Get<Mle::MleRouter>().Enable();
     Get<Coap::Coap>().Start(kCoapUdpPort);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Start();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
@@ -144,7 +144,7 @@ void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Stop();
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT

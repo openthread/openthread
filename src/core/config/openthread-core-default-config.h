@@ -420,26 +420,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
- *
- * Maximum time that DNS Client waits for response in milliseconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
-#define OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT 3000
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
- *
- * Maximum number of retransmissions for DNS client.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
-#define OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT 2
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT
  *
  * Maximum time that SNTP Client waits for response in milliseconds.

@@ -34,7 +34,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
     --enable-cert-log                 \
     --enable-cli                      \
-    --enable-dns-client               \
     --enable-ftd                      \
     --enable-joiner                   \
     --enable-mac-filter               \

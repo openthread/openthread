@@ -54,6 +54,7 @@
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
+#include "config/dns_client.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_ENABLE_JOINER

@@ -584,7 +584,7 @@ template <> inline MeshCoP::Joiner &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 template <> inline Dns::Client &Instance::Get(void)
 {
     return mThreadNetif.mDnsClient;

@@ -123,7 +123,7 @@ configure_OPTIONS              += --disable-docs
 endif
 
 ifeq ($(DNS_CLIENT),1)
-configure_OPTIONS              += --enable-dns-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
 endif
 
 ifeq ($(ECDSA),1)

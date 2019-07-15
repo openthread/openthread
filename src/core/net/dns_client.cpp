@@ -37,7 +37,7 @@
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file
@@ -526,4 +526,4 @@ exit:
 } // namespace Dns
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

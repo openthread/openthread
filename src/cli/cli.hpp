@@ -222,7 +222,7 @@ private:
     void ProcessDiag(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiscover(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void ProcessDns(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -341,7 +341,7 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     static void HandleDnsResponse(void *        aContext,
                                   const char *  aHostname,
                                   otIp6Address *aAddress,
@@ -359,7 +359,7 @@ private:
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
 #if OPENTHREAD_ENABLE_SNTP_CLIENT
@@ -377,7 +377,7 @@ private:
     uint32_t                    mInterval;
     TimerMilli                  mPingTimer;
     otIcmp6Handler              mIcmpHandler;
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     bool mResolvingInProgress;
     char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
