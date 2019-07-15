@@ -28,6 +28,7 @@
 
 # OpenThread Features (Makefile default configuration).
 
+BIG_ENDIAN          ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
 COAP                ?= 0
@@ -60,6 +61,10 @@ SNTP_CLIENT         ?= 0
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
 
+
+ifeq ($(BIG_ENDIAN),1)
+COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1
+endif
 
 ifeq ($(BORDER_AGENT),1)
 configure_OPTIONS              += --enable-border-agent
