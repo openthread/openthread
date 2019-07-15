@@ -98,7 +98,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearchIsInBackoff(false)
     , mParentSearchBackoffWasCanceled(false)
     , mParentSearchRecentlyDetached(false)
@@ -204,7 +204,7 @@ Mle::Mle(Instance &aInstance)
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     StartParentSearchTimer();
 #endif
 }
@@ -595,7 +595,7 @@ otError Mle::BecomeDetached(void)
         Get<MeshCoP::PendingDataset>().HandleDetach();
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     mParentSearchRecentlyDetached = true;
 #endif
 
@@ -769,7 +769,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     // send announce after attached if needed
     InformPreviousChannel();
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     UpdateParentSearchState();
 #endif
 
@@ -4030,7 +4030,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 void Mle::HandleParentSearchTimer(Timer &aTimer)
 {
     aTimer.GetOwner<Mle>().HandleParentSearchTimer();
@@ -4135,7 +4135,7 @@ void Mle::UpdateParentSearchState(void)
         StartParentSearchTimer();
     }
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 
 void Mle::LogMleMessage(const char *aLogString, const Ip6::Address &aAddress) const
 {
