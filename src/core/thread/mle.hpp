@@ -1741,7 +1741,7 @@ private:
     otError InformPreviousParent(void);
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     static void HandleParentSearchTimer(Timer &aTimer);
     void        HandleParentSearchTimer(void);
     void        StartParentSearchTimer(void);
@@ -1795,7 +1795,7 @@ private:
     uint16_t mPreviousParentRloc;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     bool       mParentSearchIsInBackoff : 1;
     bool       mParentSearchBackoffWasCanceled : 1;
     bool       mParentSearchRecentlyDetached : 1;
