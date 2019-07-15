@@ -840,37 +840,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC], [test "${enable_mtd_n
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC],[${OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC}],[Define to 1 to enable network diagnostic for MTD.])
 
 #
-# Application CoAP Secure
-#
-
-AC_ARG_ENABLE(application_coap_secure,
-    [AS_HELP_STRING([--enable-application-coap-secure],[Enable CoAP Secure to an application.@<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_application_coap_secure=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_application_coap_secure} for --enable-application-coap_secure])
-            ;;
-        esac
-    ],
-    [enable_application_coap_secure=no])
-
-if test "$enable_application_coap_secure" = "yes"; then
-    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=1
-    enable_application_coap="yes"
-else
-    OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE], [test "${enable_application_coap_secure}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE],[${OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE}],[Define to 1 if you want to enable CoAP Secure to an application.])
-
-#
 # Platform UDP
 #
 
@@ -1325,36 +1294,6 @@ fi
 AC_SUBST(OPENTHREAD_ENABLE_SNTP_CLIENT)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_SNTP_CLIENT], [test "${enable_sntp_client}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SNTP_CLIENT],[${OPENTHREAD_ENABLE_SNTP_CLIENT}],[Define to 1 if you want to enable SNTP Client])
-
-#
-# Application CoAP
-#
-
-AC_ARG_ENABLE(application_coap,
-    [AS_HELP_STRING([--enable-application-coap],[Enable CoAP to an application.@<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_application_coap=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_application_coap} for --enable-application-coap])
-            ;;
-        esac
-    ],
-    [enable_application_coap=no])
-
-if test "$enable_application_coap" = "yes"; then
-    OPENTHREAD_ENABLE_APPLICATION_COAP=1
-else
-    OPENTHREAD_ENABLE_APPLICATION_COAP=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application_coap}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
 # otLinkRaw API
@@ -1885,8 +1824,6 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread SNTP Client support            : ${enable_sntp_client}
-  OpenThread Application CoAP support       : ${enable_application_coap}
-  OpenThread Application CoAP Secure support: ${enable_application_coap_secure}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}

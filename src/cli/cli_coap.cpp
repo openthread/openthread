@@ -33,7 +33,7 @@
 
 #include "cli_coap.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #include <ctype.h>
 
@@ -385,4 +385,4 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

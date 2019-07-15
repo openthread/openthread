@@ -60,11 +60,11 @@ python --version || die
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1"
 
     scan-build ./configure                \
-        --enable-application-coap         \
-        --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
@@ -95,8 +95,6 @@ python --version || die
 
     # SPI transport
     scan-build ./configure                \
-        --enable-application-coap         \
-        --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \

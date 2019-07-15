@@ -430,60 +430,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
- *
- * Minimum spacing before first retransmission when ACK is not received (RFC7252 default value is 2).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
-#define OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT 2
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR
- *
- * Numerator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when
- * ACK is not received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5, must not be decreased below 1).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR
-#define OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR 3
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR
- *
- * Denominator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when
- * ACK is not received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5, must not be decreased below 1).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR
-#define OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR 2
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
- *
- * Maximum number of retransmissions for CoAP Confirmable messages (RFC7252 default value is 4).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
-#define OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT 4
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
- *
- * Maximum number of cached responses for CoAP Confirmable messages.
- *
- * Cached responses are used for message deduplication.
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
-#define OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES 10
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
  *
  * Maximum time that DNS Client waits for response in milliseconds.
@@ -1074,12 +1020,12 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_HEAP_SIZE
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define OPENTHREAD_CONFIG_HEAP_SIZE (3072 * sizeof(void *))
 #else
 #define OPENTHREAD_CONFIG_HEAP_SIZE (1536 * sizeof(void *))
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#endif // OPENTHREAD_CONFIG_HEAP_SIZE
+#endif
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
