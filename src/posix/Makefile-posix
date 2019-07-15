@@ -78,7 +78,7 @@ configure_OPTIONS                   = \
 
 # Platform specific switches
 
-ifeq (${DAEMON},1)
+ifeq ($(DAEMON),1)
 configure_OPTIONS              += --enable-posix-app-daemon
 endif
 
@@ -86,6 +86,10 @@ ifneq ($(DEBUG),1)
 COMMONCFLAGS                   += \
     -O2                           \
     $(NULL)
+endif
+
+ifneq ($(HOST),)
+configure_OPTIONS              += --host=$(HOST)
 endif
 
 ifeq ($(PLATFORM_NETIF),1)
