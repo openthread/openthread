@@ -37,7 +37,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-ftd                      \
     --enable-mtd                      \
     --enable-ncp                      \
-    --with-ncp-bus=uart               \
     --enable-radio-only               \
     --enable-service                  \
     --with-examples=posix             \

@@ -44,7 +44,7 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_SPI
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
@@ -75,7 +75,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
 NcpSpi::NcpSpi(Instance *aInstance)
     : NcpBase(aInstance)
@@ -379,4 +379,4 @@ void NcpSpi::HandleRxFrame(void)
 } // namespace Ncp
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_NCP_SPI
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLE

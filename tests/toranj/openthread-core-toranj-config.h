@@ -219,6 +219,14 @@
 #define OPENTHREAD_CONFIG_LOG_PLATFORM                          1
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE
  *
  *  The size of NCP message buffer in bytes

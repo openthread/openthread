@@ -73,7 +73,6 @@ configure_OPTIONS                   = \
     --enable-ftd                      \
     --enable-ncp                      \
     --enable-posix-app                \
-    --with-ncp-bus=uart               \
     $(NULL)
 
 # Platform specific switches

@@ -47,7 +47,6 @@ configure_OPTIONS                                 = \
     --enable-ftd                                    \
     --enable-mtd                                    \
     --enable-ncp                                    \
-    --with-ncp-bus=uart                             \
     --enable-radio-only                             \
     --enable-linker-map                             \
     --with-examples=qpg6095                         \

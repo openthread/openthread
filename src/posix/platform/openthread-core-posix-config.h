@@ -54,4 +54,12 @@
 
 #define OPENTHREAD_CONFIG_UART_CLI_RAW 1
 
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

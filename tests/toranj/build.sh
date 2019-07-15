@@ -83,7 +83,6 @@ configure_options="                \
     --enable-legacy                \
     --enable-ncp                   \
     --enable-service               \
-    --with-ncp-bus=uart            \
     "
 
 cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
@@ -110,7 +109,6 @@ case ${build_config} in
             CPPFLAGS="$cppflags_config"         \
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
-            --with-ncp-bus=uart                 \
             --enable-radio-only                 \
             --with-examples=posix               \
             --disable-docs                      \

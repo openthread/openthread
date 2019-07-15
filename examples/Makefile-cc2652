@@ -46,7 +46,6 @@ configure_OPTIONS                                          = \
     --enable-ftd                                             \
     --enable-mtd                                             \
     --enable-ncp                                             \
-    --with-ncp-bus=uart                                      \
     --enable-radio-only                                      \
     --with-examples=cc2652                                   \
     MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \

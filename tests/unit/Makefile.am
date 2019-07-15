@@ -126,16 +126,11 @@ check_PROGRAMS                                                     += \
 
 if OPENTHREAD_ENABLE_NCP
 check_PROGRAMS                                                     += \
+    test-hdlc                                                         \
     test-ncp-buffer                                                   \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
     $(NULL)
-
-if OPENTHREAD_ENABLE_NCP_UART
-check_PROGRAMS                                                     += \
-    test-hdlc                                                         \
-    $(NULL)
-endif
 endif
 endif # OPENTHREAD_ENABLE_FTD
 

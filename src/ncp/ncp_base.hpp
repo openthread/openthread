@@ -35,6 +35,8 @@
 
 #include "openthread-core-config.h"
 
+#include "ncp/ncp_config.h"
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include <openthread/ip6.h>
 #else

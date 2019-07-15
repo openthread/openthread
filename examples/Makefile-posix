@@ -73,7 +73,6 @@ configure_OPTIONS               = \
     --enable-ncp                  \
     --enable-radio-only           \
     --with-examples=posix         \
-    --with-ncp-bus=uart           \
     $(NULL)
 
 # Platform specific switches
@@ -83,6 +82,12 @@ COMMONCFLAGS                   += \
     -O2                           \
     $(NULL)
 endif
+
+ifeq ($(NCP_SPI),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
+else
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+endif # NCP_SPI == 1
 
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
