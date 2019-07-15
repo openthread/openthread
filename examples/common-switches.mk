@@ -99,7 +99,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1
 endif
 
 ifeq ($(CHILD_SUPERVISION),1)
-configure_OPTIONS              += --enable-child-supervision
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
 ifeq ($(DEBUG),1)

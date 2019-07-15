@@ -36,7 +36,7 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include <openthread/channel_manager.h>
 #endif
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #include <openthread/child_supervision.h>
 #endif
 #include <openthread/dataset.h>
@@ -903,7 +903,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
 {
@@ -922,7 +922,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 

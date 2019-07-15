@@ -593,7 +593,7 @@ public:
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
     /**
      * This method increments the number of seconds since last supervision of the child.
@@ -615,7 +615,7 @@ public:
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 private:
 #if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
@@ -639,9 +639,9 @@ private:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
-#endif                                 // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif
 
     OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };

@@ -203,7 +203,7 @@ private:
          * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
          *
          */
-        kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
+        kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
     // Callbacks from DataPollHandler

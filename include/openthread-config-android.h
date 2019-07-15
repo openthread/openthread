@@ -39,7 +39,7 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
 
 /* Define to 1 if you want to use child supervision feature */
-#define OPENTHREAD_ENABLE_CHILD_SUPERVISION 1
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
 
 /* Define to 1 to enable dtls support. */
 #define OPENTHREAD_CONFIG_DTLS_ENABLE 1

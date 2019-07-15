@@ -43,7 +43,7 @@
 namespace ot {
 namespace Utils {
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -248,7 +248,7 @@ exit:
     RestartTimer();
 }
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 } // namespace Utils
 } // namespace ot

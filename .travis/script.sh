@@ -59,14 +59,14 @@ python --version || die
         -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1"
 
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
-        --enable-child-supervision        \
         --enable-cli                      \
         --enable-commissioner             \
         --enable-dhcp6-client             \
@@ -99,7 +99,6 @@ python --version || die
         --enable-application-coap-secure  \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
-        --enable-child-supervision        \
         --enable-cli                      \
         --enable-commissioner             \
         --enable-dhcp6-client             \
@@ -363,7 +362,8 @@ build_samr21() {
     export CPPFLAGS=" \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -374,7 +374,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-child-supervision          \
         --enable-diag                       \
         --enable-jam-detection              \
         --enable-legacy                     \
@@ -393,7 +392,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-child-supervision          \
         --enable-legacy                     \
         --enable-mac-filter                 \
         --enable-service                    \

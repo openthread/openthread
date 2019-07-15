@@ -1207,37 +1207,6 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
-# Child Supervision
-#
-
-AC_ARG_ENABLE(child_supervision,
-    [AS_HELP_STRING([--enable-child-supervision],[Enable child supervision feature @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_child_supervision=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_child_supervision} for --enable-child-supervision])
-            ;;
-        esac
-    ],
-    [enable_child_supervision=no])
-
-if test "$enable_child_supervision" = "yes"; then
-    OPENTHREAD_ENABLE_CHILD_SUPERVISION=1
-else
-    OPENTHREAD_ENABLE_CHILD_SUPERVISION=0
-fi
-
-AC_MSG_RESULT(${enable_child_supervision})
-AC_SUBST(OPENTHREAD_ENABLE_CHILD_SUPERVISION)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CHILD_SUPERVISION], [test "${enable_child_supervision}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHILD_SUPERVISION],[${OPENTHREAD_ENABLE_CHILD_SUPERVISION}],[Define to 1 if you want to use child supervision feature])
-
-#
 # DHCPv6 Client
 #
 
@@ -1911,7 +1880,6 @@ AC_MSG_NOTICE([
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Factory Diagnostics support    : ${enable_diag}
-  OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
