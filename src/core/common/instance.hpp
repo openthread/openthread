@@ -355,7 +355,7 @@ private:
     Utils::ChannelManager mChannelManager;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     AnnounceSender mAnnounceSender;
 #endif
 
@@ -664,7 +664,7 @@ template <> inline MeshCoP::BorderAgent &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 template <> inline AnnounceSender &Instance::Get(void)
 {
     return mAnnounceSender;

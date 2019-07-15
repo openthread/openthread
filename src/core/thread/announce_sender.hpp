@@ -130,7 +130,7 @@ private:
     TimerMilli       mTimer;
 };
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 /**
  * This class implements an AnnounceSender.
@@ -165,7 +165,7 @@ private:
     Notifier::Callback mNotifierCallback;
 };
 
-#endif // OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 /**
  * @}
