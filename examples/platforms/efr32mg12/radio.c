@@ -34,6 +34,7 @@
 
 #include <assert.h>
 
+#include "openthread-system.h"
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -55,7 +56,6 @@
 #include "rail.h"
 #include "rail_config.h"
 #include "rail_ieee802154.h"
-#include "rtcdriver.h"
 
 enum
 {
@@ -289,7 +289,7 @@ void efr32RadioInit(void)
     efr32ConfigInit(RAILCb_Generic);
 
     CMU_ClockEnable(cmuClock_PRS, true);
-    RTCDRV_Init();
+
     status = RAIL_ConfigSleep(gRailHandle, RAIL_SLEEP_CONFIG_TIMERSYNC_ENABLED);
     assert(status == RAIL_STATUS_NO_ERROR);
 
@@ -704,6 +704,8 @@ static void processNextRxPacket(otInstance *aInstance)
         }
     }
 
+    otSysEventSignalPending();
+
 exit:
 
     if (packetHandle != RAIL_RX_PACKET_HANDLE_INVALID)
@@ -801,6 +803,8 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
             sEnergyScanResultDbm = energyScanResultQuarterDbm / QUARTER_DBM_IN_DBM;
         }
     }
+
+    otSysEventSignalPending();
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
@@ -835,11 +839,14 @@ void efr32RadioProcess(otInstance *aInstance)
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
+
+        otSysEventSignalPending();
     }
     else if (sEnergyScanMode == ENERGY_SCAN_MODE_ASYNC && sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
         sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
         otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
+        otSysEventSignalPending();
     }
 
     processNextRxPacket(aInstance);
