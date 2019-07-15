@@ -66,7 +66,7 @@ class DataPollHandler : public InstanceLocator
 public:
     enum
     {
-        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
     /**

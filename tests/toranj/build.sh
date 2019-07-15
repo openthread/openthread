@@ -81,7 +81,6 @@ configure_options="                \
     --enable-ftd                   \
     --enable-jam-detection         \
     --enable-legacy                \
-    --enable-mac-filter            \
     --enable-ncp                   \
     --enable-service               \
     --with-ncp-bus=uart            \

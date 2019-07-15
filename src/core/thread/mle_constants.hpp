@@ -77,8 +77,8 @@ enum
     kMaxLinkRequestTimeout          = 2000,  ///< Maximum delay for receiving a Link Accept
     kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
                             1000), ///< Minimum timeout(s) for keep alive
-    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD +
-                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_RETX_POLL_PERIOD) /
+    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
+                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
                           1000, ///< Minimum timeout(s) for data poll
     kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
                                                                : kMinTimeoutDataPoll), ///< Minimum timeout(s)

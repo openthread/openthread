@@ -166,7 +166,7 @@ public:
          */
         void EnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
         /**
          * The method notifies user of `SubMac` to process transmit security for the frame, which  happens when the
          * frame includes Header IE(s) that were updated before transmission.
@@ -388,7 +388,7 @@ public:
      */
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
      * This method handles a "Frame Updated" event from radio platform.
      *

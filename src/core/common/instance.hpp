@@ -439,7 +439,7 @@ template <> inline Mac::SubMac &Instance::Get(void)
     return mThreadNetif.mMac.mSubMac;
 }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> inline Mac::Filter &Instance::Get(void)
 {
     return mThreadNetif.mMac.mFilter;

@@ -69,7 +69,8 @@ python --version || die
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_JOINER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1"
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -80,7 +81,6 @@ python --version || die
         --enable-ftd                      \
         --enable-jam-detection            \
         --enable-legacy                   \
-        --enable-mac-filter               \
         --enable-mtd                      \
         --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
@@ -103,7 +103,6 @@ python --version || die
         --enable-ftd                      \
         --enable-jam-detection            \
         --enable-legacy                   \
-        --enable-mac-filter               \
         --enable-mtd                      \
         --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
@@ -355,7 +354,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -368,7 +368,6 @@ build_samr21() {
         --with-examples=posix               \
         --enable-jam-detection              \
         --enable-legacy                     \
-        --enable-mac-filter                 \
         --enable-service                    \
         --disable-docs                      \
         --disable-tests                     \
@@ -384,7 +383,6 @@ build_samr21() {
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
         --enable-legacy                     \
-        --enable-mac-filter                 \
         --enable-service                    \
         --disable-docs                      \
         --disable-tests || die

@@ -157,7 +157,7 @@ otError DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
 
     if (aPeriod != 0)
     {
-        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = OT_ERROR_INVALID_ARGS);
 
         // Clipped by the maximal value.
         if (aPeriod > kMaxExternalPeriod)

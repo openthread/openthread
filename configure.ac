@@ -930,38 +930,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
 
 #
-# MAC Filter (include AddressFilter and RssInFilter)
-#
-
-AC_ARG_ENABLE(mac_filter,
-              [AS_HELP_STRING([--enable-mac-filter],[Enable MAC filter support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_mac_filter=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_mac_filter} for --enable-mac-filter])
-            ;;
-        esac
-    ],
-    [enable_mac_filter=no])
-
-if test "$enable_mac_filter" = "yes"; then
-    OPENTHREAD_ENABLE_MAC_FILTER=1
-else
-    OPENTHREAD_ENABLE_MAC_FILTER=0
-fi
-
-AC_MSG_CHECKING([whether to enable mac filter])
-AC_MSG_RESULT(${enable_mac_filter})
-AC_SUBST(OPENTHREAD_ENABLE_MAC_FILTER)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_FILTER], [test "${enable_mac_filter}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_FILTER],[${OPENTHREAD_ENABLE_MAC_FILTER}],[Define to 1 if you want to use MAC filter feature])
-
-#
 # Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
 #
 
@@ -1599,7 +1567,6 @@ AC_MSG_NOTICE([
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread UDP forward support            : ${enable_udp_forward}
   OpenThread Jam Detection support          : ${enable_jam_detection}
-  OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Service support                : ${enable_service}

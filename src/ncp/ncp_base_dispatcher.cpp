@@ -157,7 +157,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_MAC_CCA_FAILURE_RATE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_CCA_FAILURE_RATE>;
         break;
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     case SPINEL_PROP_MAC_BLACKLIST:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_BLACKLIST>;
         break;
@@ -777,7 +777,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU>;
         break;
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     case SPINEL_PROP_MAC_WHITELIST:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_WHITELIST>;
         break;
@@ -1046,7 +1046,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NETS>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     case SPINEL_PROP_MAC_WHITELIST:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>;
         break;
@@ -1131,7 +1131,7 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
     case SPINEL_PROP_THREAD_ASSISTING_PORTS:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ASSISTING_PORTS>;
         break;
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     case SPINEL_PROP_MAC_WHITELIST:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>;
         break;

@@ -147,6 +147,14 @@
 #define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS            4
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+ *
+ * Define to 1 to enable MAC filter support.
+ *
+ */
+#define OPENTHREAD_CONFIG_MAC_FILTER_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_FILTER_SIZE
  *
  * The number of MAC Filter entries.

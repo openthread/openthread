@@ -116,85 +116,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
- *
- * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
- *
- * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT 32
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
- *
- * The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access failure.
- *
- * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006, default value is 4.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT 4
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
- *
- * The maximum number of retries allowed after a transmission failure for direct transmissions.
- *
- * Equivalent to macMaxFrameRetries, default value is 3.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
- *
- * The maximum number of retries allowed after a transmission failure for indirect transmissions.
- *
- * Equivalent to macMaxFrameRetries, default value is 0.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
- *
- * Maximum number of received IEEE 802.15.4 Data Requests for a queued indirect transaction.
- *
- * The indirect frame remains in the transaction queue until it is successfully transmitted or until the indirect
- * transmission fails after the maximum number of IEEE 802.15.4 Data Request messages have been received.
- *
- * Takes the place of macTransactionPersistenceTime. The time period is specified in units of IEEE 802.15.4 Data
- * Request receptions, rather than being governed by macBeaconOrder.
- *
- * @sa OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
-#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS 4
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_TX_NUM_BCAST
- *
- * The number of times each IEEE 802.15.4 broadcast frame is transmitted.
- *
- * The minimum value is 1. Values larger than 1 may improve broadcast reliability by increasing redundancy, but may also
- * increase congestion.
- *
- */
-#ifndef OPENTHREAD_CONFIG_TX_NUM_BCAST
-#define OPENTHREAD_CONFIG_TX_NUM_BCAST 1
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
  *
  * Define as 1 for OpenThread to drop a message (and not send any remaining fragments of the message) if all transmit
@@ -208,16 +129,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 #define OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE 1
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
- *
- * The Data Poll period during attach in milliseconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
-#define OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD 100
 #endif
 
 /**
@@ -390,16 +301,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
- *
- * The Beacon version to use when the beacon join flag is set.
- *
- */
-#ifndef OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
-#define OPENTHREAD_CONFIG_JOIN_BEACON_VERSION kProtocolVersion
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
  *
  * The message pool is managed by platform defined logic when this flag is set.
@@ -409,16 +310,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 #define OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAC_FILTER_SIZE
- *
- * The number of MAC Filter entries.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAC_FILTER_SIZE
-#define OPENTHREAD_CONFIG_MAC_FILTER_SIZE 32
 #endif
 
 /**
@@ -567,19 +458,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
 #define OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
- *
- * Define to 1 to enable IEEE 802.15.4 Beacons when joining is enabled.
- *
- * @note When this feature is enabled, the device will transmit IEEE 802.15.4 Beacons in response to IEEE 802.15.4
- * Beacon Requests even while the device is not router capable and detached.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE
-#define OPENTHREAD_CONFIG_ENABLE_BEACON_RSP_WHEN_JOINABLE 0
 #endif
 
 /**
@@ -827,17 +705,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
- *
- * Define as 1 to stay awake between fragments while transmitting a large packet,
- * and to stay awake after receiving a packet with frame pending set to true.
- *
- */
-#ifndef OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
-#define OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
  *
  * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.
@@ -900,16 +767,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
- *
- * Define as 1 to disable CSMA-CA on the last transmit attempt.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-#define OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
  *
  * Define as 1 to enable the time synchronization service feature.
@@ -958,24 +815,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
- *
- * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
- * to support following features:
- *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
- *
- * @note If it's enabled, platform must support interrupt context and concurrent access AES.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
-#else
-#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 0
-#endif
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
  *
  * Enable experimental mode for 'deep' networks, allowing packet routes up to 32 nodes.
@@ -1005,26 +844,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS
 #define OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS 4
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
- *
- * This setting configures the minimum poll period in milliseconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD
-#define OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD 10
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_RETX_POLL_PERIOD
- *
- * This setting configures the retx poll period in milliseconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_RETX_POLL_PERIOD
-#define OPENTHREAD_CONFIG_RETX_POLL_PERIOD 1000
 #endif
 
 /**

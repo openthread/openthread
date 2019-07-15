@@ -2506,7 +2506,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_WHITELIST>(void)
 {
@@ -2750,7 +2750,7 @@ exit:
 
     return error;
 }
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
 {
@@ -2894,7 +2894,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>(void)
 {
@@ -2964,7 +2964,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
 {
@@ -2985,7 +2985,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>(void)
 {
@@ -3044,7 +3044,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 #if OPENTHREAD_PLATFORM_POSIX_APP
 
