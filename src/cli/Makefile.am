@@ -167,6 +167,7 @@ noinst_HEADERS                      = \
     cli_coap.hpp                      \
     cli_coap_secure.hpp               \
     cli_commissioner.hpp              \
+    cli_config.h                      \
     cli_console.hpp                   \
     cli_dataset.hpp                   \
     cli_joiner.hpp                    \
