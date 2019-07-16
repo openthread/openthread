@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include "cli_config.h"
+
 #include <stdarg.h>
 
 #include <openthread/cli.h>
