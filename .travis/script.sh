@@ -62,13 +62,13 @@ python --version || die
         -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
         -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1"
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-commissioner             \
         --enable-dhcp6-client             \
         --enable-dhcp6-server             \
         --enable-diag                     \
@@ -98,7 +98,6 @@ python --version || die
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-commissioner             \
         --enable-dhcp6-client             \
         --enable-dhcp6-server             \
         --enable-diag                     \

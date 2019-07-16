@@ -570,7 +570,7 @@ template <> inline TimeSync &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 template <> inline MeshCoP::Commissioner &Instance::Get(void)
 {
     return mThreadNetif.mCommissioner;

@@ -898,38 +898,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM_NETIF], [test "${enable_platform_neti
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_PLATFORM_NETIF], [${OPENTHREAD_ENABLE_PLATFORM_NETIF}], [Define to 1 to enable platform Netif.])
 
 #
-# Thread Commissioner
-#
-
-AC_ARG_ENABLE(commissioner,
-    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_commissioner=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_commissioner} for --enable-commissioner])
-            ;;
-        esac
-    ],
-    [enable_commissioner=no])
-
-if test "$enable_commissioner" = "yes"; then
-    OPENTHREAD_ENABLE_COMMISSIONER=1
-else
-    OPENTHREAD_ENABLE_COMMISSIONER=0
-fi
-
-AC_MSG_CHECKING([whether to enable the commissioner])
-AC_MSG_RESULT(${enable_commissioner})
-AC_SUBST(OPENTHREAD_ENABLE_COMMISSIONER)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_COMMISSIONER],[${OPENTHREAD_ENABLE_COMMISSIONER}],[Define to 1 to enable the commissioner role.])
-
-#
 # Thread Joiner
 #
 
@@ -1814,7 +1782,6 @@ AC_MSG_NOTICE([
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread UDP forward support            : ${enable_udp_forward}
-  OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Filter support             : ${enable_mac_filter}

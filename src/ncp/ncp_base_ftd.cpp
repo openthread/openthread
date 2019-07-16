@@ -50,7 +50,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 #include "meshcop/commissioner.hpp"
 #endif
 
@@ -471,7 +471,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEW_DATASET>(v
     return error;
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>(void)
 {
@@ -805,7 +805,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT>(void)
 {

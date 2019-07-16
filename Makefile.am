@@ -34,7 +34,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
     --enable-cert-log                 \
     --enable-cli                      \
-    --enable-commissioner             \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-diag                     \

@@ -83,7 +83,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
 endif
 
 ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1
 endif
 
 ifeq ($(COVERAGE),1)

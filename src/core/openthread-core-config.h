@@ -50,9 +50,10 @@
 #include "config/channel_monitor.h"
 #include "config/child_supervision.h"
 #include "config/coap.h"
+#include "config/commissioner.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-    OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_JOINER
+    OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_ENABLE_JOINER
 #define OPENTHREAD_CONFIG_DTLS_ENABLE 1
 #endif
 

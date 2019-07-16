@@ -400,17 +400,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
- *
- * The maximum number of Joiner entries maintained by the Commissioner.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
-#define OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES 2
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES
  *
  * The maximum number of Joiner Router entries that can be queued by the Joiner.
  *

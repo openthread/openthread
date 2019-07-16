@@ -922,7 +922,7 @@ bool NcpBase::HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(aHeader));
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(aHeader));
 #endif
@@ -1807,7 +1807,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NEST_LEGACY_INTERFACE));
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_COMMISSIONER));
 #endif
 

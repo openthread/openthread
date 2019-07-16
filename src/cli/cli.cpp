@@ -106,7 +106,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
 #endif
 #if OPENTHREAD_FTD
@@ -237,7 +237,7 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mCoapSecure(*this)
 #endif
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
 #endif
 #if OPENTHREAD_ENABLE_JOINER
@@ -3070,7 +3070,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     AppendResult(OT_ERROR_NONE);
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 void Interpreter::ProcessCommissioner(int argc, char *argv[])
 {

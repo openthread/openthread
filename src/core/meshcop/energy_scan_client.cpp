@@ -45,7 +45,7 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 
@@ -164,4 +164,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
