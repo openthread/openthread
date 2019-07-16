@@ -808,38 +808,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_UDP_FORWARD], [test "${enable_udp_forward}" = 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UDP_FORWARD], [${OPENTHREAD_ENABLE_UDP_FORWARD}], [Define to 1 to enable the UDP forward feature.])
 
 #
-# Thread Border Agent
-#
-
-AC_MSG_CHECKING([whether to enable border agent])
-AC_ARG_ENABLE(border_agent,
-    [AS_HELP_STRING([--enable-border-agent], [Enable border agent support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_border_agent=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_border_agent} for --enable-border-agent])
-            ;;
-        esac
-    ],
-    [enable_border_agent=no])
-
-if test "${enable_border_agent}" = "yes"; then
-    OPENTHREAD_ENABLE_BORDER_AGENT=1
-else
-    OPENTHREAD_ENABLE_BORDER_AGENT=0
-fi
-
-AC_MSG_RESULT(${enable_border_agent})
-AC_SUBST(OPENTHREAD_ENABLE_BORDER_AGENT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_AGENT], [test "${enable_border_agent}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT], [${OPENTHREAD_ENABLE_BORDER_AGENT}], [Define to 1 to enable the border agent feature.])
-
-#
 # Thread Network Diagnostic for MTD
 #
 
@@ -1514,36 +1482,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
 
 #
-# Border Router
-#
-
-AC_ARG_ENABLE(border_router,
-    [AS_HELP_STRING([--enable-border-router],[Enable Border Router support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_border_router=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_border_router} for --enable-border-router])
-            ;;
-        esac
-    ],
-    [enable_border_router=no])
-
-if test "$enable_border_router" = "yes"; then
-    OPENTHREAD_ENABLE_BORDER_ROUTER=1
-else
-    OPENTHREAD_ENABLE_BORDER_ROUTER=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_BORDER_ROUTER)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
-
-#
 # Service
 #
 
@@ -2048,8 +1986,6 @@ AC_MSG_NOTICE([
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Application CoAP Secure support: ${enable_application_coap_secure}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
-  OpenThread Border Agent support           : ${enable_border_agent}
-  OpenThread Border Router support          : ${enable_border_router}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}

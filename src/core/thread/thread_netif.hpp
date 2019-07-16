@@ -40,7 +40,7 @@
 #include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 #include "meshcop/border_agent.hpp"
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -187,16 +187,16 @@ private:
     Mac::Mac                mMac;
     MeshForwarder           mMeshForwarder;
     Mle::MleRouter          mMleRouter;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     NetworkData::Local mNetworkDataLocal;
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     NetworkData::Leader mNetworkDataLeader;
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     bool mIsUp;
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     MeshCoP::BorderAgent mBorderAgent;
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

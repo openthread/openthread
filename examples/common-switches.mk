@@ -67,11 +67,11 @@ COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1
 endif
 
 ifeq ($(BORDER_AGENT),1)
-configure_OPTIONS              += --enable-border-agent
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1
 endif
 
 ifeq ($(BORDER_ROUTER),1)
-configure_OPTIONS              += --enable-border-router
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1
 endif
 
 ifeq ($(COAP),1)

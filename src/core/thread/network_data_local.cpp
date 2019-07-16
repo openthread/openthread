@@ -41,7 +41,7 @@
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
 
 namespace ot {
 namespace NetworkData {
@@ -387,4 +387,4 @@ exit:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,25 +28,31 @@
 
 /**
  * @file
- *   This file implements the OpenThread Border Agent API.
+ *   This file includes compile-time configurations for Border Router services.
+ *
  */
 
-#include "openthread-core-config.h"
+#ifndef CONFIG_BORDER_ROUTER_H_
+#define CONFIG_BORDER_ROUTER_H_
 
-#include <openthread/border_agent.h>
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+ *
+ * Define to 1 to enable Border Agent support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
+#endif
 
-#include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+ *
+ * Define to 1 to enable Border Router support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
+#endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-
-using namespace ot;
-
-otBorderAgentState otBorderAgentGetState(otInstance *aInstance)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<MeshCoP::BorderAgent>().GetState();
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#endif // CONFIG_BORDER_ROUTER_H_

@@ -319,6 +319,7 @@ HEADERS_COMMON                             = \
     common/tlvs.hpp                          \
     common/trickle_timer.hpp                 \
     config/announce_sender.h                 \
+    config/border_router.h                   \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \

@@ -52,7 +52,7 @@
 #include <openthread/thread_ftd.h>
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 #include <openthread/border_router.h>
 #endif
 #if OPENTHREAD_ENABLE_SERVICE
@@ -160,7 +160,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     {"netdataregister", &Interpreter::ProcessNetworkDataRegister},
 #endif
 #if OPENTHREAD_ENABLE_SERVICE
@@ -184,7 +184,7 @@ const struct Command Interpreter::sCommands[] = {
     {"ping", &Interpreter::ProcessPing},
     {"pollperiod", &Interpreter::ProcessPollPeriod},
     {"promiscuous", &Interpreter::ProcessPromiscuous},
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     {"prefix", &Interpreter::ProcessPrefix},
 #endif
 #if OPENTHREAD_FTD
@@ -193,7 +193,7 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"reset", &Interpreter::ProcessReset},
     {"rloc16", &Interpreter::ProcessRloc16},
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     {"route", &Interpreter::ProcessRoute},
 #endif
 #if OPENTHREAD_FTD
@@ -1699,14 +1699,14 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     otError error = OT_ERROR_NONE;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     SuccessOrExit(error = otBorderRouterRegister(mInstance));
 #else
     SuccessOrExit(error = otServerRegister(mInstance));
@@ -1715,7 +1715,7 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
@@ -2138,7 +2138,7 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
     mServer->OutputFormat("\r\n");
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     otError              error = OT_ERROR_NONE;
@@ -2358,7 +2358,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
@@ -2393,7 +2393,7 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
     mServer->OutputFormat("Done\r\n");
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
     otError               error = OT_ERROR_NONE;
@@ -2549,7 +2549,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessRouter(int argc, char *argv[])

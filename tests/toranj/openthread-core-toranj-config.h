@@ -49,6 +49,14 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+ *
+ * Define to 1 to enable Border Router support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE                  1
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

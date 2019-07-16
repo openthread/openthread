@@ -261,7 +261,7 @@ private:
 #if OPENTHREAD_FTD
     void ProcessNeighbor(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_ENABLE_SERVICE
@@ -285,7 +285,7 @@ private:
 #endif
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     void    ProcessPrefix(int argc, char *argv[]);
     otError ProcessPrefixAdd(int argc, char *argv[]);
     otError ProcessPrefixRemove(int argc, char *argv[]);
@@ -297,7 +297,7 @@ private:
     void ProcessReleaseRouterId(int argc, char *argv[]);
 #endif
     void ProcessReset(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     void    ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
