@@ -43,7 +43,7 @@
 #include <openthread/link.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
 
@@ -173,7 +173,7 @@ const struct Command Interpreter::sCommands[] = {
     {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
 #endif
     {"networkname", &Interpreter::ProcessNetworkName},
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     {"networktime", &Interpreter::ProcessNetworkTime},
 #endif
     {"panid", &Interpreter::ProcessPanId},
@@ -1756,7 +1756,7 @@ exit:
     AppendResult(error);
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 void Interpreter::ProcessNetworkTime(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1808,7 +1808,7 @@ void Interpreter::ProcessNetworkTime(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 void Interpreter::ProcessPanId(int argc, char *argv[])
 {

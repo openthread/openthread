@@ -677,7 +677,7 @@ private:
     void LogFrameTxFailure(const Frame &aFrame, otError aError, uint8_t aRetryCount) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void    ProcessTimeIe(Frame &aFrame);
     uint8_t GetTimeIeOffset(Frame &aFrame);
 #endif

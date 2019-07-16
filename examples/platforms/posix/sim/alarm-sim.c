@@ -186,11 +186,11 @@ uint64_t otPlatTimeGet(void)
     return platformAlarmGetNow();
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME

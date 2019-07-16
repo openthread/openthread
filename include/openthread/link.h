@@ -65,7 +65,7 @@ typedef struct otThreadLinkInfo
     uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
     bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
 
-    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
 } otThreadLinkInfo;

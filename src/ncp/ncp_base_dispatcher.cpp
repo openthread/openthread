@@ -499,7 +499,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CNTR_IP_RX_FAILURE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_IP_RX_FAILURE>;
         break;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case SPINEL_PROP_THREAD_NETWORK_TIME:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>;
         break;
@@ -636,14 +636,14 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL>;
         break;
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case SPINEL_PROP_TIME_SYNC_PERIOD:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_TIME_SYNC_PERIOD>;
         break;
     case SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_TIME_SYNC_XTAL_THRESHOLD>;
         break;
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #endif // OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------
@@ -974,7 +974,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL>;
         break;
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case SPINEL_PROP_TIME_SYNC_PERIOD:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_TIME_SYNC_PERIOD>;
         break;

@@ -227,7 +227,7 @@ private:
     PanIdQueryServer           mPanIdQuery;
     EnergyScanServer           mEnergyScan;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;
 #endif
 };

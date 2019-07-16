@@ -504,7 +504,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         break;
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = AppendTimeRequest(*message));
 #endif
 
@@ -563,7 +563,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     SourceAddressTlv sourceAddress;
     TlvRequestTlv    tlvRequest;
     uint16_t         rloc16;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeRequestTlv timeRequest;
 #endif
 
@@ -651,7 +651,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
         tlvRequest.SetLength(0);
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (neighbor != NULL)
     {
         if (Tlv::GetTlv(aMessage, Tlv::kTimeRequest, sizeof(timeRequest), timeRequest) == OT_ERROR_NONE)
@@ -736,7 +736,7 @@ otError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
         aNeighbor->SetState(Neighbor::kStateLinkRequest);
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aNeighbor != NULL && aNeighbor->IsTimeSyncEnabled())
     {
         message->SetTimeSync(true);
@@ -927,7 +927,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         mRetrieveNewNetworkData = true;
         SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Get<TimeSync>().HandleTimeSyncMessage(aMessage);
 #endif
         break;
@@ -1234,7 +1234,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()) && route.IsValid());
     routerId = GetRouterId(sourceAddress.GetRloc16());
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     Get<TimeSync>().HandleTimeSyncMessage(aMessage);
 #endif
 
@@ -1563,7 +1563,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
     ChallengeTlv            challenge;
     Router *                leader;
     Child *                 child;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeRequestTlv timeRequest;
 #endif
 
@@ -1638,7 +1638,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         if (Tlv::GetTlv(aMessage, Tlv::kTimeRequest, sizeof(timeRequest), timeRequest) == OT_ERROR_NONE)
         {
             child->SetTimeSyncEnabled(true);
@@ -1871,7 +1871,7 @@ void MleRouter::HandleStateUpdateTimer(void)
 
     SynchronizeChildNetworkData();
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mRole == OT_DEVICE_ROLE_LEADER || mRole == OT_DEVICE_ROLE_ROUTER)
     {
         Get<TimeSync>().ProcessTimeSync();
@@ -1898,7 +1898,7 @@ void MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
     SuccessOrExit(error = AppendMleFrameCounter(*message));
     SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetChallengeLength()));
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aChild->IsTimeSyncEnabled())
     {
         SuccessOrExit(error = AppendTimeParameter(*message));
@@ -2865,7 +2865,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
         Get<IndirectSender>().SetChildUseShortAddress(aChild, false);
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aChild.IsTimeSyncEnabled())
     {
         message->SetTimeSync(true);
@@ -3807,7 +3807,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     statusTlv.SetStatus(aStatus);
     SuccessOrExit(error = message->AppendTlv(statusTlv));
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = AppendXtalAccuracy(*message));
 #endif
 
@@ -3993,7 +3993,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     ThreadRloc16Tlv        rlocTlv;
     ThreadStatusTlv        statusTlv;
     Router *               router = NULL;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     XtalAccuracyTlv xtalAccuracyTlv;
 #endif
 
@@ -4008,7 +4008,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
     VerifyOrExit(statusTlv.IsValid(), error = OT_ERROR_PARSE);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // In a time sync enabled network, all routers' xtal accuracy must be less than the threshold.
     if (Tlv::GetTlv(aMessage, Tlv::kXtalAccuracy, sizeof(xtalAccuracyTlv), xtalAccuracyTlv) != OT_ERROR_NONE ||
         xtalAccuracyTlv.GetXtalAccuracy() > Get<TimeSync>().GetXtalThreshold())
@@ -4680,7 +4680,7 @@ bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aCh
            aChild.HasIp6Address(GetInstance(), aAddress);
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 void MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     LogMleMessage("Receive Time Sync", aMessageInfo.GetPeerAddr());
@@ -4715,7 +4715,7 @@ exit:
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Mle
 } // namespace ot

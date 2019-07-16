@@ -454,7 +454,7 @@ private:
     uint16_t mHeaderIe;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements vendor specific Header IE generation and parsing.
  *
@@ -564,7 +564,7 @@ private:
     uint8_t  mSequence;
     uint64_t mTime;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
@@ -1265,7 +1265,7 @@ public:
      */
     const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
      *
@@ -1327,7 +1327,7 @@ public:
      *
      */
     uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**

@@ -65,6 +65,7 @@
 #include "config/parent_search.h"
 #include "config/platform.h"
 #include "config/sntp_client.h"
+#include "config/time_sync.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE

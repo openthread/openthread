@@ -105,7 +105,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mPanIdQuery(aInstance)
     , mEnergyScan(aInstance)
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
 {

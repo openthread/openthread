@@ -266,9 +266,9 @@ NcpBase::NcpBase(Instance *aInstance)
     otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otIp6SetReceiveFilterEnabled(mInstance, true);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #if OPENTHREAD_ENABLE_UDP_FORWARD
     otUdpForwardSetForwarder(mInstance, &NcpBase::HandleUdpForwardStream, this);
 #endif
@@ -1777,7 +1777,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CHANNEL_MANAGER));
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_TIME_SYNC));
 #endif
 

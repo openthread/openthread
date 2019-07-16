@@ -341,6 +341,7 @@ HEADERS_COMMON                             = \
     config/parent_search.h                   \
     config/platform.h                        \
     config/sntp_client.h                     \
+    config/time_sync.h                       \
     crypto/aes_ccm.hpp                       \
     crypto/aes_ecb.hpp                       \
     crypto/ecdsa.hpp                         \

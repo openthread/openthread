@@ -1418,7 +1418,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 otError Mle::AppendTimeRequest(Message &aMessage)
 {
     TimeRequestTlv tlv;
@@ -1448,7 +1448,7 @@ otError Mle::AppendXtalAccuracy(Message &aMessage)
 
     return aMessage.AppendTlv(tlv);
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 otError Mle::AppendActiveTimestamp(Message &aMessage)
 {
@@ -1991,7 +1991,7 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
     SuccessOrExit(error = AppendVersion(*message));
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = AppendTimeRequest(*message));
 #endif
 
@@ -2830,7 +2830,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         HandleAnnounce(aMessage, aMessageInfo);
         break;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case Header::kCommandTimeSync:
         Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo);
         break;
@@ -3193,7 +3193,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     MleFrameCounterTlv      mleFrameCounter;
     ChallengeTlv            challenge;
     Mac::ExtAddress         extAddress;
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameter;
 #endif
 
@@ -3318,7 +3318,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Time Parameter
     if (Tlv::GetTlv(aMessage, Tlv::kTimeParameter, sizeof(timeParameter), timeParameter) == OT_ERROR_NONE)
@@ -3337,7 +3337,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     }
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
@@ -3448,7 +3448,7 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
         Get<MeshCoP::PendingDataset>().ClearNetwork();
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Sync to Thread network time
     if (aMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ)
     {

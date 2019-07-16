@@ -305,7 +305,7 @@ public:
 
         /**
          * Applicable/Required only when time synchronization service
-         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
          *
          */
         kCommandTimeSync = 99, ///< Time Synchronization
@@ -1349,7 +1349,7 @@ protected:
      */
     otError AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method appends a Time Request TLV to a message.
      *
@@ -1382,7 +1382,7 @@ protected:
      *
      */
     otError AppendXtalAccuracy(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.

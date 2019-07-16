@@ -49,7 +49,7 @@
 #include <openthread/jam_detection.h>
 #endif
 #include <openthread/ncp.h>
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
 #include <openthread/platform/misc.h>
@@ -3185,7 +3185,7 @@ void NcpBase::StopLegacy(void)
 
 #endif // OPENTHREAD_ENABLE_LEGACY
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(void)
 {
     otError             error = OT_ERROR_NONE;
@@ -3211,7 +3211,7 @@ void NcpBase::HandleTimeSyncUpdate(void)
     mChangedPropsSet.AddProperty(SPINEL_PROP_THREAD_NETWORK_TIME);
     mUpdateChangedPropsTask.Post();
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext)
 {

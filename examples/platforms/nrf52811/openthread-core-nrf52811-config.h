@@ -201,13 +201,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
  *
  * Define as 1 to enable the time synchronization service feature.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#define OPENTHREAD_CONFIG_ENABLE_TIME_SYNC 0
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#define OPENTHREAD_CONFIG_TIME_SYNC_ENABLE 0
 #endif
 
 /**
@@ -215,12 +215,12 @@
  *
  * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
  * to support following features:
- *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_ENABLE_TIME_SYNC is set).
+ *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set).
  *
  * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
  *
  */
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
 #endif
 
