@@ -564,7 +564,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         if (sReceivedFrames[i].mPsdu != NULL)
         {
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -586,7 +586,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         resetPendingEvent(kPendingEventFrameTransmitted);
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -610,7 +610,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         resetPendingEvent(kPendingEventChannelAccessFailure);
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -627,7 +627,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         resetPendingEvent(kPendingEventInvalidOrNoAck);
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -644,7 +644,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     {
         resetPendingEvent(kPendingEventReceiveFailed);
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

@@ -44,7 +44,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 configure_OPTIONS                                 = \
     --enable-cli                                    \
-    --enable-diag                                   \
     --enable-ftd                                    \
     --enable-mtd                                    \
     --enable-ncp                                    \

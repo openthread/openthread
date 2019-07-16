@@ -43,7 +43,6 @@ BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
     --enable-cli                  \
-    --enable-diag                 \
     --enable-ftd                  \
     --enable-mtd                  \
     --enable-ncp                  \

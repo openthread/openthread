@@ -44,7 +44,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 configure_OPTIONS                                 = \
     --enable-mtd                                    \
-    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52811                        \
     MBEDTLS_CPPFLAGS="$(NRF52811_MBEDTLS_CPPFLAGS)" \

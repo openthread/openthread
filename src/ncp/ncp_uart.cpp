@@ -49,7 +49,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_UART
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
                                                                   ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
                                                                   ot::Ncp::NcpBase::kSpinelPropIdSize,

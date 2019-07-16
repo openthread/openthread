@@ -117,7 +117,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
 #endif
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     {"diag", &Interpreter::ProcessDiag},
 #endif
     {"discover", &Interpreter::ProcessDiscover},
@@ -3406,7 +3406,7 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_MAC_FILTER
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Interpreter::ProcessDiag(int argc, char *argv[])
 {
     char output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
@@ -3434,7 +3434,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     cmd = argv[0];
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     VerifyOrExit(
         (!otDiagIsEnabled(mInstance) || (strcmp(cmd, "diag") == 0)),
         mServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));

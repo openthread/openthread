@@ -115,7 +115,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1
 endif
 
 ifeq ($(DIAGNOSTIC),1)
-configure_OPTIONS              += --enable-diag
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DIAG_ENABLE=1
 endif
 
 ifeq ($(DISABLE_DOC),1)

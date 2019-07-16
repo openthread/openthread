@@ -78,7 +78,6 @@ configure_options="                \
     --disable-docs                 \
     --disable-tests                \
     --enable-coverage=$coverage    \
-    --enable-diag                  \
     --enable-ftd                   \
     --enable-jam-detection         \
     --enable-joiner                \

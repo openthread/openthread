@@ -370,7 +370,7 @@ private:
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
 #endif
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
 #endif
     bool mIsInitialized;
@@ -717,7 +717,7 @@ template <> inline Extension::ExtensionBase &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 template <> inline FactoryDiags::Diags &Instance::Get(void)
 {
     return mDiags;

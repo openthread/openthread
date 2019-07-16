@@ -685,7 +685,7 @@ static void processNextRxPacket(otInstance *aInstance)
         // See https://github.com/openthread/openthread/pull/3785
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -824,7 +824,7 @@ void efr32RadioProcess(otInstance *aInstance)
         }
 
         sState = OT_RADIO_STATE_RECEIVE;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);

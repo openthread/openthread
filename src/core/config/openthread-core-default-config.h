@@ -1390,36 +1390,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
- *
- * Define OpenThread diagnostic mode output buffer size in bytes
- *
- */
-#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
- *
- * Define OpenThread diagnostic mode max command line arguments.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
-#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
- *
- * Define OpenThread diagnostic mode command line buffer size in bytes.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
  *
  * Define as 1 to enable the time synchronization service feature.

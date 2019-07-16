@@ -661,7 +661,7 @@ static void radioReceive(otInstance *aInstance)
         sState  = OT_RADIO_STATE_RECEIVE;
         sTxWait = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -739,7 +739,7 @@ void radioSendMessage(otInstance *aInstance)
     {
         sState = OT_RADIO_STATE_RECEIVE;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -940,7 +940,7 @@ exit:
 
     if (error != OT_ERROR_ABORT)
     {
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);

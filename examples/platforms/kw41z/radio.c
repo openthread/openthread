@@ -994,7 +994,7 @@ void kw41zRadioProcess(otInstance *aInstance)
         // See https://github.com/openthread/openthread/pull/3785
         sRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

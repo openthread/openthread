@@ -218,9 +218,9 @@ private:
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiag(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiscover(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void ProcessDns(int argc, char *argv[]);

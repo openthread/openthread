@@ -408,7 +408,7 @@ public:
     void Update(struct timeval &aTimeout);
 #endif
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
      * This method enables/disables the factory diagnostics mode.
      *
@@ -618,7 +618,7 @@ private:
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
     char * mDiagOutput;
     size_t mDiagOutputMaxLen;

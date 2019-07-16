@@ -45,7 +45,7 @@
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 class Diags
 {
@@ -162,7 +162,7 @@ private:
     bool          mRepeatActive;
 };
 
-#endif // #if OPENTHREAD_ENABLE_DIAG
+#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 } // namespace FactoryDiags
 } // namespace ot
