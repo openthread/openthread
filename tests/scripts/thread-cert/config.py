@@ -459,8 +459,8 @@ def create_default_thread_message_factory(master_key=DEFAULT_MASTER_KEY):
     return message.MessageFactory(lowpan_parser=lowpan_parser)
 
 
-def create_default_thread_sniffer(nodeid=SNIFFER_ID):
-    return sniffer.Sniffer(nodeid, create_default_thread_message_factory())
+def create_default_thread_sniffer():
+    return sniffer.Sniffer(create_default_thread_message_factory())
 
 
 def create_default_simulator():

@@ -96,8 +96,9 @@ class SnifferSocketTransport(SnifferTransport):
 
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
-    def __init__(self, nodeid):
-        self._nodeid = nodeid
+    RADIO_GROUP = '224.0.0.116'
+
+    def __init__(self):
         self._socket = None
 
     def __del__(self):
@@ -106,7 +107,7 @@ class SnifferSocketTransport(SnifferTransport):
 
         self.close()
 
-    def _nodeid_to_address(self, nodeid, ip_address=""):
+    def _nodeid_to_address(self, nodeid, ip_address=''):
         return (
             ip_address,
             self.BASE_PORT
@@ -129,7 +130,11 @@ class SnifferSocketTransport(SnifferTransport):
         if not self.is_opened:
             raise RuntimeError("Transport opening failed.")
 
-        self._socket.bind(self._nodeid_to_address(self._nodeid))
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                                socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
+        self._socket.bind(self._nodeid_to_address(self.WELLKNOWN_NODE_ID))
 
     def close(self):
         if not self.is_opened:
@@ -164,5 +169,5 @@ class MacFrame(ctypes.Structure):
 
 
 class SnifferTransportFactory(object):
-    def create_transport(self, nodeid):
-        return SnifferSocketTransport(nodeid)
+    def create_transport(self):
+        return SnifferSocketTransport()

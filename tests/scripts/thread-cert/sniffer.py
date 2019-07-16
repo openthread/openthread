@@ -54,21 +54,19 @@ class Sniffer:
 
     RECV_BUFFER_SIZE = 4096
 
-    def __init__(self, nodeid, message_factory):
+    def __init__(self, message_factory):
         """
         Args:
-            nodeid (int): Node identifier
             message_factory (MessageFactory): Class producing messages from data bytes.
         """
 
-        self.nodeid = nodeid
         self._message_factory = message_factory
 
         self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
-        self._transport = transport_factory.create_transport(nodeid)
+        self._transport = transport_factory.create_transport()
 
         self._thread = None
         self._thread_alive = threading.Event()
