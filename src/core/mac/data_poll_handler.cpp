@@ -47,16 +47,19 @@ DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
 {
 }
 
-inline otError DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild)
+inline otError DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
+                                                                FrameContext &aContext,
+                                                                Child &       aChild)
 {
-    return Get<IndirectSender>().PrepareFrameForChild(aFrame, aChild);
+    return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
 }
 
 inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                                               const FrameContext &aContext,
                                                                otError             aError,
                                                                Child &             aChild)
 {
-    Get<IndirectSender>().HandleSentFrameToChild(aFrame, aError, aChild);
+    Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
 }
 
 inline void DataPollHandler::Callbacks::HandleFrameChangeDone(Child &aChild)
@@ -69,6 +72,7 @@ inline void DataPollHandler::Callbacks::HandleFrameChangeDone(Child &aChild)
 DataPollHandler::DataPollHandler(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIndirectTxChild(NULL)
+    , mFrameContext()
     , mCallbacks(aInstance)
 {
 }
@@ -172,7 +176,7 @@ otError DataPollHandler::HandleFrameRequest(Mac::TxFrame &aFrame)
 
     VerifyOrExit(mIndirectTxChild != NULL, error = OT_ERROR_ABORT);
 
-    SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, *mIndirectTxChild));
+    SuccessOrExit(error = mCallbacks.PrepareFrameForChild(aFrame, mFrameContext, *mIndirectTxChild));
 
     if (mIndirectTxChild->GetIndirectTxAttempts() > 0)
     {
@@ -279,7 +283,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
         break;
     }
 
-    mCallbacks.HandleSentFrameToChild(aFrame, aError, aChild);
+    mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);
 
 exit:
     return;
