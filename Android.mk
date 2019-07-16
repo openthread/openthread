@@ -40,13 +40,13 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DPACKAGE_TARNAME=\"openthread\"                                \
     -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
     -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
+    -DOPENTHREAD_ENABLE_MAC_FILTER=1                                \
     $(NULL)
 
 # Enable required features for on-device tests.
 ifeq ($(TARGET_BUILD_VARIANT),eng)
 OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_ENABLE_DIAG=1                                      \
-    -DOPENTHREAD_ENABLE_MAC_FILTER=1                                \
     $(NULL)
 endif
 
