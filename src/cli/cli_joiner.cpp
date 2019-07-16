@@ -36,7 +36,7 @@
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 namespace ot {
 namespace Cli {
@@ -150,4 +150,4 @@ void Joiner::HandleCallback(otError aError)
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE

@@ -171,7 +171,7 @@ private:
     otJoinerCallback mCallback;
     void *           mContext;
 
-    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES];
+    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
     uint16_t     mJoinerRouterIndex;
 
     Coap::Message *mFinalizeMessage;

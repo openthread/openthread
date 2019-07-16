@@ -73,6 +73,14 @@
 #define OPENTHREAD_CONFIG_DIAG_ENABLE                           1
 
 /**
+ * @def OPENTHREAD_CONFIG_JOINER_ENABLE
+ *
+ * Define to 1 to enable Joiner support.
+ *
+ */
+#define OPENTHREAD_CONFIG_JOINER_ENABLE                         1
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

@@ -315,7 +315,7 @@ protected:
     void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     static void HandleJoinerCallback_Jump(otError aError, void *aContext);
     void        HandleJoinerCallback(otError aError);
 #endif

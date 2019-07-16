@@ -48,7 +48,7 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -688,4 +688,4 @@ exit:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE

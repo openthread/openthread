@@ -35,7 +35,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-cert-log                 \
     --enable-cli                      \
     --enable-ftd                      \
-    --enable-joiner                   \
     --enable-mac-filter               \
     --enable-mtd                      \
     --enable-ncp                      \

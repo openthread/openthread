@@ -584,7 +584,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_NEW_DATASET:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEW_DATASET>;
         break;
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     case SPINEL_PROP_MESHCOP_JOINER_STATE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>;
         break;
@@ -769,7 +769,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_TIMEOUT>;
         break;
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     case SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMISSIONING>;
         break;

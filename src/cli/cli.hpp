@@ -246,7 +246,7 @@ private:
     otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
     otError ProcessMulticastPromiscuous(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     void ProcessJoiner(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -401,7 +401,7 @@ private:
     Commissioner mCommissioner;
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Joiner mJoiner;
 #endif
 

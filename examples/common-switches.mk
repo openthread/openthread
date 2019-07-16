@@ -135,7 +135,7 @@ configure_OPTIONS              += --enable-jam-detection
 endif
 
 ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JOINER_ENABLE=1
 endif
 
 ifeq ($(LEGACY),1)

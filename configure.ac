@@ -898,38 +898,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM_NETIF], [test "${enable_platform_neti
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_PLATFORM_NETIF], [${OPENTHREAD_ENABLE_PLATFORM_NETIF}], [Define to 1 to enable platform Netif.])
 
 #
-# Thread Joiner
-#
-
-AC_ARG_ENABLE(joiner,
-    [AS_HELP_STRING([--enable-joiner],[Enable joiner support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_joiner=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_joiner} for --enable-joiner])
-            ;;
-        esac
-    ],
-    [enable_joiner=no])
-
-if test "$enable_joiner" = "yes"; then
-    OPENTHREAD_ENABLE_JOINER=1
-else
-    OPENTHREAD_ENABLE_JOINER=0
-fi
-
-AC_MSG_CHECKING([whether to enable the joiner feature])
-AC_MSG_RESULT(${enable_joiner})
-AC_SUBST(OPENTHREAD_ENABLE_JOINER)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Define to 1 to enable the joiner role.])
-
-#
 # Jam Detection
 #
 
@@ -1660,7 +1628,6 @@ AC_MSG_NOTICE([
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread UDP forward support            : ${enable_udp_forward}
-  OpenThread Joiner support                 : ${enable_joiner}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Legacy network support         : ${enable_legacy}

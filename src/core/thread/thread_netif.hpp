@@ -49,9 +49,9 @@
 
 #include "meshcop/dataset_manager.hpp"
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 #include "meshcop/joiner.hpp"
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/leader.hpp"
@@ -207,9 +207,9 @@ private:
     Coap::CoapSecure mCoapSecure;
 #endif // OPENTHREAD_CONFIG_DTLS_ENABLE
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     MeshCoP::Joiner mJoiner;
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     Utils::JamDetector mJamDetector;
