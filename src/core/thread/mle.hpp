@@ -1664,9 +1664,9 @@ private:
         kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
 
         // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
-        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL,
-        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
-        kAttachBackoffJitter      = OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL,
+        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL,
+        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
+        kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL,
     };
 
     enum ParentRequestType
@@ -1737,7 +1737,7 @@ private:
     void UpdateServiceAlocs(void);
 #endif
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     otError InformPreviousParent(void);
 #endif
 
@@ -1791,7 +1791,7 @@ private:
     bool            mDiscoverInProgress;
     bool            mDiscoverEnableFiltering;
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
 #endif
 

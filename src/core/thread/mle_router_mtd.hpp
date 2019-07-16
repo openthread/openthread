@@ -116,9 +116,9 @@ public:
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otError SetSteeringData(const otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 

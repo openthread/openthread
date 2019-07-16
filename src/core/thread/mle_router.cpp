@@ -2580,7 +2580,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 {
     otError         error = OT_ERROR_NONE;
@@ -2615,7 +2615,7 @@ otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
 otError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
@@ -2651,14 +2651,14 @@ otError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Me
 
             if (discoveryRequest.IsJoiner())
             {
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
                 if (!mSteeringData.IsCleared())
                 {
                     break;
                 }
                 else // if steering data is not set out of band, fall back to network data
-#endif               // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif               // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
                 {
                     VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled());
                 }
@@ -2747,7 +2747,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName());
     SuccessOrExit(error = message->AppendTlv(networkName));
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     // If steering data is set out of band, use that value.
     // Otherwise use the one from commissioning data.
@@ -2756,7 +2756,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
         SuccessOrExit(error = message->AppendTlv(mSteeringData));
     }
     else
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     {
         // Steering Data TLV
         steeringData = Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);

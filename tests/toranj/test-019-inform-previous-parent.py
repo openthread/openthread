@@ -53,7 +53,7 @@ from wpan import verify
 #
 # This test verifies the behavior of the child and parents under this feature.
 #
-# Note that `OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH` is enabled in
+# Note that `OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH` is enabled in
 # `openthread-core-toranj.config.h` header file.
 #
 

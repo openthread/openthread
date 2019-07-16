@@ -558,7 +558,7 @@ protected:
 #endif
 
 #if OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otExtAddress mSteeringDataAddress;
 #endif
     uint8_t mPreferredRouteId;

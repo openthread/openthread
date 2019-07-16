@@ -603,7 +603,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_COMMISSIONER_ENABLED>;
         break;
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     case SPINEL_PROP_THREAD_STEERING_DATA:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STEERING_DATA>;
         break;
@@ -913,7 +913,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID>;
         break;
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     case SPINEL_PROP_THREAD_STEERING_DATA:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>;
         break;
