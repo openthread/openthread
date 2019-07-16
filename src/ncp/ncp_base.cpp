@@ -275,7 +275,7 @@ NcpBase::NcpBase(Instance *aInstance)
     otIcmp6SetEchoMode(mInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #if OPENTHREAD_FTD
     otThreadRegisterNeighborTableCallback(mInstance, &NcpBase::HandleNeighborTableChanged);
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     memset(&mSteeringDataAddress, 0, sizeof(mSteeringDataAddress));
 #endif
     otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
@@ -1785,7 +1785,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_ERROR_RATE_TRACKING));
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OOB_STEERING_DATA));
 #endif
 
@@ -1797,7 +1797,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PEEK_POKE));
 #endif
 
-#if OPENTHREAD_CONFIG_MAX_CHILDREN > 0
+#if OPENTHREAD_CONFIG_MLE_MAX_CHILDREN > 0
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_ROLE_ROUTER));
 #endif
 

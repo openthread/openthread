@@ -539,7 +539,7 @@ public:
 
     otError SendLinkRequest(Neighbor *aNeighbor);
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * This method sets steering data out of band
      *
@@ -552,7 +552,7 @@ public:
      *
      */
     otError SetSteeringData(const Mac::ExtAddress *aExtAddress);
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     /**
      * This method gets the assigned parent priority.
@@ -795,9 +795,9 @@ private:
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringDataTlv mSteeringData;
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 };
 
 } // namespace Mle

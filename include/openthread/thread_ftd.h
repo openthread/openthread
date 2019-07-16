@@ -114,7 +114,7 @@ uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @param[in]  aMaxChildren  The maximum allowed children.
  *
  * @retval  OT_ERROR_NONE           Successfully set the max.
- * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
+ * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MLE_MAX_CHILDREN].
  * @retval  OT_ERROR_INVALID_STATE  If Thread isn't stopped.
  *
  * @sa otThreadGetMaxAllowedChildren
@@ -231,7 +231,7 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 /**
  * Set Steering data out of band.
  *
- * Configuration option `OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB` should be set to enable setting of steering
+ * Configuration option `OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE` should be set to enable setting of steering
  * data out of band. Otherwise calling this function does nothing and it returns `OT_ERROR_DISABLED_FEATURE`
  * error.
  *

@@ -488,7 +488,7 @@ private:
     uint32_t mFrameCounter;
 } OT_TOOL_PACKED_END;
 
-#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -662,7 +662,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
-#else // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#else // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -872,7 +872,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;
 
-#endif // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.

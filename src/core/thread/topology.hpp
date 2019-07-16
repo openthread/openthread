@@ -618,13 +618,13 @@ public:
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 private:
-#if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
-#error OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD should be at least set to 2.
+#if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
+#error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
 #endif
 
     enum
     {
-        kNumIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD - 1,
+        kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
 
     uint8_t      mNetworkDataVersion;                                   ///< Current Network Data version
@@ -705,7 +705,7 @@ private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
 
-#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     uint8_t mCost; ///< The cost to this router via neighbor router
 #else
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router

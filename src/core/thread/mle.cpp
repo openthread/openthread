@@ -95,7 +95,7 @@ Mle::Mle(Instance &aInstance)
     , mDiscoverAnsiIndex(0)
     , mDiscoverInProgress(false)
     , mDiscoverEnableFiltering(false)
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #endif
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
@@ -416,7 +416,7 @@ otError Mle::Restore(void)
         mParent.SetRloc16(GetRloc16(GetRouterId(networkInfo.mRloc16)));
         mParent.SetState(Neighbor::kStateRestored);
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
         mPreviousParentRloc = mParent.GetRloc16();
 #endif
     }
@@ -678,7 +678,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         delay = 1 + Random::NonCrypto::GetUint32InRange(0, kParentRequestRouterTimeout);
         ExitNow();
     }
-#if OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+#if OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
     else
     {
         uint16_t       counter = mAttachCounter - 1;
@@ -694,7 +694,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
             delay = Random::NonCrypto::AddJitter(kAttachBackoffMaxInterval, kAttachBackoffJitter);
         }
     }
-#endif // OPENTHREAD_CONFIG_ENABLE_ATTACH_BACKOFF
+#endif // OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE
 
     jitter = Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
 
@@ -773,7 +773,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     UpdateParentSearchState();
 #endif
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     InformPreviousParent();
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
@@ -1384,7 +1384,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(!done && (counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER));
+        VerifyOrExit(!done && (counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER));
     }
 
     // For sleepy end device, register external multicast addresses to the parent for indirect transmission
@@ -1403,7 +1403,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 
             counter++;
             // only continue to append if there is available entry.
-            VerifyOrExit(counter < OPENTHREAD_CONFIG_IP_ADDRS_TO_REGISTER);
+            VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER);
         }
     }
 
@@ -3727,7 +3727,7 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
     {
         SendAnnounce(channel, false);
 
-#if OPENTHREAD_CONFIG_SEND_UNICAST_ANNOUNCE_RESPONSE
+#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
         SendAnnounce(channel, false, aMessageInfo.GetPeerAddr());
 #endif
     }
@@ -3992,7 +3992,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 otError Mle::InformPreviousParent(void)
 {
     otError          error   = OT_ERROR_NONE;
@@ -4028,7 +4028,7 @@ exit:
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
 #if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
 void Mle::HandleParentSearchTimer(Timer &aTimer)
@@ -4098,7 +4098,7 @@ void Mle::StartParentSearchTimer(void)
 
 void Mle::UpdateParentSearchState(void)
 {
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
     // If we are in middle of backoff and backoff was not canceled
     // recently and we recently detached from a previous parent,
@@ -4126,7 +4126,7 @@ void Mle::UpdateParentSearchState(void)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
     mParentSearchRecentlyDetached = false;
 

@@ -107,28 +107,28 @@
 #define OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY         120
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_CHILDREN
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
  *
  * The maximum number of children.
  *
  */
-#define OPENTHREAD_CONFIG_MAX_CHILDREN                          32
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN                          32
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+ * @def OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT
  *
  * The default child timeout value (in seconds).
  *
  */
-#define OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT                 120
+#define OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT                 120
 
 /**
- * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
  *
  */
-#define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                    10
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD                    10
 
 /**
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
@@ -227,15 +227,15 @@
 #define OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE                    4096
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+ * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
  *
  * Enable setting steering data out of band.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB          1
+#define OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE          1
 
 /**
- * @def OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+ * @def OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
  *
  * Define as 1 for a child to inform its previous parent when it attaches to a new parent.
  *
@@ -243,7 +243,7 @@
  * and mesh-local IP address as the source address) to its previous parent.
  *
  */
-#define OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH    1
+#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH    1
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT

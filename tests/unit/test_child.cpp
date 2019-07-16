@@ -41,7 +41,7 @@ static ot::Instance *sInstance;
 
 enum
 {
-    kMaxChildIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
+    kMaxChildIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD,
 };
 
 void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, const Ip6::Address aAddressList[])

@@ -73,13 +73,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_CHILDREN
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
  *
  * The maximum number of children.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAX_CHILDREN
-#define OPENTHREAD_CONFIG_MAX_CHILDREN 32
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 32
 #endif
 
 /**
@@ -93,13 +93,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
  *
  * The maximum number of supported IPv6 address registrations per child.
  *
  */
-#ifndef OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
-#define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD 6
+#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 6
 #endif
 
 /**

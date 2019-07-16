@@ -61,6 +61,7 @@
 #include "config/link_raw.h"
 #include "config/logging.h"
 #include "config/mac.h"
+#include "config/mle.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
