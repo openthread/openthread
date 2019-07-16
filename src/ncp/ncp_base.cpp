@@ -917,7 +917,7 @@ bool NcpBase::HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop
     case SPINEL_PROP_HOST_POWER_STATE:
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(aHeader));
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     case SPINEL_PROP_NEST_STREAM_MFG:
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(aHeader));
 #endif
@@ -1273,7 +1273,7 @@ exit:
 // MARK: Individual Property Getters and Setters
 // ----------------------------------------------------------------------------
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 otError NcpBase::HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader)
 {
@@ -1297,7 +1297,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_ENABLED>(void)
 {

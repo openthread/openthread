@@ -48,7 +48,7 @@
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 #if OPENTHREAD_RADIO
 
 const struct Diags::Command Diags::sCommands[] = {
@@ -557,7 +557,7 @@ bool Diags::IsEnabled(void)
     return otPlatDiagModeGet();
 }
 
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
 } // namespace FactoryDiags
 } // namespace ot

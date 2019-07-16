@@ -28,68 +28,51 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for the diagnostics.
+ *   This file includes compile-time configurations for the DIAG service.
  *
  */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
-
-#include "platform-efr32.h"
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#ifndef CONFIG_DIAG_H_
+#define CONFIG_DIAG_H_
 
 /**
- * Diagnostics mode variables.
+ * @def OPENTHREAD_CONFIG_DIAG_ENABLE
+ *
+ * Define to 1 to enable Factory Diagnostics support.
  *
  */
-static bool sDiagMode = false;
+#ifndef OPENTHREAD_CONFIG_DIAG_ENABLE
+#define OPENTHREAD_CONFIG_DIAG_ENABLE 0
+#endif
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argc);
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 256
+#endif
 
-    // Add more platform specific diagnostics features here.
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-}
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+ *
+ * Define OpenThread diagnostic mode max command line arguments.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX 32
+#endif
 
-void otPlatDiagModeSet(bool aMode)
-{
-    sDiagMode = aMode;
-}
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode command line buffer size in bytes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
+#endif
 
-bool otPlatDiagModeGet()
-{
-    return sDiagMode;
-}
-
-void otPlatDiagChannelSet(uint8_t aChannel)
-{
-    OT_UNUSED_VARIABLE(aChannel);
-}
-
-void otPlatDiagTxPowerSet(int8_t aTxPower)
-{
-    OT_UNUSED_VARIABLE(aTxPower);
-}
-
-void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aError);
-}
-
-void otPlatDiagAlarmCallback(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
+#endif // CONFIG_DIAG_H_

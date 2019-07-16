@@ -65,13 +65,13 @@ python --version || die
         -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1 \
         -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-diag                     \
         --enable-dns-client               \
         --enable-ecdsa                    \
         --enable-executable=no            \
@@ -98,7 +98,6 @@ python --version || die
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-cli                      \
-        --enable-diag                     \
         --enable-dns-client               \
         --enable-ecdsa                    \
         --enable-executable=no            \
@@ -358,7 +357,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1"
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -369,7 +369,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-diag                       \
         --enable-jam-detection              \
         --enable-legacy                     \
         --enable-mac-filter                 \

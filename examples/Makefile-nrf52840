@@ -45,7 +45,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 configure_OPTIONS                                 = \
     --enable-ftd                                    \
     --enable-mtd                                    \
-    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
     $(NULL)

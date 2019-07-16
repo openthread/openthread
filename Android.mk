@@ -46,7 +46,7 @@ OPENTHREAD_COMMON_FLAGS                                          := \
 # Enable required features for on-device tests.
 ifeq ($(TARGET_BUILD_VARIANT),eng)
 OPENTHREAD_COMMON_FLAGS                                          += \
-    -DOPENTHREAD_ENABLE_DIAG=1                                      \
+    -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                               \
     $(NULL)
 endif
 

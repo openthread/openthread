@@ -202,7 +202,7 @@ void efr32AlarmProcess(otInstance *aInstance)
             }
         }
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
         {
             otPlatDiagAlarmFired(aInstance);

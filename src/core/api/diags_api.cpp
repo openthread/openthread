@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
@@ -63,4 +63,4 @@ bool otDiagIsEnabled(otInstance *aInstance)
     return instance.Get<FactoryDiags::Diags>().IsEnabled();
 }
 
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

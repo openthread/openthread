@@ -46,7 +46,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_SPI
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
                      OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE - ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
                          ot::Ncp::NcpBase::kSpinelPropIdSize - ot::Ncp::SpiFrame::kHeaderSize,

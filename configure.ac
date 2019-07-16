@@ -994,38 +994,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_FILTER], [test "${enable_mac_filter}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_FILTER],[${OPENTHREAD_ENABLE_MAC_FILTER}],[Define to 1 if you want to use MAC filter feature])
 
 #
-# Factory Diagnostics
-#
-
-AC_ARG_ENABLE(diag,
-    [AS_HELP_STRING([--enable-diag],[Enable diagnostics support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_diag=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_diag} for --enable-diag])
-            ;;
-        esac
-    ],
-    [enable_diag=no])
-
-if test "$enable_diag" = "yes"; then
-    OPENTHREAD_ENABLE_DIAG=1
-else
-    OPENTHREAD_ENABLE_DIAG=0
-fi
-
-AC_MSG_CHECKING([whether to enable diag])
-AC_MSG_RESULT(${enable_diag})
-AC_SUBST(OPENTHREAD_ENABLE_DIAG)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to enable factory diagnostics feature])
-
-#
 # Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
 #
 
@@ -1725,7 +1693,6 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Filter support             : ${enable_mac_filter}
-  OpenThread Factory Diagnostics support    : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread SNTP Client support            : ${enable_sntp_client}

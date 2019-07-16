@@ -114,14 +114,14 @@ void cc1352AlarmProcess(otInstance *aInstance)
         if (sAlarmTime <= offsetTime)
         {
             sIsRunning = false;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
                 otPlatDiagAlarmFired(aInstance);
             }
             else
-#endif /* OPENTHREAD_ENABLE_DIAG */
+#endif /* OPENTHREAD_CONFIG_DIAG_ENABLE */
             {
                 otPlatAlarmMilliFired(aInstance);
             }
