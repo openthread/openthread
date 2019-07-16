@@ -51,7 +51,7 @@ class MessageInfo(object):
         self.aux_sec_hdr_bytes = None
 
         self.mhr_bytes = None
-        self.nonpayload_fields = None
+        self.extra_open_fields = None
 
         self.source_mac_address = None
         self.destination_mac_address = None
