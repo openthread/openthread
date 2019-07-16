@@ -732,7 +732,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
                 break;
 
-#if OPENTHREAD_ENABLE_PLATFORM_UDP == 0
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE == 0
             case kCoapUdpPort:
 
                 // do not pass TMF messages
@@ -742,7 +742,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 }
 
                 break;
-#endif // OPENTHREAD_ENABLE_PLATFORM_UDP
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
             default:
 #if OPENTHREAD_FTD

@@ -413,7 +413,7 @@ private:
         kMinBackoff        = 1,  ///< Minimum backoff (milliseconds).
         kAckTimeout        = 16, ///< Timeout for waiting on an ACK (milliseconds).
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec
 #else
         kEnergyScanRssiSampleInterval = 1, ///< RSSI sample interval during energy scan, 1 ms
@@ -467,7 +467,7 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else
     TimerMilli mTimer;

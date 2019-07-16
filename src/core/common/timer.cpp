@@ -212,7 +212,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 const TimerScheduler::AlarmApi TimerMicroScheduler::sAlarmMicroApi = {&otPlatAlarmMicroStartAt, &otPlatAlarmMicroStop,
                                                                       &otPlatAlarmMicroGetNow};
 
@@ -238,6 +238,6 @@ extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 } // namespace ot

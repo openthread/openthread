@@ -256,7 +256,7 @@ void SubMac::StartCsmaBackoff(void)
         otPlatRadioSleep(&GetInstance());
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     mTimer.Start(backoff);
 #else
     mTimer.Start(backoff / 1000UL);
@@ -304,7 +304,7 @@ void SubMac::HandleTransmitStarted(Frame &aFrame)
 {
     if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
     {
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         mTimer.Start(kAckTimeout * 1000UL);
 #else
         mTimer.Start(kAckTimeout);

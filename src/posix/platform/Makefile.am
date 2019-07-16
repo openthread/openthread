@@ -51,13 +51,8 @@ libopenthread_posix_a_SOURCES             = \
     sim.c                                   \
     system.c                                \
     uart.c                                  \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_PLATFORM_UDP
-libopenthread_posix_a_SOURCES            += \
     udp.cpp                                 \
     $(NULL)
-endif
 
 noinst_HEADERS                            = \
     openthread-system.h                     \

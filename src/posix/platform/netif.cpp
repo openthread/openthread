@@ -61,7 +61,7 @@
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 
-#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 
 #ifndef OPENTHREAD_POSIX_TUN_DEVICE
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
@@ -410,7 +410,7 @@ void platformNetifInit(otInstance *aInstance)
     VerifyOrExit(sTunIndex > 0);
 
     strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(sTunName);
 #endif
 
@@ -504,4 +504,4 @@ exit:
     return;
 }
 
-#endif // OPENTHREAD_ENABLE_PLATFORM_NETIF
+#endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

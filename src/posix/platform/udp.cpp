@@ -53,6 +53,8 @@
 
 #include "common/code_utils.hpp"
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
 static uint32_t sPlatNetifIndex = 0;
 
 static const size_t kMaxUdpSize = 1280;
@@ -447,3 +449,5 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 exit:
     return;
 }
+
+#endif // #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE

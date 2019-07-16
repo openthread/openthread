@@ -92,7 +92,7 @@ configure_OPTIONS              += --host=$(HOST)
 endif
 
 ifeq ($(PLATFORM_NETIF),1)
-configure_OPTIONS              += --enable-platform-netif
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1
 endif
 
 ifneq ($(READLINE),)

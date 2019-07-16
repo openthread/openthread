@@ -308,7 +308,7 @@ private:
 
     TaskletScheduler    mTaskletScheduler;
     TimerMilliScheduler mTimerMilliScheduler;
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicroScheduler mTimerMicroScheduler;
 #endif
 
@@ -703,7 +703,7 @@ template <> inline TimerMilliScheduler &Instance::Get(void)
     return mTimerMilliScheduler;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 template <> inline TimerMicroScheduler &Instance::Get(void)
 {
     return mTimerMicroScheduler;
