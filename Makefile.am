@@ -32,7 +32,6 @@ AM_MAKEFLAGS                        = --no-print-directory
 
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
-    --enable-cert-log                 \
     --enable-cli                      \
     --enable-ftd                      \
     --enable-mtd                      \

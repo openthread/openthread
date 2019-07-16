@@ -95,7 +95,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_ENABLE_ECDSA
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           uint16_t *     aOutputLength,
@@ -107,4 +107,4 @@ otError otCryptoEcdsaSign(uint8_t *      aOutput,
     return Ecdsa::Sign(aOutput, aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
 }
 
-#endif // OPENTHREAD_ENABLE_ECDSA
+#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE

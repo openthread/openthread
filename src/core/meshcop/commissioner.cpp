@@ -953,7 +953,7 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
         }
     }
 
-#if OPENTHREAD_ENABLE_REFERENCE_DEVICE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     if (aMessage.GetLength() <= OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
     {
         uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
@@ -990,7 +990,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-#if OPENTHREAD_ENABLE_REFERENCE_DEVICE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
     VerifyOrExit(message->GetLength() <= sizeof(buf));

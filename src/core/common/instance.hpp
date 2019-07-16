@@ -54,7 +54,7 @@
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "crypto/mbedtls.hpp"
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #include "utils/heap.hpp"
 #endif
 #include "common/notifier.hpp"
@@ -104,7 +104,7 @@ namespace ot {
 class Instance : public otInstance
 {
 public:
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
       * This static method initializes the OpenThread instance.
       *
@@ -119,7 +119,7 @@ public:
       */
     static Instance *Init(void *aBuffer, size_t *aBufferSize);
 
-#else // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
      * This static method initializes the single OpenThread instance.
@@ -249,7 +249,7 @@ public:
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
      * This method returns a reference to the Heap object.
      *
@@ -315,7 +315,7 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Utils::Heap mHeap;
 #endif
     Crypto::MbedTls mMbedTls;
@@ -619,7 +619,7 @@ template <> inline Utils::Slaac &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 template <> inline Utils::JamDetector &Instance::Get(void)
 {
     return mThreadNetif.mJamDetector;

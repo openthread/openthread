@@ -379,37 +379,6 @@ NL_ENABLE_TESTS([yes])
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 #
-# Multiple OpenThread Instances
-#
-
-AC_ARG_ENABLE(multiple-instances,
-    [AS_HELP_STRING([--enable-multiple-instances],[Enable support for multiple OpenThread instances @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_multiple_instances=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_multiple_instances} for --enable-multiple-instances])
-            ;;
-        esac
-    ],
-    [enable_multiple_instances=no])
-
-if test "$enable_multiple_instances" = "yes"; then
-    OPENTHREAD_ENABLE_MULTIPLE_INSTANCES=1
-else
-    OPENTHREAD_ENABLE_MULTIPLE_INSTANCES=0
-fi
-
-AC_MSG_RESULT(${enable_multiple_instances})
-AC_SUBST(OPENTHREAD_ENABLE_MULTIPLE_INSTANCES)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_MULTIPLE_INSTANCES], [test "${enable_multiple_instances}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MULTIPLE_INSTANCES],[${OPENTHREAD_ENABLE_MULTIPLE_INSTANCES}],[Define to 1 if you want to enable support for multiple OpenThread instances.])
-
-#
 # Builtin mbedtls
 #
 
@@ -733,70 +702,6 @@ case "${with_readline}" in
 esac
 
 #
-# Thread UDP forward
-#
-
-AC_MSG_CHECKING([whether to enable UDP forward])
-AC_ARG_ENABLE(udp_forward,
-    [AS_HELP_STRING([--enable-udp-forward], [Enable UDP forward support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_udp_forward=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_udp_forward} for --enable-udp-forward])
-            ;;
-        esac
-    ],
-    [enable_udp_forward=no])
-
-if test "$enable_udp_forward" = "yes"; then
-    OPENTHREAD_ENABLE_UDP_FORWARD=1
-else
-    OPENTHREAD_ENABLE_UDP_FORWARD=0
-fi
-
-AC_MSG_RESULT(${enable_udp_forward})
-AC_SUBST(OPENTHREAD_ENABLE_UDP_FORWARD)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_UDP_FORWARD], [test "${enable_udp_forward}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UDP_FORWARD], [${OPENTHREAD_ENABLE_UDP_FORWARD}], [Define to 1 to enable the UDP forward feature.])
-
-#
-# Jam Detection
-#
-
-AC_ARG_ENABLE(jam_detection,
-    [AS_HELP_STRING([--enable-jam-detection],[Enable Jam Detection support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_jam_detection=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_jam_detection} for --enable-jam-detection])
-            ;;
-        esac
-    ],
-    [enable_jam_detection=no])
-
-if test "$enable_jam_detection" = "yes"; then
-    OPENTHREAD_ENABLE_JAM_DETECTION=1
-else
-    OPENTHREAD_ENABLE_JAM_DETECTION=0
-fi
-
-AC_MSG_CHECKING([whether to enable jam detection])
-AC_MSG_RESULT(${enable_jam_detection})
-AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
-
-#
 # Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
 #
 
@@ -825,38 +730,6 @@ AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
 AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_VENDOR_EXTENSION],[${OPENTHREAD_ENABLE_VENDOR_EXTENSION}],[Define to 1 if using vendor extension])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_VENDOR_EXTENSION}" = "1"])
-
-#
-# Legacy Network
-#
-
-AC_ARG_ENABLE(legacy,
-    [AS_HELP_STRING([--enable-legacy],[Enable legacy network support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_legacy=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_legacy} for --enable-legacy])
-            ;;
-        esac
-    ],
-    [enable_legacy=no])
-
-if test "$enable_legacy" = "yes"; then
-    OPENTHREAD_ENABLE_LEGACY=1
-else
-    OPENTHREAD_ENABLE_LEGACY=0
-fi
-
-AC_MSG_CHECKING([whether to enable legacy])
-AC_MSG_RESULT(${enable_legacy})
-AC_SUBST(OPENTHREAD_ENABLE_LEGACY)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LEGACY],[${OPENTHREAD_ENABLE_LEGACY}],[Define to 1 if you want to use legacy network support])
 
 #
 # NCP Vendor Hook Source - Specify a C++ file that implements the NCP vendor hook.
@@ -955,38 +828,6 @@ AC_ARG_WITH(
 
 AC_SUBST(OPENTHREAD_CUSTOM_LINKER_FILE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_linker_file}" = "yes"])
-
-#
-# Support for ECDSA
-#
-
-AC_MSG_CHECKING([whether to build with ECDSA support])
-AC_ARG_ENABLE(ecdsa,
-    [AS_HELP_STRING([--enable-ecdsa], [Enable ECDSA support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_ecdsa=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_ecdsa} for --enable-ecdsa])
-            ;;
-        esac
-    ],
-    [enable_ecdsa=no])
-
-if test "$enable_ecdsa" = "yes"; then
-    OPENTHREAD_ENABLE_ECDSA=1
-else
-    OPENTHREAD_ENABLE_ECDSA=0
-fi
-
-AC_MSG_RESULT(${enable_ecdsa})
-AC_SUBST(OPENTHREAD_ENABLE_ECDSA)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_ECDSA], [test "${enable_ecdsa}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Define to 1 if you want to enable ECDSA support])
 
 #
 # Examples
@@ -1368,12 +1209,7 @@ AC_MSG_NOTICE([
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
-  OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
-  OpenThread UDP forward support            : ${enable_udp_forward}
-  OpenThread Jam Detection support          : ${enable_jam_detection}
-  OpenThread Legacy network support         : ${enable_legacy}
-  OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}
 

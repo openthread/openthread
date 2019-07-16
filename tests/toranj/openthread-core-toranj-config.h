@@ -89,6 +89,22 @@
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE                1
 
 /**
+ * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
+ *
+ * Define to 1 to enable legacy network support.
+ *
+ */
+#define OPENTHREAD_CONFIG_LEGACY_ENABLE                         1
+
+/**
+ * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+ *
+ * Define to 1 to enable the Jam Detection service.
+ *
+ */
+#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE                  1
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

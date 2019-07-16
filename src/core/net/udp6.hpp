@@ -332,7 +332,7 @@ public:
     otUdpSocket *GetUdpSockets(void) { return mSockets; }
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**
      * This method sets the forward sender.
      *
@@ -345,7 +345,7 @@ public:
         mUdpForwarder        = aForwarder;
         mUdpForwarderContext = aContext;
     }
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 
 private:
     enum
@@ -357,7 +357,7 @@ private:
     uint16_t     mEphemeralPort;
     UdpReceiver *mReceivers;
     UdpSocket *  mSockets;
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;
 #endif

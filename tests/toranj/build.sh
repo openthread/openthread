@@ -79,8 +79,6 @@ configure_options="                \
     --disable-tests                \
     --enable-coverage=$coverage    \
     --enable-ftd                   \
-    --enable-jam-detection         \
-    --enable-legacy                \
     --enable-ncp                   \
     "
 
