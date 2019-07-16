@@ -1110,36 +1110,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_SNTP_CLIENT], [test "${enable_sntp_client}" = 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SNTP_CLIENT],[${OPENTHREAD_ENABLE_SNTP_CLIENT}],[Define to 1 if you want to enable SNTP Client])
 
 #
-# otLinkRaw API
-#
-
-AC_ARG_ENABLE(raw_link_api,
-    [AS_HELP_STRING([--enable-raw-link-api],[Enable raw link-layer API support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_raw_link_api=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_raw_link_api} for --enable-raw-link-api])
-            ;;
-        esac
-    ],
-    [enable_raw_link_api=no])
-
-if test "$enable_raw_link_api" = "yes"; then
-    OPENTHREAD_ENABLE_RAW_LINK_API=1
-else
-    OPENTHREAD_ENABLE_RAW_LINK_API=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_RAW_LINK_API)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
-
-#
 # Service
 #
 
@@ -1632,7 +1602,6 @@ AC_MSG_NOTICE([
   OpenThread MAC Filter support             : ${enable_mac_filter}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread SNTP Client support            : ${enable_sntp_client}
-  OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}

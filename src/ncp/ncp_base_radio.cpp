@@ -42,7 +42,7 @@
 #include "common/instance.hpp"
 #include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 namespace ot {
 namespace Ncp {
@@ -424,4 +424,4 @@ exit:
 } // namespace Ncp
 } // namespace ot
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

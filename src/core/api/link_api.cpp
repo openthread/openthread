@@ -50,7 +50,7 @@ uint8_t otLinkGetChannel(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
     uint8_t   channel;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (instance.Get<Mac::LinkRaw>().IsEnabled())
     {
         channel = instance.Get<Mac::LinkRaw>().GetChannel();
@@ -69,7 +69,7 @@ otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (instance.Get<Mac::LinkRaw>().IsEnabled())
     {
         error = instance.Get<Mac::LinkRaw>().SetChannel(aChannel);

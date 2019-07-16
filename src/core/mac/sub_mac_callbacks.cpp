@@ -50,7 +50,7 @@ SubMac::Callbacks::Callbacks(Instance &aInstance)
 
 void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
 {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
         Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
@@ -78,7 +78,7 @@ void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
 
 void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
 {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
         Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
@@ -92,7 +92,7 @@ void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aE
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     if (Get<LinkRaw>().IsEnabled())
     {
         Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);

@@ -68,7 +68,8 @@ python --version || die
         -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1"
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -85,7 +86,6 @@ python --version || die
         --enable-ncp                      \
         --with-ncp-bus=uart               \
         --enable-radio-only               \
-        --enable-raw-link-api             \
         --enable-service                  \
         --enable-sntp-client              \
         --enable-udp-forward              \
@@ -109,7 +109,6 @@ python --version || die
         --enable-ncp                      \
         --with-ncp-bus=spi                \
         --enable-radio-only               \
-        --enable-raw-link-api             \
         --enable-service                  \
         --enable-sntp-client              \
         --enable-udp-forward              \

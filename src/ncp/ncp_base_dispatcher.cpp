@@ -649,7 +649,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         // --------------------------------------------------------------------------
         // Raw Link or Radio Mode Properties (Get Handler)
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     case SPINEL_PROP_RADIO_CAPS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_CAPS>;
         break;
@@ -987,7 +987,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         // --------------------------------------------------------------------------
         // Raw Link API Properties (Set Handler)
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     case SPINEL_PROP_MAC_15_4_SADDR:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_SADDR>;
         break;
@@ -1003,7 +1003,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_PHY_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_ENABLED>;
         break;
-#endif // #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     default:
         handler = NULL;
@@ -1081,7 +1081,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         // --------------------------------------------------------------------------
         // Raw Link API Properties (Insert Handler)
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
         break;
@@ -1166,7 +1166,7 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
         // --------------------------------------------------------------------------
         // Raw Link API Properties (Remove Handler)
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
         break;

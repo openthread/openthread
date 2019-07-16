@@ -49,7 +49,7 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 #endif
 
@@ -62,7 +62,7 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<ThreadNetif>().Down();
     }
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 exit:
 #endif
     return error;
