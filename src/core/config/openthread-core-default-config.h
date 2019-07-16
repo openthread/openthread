@@ -122,62 +122,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
- *
- * The number of EID-to-RLOC cache entries.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
-#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES 10
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT
- *
- * The timeout value (in seconds) waiting for a address notification response after sending an address query.
- *
- * Default: 3 seconds
- *
- */
-#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT
-#define OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT 3
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
- *
- * Initial retry delay for address query (in seconds).
- *
- * Default: 15 seconds
- *
- */
-#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY
-#define OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY 15
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
- *
- * Maximum retry delay for address query (in seconds).
- *
- * Default: 28800 seconds (480 minutes or 8 hours)
- *
- */
-#ifndef OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
-#define OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY 28800
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS
- *
- * The maximum number of supported Service ALOCs registrations for this device.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS
-#define OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS 1
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The reassembly timeout between 6LoWPAN fragments in seconds.
@@ -198,16 +142,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
- *
- * The maximum number of Energy List entries.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
-#define OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS 64
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
  *
  * The maximum number of state-changed callback handlers (set using `otSetStateChangedCallback()`).
@@ -225,32 +159,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
 #define OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD 1000
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
- *
- * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
- *
- * Thread specification defines this value as 30,000 ms. Changing from the specified value should be done for testing
- * only.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
-#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY 30000
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
- *
- * Default Delay Timer value for a Pending Operational Dataset (in ms).
- *
- * Thread specification defines this value as 300,000 ms. Changing from the specified value should be done for testing
- * only.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY
-#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY 300000
 #endif
 
 /**

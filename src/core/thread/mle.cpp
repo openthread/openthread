@@ -142,7 +142,7 @@ Mle::Mle(Instance &aInstance)
     mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mLeaderAloc.mScopeOverrideValid = true;
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     // Service Alocs
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
@@ -760,7 +760,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
         Get<MleRouter>().HandleChildStart(mParentRequestMode);
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Get<NetworkData::Local>().ClearResubmitDelayTimer();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
@@ -900,7 +900,7 @@ exit:
 
 void Mle::ApplyMeshLocalPrefix(void)
 {
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
@@ -1010,7 +1010,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
@@ -1548,9 +1548,9 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             ScheduleMessageTransmissionTimer();
         }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         Get<NetworkData::Local>().SendServerDataNotification();
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         this->UpdateServiceAlocs();
 #endif
 #endif
@@ -1585,7 +1585,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Mle::UpdateServiceAlocs(void)
 {
     uint16_t              rloc               = GetRloc16();

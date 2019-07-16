@@ -60,7 +60,7 @@
 #define OPENTHREAD_PLATFORM_POSIX_APP 1
 
 /* Define to 1 if you want to enable Service */
-#define OPENTHREAD_ENABLE_SERVICE 1
+#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
 /* Define to 1 to enable the UDP forward feature. */
 #define OPENTHREAD_ENABLE_UDP_FORWARD 1

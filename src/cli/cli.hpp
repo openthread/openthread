@@ -263,16 +263,16 @@ private:
 #if OPENTHREAD_FTD
     void ProcessNeighbor(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataShow(int argc, char *argv[]);
     void ProcessService(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 #if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif

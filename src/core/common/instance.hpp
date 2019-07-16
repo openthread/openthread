@@ -514,7 +514,7 @@ template <> inline PanIdQueryServer &Instance::Get(void)
     return mThreadNetif.mPanIdQuery;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 template <> inline NetworkData::Local &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLocal;
@@ -591,7 +591,7 @@ template <> inline Dns::Client &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDiagnostic;

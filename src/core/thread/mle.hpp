@@ -880,7 +880,7 @@ public:
         return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
     }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
@@ -1729,7 +1729,7 @@ private:
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method scans for network data from the leader and updates IP addresses assigned to this
      * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
@@ -1810,8 +1810,8 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-#if OPENTHREAD_ENABLE_SERVICE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS];
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS];
 #endif
 
     otMleCounters mCounters;

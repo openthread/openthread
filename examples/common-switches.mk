@@ -151,7 +151,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
 ifeq ($(MTD_NETDIAG),1)
-configure_OPTIONS              += --enable-mtd-network-diagnostic
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)
@@ -165,7 +165,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_ENABLE_REFERENCE_DEVICE=1
 endif
 
 ifeq ($(SERVICE),1)
-configure_OPTIONS              += --enable-service
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1
 endif
 
 ifeq ($(SLAAC),1)

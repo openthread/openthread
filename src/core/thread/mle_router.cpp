@@ -1405,7 +1405,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
 
     UpdateRoutes(route, routerId);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Get<NetworkData::Local>().SendServerDataNotification();
 #endif
 

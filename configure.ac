@@ -765,38 +765,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_UDP_FORWARD], [test "${enable_udp_forward}" = 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UDP_FORWARD], [${OPENTHREAD_ENABLE_UDP_FORWARD}], [Define to 1 to enable the UDP forward feature.])
 
 #
-# Thread Network Diagnostic for MTD
-#
-
-AC_ARG_ENABLE(mtd_network_diagnostic,
-    [AS_HELP_STRING([--enable-mtd-network-diagnostic],[Enable network diagnostic support for MTD @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_mtd_network_diagnostic=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_mtd_network_diagnostic} for --enable-mtd-network-diagnostic])
-            ;;
-        esac
-    ],
-    [enable_mtd_network_diagnostic=no])
-
-if test "$enable_mtd_network_diagnostic" = "yes"; then
-    OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1
-else
-    OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=0
-fi
-
-AC_MSG_CHECKING([whether to enable the network diagnostic for MTD])
-AC_MSG_RESULT(${enable_mtd_network_diagnostic})
-AC_SUBST(OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC], [test "${enable_mtd_network_diagnostic}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC],[${OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC}],[Define to 1 to enable network diagnostic for MTD.])
-
-#
 # Jam Detection
 #
 
@@ -945,36 +913,6 @@ AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}],[Define to 1 if using NCP Spinel Encrypter])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
-
-#
-# Service
-#
-
-AC_ARG_ENABLE(service,
-    [AS_HELP_STRING([--enable-service],[Enable Service @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_service=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_service} for --enable-service])
-            ;;
-        esac
-    ],
-    [enable_service=no])
-
-if test "$enable_service" = "yes"; then
-    OPENTHREAD_ENABLE_SERVICE=1
-else
-    OPENTHREAD_ENABLE_SERVICE=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_SERVICE)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SERVICE], [test "${enable_service}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SERVICE],[${OPENTHREAD_ENABLE_SERVICE}],[Define to 1 if you want to enable Service])
 
 #
 # Linker Map Output
@@ -1431,12 +1369,10 @@ AC_MSG_NOTICE([
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
-  OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread UDP forward support            : ${enable_udp_forward}
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Legacy network support         : ${enable_legacy}
-  OpenThread Service support                : ${enable_service}
   OpenThread ECDSA support                  : ${enable_ecdsa}
   OpenThread Examples                       : ${with_examples}
   OpenThread POSIX Application              : ${enable_posix_app}

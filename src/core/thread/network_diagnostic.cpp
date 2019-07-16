@@ -49,7 +49,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 namespace ot {
 
@@ -695,4 +695,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE

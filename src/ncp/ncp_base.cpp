@@ -228,7 +228,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mPcapEnabled(false)
     , mDisableStreamWrite(false)
     , mShouldEmitChildTableUpdate(false)
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mAllowLocalServerDataChange(false)
 #endif
 #if OPENTHREAD_FTD
@@ -1823,7 +1823,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_UDP_FORWARD));
 #endif
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_SERVICE));
 #endif
 

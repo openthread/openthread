@@ -555,7 +555,7 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     bool mAllowLocalServerDataChange;
 #endif
 
