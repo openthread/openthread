@@ -72,11 +72,11 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMac(aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mNetworkDataLocal(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     , mNetworkDiagnostic(aInstance)
 #endif
     , mIsUp(false)

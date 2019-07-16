@@ -38,7 +38,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-mtd                      \
     --enable-ncp                      \
     --enable-radio-only               \
-    --enable-service                  \
     --with-examples=posix             \
     $(NULL)
 

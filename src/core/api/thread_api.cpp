@@ -365,7 +365,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
                                              otReceiveDiagnosticGetCallback aCallback,
                                              void *                         aCallbackContext)
@@ -396,7 +396,7 @@ otError otThreadSendDiagnosticReset(otInstance *        aInstance,
     return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
         *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
 }
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {

@@ -81,6 +81,14 @@
 #define OPENTHREAD_CONFIG_JOINER_ENABLE                         1
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+ *
+ * Define to 1 to support injecting Service entries into the Thread Network Data.
+ *
+ */
+#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE                1
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.
@@ -89,22 +97,22 @@
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   256
 
 /**
- * @def OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
  *
  * The number of EID-to-RLOC cache entries.
  *
  */
-#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES                 32
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES                 32
 
 /**
- * @def OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY
  *
  * Maximum retry delay for address query (in seconds).
  *
  * Default: 28800 seconds (480 minutes or 8 hours)
  *
  */
-#define OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY         120
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY         120
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
@@ -330,7 +338,7 @@
 #define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY
+ * @def OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
  *
@@ -339,7 +347,7 @@
  * For `toranj` test script the value is decreased so that the tests can be run faster.
  *
  */
-#define OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY 1000
+#define OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY 1000
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL

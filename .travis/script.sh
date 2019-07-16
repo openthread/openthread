@@ -72,7 +72,9 @@ python --version || die
         -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1 \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1"
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -84,10 +86,8 @@ python --version || die
         --enable-jam-detection            \
         --enable-legacy                   \
         --enable-mtd                      \
-        --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
         --enable-radio-only               \
-        --enable-service                  \
         --enable-udp-forward              \
         --with-examples=posix || die
 
@@ -104,10 +104,8 @@ python --version || die
         --enable-jam-detection            \
         --enable-legacy                   \
         --enable-mtd                      \
-        --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
         --enable-radio-only               \
-        --enable-service                  \
         --enable-udp-forward              \
         --with-examples=posix || die
 
@@ -354,7 +352,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
+        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -366,7 +365,6 @@ build_samr21() {
         --with-examples=posix               \
         --enable-jam-detection              \
         --enable-legacy                     \
-        --enable-service                    \
         --disable-docs                      \
         --disable-tests                     \
         --with-vendor-extension=./src/core/common/extension_example.cpp || die
@@ -380,7 +378,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-examples=posix               \
         --enable-legacy                     \
-        --enable-service                    \
         --disable-docs                      \
         --disable-tests || die
     make -j 8 || die

@@ -82,7 +82,6 @@ configure_options="                \
     --enable-jam-detection         \
     --enable-legacy                \
     --enable-ncp                   \
-    --enable-service               \
     "
 
 cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'

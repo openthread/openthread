@@ -57,7 +57,7 @@
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #include <openthread/server.h>
 #endif
 
@@ -826,7 +826,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>(void)
 {
@@ -958,7 +958,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG>(void)
 {

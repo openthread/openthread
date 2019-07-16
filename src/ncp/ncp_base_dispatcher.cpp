@@ -519,7 +519,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
         break;
@@ -869,7 +869,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE>;
         break;
@@ -1057,7 +1057,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     case SPINEL_PROP_SERVER_SERVICES:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>;
         break;
@@ -1142,7 +1142,7 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     case SPINEL_PROP_SERVER_SERVICES:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>;
         break;

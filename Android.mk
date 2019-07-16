@@ -58,7 +58,7 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
-    -DOPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1                    \
+    -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1               \
     -DOPENTHREAD_ENABLE_REFERENCE_DEVICE=0                          \
     $(NULL)
 endif
