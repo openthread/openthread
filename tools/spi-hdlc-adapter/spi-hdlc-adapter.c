@@ -1826,7 +1826,7 @@ int main(int argc, char *argv[])
 
     trigger_reset();
 
-    usleep(sSpiResetDelay * USEC_PER_MSEC);
+    usleep((useconds_t)sSpiResetDelay * USEC_PER_MSEC);
 
     // ========================================================================
     // MAIN LOOP
