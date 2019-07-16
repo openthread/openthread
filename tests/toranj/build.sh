@@ -80,7 +80,6 @@ configure_options="                \
     --enable-coverage=$coverage    \
     --enable-ftd                   \
     --enable-jam-detection         \
-    --enable-joiner                \
     --enable-legacy                \
     --enable-mac-filter            \
     --enable-ncp                   \

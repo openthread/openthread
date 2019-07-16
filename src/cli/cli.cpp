@@ -140,7 +140,7 @@ const struct Command Interpreter::sCommands[] = {
     {"ifconfig", &Interpreter::ProcessIfconfig},
     {"ipaddr", &Interpreter::ProcessIpAddr},
     {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     {"joiner", &Interpreter::ProcessJoiner},
 #endif
 #if OPENTHREAD_FTD
@@ -240,7 +240,7 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
 #endif
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
 #endif
     , mInstance(aInstance)
@@ -3081,7 +3081,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 void Interpreter::ProcessJoiner(int argc, char *argv[])
 {

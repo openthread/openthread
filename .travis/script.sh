@@ -67,7 +67,8 @@ python --version || die
         -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1"
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
@@ -77,7 +78,6 @@ python --version || die
         --enable-executable=no            \
         --enable-ftd                      \
         --enable-jam-detection            \
-        --enable-joiner                   \
         --enable-legacy                   \
         --enable-mac-filter               \
         --enable-mtd                      \
@@ -102,7 +102,6 @@ python --version || die
         --enable-executable=no            \
         --enable-ftd                      \
         --enable-jam-detection            \
-        --enable-joiner                   \
         --enable-legacy                   \
         --enable-mac-filter               \
         --enable-mtd                      \

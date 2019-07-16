@@ -48,7 +48,7 @@
 #define OPENTHREAD_ENABLE_JAM_DETECTION 1
 
 /* Define to 1 to enable the joiner role. */
-#define OPENTHREAD_ENABLE_JOINER 1
+#define OPENTHREAD_CONFIG_JOINER_ENABLE 1
 
 /* Define to 1 if you want to use legacy network support */
 #define OPENTHREAD_ENABLE_LEGACY 1

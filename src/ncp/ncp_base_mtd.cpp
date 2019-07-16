@@ -1448,7 +1448,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDI
 exit:
     return error;
 }
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_JOINER_STATE>(void)
 {
     spinel_meshcop_joiner_state_t state = SPINEL_MESHCOP_JOINER_STATE_IDLE;
@@ -3316,7 +3316,7 @@ exit:
     }
 }
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 void NcpBase::HandleJoinerCallback_Jump(otError aError, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleJoinerCallback(aError);

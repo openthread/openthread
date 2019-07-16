@@ -577,7 +577,7 @@ template <> inline MeshCoP::Commissioner &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> inline MeshCoP::Joiner &Instance::Get(void)
 {
     return mThreadNetif.mJoiner;

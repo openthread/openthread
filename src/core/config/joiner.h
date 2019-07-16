@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,44 +26,33 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NRF52840_MBEDTLS_CONFIG_H_
-#define NRF52840_MBEDTLS_CONFIG_H_
+/**
+ * @file
+ *   This file includes compile-time configurations for the Joiner.
+ *
+ */
 
-#include <openthread/config.h>
+#ifndef CONFIG_JOINER_H_
+#define CONFIG_JOINER_H_
 
-#ifndef DISABLE_CC310
-#define MBEDTLS_AES_ALT
-#define MBEDTLS_ECP_ALT
-#define MBEDTLS_SHA256_ALT
-#endif // DISABLE_CC310
-
-#ifdef MBEDTLS_THREADING
-#define MBEDTLS_THREADING_C
-#define MBEDTLS_THREADING_ALT
-#endif // MBEDTLS_THREADING
-
-#if defined(__ICCARM__)
-    _Pragma("diag_suppress=Pe550")
-#endif
-
-#if defined(__CC_ARM)
-    _Pragma("diag_suppress=550")
-    _Pragma("diag_suppress=68")
+/**
+ * @def OPENTHREAD_CONFIG_JOINER_ENABLE
+ *
+ * Define to 1 to enable Joiner support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_ENABLE
+#define OPENTHREAD_CONFIG_JOINER_ENABLE 0
 #endif
 
 /**
- * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
  *
- * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
- *
- * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt context
- *       used by Header IE related features.
+ * The maximum number of Joiner Router entries that can be queued by the Joiner.
  *
  */
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE || OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 1
-#else
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 0
+#ifndef OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
+#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 2
 #endif
 
-#endif // NRF52840_MBEDTLS_CONFIG_H_
+#endif // CONFIG_JOINER_H_

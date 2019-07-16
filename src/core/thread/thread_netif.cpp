@@ -89,9 +89,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
     , mCoapSecure(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(aInstance)
-#endif // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     , mJamDetector(aInstance)
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
