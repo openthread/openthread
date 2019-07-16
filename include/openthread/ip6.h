@@ -158,7 +158,7 @@ typedef struct otMessageInfo
  *
  * @retval OT_ERROR_NONE            Successfully brought the IPv6 interface up/down.
  * @retval OT_ERROR_INVALID_STATE   IPv6 interface is not available since device is operating in raw-link mode
- *                                  (applicable only when `OPENTHREAD_ENABLE_RAW_LINK_API` feature is enabled).
+ *                                  (applicable only when `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` feature is enabled).
  *
  */
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);

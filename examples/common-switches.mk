@@ -143,7 +143,7 @@ configure_OPTIONS              += --enable-legacy
 endif
 
 ifeq ($(LINK_RAW),1)
-configure_OPTIONS              += --enable-raw-link-api
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
 
 ifeq ($(MAC_FILTER),1)

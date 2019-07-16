@@ -46,7 +46,7 @@
 #include "common/random_manager.hpp"
 #include "diags/factory_diags.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #include "common/message.hpp"
 #include "mac/link_raw.hpp"
 #endif
@@ -360,9 +360,9 @@ private:
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     Mac::LinkRaw mLinkRaw;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLogLevel mLogLevel;
@@ -678,7 +678,7 @@ template <> inline MessagePool &Instance::Get(void)
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 template <> inline Mac::LinkRaw &Instance::Get(void)
 {
     return mLinkRaw;
@@ -691,7 +691,7 @@ template <> inline Mac::SubMac &Instance::Get(void)
 }
 #endif
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 template <> inline TaskletScheduler &Instance::Get(void)
 {

@@ -255,7 +255,7 @@ protected:
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -269,7 +269,7 @@ protected:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
@@ -417,7 +417,7 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
@@ -564,11 +564,11 @@ protected:
     uint8_t mPreferredRouteId;
 #endif
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     uint8_t mCurTransmitTID;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;

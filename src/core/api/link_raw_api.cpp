@@ -46,7 +46,7 @@
 #include "mac/mac_frame.hpp"
 #include "utils/parse_cmdline.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 using namespace ot;
 
@@ -262,4 +262,4 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
 
 #endif // OPENTHREAD_RADIO
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

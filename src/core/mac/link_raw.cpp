@@ -45,7 +45,7 @@
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 namespace ot {
 namespace Mac {
@@ -60,7 +60,7 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
-#elif OPENTHREAD_ENABLE_RAW_LINK_API
+#elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mSubMac(aInstance.Get<SubMac>())
 #endif
 {
@@ -233,4 +233,4 @@ void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

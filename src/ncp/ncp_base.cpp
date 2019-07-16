@@ -55,7 +55,7 @@ namespace Ncp {
 // MARK: Utility Functions
 // ----------------------------------------------------------------------------
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 static bool HasOnly1BitSet(uint32_t aValue)
 {
     return aValue != 0 && ((aValue & (aValue - 1)) == 0);
@@ -72,7 +72,7 @@ static uint8_t IndexOfMSB(uint32_t aValue)
 
     return index;
 }
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 spinel_status_t NcpBase::ThreadErrorToSpinelStatus(otError aError)
 {
@@ -234,11 +234,11 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_FTD
     , mPreferredRouteId(0)
 #endif
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mCurTransmitTID(0)
     , mCurScanChannel(kInvalidScanChannel)
     , mSrcMatchEnabled(false)
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mInboundSecureIpFrameCounter(0)
     , mInboundInsecureIpFrameCounter(0)
@@ -927,7 +927,7 @@ bool NcpBase::HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(aHeader));
 #endif
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     case SPINEL_PROP_STREAM_RAW:
         ExitNow(aError = HandlePropertySet_SPINEL_PROP_STREAM_RAW(aHeader));
 #endif
@@ -1301,7 +1301,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_ENABLED>(void)
 {
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     return mEncoder.WriteBool(otLinkRawIsEnabled(mInstance));
 #else
     return mEncoder.WriteBool(false);
@@ -1322,7 +1322,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN>(void)
 
     error = otLinkSetChannel(mInstance, static_cast<uint8_t>(channel));
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     SuccessOrExit(error);
 
@@ -1333,7 +1333,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN>(void)
         error = otLinkRawReceive(mInstance, &NcpBase::LinkRawReceiveDone);
     }
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 exit:
     return error;
@@ -1425,7 +1425,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     if (otLinkRawIsEnabled(mInstance))
     {
@@ -1439,7 +1439,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RAW_STREAM_ENABLE
         }
     }
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     mIsRawStreamEnabled = enabled;
 
@@ -1512,7 +1512,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_STATE>(void)
 {
     uint8_t scanState = SPINEL_SCAN_STATE_IDLE;
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     if (otLinkRawIsEnabled(mInstance))
     {
@@ -1520,7 +1520,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_SCAN_STATE>(void)
     }
     else
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -1567,7 +1567,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     case SPINEL_SCAN_STATE_ENERGY:
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
         if (otLinkRawIsEnabled(mInstance))
         {
             uint8_t scanChannel;
@@ -1583,7 +1583,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_STATE>(void)
             error = otLinkRawEnergyScan(mInstance, scanChannel, mScanPeriod, LinkRawEnergyScanDone);
         }
         else
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
         {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
             error = otLinkEnergyScan(mInstance, mScanChannelMask, mScanPeriod, &HandleEnergyScanResult_Jump, this);
@@ -1740,7 +1740,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_RADIO));
 #endif
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RAW));
 #endif
 
