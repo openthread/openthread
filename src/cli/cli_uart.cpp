@@ -237,25 +237,52 @@ otError Uart::ProcessCommand(void)
 int Uart::Output(const char *aBuf, uint16_t aBufLength)
 {
     OT_CLI_UART_OUTPUT_LOCK();
-    uint16_t remaining = kTxBufferSize - mTxLength;
-    uint16_t tail;
+    uint16_t sent = 0;
 
-    if (aBufLength > remaining)
+    while (aBufLength > 0)
     {
-        aBufLength = remaining;
+        uint16_t remaining = kTxBufferSize - mTxLength;
+        uint16_t tail;
+        uint16_t sendLength = aBufLength;
+
+        if (sendLength > remaining)
+        {
+            sendLength = remaining;
+        }
+
+        for (int i = 0; i < sendLength; i++)
+        {
+            tail            = (mTxHead + mTxLength) % kTxBufferSize;
+            mTxBuffer[tail] = *aBuf++;
+            mTxLength++;
+        }
+
+        Send();
+
+        aBufLength -= sendLength;
+        sent += sendLength;
+
+        if (aBufLength > 0)
+        {
+            // More to send, so flush what's waiting now
+            otError err = otPlatUartFlush();
+
+            if (err == OT_ERROR_NONE)
+            {
+                // Flush successful, reset the pointers
+                SendDoneTask();
+            }
+            else
+            {
+                // Flush did not succeed, so abort here.
+                break;
+            }
+        }
     }
 
-    for (int i = 0; i < aBufLength; i++)
-    {
-        tail            = (mTxHead + mTxLength) % kTxBufferSize;
-        mTxBuffer[tail] = *aBuf++;
-        mTxLength++;
-    }
-
-    Send();
     OT_CLI_UART_OUTPUT_UNLOCK();
 
-    return aBufLength;
+    return sent;
 }
 
 void Uart::Send(void)
