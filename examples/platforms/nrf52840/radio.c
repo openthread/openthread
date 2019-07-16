@@ -733,7 +733,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
         receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Get the timestamp when the SFD was received.
     uint32_t offset =
         (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
@@ -743,7 +743,7 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
     {
         receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime();
     }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif
 
     sAckedWithFramePending = false;
 
@@ -854,8 +854,8 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     bool notifyFrameUpdated = false;
     assert(aFrame == sTransmitPsdu);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
     {
         uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
         uint64_t time   = otPlatTimeGet() + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
@@ -871,7 +871,7 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
 
         notifyFrameUpdated = true;
     }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     if (notifyFrameUpdated)
     {

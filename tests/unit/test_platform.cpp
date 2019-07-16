@@ -543,7 +543,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint64_t otPlatTimeGet(void)
 {
     struct timeval tv;
@@ -557,6 +557,6 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // extern "C"

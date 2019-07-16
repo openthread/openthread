@@ -218,7 +218,7 @@ static void handleRx(void)
     {
         sRxDone = false;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #error Time sync requires the timestamp of SFD rather than that of rx done!
 #else
         if (otPlatRadioGetPromiscuous(sInstance))

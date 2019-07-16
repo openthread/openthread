@@ -662,7 +662,7 @@ void readFrame(otInstance *aInstance)
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #error Time sync requires the timestamp of SFD rather than that of rx done!
 #else
     // Timestamp

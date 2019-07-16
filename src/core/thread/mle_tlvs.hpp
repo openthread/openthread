@@ -111,7 +111,7 @@ public:
 
         /**
          * Applicable/Required only when time synchronization service
-         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
          *
          */
         kTimeRequest   = 252, ///< Time Request TLV
@@ -1859,7 +1859,7 @@ private:
     uint16_t mPanId;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements Time Request TLV generation and parsing.
  *
@@ -1998,7 +1998,7 @@ public:
 private:
     uint16_t mXtalAccuracy;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 /**
  * This class implements Active Timestamp TLV generation and parsing.

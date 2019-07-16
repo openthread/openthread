@@ -577,7 +577,7 @@ start:
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aMessage.IsTimeSync())
     {
         fcf |= Mac::Frame::kFcfFrameVersion2015 | Mac::Frame::kFcfIePresent;
@@ -666,7 +666,7 @@ start:
     aFrame.SetDstAddr(aMacDest);
     aFrame.SetSrcAddr(aMacSource);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aMessage.IsTimeSync())
     {
         Mac::TimeIe * ie;
@@ -847,7 +847,7 @@ start:
     if (nextOffset < aMessage.GetLength())
     {
         aFrame.SetFramePending(true);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         aMessage.SetTimeSync(false);
 #endif
     }
@@ -1072,7 +1072,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     linkInfo.mRss          = aFrame.GetRssi();
     linkInfo.mLqi          = aFrame.GetLqi();
     linkInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aFrame.GetTimeIe() != NULL)
     {
         linkInfo.mNetworkTimeOffset = aFrame.ComputeNetworkTimeOffset();
@@ -1155,7 +1155,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
         message->AddRss(aLinkInfo.mRss);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         message->SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
         message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
@@ -1344,7 +1344,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     message->SetPanId(aLinkInfo.mPanId);
     message->AddRss(aLinkInfo.mRss);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     message->SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif

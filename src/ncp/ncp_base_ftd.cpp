@@ -1049,7 +1049,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TIME_SYNC_PERIOD>(void)
 {
     return mEncoder.WriteUint16(otNetworkTimeGetSyncPeriod(mInstance));
@@ -1085,7 +1085,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TIME_SYNC_XTAL_THRESH
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Ncp
 } // namespace ot

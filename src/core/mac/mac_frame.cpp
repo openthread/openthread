@@ -1010,7 +1010,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
 {
     const TimeIe * timeIe                              = NULL;
@@ -1031,7 +1031,7 @@ const TimeIe *Frame::GetTimeIe(void) const
 exit:
     return timeIe;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 void Frame::CopyFrom(const Frame &aFromFrame)
 {
@@ -1049,7 +1049,7 @@ void Frame::CopyFrom(const Frame &aFromFrame)
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
 
     // mIeInfo may be null when TIME_SYNC is not enabled.
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
 #endif
 }

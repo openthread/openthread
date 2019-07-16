@@ -563,7 +563,7 @@ template <> inline MeshCoP::PendingDataset &Instance::Get(void)
     return mThreadNetif.mPendingDataset;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> inline TimeSync &Instance::Get(void)
 {
     return mThreadNetif.mTimeSync;

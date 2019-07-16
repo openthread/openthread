@@ -647,7 +647,7 @@ public:
      */
     static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method generates an MLE Time Synchronization message.
      *
@@ -697,7 +697,7 @@ private:
     otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    HandleNetworkDataUpdateRouter(void);
     otError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 

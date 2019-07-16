@@ -324,7 +324,7 @@ public:
      */
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not time sync feature is enabled.
      *
@@ -362,7 +362,7 @@ private:
     uint16_t mRloc16;      ///< The RLOC16
     uint8_t  mState : 4;   ///< The link state
     uint8_t  mMode : 4;    ///< The MLE device mode
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t mLinkFailures : 7;    ///< Consecutive link failure count
     bool    mTimeSyncEnabled : 1; ///< Indicates whether or not time sync feature is enabled.
 #else

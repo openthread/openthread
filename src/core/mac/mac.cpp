@@ -1012,7 +1012,7 @@ void Mac::BeginTransmit(void)
     bool    applyTransmitSecurity = true;
     bool    processTransmitAesCcm = true;
     Frame & sendFrame             = mSubMac.GetTransmitFrame();
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t timeIeOffset = 0;
 #endif
 
@@ -1078,7 +1078,7 @@ void Mac::BeginTransmit(void)
         break;
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     timeIeOffset = GetTimeIeOffset(sendFrame);
     sendFrame.SetTimeIeOffset(timeIeOffset);
 
@@ -1982,7 +1982,7 @@ void Mac::LogFrameTxFailure(const Frame &, otError, uint8_t) const
 
 // LCOV_EXCL_STOP
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
 {
     uint8_t        offset = 0;
@@ -1998,7 +1998,7 @@ uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
 exit:
     return offset;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Mac
 } // namespace ot

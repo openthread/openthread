@@ -701,7 +701,7 @@ void radioSendMessage(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     bool notifyFrameUpdated = false;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
         uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
@@ -718,7 +718,7 @@ void radioSendMessage(otInstance *aInstance)
 
         notifyFrameUpdated = true;
     }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     if (notifyFrameUpdated)
     {
