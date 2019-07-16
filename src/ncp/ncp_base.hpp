@@ -304,7 +304,7 @@ protected:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void        HandleJamStateChange(bool aJamState);
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                     const uint8_t *aEnergyData,
                                                     uint8_t        aLength,
@@ -413,7 +413,7 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 

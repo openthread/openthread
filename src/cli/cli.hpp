@@ -208,7 +208,7 @@ private:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -397,7 +397,7 @@ private:
     CoapSecure mCoapSecure;
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     Commissioner mCommissioner;
 #endif
 

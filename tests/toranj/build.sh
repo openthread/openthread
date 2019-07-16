@@ -77,7 +77,6 @@ build_config=$1
 configure_options="                \
     --disable-docs                 \
     --disable-tests                \
-    --enable-commissioner          \
     --enable-coverage=$coverage    \
     --enable-diag                  \
     --enable-ftd                   \

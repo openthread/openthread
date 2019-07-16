@@ -57,6 +57,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE                  1
 
 /**
+ * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+ *
+ * Define to 1 to enable Commissioner support.
+ *
+ */
+#define OPENTHREAD_CONFIG_COMMISSIONER_ENABLE                   1
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.

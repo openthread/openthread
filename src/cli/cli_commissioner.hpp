@@ -38,7 +38,7 @@
 
 #include <openthread/commissioner.h>
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Cli {
@@ -120,6 +120,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 #endif // CLI_COMMISSIONER_HPP_

@@ -49,7 +49,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 namespace ot {
 namespace MeshCoP {
@@ -1123,4 +1123,4 @@ exit:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

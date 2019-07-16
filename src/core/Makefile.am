@@ -324,6 +324,7 @@ HEADERS_COMMON                             = \
     config/channel_monitor.h                 \
     config/child_supervision.h               \
     config/coap.h                            \
+    config/commissioner.h                    \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \

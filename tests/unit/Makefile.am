@@ -116,18 +116,13 @@ check_PROGRAMS                                                     += \
     test-message-queue                                                \
     test-network-data                                                 \
     test-priority-queue                                               \
+    test-pskc                                                         \
     test-string                                                       \
     test-strlcat                                                      \
     test-strlcpy                                                      \
     test-strnlen                                                      \
     test-timer                                                        \
     $(NULL)
-
-if OPENTHREAD_ENABLE_COMMISSIONER
-check_PROGRAMS                                                     += \
-    test-pskc                                                         \
-    $(NULL)
-endif
 
 if OPENTHREAD_ENABLE_NCP
 check_PROGRAMS                                                     += \
