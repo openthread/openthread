@@ -54,6 +54,7 @@ python --version || die
     export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/third_party/mbedtls/repo/include"
     export CPPFLAGS="${CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 
+    # UART transport
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
@@ -81,6 +82,43 @@ python --version || die
         --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
         --with-ncp-bus=uart               \
+        --enable-radio-only               \
+        --enable-raw-link-api             \
+        --enable-service                  \
+        --enable-sntp-client              \
+        --enable-udp-forward              \
+        --with-examples=posix || die
+
+    scan-build --status-bugs -analyze-headers -v make -j2 || die
+
+    # SPI transport
+    scan-build ./configure                \
+        --enable-application-coap         \
+        --enable-application-coap-secure  \
+        --enable-border-agent             \
+        --enable-border-router            \
+        --enable-builtin-mbedtls=no       \
+        --enable-cert-log                 \
+        --enable-channel-manager          \
+        --enable-channel-monitor          \
+        --enable-child-supervision        \
+        --enable-cli                      \
+        --enable-commissioner             \
+        --enable-dhcp6-client             \
+        --enable-dhcp6-server             \
+        --enable-diag                     \
+        --enable-dns-client               \
+        --enable-ecdsa                    \
+        --enable-executable=no            \
+        --enable-ftd                      \
+        --enable-jam-detection            \
+        --enable-joiner                   \
+        --enable-legacy                   \
+        --enable-mac-filter               \
+        --enable-mtd                      \
+        --enable-mtd-network-diagnostic   \
+        --enable-ncp                      \
+        --with-ncp-bus=spi                \
         --enable-radio-only               \
         --enable-raw-link-api             \
         --enable-service                  \
