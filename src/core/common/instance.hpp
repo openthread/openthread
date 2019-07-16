@@ -612,7 +612,7 @@ template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 template <> inline Utils::Slaac &Instance::Get(void)
 {
     return mThreadNetif.mSlaac;

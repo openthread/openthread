@@ -3055,7 +3055,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>(void)
 {
@@ -3074,7 +3074,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 #if OPENTHREAD_ENABLE_LEGACY
 

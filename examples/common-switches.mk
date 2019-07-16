@@ -169,7 +169,7 @@ configure_OPTIONS              += --enable-service
 endif
 
 ifeq ($(SLAAC),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_SLAAC=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1
 endif
 
 ifeq ($(SNTP_CLIENT),1)
