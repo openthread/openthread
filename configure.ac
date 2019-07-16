@@ -1661,12 +1661,12 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_ECDSA], [${OPENTHREAD_ENABLE_ECDSA}], [Def
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, emsk, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
         none)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|emsk|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
             fi
@@ -1715,11 +1715,6 @@ case ${with_examples} in
     efr32mg21)
         OPENTHREAD_EXAMPLES_EFR32MG21=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32MG21],[${OPENTHREAD_EXAMPLES_EFR32MG21}],[Define to 1 if you want to use efr32mg21 examples])
-        ;;
-
-     emsk)
-        OPENTHREAD_EXAMPLES_EMSK=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
         ;;
 
     gp712)
@@ -1781,9 +1776,6 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr3
 
 AC_SUBST(OPENTHREAD_EXAMPLES_EFR32MG21)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_EMSK)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EMSK], [test "${with_examples}" = "emsk"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_GP712)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712], [test "${with_examples}" = "gp712"])
@@ -1958,7 +1950,6 @@ examples/platforms/efr32mg12/sleepy-demo/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/efr32mg21/Makefile
-examples/platforms/emsk/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf52811/Makefile

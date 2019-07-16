@@ -34,7 +34,6 @@ EXTRA_DIST                              = \
     openthread-test-driver                \
     NordicSemiconductor                   \
     silabs                                \
-    synopsys                              \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.

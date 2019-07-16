@@ -65,10 +65,6 @@ if OPENTHREAD_EXAMPLES_EFR32MG21
 include $(top_srcdir)/examples/platforms/efr32mg21/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_EMSK
-include $(top_srcdir)/examples/platforms/emsk/Makefile.platform.am
-endif
-
 if OPENTHREAD_EXAMPLES_GP712
 include $(top_srcdir)/examples/platforms/gp712/Makefile.platform.am
 endif

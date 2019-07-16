@@ -137,19 +137,6 @@ build_cc2652() {
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
 }
 
-build_emsk() {
-    export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
-
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-emsk || die
-    arc-elf32-size  output/emsk/bin/ot-cli-ftd || die
-    arc-elf32-size  output/emsk/bin/ot-cli-mtd || die
-    arc-elf32-size  output/emsk/bin/ot-ncp-ftd || die
-    arc-elf32-size  output/emsk/bin/ot-ncp-mtd || die
-}
-
 build_kw41z() {
     git checkout -- . || die
     git clean -xfd || die
@@ -296,8 +283,6 @@ build_samr21() {
     build_nrf52840
     build_qpg6095
     build_samr21
-
-    build_emsk
 }
 
 [ $BUILD_TARGET != arm-gcc-7 ] || {
