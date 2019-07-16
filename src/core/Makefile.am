@@ -331,6 +331,7 @@ HEADERS_COMMON                             = \
     config/dns_client.h                      \
     config/ip6.h                             \
     config/joiner.h                          \
+    config/link_quality.h                    \
     config/openthread-core-config-check.h    \
     config/openthread-core-default-config.h  \
     crypto/aes_ccm.hpp                       \
