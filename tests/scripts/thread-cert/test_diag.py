@@ -63,7 +63,9 @@ class TestDiag(unittest.TestCase):
             ('diag power\n',
              'tx power: -10 dBm\r\n'),
             ('diag stats\n',
-                'received packets: 0\r\nsent packets: 0\r\nfirst received packet: rssi=0, lqi=0\r\n',
+                'received packets: 0\r\nsent packets: 0\r\n'
+                'first received packet: rssi=0, lqi=0\r\n'
+                'last received packet: rssi=0, lqi=0\r\n',
              ),
             ('diag send 20 100\n',
                 r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
@@ -78,7 +80,9 @@ class TestDiag(unittest.TestCase):
                 'repeated packet transmission is stopped\r\nstatus 0x00\r\n',
              ),
             ('diag stop\n',
-                r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\nfirst received packet: rssi=0, lqi=0\r\n\n'
+                r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\n'
+                'first received packet: rssi=0, lqi=0\r\n'
+                'last received packet: rssi=0, lqi=0\r\n\n'
                 r'stop diagnostics mode\r\nstatus 0x00\r\n',
              ),
             ('diag',

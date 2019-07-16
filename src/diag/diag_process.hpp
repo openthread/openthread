@@ -64,6 +64,8 @@ private:
         uint32_t mSentPackets;
         int8_t   mFirstRssi;
         uint8_t  mFirstLqi;
+        int8_t   mLastRssi;
+        uint8_t  mLastLqi;
     };
 
     struct Command
