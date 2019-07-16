@@ -275,7 +275,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION>;
         break;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     case SPINEL_PROP_THREAD_NETWORK_DATA:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_DATA>;
         break;
@@ -812,7 +812,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID>;
         break;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     case SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE>;
         break;
@@ -1038,7 +1038,7 @@ NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aK
     case SPINEL_PROP_THREAD_ASSISTING_PORTS:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ASSISTING_PORTS>;
         break;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     case SPINEL_PROP_THREAD_OFF_MESH_ROUTES:
         handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>;
         break;
@@ -1120,7 +1120,7 @@ NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aK
     case SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE>;
         break;
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     case SPINEL_PROP_THREAD_OFF_MESH_ROUTES:
         handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>;
         break;

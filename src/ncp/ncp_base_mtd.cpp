@@ -34,7 +34,7 @@
 
 #include "ncp_base.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 #include <openthread/border_router.h>
 #endif
 #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
@@ -485,7 +485,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STABLE_NETWORK
     return mEncoder.WriteUint8(otNetDataGetStableVersion(mInstance));
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_DATA>(void)
 {
     uint8_t networkData[255];
@@ -509,7 +509,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STABLE_NETWORK
 
     return mEncoder.WriteData(networkData, networkDataLen);
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_LEADER_NETWORK_DATA>(void)
 {
@@ -692,7 +692,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NE
     return mEncoder.WriteBool(mAllowLocalNetworkDataChange);
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE>(void)
 {
     bool    value                    = false;
@@ -715,7 +715,7 @@ exit:
 
     return error;
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ON_MESH_NETS>(void)
 {
@@ -738,7 +738,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ON_MESH_NETS>(
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
     iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -756,13 +756,13 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ON_MESH_NETS>(
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NETS>(void)
 {
     otError              error = OT_ERROR_NONE;
@@ -824,7 +824,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NET
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_ENABLE_SERVICE
 
@@ -1845,7 +1845,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_OFF_MESH_ROUTE
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
     iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -1863,13 +1863,13 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_OFF_MESH_ROUTE
 
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 static int FlagByteToExternalRoutePreference(uint8_t aFlags)
 {
     int route_preference = 0;
@@ -1945,7 +1945,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_OFF_MESH_RO
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
 {

@@ -27,10 +27,10 @@
  */
 
 /* Define to 1 to enable the border agent feature. */
-#define OPENTHREAD_ENABLE_BORDER_AGENT 1
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
 
 /* Define to 1 if you want to enable Border Router */
-#define OPENTHREAD_ENABLE_BORDER_ROUTER 1
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /* Define to 1 if you want to enable channel manager feature */
 #define OPENTHREAD_ENABLE_CHANNEL_MANAGER 0

@@ -72,7 +72,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMac(aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     , mNetworkDataLocal(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)
@@ -80,7 +80,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mNetworkDiagnostic(aInstance)
 #endif
     , mIsUp(false)
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgent(aInstance)
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

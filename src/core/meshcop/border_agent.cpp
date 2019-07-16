@@ -44,7 +44,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 namespace ot {
 namespace MeshCoP {
@@ -727,4 +727,4 @@ void BorderAgent::SetState(otBorderAgentState aState)
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

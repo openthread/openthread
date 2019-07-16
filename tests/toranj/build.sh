@@ -77,7 +77,6 @@ build_config=$1
 configure_options="                \
     --disable-docs                 \
     --disable-tests                \
-    --enable-border-router         \
     --enable-channel-manager       \
     --enable-channel-monitor       \
     --enable-child-supervision     \

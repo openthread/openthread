@@ -514,7 +514,7 @@ template <> inline PanIdQueryServer &Instance::Get(void)
     return mThreadNetif.mPanIdQuery;
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
 template <> inline NetworkData::Local &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLocal;
@@ -657,7 +657,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent &Instance::Get(void)
 {
     return mThreadNetif.mBorderAgent;

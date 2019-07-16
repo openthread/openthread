@@ -50,7 +50,7 @@ otError otCommissionerStart(otInstance *                 aInstance,
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
 #endif
     SuccessOrExit(error =
@@ -76,7 +76,7 @@ otError otCommissionerStop(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop());
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
 #endif
 exit:

@@ -329,7 +329,7 @@ void Mle::SetRole(otDeviceRole aRole)
         break;
     }
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (IsAttached())
     {
         SuccessOrExit(Get<MeshCoP::BorderAgent>().Start());
@@ -760,7 +760,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
         Get<MleRouter>().HandleChildStart(mParentRequestMode);
     }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
     Get<NetworkData::Local>().ClearResubmitDelayTimer();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
@@ -1548,7 +1548,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             ScheduleMessageTransmissionTimer();
         }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_ENABLE_SERVICE
         Get<NetworkData::Local>().SendServerDataNotification();
 #if OPENTHREAD_ENABLE_SERVICE
         this->UpdateServiceAlocs();

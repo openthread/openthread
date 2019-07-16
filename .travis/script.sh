@@ -55,11 +55,13 @@ python --version || die
     export CPPFLAGS="${CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 
     # UART transport
+    export CPPFLAGS="${CPPFLAGS} \
+        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
-        --enable-border-agent             \
-        --enable-border-router            \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-channel-manager          \
@@ -95,8 +97,6 @@ python --version || die
     scan-build ./configure                \
         --enable-application-coap         \
         --enable-application-coap-secure  \
-        --enable-border-agent             \
-        --enable-border-router            \
         --enable-builtin-mbedtls=no       \
         --enable-cert-log                 \
         --enable-channel-manager          \
@@ -362,6 +362,9 @@ build_samr21() {
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 
+    export CPPFLAGS=" \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -371,7 +374,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-border-router              \
         --enable-child-supervision          \
         --enable-diag                       \
         --enable-jam-detection              \
@@ -393,7 +395,6 @@ build_samr21() {
         --enable-mtd                        \
         --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-border-router              \
         --enable-child-supervision          \
         --enable-legacy                     \
         --enable-mac-filter                 \
