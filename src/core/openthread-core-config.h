@@ -57,6 +57,7 @@
 #include "config/dns_client.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
+#include "config/link_quality.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
