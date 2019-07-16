@@ -218,7 +218,7 @@ otError Uart::ProcessCommand(void)
      * Thus this is here to affirmatively LOG exactly when the CLI
      * command is being executed.
      */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /* TODO: how exactly do we get the instance here? */
 #else
     otLogInfoCli("execute command: %s", mRxBuffer);

@@ -130,7 +130,7 @@ public:
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     /**
      * This callback is invoked by the legacy stack to notify that a new
      * legacy node did join the network.
@@ -336,14 +336,14 @@ protected:
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     static void HandleUdpForwardStream(otMessage *   aMessage,
                                        uint16_t      aPeerPort,
                                        otIp6Address *aPeerAddr,
                                        uint16_t      aSockPort,
                                        void *        aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     otError CommandHandler_NOOP(uint8_t aHeader);
@@ -424,7 +424,7 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     void StartLegacy(void);
     void StopLegacy(void);
 #else
@@ -581,7 +581,7 @@ protected:
     uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
     otExtAddress               mLegacyLastJoinedNode;

@@ -40,7 +40,7 @@
 #include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -286,4 +286,4 @@ void JamDetector::HandleStateChanged(otChangedFlags aFlags)
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE

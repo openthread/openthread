@@ -97,7 +97,7 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
     return socket.SendTo(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -126,7 +126,7 @@ void otUdpForwardReceive(otInstance *        aInstance,
 
     static_cast<ot::Message *>(aMessage)->Free();
 }
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 otUdpSocket *otUdpGetSockets(otInstance *aInstance)

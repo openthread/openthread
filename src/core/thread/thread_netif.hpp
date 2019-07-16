@@ -79,9 +79,9 @@
 #include "utils/slaac_address.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 #include "utils/jam_detector.hpp"
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 namespace ot {
 
@@ -211,9 +211,9 @@ private:
     MeshCoP::Joiner mJoiner;
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     Utils::JamDetector mJamDetector;
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 #if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;

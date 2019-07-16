@@ -313,7 +313,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_IPV6_ROUTE_TABLE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ROUTE_TABLE>;
         break;
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_JAM_DETECT_ENABLE>;
         break;
@@ -350,7 +350,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     case SPINEL_PROP_NEST_LEGACY_ULA_PREFIX:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_NEST_LEGACY_ULA_PREFIX>;
         break;
@@ -837,7 +837,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_GET_PENDING_DATASET>;
         break;
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_JAM_DETECT_ENABLE>;
         break;
@@ -851,7 +851,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_JAM_DETECT_BUSY>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     case SPINEL_PROP_NEST_LEGACY_ULA_PREFIX:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NEST_LEGACY_ULA_PREFIX>;
         break;
@@ -918,7 +918,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>;
         break;
 #endif
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     case SPINEL_PROP_THREAD_UDP_FORWARD_STREAM:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_STREAM>;
         break;

@@ -127,11 +127,11 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
 endif
 
 ifeq ($(ECDSA),1)
-configure_OPTIONS              += --enable-ecdsa
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
 ifeq ($(JAM_DETECTION),1)
-configure_OPTIONS              += --enable-jam-detection
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1
 endif
 
 ifeq ($(JOINER),1)
@@ -139,7 +139,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JOINER_ENABLE=1
 endif
 
 ifeq ($(LEGACY),1)
-configure_OPTIONS              += --enable-legacy
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1
 endif
 
 ifeq ($(LINK_RAW),1)
@@ -161,7 +161,7 @@ endif
 # Enable features only required for reference device during certification.
 ifeq ($(REFERENCE_DEVICE),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-COMMONCFLAGS                   += -DOPENTHREAD_ENABLE_REFERENCE_DEVICE=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1
 endif
 
 ifeq ($(SERVICE),1)
@@ -181,7 +181,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENT
 endif
 
 ifeq ($(UDP_FORWARD),1)
-configure_OPTIONS              += --enable-udp-forward
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
 endif
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)

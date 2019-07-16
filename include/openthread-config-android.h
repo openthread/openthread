@@ -45,13 +45,13 @@
 #define OPENTHREAD_CONFIG_DTLS_ENABLE 1
 
 /* Define to 1 if you want to use jam detection feature */
-#define OPENTHREAD_ENABLE_JAM_DETECTION 1
+#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE 1
 
 /* Define to 1 to enable the joiner role. */
 #define OPENTHREAD_CONFIG_JOINER_ENABLE 1
 
 /* Define to 1 if you want to use legacy network support */
-#define OPENTHREAD_ENABLE_LEGACY 1
+#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /* Define to 1 to enable the NCP UART interface. */
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
@@ -63,7 +63,7 @@
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
 /* Define to 1 to enable the UDP forward feature. */
-#define OPENTHREAD_ENABLE_UDP_FORWARD 1
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
 
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none

@@ -55,40 +55,40 @@ python --version || die
     export CPPFLAGS="${CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 
     # UART transport
-    export CPPFLAGS="${CPPFLAGS} \
-        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1"
+    export CPPFLAGS="${CPPFLAGS}                          \
+        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1    \
+        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1  \
+        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
 
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
-        --enable-cert-log                 \
         --enable-cli                      \
-        --enable-ecdsa                    \
         --enable-executable=no            \
         --enable-ftd                      \
-        --enable-jam-detection            \
-        --enable-legacy                   \
         --enable-mtd                      \
         --enable-ncp                      \
         --enable-radio-only               \
-        --enable-udp-forward              \
         --with-examples=posix || die
 
     scan-build --status-bugs -analyze-headers -v make -j2 || die
@@ -96,17 +96,12 @@ python --version || die
     # SPI transport
     scan-build ./configure                \
         --enable-builtin-mbedtls=no       \
-        --enable-cert-log                 \
         --enable-cli                      \
-        --enable-ecdsa                    \
         --enable-executable=no            \
         --enable-ftd                      \
-        --enable-jam-detection            \
-        --enable-legacy                   \
         --enable-mtd                      \
         --enable-ncp                      \
         --enable-radio-only               \
-        --enable-udp-forward              \
         --with-examples=posix || die
 
     scan-build --status-bugs -analyze-headers -v make -j2 || die
@@ -345,14 +340,16 @@ build_samr21() {
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 
-    export CPPFLAGS=" \
-        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1 \
+    export CPPFLAGS="                                    \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1   \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1       \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1             \
         -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
 
     git checkout -- . || die
@@ -363,8 +360,6 @@ build_samr21() {
         --enable-ftd                        \
         --enable-mtd                        \
         --with-examples=posix               \
-        --enable-jam-detection              \
-        --enable-legacy                     \
         --disable-docs                      \
         --disable-tests                     \
         --with-vendor-extension=./src/core/common/extension_example.cpp || die
@@ -377,14 +372,13 @@ build_samr21() {
         --enable-cli                        \
         --enable-mtd                        \
         --with-examples=posix               \
-        --enable-legacy                     \
         --disable-docs                      \
         --disable-tests || die
     make -j 8 || die
 
-    export CPPFLAGS=" \
+    export CPPFLAGS="                               \
         -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1      \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 
     git checkout -- . || die

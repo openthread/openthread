@@ -3555,7 +3555,7 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
 
 Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
 {
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Interpreter &interpreter = (aOwnerLocator.GetOwner<Interpreter>());
 #else
     OT_UNUSED_VARIABLE(aOwnerLocator);
@@ -3610,7 +3610,7 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
 OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
     OT_UNUSED_VARIABLE(aHandlers);
@@ -3625,4 +3625,4 @@ OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aExtAddr);
 }
-#endif // OPENTHREAD_ENABLE_LEGACY
+#endif // OPENTHREAD_CONFIG_LEGACY_ENABLE

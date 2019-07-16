@@ -45,7 +45,7 @@
 #endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 #include <openthread/jam_detection.h>
 #endif
 #include <openthread/ncp.h>
@@ -1992,7 +1992,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_JAM_DETECT_ENABLE>(void)
 {
@@ -2096,7 +2096,7 @@ void NcpBase::HandleJamStateChange(bool aJamState)
     mUpdateChangedPropsTask.Post();
 }
 
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
@@ -3076,7 +3076,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
 
 void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
@@ -3183,7 +3183,7 @@ void NcpBase::StopLegacy(void)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_LEGACY
+#endif // OPENTHREAD_CONFIG_LEGACY_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(void)
@@ -3435,7 +3435,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_UDP_FORWARD_STREAM>(void)
 {
     const uint8_t *     framePtr = NULL;
@@ -3509,7 +3509,7 @@ exit:
         otMessageFree(aMessage);
     }
 }
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 
 // ----------------------------------------------------------------------------
 // MARK: Pcap frame handling
@@ -3646,7 +3646,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
             }
 
             if ((otThreadGetDeviceRole(mInstance) == OT_DEVICE_ROLE_LEADER) && otThreadIsSingleton(mInstance)
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
                 && !mLegacyNodeDidJoin
 #endif
             )
@@ -3718,7 +3718,7 @@ exit:
 
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
@@ -3733,7 +3733,7 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
@@ -3748,7 +3748,7 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 
 void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)

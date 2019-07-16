@@ -206,7 +206,7 @@ Udp::Udp(Instance &aInstance)
     , mEphemeralPort(kDynamicPortMin)
     , mReceivers(NULL)
     , mSockets(NULL)
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     , mUdpForwarderContext(NULL)
     , mUdpForwarder(NULL)
 #endif
@@ -322,7 +322,7 @@ otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
 {
     otError error = OT_ERROR_NONE;
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     if (aMessageInfo.IsHostInterface())
     {
         VerifyOrExit(mUdpForwarder != NULL, error = OT_ERROR_NO_ROUTE);

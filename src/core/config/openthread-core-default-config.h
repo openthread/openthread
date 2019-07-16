@@ -6,7 +6,7 @@
  *  modification, are permitted provided that the following conditions are met:
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- *  2. Redistributions in binary form must reproduce the above copyright
+ >*  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
  *  3. Neither the name of the copyright holder nor the
@@ -73,6 +73,86 @@
  */
 #ifndef OPENTHREAD_CONFIG_STACK_VERSION_MINOR
 #define OPENTHREAD_CONFIG_STACK_VERSION_MINOR 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+ *
+ * Define to 1 to enable the Border Agent service.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+ *
+ * Define to 1 to enable the Border Router service.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
+ *
+ * Define to 1 to enable ECDSA support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_ECDSA_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+ *
+ * Define to 1 to enable the Jam Detection service.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+ *
+ * Define to 1 to enable multiple instance support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#define OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+ *
+ * Define to 1 to enable posix-app daemon support.
+ *
+ */
+#ifndef OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+#define OPENTHREAD_ENABLE_POSIX_APP_DAEMON 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+ *
+ * Define to 1 to enable Thread Test Harness reference device support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+ *
+ * Define to 1 to enable UDP forward support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 0
 #endif
 
 /**
@@ -325,5 +405,15 @@
 #endif // OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #endif // OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
 #endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+
+/**
+ * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
+ *
+ * Define to 1 to enable legacy network support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LEGACY_ENABLE
+#define OPENTHREAD_CONFIG_LEGACY_ENABLE 0
+#endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

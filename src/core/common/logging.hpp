@@ -1020,7 +1020,7 @@ extern "C" {
  *
  *
  */
-#if OPENTHREAD_ENABLE_REFERENCE_DEVICE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #define otLogCertMeshCoP(aFormat, ...) \
     _otLogFormatter(OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aFormat, ##__VA_ARGS__)
 #else
@@ -1858,7 +1858,7 @@ extern "C" {
  * @param[in]  aLength      Number of bytes to print.
  *
  */
-#if OPENTHREAD_ENABLE_REFERENCE_DEVICE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #define otDumpCertMeshCoP(aId, aBuf, aLength) otDump(OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aId, aBuf, aLength)
 #else
 #define otDumpCertMeshCoP(aId, aBuf, aLength)

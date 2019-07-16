@@ -41,7 +41,7 @@
 
 namespace ot {
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
 otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
@@ -55,7 +55,7 @@ Instance::Instance(void)
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     , mHeap()
 #endif
     , mMbedTls()
@@ -103,7 +103,7 @@ Instance::Instance(void)
 {
 }
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 Instance &Instance::InitSingle(void)
 {
@@ -126,7 +126,7 @@ Instance &Instance::Get(void)
     return *static_cast<Instance *>(instance);
 }
 
-#else // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 {
@@ -147,7 +147,7 @@ exit:
     return instance;
 }
 
-#endif // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 void Instance::Reset(void)
 {
@@ -185,7 +185,7 @@ void Instance::Finalize(void)
     Get<Settings>().Deinit();
 #endif
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
      * Object was created on buffer, so instead of deleting
@@ -193,7 +193,7 @@ void Instance::Finalize(void)
      */
     this->~Instance();
 
-#endif // !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 exit:
     return;

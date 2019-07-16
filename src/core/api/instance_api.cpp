@@ -44,7 +44,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;
@@ -59,7 +59,7 @@ otInstance *otInstanceInitSingle(void)
 {
     return &Instance::InitSingle();
 }
-#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 bool otInstanceIsInitialized(otInstance *aInstance)
 {

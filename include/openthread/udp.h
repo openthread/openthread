@@ -251,7 +251,8 @@ otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo
  * @brief
  *   This module includes functions for UDP forward feature.
  *
- *   The functions in this module are available when udp-forward feature (`OPENTHREAD_ENABLE_UDP_FORWARD`) is enabled.
+ *   The functions in this module are available when udp-forward feature (`OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE`) is
+ *   enabled.
  *
  * @{
  *
