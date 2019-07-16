@@ -341,8 +341,8 @@ class MacFrame:
                 MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY)
             )
             self.payload = MacPayload(
-                bytearray(open_payload) +
-                sec_obj.decrypt(private_payload, mic, message_info)
+                bytearray(open_payload)
+                + sec_obj.decrypt(private_payload, mic, message_info)
             )
 
         else:
