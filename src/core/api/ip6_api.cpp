@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
 
@@ -266,7 +266,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 bool otIp6IsSlaacEnabled(otInstance *aInstance)
 {
@@ -294,4 +294,4 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
     instance.Get<Utils::Slaac>().SetFilter(aFilter);
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

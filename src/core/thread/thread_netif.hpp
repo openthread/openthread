@@ -75,7 +75,7 @@
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
 
@@ -170,7 +170,7 @@ private:
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Dhcp6::Dhcp6Server mDhcp6Server;
 #endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     Utils::Slaac mSlaac;
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

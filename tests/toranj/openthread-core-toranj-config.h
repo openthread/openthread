@@ -123,20 +123,20 @@
 #define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                    10
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+ * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
  *
  * The maximum number of supported IPv6 addresses allows to be externally added.
  *
  */
-#define OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS                      8
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS                      8
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+ * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
  *
  * The maximum number of supported IPv6 multicast addresses allows to be externally added.
  *
  */
-#define OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS            4
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS            4
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_FILTER_SIZE
@@ -337,12 +337,12 @@
 #define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ * @def OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
  *
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SLAAC    1
+#define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE    1
 
 #if OPENTHREAD_RADIO
 /**

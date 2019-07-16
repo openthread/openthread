@@ -320,26 +320,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
- *
- * The maximum number of supported IPv6 addresses allows to be externally added.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
-#define OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS 4
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
- *
- * The maximum number of supported IPv6 multicast addresses allows to be externally added.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
-#define OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS 2
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS
  *
  * The maximum number of supported Service ALOCs registrations for this device.
@@ -357,26 +337,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
 #define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 2
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES
- *
- * The number of MPL Seed Set entries for duplicate detection.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES
-#define OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES 32
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME
- *
- * The MPL Seed Set entry lifetime in seconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME
-#define OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME 5
 #endif
 
 /**
@@ -791,26 +751,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
 #define OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION otPlatLog
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
- *
- * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SLAAC
-#define OPENTHREAD_CONFIG_ENABLE_SLAAC 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
- *
- * The number of auto-configured SLAAC addresses. Applicable only if OPENTHREAD_CONFIG_ENABLE_SLAAC is enabled.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
-#define OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES 4
 #endif
 
 /**
@@ -1347,19 +1287,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
- *
- * Define as 1 to enable dynamic MPL interval feature.
- *
- * If this feature is enabled, the MPL forward interval will be adjusted dynamically according to
- * the network scale, which helps to reduce multicast latency.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
-#define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
  *
  * Define as 1 to disable CSMA-CA on the last transmit attempt.
@@ -1509,26 +1436,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT
 #define OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT 1
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT
- *
- * This setting configures the default hop limit of IPv6.
- *
- */
-#ifndef OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT
-#define OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT 64
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM
- *
- * This setting configures the max datagram length of IPv6.
- *
- */
-#ifndef OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM
-#define OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM 1280
 #endif
 
 /**

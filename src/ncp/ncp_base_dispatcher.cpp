@@ -514,7 +514,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>;
         break;
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     case SPINEL_PROP_SLAAC_ENABLED:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
@@ -864,7 +864,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>;
         break;
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     case SPINEL_PROP_SLAAC_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_SLAAC_ENABLED>;
         break;
