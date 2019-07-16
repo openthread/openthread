@@ -51,7 +51,7 @@ otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 Instance::Instance(void)
     : mTaskletScheduler()
     , mTimerMilliScheduler(*this)
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

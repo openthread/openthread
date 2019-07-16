@@ -121,7 +121,7 @@ int32_t platformAlarmGetNext(void)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -133,7 +133,7 @@ int32_t platformAlarmGetNext(void)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     return remaining;
 }
@@ -164,7 +164,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -178,7 +178,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 }
 
 uint64_t otPlatTimeGet(void)

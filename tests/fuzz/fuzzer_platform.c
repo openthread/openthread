@@ -82,7 +82,7 @@ void FuzzerPlatformProcess(otInstance *aInstance)
             otPlatAlarmMilliFired(aInstance);
         }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         if (sAlarmMicro.isRunning && sAlarmNow >= sAlarmMicro.fire)
         {
             sAlarmMicro.isRunning = false;

@@ -128,7 +128,7 @@ void otUdpForwardReceive(otInstance *        aInstance,
 }
 #endif // OPENTHREAD_ENABLE_UDP_FORWARD
 
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 otUdpSocket *otUdpGetSockets(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

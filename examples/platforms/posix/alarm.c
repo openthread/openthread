@@ -283,7 +283,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -297,7 +297,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 }
 
 uint64_t otPlatTimeGet(void)

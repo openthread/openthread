@@ -155,7 +155,7 @@ configure_OPTIONS              += --enable-mtd-network-diagnostic
 endif
 
 ifeq ($(PLATFORM_UDP),1)
-configure_OPTIONS              += --enable-platform-udp
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1
 endif
 
 # Enable features only required for reference device during certification.

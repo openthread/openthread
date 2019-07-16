@@ -76,16 +76,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_INFO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "NONE"
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.
@@ -248,18 +238,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
- *
- * The message pool is managed by platform defined logic when this flag is set.
- * This feature would typically be used when operating in a multi-threaded system
- * and multiple threads need to access the message pool.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-#define OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
  *
  * The value ahead of the current frame counter for persistent storage.
@@ -306,36 +284,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
 #define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS 1
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
- *
- * The assert is managed by platform defined logic when this flag is set.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
-#define OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
- *
- * Define to 1 if you want to enable microsecond backoff timer implemented in platform.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
- *
- * Allows to define custom otPlatRadioGetIeeeEui64 function to retrieve EUI-64.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE 0
 #endif
 
 /**

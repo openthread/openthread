@@ -412,7 +412,7 @@ private:
     static const AlarmApi sAlarmMilliApi;
 };
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 class TimerMicroScheduler;
 
 /**
@@ -512,7 +512,7 @@ public:
 private:
     static const AlarmApi sAlarmMicroApi;
 };
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
  * @}
