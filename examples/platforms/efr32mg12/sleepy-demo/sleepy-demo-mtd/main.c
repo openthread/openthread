@@ -33,7 +33,7 @@
 #include "em_cmu.h"
 #include "em_emu.h"
 #include "gpiointerrupt.h"
-#include "hal-config-board.h"
+#include "hal-config.h"
 #include "hal_common.h"
 #include "openthread-system.h"
 #include "platform-efr32.h"
