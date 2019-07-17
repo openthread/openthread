@@ -251,7 +251,7 @@ static void processReceive(void)
 
 otError otPlatUartFlush(void)
 {
-	return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 static void processTransmit(void)
