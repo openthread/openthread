@@ -78,11 +78,6 @@ void otPlatUartSendDone(void)
 {
 }
 
-otError otPlatUartFlush(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
 void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     OT_UNUSED_VARIABLE(aBuf);
