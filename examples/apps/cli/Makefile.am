@@ -57,12 +57,6 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
-if OPENTHREAD_ENABLE_DIAG
-LDADD_COMMON                                                          += \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_DIAG
-
 if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-cli-ftd                                                           \

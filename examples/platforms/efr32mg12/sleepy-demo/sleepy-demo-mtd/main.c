@@ -115,10 +115,6 @@ int main(int argc, char *argv[])
     otThreadSetEnabled(instance, true);
     efr32SetSleepCallback(sleepCb);
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
-
     while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(instance);

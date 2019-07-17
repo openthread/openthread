@@ -3413,7 +3413,7 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
 
     // all diagnostics related features are processed within diagnostics module
     output[sizeof(output) - 1] = '\0';
-    otDiagProcessCmd(argc, argv, output, sizeof(output) - 1);
+    otDiagProcessCmd(mInstance, argc, argv, output, sizeof(output) - 1);
     mServer->Output(output, static_cast<uint16_t>(strlen(output)));
 }
 #endif
@@ -3436,7 +3436,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
 #if OPENTHREAD_ENABLE_DIAG
     VerifyOrExit(
-        (!otDiagIsEnabled() || (strcmp(cmd, "diag") == 0)),
+        (!otDiagIsEnabled(mInstance) || (strcmp(cmd, "diag") == 0)),
         mServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 

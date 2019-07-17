@@ -112,6 +112,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
     src/core/api/dataset_ftd_api.cpp                        \
+    src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
@@ -151,6 +152,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/crypto/mbedtls.cpp                             \
     src/core/crypto/pbkdf2_cmac.cpp                         \
     src/core/crypto/sha256.cpp                              \
+    src/core/diags/factory_diags.cpp                        \
     src/core/mac/channel_mask.cpp                           \
     src/core/mac/data_poll_handler.cpp                      \
     src/core/mac/data_poll_sender.cpp                       \
@@ -221,8 +223,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/missing_strnlen.c                        \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
-    src/diag/diag_process.cpp                               \
-    src/diag/openthread-diag.cpp                            \
     src/ncp/hdlc.cpp                                        \
     src/ncp/spinel.c                                        \
     src/ncp/spinel_decoder.cpp                              \

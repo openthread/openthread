@@ -102,10 +102,6 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
-
     while (true)
     {
         otSysMainloopContext mainloop;

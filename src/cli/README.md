@@ -1500,7 +1500,7 @@ Done
 
 ### diag
 
-Diagnostics module is enabled only when building OpenThread with --enable-diag option.
+Factory Diagnostics module is enabled only when building OpenThread with --enable-diag option.
 Go [diagnostics module][1] for more information.
 
 ### service

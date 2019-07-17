@@ -1161,7 +1161,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_FILTER], [test "${enable_mac_filter}" = "y
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_FILTER],[${OPENTHREAD_ENABLE_MAC_FILTER}],[Define to 1 if you want to use MAC filter feature])
 
 #
-# Diagnostics Library
+# Factory Diagnostics
 #
 
 AC_ARG_ENABLE(diag,
@@ -1190,7 +1190,7 @@ AC_MSG_CHECKING([whether to enable diag])
 AC_MSG_RESULT(${enable_diag})
 AC_SUBST(OPENTHREAD_ENABLE_DIAG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to use diagnostics module])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to enable factory diagnostics feature])
 
 #
 # Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
@@ -1928,7 +1928,6 @@ src/Makefile
 src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
-src/diag/Makefile
 src/posix/Makefile
 src/posix/platform/Makefile
 third_party/Makefile
@@ -2048,7 +2047,7 @@ AC_MSG_NOTICE([
   OpenThread Channel Monitor support        : ${enable_channel_monitor}
   OpenThread Channel Manager support        : ${enable_channel_manager}
   OpenThread MAC Filter support             : ${enable_mac_filter}
-  OpenThread Diagnostics support            : ${enable_diag}
+  OpenThread Factory Diagnostics support    : ${enable_diag}
   OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}

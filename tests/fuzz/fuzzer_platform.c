@@ -132,21 +132,25 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     sAlarmMicro.isRunning = false;
 }
 
-bool otDiagIsEnabled(void)
+bool otDiagIsEnabled(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     return false;
 }
 
-void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+void otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgCount);
     OT_UNUSED_VARIABLE(aArgVector);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 }
 
-void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
+void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aString);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
@@ -414,4 +418,45 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);
     return OT_ERROR_NONE;
+}
+
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aOutput);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+bool otPlatDiagModeGet(void)
+{
+    return false;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 }
