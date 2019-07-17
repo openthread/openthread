@@ -36,6 +36,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "openthread-system.h"
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -67,6 +68,7 @@ static bool     sIsRunning = false;
 
 static void RAILCb_TimerExpired(RAIL_Handle_t aHandle)
 {
+    otSysEventSignalPending();
 }
 
 void efr32AlarmInit(void)

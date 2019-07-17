@@ -34,6 +34,7 @@
 
 #include <stddef.h>
 
+#include "openthread-system.h"
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
@@ -132,6 +133,8 @@ static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDat
         assert(sReceiveDeferred == false);
         sReceiveDeferred = true;
     }
+
+    otSysEventSignalPending();
 }
 
 static inline bool isBufferEmpty(uint16_t unwrappedReadStart, uint16_t unwrappedReadEnd)
@@ -180,6 +183,7 @@ exit:
 static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
     sTransmitLength = 0;
+    otSysEventSignalPending();
 }
 
 static void processReceive(void)
