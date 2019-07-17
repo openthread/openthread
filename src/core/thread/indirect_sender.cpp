@@ -273,7 +273,12 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
 
     if (message != NULL)
     {
+        Mac::Address childAddress;
+
         mDataPollHandler.HandleNewFrame(aChild);
+
+        aChild.GetMacAddress(childAddress);
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, &childAddress, OT_ERROR_NONE);
     }
 }
 
