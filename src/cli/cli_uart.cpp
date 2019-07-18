@@ -250,7 +250,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
             sendLength = remaining;
         }
 
-        for (int i = 0; i < sendLength; i++)
+        for (uint16_t i = 0; i < sendLength; i++)
         {
             tail            = (mTxHead + mTxLength) % kTxBufferSize;
             mTxBuffer[tail] = *aBuf++;
