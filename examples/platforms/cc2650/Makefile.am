@@ -54,6 +54,7 @@ PLATFORM_SOURCES                                      = \
     misc.c                                              \
     logging.c                                           \
     openthread-core-cc2650-config.h                     \
+    openthread-core-cc2650-config-platform-check.h      \
     platform-cc2650.h                                   \
     radio.c                                             \
     system.c                                            \

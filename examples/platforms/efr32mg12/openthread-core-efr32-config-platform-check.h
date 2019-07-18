@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes compile-time configuration constants for OpenThread.
- */
+#ifndef OPENTHREAD_PLATFORM_EFR32_CORE_CONFIG_CHECK_H_
+#define OPENTHREAD_PLATFORM_EFR32_CORE_CONFIG_CHECK_H_
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#include "board_config.h"
 
-#include <openthread/config.h>
-
-#define OPENTHREAD_CORE_CONFIG_H_IN
-
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error "Platform efr32 doesn't support configuration option: OPENTHREAD_CONFIG_ENABLE_TIME_SYNC"
 #endif
 
-#include "openthread-core-default-config.h"
-
-#undef OPENTHREAD_CORE_CONFIG_H_IN
-
-#include "openthread-core-config-check.h"
-
-#ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
-#include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
+#ifndef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#error "Platform efr32 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
+#endif
 #endif
 
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif /* OPENTHREAD_PLATFORM_EFR32_CORE_CONFIG_CHECK_H_ */

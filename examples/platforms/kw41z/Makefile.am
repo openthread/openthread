@@ -56,6 +56,7 @@ PLATFORM_SOURCES                                                                
     logging.c                                                                                        \
     misc.c                                                                                           \
     openthread-core-kw41z-config.h                                                                   \
+    openthread-core-kw41z-config-platform-check.h                                                    \
     platform-kw41z.h                                                                                 \
     radio.c                                                                                          \
     system.c                                                                                         \

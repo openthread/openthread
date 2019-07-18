@@ -78,6 +78,7 @@ PLATFORM_COMMON_SOURCES                                                         
     logging.c                                                                                                \
     misc.c                                                                                                   \
     openthread-core-nrf52811-config.h                                                                        \
+    openthread-core-nrf52811-config-platform-check.h                                                         \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \

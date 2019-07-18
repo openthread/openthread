@@ -60,6 +60,7 @@ configure_OPTIONS              += --enable-cli-logging
 endif
 
 GP712_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-gp712-config.h\"'
+GP712_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-gp712-config-platform-check.h\"'
 GP712_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/gp712/
 
 COMMONCFLAGS                   := \

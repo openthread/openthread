@@ -49,6 +49,7 @@ libopenthread_qpg6095_a_SOURCES             = \
     misc.c                                    \
     misc_qorvo.h                              \
     openthread-core-qpg6095-config.h          \
+    openthread-core-qpg6095-config-platform-check.h \
     platform.c                                \
     platform_qorvo.h                          \
     radio.c                                   \
