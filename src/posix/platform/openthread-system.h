@@ -35,8 +35,12 @@
 #ifndef OPENTHREAD_SYSTEM_H_
 #define OPENTHREAD_SYSTEM_H_
 
+#include <setjmp.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <sys/select.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #ifdef __cplusplus
@@ -44,26 +48,68 @@ extern "C" {
 #endif
 
 /**
+ * This enumeration represents exit codes used when OpenThread exits.
+ *
+ */
+enum
+{
+    /**
+     * Success.
+     */
+    OT_EXIT_SUCCESS = 0,
+
+    /**
+     * Generic failure.
+     */
+    OT_EXIT_FAILURE = 1,
+
+    /**
+     * Invalid arguments.
+     */
+    OT_EXIT_INVALID_ARGUMENTS = 2,
+
+    /**
+     * Incompatible radio spinel.
+     */
+    OT_EXIT_RADIO_SPINEL_INCOMPATIBLE = 3,
+
+    /**
+     * Unexpected radio spinel reset.
+     */
+    OT_EXIT_RADIO_SPINEL_RESET = 4,
+
+    /**
+     * System call or library function error.
+     */
+    OT_EXIT_ERROR_ERRNO = 5,
+};
+
+/**
+ * This structure represents platform specific configurations.
+ *
+ */
+typedef struct otPlatformConfig
+{
+    uint64_t    mNodeId;        /// Unique node ID.
+    const char *mInterfaceName; /// Thread network interface name.
+    const char *mRadioFile;     /// Radio file path.
+    const char *mRadioConfig;   /// Radio configurations.
+    uint32_t    mSpeedUpFactor; /// Speed up factor.
+    bool        mResetRadio;    /// Whether to reset RCP when initializing.
+} otPlatformConfig;
+
+/**
  * This function performs all platform-specific initialization of OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when initialization of OpenThread's drivers is most appropriate.
  *
- * @param[in]  argc  Number of arguments in @p argv.
- * @param[in]  argv  Argument vector.
+ * @param[in]  aPlatformConfig  Argument vector.
  *
  * @returns A pointer to the OpenThread instance.
  *
  */
-otInstance *otSysInit(int argc, char *argv[]);
-
-/**
- * This function performs platform network interface initialization.
- *
- * @param[in]  aInstance  A pointer to the OpenThread instance.
- *
- */
-void otSysInitNetif(otInstance *aInstance);
+otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
 /**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
@@ -117,15 +163,6 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop);
  *
  */
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
-
-/**
- * This function is called whenever platform drivers needs processing.
- *
- * @note This function is not handled by the OpenThread library. Instead, the system/RTOS should handle this function
- *       and schedule a call to `otSysProcessDrivers()`.
- *
- */
-extern void otSysEventSignalPending(void);
 
 #ifdef __cplusplus
 } // end of extern "C"

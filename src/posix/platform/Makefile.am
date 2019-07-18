@@ -55,11 +55,17 @@ libopenthread_posix_a_SOURCES             = \
     $(NULL)
 
 noinst_HEADERS                            = \
-    openthread-system.h                     \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
     radio_spinel.hpp                        \
     $(NULL)
+
+openthread_HEADERS                        = \
+    openthread-system.h                     \
+    $(NULL)
+
+openthreaddir = $(includedir)/openthread
+dist_openthread_HEADERS = $(openthread_headers)
 
 PRETTY_FILES                              = \
     $(libopenthread_posix_a_SOURCES)        \

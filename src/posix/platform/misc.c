@@ -38,22 +38,10 @@
 #include <openthread/platform/misc.h>
 
 #include "code_utils.h"
-#include "openthread-system.h"
 #include "common/logging.hpp"
-
-extern jmp_buf gResetJump;
 
 static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
-
-void otPlatReset(otInstance *aInstance)
-{
-    otInstanceFinalize(aInstance);
-    otSysDeinit();
-
-    longjmp(gResetJump, 1);
-    assert(false);
-}
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
