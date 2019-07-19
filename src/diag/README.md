@@ -134,8 +134,17 @@ Print statistics during diagnostics mode.
 received packets: 10
 sent packets: 10
 first received packet: rssi=-65, lqi=101
+last received packet: rssi=-64, lqi=98
 ```
 
+### diag stats clear
+
+Clear statistics during diagnostics mode.
+
+```bash
+> diag stats clear
+stats cleared
+```
 ### diag stop
 
 Stop diagnostics mode and print statistics.
@@ -145,6 +154,7 @@ Stop diagnostics mode and print statistics.
 received packets: 10
 sent packets: 10
 first received packet: rssi=-65, lqi=101
+last received packet: rssi=-61, lqi=98
 
 stop diagnostics mode
 status 0x00

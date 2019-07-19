@@ -126,6 +126,7 @@ void Diag::ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t
     otPlatRadioSetPromiscuous(sInstance, true);
     otPlatAlarmMilliStop(sInstance);
     SuccessOrExit(error = otPlatRadioReceive(sInstance, sChannel));
+    SuccessOrExit(error = otPlatRadioSetTransmitPower(sInstance, sTxPower));
     otPlatDiagModeSet(true);
     memset(&sStats, 0, sizeof(struct DiagStats));
     snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
@@ -148,10 +149,13 @@ void Diag::ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t 
     otPlatRadioSetPromiscuous(sInstance, false);
 
     snprintf(aOutput, aOutputMaxLen,
-             "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n"
+             "received packets: %d\r\nsent packets: %d\r\n"
+             "first received packet: rssi=%d, lqi=%d\r\n"
+             "last received packet: rssi=%d, lqi=%d\r\n"
              "\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
              static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
-             static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi), error);
+             static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi),
+             static_cast<int>(sStats.mLastRssi), static_cast<int>(sStats.mLastLqi), error);
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -222,6 +226,7 @@ void Diag::ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t
         SuccessOrExit(error = ParseLong(aArgVector[0], value));
 
         sTxPower = static_cast<int8_t>(value);
+        SuccessOrExit(error = otPlatRadioSetTransmitPower(sInstance, sTxPower));
         otPlatDiagTxPowerSet(sTxPower);
 
         snprintf(aOutput, aOutputMaxLen, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
@@ -293,17 +298,26 @@ exit:
 
 void Diag::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
-    OT_UNUSED_VARIABLE(aArgCount);
-    OT_UNUSED_VARIABLE(aArgVector);
-
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    snprintf(aOutput, aOutputMaxLen,
-             "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
-             static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
-             static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi));
+    if ((aArgCount == 1) && (strcmp(aArgVector[0], "clear") == 0))
+    {
+        memset(&sStats, 0, sizeof(struct DiagStats));
+        snprintf(aOutput, aOutputMaxLen, "stats cleared\r\n");
+    }
+    else
+    {
+        VerifyOrExit(aArgCount == 0, error = OT_ERROR_INVALID_ARGS);
+        snprintf(aOutput, aOutputMaxLen,
+                 "received packets: %d\r\nsent packets: %d\r\n"
+                 "first received packet: rssi=%d, lqi=%d\r\n"
+                 "last received packet: rssi=%d, lqi=%d\r\n",
+                 static_cast<int>(sStats.mReceivedPackets), static_cast<int>(sStats.mSentPackets),
+                 static_cast<int>(sStats.mFirstRssi), static_cast<int>(sStats.mFirstLqi),
+                 static_cast<int>(sStats.mLastRssi), static_cast<int>(sStats.mLastLqi));
+    }
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -324,7 +338,9 @@ void Diag::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t
     else if (strcmp(aArgVector[0], "receive") == 0)
     {
         SuccessOrExit(error = otPlatRadioReceive(sInstance, sChannel));
+        SuccessOrExit(error = otPlatRadioSetTransmitPower(sInstance, sTxPower));
         otPlatDiagChannelSet(sChannel);
+        otPlatDiagTxPowerSet(sTxPower);
 
         snprintf(aOutput, aOutputMaxLen, "set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", sChannel,
                  error);
@@ -363,12 +379,15 @@ void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError 
 
     if (aError == OT_ERROR_NONE)
     {
-        // for sensitivity test, only record the rssi and lqi for the first packet
+        // for sensitivity test, only record the rssi and lqi for the first and last packet
         if (sStats.mReceivedPackets == 0)
         {
             sStats.mFirstRssi = aFrame->mInfo.mRxInfo.mRssi;
             sStats.mFirstLqi  = aFrame->mInfo.mRxInfo.mLqi;
         }
+
+        sStats.mLastRssi = aFrame->mInfo.mRxInfo.mRssi;
+        sStats.mLastLqi  = aFrame->mInfo.mRxInfo.mLqi;
 
         sStats.mReceivedPackets++;
     }
