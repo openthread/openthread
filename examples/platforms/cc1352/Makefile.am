@@ -54,7 +54,7 @@ PLATFORM_SOURCES                                                                
     logging.c                                                                             \
     misc.c                                                                                \
     openthread-core-cc1352-config.h                                                       \
-    openthread-core-cc1352-config-platform-check.h                                        \
+    openthread-core-cc1352-config-check.h                                                 \
     platform-cc1352.h                                                                     \
     radio.c                                                                               \
     system.c                                                                              \

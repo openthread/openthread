@@ -59,7 +59,7 @@ TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 QPG6095_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
-QPG6095_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-qpg6095-config-platform-check.h\"'
+QPG6095_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-qpg6095-config-check.h\"'
 QPG6095_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/qpg6095/
 QPG6095_MBEDTLS_CPPFLAGS      = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 QPG6095_MBEDTLS_CPPFLAGS     += -DMBEDTLS_USER_CONFIG_FILE='\"qpg6095-mbedtls-config.h\"'

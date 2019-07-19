@@ -86,7 +86,7 @@ PLATFORM_SOURCES                                                              = 
     logging.c                                                                   \
     misc.c                                                                      \
     openthread-core-efr32-config.h                                              \
-    openthread-core-efr32-config-platform-check.h                               \
+    openthread-core-efr32-config-check.h                                        \
     radio.c                                                                     \
     startup-gcc.c                                                               \
     system.c                                                                    \

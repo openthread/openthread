@@ -79,7 +79,7 @@ SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 
 CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-samr21-config.h\"'
-CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-samr21-config-platform-check.h\"'
+CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-samr21-config-check.h\"'
 CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/samr21/
 
 COMMONCFLAGS                   := \
