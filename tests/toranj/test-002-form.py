@@ -130,6 +130,14 @@ verify(node.get(wpan.WPAN_PANID) == '0x1977')
 verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
 verify(node.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == '"fd00:cafe::/64"')
 
+# Verify behavior when commands are issued immediately after a `reset`
+
+node.reset()
+node.leave()
+
+node.reset()
+node.form('net-after-reset')
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
