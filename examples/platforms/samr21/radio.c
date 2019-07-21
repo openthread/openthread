@@ -218,11 +218,14 @@ static void handleRx(void)
     {
         sRxDone = false;
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
         if (otPlatRadioGetPromiscuous(sInstance))
+#endif
         {
-            // Timestamp
-            sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-            sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+            // The current driver only supports milliseconds resolution.
+            sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
         }
 
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.

@@ -612,27 +612,29 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     otError        error        = OT_ERROR_NONE;
     uint16_t       flags        = 0;
     int8_t         noiseFloor   = -128;
+    uint32_t       msec         = 0;
+    uint16_t       usec         = 0;
     spinel_size_t  size         = OT_RADIO_FRAME_MAX_SIZE;
     unsigned int   receiveError = 0;
     spinel_ssize_t unpacked;
 
     // Timestamp is ms + us.
-    unpacked = spinel_datatype_unpack_in_place(
-        aBuffer, aLength,
-        SPINEL_DATATYPE_DATA_WLEN_S                              // Frame
-                        SPINEL_DATATYPE_INT8_S                   // RSSI
-                        SPINEL_DATATYPE_INT8_S                   // Noise Floor
-                        SPINEL_DATATYPE_UINT16_S                 // Flags
-                        SPINEL_DATATYPE_STRUCT_S(                // PHY-data
-                            SPINEL_DATATYPE_UINT8_S              // 802.15.4 channel
-                                        SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
-                                        SPINEL_DATATYPE_UINT32_S // Timestamp (ms).
-                                        SPINEL_DATATYPE_UINT16_S // Timestamp (us).
-                            ) SPINEL_DATATYPE_STRUCT_S(          // Vendor-data
-                            SPINEL_DATATYPE_UINT_PACKED_S        // Receive error
-                            ),
-        aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags, &aFrame.mChannel,
-        &aFrame.mInfo.mRxInfo.mLqi, &aFrame.mInfo.mRxInfo.mMsec, &aFrame.mInfo.mRxInfo.mUsec, &receiveError);
+    unpacked =
+        spinel_datatype_unpack_in_place(aBuffer, aLength,
+                                        SPINEL_DATATYPE_DATA_WLEN_S                              // Frame
+                                                        SPINEL_DATATYPE_INT8_S                   // RSSI
+                                                        SPINEL_DATATYPE_INT8_S                   // Noise Floor
+                                                        SPINEL_DATATYPE_UINT16_S                 // Flags
+                                                        SPINEL_DATATYPE_STRUCT_S(                // PHY-data
+                                                            SPINEL_DATATYPE_UINT8_S              // 802.15.4 channel
+                                                                        SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                                                        SPINEL_DATATYPE_UINT32_S // Timestamp (ms).
+                                                                        SPINEL_DATATYPE_UINT16_S // Timestamp (us).
+                                                            ) SPINEL_DATATYPE_STRUCT_S(          // Vendor-data
+                                                            SPINEL_DATATYPE_UINT_PACKED_S        // Receive error
+                                                            ),
+                                        aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
+                                        &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi, &msec, &usec, &receiveError);
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
@@ -640,6 +642,7 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     {
         aFrame.mLength = static_cast<uint8_t>(size);
 
+        aFrame.mInfo.mRxInfo.mTimestamp             = msec * 1000 + usec;
         aFrame.mInfo.mRxInfo.mAckedWithFramePending = ((flags & SPINEL_MD_FLAG_ACKED_FP) != 0);
     }
     else if (receiveError < OT_NUM_ERRORS)

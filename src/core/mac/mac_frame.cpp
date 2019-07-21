@@ -1034,18 +1034,22 @@ exit:
 void Frame::CopyFrom(const Frame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mIeInfo;
+    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
 
     memcpy(this, &aFromFrame, sizeof(Frame));
 
     // Set the original buffer pointers back on the frame
     // which were overwritten by above `memcpy()`.
 
-    mPsdu   = psduBuffer;
-    mIeInfo = ieInfoBuffer;
+    mPsdu                 = psduBuffer;
+    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
-    memcpy(mIeInfo, aFromFrame.mIeInfo, sizeof(otRadioIeInfo));
+
+    // mIeInfo may be null when TIME_SYNC is not enabled.
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
+#endif
 }
 
 uint16_t Frame::GetMtu(void) const

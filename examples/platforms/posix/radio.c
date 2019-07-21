@@ -497,11 +497,11 @@ void platformRadioInit(void)
     sAckFrame.mPsdu      = sAckMessage.mPsdu;
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    sTransmitFrame.mIeInfo = &sTransmitIeInfo;
-    sReceiveFrame.mIeInfo  = &sReceivedIeInfo;
+    sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
+    sReceiveFrame.mInfo.mTxInfo.mIeInfo  = &sReceivedIeInfo;
 #else
-    sTransmitFrame.mIeInfo = NULL;
-    sReceiveFrame.mIeInfo  = NULL;
+    sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
+    sReceiveFrame.mInfo.mTxInfo.mIeInfo  = NULL;
 #endif
 }
 
@@ -637,13 +637,11 @@ static void radioReceive(otInstance *aInstance)
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
 
-    // Timestamp
-    sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-    sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
-
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    sReceiveFrame.mIeInfo->mTimestamp = otPlatTimeGet();
-#endif
+    if (otPlatRadioGetPromiscuous(aInstance))
+    {
+        // Unable to simulate SFD, so use the rx done timestamp instead.
+        sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
+    }
 
     if (sTxWait)
     {
@@ -707,12 +705,12 @@ void radioSendMessage(otInstance *aInstance)
     bool notifyFrameUpdated = false;
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
+    if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
-        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
-        uint64_t time   = (uint64_t)((int64_t)otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset);
+        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+        uint64_t time = (uint64_t)((int64_t)otPlatTimeGet() + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset);
 
-        *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
+        *timeIe = sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
 
         *(++timeIe) = (uint8_t)(time & 0xff);
         for (uint8_t i = 1; i < sizeof(uint64_t); i++)

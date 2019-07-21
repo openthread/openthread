@@ -1148,6 +1148,14 @@ public:
      */
     const uint8_t *GetFooter(void) const;
 
+    /**
+     * This method returns the timestamp when the frame was received.
+     *
+     * @returns The timestamp when the frame was received, in microseconds.
+     *
+     */
+    const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
+
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     /**
      * This method sets the Time IE offset.
@@ -1155,7 +1163,7 @@ public:
      * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
      *
      */
-    void SetTimeIeOffset(uint8_t aOffset) { mIeInfo->mTimeIeOffset = aOffset; }
+    void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
 
     /**
      * This method sets the offset to network time.
@@ -1163,7 +1171,10 @@ public:
      * @param[in]  aNetworkTimeOffset  The offset to network time.
      *
      */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset) { mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset; }
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
+    {
+        mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
+    }
 
     /**
      * This method gets the offset to network time.
@@ -1171,7 +1182,7 @@ public:
      * @returns  The offset to network time.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mIeInfo->mNetworkTimeOffset; }
+    int64_t GetNetworkTimeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset; }
 
     /**
      * This method sets the time sync sequence.
@@ -1179,7 +1190,7 @@ public:
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      *
      */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 
     /**
      * This method gets the time sync sequence.
@@ -1187,15 +1198,7 @@ public:
      * @returns  The time sync sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mIeInfo->mTimeSyncSeq; }
-
-    /**
-     * This method returns the timestamp when the SFD was received.
-     *
-     * @returns The timestamp when the SFD was received, in microseconds.
-     *
-     */
-    uint64_t GetTimestamp(void) const { return mIeInfo->mTimestamp; }
+    uint8_t GetTimeSyncSeq(void) const { return mInfo.mTxInfo.mIeInfo->mTimeSyncSeq; }
 
     /**
      * This method returns a pointer to the vendor specific Time IE.
