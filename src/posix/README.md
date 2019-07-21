@@ -122,3 +122,19 @@ make -f src/posix/Makefile-posix DAEMON=1
 # Built-in controller
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-ctl
 ```
+
+Readline Support
+----------------
+
+libedit seems to be buggy supporting callback mode, so GNU readline is recommended.
+
+```bash
+# macOS requires setting these environments
+brew install readline
+export LDFLAGS="-L$(brew --prefix)/opt/readline/lib"
+export CPPFLAGS="-I$(brew --prefix)/opt/readline/include"
+export PKG_CONFIG_PATH="$(brew --prefix)/opt/readline/lib/pkgconfig"
+
+# macOS or Linux
+make -f src/posix/Makefile-posix READLINE=readline
+```
