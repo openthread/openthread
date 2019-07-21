@@ -65,6 +65,9 @@ r"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
 HARNESS_URL = "http://127.0.0.1:8000"
 """str: Harness front-end url"""
 
+HARNESS_VERSION = "R1.4.0"
+"""str: Harness version, official or internal release, e.g. 'R1.4.0' or 'V49.4' """
+
 TESTER_NAME = "Thread Open"
 """str: Who are you"""
 

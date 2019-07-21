@@ -178,6 +178,19 @@ class HarnessCase(unittest.TestCase):
         )
         self.history = HistoryHelper()
         self.add_all_devices = False
+        self.new_th = False
+
+        if (
+            re.match(r"v", settings.HARNESS_VERSION, re.I)
+            and settings.HARNESS_VERSION.upper().replace(" ", "") > "R1.4.0"
+        ):
+            self.new_th = True
+
+        if (
+            re.match(r"v", settings.HARNESS_VERSION, re.I)
+            and settings.HARNESS_VERSION.upper().replace(" ", "") > "V49.4"
+        ):
+            self.new_th = True
 
         super(HarnessCase, self).__init__(*args, **kwargs)
 
@@ -356,16 +369,24 @@ class HarnessCase(unittest.TestCase):
         logger.info("Deleting all .pdf")
         os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\NewPdf_*.pdf"')
         logger.info("Deleting all .xlsx")
-        os.system(
-            'del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\*_Excel_Report.xlsx"'
-        )
+        if not self.new_th:
+            os.system(
+                'del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\ExcelReport*.xlsx"'
+            )
         logger.info("Deleting all .pcapng")
         os.system('del /q "%s\\Captures\\*.pcapng"' % settings.HARNESS_HOME)
 
         # using temp files to fix excel downloading fail
-        logger.info("Empty files in Reports and Logs")
-        os.system('del /q "%s\\Reports\\*.*"' % settings.HARNESS_HOME)
-        os.system('del /q "%s\\Logs\\*.*"' % settings.HARNESS_HOME)
+        if self.new_th:
+            logger.info("Empty files in Reports and Logs")
+            os.system('del /q "%s\\Reports\\*.*"' % settings.HARNESS_HOME)
+            os.system('del /q "%s\\Logs\\*.*"' % settings.HARNESS_HOME)
+        else:
+            logger.info("Empty files in temps")
+            os.system(
+                'del /q "%s\\Thread_Harness\\temp\\*.*"'
+                % settings.HARNESS_HOME
+            )
 
         # create directory
         os.system("mkdir %s" % self.result_dir)
@@ -850,23 +871,19 @@ class HarnessCase(unittest.TestCase):
         self._browser.switch_to.window(main_window)
 
         os.system(
+            'copy "%%HOMEPATH%%\\Downloads\\ExcelReport_*.xlsx" %s\\'
+            % self.result_dir
+        )
+        os.system(
+            'copy "%s\\Thread_Harness\\temp\\*.*" "%s"'
+            % (settings.HARNESS_HOME, self.result_dir)
+        )
+        os.system(
             'copy "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\'
             % self.result_dir
         )
         os.system(
-            'copy "%%HOMEPATH%%\\Downloads\\*_Excel_Report.xlsx" %s\\'
-            % self.result_dir
-        )
-        os.system(
             'copy "%s\\Captures\\*.pcapng" %s\\'
-            % (settings.HARNESS_HOME, self.result_dir)
-        )
-        os.system(
-            'copy "%s\\Logs\\*.*" "%s"'
-            % (settings.HARNESS_HOME, self.result_dir)
-        )
-        os.system(
-            'copy "%s\\Reports\\*.*" "%s"'
             % (settings.HARNESS_HOME, self.result_dir)
         )
 
@@ -1136,7 +1153,17 @@ class HarnessCase(unittest.TestCase):
         self._wait_dialog()
 
         try:
-            self._collect_result()
+            if self.new_th:
+                os.system(
+                    'copy "%s\\Logs\\*.*" "%s"'
+                    % (settings.HARNESS_HOME, self.result_dir)
+                )
+                os.system(
+                    'copy "%s\\Reports\\*.*" "%s"'
+                    % (settings.HARNESS_HOME, self.result_dir)
+                )
+            else:
+                self._collect_result()
         except BaseException:
             logger.exception("Failed to collect results")
             raise
