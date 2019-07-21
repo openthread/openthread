@@ -37,13 +37,13 @@ from autothreadharness.harness_case import HarnessCase
 
 class Leader_5_5_1(HarnessCase):
     role = HarnessCase.ROLE_LEADER
-    case = '5 5 1'
+    case = "5 5 1"
     golden_devices_required = 1
 
     def on_dialog(self, dialog, title):
-        if title.startswith('User Input Required'):
-            body = dialog.find_element_by_id('cnfrmMsg').text
-            match = re.search(r'(?<=Leader Timeout\[)\d+(?= Seconds\])', body)
+        if title.startswith("User Input Required"):
+            body = dialog.find_element_by_id("cnfrmMsg").text
+            match = re.search(r"(?<=Leader Timeout\[)\d+(?= Seconds\])", body)
             if match:
                 timeout = int(match.group(0)) / 2
             else:
@@ -54,5 +54,5 @@ class Leader_5_5_1(HarnessCase):
             return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

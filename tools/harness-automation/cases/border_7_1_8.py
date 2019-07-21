@@ -28,18 +28,19 @@
 #
 
 
-from autothreadharness.harness_case import HarnessCase
 import unittest
 
+from autothreadharness.harness_case import HarnessCase
 
-class Leader_7_1_3(HarnessCase):
-    role = HarnessCase.ROLE_LEADER
-    case = '7 1 3'
+
+class Border_7_1_8(HarnessCase):
+    role = HarnessCase.ROLE_BORDER
+    case = "7 1 8"
     golden_devices_required = 3
 
     def on_dialog(self, dialog, title):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

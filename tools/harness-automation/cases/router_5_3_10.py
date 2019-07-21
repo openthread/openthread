@@ -34,12 +34,12 @@ import unittest
 
 class Router_5_3_10(HarnessCase):
     role = HarnessCase.ROLE_ROUTER
-    case = '5 3 10'
+    case = "5 3 10"
     golden_devices_required = 4
 
     def on_dialog(self, dialog, title):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

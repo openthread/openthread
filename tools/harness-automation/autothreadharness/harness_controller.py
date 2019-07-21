@@ -43,7 +43,7 @@ HARNESS_SVN_VERSION_R44 = 1471
 
 
 def _try_kill(proc):
-    logger.info('Try kill process')
+    logger.info("Try kill process")
     times = 1
 
     while proc.poll() is None:
@@ -52,10 +52,10 @@ def _try_kill(proc):
         time.sleep(5)
 
         if proc.poll() is not None:
-            logger.info('Process has been killed')
+            logger.info("Process has been killed")
             break
 
-        logger.info('Trial %d failed', times)
+        logger.info("Trial %d failed", times)
         times += 1
 
         if times > 3:
@@ -76,32 +76,32 @@ class HarnessController(object):
 
     def __init__(self, result_dir=None):
         self.result_dir = result_dir
-        self.harness_file = ''
+        self.harness_file = ""
 
         harness_info = ConfigParser.ConfigParser()
-        harness_info.read('%s\\info.ini' % settings.HARNESS_HOME)
-        self.version = harness_info.getint('Thread_Harness_Info', 'SVN')
+        harness_info.read("%s\\info.ini" % settings.HARNESS_HOME)
+        self.version = harness_info.getint("Thread_Harness_Info", "SVN")
 
     def start(self):
-        logger.info('Starting harness service')
+        logger.info("Starting harness service")
         if self.harness:
-            logger.warning('Harness already started')
+            logger.warning("Harness already started")
         else:
             env = dict(
                 os.environ,
-                PYTHONPATH='%s\\Thread_Harness;%s\\ThirdParty\\hsdk-python\\src'
+                PYTHONPATH="%s\\Thread_Harness;%s\\ThirdParty\\hsdk-python\\src"
                 % (settings.HARNESS_HOME, settings.HARNESS_HOME),
             )
 
-            self.harness_file = '%s\\harness-%s.log' % (
+            self.harness_file = "%s\\harness-%s.log" % (
                 self.result_dir,
-                time.strftime('%Y%m%d%H%M%S'),
+                time.strftime("%Y%m%d%H%M%S"),
             )
-            with open(self.harness_file, 'w') as harness_out:
+            with open(self.harness_file, "w") as harness_out:
                 self.harness = subprocess.Popen(
                     [
-                        settings.HARNESS_HOME + '\\Python27\\python.exe',
-                        settings.HARNESS_HOME + '\\Thread_Harness\\Run.py',
+                        settings.HARNESS_HOME + "\\Python27\\python.exe",
+                        settings.HARNESS_HOME + "\\Thread_Harness\\Run.py",
                     ],
                     cwd=settings.HARNESS_HOME,
                     stdout=harness_out,
@@ -114,28 +114,28 @@ class HarnessController(object):
             return
 
         if self.miniweb:
-            logger.warning('Miniweb already started')
+            logger.warning("Miniweb already started")
         else:
             with open(
-                '%s\\miniweb-%s.log'
-                % (self.result_dir, time.strftime('%Y%m%d%H%M%S')),
-                'w',
+                "%s\\miniweb-%s.log"
+                % (self.result_dir, time.strftime("%Y%m%d%H%M%S")),
+                "w",
             ) as miniweb_out:
                 self.miniweb = subprocess.Popen(
-                    [settings.HARNESS_HOME + '\\MiniWeb\\miniweb.exe'],
+                    [settings.HARNESS_HOME + "\\MiniWeb\\miniweb.exe"],
                     stdout=miniweb_out,
                     stderr=miniweb_out,
-                    cwd=settings.HARNESS_HOME + '\\MiniWeb',
+                    cwd=settings.HARNESS_HOME + "\\MiniWeb",
                 )
 
     def stop(self):
-        logger.info('Stopping harness service')
+        logger.info("Stopping harness service")
 
         if self.harness:
             _try_kill(self.harness)
             self.harness = None
         else:
-            logger.warning('Harness not started yet')
+            logger.warning("Harness not started yet")
 
         if self.version >= HARNESS_SVN_VERSION_R44:
             return
@@ -144,12 +144,12 @@ class HarnessController(object):
             _try_kill(self.miniweb)
             self.miniweb = None
         else:
-            logger.warning('Miniweb not started yet')
+            logger.warning("Miniweb not started yet")
 
     def tail(self):
         with open(self.harness_file) as harness_out:
             harness_out.seek(-100, 2)
-            return ''.join(harness_out.readlines())
+            return "".join(harness_out.readlines())
 
     def __del__(self):
         self.stop()

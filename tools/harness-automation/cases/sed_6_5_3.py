@@ -35,18 +35,18 @@ from autothreadharness.harness_case import HarnessCase
 
 class SED_6_5_3(HarnessCase):
     role = HarnessCase.ROLE_SED
-    case = '6 5 3'
-    golden_devices_required = 1
+    case = "6 5 3"
+    golden_devices_required = 2
 
     def on_dialog(self, dialog, title):
-        if title.startswith('Reset DUT'):
+        if title.startswith("Reset DUT"):
             self.dut.stop()
             return False
 
-        elif title.startswith('Rejoin Now'):
+        elif title.startswith("Rejoin Now"):
             self.dut.start()
             return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

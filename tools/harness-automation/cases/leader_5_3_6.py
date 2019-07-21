@@ -34,12 +34,12 @@ import unittest
 
 class Leader_5_3_6(HarnessCase):
     role = HarnessCase.ROLE_LEADER
-    case = '5 3 6'
-    golden_devices_required = 2
+    case = "5 3 6"
+    golden_devices_required = 5
 
     def on_dialog(self, dialog, title):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

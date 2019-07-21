@@ -32,13 +32,13 @@ class PduControllerFactory(object):
     """Factory that creates PDU controllers."""
 
     def create_pdu_controller(self, _type):
-        if _type == 'NORDIC_BOARD_PDU_CONTOLLER':
+        if _type == "NORDIC_BOARD_PDU_CONTOLLER":
             return pdu_controller.NordicBoardPduController()
-        elif _type == 'APC_PDU_CONTROLLER':
+        elif _type == "APC_PDU_CONTROLLER":
             return pdu_controller.ApcPduController()
-        elif _type == 'IP_POWER_SOCKET_PDU_CONTROLLER':
+        elif _type == "IP_POWER_SOCKET_PDU_CONTROLLER":
             return pdu_controller.IpPowerSocketPduController()
-        elif _type == 'MANUAL_PDU_CONTROLLER':
+        elif _type == "MANUAL_PDU_CONTROLLER":
             return pdu_controller.ManualPduController()
         else:
             return pdu_controller.DummyPduController()

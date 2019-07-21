@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2016, The OpenThread Authors.
+# Copyright (c) 2019, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,18 +28,19 @@
 #
 
 
-from autothreadharness.harness_case import HarnessCase
 import unittest
 
+from autothreadharness.harness_case import HarnessCase
 
-class Leader_7_1_1(HarnessCase):
-    role = HarnessCase.ROLE_LEADER
-    case = '7 1 1'
+
+class Border_7_1_4(HarnessCase):
+    role = HarnessCase.ROLE_BORDER
+    case = "7 1 4"
     golden_devices_required = 3
 
     def on_dialog(self, dialog, title):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
