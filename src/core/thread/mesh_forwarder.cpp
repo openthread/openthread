@@ -1106,8 +1106,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     linkInfo.mLqi          = aFrame.GetLqi();
     linkInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    linkInfo.mNetworkTimeOffset = aFrame.GetNetworkTimeOffset();
-    linkInfo.mTimeSyncSeq       = aFrame.GetTimeSyncSeq();
+    if (aFrame.GetTimeIe() != NULL)
+    {
+        linkInfo.mNetworkTimeOffset = aFrame.ReadNetworkTimeOffset();
+        linkInfo.mTimeSyncSeq       = aFrame.ReadTimeSyncSeq();
+    }
 #endif
 
     payload       = aFrame.GetPayload();

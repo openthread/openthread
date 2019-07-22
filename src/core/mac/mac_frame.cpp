@@ -1011,11 +1011,13 @@ exit:
 #endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-const uint8_t *Frame::GetTimeIe(void) const
+const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe * timeIe       = NULL;
-    const uint8_t *cur          = NULL;
-    uint8_t oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+    const TimeIe * timeIe                              = NULL;
+    const uint8_t *cur                                 = NULL;
+    uint8_t        oui[VendorIeHeader::kVendorOuiSize] = {VendorIeHeader::kVendorOuiNest & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
     VerifyOrExit(cur != NULL);
@@ -1023,11 +1025,11 @@ const uint8_t *Frame::GetTimeIe(void) const
     cur += sizeof(HeaderIe);
 
     timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
-    VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), VendorIeHeader::kVendorOuiSize) == 0, timeIe = NULL);
+    VerifyOrExit(timeIe->GetSubType() == VendorIeHeader::kVendorIeTime, timeIe = NULL);
 
 exit:
-    return cur;
+    return timeIe;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 

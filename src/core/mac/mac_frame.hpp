@@ -454,6 +454,118 @@ private:
     uint16_t mHeaderIe;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+/**
+ * This class implements vendor specific Header IE generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorIeHeader
+{
+public:
+    enum
+    {
+        kVendorOuiNest = 0x18b430,
+        kVendorOuiSize = 3,
+        kVendorIeTime  = 0x01,
+    };
+
+    /**
+     * This method returns the Vendor OUI.
+     *
+     * @returns the Vendor OUI.
+     *
+     */
+    const uint8_t *GetVendorOui(void) const { return mVendorOui; }
+
+    /**
+     * This method sets the Vendor OUI.
+     *
+     * @param[in]  aVendorOui  A pointer to the Vendor OUI.
+     *
+     */
+    void SetVendorOui(uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, kVendorOuiSize); }
+
+    /**
+     * This method returns the Vendor IE sub-type.
+     *
+     * @returns the Vendor IE sub-type.
+     *
+     */
+    uint8_t GetSubType(void) const { return mSubType; }
+
+    /**
+     * This method sets the Vendor IE sub-type.
+     *
+     * @param[in] the Vendor IE sub-type.
+     *
+     */
+    void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
+
+private:
+    uint8_t mVendorOui[kVendorOuiSize];
+    uint8_t mSubType;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Time Header IE generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class TimeIe : public VendorIeHeader
+{
+public:
+    /**
+     * This method initializes the time IE.
+     *
+     */
+    void Init(void)
+    {
+        uint8_t oui[3] = {VendorIeHeader::kVendorOuiNest & 0xff, (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
+                          (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
+
+        SetVendorOui(oui);
+        SetSubType(VendorIeHeader::kVendorIeTime);
+    }
+
+    /**
+     * This method returns the time sync sequence.
+     *
+     * @returns the time sync sequence.
+     *
+     */
+    uint8_t GetSequence(void) const { return mSequence; }
+
+    /**
+     * This method sets the tine sync sequence.
+     *
+     * @param[in]  aSequence The time sync sequence.
+     *
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * This method returns the network time.
+     *
+     * @returns the network time, in microseconds.
+     *
+     */
+    uint64_t GetTime(void) const { return ot::Encoding::LittleEndian::HostSwap64(mTime); }
+
+    /**
+     * This method sets the network time.
+     *
+     * @param[in]  aTime  The network time.
+     *
+     */
+    void SetTime(uint64_t aTime) { mTime = ot::Encoding::LittleEndian::HostSwap64(aTime); }
+
+private:
+    uint8_t  mSequence;
+    uint64_t mTime;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
  *
@@ -534,9 +646,6 @@ public:
 
         kHeaderIeVendor       = 0x00,
         kHeaderIeTermination2 = 0x7f,
-        kVendorOuiNest        = 0x18b430,
-        kVendorOuiSize        = 3,
-        kVendorIeTime         = 0x01,
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
     };
@@ -1177,12 +1286,28 @@ public:
     }
 
     /**
+     * This method returns a pointer to the vendor specific Time IE.
+     *
+     * @returns A pointer to the Time IE, NULL if not found.
+     *
+     */
+    TimeIe *GetTimeIe(void) { return const_cast<TimeIe *>(const_cast<const Frame *>(this)->GetTimeIe()); }
+
+    /**
+     * This method returns a pointer to the vendor specific Time IE.
+     *
+     * @returns A pointer to the Time IE, NULL if not found.
+     *
+     */
+    const TimeIe *GetTimeIe(void) const;
+
+    /**
      * This method gets the offset to network time.
      *
      * @returns  The offset to network time.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset; }
+    int64_t ReadNetworkTimeOffset(void) const { return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp()); }
 
     /**
      * This method sets the time sync sequence.
@@ -1198,23 +1323,7 @@ public:
      * @returns  The time sync sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mInfo.mTxInfo.mIeInfo->mTimeSyncSeq; }
-
-    /**
-     * This method returns a pointer to the vendor specific Time IE.
-     *
-     * @returns A pointer to the Time IE, NULL if not found.
-     *
-     */
-    uint8_t *GetTimeIe(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetTimeIe()); }
-
-    /**
-     * This method returns a pointer to the vendor specific Time IE.
-     *
-     * @returns A pointer to the Time IE, NULL if not found.
-     *
-     */
-    const uint8_t *GetTimeIe(void) const;
+    uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
@@ -1525,111 +1634,6 @@ private:
     char    mNetworkName[kNetworkNameSize];
     uint8_t mExtendedPanId[kExtPanIdSize];
 } OT_TOOL_PACKED_END;
-
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-/**
- * This class implements vendor specific Header IE generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class VendorIeHeader
-{
-public:
-    /**
-     * This method returns the Vendor OUI.
-     *
-     * @returns the Vendor OUI.
-     *
-     */
-    const uint8_t *GetVendorOui(void) const { return mVendorOui; }
-
-    /**
-     * This method sets the Vendor OUI.
-     *
-     * @param[in]  aVendorOui  A pointer to the Vendor OUI.
-     *
-     */
-    void SetVendorOui(uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, Frame::kVendorOuiSize); }
-
-    /**
-     * This method returns the Vendor IE sub-type.
-     *
-     * @returns the Vendor IE sub-type.
-     *
-     */
-    uint8_t GetSubType(void) const { return mSubType; }
-
-    /**
-     * This method sets the Vendor IE sub-type.
-     *
-     * @param[in] the Vendor IE sub-type.
-     *
-     */
-    void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
-
-private:
-    uint8_t mVendorOui[Frame::kVendorOuiSize];
-    uint8_t mSubType;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Time Header IE generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TimeIe : public VendorIeHeader
-{
-public:
-    /**
-     * This method initializes the time IE.
-     *
-     */
-    void Init(void)
-    {
-        uint8_t oui[3] = {Frame::kVendorOuiNest & 0xff, (Frame::kVendorOuiNest >> 8) & 0xff,
-                          (Frame::kVendorOuiNest >> 16) & 0xff};
-
-        SetVendorOui(oui);
-        SetSubType(Frame::kVendorIeTime);
-    }
-
-    /**
-     * This method returns the time sync sequence.
-     *
-     * @returns the time sync sequence.
-     *
-     */
-    uint8_t GetSequence(void) const { return mSequence; }
-
-    /**
-     * This method sets the tine sync sequence.
-     *
-     * @param[in]  aSequence The time sync sequence.
-     *
-     */
-    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
-
-    /**
-     * This method returns the network time.
-     *
-     * @returns the network time, in microseconds.
-     *
-     */
-    uint64_t GetTime(void) const { return ot::Encoding::LittleEndian::HostSwap64(mTime); }
-
-    /**
-     * This method sets the network time.
-     *
-     * @param[in]  aTime  The network time.
-     *
-     */
-    void SetTime(uint64_t aTime) { mTime = ot::Encoding::LittleEndian::HostSwap64(aTime); }
-
-private:
-    uint8_t  mSequence;
-    uint64_t mTime;
-} OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 /**
  * @}
