@@ -130,15 +130,16 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define VerifyOrDie(aCondition, aExitCode)                                                               \
-    do                                                                                                   \
-    {                                                                                                    \
-        if (!(aCondition))                                                                               \
-        {                                                                                                \
-            fprintf(stderr, "exit(%d): %s: %s\r\n", aExitCode, __func__, otExitCodeToString(aExitCode)); \
-            otLogCritPlat("exit(%d): %s: %s", aExitCode, __func__, otExitCodeToString(aExitCode));       \
-            exit(aExitCode);                                                                             \
-        }                                                                                                \
+#define VerifyOrDie(aCondition, aExitCode)                                                                           \
+    do                                                                                                               \
+    {                                                                                                                \
+        if (!(aCondition))                                                                                           \
+        {                                                                                                            \
+            fprintf(stderr, "exit(%d): %s line %d, %s\r\n", aExitCode, __func__, __LINE__,                           \
+                    otExitCodeToString(aExitCode));                                                                  \
+            otLogCritPlat("exit(%d): %s line %d, %s", aExitCode, __func__, __LINE__, otExitCodeToString(aExitCode)); \
+            exit(aExitCode);                                                                                         \
+        }                                                                                                            \
     } while (false)
 
 /**
@@ -148,17 +149,18 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
  *
  */
-#define SuccessOrDie(aError)                                                                            \
-    do                                                                                                  \
-    {                                                                                                   \
-        if (aError != OT_ERROR_NONE)                                                                    \
-        {                                                                                               \
-            uint8_t exitCode;                                                                           \
-            exitCode = (aError == OT_ERROR_INVALID_ARGS) ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE; \
-            fprintf(stderr, "exit(%d): %s: %s\r\n", exitCode, __func__, otThreadErrorToString(aError)); \
-            otLogCritPlat("exit(%d): %s: %s", exitCode, __func__, otThreadErrorToString(aError));       \
-            exit(exitCode);                                                                             \
-        }                                                                                               \
+#define SuccessOrDie(aError)                                                                                        \
+    do                                                                                                              \
+    {                                                                                                               \
+        if (aError != OT_ERROR_NONE)                                                                                \
+        {                                                                                                           \
+            uint8_t exitCode;                                                                                       \
+            exitCode = (aError == OT_ERROR_INVALID_ARGS) ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE;             \
+            fprintf(stderr, "exit(%d): %s line %d, %s\r\n", exitCode, __func__, __LINE__,                           \
+                    otThreadErrorToString(aError));                                                                 \
+            otLogCritPlat("exit(%d): %s line %d, %s", exitCode, __func__, __LINE__, otThreadErrorToString(aError)); \
+            exit(exitCode);                                                                                         \
+        }                                                                                                           \
     } while (false)
 
 /**
@@ -176,12 +178,14 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define DieNowWithMessage(aMessage, aExitCode)                                                                     \
-    do                                                                                                             \
-    {                                                                                                              \
-        fprintf(stderr, "exit(%d): %s: %s: %s\r\n", aExitCode, __func__, aMessage, otExitCodeToString(aExitCode)); \
-        otLogCritPlat("exit(%d): %s: %s: %s", aExitCode, __func__, aMessage, otExitCodeToString(aExitCode));       \
-        exit(aExitCode);                                                                                           \
+#define DieNowWithMessage(aMessage, aExitCode)                                                       \
+    do                                                                                               \
+    {                                                                                                \
+        fprintf(stderr, "exit(%d): %s line %d, %s, %s\r\n", aExitCode, __func__, __LINE__, aMessage, \
+                otExitCodeToString(aExitCode));                                                      \
+        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage,       \
+                      otExitCodeToString(aExitCode));                                                \
+        exit(aExitCode);                                                                             \
     } while (false)
 
 /**
