@@ -473,7 +473,7 @@ public:
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *Clone(void) const { return Clone(GetLength()); };
+    Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.

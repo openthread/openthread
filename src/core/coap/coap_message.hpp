@@ -446,7 +446,7 @@ public:
      * @retval FALSE  Message is not an empty message header.
      *
      */
-    bool IsEmpty(void) const { return (GetCode() == 0); };
+    bool IsEmpty(void) const { return (GetCode() == 0); }
 
     /**
      * This method checks if a header is a request header.
@@ -455,7 +455,7 @@ public:
      * @retval FALSE  Message is not a request header.
      *
      */
-    bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); };
+    bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); }
 
     /**
      * This method checks if a header is a response header.
@@ -464,7 +464,7 @@ public:
      * @retval FALSE  Message is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); };
+    bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); }
 
     /**
      * This method checks if a header is a CON message header.
@@ -473,7 +473,7 @@ public:
      * @retval FALSE  Message is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); };
+    bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); }
 
     /**
      * This method checks if a header is a NON message header.
@@ -482,7 +482,7 @@ public:
      * @retval FALSE  Message is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); };
+    bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); }
 
     /**
      * This method checks if a header is a ACK message header.
@@ -491,7 +491,7 @@ public:
      * @retval FALSE  Message is not is a ACK message header.
      *
      */
-    bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); };
+    bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); }
 
     /**
      * This method checks if a header is a RST message header.
@@ -500,7 +500,7 @@ public:
      * @retval FALSE  Message is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET); };
+    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET); }
 
     /**
      * This method creates a copy of this CoAP message.
@@ -526,7 +526,7 @@ public:
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *Clone(void) const { return Clone(GetLength()); };
+    Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
      * This method returns the minimal reserved bytes required for CoAP message.

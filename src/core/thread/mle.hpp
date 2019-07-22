@@ -367,7 +367,7 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
+    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This constructor initializes the object with specific values.
@@ -380,7 +380,7 @@ public:
     {
         mSendTime    = aSendTime;
         mDestination = aDestination;
-    };
+    }
 
     /**
      * This method appends delayed response header to the message.
@@ -391,7 +391,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads delayed response header from the message.
@@ -425,7 +425,7 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; };
+    uint32_t GetSendTime(void) const { return mSendTime; }
 
     /**
      * This method returns a destination of the delayed message.
@@ -433,7 +433,7 @@ public:
      * @returns  A destination of the delayed message.
      *
      */
-    const Ip6::Address &GetDestination(void) const { return mDestination; };
+    const Ip6::Address &GetDestination(void) const { return mDestination; }
 
     /**
      * This method checks if the message shall be sent before the given time.
@@ -443,7 +443,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
+    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -453,7 +453,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
+    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
 
 private:
     Ip6::Address mDestination; ///< IPv6 address of the message destination.
