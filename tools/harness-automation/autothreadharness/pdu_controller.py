@@ -33,8 +33,6 @@ import re
 import telnetlib
 import time
 
-from builtins import input
-
 try:
     # python 2
     from urllib2 import (

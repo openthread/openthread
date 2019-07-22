@@ -36,7 +36,6 @@ import os
 import sys
 import time
 import unittest
-from builtins import str
 from collections import OrderedDict
 
 from autothreadharness.harness_case import HarnessCase

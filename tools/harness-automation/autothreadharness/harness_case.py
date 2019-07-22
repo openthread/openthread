@@ -36,9 +36,6 @@ import re
 import time
 import unittest
 
-from builtins import input
-from functools import reduce
-
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import Select
@@ -1162,6 +1159,21 @@ class HarnessCase(unittest.TestCase):
                     'copy "%s\\Reports\\*.*" "%s"'
                     % (settings.HARNESS_HOME, self.result_dir)
                 )
+                os.system(
+                    'copy "%s\\Captures\\*.*" "%s"'
+                    % (settings.HARNESS_HOME, self.result_dir)
+                )
+            else:
+                self._collect_result()
+        except BaseException:
+            logger.exception("Failed to collect results")
+            raise
+
+        # get case result
+        status = self._browser.find_element_by_class_name("title-test").text
+        logger.info(status)
+        success = "Pass" in status
+        self.assertTrue(success)
             else:
                 self._collect_result()
         except BaseException:
