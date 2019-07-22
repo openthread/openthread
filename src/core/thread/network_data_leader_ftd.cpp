@@ -631,7 +631,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 {
                     BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
-                    if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
+                    if (!borderRouterBase || (borderRouter->GetLength() != borderRouterBase->GetLength()) ||
+                        (memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0))
                     {
                         ExitNow(rval = true);
                     }
@@ -641,7 +642,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                 {
                     HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
 
-                    if (!hasRouteBase || (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
+                    if (!hasRouteBase || (hasRoute->GetLength() != hasRouteBase->GetLength()) ||
+                        (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
                     {
                         ExitNow(rval = true);
                     }
