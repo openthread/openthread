@@ -472,7 +472,7 @@ exit:
     return error;
 }
 
-otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
+otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
 {
     otError error = OT_ERROR_NONE;
 
@@ -555,7 +555,7 @@ exit:
 // when message is MLE type and requires fragmentation. It returns the
 // next offset into the message after the prepared frame.
 //
-uint16_t MeshForwarder::PrepareDataFrame(Mac::Frame &        aFrame,
+uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame &      aFrame,
                                          Message &           aMessage,
                                          const Mac::Address &aMacSource,
                                          const Mac::Address &aMacDest,
@@ -855,7 +855,7 @@ start:
     return nextOffset;
 }
 
-Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)
+Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest)
 {
     Neighbor *neighbor = NULL;
 
@@ -885,7 +885,7 @@ exit:
     return neighbor;
 }
 
-void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
+void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 {
     Neighbor *   neighbor = NULL;
     Mac::Address macDest;
@@ -1050,7 +1050,7 @@ void MeshForwarder::HandleDiscoverComplete(void)
     mDiscoverTimer.Stop();
 }
 
-void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
+void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 {
     otThreadLinkInfo linkInfo;
     Mac::Address     macDest;

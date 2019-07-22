@@ -313,7 +313,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
     }
 }
 
-void MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
+void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 {
     uint16_t fcf;
 

@@ -320,7 +320,7 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
     }
 }
 
-otError IndirectSender::PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild)
+otError IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild)
 {
     otError  error   = OT_ERROR_NONE;
     Message *message = aChild.GetIndirectMessage();
@@ -353,7 +353,7 @@ exit:
     return error;
 }
 
-uint16_t IndirectSender::PrepareDataFrame(Mac::Frame &aFrame, Child &aChild, Message &aMessage)
+uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage)
 {
     Ip6::Header  ip6Header;
     Mac::Address macSource, macDest;
@@ -397,7 +397,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::Frame &aFrame, Child &aChild, Mes
     return nextOffset;
 }
 
-void IndirectSender::PrepareEmptyFrame(Mac::Frame &aFrame, Child &aChild, bool aAckRequest)
+void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest)
 {
     uint16_t     fcf;
     Mac::Address macSource, macDest;
@@ -432,7 +432,7 @@ void IndirectSender::PrepareEmptyFrame(Mac::Frame &aFrame, Child &aChild, bool a
     aFrame.SetFramePending(false);
 }
 
-void IndirectSender::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild)
+void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame, otError aError, Child &aChild)
 {
     Message *message = aChild.GetIndirectMessage();
 

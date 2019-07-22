@@ -376,7 +376,7 @@ private:
                                      uint16_t                aFrameLength,
                                      Lowpan::FragmentHeader &aFragmentHeader);
 
-    uint16_t PrepareDataFrame(Mac::Frame &        aFrame,
+    uint16_t PrepareDataFrame(Mac::TxFrame &      aFrame,
                               Message &           aMessage,
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
@@ -384,7 +384,7 @@ private:
                               uint16_t            aMeshSource    = 0xffff,
                               uint16_t            aMeshDest      = 0xffff);
 
-    void    SendMesh(Message &aMessage, Mac::Frame &aFrame);
+    void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);
@@ -399,10 +399,10 @@ private:
     void    RemoveMessage(Message &aMessage);
     void    HandleDiscoverComplete(void);
 
-    void      HandleReceivedFrame(Mac::Frame &aFrame);
-    otError   HandleFrameRequest(Mac::Frame &aFrame);
-    Neighbor *UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest);
-    void      HandleSentFrame(Mac::Frame &aFrame, otError aError);
+    void      HandleReceivedFrame(Mac::RxFrame &aFrame);
+    otError   HandleFrameRequest(Mac::TxFrame &aFrame);
+    Neighbor *UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
+    void      HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);

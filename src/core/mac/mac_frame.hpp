@@ -1043,141 +1043,6 @@ public:
     void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
 
     /**
-     * This method returns the RSSI in dBm used for reception.
-     *
-     * @returns The RSSI in dBm used for reception.
-     *
-     */
-    int8_t GetRssi(void) const { return mInfo.mRxInfo.mRssi; }
-
-    /**
-     * This method sets the RSSI in dBm used for reception.
-     *
-     * @param[in]  aRssi  The RSSI in dBm used for reception.
-     *
-     */
-    void SetRssi(int8_t aRssi) { mInfo.mRxInfo.mRssi = aRssi; }
-
-    /**
-     * This method returns the receive Link Quality Indicator.
-     *
-     * @returns The receive Link Quality Indicator.
-     *
-     */
-    uint8_t GetLqi(void) const { return mInfo.mRxInfo.mLqi; }
-
-    /**
-     * This method sets the receive Link Quality Indicator.
-     *
-     * @param[in]  aLqi  The receive Link Quality Indicator.
-     *
-     */
-    void SetLqi(uint8_t aLqi) { mInfo.mRxInfo.mLqi = aLqi; }
-
-    /**
-     * This method returns the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
-     * access failure.
-     *
-     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
-     *
-     * @returns The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access
-     *          failure.
-     *
-     */
-    uint8_t GetMaxCsmaBackoffs(void) const { return mInfo.mTxInfo.mMaxCsmaBackoffs; }
-
-    /**
-     * This method sets the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
-     * access failure.
-     *
-     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
-     *
-     * @param[in]  aMaxCsmaBackoffs  The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring
-     *                               a channel access failure.
-     *
-     */
-    void SetMaxCsmaBackoffs(uint8_t aMaxCsmaBackoffs) { mInfo.mTxInfo.mMaxCsmaBackoffs = aMaxCsmaBackoffs; }
-
-    /**
-     * This method returns the maximum number of retries allowed after a transmission failure.
-     *
-     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
-     *
-     * @returns The maximum number of retries allowed after a transmission failure.
-     *
-     */
-    uint8_t GetMaxFrameRetries(void) const { return mInfo.mTxInfo.mMaxFrameRetries; }
-
-    /**
-     * This method sets the maximum number of retries allowed after a transmission failure.
-     *
-     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
-     *
-     * @param[in]  aMaxFrameRetries  The maximum number of retries allowed after a transmission failure.
-     *
-     */
-    void SetMaxFrameRetries(uint8_t aMaxFrameRetries) { mInfo.mTxInfo.mMaxFrameRetries = aMaxFrameRetries; }
-
-    /**
-     * This method indicates whether or not the frame is a retransmission.
-     *
-     * @retval TRUE   Frame is a retransmission
-     * @retval FALSE  This is a new frame and not a retransmission of an earlier frame.
-     *
-     */
-    bool IsARetransmission(void) const { return mInfo.mTxInfo.mIsARetx; }
-
-    /**
-     * This method indicates whether or not the received frame is acknowledged with frame pending set.
-     *
-     * @retval TRUE   This frame is acknowledged with frame pending set.
-     * @retval FALSE  This frame is acknowledged with frame pending not set.
-     *
-     */
-    bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
-
-    /**
-     * This method sets the retransmission flag attribute.
-     *
-     * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
-     *
-     */
-    void SetIsARetransmission(bool aIsARetx) { mInfo.mTxInfo.mIsARetx = aIsARetx; }
-
-    /**
-     * This method indicates whether or not CSMA-CA is enabled.
-     *
-     * @retval TRUE  CSMA-CA is enabled.
-     * @retval FALSE CSMA-CA is not enabled is not enabled.
-     *
-     */
-    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
-
-    /**
-     * This method sets the CSMA-CA enabled attribute.
-     *
-     * @param[in]  aCsmaCaEnabled  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
-     *
-     */
-    void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
-
-    /**
-     * This method returns the key used for frame encryption and authentication (AES CCM).
-     *
-     * @returns The pointer to the key.
-     *
-     */
-    const uint8_t *GetAesKey(void) const { return mInfo.mTxInfo.mAesKey; }
-
-    /**
-     * This method sets the key used for frame encryption and authentication (AES CCM).
-     *
-     * @param[in]  aAesKey  The pointer to the key.
-     *
-     */
-    void SetAesKey(const uint8_t *aAesKey) { mInfo.mTxInfo.mAesKey = aAesKey; }
-
-    /**
      * This method returns the IEEE 802.15.4 PSDU length.
      *
      * @returns The IEEE 802.15.4 PSDU length.
@@ -1257,33 +1122,7 @@ public:
      */
     const uint8_t *GetFooter(void) const;
 
-    /**
-     * This method returns the timestamp when the frame was received.
-     *
-     * @returns The timestamp when the frame was received, in microseconds.
-     *
-     */
-    const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
-
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    /**
-     * This method sets the Time IE offset.
-     *
-     * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
-     *
-     */
-    void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
-
-    /**
-     * This method sets the offset to network time.
-     *
-     * @param[in]  aNetworkTimeOffset  The offset to network time.
-     *
-     */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
-    {
-        mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
-    }
 
     /**
      * This method returns a pointer to the vendor specific Time IE.
@@ -1300,36 +1139,9 @@ public:
      *
      */
     const TimeIe *GetTimeIe(void) const;
-
-    /**
-     * This method gets the offset to network time.
-     *
-     * @returns  The offset to network time.
-     *
-     */
-    int64_t ComputeNetworkTimeOffset(void) const
-    {
-        return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp());
-    }
-
-    /**
-     * This method sets the time sync sequence.
-     *
-     * @param[in]  aTimeSyncSeq  The time sync sequence.
-     *
-     */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
-
-    /**
-     * This method gets the time sync sequence.
-     *
-     * @returns  The time sync sequence.
-     *
-     */
-    uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     /**
      * This method appends Header IEs to MAC header.
      *
@@ -1364,18 +1176,7 @@ public:
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-    /**
-     * This method copies the PSDU and all attributes from another frame.
-     *
-     * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
-     * the PSDU buffer of the current frame.
-
-     * @param[in] aFromFrame  The frame to copy from.
-     *
-     */
-    void CopyFrom(const Frame &aFromFrame);
+#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
     /**
      * This method returns the maximum transmission unit size (MTU).
@@ -1416,14 +1217,233 @@ private:
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 };
 
-OT_TOOL_PACKED_BEGIN
+/**
+ * This class implements IEEE 802.15.4 MAC rx frame generation and parsing.
+ *
+ */
+class RxFrame : public Frame
+{
+public:
+    /**
+     * This method returns the RSSI in dBm used for reception.
+     *
+     * @returns The RSSI in dBm used for reception.
+     *
+     */
+    int8_t GetRssi(void) const { return mInfo.mRxInfo.mRssi; }
+
+    /**
+     * This method sets the RSSI in dBm used for reception.
+     *
+     * @param[in]  aRssi  The RSSI in dBm used for reception.
+     *
+     */
+    void SetRssi(int8_t aRssi) { mInfo.mRxInfo.mRssi = aRssi; }
+
+    /**
+     * This method returns the receive Link Quality Indicator.
+     *
+     * @returns The receive Link Quality Indicator.
+     *
+     */
+    uint8_t GetLqi(void) const { return mInfo.mRxInfo.mLqi; }
+
+    /**
+     * This method sets the receive Link Quality Indicator.
+     *
+     * @param[in]  aLqi  The receive Link Quality Indicator.
+     *
+     */
+    void SetLqi(uint8_t aLqi) { mInfo.mRxInfo.mLqi = aLqi; }
+
+    /**
+     * This method indicates whether or not the received frame is acknowledged with frame pending set.
+     *
+     * @retval TRUE   This frame is acknowledged with frame pending set.
+     * @retval FALSE  This frame is acknowledged with frame pending not set.
+     *
+     */
+    bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
+
+    /**
+     * This method returns the timestamp when the frame was received.
+     *
+     * @returns The timestamp when the frame was received, in microseconds.
+     *
+     */
+    const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * This method gets the offset to network time.
+     *
+     * @returns  The offset to network time.
+     *
+     */
+    int64_t ComputeNetworkTimeOffset(void) const
+    {
+        return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp());
+    }
+
+    /**
+     * This method gets the time sync sequence.
+     *
+     * @returns  The time sync sequence.
+     *
+     */
+    uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+};
+
+/**
+ * This class implements IEEE 802.15.4 MAC tx frame generation and parsing.
+ *
+ */
+class TxFrame : public Frame
+{
+public:
+    /**
+     * This method returns the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
+     * access failure.
+     *
+     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
+     *
+     * @returns The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel access
+     *          failure.
+     *
+     */
+    uint8_t GetMaxCsmaBackoffs(void) const { return mInfo.mTxInfo.mMaxCsmaBackoffs; }
+
+    /**
+     * This method sets the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
+     * access failure.
+     *
+     * Equivalent to macMaxCSMABackoffs in IEEE 802.15.4-2006.
+     *
+     * @param[in]  aMaxCsmaBackoffs  The maximum number of backoffs the CSMA-CA algorithm will attempt before declaring
+     *                               a channel access failure.
+     *
+     */
+    void SetMaxCsmaBackoffs(uint8_t aMaxCsmaBackoffs) { mInfo.mTxInfo.mMaxCsmaBackoffs = aMaxCsmaBackoffs; }
+
+    /**
+     * This method returns the maximum number of retries allowed after a transmission failure.
+     *
+     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
+     *
+     * @returns The maximum number of retries allowed after a transmission failure.
+     *
+     */
+    uint8_t GetMaxFrameRetries(void) const { return mInfo.mTxInfo.mMaxFrameRetries; }
+
+    /**
+     * This method sets the maximum number of retries allowed after a transmission failure.
+     *
+     * Equivalent to macMaxFrameRetries in IEEE 802.15.4-2006.
+     *
+     * @param[in]  aMaxFrameRetries  The maximum number of retries allowed after a transmission failure.
+     *
+     */
+    void SetMaxFrameRetries(uint8_t aMaxFrameRetries) { mInfo.mTxInfo.mMaxFrameRetries = aMaxFrameRetries; }
+
+    /**
+     * This method indicates whether or not the frame is a retransmission.
+     *
+     * @retval TRUE   Frame is a retransmission
+     * @retval FALSE  This is a new frame and not a retransmission of an earlier frame.
+     *
+     */
+    bool IsARetransmission(void) const { return mInfo.mTxInfo.mIsARetx; }
+
+    /**
+     * This method sets the retransmission flag attribute.
+     *
+     * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
+     *
+     */
+    void SetIsARetransmission(bool aIsARetx) { mInfo.mTxInfo.mIsARetx = aIsARetx; }
+
+    /**
+     * This method indicates whether or not CSMA-CA is enabled.
+     *
+     * @retval TRUE  CSMA-CA is enabled.
+     * @retval FALSE CSMA-CA is not enabled is not enabled.
+     *
+     */
+    bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
+
+    /**
+     * This method sets the CSMA-CA enabled attribute.
+     *
+     * @param[in]  aCsmaCaEnabled  TRUE if CSMA-CA must be enabled for this packet, FALSE otherwise.
+     *
+     */
+    void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
+
+    /**
+     * This method returns the key used for frame encryption and authentication (AES CCM).
+     *
+     * @returns The pointer to the key.
+     *
+     */
+    const uint8_t *GetAesKey(void) const { return mInfo.mTxInfo.mAesKey; }
+
+    /**
+     * This method sets the key used for frame encryption and authentication (AES CCM).
+     *
+     * @param[in]  aAesKey  The pointer to the key.
+     *
+     */
+    void SetAesKey(const uint8_t *aAesKey) { mInfo.mTxInfo.mAesKey = aAesKey; }
+
+    /**
+     * This method copies the PSDU and all attributes from another frame.
+     *
+     * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
+     * the PSDU buffer of the current frame.
+
+     * @param[in] aFromFrame  The frame to copy from.
+     *
+     */
+    void CopyFrom(const TxFrame &aFromFrame);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * This method sets the Time IE offset.
+     *
+     * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
+     *
+     */
+    void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+
+    /**
+     * This method sets the offset to network time.
+     *
+     * @param[in]  aNetworkTimeOffset  The offset to network time.
+     *
+     */
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
+    {
+        mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset = aNetworkTimeOffset;
+    }
+
+    /**
+     * This method sets the time sync sequence.
+     *
+     * @param[in]  aTimeSyncSeq  The time sync sequence.
+     *
+     */
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+};
+
 class Beacon
 {
 public:
