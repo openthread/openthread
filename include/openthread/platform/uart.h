@@ -88,9 +88,11 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
  * This is called when the CLI UART interface has a full buffer but still
  * wishes to send more data.
  *
- * @retval OT_ERROR_NONE    Flush succeeded, we can proceed to write more
- *                          data to the buffer.
- * @retval !OT_ERROR_NONE   Flush failed.  Following data will be truncated.
+ * @retval OT_ERROR_NONE                Flush succeeded, we can proceed to write more
+ *                                      data to the buffer.
+ *
+ * @retval OT_ERROR_NOT_IMPLEMENTED     Driver does not support synchronous flush.
+ * @retval OT_ERROR_INVALID_STATE       Driver has no data to flush.
  */
 otError otPlatUartFlush(void);
 
