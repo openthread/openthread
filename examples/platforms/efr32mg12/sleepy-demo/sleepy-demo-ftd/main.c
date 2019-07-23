@@ -104,10 +104,6 @@ int main(int argc, char *argv[])
     otIp6SetEnabled(instance, true);
     otThreadSetEnabled(instance, true);
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
-
     while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(instance);

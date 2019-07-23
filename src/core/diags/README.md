@@ -1,4 +1,4 @@
-# OpenThread Diagnostics Module Reference
+# OpenThread Factory Diagnostics Module Reference
 
 The OpenThread diagnostics module is a tool for debugging platform hardware manually, and it will also be used during manufacturing process, to verify platform hardware performance.
 

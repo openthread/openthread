@@ -44,6 +44,7 @@
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
+#include "diags/factory_diags.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
 #include "common/message.hpp"
@@ -368,6 +369,9 @@ private:
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
+#endif
+#if OPENTHREAD_ENABLE_DIAG
+    FactoryDiags::Diags mDiags;
 #endif
     bool mIsInitialized;
 };
@@ -710,6 +714,13 @@ template <> inline TimerMicroScheduler &Instance::Get(void)
 template <> inline Extension::ExtensionBase &Instance::Get(void)
 {
     return mExtension;
+}
+#endif
+
+#if OPENTHREAD_ENABLE_DIAG
+template <> inline FactoryDiags::Diags &Instance::Get(void)
+{
+    return mDiags;
 }
 #endif
 

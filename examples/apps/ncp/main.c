@@ -103,10 +103,6 @@ pseudo_reset:
 
     otNcpInit(instance);
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
-
     while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(instance);

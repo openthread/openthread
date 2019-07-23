@@ -104,10 +104,6 @@ pseudo_reset:
 
     otCliUartInit(instance);
 
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
-
     while (!otSysPseudoResetWasRequested())
     {
         otTaskletsProcess(instance);

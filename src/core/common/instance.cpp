@@ -96,6 +96,9 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
 #endif
+#if OPENTHREAD_ENABLE_DIAG
+    , mDiags(*this)
+#endif
     , mIsInitialized(false)
 {
 }

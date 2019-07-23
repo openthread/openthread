@@ -112,6 +112,7 @@ SOURCES_COMMON                      = \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
+    api/diags_api.cpp                 \
     api/dns_api.cpp                   \
     api/entropy_api.cpp               \
     api/icmp6_api.cpp                 \
@@ -155,6 +156,7 @@ SOURCES_COMMON                      = \
     crypto/mbedtls.cpp                \
     crypto/pbkdf2_cmac.cpp            \
     crypto/sha256.cpp                 \
+    diags/factory_diags.cpp           \
     mac/channel_mask.cpp              \
     mac/data_poll_handler.cpp         \
     mac/data_poll_sender.cpp          \
@@ -235,6 +237,7 @@ EXTRA_DIST                          = \
     $(NULL)
 
 libopenthread_radio_a_SOURCES       = \
+    api/diags_api.cpp                 \
     api/instance_api.cpp              \
     api/link_raw_api.cpp              \
     api/logging_api.cpp               \
@@ -246,6 +249,7 @@ libopenthread_radio_a_SOURCES       = \
     common/string.cpp                 \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    diags/factory_diags.cpp           \
     mac/link_raw.cpp                  \
     mac/mac_frame.cpp                 \
     mac/sub_mac.cpp                   \
@@ -322,6 +326,7 @@ HEADERS_COMMON                      = \
     crypto/mbedtls.hpp                \
     crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
+    diags/factory_diags.hpp           \
     mac/channel_mask.hpp              \
     mac/data_poll_handler.hpp         \
     mac/data_poll_sender.hpp          \
