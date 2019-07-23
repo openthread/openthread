@@ -499,7 +499,8 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
                      fprintf(stderr, "NCP file and configuration is too long!");
                      rval = -1);
 
-        VerifyOrExit((rval = execl(SOCKET_UTILS_DEFAULT_SHELL, SOCKET_UTILS_DEFAULT_SHELL, "-c", cmd, NULL)) != -1,
+        VerifyOrExit((rval = execl(SOCKET_UTILS_DEFAULT_SHELL, SOCKET_UTILS_DEFAULT_SHELL, "-c", cmd,
+                                   static_cast<char *>(NULL))) != -1,
                      perror("execl(OT_RCP)"));
     }
     else
