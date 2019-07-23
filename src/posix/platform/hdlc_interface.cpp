@@ -505,7 +505,7 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
                      rval = -1);
 
         VerifyOrExit((rval = execl(SOCKET_UTILS_DEFAULT_SHELL, SOCKET_UTILS_DEFAULT_SHELL, "-c", cmd,
-                                    static_cast<char *>(NULL))) != -1,
+                                   static_cast<char *>(NULL))) != -1,
                      perror("execl(OT_RCP)"));
     }
     else
