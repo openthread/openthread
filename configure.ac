@@ -759,6 +759,12 @@ case "${with_readline}" in
 "none")
     ;;
 "readline")
+    # Prefer GNU readline installed by Homebrew.
+    if test "${OPENTHREAD_TARGET}" = darwin && brew --prefix readline > /dev/null; then
+        LDFLAGS="-L$(brew --prefix readline)/lib ${LDFLAGS}"
+        CPPFLAGS="-I$(brew --prefix readline)/include ${CPPFLAGS}"
+        PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
+    fi
     AC_CHECK_LIB([readline], [rl_callback_handler_install])
     ;;
 "edit")
