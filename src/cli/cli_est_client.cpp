@@ -305,49 +305,53 @@ void EstClient::HandleResponse(otError   aError,
 
 void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLength)
 {
-    if (aError != OT_ERROR_NONE)
+    if (aError == OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("error");
-        ExitNow();
-    }
+        switch (aType)
+        {
+        case OT_EST_TYPE_CA_CERTS:
+            break;
+        case OT_EST_TYPE_CSR_ATTR:
+            break;
+        case OT_EST_TYPE_SERVER_SIDE_KEY:
+            break;
+        case OT_EST_TYPE_SIMPLE_ENROLL:
+        case OT_EST_TYPE_SIMPLE_REENROLL:
+            if (aPayloadLength <= 1024)
+            {
+                memset(mPrivateKey, 0, sizeof(mPrivateKey));
+                memcpy(mPrivateKey, mPrivateKeyTemp, mPrivateKeyTempLength);
+                mPrivateKeyLength = mPrivateKeyTempLength;
 
-    switch (aType)
+                memset(mPublicKey, 0, sizeof(mPublicKey));
+                memcpy(mPublicKey, mPublicKeyTemp, mPublicKeyTempLength);
+                mPublicKeyLength = mPublicKeyTempLength;
+
+                memset(mOpCertificate, 0, sizeof(mOpCertificate));
+                memcpy(mOpCertificate, aPayload, aPayloadLength);
+                mOpCertificateLength = aPayloadLength;
+
+                mInterpreter.mServer->OutputFormat("enrollment successful\r\n");
+            }
+            else
+            {
+                mInterpreter.mServer->OutputFormat("error certificate too long\r\n");
+            }
+            break;
+        case OT_EST_TYPE_INVALID_CERT:
+            mInterpreter.mServer->OutputFormat("error invalid certificate received\r\n");
+            break;
+        case OT_EST_TYPE_INVALID_KEY:
+            mInterpreter.mServer->OutputFormat("error invalid key received\r\n");
+            break;
+        default:
+            mInterpreter.mServer->OutputFormat("error param\r\n");
+        }
+    }
+    else
     {
-    case OT_EST_TYPE_CA_CERTS:
-        break;
-    case OT_EST_TYPE_CSR_ATTR:
-        break;
-    case OT_EST_TYPE_SERVER_SIDE_KEY:
-        break;
-    case OT_EST_TYPE_SIMPLE_ENROLL:
-    case OT_EST_TYPE_SIMPLE_REENROLL:
-        if (aPayloadLength <= 1024)
-        {
-            memset(mPrivateKey, 0, sizeof(mPrivateKey));
-            memcpy(mPrivateKey, mPrivateKeyTemp, mPrivateKeyTempLength);
-            mPrivateKeyLength = mPrivateKeyTempLength;
-
-            memset(mPublicKey, 0, sizeof(mPublicKey));
-            memcpy(mPublicKey, mPublicKeyTemp, mPublicKeyTempLength);
-            mPublicKeyLength = mPublicKeyTempLength;
-
-            memset(mOpCertificate, 0, sizeof(mOpCertificate));
-            memcpy(mOpCertificate, aPayload, aPayloadLength);
-            mOpCertificateLength = aPayloadLength;
-        }
-        else
-        {
-            mInterpreter.mServer->OutputFormat("error certificate too long");
-        }
-        break;
-    case OT_EST_TYPE_INVALID_CERT:
-    case OT_EST_TYPE_INVALID_KEY:
-    default:
-        mInterpreter.mServer->OutputFormat("error param");
+        mInterpreter.mServer->OutputFormat("error request failed\r\n");
     }
-
-exit:
-    mInterpreter.mServer->OutputFormat("response\r\n");
 }
 
 void EstClient::CleanUpTemporaryBuffer(void)
