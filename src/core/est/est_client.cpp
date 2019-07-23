@@ -84,20 +84,20 @@ Client::Client(Instance &aInstance)
 
 otError Client::Start(bool aVerifyPeer)
 {
-    otError error = OT_ERROR_NONE;
+    otError mError = OT_ERROR_NONE;
 
-    VerifyOrExit(mStarted == false, error = OT_ERROR_ALREADY);
+    VerifyOrExit(mStarted == false, mError = OT_ERROR_ALREADY);
 
     mStarted                    = true;
     mVerifyEstServerCertificate = aVerifyPeer;
 
     mCoapSecure.SetSslAuthMode(mVerifyEstServerCertificate);
-    error = mCoapSecure.Start(kLocalPort);
-    VerifyOrExit(error);
+    mError = mCoapSecure.Start(kLocalPort);
+    VerifyOrExit(mError);
 
 exit:
 
-    return error;
+    return mError;
 }
 
 void Client::Stop(void)
@@ -148,31 +148,31 @@ otError Client::SimpleEnroll(const uint8_t *aPrivateKey,
                              otMdType       aMdType,
                              uint8_t        aKeyUsageFlags)
 {
-    otError        error                   = OT_ERROR_NONE;
-    uint8_t        buffer[CSR_BUFFER_SIZE] = {0};
-    size_t         bufferLength            = CSR_BUFFER_SIZE;
-    uint8_t *      bufferPointer           = NULL;
-    Coap::Message *mCoapMessage            = NULL;
+    otError        mError                   = OT_ERROR_NONE;
+    uint8_t        mBuffer[CSR_BUFFER_SIZE] = {0};
+    size_t         mBufferLength            = CSR_BUFFER_SIZE;
+    uint8_t *      mBufferPointer           = NULL;
+    Coap::Message *mCoapMessage             = NULL;
 
-    VerifyOrExit(mIsConnected, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error =
-                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, buffer, &bufferLength));
+    SuccessOrExit(mError =
+                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, mBuffer, &mBufferLength));
 
     // The CSR is written at the end of the buffer, therefore the pointer is set to the begin of the CSR
-    bufferPointer = buffer + (CSR_BUFFER_SIZE - bufferLength);
+    mBufferPointer = mBuffer + (CSR_BUFFER_SIZE - mBufferLength);
 
     // Send CSR
-    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(
-        error = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL));
+            mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL));
 
-    SuccessOrExit(error = mCoapMessage->AppendContentFormatOption(OT_COAP_OPTION_CONTENT_FORMAT_PKCS10));
+    SuccessOrExit(mError = mCoapMessage->AppendContentFormatOption(OT_COAP_OPTION_CONTENT_FORMAT_PKCS10));
 
-    SuccessOrExit(error = mCoapMessage->SetPayloadMarker());
+    SuccessOrExit(mError = mCoapMessage->SetPayloadMarker());
 
-    SuccessOrExit(error = mCoapMessage->Append(bufferPointer, bufferLength));
+    SuccessOrExit(mError = mCoapMessage->Append(mBufferPointer, mBufferLength));
 
     mCoapSecure.SendMessage(*mCoapMessage, &Client::SimpleEnrollResponseHandler, this);
 
@@ -180,7 +180,7 @@ otError Client::SimpleEnroll(const uint8_t *aPrivateKey,
 
 exit:
 
-    return error;
+    return mError;
 }
 
 otError Client::SimpleReEnroll(const uint8_t *aPrivateKey,
@@ -188,31 +188,31 @@ otError Client::SimpleReEnroll(const uint8_t *aPrivateKey,
                                otMdType       aMdType,
                                uint8_t        aKeyUsageFlags)
 {
-    otError        error                   = OT_ERROR_NONE;
-    uint8_t        buffer[CSR_BUFFER_SIZE] = {0};
-    size_t         bufferLength            = CSR_BUFFER_SIZE;
-    uint8_t *      bufferPointer           = NULL;
-    Coap::Message *mCoapMessage            = NULL;
+    otError        mError                   = OT_ERROR_NONE;
+    uint8_t        mBuffer[CSR_BUFFER_SIZE] = {0};
+    size_t         mBufferLength            = CSR_BUFFER_SIZE;
+    uint8_t *      mBufferPointer           = NULL;
+    Coap::Message *mCoapMessage             = NULL;
 
-    VerifyOrExit(mIsConnected && mIsEnrolled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mIsConnected && mIsEnrolled, mError = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error =
-                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, buffer, &bufferLength));
+    SuccessOrExit(mError =
+                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, mBuffer, &mBufferLength));
 
     // The CSR is written at the end of the buffer, therefore the pointer is set to the begin of the CSR
-    bufferPointer = buffer + (CSR_BUFFER_SIZE - bufferLength);
+    mBufferPointer = mBuffer + (CSR_BUFFER_SIZE - mBufferLength);
 
     // Send CSR
-    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST,
+    SuccessOrExit(mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST,
                                              OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL));
 
-    SuccessOrExit(error = mCoapMessage->AppendContentFormatOption(OT_COAP_OPTION_CONTENT_FORMAT_PKCS10));
+    SuccessOrExit(mError = mCoapMessage->AppendContentFormatOption(OT_COAP_OPTION_CONTENT_FORMAT_PKCS10));
 
-    SuccessOrExit(error = mCoapMessage->SetPayloadMarker());
+    SuccessOrExit(mError = mCoapMessage->SetPayloadMarker());
 
-    SuccessOrExit(error = mCoapMessage->Append(bufferPointer, bufferLength));
+    SuccessOrExit(mError = mCoapMessage->Append(mBufferPointer, mBufferLength));
 
     mCoapSecure.SendMessage(*mCoapMessage, &Client::SimpleEnrollResponseHandler, this);
 
@@ -220,7 +220,7 @@ otError Client::SimpleReEnroll(const uint8_t *aPrivateKey,
 
 exit:
 
-    return error;
+    return mError;
 }
 
 otError Client::GetCsrAttributes(void)
@@ -247,9 +247,17 @@ exit:
 
 otError Client::GetCaCertificates(void)
 {
-    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+    otError        mError       = OT_ERROR_NONE;
+    Coap::Message *mCoapMessage = NULL;
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
+
+    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET,
+                                              OT_EST_COAPS_SHORT_URI_CA_CERTS));
+
+    mCoapSecure.SendMessage(*mCoapMessage, &Client::GetCaCertificatesResponseHandler, this);
 
 exit:
 
@@ -342,7 +350,7 @@ otError Client::WriteCsr(const uint8_t *aPrivateKey,
                          uint8_t *      aOutput,
                          size_t *       aOutputLength)
 {
-    otError               error = OT_ERROR_NONE;
+    otError               mError = OT_ERROR_NONE;
     mbedtls_x509write_csr csr;
     mbedtls_pk_context    pkCtx;
     uint8_t               nsCertType = 0;
@@ -352,28 +360,28 @@ otError Client::WriteCsr(const uint8_t *aPrivateKey,
 
     // Parse key pair
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateLeyLength, NULL, 0) == 0,
-                 error = OT_ERROR_INVALID_ARGS);
+                 mError = OT_ERROR_INVALID_ARGS);
 
     // Create PKCS#10
     mbedtls_x509write_csr_set_md_alg(&csr, (mbedtls_md_type_t)aMdType);
 
-    VerifyOrExit(mbedtls_x509write_csr_set_key_usage(&csr, aKeyUsageFlags) == 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mbedtls_x509write_csr_set_key_usage(&csr, aKeyUsageFlags) == 0, mError = OT_ERROR_INVALID_ARGS);
 
     nsCertType |= MBEDTLS_X509_NS_CERT_TYPE_SSL_CLIENT;
-    VerifyOrExit(mbedtls_x509write_csr_set_ns_cert_type(&csr, nsCertType) == 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(mbedtls_x509write_csr_set_ns_cert_type(&csr, nsCertType) == 0, mError = OT_ERROR_FAILED);
 
     mbedtls_x509write_csr_set_key(&csr, &pkCtx);
 
     // Write CSR in DER format
     VerifyOrExit((*aOutputLength = mbedtls_x509write_csr_der(&csr, aOutput, *aOutputLength, mbedtls_ctr_drbg_random,
                                                              Random::Crypto::MbedTlsContextGet())) > 0,
-                 error = OT_ERROR_NO_BUFS);
+                 mError = OT_ERROR_NO_BUFS);
 
 exit:
     mbedtls_x509write_csr_free(&csr);
     mbedtls_pk_free(&pkCtx);
 
-    return error;
+    return mError;
 }
 
 void Client::SimpleEnrollResponseHandler(void *               aContext,
@@ -426,6 +434,63 @@ void Client::SimpleEnrollResponseHandler(otMessage *aMessage, const otMessageInf
         {
             mType = OT_EST_TYPE_SIMPLE_REENROLL;
         }
+        break;
+
+    default:
+        aResult        = OT_ERROR_FAILED;
+        mPayloadLength = 0;
+        break;
+    }
+
+exit:
+    mbedtls_x509_crt_free(&mCertificate);
+
+    mResponseCallback(aResult, mType, mPayload, mPayloadLength, mApplicationContext);
+}
+
+void Client::GetCaCertificatesResponseHandler(void *               aContext,
+                                              otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              otError              aResult)
+{
+    return static_cast<Client *>(aContext)->GetCaCertificatesResponseHandler(aMessage,
+                                                                             aMessageInfo,
+                                                                             aResult);
+}
+
+void Client::GetCaCertificatesResponseHandler(otMessage *          aMessage,
+                                              const otMessageInfo *aMessageInfo,
+                                              otError              aResult)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    otCoapCode       mCoapCode                     = otCoapMessageGetCode(aMessage);
+    otEstType        mType                         = OT_EST_TYPE_NONE;
+    uint8_t          mMessage[CSR_BUFFER_SIZE + 1] = {0};
+    uint32_t         mMessageLength                = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    uint8_t *        mPayload                      = NULL;
+    uint32_t         mPayloadLength                = 0;
+    mbedtls_x509_crt mCertificate;
+
+    mbedtls_x509_crt_init(&mCertificate);
+
+    switch (mCoapCode)
+    {
+    case OT_COAP_CODE_CONTENT:
+        // Check if message is too long for buffer
+        VerifyOrExit(mMessageLength <= sizeof(mMessage), aResult = OT_ERROR_NO_BUFS;);
+
+        // Parse message
+        mMessage[mMessageLength] = '\0';
+        otMessageRead(aMessage, otMessageGetOffset(aMessage), mMessage, mMessageLength);
+
+        SuccessOrExit(aResult = Client::CmsReadSignedData(mMessage, mMessageLength, &mPayload, &mPayloadLength));
+
+        // Check if payload is a valid x509 certificate
+        VerifyOrExit(mbedtls_x509_crt_parse_der(&mCertificate, (unsigned char *)mPayload, mPayloadLength) == 0,
+                     mType = OT_EST_TYPE_INVALID_CERT);
+
+        mType = OT_EST_TYPE_CA_CERTS;
         break;
 
     default:

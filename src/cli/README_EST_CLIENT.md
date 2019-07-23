@@ -41,7 +41,15 @@ Done
 connected
 ```
 
-3. Start simple enrollment:
+3. Request CA of EST server:
+
+```bash
+> est cacerts
+Done
+CA certificate request successful
+```
+
+4. Start simple enrollment:
 
 ```bash
 > est enroll
@@ -50,7 +58,7 @@ enrollment successful
 ```
 The client is now in possession of a X509 certifcate issued by the server side Certificate Authority (CA).
 
-4. Start simple reenrollment:
+5. Start simple reenrollment:
 
 Reenrollment is only allowed if a client uses a X509 certificate issued by the server side CA during the DTLS handshake. So, in this 
 example, the client uses the certificate received through the simple enrollment the next time `est connect` is used.  
@@ -69,7 +77,8 @@ enrollment successful
 ## Command List
 
 * [help](#help)
-* [connect](#connect)
+* [connect](#connect-address)
+* [cacerts](#cacerts)
 * [disconnect](#disconnect)
 * [enroll](#enroll)
 * [reenroll](#reenroll)
@@ -87,12 +96,21 @@ start
 stop
 connect
 disconnect
+cacerts
 enroll
 reenroll
 Done
 ```
 
 List the EST Client CLI commands.
+
+### cacerts
+
+```bash
+> est cacerts
+Done
+CA certificate request successful
+```
 
 ### connect \[address\]
 

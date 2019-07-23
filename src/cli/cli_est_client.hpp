@@ -82,6 +82,7 @@ private:
     otError ProcessStop(int argc, char *argv[]);
     otError ProcessConnect(int argc, char *argv[]);
     otError ProcessDisconnect(int argc, char *argv[]);
+    otError ProcessGetCaCertificate(int argc, char *argv[]);
     otError ProcessSimpleEnroll(int argc, char *argv[]);
     otError ProcessSimpleReEnroll(int argc, char *argv[]);
 
@@ -100,11 +101,13 @@ private:
     static const Command sCommands[];
     Interpreter &        mInterpreter;
     bool                 mStopFlag;
+    uint32_t             mCaCertificateLength;
     uint32_t             mPrivateKeyTempLength;
     uint32_t             mPublicKeyTempLength;
     uint32_t             mPrivateKeyLength;
     uint32_t             mPublicKeyLength;
     uint32_t             mOpCertificateLength;
+    uint8_t              mCaCertificate[1024];
     uint8_t              mPrivateKeyTemp[512];
     uint8_t              mPublicKeyTemp[512];
     uint8_t              mPrivateKey[512];

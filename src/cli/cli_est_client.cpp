@@ -52,6 +52,7 @@ const struct EstClient::Command EstClient::sCommands[] = {
     {"stop", &EstClient::ProcessStop},
     {"connect", &EstClient::ProcessConnect},
     {"disconnect", &EstClient::ProcessDisconnect},
+    {"cacerts", &EstClient::ProcessGetCaCertificate},
     {"enroll", &EstClient::ProcessSimpleEnroll},
     {"reenroll", &EstClient::ProcessSimpleReEnroll},
 
@@ -60,12 +61,14 @@ const struct EstClient::Command EstClient::sCommands[] = {
 EstClient::EstClient(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mStopFlag(false)
+    , mCaCertificateLength(0)
     , mPrivateKeyTempLength(0)
     , mPublicKeyTempLength(0)
     , mPrivateKeyLength(0)
     , mPublicKeyLength(0)
     , mOpCertificateLength(0)
 {
+    memset(mCaCertificate, 0, sizeof(mCaCertificate));
     memset(mPrivateKeyTemp, 0, sizeof(mPrivateKeyTemp));
     memset(mPublicKeyTemp, 0, sizeof(mPublicKeyTemp));
     memset(mPrivateKey, 0, sizeof(mPrivateKey));
@@ -114,11 +117,13 @@ otError EstClient::ProcessStop(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
+    memset(mCaCertificate, 0, sizeof(mCaCertificate));
     memset(mPrivateKeyTemp, 0, sizeof(mPrivateKeyTemp));
     memset(mPublicKeyTemp, 0, sizeof(mPublicKeyTemp));
     memset(mPrivateKey, 0, sizeof(mPrivateKey));
     memset(mPublicKey, 0, sizeof(mPublicKey));
     memset(mOpCertificate, 0, sizeof(mOpCertificate));
+    mCaCertificateLength  = 0;
     mPrivateKeyTempLength = 0;
     mPublicKeyTempLength  = 0;
     mPrivateKeyLength     = 0;
@@ -201,6 +206,21 @@ otError EstClient::ProcessDisconnect(int argc, char *argv[])
     otEstClientDisconnect(mInterpreter.mInstance);
 
     return OT_ERROR_NONE;
+}
+
+otError EstClient::ProcessGetCaCertificate(int argc, char *argv[])
+{
+    otError mError;
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    mError = otEstClientGetCaCertificates(mInterpreter.mInstance);
+    VerifyOrExit(mError == OT_ERROR_NONE);
+
+exit:
+
+    return mError;
 }
 
 otError EstClient::ProcessSimpleEnroll(int argc, char *argv[])
@@ -310,6 +330,19 @@ void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayloa
         switch (aType)
         {
         case OT_EST_TYPE_CA_CERTS:
+            if (aPayloadLength <= 1024)
+            {
+                memset(mCaCertificate, 0, sizeof(mCaCertificate));
+                memcpy(mCaCertificate, aPayload, aPayloadLength);
+                mCaCertificateLength = aPayloadLength;
+
+                mInterpreter.mServer->OutputFormat("CA certificate request successful\r\n");
+            }
+            else
+            {
+                mInterpreter.mServer->OutputFormat("error certificate too long\r\n");
+            }
+
             break;
         case OT_EST_TYPE_CSR_ATTR:
             break;

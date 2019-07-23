@@ -229,7 +229,7 @@ void otEstClientDisconnect(otInstance *aInstance);
 bool otEstClientIsConnected(otInstance *aInstance);
 
 /**
- * This method process a simple enrollment over CoAP Secure.
+ * This method processes a simple enrollment over CoAP Secure.
  * The response callback should return the signed certificate after execution this step.
  * Note: With the function otCryptoEcpGenenrateKey a new EC key pair can be generated.
  *
@@ -251,7 +251,7 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
                                 uint8_t        aKeyUsageFlags);
 
 /**
- * This method process a simple re-enrollment over CoAP Secure.
+ * This method processes a simple re-enrollment over CoAP Secure.
  * The response callback should return the renewed signed certificate after execution this step.
  * Note: With the function otCryptoEcpGenenrateKey a new EC key pair can be generated.
  *
@@ -283,7 +283,15 @@ otError otEstClientGetCsrAttributes(otInstance *aInstance);
 otError otEstClientGetServerGeneratedKeys(otInstance *aInstance);
 
 /**
- * ToDo: Optionally
+ * This method requests the EST CA certificate from the EST server.
+ * The response callback should return the public key certificate with which the client can
+ * verify object singed by the EST CA [RFC7030, draft-ietf-ace-coap-est-12].
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE           Successfully sent request.
+ * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_STATE  EST client not connected.
  */
 otError otEstClientGetCaCertificates(otInstance *aInstance);
 

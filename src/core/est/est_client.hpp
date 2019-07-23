@@ -188,7 +188,13 @@ public:
     otError GetServerGeneratedKeys(void);
 
     /**
-     * ToDo: Optionally
+     * This method requests the EST CA certificate from the EST server.
+     * The response callback should return the public key certificate with which the client can
+     * verify object singed by the EST CA [RFC7030, draft-ietf-ace-coap-est-12].
+     *
+     * @retval OT_ERROR_NONE           Successfully sent request.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retval OT_ERROR_INVALID_STATE  EST client not connected.
      */
     otError GetCaCertificates(void);
 
@@ -200,18 +206,30 @@ private:
 
     static void CoapSecureConnectedHandle(bool aConnected, void *aContext);
     void        CoapSecureConnectedHandle(bool aConnected);
-    otError CmsReadSignedData(uint8_t *aMessage, uint32_t aMessageLength, uint8_t **aPayload, uint32_t *aPayloadLength);
-    otError WriteCsr(const uint8_t *aPrivateKey,
-                     size_t         aPrivateLeyLength,
-                     otMdType       aMdType,
-                     uint8_t        aKeyUsageFlags,
-                     uint8_t *      aOutput,
-                     size_t *       aOutputLength);
+    otError     CmsReadSignedData(uint8_t * aMessage,
+                                  uint32_t  aMessageLength,
+                                  uint8_t **aPayload,
+                                  uint32_t *aPayloadLength);
+    otError     WriteCsr(const uint8_t *aPrivateKey,
+                         size_t         aPrivateLeyLength,
+                         otMdType       aMdType,
+                         uint8_t        aKeyUsageFlags,
+                         uint8_t *      aOutput,
+                         size_t *       aOutputLength);
     static void SimpleEnrollResponseHandler(void *               aContext,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aResult);
-    void        SimpleEnrollResponseHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
+    void        SimpleEnrollResponseHandler(otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            otError              aResult);
+    static void GetCaCertificatesResponseHandler(void *               aContext,
+                                                 otMessage *          aMessage,
+                                                 const otMessageInfo *aMessageInfo,
+                                                 otError              aResult);
+    void        GetCaCertificatesResponseHandler(otMessage *          aMessage,
+                                                 const otMessageInfo *aMessageInfo,
+                                                 otError              aResult);
 
     bool                      mIsConnected;
     bool                      mStarted;
