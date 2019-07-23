@@ -95,38 +95,6 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
     return gPlatMcuPowerState;
 }
 
-void SuccessOrDie(otError aError)
-{
-    int exitCode;
-
-    switch (aError)
-    {
-    case OT_ERROR_NONE:
-        return;
-
-    case OT_ERROR_INVALID_ARGS:
-        exitCode = OT_EXIT_INVALID_ARGUMENTS;
-        break;
-
-    default:
-        exitCode = OT_EXIT_FAILURE;
-        break;
-    }
-
-    otLogCritPlat("Error: %s", otThreadErrorToString(aError));
-    // For better user experience.
-    fprintf(stderr, "Error: %s\r\n", otThreadErrorToString(aError));
-    exit(exitCode);
-}
-
-void VerifyOrDie(bool aCondition, int aExitCode)
-{
-    if (!aCondition)
-    {
-        exit(aExitCode);
-    }
-}
-
 int SocketWithCloseExec(int aDomain, int aType, int aProtocol)
 {
     int rval = 0;
@@ -144,9 +112,48 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol)
 exit:
     if (rval == -1 && fd != -1)
     {
-        VerifyOrDie(close(fd) == 0, OT_EXIT_FAILURE);
+        VerifyOrDie(close(fd) == 0, OT_EXIT_ERROR_ERRNO);
         fd = -1;
     }
 
     return fd;
+}
+
+const char *otExitCodeToString(uint8_t aExitCode)
+{
+    const char *retval = NULL;
+
+    switch (aExitCode)
+    {
+    case OT_EXIT_SUCCESS:
+        retval = "Success";
+        break;
+
+    case OT_EXIT_FAILURE:
+        retval = "Failure";
+        break;
+
+    case OT_EXIT_INVALID_ARGUMENTS:
+        retval = "InvalidArgument";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_INCOMPATIBLE:
+        retval = "RadioSpinelIncompatible";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_RESET:
+        retval = "RadioSpinelReset";
+        break;
+
+    case OT_EXIT_ERROR_ERRNO:
+        retval = strerror(errno);
+        break;
+
+    default:
+        assert(false);
+        retval = "UnknownExitCode";
+        break;
+    }
+
+    return retval;
 }

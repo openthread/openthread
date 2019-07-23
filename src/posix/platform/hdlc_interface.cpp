@@ -193,8 +193,7 @@ void HdlcInterface::Read(void)
     }
     else if ((rval < 0) && (errno != EAGAIN) && (errno != EINTR))
     {
-        perror("HdlcInterface::Read()");
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_ERROR_ERRNO);
     }
 }
 
@@ -240,8 +239,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 
         if ((rval < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
         {
-            perror("HdlcInterface::Write()");
-            exit(OT_EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         SuccessOrExit(error = WaitForWritable());
@@ -279,19 +277,16 @@ otError HdlcInterface::WaitForWritable(void)
             }
             else if (FD_ISSET(mSockFd, &errorFds))
             {
-                fprintf(stderr, "HdlcInterface::WaitForWritable(): socket error\n\r");
-                exit(OT_EXIT_FAILURE);
+                DieNowWithMessage("socket error", OT_EXIT_FAILURE);
             }
             else
             {
-                fprintf(stderr, "HdlcInterface::WaitForWritable(): select error\n\r");
-                exit(OT_EXIT_FAILURE);
+                DieNowWithMessage("select error", OT_EXIT_FAILURE);
             }
         }
         else if ((rval < 0) && (errno != EINTR))
         {
-            perror("HdlcInterface::WaitForWritable()");
-            exit(OT_EXIT_FAILURE);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
         now = otSysGetTime();
@@ -357,7 +352,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         default:
             // not supported
             assert(false);
-            exit(OT_EXIT_INVALID_ARGUMENTS);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -371,7 +366,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             assert(false);
-            exit(OT_EXIT_INVALID_ARGUMENTS);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -459,7 +454,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 #endif
         default:
             assert(false);
-            exit(OT_EXIT_INVALID_ARGUMENTS);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
 
@@ -471,7 +466,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 exit:
     if (rval != 0)
     {
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     return fd;
@@ -514,7 +509,7 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
     }
 
 exit:
-    VerifyOrDie(rval == 0, OT_EXIT_FAILURE);
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
     return fd;
 }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
