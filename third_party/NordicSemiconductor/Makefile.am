@@ -110,7 +110,7 @@ NORDICSEMI_COMMON_SOURCES                                                       
     libraries/utf_converter/utf.c                                                                                         \
     nrfx/drivers/src/nrfx_clock.c                                                                                         \
     nrfx/drivers/src/nrfx_power.c                                                                                         \
-    nrfx/drivers/src/nrfx_spis.c                                                                                       \
+    nrfx/drivers/src/nrfx_spis.c                                                                                          \
     nrfx/drivers/src/nrfx_systick.c                                                                                       \
     nrfx/hal/nrf_nvmc.c                                                                                                   \
     nrfx/soc/nrfx_atomic.c                                                                                                \
