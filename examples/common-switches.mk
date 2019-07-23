@@ -120,7 +120,7 @@ configure_OPTIONS              += --enable-diag
 endif
 
 ifeq ($(IP6_FRAGM),1)
-configure_OPTIONS              += --enable-ip6-fragmentation
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION=1
 endif
 
 ifeq ($(DISABLE_DOC),1)

@@ -1913,6 +1913,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+ *
+ * Define as 1 to enable IPv6 Fragmentation support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#define OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_IPV6_MAX_ASSEMBLED_DATAGRAM
  *
  * This setting configures the max datagram length of a unfragmented IPv6 packet.

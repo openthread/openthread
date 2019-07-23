@@ -87,11 +87,11 @@ struct MessageInfo
         PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
     } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
 
-    uint16_t mReserved;       ///< Number of header bytes reserved for the message.
-    uint16_t mLength;         ///< Number of bytes within the message.
-    uint16_t mOffset;         ///< A byte offset within the message.
     uint32_t mDatagramTag;    ///< The datagram tag used for 6LoWPAN fragmentation or identification used for IPv6
                               ///< fragmentation.
+    uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
+    uint16_t    mLength;      ///< Number of bytes within the message.
+    uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
     uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
@@ -480,7 +480,7 @@ public:
      * This method returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
      * fragmentation.
      *
-     * @returns The 6LoWPAN datagram tag.
+     * @returns The 6LoWPAN datagram tag or the IPv6 fragment identification.
      *
      */
     uint32_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }

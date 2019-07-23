@@ -361,13 +361,13 @@ private:
                                    bool         aReceive);
     otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
     void        CleanupFragmentationBuffer(void);
     void        HandleUpdateTimer(void);
-    bool        UpdateReassemblyList(void);
+    void        UpdateReassemblyList(void);
     otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
     static void HandleTimer(Timer &aTimer);
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#endif
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -389,10 +389,10 @@ private:
     Udp  mUdp;
     Mpl  mMpl;
 
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
     TimerMilli   mTimer;
     MessageQueue mReassemblyList;
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#endif
 };
 
 /**

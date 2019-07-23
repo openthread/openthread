@@ -1432,36 +1432,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
 
 #
-# IPv6 Fragmentation
-#
-
-AC_ARG_ENABLE(ip6_fragmentation,
-    [AS_HELP_STRING([--enable-ip6-fragmentation],[Enable IPv6 fragmentation support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_ip6_fragmentation=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_ip6_fragmentation} for --enable-ip6-fragmentation])
-            ;;
-        esac
-    ],
-    [enable_ip6_fragmentation=no])
-
-if test "$enable_ip6_fragmentation" = "yes"; then
-    OPENTHREAD_ENABLE_IP6_FRAGMENTATION=1
-else
-    OPENTHREAD_ENABLE_IP6_FRAGMENTATION=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_IP6_FRAGMENTATION)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_IP6_FRAGMENTATION], [test "${enable_ip6_fragmentation}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_IP6_FRAGMENTATION],[${OPENTHREAD_ENABLE_IP6_FRAGMENTATION}],[Define to 1 if you want to enable IPv6 Fragmentation support])
-
-#
 # DNS Client
 #
 
@@ -2113,7 +2083,6 @@ AC_MSG_NOTICE([
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
-  OpenThread IPv6 Fragmentation support     : ${enable_ip6_fragmentation}
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread SNTP Client support            : ${enable_sntp_client}
   OpenThread Application CoAP support       : ${enable_application_coap}

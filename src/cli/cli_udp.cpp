@@ -174,8 +174,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
 
     if (autoGenMessageLength != 0)
     {
-        VerifyOrExit((error = WriteCharToBuffer(message, static_cast<uint16_t>(autoGenMessageLength))) ==
-                     OT_ERROR_NONE);
+        error = WriteCharToBuffer(message, static_cast<uint16_t>(autoGenMessageLength));
     }
     else
     {
@@ -206,17 +205,17 @@ otError UdpExample::WriteCharToBuffer(otMessage *aMessage, uint16_t aMessageSize
         SuccessOrExit(error = otMessageAppend(aMessage, &character, 1));
         character++;
 
-        if (character == 0x3A) // 9
+        switch (character)
         {
+        case 0x3A:            // 9
             character = 0x41; // A
-        }
-        else if (character == 0x5B) // Z
-        {
+            break;
+        case 0x5B:            // Z
             character = 0x61; // a
-        }
-        else if (character == 0x7B) // z
-        {
+            break;
+        case 0x7B:            // z
             character = 0x30; // 0
+            break;
         }
     }
 

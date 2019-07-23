@@ -60,9 +60,9 @@ Ip6::Ip6(Instance &aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
     , mTimer(aInstance, &Ip6::HandleTimer, this)
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#endif
 {
 }
 
@@ -614,7 +614,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
 otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
 {
     otError        error = OT_ERROR_NONE;
@@ -705,13 +705,15 @@ exit:
 otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
 {
     otError        error = OT_ERROR_NONE;
-    Header         header;
+    Header         header, headerBuffer;
     FragmentHeader fragmentHeader;
     Message *      message         = NULL;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
     int            assertValue     = 0;
     bool           isFragmented    = true;
+
+    VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
                  error = OT_ERROR_PARSE);
@@ -726,13 +728,17 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
     for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
     {
-        if (message->GetDatagramTag() == fragmentHeader.GetIdentification())
+        VerifyOrExit(aMessage.Read(0, sizeof(headerBuffer), &headerBuffer) == sizeof(headerBuffer),
+                     error = OT_ERROR_PARSE);
+        if (message->GetDatagramTag() == fragmentHeader.GetIdentification() &&
+            headerBuffer.GetSource().     operator==(header.GetSource()) &&
+            headerBuffer.GetDestination().operator==(header.GetDestination()))
         {
             break;
         }
     }
 
-    offset          = (uint16_t)(fragmentHeader.GetOffset() << 3);
+    offset          = static_cast<uint16_t>(fragmentHeader.GetOffset() << 3);
     payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
 
     if (message == NULL)
@@ -824,15 +830,13 @@ exit:
 
 void Ip6::CleanupFragmentationBuffer(void)
 {
-    Message *message;
-    Message *next;
-
-    for (message = mReassemblyList.GetHead(); message; message = next)
+    for (Message *message = mReassemblyList.GetHead(); message;)
     {
-        next = message->GetNext();
+        Message *next = message->GetNext();
         mReassemblyList.Dequeue(*message);
 
         message->Free();
+        message = next;
     }
 }
 
@@ -843,13 +847,15 @@ void Ip6::HandleTimer(Timer &aTimer)
 
 void Ip6::HandleUpdateTimer(void)
 {
-    if (UpdateReassemblyList())
+    UpdateReassemblyList();
+
+    if (mReassemblyList.GetHead() != NULL)
     {
         mTimer.Start(kStateUpdatePeriod);
     }
 }
 
-bool Ip6::UpdateReassemblyList(void)
+void Ip6::UpdateReassemblyList(void)
 {
     Message *next;
 
@@ -870,7 +876,6 @@ bool Ip6::UpdateReassemblyList(void)
             message->Free();
         }
     }
-    return mReassemblyList.GetHead() != NULL;
 }
 
 otError Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode)
@@ -895,21 +900,21 @@ exit:
 #else
 otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
 {
-    EnqueueDatagram(aMessage);
-
     OT_UNUSED_VARIABLE(aIpProto);
+
+    EnqueueDatagram(aMessage);
 
     return OT_ERROR_NONE;
 }
 
 otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
 {
-    otError        error = OT_ERROR_NONE;
-    FragmentHeader fragmentHeader;
-
     OT_UNUSED_VARIABLE(aNetif);
     OT_UNUSED_VARIABLE(aMessageInfo);
     OT_UNUSED_VARIABLE(aFromNcpHost);
+
+    otError        error = OT_ERROR_NONE;
+    FragmentHeader fragmentHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
                  error = OT_ERROR_PARSE);
@@ -921,7 +926,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_IP6_FRAGMENTATION
+#endif // OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
 
 otError Ip6::HandleExtensionHeaders(Message &    aMessage,
                                     Netif *      aNetif,
