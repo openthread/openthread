@@ -206,8 +206,8 @@ otError otPlatUartFlush(void)
     sSendLen    = 0;
 
     return OT_ERROR_NONE;
+
 exit:
-    // Nothing to flush?
     return OT_ERROR_INVALID_STATE;
 }
 
