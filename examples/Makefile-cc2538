@@ -56,16 +56,16 @@ configure_OPTIONS               = \
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2538-config.h\"'
-CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc2538-config-check.h\"'
-CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/cc2538/
+CC2538_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2538-config.h\"'
+CC2538_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc2538-config-check.h\"'
+CC2538_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/cc2538/
 
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    $(CONFIG_FILE_CPPFLAGS)       \
+COMMONCFLAGS                    := \
+    -fdata-sections                \
+    -ffunction-sections            \
+    -Os                            \
+    -g                             \
+    $(CC2538_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

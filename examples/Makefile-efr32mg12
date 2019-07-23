@@ -104,18 +104,18 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/efr32mg12/
 HAL_CONF_DIR     = $(CONFIG_FILE_PATH)/$(shell echo $(BOARD) | tr A-Z a-z)
 
-CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
-CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
-CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
+EFR32MG12_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-efr32-config.h\"'
+EFR32MG12_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-efr32-config-check.h\"'
+EFR32MG12_CONFIG_FILE_CPPFLAGS += -I$(CONFIG_FILE_PATH)
 
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    -I$(HAL_CONF_DIR)             \
-    -D$(MCU)                      \
-    $(CONFIG_FILE_CPPFLAGS)       \
+COMMONCFLAGS                       := \
+    -fdata-sections                   \
+    -ffunction-sections               \
+    -Os                               \
+    -g                                \
+    -I$(HAL_CONF_DIR)                 \
+    -D$(MCU)                          \
+    $(EFR32MG12_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

@@ -78,18 +78,18 @@ SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/samr21/crypto
 SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 SAMR21_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 
-CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-samr21-config.h\"'
-CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-samr21-config-check.h\"'
-CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/samr21/
+SAMR21_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-samr21-config.h\"'
+SAMR21_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-samr21-config-check.h\"'
+SAMR21_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/samr21/
 
-COMMONCFLAGS                   := \
-    -DBOARD=$(BOARD)              \
-    -D$(CPU)                      \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    $(CONFIG_FILE_CPPFLAGS)       \
+COMMONCFLAGS                    := \
+    -DBOARD=$(BOARD)               \
+    -D$(CPU)                       \
+    -fdata-sections                \
+    -ffunction-sections            \
+    -Os                            \
+    -g                             \
+    $(SAMR21_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

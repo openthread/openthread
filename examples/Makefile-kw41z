@@ -56,16 +56,16 @@ configure_OPTIONS               = \
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-kw41z-config.h\"'
-CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-kw41z-config-check.h\"'
-CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/kw41z/
+KW41Z_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-kw41z-config.h\"'
+KW41Z_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-kw41z-config-check.h\"'
+KW41Z_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/kw41z/
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
     -g                            \
-    $(CONFIG_FILE_CPPFLAGS)       \
+    $(KW41Z_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
