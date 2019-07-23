@@ -96,7 +96,7 @@ public:
      * @returns The time synchronization sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; };
+    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
      * This method gets the time offset to the Thread network time.
@@ -104,7 +104,7 @@ public:
      * @returns The time offset to the Thread network time, in microseconds.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; };
+    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
 
     /**
      * Set the time synchronization period.

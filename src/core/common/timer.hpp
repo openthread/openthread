@@ -400,7 +400,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); };
+    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); }
 
     /**
      * This method processes the running timers.
@@ -501,7 +501,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(TimerMicro &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMicroApi); };
+    void Remove(TimerMicro &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMicroApi); }
 
     /**
      * This method processes the running timers.

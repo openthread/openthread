@@ -227,7 +227,7 @@ public:
      * @returns A Pointer to the next resource.
      *
      */
-    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); }
 
     /**
      * This method returns a pointer to the Uri-Path.
@@ -235,7 +235,7 @@ public:
      * @returns A Pointer to the Uri-Path.
      *
      */
-    const char *GetUriPath(void) const { return mUriPath; };
+    const char *GetUriPath(void) const { return mUriPath; }
 
 private:
     void HandleRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -526,7 +526,7 @@ public:
     otError SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
         return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequest, aMessageInfo);
-    };
+    }
 
     /**
      * This method sends header-only CoAP response message.
@@ -556,7 +556,7 @@ public:
     otError SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
     {
         return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequest, aMessageInfo);
-    };
+    }
 
     /**
      * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.

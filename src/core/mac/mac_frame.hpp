@@ -579,7 +579,7 @@ public:
      * @returns The IEEE 802.15.4 Frame Version.
      *
      */
-    uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; };
+    uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
 
     /**
      * This method indicates whether or not security is enabled.
@@ -631,7 +631,7 @@ public:
      * @retval FALSE  If no IE present.
      *
      */
-    bool IsIePresent(void) const { return (GetFrameControlField() & kFcfIePresent) != 0; };
+    bool IsIePresent(void) const { return (GetFrameControlField() & kFcfIePresent) != 0; }
 
     /**
      * This method returns the Sequence Number value.

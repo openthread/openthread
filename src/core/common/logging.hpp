@@ -1918,7 +1918,7 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
     OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION(aLogLevel, aRegion, aFormat, ##__VA_ARGS__)
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif // LOGGING_HPP_
