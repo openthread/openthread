@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes compile-time configuration constants for OpenThread.
- */
+#ifndef OPENTHREAD_CORE_NRF52811_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_NRF52811_CONFIG_CHECK_H_
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
-
-#include <openthread/config.h>
-
-#define OPENTHREAD_CORE_CONFIG_H_IN
-
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#error "Platform nrf52811 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
 #endif
 
-#include "openthread-core-default-config.h"
-
-#undef OPENTHREAD_CORE_CONFIG_H_IN
-
-#include "openthread-core-config-check.h"
-
-#ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
-#include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
-#endif
-
-#endif // OPENTHREAD_CORE_CONFIG_H_
+#endif /* OPENTHREAD_CORE_NRF52811_CONFIG_CHECK_H_ */

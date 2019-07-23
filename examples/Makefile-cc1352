@@ -68,10 +68,9 @@ CC1352_MBEDTLS_CPPFLAGS                                    = \
     -I$(PWD)/third_party/mbedtls/repo/include                \
     $(NULL)
 
-CC1352_CONFIG_FILE_CPPFLAGS                                                   = \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc1352-config.h\"' \
-    -I$(PWD)/examples/platforms/cc1352/                                         \
-    $(NULL)
+CC1352_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc1352-config.h\"'
+CC1352_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc1352-config-check.h\"'
+CC1352_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc1352/
 
 COMMONCFLAGS                                              := \
     -fdata-sections                                          \

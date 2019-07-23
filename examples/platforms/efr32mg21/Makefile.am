@@ -85,6 +85,8 @@ PLATFORM_SOURCES                                                              = 
     flash.c                                                                     \
     logging.c                                                                   \
     misc.c                                                                      \
+    openthread-core-efr32-config.h                                              \
+    openthread-core-efr32-config-check.h                                        \
     radio.c                                                                     \
     startup-gcc.c                                                               \
     system.c                                                                    \

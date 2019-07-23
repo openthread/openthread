@@ -99,6 +99,7 @@ PLATFORM_SOURCES                                                              = 
     logging.c                                                                   \
     misc.c                                                                      \
     openthread-core-efr32-config.h                                              \
+    openthread-core-efr32-config-check.h                                        \
     platform-efr32.h                                                            \
     platform-band.h                                                             \
     radio.c                                                                     \

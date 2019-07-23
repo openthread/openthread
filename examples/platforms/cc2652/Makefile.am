@@ -54,6 +54,7 @@ PLATFORM_SOURCES                                                                
     logging.c                                                                             \
     misc.c                                                                                \
     openthread-core-cc2652-config.h                                                       \
+    openthread-core-cc2652-config-check.h                                                 \
     platform-cc2652.h                                                                     \
     radio.c                                                                               \
     system.c                                                                              \
