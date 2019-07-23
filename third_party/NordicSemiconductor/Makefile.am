@@ -110,6 +110,7 @@ NORDICSEMI_COMMON_SOURCES                                                       
     libraries/utf_converter/utf.c                                                                                         \
     nrfx/drivers/src/nrfx_clock.c                                                                                         \
     nrfx/drivers/src/nrfx_power.c                                                                                         \
+    nrfx/drivers/src/nrfx_spis.c                                                                                          \
     nrfx/drivers/src/nrfx_systick.c                                                                                       \
     nrfx/hal/nrf_nvmc.c                                                                                                   \
     nrfx/soc/nrfx_atomic.c                                                                                                \
@@ -363,6 +364,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_clock.h                                       \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power_clock.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power.h                                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_spis.h                                        \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_systick.h                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_usbd.h                                        \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/src/nrfx_usbd_errata.h                                     \

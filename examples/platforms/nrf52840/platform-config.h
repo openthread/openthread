@@ -256,7 +256,7 @@
  * @def SPIS Instance.
  */
 #ifndef SPIS_INSTANCE
-#define SPIS_INSTANCE NRF_SPIS0
+#define SPIS_INSTANCE 0
 #endif
 
 /**
@@ -281,13 +281,6 @@
  */
 #ifndef SPIS_BIT_ORDER
 #define SPIS_BIT_ORDER NRF_SPIS_BIT_ORDER_MSB_FIRST
-#endif
-
-/**
- * @def SPIS Interrupt number.
- */
-#ifndef SPIS_IRQN
-#define SPIS_IRQN SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn
 #endif
 
 /**
