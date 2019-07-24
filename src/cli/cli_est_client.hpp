@@ -99,6 +99,8 @@ private:
 
     void CleanUpTemporaryBuffer(void);
 
+    otError PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd);
+
     static const Command sCommands[];
     Interpreter &        mInterpreter;
     bool                 mStopFlag;

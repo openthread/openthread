@@ -36,12 +36,14 @@
 #if OPENTHREAD_ENABLE_EST_CLIENT
 
 #include <mbedtls/debug.h>
+#include <mbedtls/oid.h>
 #include <openthread/coap_secure.h>
 #include <openthread/ip6.h>
 
 #include "x509_cert_key.hpp"
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
+#include "core/common/asn1.hpp"
 
 namespace ot {
 namespace Cli {
@@ -53,7 +55,7 @@ const struct EstClient::Command EstClient::sCommands[] = {
     {"connect", &EstClient::ProcessConnect},
     {"disconnect", &EstClient::ProcessDisconnect},
     {"cacerts", &EstClient::ProcessGetCaCertificate},
-    {"csrattr", &EstClient::ProcessGetCaCertificate},
+    {"csrattr", &EstClient::ProcessGetCsrAttributes},
     {"enroll", &EstClient::ProcessSimpleEnroll},
     {"reenroll", &EstClient::ProcessSimpleReEnroll},
 
@@ -360,9 +362,7 @@ void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayloa
 
             break;
         case OT_EST_TYPE_CSR_ATTR:
-            // test begin
-            mInterpreter.mServer->OutputFormat("%x256\r\n", aPayload);
-            // test end
+            PrintoutCsrAttributes(aPayload, aPayload + aPayloadLength);
             break;
         case OT_EST_TYPE_SERVER_SIDE_KEY:
             break;
@@ -411,6 +411,236 @@ void EstClient::CleanUpTemporaryBuffer(void)
     memset(mPublicKeyTemp, 0, sizeof(mPublicKeyTemp));
     mPrivateKeyTempLength = sizeof(mPrivateKeyTemp);
     mPublicKeyTempLength  = sizeof(mPublicKeyTemp);
+}
+
+otError EstClient::PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd)
+{
+    otError  mError                   = OT_ERROR_NONE;
+    uint8_t *mSetBegin                = NULL;
+    size_t   mAttributeOidLength      = 0;
+    size_t   mAttributeSetLength      = 0;
+    size_t   mAttributeSequenceLength = 0;
+
+    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSequenceLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+                 mError = OT_ERROR_PARSE);
+
+    while(aData < aDataEnd)
+    {
+        switch(*aData)
+        {
+        case MBEDTLS_ASN1_OID:
+            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
+                         mError = OT_ERROR_PARSE);
+
+            if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_MD5, sizeof(MBEDTLS_OID_DIGEST_ALG_MD5) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: MD5\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA256, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA256) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA256\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA384, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA384) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA384\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA512, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA512) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA512\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA256, sizeof(MBEDTLS_OID_ECDSA_SHA256) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA256\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA384, sizeof(MBEDTLS_OID_ECDSA_SHA384) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA384\r\n");
+            }
+            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA512, sizeof(MBEDTLS_OID_ECDSA_SHA512) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA512\r\n");
+            }
+            else
+            {
+                mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+            }
+            aData += mAttributeOidLength;
+            break;
+
+        case MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE:
+            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSequenceLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+                         mError = OT_ERROR_PARSE);
+            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
+                         mError = OT_ERROR_PARSE);
+
+            if(memcmp(aData, MBEDTLS_OID_EC_ALG_UNRESTRICTED, sizeof(MBEDTLS_OID_EC_ALG_UNRESTRICTED) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("KEY TYPE: EC\r\n");
+
+                aData += mAttributeOidLength;
+                VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSetLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
+                             mError = OT_ERROR_PARSE);
+
+                mSetBegin = aData;
+                while(aData < (mSetBegin + mAttributeSetLength))
+                {
+                    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
+                                 mError = OT_ERROR_PARSE);
+
+                    if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP192R1, sizeof(MBEDTLS_OID_EC_GRP_SECP192R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP192R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP224R1, sizeof(MBEDTLS_OID_EC_GRP_SECP224R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP224R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP256R1, sizeof(MBEDTLS_OID_EC_GRP_SECP256R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP256R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP384R1, sizeof(MBEDTLS_OID_EC_GRP_SECP384R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP384R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP521R1, sizeof(MBEDTLS_OID_EC_GRP_SECP521R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP521R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP192K1, sizeof(MBEDTLS_OID_EC_GRP_SECP192K1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP192K1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP224K1, sizeof(MBEDTLS_OID_EC_GRP_SECP224K1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP224K1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP256K1, sizeof(MBEDTLS_OID_EC_GRP_SECP256K1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP256K1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP256R1, sizeof(MBEDTLS_OID_EC_GRP_BP256R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP256R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP384R1, sizeof(MBEDTLS_OID_EC_GRP_BP384R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP384R1\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP512R1, sizeof(MBEDTLS_OID_EC_GRP_BP512R1) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP512R1\r\n");
+                    }
+                    else
+                    {
+                        mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+                    }
+                    aData += mAttributeOidLength;
+                }
+            }
+            else if(memcmp(aData, MBEDTLS_OID_PKCS9_CSR_EXT_REQ, sizeof(MBEDTLS_OID_PKCS9_CSR_EXT_REQ) - 1) == 0)
+            {
+                mInterpreter.mServer->OutputFormat("CSR EXTENSION REQUEST\r\n");
+
+                aData += mAttributeOidLength;
+                VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSetLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
+                             mError = OT_ERROR_PARSE);
+
+                mSetBegin = aData;
+                while(aData < (mSetBegin + mAttributeSetLength))
+                {
+                    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
+                                 mError = OT_ERROR_PARSE);
+
+                    if(memcmp(aData, MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER, sizeof(MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    AUTHORITY KEY IDENTIFIER\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_KEY_IDENTIFIER, sizeof(MBEDTLS_OID_SUBJECT_KEY_IDENTIFIER) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    SUBJECT KEY IDENTIFIER\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_KEY_USAGE, sizeof(MBEDTLS_OID_KEY_USAGE) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    KEY USAGE\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_CERTIFICATE_POLICIES, sizeof(MBEDTLS_OID_CERTIFICATE_POLICIES) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    CERTIFICATE POLICIES\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_POLICY_MAPPINGS, sizeof(MBEDTLS_OID_POLICY_MAPPINGS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    POLICY MAPPINGS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_ALT_NAME, sizeof(MBEDTLS_OID_SUBJECT_ALT_NAME) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    SUBJECT ALT NAME\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_ISSUER_ALT_NAME, sizeof(MBEDTLS_OID_ISSUER_ALT_NAME) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    ISSUER ALT NAME\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_DIRECTORY_ATTRS, sizeof(MBEDTLS_OID_SUBJECT_DIRECTORY_ATTRS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    SUBJECT DIRECTORY ATTRS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_BASIC_CONSTRAINTS, sizeof(MBEDTLS_OID_BASIC_CONSTRAINTS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    BASIC CONSTRAINTS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_NAME_CONSTRAINTS, sizeof(MBEDTLS_OID_NAME_CONSTRAINTS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    NAME CONSTRAINTS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_POLICY_CONSTRAINTS, sizeof(MBEDTLS_OID_POLICY_CONSTRAINTS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    POLICY CONSTRAINTS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_EXTENDED_KEY_USAGE, sizeof(MBEDTLS_OID_EXTENDED_KEY_USAGE) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    EXTENDED KEY USAGE\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_CRL_DISTRIBUTION_POINTS, sizeof(MBEDTLS_OID_CRL_DISTRIBUTION_POINTS) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    CRL DISTRIBUTION POINTS\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_INIHIBIT_ANYPOLICY, sizeof(MBEDTLS_OID_INIHIBIT_ANYPOLICY) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    INIHIBIT ANYPOLICY\r\n");
+                    }
+                    else if(memcmp(aData, MBEDTLS_OID_FRESHEST_CRL, sizeof(MBEDTLS_OID_FRESHEST_CRL) - 1) == 0)
+                    {
+                        mInterpreter.mServer->OutputFormat("    FRESHEST CRL\r\n");
+                    }
+                    else
+                    {
+                        mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+                    }
+                    aData += mAttributeOidLength;
+                }
+            }
+            else
+            {
+                mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+
+                aData += mAttributeSequenceLength;
+            }
+            break;
+
+        default:
+            mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+
+            aData++;
+            VerifyOrExit(otAsn1GetLength(&aData, aDataEnd, &mAttributeSequenceLength) == 0,
+                         mError = OT_ERROR_PARSE);
+            aData += mAttributeSequenceLength;
+            break;
+        }
+    }
+
+exit:
+
+    return mError;
 }
 
 } // namespace Cli
