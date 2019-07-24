@@ -653,6 +653,7 @@ private:
     void    PrepareBeaconRequest(TxFrame &aFrame);
     void    PrepareBeacon(TxFrame &aFrame);
     bool    ShouldSendBeacon(void) const;
+    bool    IsJoinable(void) const;
     void    BeginTransmit(void);
     bool    HandleMacCommand(RxFrame &aFrame);
     Frame * GetOperationFrame(void);
