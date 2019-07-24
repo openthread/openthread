@@ -253,6 +253,11 @@ static void processReceive(void)
     CORE_EXIT_NVIC();
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 static void processTransmit(void)
 {
     if (sTransmitBuffer != NULL && sTransmitLength == 0)
