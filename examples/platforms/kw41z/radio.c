@@ -770,11 +770,7 @@ static bool rf_process_rx_frame(void)
     /* Check if frame is valid */
     otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#error Time sync requires the timestamp of SFD rather than that of rx done!
-#else
     if (otPlatRadioGetPromiscuous(sInstance))
-#endif
     {
         // The current driver only supports milliseconds resolution.
         sRxFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;

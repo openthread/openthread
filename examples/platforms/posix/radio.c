@@ -130,7 +130,6 @@ static otRadioFrame        sAckFrame;
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
-static otRadioIeInfo sReceivedIeInfo;
 #endif
 
 static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
@@ -498,10 +497,8 @@ void platformRadioInit(void)
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
-    sReceiveFrame.mInfo.mTxInfo.mIeInfo  = &sReceivedIeInfo;
 #else
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = NULL;
-    sReceiveFrame.mInfo.mTxInfo.mIeInfo  = NULL;
 #endif
 }
 

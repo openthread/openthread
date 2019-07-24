@@ -205,8 +205,8 @@ typedef struct otRadioFrame
             /**
              * The timestamp when the frame was received in microseconds.
              *
-             * The value SHALL be the time when the SFD was received when TIME_SYNC or CSL is enabled,
-             * Otherwise it MAY be set to the time when rx was done.
+             * The value SHALL be the time when the SFD was received when TIME_SYNC or CSL is enabled.
+             * Otherwise, the time when the MAC frame was fully received is also acceptable.
              *
              */
             uint64_t mTimestamp;

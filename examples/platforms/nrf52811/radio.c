@@ -86,7 +86,6 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
-static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
 #endif
 static otInstance *sInstance = NULL;
 
@@ -712,9 +711,6 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
             receivedFrame = &sReceivedFrames[i];
 
             memset(receivedFrame, 0, sizeof(*receivedFrame));
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-            receivedFrame->mInfo.mTxInfo.mIeInfo = &sReceivedIeInfos[i];
-#endif
             break;
         }
     }

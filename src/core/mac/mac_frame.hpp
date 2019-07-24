@@ -484,7 +484,7 @@ public:
      * @param[in]  aVendorOui  A pointer to the Vendor OUI.
      *
      */
-    void SetVendorOui(uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, kVendorOuiSize); }
+    void SetVendorOui(const uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, kVendorOuiSize); }
 
     /**
      * This method returns the Vendor IE sub-type.
