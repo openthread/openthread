@@ -131,6 +131,26 @@ exit:
     return error;
 }
 
+otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
+{
+    otError   error  = OT_ERROR_NONE;
+    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
+
+    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+
+    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent()))
+    {
+        aDest.SetExtended(parent->GetExtAddress());
+    }
+    else
+    {
+        aDest.SetShort(parent->GetRloc16());
+    }
+
+exit:
+    return error;
+}
+
 otError DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
 {
     otError error = OT_ERROR_NONE;
