@@ -49,7 +49,8 @@
 #include <openthread/ncp.h>
 #elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
-#if HAVE_LIBEDIT || HAVE_LIBREADLINE
+#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+#define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
 #endif
 #else
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_ENABLE_PLATFORM_NETIF
     otSysInitNetif(instance);
 #endif
-#if HAVE_LIBEDIT || HAVE_LIBREADLINE
+#if OPENTHREAD_USE_CONSOLE
     otxConsoleInit(instance);
 #else
     otCliUartInit(instance);
@@ -120,7 +121,7 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+#if OPENTHREAD_USE_CONSOLE
         otxConsoleUpdate(&mainloop);
 #endif
 
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+#if OPENTHREAD_USE_CONSOLE
             otxConsoleProcess(&mainloop);
 #endif
         }
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
         }
     }
 
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI && (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+#if OPENTHREAD_USE_CONSOLE
     otxConsoleDeinit();
 #endif
     otInstanceFinalize(instance);
