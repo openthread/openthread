@@ -28,7 +28,6 @@
 
 #include "est_client.hpp"
 
-#include <mbedtls/asn1.h>
 #include <mbedtls/oid.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/x509_crt.h>
@@ -57,9 +56,8 @@
 namespace ot {
 namespace Est {
 
-#define CSR_RANDOM_THRESHOLD 32
-#define CSR_SEED_LENGTH 8
-#define CSR_BUFFER_SIZE 1024
+#define EST_CERTIFICATE_BUFFER_SIZE 1024
+#define EST_ATTRIBUTES_BUFFER_SIZE  256
 
 #define EST_ASN1_OID_PKCS7_DATA \
     MBEDTLS_OID_PKCS "\x07"     \
@@ -146,27 +144,34 @@ bool Client::IsConnected(void)
 otError Client::SimpleEnroll(const uint8_t *aPrivateKey,
                              uint32_t       aPrivateLeyLength,
                              otMdType       aMdType,
-                             uint8_t        aKeyUsageFlags)
+                             uint8_t        aKeyUsageFlags,
+                             uint8_t *      aX509Extensions,
+                             uint32_t       aX509ExtensionsLength)
 {
-    otError        mError                   = OT_ERROR_NONE;
-    uint8_t        mBuffer[CSR_BUFFER_SIZE] = {0};
-    size_t         mBufferLength            = CSR_BUFFER_SIZE;
-    uint8_t *      mBufferPointer           = NULL;
-    Coap::Message *mCoapMessage             = NULL;
+    otError        mError                               = OT_ERROR_NONE;
+    uint8_t        mBuffer[EST_CERTIFICATE_BUFFER_SIZE] = {0};
+    size_t         mBufferLength                        = EST_CERTIFICATE_BUFFER_SIZE;
+    uint8_t *      mBufferPointer                       = NULL;
+    Coap::Message *mCoapMessage                         = NULL;
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(mError =
-                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, mBuffer, &mBufferLength));
+    SuccessOrExit(mError = Client::WriteCsr(aPrivateKey,
+                                            aPrivateLeyLength,
+                                            aMdType,
+                                            aKeyUsageFlags,
+                                            aX509Extensions,
+                                            aX509ExtensionsLength,
+                                            mBuffer,
+                                            &mBufferLength));
 
     // The CSR is written at the end of the buffer, therefore the pointer is set to the begin of the CSR
-    mBufferPointer = mBuffer + (CSR_BUFFER_SIZE - mBufferLength);
+    mBufferPointer = mBuffer + (EST_CERTIFICATE_BUFFER_SIZE - mBufferLength);
 
     // Send CSR
     VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(
-            mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL));
+    SuccessOrExit(mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL));
 
     SuccessOrExit(mError = mCoapMessage->AppendContentFormatOption(OT_COAP_OPTION_CONTENT_FORMAT_PKCS10));
 
@@ -186,21 +191,29 @@ exit:
 otError Client::SimpleReEnroll(const uint8_t *aPrivateKey,
                                uint32_t       aPrivateLeyLength,
                                otMdType       aMdType,
-                               uint8_t        aKeyUsageFlags)
+                               uint8_t        aKeyUsageFlags,
+                               uint8_t *      aX509Extensions,
+                               uint32_t       aX509ExtensionsLength)
 {
-    otError        mError                   = OT_ERROR_NONE;
-    uint8_t        mBuffer[CSR_BUFFER_SIZE] = {0};
-    size_t         mBufferLength            = CSR_BUFFER_SIZE;
-    uint8_t *      mBufferPointer           = NULL;
-    Coap::Message *mCoapMessage             = NULL;
+    otError        mError                               = OT_ERROR_NONE;
+    uint8_t        mBuffer[EST_CERTIFICATE_BUFFER_SIZE] = {0};
+    size_t         mBufferLength                        = EST_CERTIFICATE_BUFFER_SIZE;
+    uint8_t *      mBufferPointer                       = NULL;
+    Coap::Message *mCoapMessage                         = NULL;
 
     VerifyOrExit(mIsConnected && mIsEnrolled, mError = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(mError =
-                      Client::WriteCsr(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags, mBuffer, &mBufferLength));
+    SuccessOrExit(mError = Client::WriteCsr(aPrivateKey,
+                                            aPrivateLeyLength,
+                                            aMdType,
+                                            aKeyUsageFlags,
+                                            aX509Extensions,
+                                            aX509ExtensionsLength,
+                                            mBuffer,
+                                            &mBufferLength));
 
     // The CSR is written at the end of the buffer, therefore the pointer is set to the begin of the CSR
-    mBufferPointer = mBuffer + (CSR_BUFFER_SIZE - mBufferLength);
+    mBufferPointer = mBuffer + (EST_CERTIFICATE_BUFFER_SIZE - mBufferLength);
 
     // Send CSR
     VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
@@ -225,10 +238,17 @@ exit:
 
 otError Client::GetCsrAttributes(void)
 {
-    otError mError = OT_ERROR_NOT_IMPLEMENTED;
+    otError        mError       = OT_ERROR_NONE;
+    Coap::Message *mCoapMessage = NULL;
 
     VerifyOrExit(mIsConnected, mError = OT_ERROR_INVALID_STATE);
 
+    VerifyOrExit((mCoapMessage = mCoapSecure.NewMessage(NULL)) != NULL, mError = OT_ERROR_NO_BUFS);
+
+    SuccessOrExit(mError = mCoapMessage->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET,
+                                              OT_EST_COAPS_SHORT_URI_CSR_ATTRS));
+
+    mCoapSecure.SendMessage(*mCoapMessage, &Client::GetCsrAttributesResponseHandler, this);
 exit:
 
     return mError;
@@ -292,11 +312,11 @@ otError Client::CmsReadSignedData(uint8_t * aMessage,
     mMessagePointer = aMessage;
     mMessageEnd     = aMessage + aMessageLength;
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
                  mError = OT_ERROR_SECURITY);
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_OID) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_OID) == 0,
                  mError = OT_ERROR_SECURITY);
 
     VerifyOrExit(memcmp(mMessagePointer, EST_ASN1_OID_PKCS7_SIGNEDATA, mSequenceLength) == 0,
@@ -304,36 +324,36 @@ otError Client::CmsReadSignedData(uint8_t * aMessage,
 
     mMessagePointer += mSequenceLength;
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0,
                  mError = OT_ERROR_SECURITY);
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
                  mError = OT_ERROR_SECURITY);
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_INTEGER) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_INTEGER) == 0,
                  mError = OT_ERROR_SECURITY);
 
     mMessagePointer += mSequenceLength;
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
                  mError = OT_ERROR_SECURITY);
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
                  mError = OT_ERROR_SECURITY);
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_OID) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength, MBEDTLS_ASN1_OID) == 0,
                  mError = OT_ERROR_SECURITY);
 
     VerifyOrExit(memcmp(mMessagePointer, EST_ASN1_OID_PKCS7_DATA, mSequenceLength) == 0, mError = OT_ERROR_SECURITY);
 
     mMessagePointer += mSequenceLength;
 
-    VerifyOrExit(mbedtls_asn1_get_tag(&mMessagePointer, mMessageEnd, &mSequenceLength,
-                                      MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0,
+    VerifyOrExit(otAsn1GetTag(&mMessagePointer, mMessageEnd, &mSequenceLength,
+                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0,
                  mError = OT_ERROR_SECURITY);
 
     *aPayload       = mMessagePointer;
@@ -347,13 +367,21 @@ otError Client::WriteCsr(const uint8_t *aPrivateKey,
                          size_t         aPrivateLeyLength,
                          otMdType       aMdType,
                          uint8_t        aKeyUsageFlags,
+                         uint8_t *      aX509Extensions,
+                         uint32_t       aX509ExtensionsLength,
                          uint8_t *      aOutput,
                          size_t *       aOutputLength)
 {
-    otError               mError = OT_ERROR_NONE;
+    otError               mError                 = OT_ERROR_NONE;
     mbedtls_x509write_csr csr;
     mbedtls_pk_context    pkCtx;
-    uint8_t               nsCertType = 0;
+    uint8_t               nsCertType             = 0;
+    uint8_t *             mX509ExtensionsPointer = aX509Extensions;
+    uint8_t *             mOidPointer            = NULL;
+    uint8_t *             mValuePointer          = NULL;
+    const uint8_t *       mX509ExtensionsEnd     = aX509Extensions + aX509ExtensionsLength;
+    size_t                mOidLength             = 0;
+    size_t                mValueLength           = 0;
 
     mbedtls_x509write_csr_init(&csr);
     mbedtls_pk_init(&pkCtx);
@@ -371,6 +399,33 @@ otError Client::WriteCsr(const uint8_t *aPrivateKey,
     VerifyOrExit(mbedtls_x509write_csr_set_ns_cert_type(&csr, nsCertType) == 0, mError = OT_ERROR_FAILED);
 
     mbedtls_x509write_csr_set_key(&csr, &pkCtx);
+
+    // Set X.509 extensions
+    if(aX509Extensions != NULL)
+    {
+        otAsn1GetTag(&mX509ExtensionsPointer, mX509ExtensionsEnd, NULL, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET);
+
+        while(mX509ExtensionsPointer < mX509ExtensionsEnd)
+        {
+            VerifyOrExit(otAsn1GetTag(&mX509ExtensionsPointer, mX509ExtensionsEnd, &mOidLength, MBEDTLS_ASN1_OID) == 0,
+                         mError = OT_ERROR_INVALID_ARGS);
+
+            mOidPointer = mX509ExtensionsPointer;
+            mX509ExtensionsPointer += mOidLength;
+            mValuePointer = mX509ExtensionsPointer;
+
+            VerifyOrExit(otAsn1GetLength(&mX509ExtensionsPointer, mX509ExtensionsEnd, &mValueLength) == 0,
+                         mError = OT_ERROR_INVALID_ARGS);
+
+            mValueLength += mX509ExtensionsPointer - mValuePointer;
+
+            VerifyOrExit(mbedtls_x509write_csr_set_extension(&csr, (char*)mOidPointer,
+                                                             mOidLength, mValuePointer, mValueLength),
+                         mError = OT_ERROR_INVALID_ARGS);
+
+            mX509ExtensionsPointer = mValuePointer + mValueLength;
+        }
+    }
 
     // Write CSR in DER format
     VerifyOrExit((*aOutputLength = mbedtls_x509write_csr_der(&csr, aOutput, *aOutputLength, mbedtls_ctr_drbg_random,
@@ -396,12 +451,12 @@ void Client::SimpleEnrollResponseHandler(otMessage *aMessage, const otMessageInf
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otCoapCode       mCoapCode                     = otCoapMessageGetCode(aMessage);
-    otEstType        mType                         = OT_EST_TYPE_NONE;
-    uint8_t          mMessage[CSR_BUFFER_SIZE + 1] = {0};
-    uint32_t         mMessageLength                = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    uint8_t *        mPayload                      = NULL;
-    uint32_t         mPayloadLength                = 0;
+    otCoapCode       mCoapCode                                 = otCoapMessageGetCode(aMessage);
+    otEstType        mType                                     = OT_EST_TYPE_NONE;
+    uint8_t          mMessage[EST_CERTIFICATE_BUFFER_SIZE + 1] = {0};
+    uint32_t         mMessageLength                            = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    uint8_t *        mPayload                                  = NULL;
+    uint32_t         mPayloadLength                            = 0;
     mbedtls_x509_crt mCertificate;
 
     mbedtls_x509_crt_init(&mCertificate);
@@ -464,12 +519,12 @@ void Client::GetCaCertificatesResponseHandler(otMessage *          aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otCoapCode       mCoapCode                     = otCoapMessageGetCode(aMessage);
-    otEstType        mType                         = OT_EST_TYPE_NONE;
-    uint8_t          mMessage[CSR_BUFFER_SIZE + 1] = {0};
-    uint32_t         mMessageLength                = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    uint8_t *        mPayload                      = NULL;
-    uint32_t         mPayloadLength                = 0;
+    otCoapCode       mCoapCode                                 = otCoapMessageGetCode(aMessage);
+    otEstType        mType                                     = OT_EST_TYPE_NONE;
+    uint8_t          mMessage[EST_CERTIFICATE_BUFFER_SIZE + 1] = {0};
+    uint32_t         mMessageLength                            = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    uint8_t *        mPayload                                  = NULL;
+    uint32_t         mPayloadLength                            = 0;
     mbedtls_x509_crt mCertificate;
 
     mbedtls_x509_crt_init(&mCertificate);
@@ -503,6 +558,51 @@ exit:
     mbedtls_x509_crt_free(&mCertificate);
 
     mResponseCallback(aResult, mType, mPayload, mPayloadLength, mApplicationContext);
+}
+
+void Client::GetCsrAttributesResponseHandler(void *               aContext,
+                                             otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo,
+                                             otError              aResult)
+{
+    return static_cast<Client *>(aContext)->GetCsrAttributesResponseHandler(aMessage,
+                                                                            aMessageInfo,
+                                                                            aResult);
+}
+
+void Client::GetCsrAttributesResponseHandler(otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo,
+                                             otError              aResult)
+{
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    otCoapCode       mCoapCode                                = otCoapMessageGetCode(aMessage);
+    otEstType        mType                                    = OT_EST_TYPE_NONE;
+    uint8_t          mMessage[EST_ATTRIBUTES_BUFFER_SIZE + 1] = {0};
+    uint32_t         mMessageLength                           = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+
+    switch (mCoapCode)
+    {
+    case OT_COAP_CODE_CONTENT:
+        // Check if message is too long for buffer
+        VerifyOrExit(mMessageLength <= sizeof(mMessage), aResult = OT_ERROR_NO_BUFS;);
+
+        // Parse message
+        mMessage[mMessageLength] = '\0';
+        otMessageRead(aMessage, otMessageGetOffset(aMessage), mMessage, mMessageLength);
+
+        mType = OT_EST_TYPE_CSR_ATTR;
+        break;
+
+    default:
+        aResult        = OT_ERROR_FAILED;
+        mMessageLength = 0;
+        break;
+    }
+
+exit:
+
+    mResponseCallback(aResult, mType, mMessage, mMessageLength, mApplicationContext);
 }
 
 } // namespace Est

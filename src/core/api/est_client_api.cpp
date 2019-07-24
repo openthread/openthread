@@ -107,22 +107,30 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateLeyLength,
                                 otMdType       aMdType,
-                                uint8_t        aKeyUsageFlags)
+                                uint8_t        aKeyUsageFlags,
+                                uint8_t *      aX509Extensions,
+                                uint32_t       aX509ExtensionsLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags);
+    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength,
+                                                    aMdType, aKeyUsageFlags,
+                                                    aX509Extensions, aX509ExtensionsLength);
 }
 
 otError otEstClientSimpleReEnroll(otInstance *   aInstance,
                                   const uint8_t *aPrivateKey,
                                   uint32_t       aPrivateLeyLength,
                                   otMdType       aMdType,
-                                  uint8_t        aKeyUsageFlags)
+                                  uint8_t        aKeyUsageFlags,
+                                  uint8_t *      aX509Extensions,
+                                  uint32_t       aX509ExtensionsLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags);
+    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength,
+                                                      aMdType, aKeyUsageFlags,
+                                                      aX509Extensions, aX509ExtensionsLength);
 }
 
 otError otEstClientGetCsrAttributes(otInstance *aInstance)

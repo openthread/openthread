@@ -53,6 +53,7 @@ const struct EstClient::Command EstClient::sCommands[] = {
     {"connect", &EstClient::ProcessConnect},
     {"disconnect", &EstClient::ProcessDisconnect},
     {"cacerts", &EstClient::ProcessGetCaCertificate},
+    {"csrattr", &EstClient::ProcessGetCaCertificate},
     {"enroll", &EstClient::ProcessSimpleEnroll},
     {"reenroll", &EstClient::ProcessSimpleReEnroll},
 
@@ -222,6 +223,20 @@ exit:
 
     return mError;
 }
+otError EstClient::ProcessGetCsrAttributes(int argc, char *argv[])
+{
+    otError mError;
+
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    mError = otEstClientGetCsrAttributes(mInterpreter.mInstance);
+    VerifyOrExit(mError == OT_ERROR_NONE);
+
+exit:
+
+    return mError;
+}
 
 otError EstClient::ProcessSimpleEnroll(int argc, char *argv[])
 {
@@ -236,7 +251,7 @@ otError EstClient::ProcessSimpleEnroll(int argc, char *argv[])
     mError = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
     VerifyOrExit(mError == OT_ERROR_NONE);
     mError = otEstClientSimpleEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength, OT_MD_TYPE_SHA256,
-                                     mKeyUsageFlags);
+                                     mKeyUsageFlags, NULL, 0);
     VerifyOrExit(mError == OT_ERROR_NONE);
 
 exit:
@@ -259,7 +274,7 @@ otError EstClient::ProcessSimpleReEnroll(int argc, char *argv[])
     mError = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
     VerifyOrExit(mError == OT_ERROR_NONE);
     mError = otEstClientSimpleReEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength,
-                                       OT_MD_TYPE_SHA256, mKeyUsageFlags);
+                                       OT_MD_TYPE_SHA256, mKeyUsageFlags, NULL, 0);
     VerifyOrExit(mError == OT_ERROR_NONE);
 
 exit:
@@ -345,6 +360,9 @@ void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayloa
 
             break;
         case OT_EST_TYPE_CSR_ATTR:
+            // test begin
+            mInterpreter.mServer->OutputFormat("%x256\r\n", aPayload);
+            // test end
             break;
         case OT_EST_TYPE_SERVER_SIDE_KEY:
             break;

@@ -144,10 +144,13 @@ public:
     /**
      * This method process a simple enrollment over CoAP Secure.
      *
-     * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
-     * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
-     * @param[in]  aMdType            The message digest type to be used for simple enrollment.
-     * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+     * @param[in]  aPrivateKey              A pointer to a buffer that contains the EC private key.
+     * @param[in]  aPrivateLeyLength        The length of the buffer @p aPrivateKey
+     * @param[in]  aMdType                  The message digest type to be used for simple enrollment.
+     * @param[in]  aKeyUsageFlags           Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+     * @param[in]  aX509Extensions          A pointer to ASN.1 DER encoded data that contain the X.509
+     *                                      extensions to set.
+     * @param[in]  aX509ExtensionsLength    The length of the data @p aX509Extensions
      *
      * @retval OT_ERROR_NONE           Successfully sent request.
      * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -157,15 +160,20 @@ public:
     otError SimpleEnroll(const uint8_t *aPrivateKey,
                          uint32_t       aPrivateLeyLength,
                          otMdType       aMdType,
-                         uint8_t        aKeyUsageFlags);
+                         uint8_t        aKeyUsageFlags,
+                         uint8_t *      aX509Extensions,
+                         uint32_t       aX509ExtensionsLength);
 
     /**
      * This method process a simple re-enrollment over CoAP Secure.
      *
-     * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
-     * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
-     * @param[in]  aMdType            The message digest type to be used for simple enrollment.
-     * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+     * @param[in]  aPrivateKey              A pointer to a buffer that contains the EC private key.
+     * @param[in]  aPrivateLeyLength        The length of the buffer @p aPrivateKey
+     * @param[in]  aMdType                  The message digest type to be used for simple enrollment.
+     * @param[in]  aKeyUsageFlags           Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+     * @param[in]  aX509Extensions          A pointer to ASN.1 DER encoded data that contain the X.509
+     *                                      extensions to set.
+     * @param[in]  aX509ExtensionsLength    The length of the data @p aX509Extensions
      *
      * @retval OT_ERROR_NONE           Successfully sent request.
      * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -175,7 +183,9 @@ public:
     otError SimpleReEnroll(const uint8_t *aPrivateKey,
                            uint32_t       aPrivateLeyLength,
                            otMdType       aMdType,
-                           uint8_t        aKeyUsageFlags);
+                           uint8_t        aKeyUsageFlags,
+                           uint8_t *      aX509Extensions,
+                           uint32_t       aX509ExtensionsLength);
 
     /**
      * ToDo: Optionally
@@ -214,6 +224,8 @@ private:
                          size_t         aPrivateLeyLength,
                          otMdType       aMdType,
                          uint8_t        aKeyUsageFlags,
+                         uint8_t *      aX509Extensions,
+                         uint32_t       aX509ExtensionsLength,
                          uint8_t *      aOutput,
                          size_t *       aOutputLength);
     static void SimpleEnrollResponseHandler(void *               aContext,
@@ -230,6 +242,13 @@ private:
     void        GetCaCertificatesResponseHandler(otMessage *          aMessage,
                                                  const otMessageInfo *aMessageInfo,
                                                  otError              aResult);
+    static void GetCsrAttributesResponseHandler(void *               aContext,
+                                                otMessage *          aMessage,
+                                                const otMessageInfo *aMessageInfo,
+                                                otError              aResult);
+    void        GetCsrAttributesResponseHandler(otMessage *          aMessage,
+                                                const otMessageInfo *aMessageInfo,
+                                                otError              aResult);
 
     bool                      mIsConnected;
     bool                      mStarted;

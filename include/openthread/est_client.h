@@ -61,24 +61,44 @@ extern "C" {
 #define OT_EST_COAPS_DEFAULT_EST_SERVER_IP6 "2001:620:190:ffa1:21b:21ff:fe70:9240"
 #define OT_EST_COAPS_DEFAULT_EST_SERVER_PORT 5684
 
-#define OT_EST_COAPS_SHORT_URI_CA_CERTS ".well-known/est/crts"        ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL ".well-known/est/sen"    ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CA_CERTS        ".well-known/est/crts" ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SIMPLE_ENROLL   ".well-known/est/sen"  ///< Specified in draft-ietf-ace-coap-est-12
 #define OT_EST_COAPS_SHORT_URI_SIMPLE_REENROLL ".well-known/est/sren" ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS ".well-known/est/att"        ///< Specified in draft-ietf-ace-coap-est-12
-#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN ".well-known/est/skg"   ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_CSR_ATTRS       ".well-known/est/att"  ///< Specified in draft-ietf-ace-coap-est-12
+#define OT_EST_COAPS_SHORT_URI_SERVER_KEY_GEN  ".well-known/est/skg"  ///< Specified in draft-ietf-ace-coap-est-12
 
 /**
  * Key usage type for the X.509 certificate used in the EST client.
  */
 #define OT_EST_KEY_USAGE_DIGITAL_SIGNATURE MBEDTLS_X509_KU_DIGITAL_SIGNATURE
-#define OT_EST_KEY_USAGE_NON_REPUTATION MBEDTLS_X509_KU_NON_REPUDIATION
-#define OT_EST_KEY_USAGE_KEY_ENCIPHERMENT MBEDTLS_X509_KU_KEY_ENCIPHERMENT
+#define OT_EST_KEY_USAGE_NON_REPUTATION    MBEDTLS_X509_KU_NON_REPUDIATION
+#define OT_EST_KEY_USAGE_KEY_ENCIPHERMENT  MBEDTLS_X509_KU_KEY_ENCIPHERMENT
 #define OT_EST_KEY_USAGE_DATA_ENCIPHERMENT MBEDTLS_X509_KU_DATA_ENCIPHERMENT
-#define OT_EST_KEY_USAGE_KEY_AGREEMENT MBEDTLS_X509_KU_KEY_AGREEMENT
-#define OT_EST_KEY_USAGE_KEY_CERT_SIGN MBEDTLS_X509_KU_KEY_CERT_SIGN
-#define OT_EST_KEY_USAGE_CRL_SIGN MBEDTLS_X509_KU_CRL_SIGN
-#define OT_EST_KEY_USAGE_ENCIPHER_ONLY MBEDTLS_X509_KU_ENCIPHER_ONLY
-#define OT_EST_KEY_USAGE_DECIPHER_ONLY MBEDTLS_X509_KU_DECIPHER_ONLY
+#define OT_EST_KEY_USAGE_KEY_AGREEMENT     MBEDTLS_X509_KU_KEY_AGREEMENT
+#define OT_EST_KEY_USAGE_KEY_CERT_SIGN     MBEDTLS_X509_KU_KEY_CERT_SIGN
+#define OT_EST_KEY_USAGE_CRL_SIGN          MBEDTLS_X509_KU_CRL_SIGN
+#define OT_EST_KEY_USAGE_ENCIPHER_ONLY     MBEDTLS_X509_KU_ENCIPHER_ONLY
+#define OT_EST_KEY_USAGE_DECIPHER_ONLY     MBEDTLS_X509_KU_DECIPHER_ONLY
+
+/*
+ * X.509 extension types for the X.509 certificate used in the EST client.
+ */
+#define OT_EST_EXT_AUTHORITY_KEY_IDENTIFIER MBEDTLS_X509_EXT_AUTHORITY_KEY_IDENTIFIER
+#define OT_EST_EXT_SUBJECT_KEY_IDENTIFIER   MBEDTLS_X509_EXT_SUBJECT_KEY_IDENTIFIER
+#define OT_EST_EXT_KEY_USAGE                MBEDTLS_X509_EXT_KEY_USAGE
+#define OT_EST_EXT_CERTIFICATE_POLICIES     MBEDTLS_X509_EXT_CERTIFICATE_POLICIES
+#define OT_EST_EXT_POLICY_MAPPINGS          MBEDTLS_X509_EXT_POLICY_MAPPINGS
+#define OT_EST_EXT_SUBJECT_ALT_NAME         MBEDTLS_X509_EXT_SUBJECT_ALT_NAME
+#define OT_EST_EXT_ISSUER_ALT_NAME          MBEDTLS_X509_EXT_ISSUER_ALT_NAME
+#define OT_EST_EXT_SUBJECT_DIRECTORY_ATTRS  MBEDTLS_X509_EXT_SUBJECT_DIRECTORY_ATTRS
+#define OT_EST_EXT_BASIC_CONSTRAINTS        MBEDTLS_X509_EXT_BASIC_CONSTRAINTS
+#define OT_EST_EXT_NAME_CONSTRAINTS         MBEDTLS_X509_EXT_NAME_CONSTRAINTS
+#define OT_EST_EXT_POLICY_CONSTRAINTS       MBEDTLS_X509_EXT_POLICY_CONSTRAINTS
+#define OT_EST_EXT_EXTENDED_KEY_USAGE       MBEDTLS_X509_EXT_EXTENDED_KEY_USAGE
+#define OT_EST_EXT_CRL_DISTRIBUTION_POINTS  MBEDTLS_X509_EXT_CRL_DISTRIBUTION_POINTS
+#define OT_EST_EXT_INIHIBIT_ANYPOLICY       MBEDTLS_X509_EXT_INIHIBIT_ANYPOLICY
+#define OT_EST_EXT_FRESHEST_CRL             MBEDTLS_X509_EXT_FRESHEST_CRL
+#define OT_EST_EXT_NS_CERT_TYPE             MBEDTLS_X509_EXT_NS_CERT_TYPE
 
 /**
  * Type description for the EST response handle.
@@ -233,11 +253,14 @@ bool otEstClientIsConnected(otInstance *aInstance);
  * The response callback should return the signed certificate after execution this step.
  * Note: With the function otCryptoEcpGenenrateKey a new EC key pair can be generated.
  *
- * @param[in]  aInstance          A pointer to an OpenThread instance.
- * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
- * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
- * @param[in]  aMdType            The message digest type to be used for simple enrollment.
- * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+ * @param[in]  aInstance                A pointer to an OpenThread instance.
+ * @param[in]  aPrivateKey              A pointer to a buffer that contains the EC private key.
+ * @param[in]  aPrivateLeyLength        The length of the buffer @p aPrivateKey
+ * @param[in]  aMdType                  The message digest type to be used for simple enrollment.
+ * @param[in]  aKeyUsageFlags           Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+ * @param[in]  aX509Extensions          A pointer to ASN.1 DER encoded data that contain the X.509
+ *                                      extensions to set.
+ * @param[in]  aX509ExtensionsLength    The length of the data @p aX509Extensions
  *
  * @retval OT_ERROR_NONE           Successfully sent request.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -248,18 +271,23 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateLeyLength,
                                 otMdType       aMdType,
-                                uint8_t        aKeyUsageFlags);
+                                uint8_t        aKeyUsageFlags,
+                                uint8_t *      aX509Extensions,
+                                uint32_t       aX509ExtensionsLength);
 
 /**
  * This method processes a simple re-enrollment over CoAP Secure.
  * The response callback should return the renewed signed certificate after execution this step.
  * Note: With the function otCryptoEcpGenenrateKey a new EC key pair can be generated.
  *
- * @param[in]  aInstance          A pointer to an OpenThread instance.
- * @param[in]  aPrivateKey        A pointer to a buffer that contains the EC private key.
- * @param[in]  aPrivateLeyLength  The length of the buffer @p aPrivateKey
- * @param[in]  aMdType            The message digest type to be used for simple enrollment.
- * @param[in]  aKeyUsageFlags     Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+ * @param[in]  aInstance                A pointer to an OpenThread instance.
+ * @param[in]  aPrivateKey              A pointer to a buffer that contains the EC private key.
+ * @param[in]  aPrivateLeyLength        The length of the buffer @p aPrivateKey
+ * @param[in]  aMdType                  The message digest type to be used for simple enrollment.
+ * @param[in]  aKeyUsageFlags           Flags for defining key usage. Refer OT_EST_KEY_USAGE_*
+ * @param[in]  aX509Extensions          A pointer to ASN.1 DER encoded data that contain the X.509
+ *                                      extensions to set.
+ * @param[in]  aX509ExtensionsLength    The length of the data @p aX509Extensions
  *
  * @retval OT_ERROR_NONE           Successfully sent request.
  * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
@@ -270,7 +298,9 @@ otError otEstClientSimpleReEnroll(otInstance *   aInstance,
                                   const uint8_t *aPrivateKey,
                                   uint32_t       aPrivateLeyLength,
                                   otMdType       aMdType,
-                                  uint8_t        aKeyUsageFlags);
+                                  uint8_t        aKeyUsageFlags,
+                                  uint8_t *      aX509Extensions,
+                                  uint32_t       aX509ExtensionsLength);
 
 /**
  * ToDo: Optionally

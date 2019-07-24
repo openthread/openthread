@@ -83,6 +83,7 @@ private:
     otError ProcessConnect(int argc, char *argv[]);
     otError ProcessDisconnect(int argc, char *argv[]);
     otError ProcessGetCaCertificate(int argc, char *argv[]);
+    otError ProcessGetCsrAttributes(int argc, char *argv[]);
     otError ProcessSimpleEnroll(int argc, char *argv[]);
     otError ProcessSimpleReEnroll(int argc, char *argv[]);
 
