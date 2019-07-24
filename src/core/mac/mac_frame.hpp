@@ -1307,7 +1307,10 @@ public:
      * @returns  The offset to network time.
      *
      */
-    int64_t ReadNetworkTimeOffset(void) const { return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp()); }
+    int64_t ComputeNetworkTimeOffset(void) const
+    {
+        return static_cast<int64_t>(GetTimeIe()->GetTime() - GetTimestamp());
+    }
 
     /**
      * This method sets the time sync sequence.
