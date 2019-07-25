@@ -77,8 +77,9 @@ enrollment successful
 ## Command List
 
 * [help](#help)
-* [connect](#connect-address)
 * [cacerts](#cacerts)
+* [connect](#connect-address)
+* [csrattr](#csrattr)
 * [disconnect](#disconnect)
 * [enroll](#enroll)
 * [reenroll](#reenroll)
@@ -97,6 +98,7 @@ stop
 connect
 disconnect
 cacerts
+csrattr
 enroll
 reenroll
 Done
@@ -122,6 +124,24 @@ Establish DTLS session with server.
 > est connect 2001:620:190:ffa1:21b:21ff:fe70:9240
 Done
 connected
+```
+
+### csrattr
+
+Requests the desired CSR attributes from the EST server. The attributes are printed out if the OID
+is listed in [oid.h](openthread/third_party/mbedtls/repo/include/mbedtls/oid.h).
+
+```bash
+> est csrattr 
+Done
+KEY TYPE: EC
+    EC GROUP: SECP384R1
+CSR EXTENSION REQUEST
+    BASIC CONSTRAINTS
+    KEY USAGE
+    SUBJECT KEY IDENTIFIER
+    AUTHORITY KEY IDENTIFIER
+SIGING ALGORITHM: ECDSA with SHA384
 ```
 
 ### disconnect

@@ -359,10 +359,12 @@ void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayloa
             {
                 mInterpreter.mServer->OutputFormat("error certificate too long\r\n");
             }
-
             break;
         case OT_EST_TYPE_CSR_ATTR:
-            PrintoutCsrAttributes(aPayload, aPayload + aPayloadLength);
+            if(PrintoutCsrAttributes(aPayload, aPayload + aPayloadLength) != OT_ERROR_NONE)
+            {
+                mInterpreter.mServer->OutputFormat("invalid format received\r\n");
+            }
             break;
         case OT_EST_TYPE_SERVER_SIDE_KEY:
             break;
@@ -533,7 +535,7 @@ otError EstClient::PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd
                     }
                     else
                     {
-                        mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+                        mInterpreter.mServer->OutputFormat("    unknown attribute\r\n");
                     }
                     aData += mAttributeOidLength;
                 }
@@ -614,7 +616,7 @@ otError EstClient::PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd
                     }
                     else
                     {
-                        mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
+                        mInterpreter.mServer->OutputFormat("    unknown attribute\r\n");
                     }
                     aData += mAttributeOidLength;
                 }

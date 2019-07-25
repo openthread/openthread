@@ -188,7 +188,11 @@ public:
                            uint32_t       aX509ExtensionsLength);
 
     /**
-     * ToDo: Optionally
+     * This method requests the CSR attributes from the EST server.
+     *
+     * @retval OT_ERROR_NONE           Successfully sent request.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retval OT_ERROR_INVALID_STATE  EST client not connected.
      */
     otError GetCsrAttributes(void);
 

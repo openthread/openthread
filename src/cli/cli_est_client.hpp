@@ -89,17 +89,14 @@ private:
 
     static void HandleConnected(bool aConnected, void *aContext);
     void        HandleConnected(bool aConnected);
-
     static void HandleResponse(otError   aError,
                                otEstType aType,
                                uint8_t * aPayload,
                                uint32_t  aPayloadLenth,
                                void *    aContext);
     void        HandleResponse(otError aError, otEstType aType, uint8_t *aPayload, uint32_t aPayloadLenth);
-
-    void CleanUpTemporaryBuffer(void);
-
-    otError PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd);
+    void        CleanUpTemporaryBuffer(void);
+    otError     PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd);
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;
