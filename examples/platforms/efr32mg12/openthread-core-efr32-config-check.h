@@ -31,10 +31,6 @@
 
 #include "board_config.h"
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#error "Platform efr32mg12 doesn't support configuration option: OPENTHREAD_CONFIG_ENABLE_TIME_SYNC"
-#endif
-
 #ifndef RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #error "Platform efr32mg12 not configured to support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"

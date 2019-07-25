@@ -662,9 +662,13 @@ void readFrame(otInstance *aInstance)
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
+    // Timestamp
     if (otPlatRadioGetPromiscuous(aInstance))
+#endif
     {
-        // Timestamp
         // The current driver only supports milliseconds resolution.
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
     }

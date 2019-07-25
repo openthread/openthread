@@ -29,10 +29,6 @@
 #ifndef OPENTHREAD_CORE_KW41Z_CONFIG_CHECK_H_
 #define OPENTHREAD_CORE_KW41Z_CONFIG_CHECK_H_
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#error "Platform kw41z doesn't support configuration option: OPENTHREAD_CONFIG_ENABLE_TIME_SYNC"
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #error "Platform kw41z doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
 #endif
