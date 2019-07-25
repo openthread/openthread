@@ -683,6 +683,8 @@ private:
 
     static const char *OperationToString(Operation aOperation);
 
+    SubMac mSubMac;
+
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;
     bool mPendingEnergyScan : 1;
@@ -723,7 +725,6 @@ private:
         EnergyScanHandler mEnergyScanHandler;
     };
 
-    SubMac             mSubMac;
     Tasklet            mOperationTask;
     TimerMilli         mTimer;
     TxFrame *          mOobFrame;
