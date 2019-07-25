@@ -1639,21 +1639,18 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
-    LeaderDataTlv mLeaderData;                    ///< Last received Leader Data TLV.
-    bool          mRetrieveNewNetworkData;        ///< Indicating new Network Data is needed if set.
-    otDeviceRole  mRole;                          ///< Current Thread role.
-    Router        mParent;                        ///< Parent information.
-    uint8_t       mDeviceMode;                    ///< Device mode setting.
-    AttachState   mAttachState;                   ///< The parent request state.
-    ReattachState mReattachState;                 ///< Reattach state
-    uint16_t      mAttachCounter;                 ///< Attach attempt counter.
-    uint16_t      mAnnounceDelay;                 ///< Delay in between sending Announce messages during attach.
-    TimerMilli    mAttachTimer;                   ///< The timer for driving the attach process.
-    TimerMilli    mDelayedResponseTimer;          ///< The timer to delay MLE responses.
-    TimerMilli    mMessageTransmissionTimer;      ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    uint32_t      mLastPartitionId;               ///< The partition ID of the previous Thread partition
-    uint8_t       mLastPartitionRouterIdSequence; ///< The router ID sequence from the previous Thread partition
-    uint8_t       mLastPartitionIdTimeout;        ///< The time remaining to avoid the previous Thread partition
+    LeaderDataTlv mLeaderData;               ///< Last received Leader Data TLV.
+    bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
+    otDeviceRole  mRole;                     ///< Current Thread role.
+    Router        mParent;                   ///< Parent information.
+    uint8_t       mDeviceMode;               ///< Device mode setting.
+    AttachState   mAttachState;              ///< The parent request state.
+    ReattachState mReattachState;            ///< Reattach state
+    uint16_t      mAttachCounter;            ///< Attach attempt counter.
+    uint16_t      mAnnounceDelay;            ///< Delay in between sending Announce messages during attach.
+    TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
+    TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
+    TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
     uint8_t       mParentLeaderCost;
 
 private:
