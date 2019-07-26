@@ -31,4 +31,7 @@
 
 #define MBEDTLS_AES_ALT
 
+/* TODO: remove once AES alt driver supports 256-bit keys */
+#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+
 #endif // CC1352_MBEDTLS_CONFIG_H
