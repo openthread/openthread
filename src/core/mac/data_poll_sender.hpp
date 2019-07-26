@@ -132,6 +132,17 @@ public:
     uint32_t GetExternalPollPeriod(void) const { return mExternalPollPeriod; }
 
     /**
+     * This method gets the destination MAC address for a data poll frame.
+     *
+     * @param[out] aDest       Reference to a `MAC::Address` to output the poll destination address (on success).
+     *
+     * @retval OT_ERROR_NONE   @p aDest was updated successfully.
+     * @retval OT_ERROR_ABORT  Abort the data poll transmission (not currently attached to any parent).
+     *
+     */
+    otError GetPollDestinationAddress(Mac::Address &aDest) const;
+
+    /**
      * This method informs the data poll sender of success/error status of a previously requested poll frame
      * transmission.
      *

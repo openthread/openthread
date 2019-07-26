@@ -791,41 +791,31 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
 
 otError Mac::PrepareDataRequest(Frame &aFrame)
 {
-    otError   error  = OT_ERROR_NONE;
-    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
-    uint16_t  fcf;
-    bool      useExtendedAddr;
+    otError  error = OT_ERROR_NONE;
+    Address  src, dst;
+    uint16_t fcf;
 
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+    SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
+    VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfFrameVersion2006 | Frame::kFcfAckRequest |
           Frame::kFcfSecurityEnabled;
 
-    useExtendedAddr = (GetShortAddress() == kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent());
-
-    if (useExtendedAddr)
+    if (dst.IsExtended())
     {
         fcf |= Frame::kFcfDstAddrExt | Frame::kFcfSrcAddrExt;
+        src.SetExtended(GetExtAddress());
     }
     else
     {
         fcf |= Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrShort;
+        src.SetShort(GetShortAddress());
     }
 
     aFrame.InitMacHeader(fcf, Frame::kKeyIdMode1 | Frame::kSecEncMic32);
     aFrame.SetDstPanId(GetPanId());
-
-    if (useExtendedAddr)
-    {
-        aFrame.SetSrcAddr(GetExtAddress());
-        aFrame.SetDstAddr(parent->GetExtAddress());
-    }
-    else
-    {
-        aFrame.SetSrcAddr(GetShortAddress());
-        aFrame.SetDstAddr(parent->GetRloc16());
-    }
-
+    aFrame.SetSrcAddr(src);
+    aFrame.SetDstAddr(dst);
     aFrame.SetCommandId(Frame::kMacCmdDataRequest);
 
 exit:
