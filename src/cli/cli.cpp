@@ -1817,7 +1817,7 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        mServer->OutputFormat("%04x\r\n", otLinkGetPanId(mInstance));
+        mServer->OutputFormat("0x%04x\r\n", otLinkGetPanId(mInstance));
     }
     else
     {
