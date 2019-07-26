@@ -164,10 +164,8 @@ exit:
     return;
 }
 
-void IndirectSender::HandleChildModeChange(Child &aChild, uint8_t aOldMode)
+void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode)
 {
-    bool wasRxOnWhenIdle = ((aOldMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0);
-
     if (!aChild.IsRxOnWhenIdle() && (aChild.GetState() == Neighbor::kStateValid))
     {
         SetChildUseShortAddress(aChild, true);
@@ -176,7 +174,7 @@ void IndirectSender::HandleChildModeChange(Child &aChild, uint8_t aOldMode)
     // On sleepy to non-sleepy mode change, convert indirect messages in
     // the send queue destined to the child to direct.
 
-    if (!wasRxOnWhenIdle && aChild.IsRxOnWhenIdle() && (aChild.GetIndirectMessageCount() > 0))
+    if (!aOldMode.IsRxOnWhenIdle() && aChild.IsRxOnWhenIdle() && (aChild.GetIndirectMessageCount() > 0))
     {
         uint8_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 

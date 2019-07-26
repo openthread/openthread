@@ -65,7 +65,7 @@ Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRetrieveNewNetworkData(false)
     , mRole(OT_DEVICE_ROLE_DISABLED)
-    , mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest)
+    , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
     , mAttachCounter(0)
@@ -380,7 +380,7 @@ otError Mle::Restore(void)
         ExitNow();
     }
 
-    mDeviceMode = networkInfo.mDeviceMode;
+    mDeviceMode.Set(networkInfo.mDeviceMode);
     Get<Mac::Mac>().SetShortAddress(networkInfo.mRloc16);
     Get<Mac::Mac>().SetExtAddress(networkInfo.mExtAddress);
 
@@ -411,8 +411,8 @@ otError Mle::Restore(void)
 
         memset(&mParent, 0, sizeof(mParent));
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
-        mParent.SetDeviceMode(ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle |
-                              ModeTlv::kModeFullNetworkData | ModeTlv::kModeSecureDataRequest);
+        mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                         DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
         mParent.SetRloc16(GetRloc16(GetRouterId(networkInfo.mRloc16)));
         mParent.SetState(Neighbor::kStateRestored);
 
@@ -444,7 +444,7 @@ otError Mle::Store(void)
         // avoid losing/overwriting previous information when a reboot
         // occurs after a message is sent but before attaching.
 
-        networkInfo.mDeviceMode          = mDeviceMode;
+        networkInfo.mDeviceMode          = mDeviceMode.Get();
         networkInfo.mRole                = mRole;
         networkInfo.mRloc16              = GetRloc16();
         networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
@@ -817,22 +817,16 @@ exit:
     return;
 }
 
-otError Mle::SetDeviceMode(uint8_t aDeviceMode)
+otError Mle::SetDeviceMode(DeviceMode aDeviceMode)
 {
-    otError error   = OT_ERROR_NONE;
-    uint8_t oldMode = mDeviceMode;
+    otError    error   = OT_ERROR_NONE;
+    DeviceMode oldMode = mDeviceMode;
 
-    VerifyOrExit((aDeviceMode & ModeTlv::kModeFullThreadDevice) == 0 || (aDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0,
-                 error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aDeviceMode.IsValid(), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(mDeviceMode != aDeviceMode);
-
-    otLogNoteMle("Mode 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ftd:%s, full-netdata:%s]", mDeviceMode, aDeviceMode,
-                 (aDeviceMode & ModeTlv::kModeRxOnWhenIdle) ? "yes" : " no",
-                 (aDeviceMode & ModeTlv::kModeSecureDataRequest) ? "yes" : " no",
-                 (aDeviceMode & ModeTlv::kModeFullThreadDevice) ? "yes" : "no",
-                 (aDeviceMode & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
-
     mDeviceMode = aDeviceMode;
+
+    otLogNoteMle("Mode 0x%02x -> 0x%02x [%s]", oldMode.Get(), mDeviceMode.Get(), mDeviceMode.ToString().AsCString());
 
     switch (mRole)
     {
@@ -852,7 +846,7 @@ otError Mle::SetDeviceMode(uint8_t aDeviceMode)
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if ((oldMode & ModeTlv::kModeFullThreadDevice) != 0 && (aDeviceMode & ModeTlv::kModeFullThreadDevice) == 0)
+        if (oldMode.IsFullThreadDevice() && !mDeviceMode.IsFullThreadDevice())
         {
             BecomeDetached();
         }
@@ -1151,7 +1145,7 @@ otError Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
     return aMessage.AppendTlv(tlv);
 }
 
-otError Mle::AppendMode(Message &aMessage, uint8_t aMode)
+otError Mle::AppendMode(Message &aMessage, DeviceMode aMode)
 {
     ModeTlv tlv;
 
@@ -3355,8 +3349,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
     mParentCandidate.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     mParentCandidate.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
-    mParentCandidate.SetDeviceMode(ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle |
-                                   ModeTlv::kModeFullNetworkData | ModeTlv::kModeSecureDataRequest);
+    mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                              DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
     mParentCandidate.GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     mParentCandidate.ResetLinkFailures();
