@@ -1174,14 +1174,4 @@ class HarnessCase(unittest.TestCase):
         logger.info(status)
         success = "Pass" in status
         self.assertTrue(success)
-            else:
-                self._collect_result()
-        except BaseException:
-            logger.exception("Failed to collect results")
-            raise
 
-        # get case result
-        status = self._browser.find_element_by_class_name("title-test").text
-        logger.info(status)
-        success = "Pass" in status
-        self.assertTrue(success)
