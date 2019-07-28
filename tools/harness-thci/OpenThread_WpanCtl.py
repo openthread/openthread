@@ -970,14 +970,6 @@ class OpenThread_WpanCtl(IThci):
                 'setNetworkName() Error: ' + str(e)
             )
 
-    def getNetworkName(self):
-        """get Thread Network name"""
-        print('%s call getNetworkname' % self.port)
-        networkName = self.__sendCommand(
-            WPANCTL_CMD + 'getprop -v Network:Name'
-        )[0]
-        return self.__stripValue(networkName)
-
     def setChannel(self, channel=15):
         """set channel of Thread device operates on.
 
@@ -1215,11 +1207,6 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger(
                 'setNetworkkey() Error: ' + str(e)
             )
-
-    def getNetworkKey(self):
-        """get the current Thread Network master key"""
-        print('%s call getNetwokKey' % self.port)
-        return self.networkKey
 
     def addBlockedMAC(self, xEUI):
         """add a given extended address to the blacklist entry
@@ -1631,11 +1618,6 @@ class OpenThread_WpanCtl(IThci):
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
-    def getPANID(self):
-        """get current Thread Network PAN ID"""
-        print('%s call getPANID' % self.port)
-        return self.__sendCommand(WPANCTL_CMD + 'getprop -v Network:PANID')[0]
-
     def reset(self):
         """factory reset"""
         print('%s call reset' % self.port)
@@ -1739,15 +1721,6 @@ class OpenThread_WpanCtl(IThci):
         """check if serial port connection is ready or not"""
         print('%s call getDeviceConnectionStatus' % self.port)
         return self.deviceConnected
-
-    def getPollingRate(self):
-        """get data polling rate for sleepy end device (in milliseconds)
-        note: not used for now
-        """
-        print('%s call getPollingRate' % self.port)
-        return self.__sendCommand(
-            WPANCTL_CMD + 'getprop -v NCP:SleepyPollInterval'
-        )[0]
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device

@@ -711,11 +711,6 @@ class OpenThread(IThci):
                 'setNetworkName() Error: ' + str(e)
             )
 
-    def getNetworkName(self):
-        """get Thread Network name"""
-        print('%s call getNetworkname' % self.port)
-        return self.__sendCommand('networkname')[0]
-
     def setChannel(self, channel=11):
         """set channel of Thread device operates on.
 
@@ -899,11 +894,6 @@ class OpenThread(IThci):
             ModuleHelper.WriteIntoDebugLogger(
                 'setNetworkkey() Error: ' + str(e)
             )
-
-    def getNetworkKey(self):
-        """get the current Thread Network master key"""
-        print('%s call getNetwokKey' % self.port)
-        return self.networkKey
 
     def addBlockedMAC(self, xEUI):
         """add a given extended address to the blacklist entry
@@ -1268,11 +1258,6 @@ class OpenThread(IThci):
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
-    def getPANID(self):
-        """get current Thread Network PAN ID"""
-        print('%s call getPANID' % self.port)
-        return self.__sendCommand('panid')[0]
-
     def reset(self):
         """factory reset"""
         print('%s call reset' % self.port)
@@ -1372,13 +1357,6 @@ class OpenThread(IThci):
         """check if serial port connection is ready or not"""
         print('%s call getDeviceConnectionStatus' % self.port)
         return self.deviceConnected
-
-    def getPollingRate(self):
-        """get data polling rate for sleepy end device (in milliseconds)
-        note: not used for now
-        """
-        print('%s call getPollingRate' % self.port)
-        return self.__sendCommand('pollperiod')[0]
 
     def setPollingRate(self, iPollingRate):
         """set data polling rate for sleepy end device
