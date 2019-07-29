@@ -528,9 +528,14 @@ otError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         break;
 
     case Message::kTypeSupervision:
-        SendEmptyFrame(aFrame, kSupervisionMsgAckRequest);
+        // A direct supervision message is possible in the case where
+        // a sleepy child switches its mode (becomes non-sleepy) while
+        // there is a pending indirect supervision message in the send
+        // queue for it. The message would be then converted to a
+        // direct tx.
         mMessageNextOffset = mSendMessage->GetLength();
-        break;
+        error              = OT_ERROR_ABORT;
+        ExitNow();
 
 #endif
     }
@@ -848,44 +853,6 @@ start:
     }
 
     return nextOffset;
-}
-
-void MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
-{
-    uint16_t     fcf;
-    uint8_t      secCtl;
-    Mac::Address macSource;
-
-    macSource.SetShort(Get<Mac::Mac>().GetShortAddress());
-
-    if (macSource.IsShortAddrInvalid())
-    {
-        macSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
-    }
-
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
-    fcf |= (mMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
-    fcf |= (macSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
-
-    if (aAckRequest)
-    {
-        fcf |= Mac::Frame::kFcfAckRequest;
-    }
-
-    fcf |= Mac::Frame::kFcfSecurityEnabled;
-    secCtl = Mac::Frame::kKeyIdMode1;
-    secCtl |= Mac::Frame::kSecEncMic32;
-
-    fcf |= Mac::Frame::kFcfPanidCompression;
-
-    aFrame.InitMacHeader(fcf, secCtl);
-
-    aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetDstAddr(mMacDest);
-    aFrame.SetSrcAddr(macSource);
-    aFrame.SetPayloadLength(0);
-    aFrame.SetFramePending(false);
 }
 
 Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::Frame &aFrame, otError aError, const Mac::Address &aMacDest)

@@ -312,21 +312,12 @@ private:
     {
         kStateUpdatePeriod  = 1000,                     ///< State update period in milliseconds.
         kDefaultMsgPriority = Message::kPriorityNormal, ///< Default message priority.
-    };
 
-    enum
-    {
         /**
          * The number of fragment priority entries.
          *
          */
         kNumFragmentPriorityEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
-
-        /**
-         * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
-         *
-         */
-        kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
     enum MessageAction ///< Defines the action parameter in `LogMessageInfo()` method.
@@ -394,7 +385,6 @@ private:
                               uint16_t            aMeshDest      = 0xffff);
 
     void    SendMesh(Message &aMessage, Mac::Frame &aFrame);
-    void    SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);
