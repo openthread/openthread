@@ -86,10 +86,6 @@ ifeq ($(DCDC),1)
 COMMONCFLAGS += -DDCDC_ENABLE
 endif
 
-ifneq ($(REFERENCE_DEVICE),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-endif
-
 #
 # Select transport which CLI, NCP and RCP examples will use to communicate.
 # To disable all transports use the DISABLE_TRANSPORTS switch. This will disable

@@ -86,10 +86,6 @@ COMMONCFLAGS                      := \
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
-ifneq ($(REFERENCE_DEVICE),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-endif
-
 ifeq ($(BOOTLOADER),1)
 configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
 COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
