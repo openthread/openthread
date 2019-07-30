@@ -28,72 +28,73 @@
 
 /**
  * @file
- *   This file includes definitions heap interface.
+ *   This file implements external heap.
  *
  */
 
-#ifndef OT_HEAP_HPP_
-#define OT_HEAP_HPP_
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+
+#include "heap.hpp"
+
+#include <openthread/instance.h>
 
 #include <stddef.h>
 #include <stdint.h>
 
+#include "common/debug.hpp"
+
 namespace ot {
 namespace Utils {
 
-/**
- * This class represents heap interface.
- *
- */
-class Heap
+static otHeapCAllocFn sCAlloc;
+static otHeapFreeFn   sFree;
+
+extern "C" void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
-public:
-    /**
-     * This constructor initializes the heap interface object.
-     *
-     */
-    Heap(void);
+    sCAlloc = aCAlloc;
+    sFree   = aFree;
+}
 
-    /**
-     * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
-     *
-     * @param[in]   aCount  Number of allocate units.
-     * @param[in]   aSize   Unit size in bytes.
-     *
-     * @returns A pointer to the allocated memory.
-     *
-     * @retval  NULL    Indicates not enough memory.
-     *
-     */
-    void *CAlloc(size_t aCount, size_t aSize);
+Heap::Heap(void)
+{
+    // Intentionally empty.
+}
 
-    /**
-     * This method free memory pointed by @p aPointer.
-     *
-     * @param[in]   aPointer    A pointer to the memory to free.
-     *
-     */
-    void Free(void *aPointer);
+void *Heap::CAlloc(size_t aCount, size_t aSize)
+{
+    assert(sCAlloc != NULL);
 
-    /**
-     * This method returns whether the heap is clean.
-     *
-     */
-    bool IsClean(void) const;
+    return sCAlloc(aCount, aSize);
+}
 
-    /**
-     * This method returns the capacity of this heap.
-     *
-     */
-    size_t GetCapacity(void) const;
+void Heap::Free(void *aPointer)
+{
+    assert(sFree != NULL);
 
-    /**
-     * This method returns free space of this heap.
-     */
-    size_t GetFreeSize(void) const;
-};
+    sFree(aPointer);
+}
+
+bool Heap::IsClean(void) const
+{
+    // Dummy implementation
+    return false;
+}
+
+size_t Heap::GetCapacity(void) const
+{
+    // Dummy implementation
+    return 0;
+}
+
+size_t Heap::GetFreeSize(void) const
+{
+    // Dummy implementation
+    return 0;
+}
 
 } // namespace Utils
 } // namespace ot
 
-#endif // OT_HEAP_HPP_
+#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES

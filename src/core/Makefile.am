@@ -224,7 +224,8 @@ SOURCES_COMMON                             = \
     utils/channel_manager.cpp                \
     utils/channel_monitor.cpp                \
     utils/child_supervision.cpp              \
-    utils/heap.cpp                           \
+    utils/external_heap.cpp                  \
+    utils/internal_heap.cpp                  \
     utils/jam_detector.cpp                   \
     utils/missing_strlcat.c                  \
     utils/missing_strlcpy.c                  \
@@ -427,6 +428,7 @@ HEADERS_COMMON                             = \
     utils/channel_manager.hpp                \
     utils/channel_monitor.hpp                \
     utils/child_supervision.hpp              \
+    utils/internal_heap.hpp                  \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \
     utils/parse_cmdline.hpp                  \

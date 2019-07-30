@@ -60,6 +60,7 @@ SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
+EXTERNAL_HEAP       ?= 0
 
 
 ifeq ($(BIG_ENDIAN),1)
@@ -184,6 +185,10 @@ ifeq ($(UDP_FORWARD),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
 endif
 
+ifeq ($(EXTERNAL_HEAP),1)
+    COMMONCFLAGS               += -DOPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE=1
+endif
+
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
 configure_OPTIONS              += --disable-builtin-mbedtls
 endif
@@ -228,4 +233,3 @@ endif
 
 CFLAGS += ${LOG_FLAGS}
 CXXFLAGS += ${LOG_FLAGS}
-
