@@ -180,6 +180,9 @@ RadioSpinel::RadioSpinel(void)
     , mDiagOutput(NULL)
     , mDiagOutputMaxLen(0)
 #endif
+#if OPENTHREAD_CONFIG_48BIT_TIMESTAMP_SUPPORT_ENABLE
+    , mTimestampType(kTimestampTypeUnknown)
+#endif
     , mTxRadioEndUs(UINT64_MAX)
 {
     mVersion[0] = '\0';
@@ -612,29 +615,73 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     otError        error        = OT_ERROR_NONE;
     uint16_t       flags        = 0;
     int8_t         noiseFloor   = -128;
-    uint32_t       msec         = 0;
-    uint16_t       usec         = 0;
     spinel_size_t  size         = OT_RADIO_FRAME_MAX_SIZE;
     unsigned int   receiveError = 0;
-    spinel_ssize_t unpacked;
+    spinel_ssize_t unpacked     = -1;
 
-    // Timestamp is ms + us.
-    unpacked =
-        spinel_datatype_unpack_in_place(aBuffer, aLength,
-                                        SPINEL_DATATYPE_DATA_WLEN_S                              // Frame
-                                                        SPINEL_DATATYPE_INT8_S                   // RSSI
-                                                        SPINEL_DATATYPE_INT8_S                   // Noise Floor
-                                                        SPINEL_DATATYPE_UINT16_S                 // Flags
-                                                        SPINEL_DATATYPE_STRUCT_S(                // PHY-data
-                                                            SPINEL_DATATYPE_UINT8_S              // 802.15.4 channel
-                                                                        SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
-                                                                        SPINEL_DATATYPE_UINT32_S // Timestamp (ms).
-                                                                        SPINEL_DATATYPE_UINT16_S // Timestamp (us).
-                                                            ) SPINEL_DATATYPE_STRUCT_S(          // Vendor-data
-                                                            SPINEL_DATATYPE_UINT_PACKED_S        // Receive error
-                                                            ),
-                                        aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags,
-                                        &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi, &msec, &usec, &receiveError);
+#if OPENTHREAD_CONFIG_48BIT_TIMESTAMP_SUPPORT_ENABLE
+    if (mTimestampType == kTimestampType64 || mTimestampType == kTimestampTypeUnknown)
+#endif
+    {
+        unpacked = spinel_datatype_unpack_in_place(
+            aBuffer, aLength,
+            SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
+                            SPINEL_DATATYPE_INT8_S               // RSSI
+                            SPINEL_DATATYPE_INT8_S               // Noise Floor
+                            SPINEL_DATATYPE_UINT16_S             // Flags
+                            SPINEL_DATATYPE_STRUCT_S(            // PHY-data
+                                SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
+                                        SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                        SPINEL_DATATYPE_UINT64_S // Timestamp (us).
+                                ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
+                                SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
+                                ),
+            aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags, &aFrame.mChannel,
+            &aFrame.mInfo.mRxInfo.mLqi, &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
+    }
+
+#if OPENTHREAD_CONFIG_48BIT_TIMESTAMP_SUPPORT_ENABLE
+    if (unpacked > 0)
+    {
+        if (mTimestampType == kTimestampTypeUnknown)
+        {
+            mTimestampType = kTimestampType64;
+        }
+    }
+    else if (mTimestampType == kTimestampType48 || mTimestampType == kTimestampTypeUnknown)
+    {
+        uint32_t msec = 0;
+        uint16_t usec = 0;
+
+        unpacked = spinel_datatype_unpack_in_place(
+            aBuffer, aLength,
+            SPINEL_DATATYPE_DATA_WLEN_S                              // Frame
+                            SPINEL_DATATYPE_INT8_S                   // RSSI
+                            SPINEL_DATATYPE_INT8_S                   // Noise Floor
+                            SPINEL_DATATYPE_UINT16_S                 // Flags
+                            SPINEL_DATATYPE_STRUCT_S(                // PHY-data
+                                SPINEL_DATATYPE_UINT8_S              // 802.15.4 channel
+                                            SPINEL_DATATYPE_UINT8_S  // 802.15.4 LQI
+                                            SPINEL_DATATYPE_UINT32_S // Timestamp ms part.
+                                            SPINEL_DATATYPE_UINT16_S // Timestamp us part.
+                                ) SPINEL_DATATYPE_STRUCT_S(          // Vendor-data
+                                SPINEL_DATATYPE_UINT_PACKED_S        // Receive error
+                                ),
+            aFrame.mPsdu, &size, &aFrame.mInfo.mRxInfo.mRssi, &noiseFloor, &flags, &aFrame.mChannel,
+            &aFrame.mInfo.mRxInfo.mLqi, &msec, &usec, &receiveError);
+
+        if (unpacked > 0)
+        {
+            aFrame.mInfo.mRxInfo.mTimestamp = msec * 1000 + usec;
+
+            if (mTimestampType == kTimestampTypeUnknown)
+            {
+                otLogWarnPlat("Deprecated RCP version! Please upgrade to the latest OpenThread!");
+                mTimestampType = kTimestampType48;
+            }
+        }
+    }
+#endif // OPENTHREAD_CONFIG_48BIT_TIMESTAMP_SUPPORT_ENABLE
 
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
@@ -642,7 +689,6 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffe
     {
         aFrame.mLength = static_cast<uint8_t>(size);
 
-        aFrame.mInfo.mRxInfo.mTimestamp             = msec * 1000 + usec;
         aFrame.mInfo.mRxInfo.mAckedWithFramePending = ((flags & SPINEL_MD_FLAG_ACKED_FP) != 0);
     }
     else if (receiveError < OT_NUM_ERRORS)

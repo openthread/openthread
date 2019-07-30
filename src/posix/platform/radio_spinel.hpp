@@ -617,11 +617,21 @@ private:
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
-
 #if OPENTHREAD_ENABLE_DIAG
     bool   mDiagMode;
     char * mDiagOutput;
     size_t mDiagOutputMaxLen;
+#endif
+
+#if OPENTHREAD_CONFIG_48BIT_TIMESTAMP_SUPPORT_ENABLE
+    enum TimestampType
+    {
+        kTimestampTypeUnknown = 0,
+        kTimestampType48      = 1,
+        kTimestampType64      = 2,
+    };
+
+    TimestampType mTimestampType; ///< STREAM_RAW timestamp type.
 #endif
 
     uint64_t mTxRadioEndUs;
