@@ -319,7 +319,7 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
 {
     otError          error             = OT_ERROR_NONE;
     Mac::ChannelMask supportedChannels = Get<Mac::Mac>().GetSupportedChannelMask();
-    Mac::ChannelMask preferredChannels(otPlatRadioGetPreferredChannelMask(&GetInstance()));
+    Mac::ChannelMask preferredChannels(Get<Radio>().GetPreferredChannelMask());
 
     memset(&aDataset, 0, sizeof(aDataset));
 

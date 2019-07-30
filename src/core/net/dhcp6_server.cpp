@@ -375,7 +375,7 @@ otError Dhcp6Server::AppendServerIdentifier(Message &aMessage)
     ServerIdentifier option;
     Mac::ExtAddress  eui64;
 
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    Get<Radio>().GetIeeeEui64(eui64);
 
     option.Init();
     option.SetDuidType(kDuidLL);
