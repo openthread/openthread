@@ -61,6 +61,7 @@ Instance::Instance(void)
     , mMbedTls()
 #endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mRandomManager()
+    , mRadio(*this)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mSettings(*this)

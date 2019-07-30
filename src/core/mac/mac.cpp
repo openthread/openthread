@@ -95,7 +95,7 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
-    , mSupportedChannelMask(otPlatRadioGetSupportedChannelMask(&aInstance))
+    , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -435,7 +435,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(otPlatRadioGetSupportedChannelMask(&GetInstance())));
+    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
     VerifyOrExit(newMask != mSupportedChannelMask, Get<Notifier>().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;
@@ -1846,7 +1846,7 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
     mPromiscuous = aPromiscuous;
-    otPlatRadioSetPromiscuous(&GetInstance(), aPromiscuous);
+    Get<Radio>().SetPromiscuous(aPromiscuous);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelayingSleep    = false;
@@ -1864,7 +1864,7 @@ void Mac::ResetCounters(void)
 
 int8_t Mac::GetNoiseFloor(void)
 {
-    return otPlatRadioGetReceiveSensitivity(&GetInstance());
+    return Get<Radio>().GetReceiveSensitivity();
 }
 
 // LCOV_EXCL_START

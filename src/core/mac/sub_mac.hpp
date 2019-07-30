@@ -37,11 +37,11 @@
 #include "openthread-core-config.h"
 
 #include <openthread/link.h>
-#include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 
