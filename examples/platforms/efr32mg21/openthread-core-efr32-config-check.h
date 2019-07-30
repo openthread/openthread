@@ -29,6 +29,10 @@
 #ifndef OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
 #define OPENTHREAD_CORE_EFR32_CONFIG_CHECK_H_
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error "Platform efr32mg21 doesn't support configuration option: OPENTHREAD_CONFIG_ENABLE_TIME_SYNC"
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #error "Platform efr32mg21 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
 #endif
