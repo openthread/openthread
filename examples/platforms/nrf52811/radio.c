@@ -86,7 +86,6 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
-static otRadioIeInfo sReceivedIeInfos[NRF_802154_RX_BUFFERS];
 #endif
 static otInstance *sInstance = NULL;
 
@@ -118,7 +117,7 @@ static void dataInit(void)
 
     sTransmitFrame.mPsdu = sTransmitPsdu + 1;
 #if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    sTransmitFrame.mIeInfo = &sTransmitIeInfo;
+    sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
 #endif
 
     sReceiveError = OT_ERROR_NONE;
@@ -712,9 +711,6 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
             receivedFrame = &sReceivedFrames[i];
 
             memset(receivedFrame, 0, sizeof(*receivedFrame));
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-            receivedFrame->mIeInfo = &sReceivedIeInfos[i];
-#endif
             break;
         }
     }
@@ -737,17 +733,16 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
         receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
     }
 
-    if (otPlatRadioGetPromiscuous(sInstance))
-    {
-        uint64_t timestamp                 = nrf5AlarmGetCurrentTime();
-        receivedFrame->mInfo.mRxInfo.mMsec = timestamp / US_PER_MS;
-        receivedFrame->mInfo.mRxInfo.mUsec = timestamp - receivedFrame->mInfo.mRxInfo.mMsec * US_PER_MS;
-    }
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
     // Get the timestamp when the SFD was received.
     uint32_t offset =
         (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
-    receivedFrame->mIeInfo->mTimestamp = otPlatTimeGet() - offset;
+    receivedFrame->mInfo.mRxInfo.mTimestamp = otPlatTimeGet() - offset;
+#else
+    if (otPlatRadioGetPromiscuous(sInstance))
+    {
+        receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime();
+    }
 #endif
 
     sAckedWithFramePending = false;
@@ -859,12 +854,12 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     assert(aFrame == sTransmitPsdu);
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
+    if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
-        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
-        uint64_t time   = otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset;
+        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+        uint64_t time   = otPlatTimeGet() + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
 
-        *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
+        *timeIe = sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
 
         *(++timeIe) = (uint8_t)(time & 0xff);
         for (uint8_t i = 1; i < sizeof(uint64_t); i++)

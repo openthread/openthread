@@ -1659,17 +1659,6 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
     Get<DataPollSender>().CheckFramePending(*aFrame);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-
-    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
-    {
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-        ProcessTimeIe(*aFrame);
-#endif
-    }
-
-#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-
     if (neighbor != NULL)
     {
 #if OPENTHREAD_ENABLE_MAC_FILTER
@@ -1994,26 +1983,13 @@ void Mac::LogFrameTxFailure(const Frame &, otError, uint8_t) const
 // LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-void Mac::ProcessTimeIe(Frame &aFrame)
-{
-    TimeIe *timeIe = reinterpret_cast<TimeIe *>(aFrame.GetTimeIe());
-
-    VerifyOrExit(timeIe != NULL);
-
-    aFrame.SetNetworkTimeOffset(static_cast<int64_t>(timeIe->GetTime()) - static_cast<int64_t>(aFrame.GetTimestamp()));
-    aFrame.SetTimeSyncSeq(timeIe->GetSequence());
-
-exit:
-    return;
-}
-
 uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
 {
-    uint8_t  offset = 0;
-    uint8_t *base   = aFrame.GetPsdu();
-    uint8_t *cur    = NULL;
+    uint8_t        offset = 0;
+    const uint8_t *base   = aFrame.GetPsdu();
+    const uint8_t *cur    = NULL;
 
-    cur = aFrame.GetTimeIe();
+    cur = reinterpret_cast<const uint8_t *>(aFrame.GetTimeIe());
     VerifyOrExit(cur != NULL);
 
     cur += sizeof(VendorIeHeader);

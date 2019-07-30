@@ -29,10 +29,6 @@
 #ifndef OPENTHREAD_CORE_SAMR21_CONFIG_CHECK_H_
 #define OPENTHREAD_CORE_SAMR21_CONFIG_CHECK_H_
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-#error "Platform samr21 doesn't support configuration option: OPENTHREAD_CONFIG_ENABLE_TIME_SYNC"
-#endif
-
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #error "Platform samr21 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
 #endif

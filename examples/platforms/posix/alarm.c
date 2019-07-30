@@ -300,12 +300,12 @@ void platformAlarmProcess(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 uint64_t otPlatTimeGet(void)
 {
     return platformGetNow();
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;

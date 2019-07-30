@@ -1896,11 +1896,16 @@ static void cc1352RadioProcessReceiveQueue(otInstance *aInstance)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-                // TODO: Propagate CM0 timestamp
-                receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-                receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
+                if (otPlatRadioGetPromiscuous(aInstance))
 #endif
+                {
+                    // TODO: Propagate CM0 timestamp
+                    // The current driver only supports milliseconds resolution.
+                    receiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
+                }
 
                 receiveFrame.mLength             = len;
                 receiveFrame.mPsdu               = &(payload[1]);

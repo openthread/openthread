@@ -1011,11 +1011,13 @@ exit:
 #endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-const uint8_t *Frame::GetTimeIe(void) const
+const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe * timeIe       = NULL;
-    const uint8_t *cur          = NULL;
-    uint8_t oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+    const TimeIe * timeIe                              = NULL;
+    const uint8_t *cur                                 = NULL;
+    uint8_t        oui[VendorIeHeader::kVendorOuiSize] = {VendorIeHeader::kVendorOuiNest & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
     VerifyOrExit(cur != NULL);
@@ -1023,29 +1025,33 @@ const uint8_t *Frame::GetTimeIe(void) const
     cur += sizeof(HeaderIe);
 
     timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
-    VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), VendorIeHeader::kVendorOuiSize) == 0, timeIe = NULL);
+    VerifyOrExit(timeIe->GetSubType() == VendorIeHeader::kVendorIeTime, timeIe = NULL);
 
 exit:
-    return cur;
+    return timeIe;
 }
 #endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 
 void Frame::CopyFrom(const Frame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mIeInfo;
+    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
 
     memcpy(this, &aFromFrame, sizeof(Frame));
 
     // Set the original buffer pointers back on the frame
     // which were overwritten by above `memcpy()`.
 
-    mPsdu   = psduBuffer;
-    mIeInfo = ieInfoBuffer;
+    mPsdu                 = psduBuffer;
+    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
-    memcpy(mIeInfo, aFromFrame.mIeInfo, sizeof(otRadioIeInfo));
+
+    // mIeInfo may be null when TIME_SYNC is not enabled.
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
+#endif
 }
 
 uint16_t Frame::GetMtu(void) const
