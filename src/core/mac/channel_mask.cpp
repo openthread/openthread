@@ -58,10 +58,10 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
     if (aChannel == kChannelIteratorFirst)
     {
-        aChannel = (Phy::kChannelMin - 1);
+        aChannel = (Radio::kChannelMin - 1);
     }
 
-    for (aChannel++; aChannel <= Phy::kChannelMax; aChannel++)
+    for (aChannel++; aChannel <= Radio::kChannelMax; aChannel++)
     {
         if (ContainsChannel(aChannel))
         {

@@ -27,12 +27,12 @@
 
 /**
  * @file
- *   This file implements the default radio platform APIs.
+ *   This file implements the default/weak radio platform APIs.
  */
 
-#include <openthread/platform/radio.h>
+#include <openthread/instance.h>
 
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 using namespace ot;
 
@@ -40,10 +40,16 @@ OT_TOOL_WEAK uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return Phy::kSupportedChannels;
+    return Radio::kSupportedChannels;
 }
 
 OT_TOOL_WEAK uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     return otPlatRadioGetSupportedChannelMask(aInstance);
+}
+
+OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return otGetVersionString();
 }

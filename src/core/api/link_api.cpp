@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "mac/mac.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 using namespace ot;
 

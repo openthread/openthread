@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file includes definitions for the IEEE 802.15.4 PHY.
+ *   This file includes definitions for OpenThread definition of radio abstraction.
  */
 
-#ifndef PHY_HPP_
-#define PHY_HPP_
+#ifndef RADIO_HPP_
+#define RADIO_HPP_
 
 #include "openthread-core-config.h"
 
@@ -43,16 +43,16 @@
 namespace ot {
 
 /**
- * @addtogroup core-phy
+ * @addtogroup core-radio
  *
  * @brief
- *   This module includes definitions for the IEEE 802.15.4 PHY
+ *   This module includes definitions for OpenThread radio abstraction.
  *
  * @{
  *
  */
 
-namespace Phy {
+namespace Radio {
 
 /**
  * This enumeration defines the IEEE 802.15.4 channel related parameters.
@@ -84,7 +84,7 @@ enum
 OT_STATIC_ASSERT((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
                  "must be set to 1 to specify the radio mode");
-} // namespace Phy
+} // namespace Radio
 } // namespace ot
 
-#endif // PHY_HPP_
+#endif // RADIO_HPP_
