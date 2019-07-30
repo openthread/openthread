@@ -422,7 +422,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kChannelPages:
         {
             uint8_t         length   = 0;
-            uint8_t         pageMask = Phy::kSupportedChannelPages;
+            uint8_t         pageMask = Radio::kSupportedChannelPages;
             ChannelPagesTlv tlv;
 
             tlv.Init();

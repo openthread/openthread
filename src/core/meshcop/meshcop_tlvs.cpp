@@ -121,8 +121,8 @@ bool ChannelTlv::IsValid(void) const
 
     VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
     VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX);
-    VerifyOrExit((1U << mChannelPage) & Phy::kSupportedChannelPages);
-    VerifyOrExit(Phy::kChannelMin <= GetChannel() && GetChannel() <= Phy::kChannelMax);
+    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
+    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
     ret = true;
 
 exit:

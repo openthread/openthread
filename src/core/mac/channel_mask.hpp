@@ -40,7 +40,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/string.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "utils/static_assert.hpp"
 
 namespace ot {
@@ -252,7 +252,7 @@ public:
     InfoString ToString(void) const;
 
 private:
-    OT_STATIC_ASSERT((Phy::kChannelMin < 32) && (Phy::kChannelMax < 32),
+    OT_STATIC_ASSERT((Radio::kChannelMin < 32) && (Radio::kChannelMax < 32),
                      "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     uint32_t mMask;
 };

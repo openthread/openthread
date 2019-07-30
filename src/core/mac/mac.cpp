@@ -46,7 +46,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -96,7 +96,7 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
     , mSupportedChannelMask(otPlatRadioGetSupportedChannelMask(&aInstance))
-    , mScanChannel(Phy::kChannelMin)
+    , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */

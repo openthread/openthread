@@ -155,9 +155,3 @@ const char *otGetRadioVersionString(otInstance *aInstance)
 {
     return otPlatRadioGetVersionString(aInstance);
 }
-
-OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return otGetVersionString();
-}

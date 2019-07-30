@@ -41,7 +41,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
 #include "utils/wrap_string.h"
 
@@ -71,7 +71,7 @@ void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, siz
     VerifyOrExit(aArgCount == 1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = ParseLong(aArgVector[0], value));
-    VerifyOrExit(value >= Phy::kChannelMin && value <= Phy::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(value >= Radio::kChannelMin && value <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
     mChannel = static_cast<uint8_t>(value);
     otPlatDiagChannelSet(mChannel);
@@ -172,7 +172,7 @@ void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, siz
         long value;
 
         SuccessOrExit(error = ParseLong(aArgVector[0], value));
-        VerifyOrExit(value >= Phy::kChannelMin && value <= Phy::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(value >= Radio::kChannelMin && value <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
         mChannel = static_cast<uint8_t>(value);
         otPlatRadioReceive(&GetInstance(), mChannel);
