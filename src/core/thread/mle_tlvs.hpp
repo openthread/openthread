@@ -43,6 +43,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 
 namespace ot {
@@ -245,21 +246,13 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
-    enum
-    {
-        kModeRxOnWhenIdle      = 1 << 3,
-        kModeSecureDataRequest = 1 << 2,
-        kModeFullThreadDevice  = 1 << 1,
-        kModeFullNetworkData   = 1 << 0,
-    };
-
     /**
      * This method returns the Mode value.
      *
      * @returns The Mode value.
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    DeviceMode GetMode(void) const { return DeviceMode(mMode); }
 
     /**
      * This method sets the Mode value.
@@ -267,7 +260,7 @@ public:
      * @param[in]  aMode  The Mode value.
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(DeviceMode aMode) { mMode = aMode.Get(); }
 
 private:
     uint8_t mMode;

@@ -40,6 +40,7 @@
 #include "common/message.hpp"
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {
@@ -193,7 +194,7 @@ public:
      * @param[in]  aOldMode  The old device mode of the child.
      *
      */
-    void HandleChildModeChange(Child &aChild, uint8_t aOldMode);
+    void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
 private:
     enum

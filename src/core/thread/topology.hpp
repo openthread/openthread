@@ -42,6 +42,7 @@
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -113,7 +114,7 @@ public:
      * @returns The device mode flags.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mMode; }
+    Mle::DeviceMode GetDeviceMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
      * This method sets the device mode flags.
@@ -121,7 +122,7 @@ public:
      * @param[in]  aMode  The device mode flags.
      *
      */
-    void SetDeviceMode(uint8_t aMode) { mMode = aMode; }
+    void SetDeviceMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -129,7 +130,7 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return (mMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0; }
+    bool IsRxOnWhenIdle(void) const { return GetDeviceMode().IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -137,7 +138,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mMode & Mle::ModeTlv::kModeFullThreadDevice) != 0; }
+    bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -145,7 +146,7 @@ public:
      * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
      *
      */
-    bool IsSecureDataRequest(void) const { return (mMode & Mle::ModeTlv::kModeSecureDataRequest) != 0; }
+    bool IsSecureDataRequest(void) const { return GetDeviceMode().IsSecureDataRequest(); }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -153,7 +154,7 @@ public:
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
      *
      */
-    bool IsFullNetworkData(void) const { return (mMode & Mle::ModeTlv::kModeFullNetworkData) != 0; }
+    bool IsFullNetworkData(void) const { return GetDeviceMode().IsFullNetworkData(); }
 
     /**
      * This method sets all bytes of the Extended Address to zero.

@@ -42,6 +42,7 @@
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "net/udp6.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -631,7 +632,7 @@ public:
      * @returns The Device Mode as reported in the Mode TLV.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mDeviceMode; }
+    DeviceMode GetDeviceMode(void) const { return mDeviceMode; }
 
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
@@ -642,7 +643,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
      *
      */
-    otError SetDeviceMode(uint8_t aDeviceMode);
+    otError SetDeviceMode(DeviceMode aDeviceMode);
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -650,7 +651,7 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0; }
+    bool IsRxOnWhenIdle(void) const { return mDeviceMode.IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -658,7 +659,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFullThreadDevice) != 0; }
+    bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -666,7 +667,7 @@ public:
      * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
      *
      */
-    bool IsSecureDataRequest(void) const { return (mDeviceMode & ModeTlv::kModeSecureDataRequest) != 0; }
+    bool IsSecureDataRequest(void) const { return mDeviceMode.IsSecureDataRequest(); }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -674,7 +675,7 @@ public:
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
      *
      */
-    bool IsFullNetworkData(void) const { return (mDeviceMode & ModeTlv::kModeFullNetworkData) != 0; }
+    bool IsFullNetworkData(void) const { return mDeviceMode.IsFullNetworkData(); }
 
     /**
      * This method indicates whether or not the device is a Minimal End Device.
@@ -682,11 +683,7 @@ public:
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      *
      */
-    bool IsMinimalEndDevice(void) const
-    {
-        return (mDeviceMode & (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle)) !=
-               (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle);
-    }
+    bool IsMinimalEndDevice(void) const { return mDeviceMode.IsMinimalEndDevice(); }
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -1177,13 +1174,13 @@ protected:
      * This method appends a Mode TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aMode     The Device Mode value.
+     * @param[in]  aMode     The Device Mode.
      *
      * @retval OT_ERROR_NONE     Successfully appended the Mode TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Mode TLV.
      *
      */
-    otError AppendMode(Message &aMessage, uint8_t aMode);
+    otError AppendMode(Message &aMessage, DeviceMode aMode);
 
     /**
      * This method appends a Timeout TLV to a message.
@@ -1643,7 +1640,7 @@ protected:
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     otDeviceRole  mRole;                     ///< Current Thread role.
     Router        mParent;                   ///< Parent information.
-    uint8_t       mDeviceMode;               ///< Device mode setting.
+    DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The parent request state.
     ReattachState mReattachState;            ///< Reattach state
     uint16_t      mAttachCounter;            ///< Attach attempt counter.

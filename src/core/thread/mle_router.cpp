@@ -81,7 +81,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
 {
-    mDeviceMode |= ModeTlv::kModeFullThreadDevice | ModeTlv::kModeFullNetworkData;
+    mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
     SetRouterId(kInvalidRouterId);
 }
@@ -974,7 +974,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     router->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     router->SetLastHeard(TimerMilli::GetNow());
-    router->SetDeviceMode(ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData);
+    router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                     DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
     router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
@@ -2134,7 +2135,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
         VerifyOrExit(pendingTimestamp.IsValid(), error = OT_ERROR_PARSE);
     }
 
-    if ((mode.GetMode() & ModeTlv::kModeFullThreadDevice) == 0)
+    if (!mode.GetMode().IsFullThreadDevice())
     {
         SuccessOrExit(error = Tlv::GetOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset));
         SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
@@ -2164,7 +2165,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
-    if (mode.GetMode() & ModeTlv::kModeFullNetworkData)
+    if (mode.GetMode().IsFullNetworkData())
     {
         child->SetNetworkDataVersion(mLeaderData.GetDataVersion());
     }
@@ -2225,7 +2226,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     LeaderDataTlv   leaderData;
     TimeoutTlv      timeout;
     Child *         child;
-    uint8_t         oldMode;
+    DeviceMode      oldMode;
     TlvRequestTlv   tlvRequest;
     uint8_t         tlvs[kMaxResponseTlvs];
     uint8_t         tlvslength                = 0;
@@ -2249,7 +2250,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     if (child == NULL || child->GetState() == Neighbor::kStateInvalid)
     {
         // For invalid non-sleepy child, Send Child Update Response with status TLV (error)
-        if (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle)
+        if (mode.GetMode().IsRxOnWhenIdle())
         {
             tlvs[tlvslength++] = Tlv::kStatus;
             SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
@@ -2325,12 +2326,8 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
     if (oldMode != child->GetDeviceMode())
     {
-        otLogNoteMle("Child 0x%04x mode change 0x%02x -> 0x%02x [rx-on:%s, sec-data-req:%s, ftd:%s, full-netdata:%s]",
-                     child->GetRloc16(), oldMode, mode.GetMode(),
-                     (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) ? "yes" : "no",
-                     (mode.GetMode() & ModeTlv::kModeSecureDataRequest) ? "yes" : "no",
-                     (mode.GetMode() & ModeTlv::kModeFullThreadDevice) ? "yes" : "no",
-                     (mode.GetMode() & ModeTlv::kModeFullNetworkData) ? "yes" : "no");
+        otLogNoteMle("Child 0x%04x mode change 0x%02x -> 0x%02x [%s]", child->GetRloc16(), oldMode.Get(),
+                     child->GetDeviceMode().Get(), child->GetDeviceMode().ToString().AsCString());
 
         childDidChange = true;
 
@@ -3156,7 +3153,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
             Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
 
-            if (aNeighbor.GetDeviceMode() & ModeTlv::kModeFullThreadDevice)
+            if (aNeighbor.IsFullThreadDevice())
             {
                 // Clear all EID-to-RLOC entries associated with the child.
                 Get<AddressResolver>().Remove(aNeighbor.GetRloc16());
@@ -3524,7 +3521,7 @@ void MleRouter::RestoreChildren(void)
         child->GetLinkInfo().Clear();
         child->SetRloc16(childInfo.mRloc16);
         child->SetTimeout(childInfo.mTimeout);
-        child->SetDeviceMode(childInfo.mMode);
+        child->SetDeviceMode(DeviceMode(childInfo.mMode));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
@@ -3572,7 +3569,7 @@ otError MleRouter::StoreChild(const Child &aChild)
     childInfo.mExtAddress = aChild.GetExtAddress();
     childInfo.mTimeout    = aChild.GetTimeout();
     childInfo.mRloc16     = aChild.GetRloc16();
-    childInfo.mMode       = aChild.GetDeviceMode();
+    childInfo.mMode       = aChild.GetDeviceMode().Get();
 
     return Get<Settings>().AddChildInfo(childInfo);
 }
