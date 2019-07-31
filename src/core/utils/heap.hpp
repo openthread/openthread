@@ -35,6 +35,8 @@
 #ifndef OT_HEAP_HPP_
 #define OT_HEAP_HPP_
 
+#include <openthread/instance.h>
+
 #include <stddef.h>
 #include <stdint.h>
 

@@ -49,6 +49,14 @@ namespace Utils {
 
 static InternalHeap sHeap;
 
+extern "C" void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+{
+    OT_UNUSED_VARIABLE(aCAlloc);
+    OT_UNUSED_VARIABLE(aFree);
+
+    // Intentionally empty.
+}
+
 void InternalHeap::Init(void)
 {
     Block &super = BlockAt(kSuperBlockOffset);

@@ -236,8 +236,6 @@ const char *otGetVersionString(void);
  */
 const char *otGetRadioVersionString(otInstance *aInstance);
 
-#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
-
 /**
  * Function pointer used to set external CAlloc function for OpenThread.
  */
@@ -259,8 +257,6 @@ typedef void *(*otHeapFreeFn)(void *aPointer);
  *
  */
 void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
-
-#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
 
 /**
  * @}

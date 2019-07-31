@@ -38,8 +38,6 @@
 
 #include "heap.hpp"
 
-#include <openthread/instance.h>
-
 #include <stddef.h>
 #include <stdint.h>
 
