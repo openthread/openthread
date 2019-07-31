@@ -82,12 +82,10 @@ $ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli-ftd 2
 ```
 
-Configure Thread Master Key and PAN ID from Node 1's Active Operational Dataset:
+Configure Thread Master Key from Node 1's Active Operational Dataset:
 
 ```bash
 > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
-Done
-> dataset panid 0x8f28
 Done
 > dataset commit active
 Done

@@ -66,10 +66,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
 
 ### Attach to Existing Network
 
-The minimum set of parameters required for a device to attach a Thread network are:
-
-* Master Key
-* PAN ID
+Only the Master Key is required for a device to attach to a Thread network.
 
 While not required, specifying the channel avoids the need to search across multiple channels, improving both latency and efficiency of the attach process.
 
@@ -78,8 +75,6 @@ After the device successfully attaches to a Thread network, the device will retr
 1. Create a partial Active Operational Dataset.
 
     ```bash
-    > dataset panid 0x8f28
-    Done
     > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
     Done
     > dataset commit active

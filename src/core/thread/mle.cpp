@@ -243,6 +243,20 @@ otError Mle::Start(bool aAnnounceAttach)
     VerifyOrExit(otPlatRadioGetPromiscuous(&GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 
+    if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
+    {
+        // if PAN ID is not configured, pick a random one to start
+
+        uint16_t panid;
+
+        do
+        {
+            panid = Random::NonCrypto::GetUint16();
+        } while (panid == Mac::kPanIdBroadcast);
+
+        Get<Mac::Mac>().SetPanId(panid);
+    }
+
     SetStateDetached();
 
     ApplyMeshLocalPrefix();
