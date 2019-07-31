@@ -36,8 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openthread/instance.h>
-#include <openthread/link.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -58,9 +58,9 @@ const struct Diags::Command Diags::sCommands[] = {
     {"stop", &Diags::ProcessStop},
 };
 
-Diags::Diags(otInstance &aInstance)
+Diags::Diags(Instance &aInstance)
+    : InstanceLocator(aInstance)
 {
-    mInstance = &aInstance;
 }
 
 void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
@@ -141,18 +141,18 @@ const struct Diags::Command Diags::sCommands[] = {
     {"stats", &Diags::ProcessStats},     {"stop", &Diags::ProcessStop},
 };
 
-Diags::Diags(otInstance &aInstance)
+Diags::Diags(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTxPower(0)
+    , mChannel(20)
+    , mTxLen(0)
+    , mTxPeriod(0)
+    , mTxPackets(0)
+    , mTxPacket(otPlatRadioGetTransmitBuffer(&aInstance))
+    , mRepeatActive(false)
 {
-    mInstance     = &aInstance;
-    mChannel      = 20;
-    mTxPower      = 0;
-    mTxPeriod     = 0;
-    mTxLen        = 0;
-    mTxPackets    = 0;
-    mRepeatActive = false;
     memset(&mStats, 0, sizeof(mStats));
 
-    mTxPacket = otPlatRadioGetTransmitBuffer(mInstance);
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
 }
@@ -175,7 +175,7 @@ void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, siz
         VerifyOrExit(value >= Phy::kChannelMin && value <= Phy::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
         mChannel = static_cast<uint8_t>(value);
-        otPlatRadioReceive(mInstance, mChannel);
+        otPlatRadioReceive(&GetInstance(), mChannel);
         otPlatDiagChannelSet(mChannel);
 
         snprintf(aOutput, aOutputMaxLen, "set channel to %d\r\nstatus 0x%02x\r\n", mChannel, error);
@@ -202,7 +202,7 @@ void Diags::ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_
         SuccessOrExit(error = ParseLong(aArgVector[0], value));
 
         mTxPower = static_cast<int8_t>(value);
-        SuccessOrExit(error = otPlatRadioSetTransmitPower(mInstance, mTxPower));
+        SuccessOrExit(error = otPlatRadioSetTransmitPower(&GetInstance(), mTxPower));
         otPlatDiagTxPowerSet(mTxPower);
 
         snprintf(aOutput, aOutputMaxLen, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", mTxPower, error);
@@ -221,7 +221,7 @@ void Diags::ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size
 
     if (strcmp(aArgVector[0], "stop") == 0)
     {
-        otPlatAlarmMilliStop(mInstance);
+        otPlatAlarmMilliStop(&GetInstance());
         mRepeatActive = false;
         snprintf(aOutput, aOutputMaxLen, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
     }
@@ -240,7 +240,7 @@ void Diags::ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size
 
         mRepeatActive = true;
         uint32_t now  = otPlatAlarmMilliGetNow();
-        otPlatAlarmMilliStartAt(mInstance, now, mTxPeriod);
+        otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n",
                  static_cast<int>(mTxLen), static_cast<int>(mTxPeriod), error);
     }
@@ -279,11 +279,11 @@ void Diags::ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     otError error = OT_ERROR_NONE;
 
-    otPlatRadioEnable(mInstance);
-    otPlatRadioSetPromiscuous(mInstance, true);
-    otPlatAlarmMilliStop(mInstance);
-    SuccessOrExit(error = otPlatRadioReceive(mInstance, mChannel));
-    SuccessOrExit(error = otPlatRadioSetTransmitPower(mInstance, mTxPower));
+    otPlatRadioEnable(&GetInstance());
+    otPlatRadioSetPromiscuous(&GetInstance(), true);
+    otPlatAlarmMilliStop(&GetInstance());
+    SuccessOrExit(error = otPlatRadioReceive(&GetInstance(), mChannel));
+    SuccessOrExit(error = otPlatRadioSetTransmitPower(&GetInstance(), mTxPower));
     otPlatDiagModeSet(true);
     memset(&mStats, 0, sizeof(mStats));
     snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
@@ -328,9 +328,9 @@ void Diags::ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t
 
     VerifyOrExit(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    otPlatAlarmMilliStop(mInstance);
+    otPlatAlarmMilliStop(&GetInstance());
     otPlatDiagModeSet(false);
-    otPlatRadioSetPromiscuous(mInstance, false);
+    otPlatRadioSetPromiscuous(&GetInstance(), false);
 
     snprintf(aOutput, aOutputMaxLen,
              "received packets: %d\r\nsent packets: %d\r\n"
@@ -355,7 +355,7 @@ void Diags::TransmitPacket(void)
         mTxPacket->mPsdu[i] = i;
     }
 
-    otPlatRadioTransmit(mInstance, mTxPacket);
+    otPlatRadioTransmit(&GetInstance(), mTxPacket);
 }
 
 void Diags::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
@@ -367,13 +367,13 @@ void Diags::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     if (strcmp(aArgVector[0], "sleep") == 0)
     {
-        SuccessOrExit(error = otPlatRadioSleep(mInstance));
+        SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
         snprintf(aOutput, aOutputMaxLen, "set radio from receive to sleep \r\nstatus 0x%02x\r\n", error);
     }
     else if (strcmp(aArgVector[0], "receive") == 0)
     {
-        SuccessOrExit(error = otPlatRadioReceive(mInstance, mChannel));
-        SuccessOrExit(error = otPlatRadioSetTransmitPower(mInstance, mTxPower));
+        SuccessOrExit(error = otPlatRadioReceive(&GetInstance(), mChannel));
+        SuccessOrExit(error = otPlatRadioSetTransmitPower(&GetInstance(), mTxPower));
         otPlatDiagChannelSet(mChannel);
         otPlatDiagTxPowerSet(mTxPower);
 
@@ -399,11 +399,11 @@ void Diags::AlarmFired(void)
         uint32_t now = otPlatAlarmMilliGetNow();
 
         TransmitPacket();
-        otPlatAlarmMilliStartAt(mInstance, now, mTxPeriod);
+        otPlatAlarmMilliStartAt(&GetInstance(), now, mTxPeriod);
     }
     else
     {
-        otPlatDiagAlarmCallback(mInstance);
+        otPlatDiagAlarmCallback(&GetInstance());
     }
 }
 
@@ -431,7 +431,7 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, otError aError)
         mStats.mReceivedPackets++;
     }
 
-    otPlatDiagRadioReceived(mInstance, aFrame, aError);
+    otPlatDiagRadioReceived(&GetInstance(), aFrame, aError);
 }
 
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
@@ -546,7 +546,7 @@ void Diags::ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t 
     }
 
     // more platform specific features will be processed under platform layer
-    otPlatDiagProcess(mInstance, aArgCount, aArgVector, aOutput, aOutputMaxLen);
+    otPlatDiagProcess(&GetInstance(), aArgCount, aArgVector, aOutput, aOutputMaxLen);
 
 exit:
     return;
