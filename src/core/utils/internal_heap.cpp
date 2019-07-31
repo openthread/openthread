@@ -36,8 +36,8 @@
 
 #if !OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
-#include "internal_heap.hpp"
 #include "heap.hpp"
+#include "internal_heap.hpp"
 
 #include <string.h>
 
