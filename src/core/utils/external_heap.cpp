@@ -38,6 +38,8 @@
 
 #include "heap.hpp"
 
+#include <openthread/instance.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -95,4 +97,4 @@ size_t Heap::GetFreeSize(void) const
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
