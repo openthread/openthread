@@ -863,7 +863,7 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 
     if (hasFragmentHeader)
     {
-        otLogMac(aLogLevel, "\tFrag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
+        otLogMac(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
                  fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
@@ -961,7 +961,7 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
     SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
                                             destPort));
 
-    otLogMac(aLogLevel, "\tIPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
+    otLogMac(aLogLevel, "    IPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
              checksum, MessagePriorityToString(aMessage));
 
     LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
