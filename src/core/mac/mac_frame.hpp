@@ -1141,7 +1141,7 @@ public:
     const TimeIe *GetTimeIe(void) const;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
      * This method appends Header IEs to MAC header.
      *
@@ -1176,7 +1176,7 @@ public:
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
-#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
      * This method returns the maximum transmission unit size (MTU).
@@ -1217,7 +1217,7 @@ private:
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
 

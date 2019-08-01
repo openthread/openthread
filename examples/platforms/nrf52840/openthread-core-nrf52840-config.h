@@ -243,7 +243,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+ * @def OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
  *
  * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
  * to support following features:
@@ -253,7 +253,7 @@
  *
  */
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#define OPENTHREAD_CONFIG_HEADER_IE_SUPPORT 1
+#define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 1
 #endif
 
 /*

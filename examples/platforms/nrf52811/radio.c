@@ -84,7 +84,7 @@ static otRadioFrame sReceivedFrames[NRF_802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
 #endif
 static otInstance *sInstance = NULL;
@@ -116,7 +116,7 @@ static void dataInit(void)
     sDisabled = true;
 
     sTransmitFrame.mPsdu = sTransmitPsdu + 1;
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
 #endif
 
@@ -696,7 +696,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     }
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lqi, uint32_t time)
 #else
 void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
@@ -847,7 +847,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return NRF52811_RECEIVE_SENSITIVITY;
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
     bool notifyFrameUpdated = false;

@@ -562,7 +562,7 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
  * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
  * this happens when the frame includes Header IE(s) that were updated before transmission.
  *
- * This function is used when feature `OPENTHREAD_CONFIG_HEADER_IE_SUPPORT` is enabled.
+ * This function is used when feature `OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT` is enabled.
  *
  * @note This function can be called from interrupt context and it would only read/write data passed in
  *       via @p aFrame, but would not read/write any state within OpenThread.
