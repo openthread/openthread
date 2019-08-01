@@ -47,12 +47,14 @@ DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
 {
 }
 
-inline otError DataPollHandler::Callbacks::PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild)
+inline otError DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild)
 {
     return Get<IndirectSender>().PrepareFrameForChild(aFrame, aChild);
 }
 
-inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild)
+inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                                               otError             aError,
+                                                               Child &             aChild)
 {
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aError, aChild);
 }
@@ -118,7 +120,7 @@ void DataPollHandler::RequestFrameChange(FrameChange aChange, Child &aChild)
     }
 }
 
-void DataPollHandler::HandleDataPoll(Mac::Frame &aFrame)
+void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
 {
     Mac::Address macSource;
     Child *      child;
@@ -164,7 +166,7 @@ exit:
     return;
 }
 
-otError DataPollHandler::HandleFrameRequest(Mac::Frame &aFrame)
+otError DataPollHandler::HandleFrameRequest(Mac::TxFrame &aFrame)
 {
     otError error = OT_ERROR_NONE;
 
@@ -196,7 +198,7 @@ exit:
     return error;
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::Frame &aFrame, otError aError)
+void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
 {
     Child *child = mIndirectTxChild;
 
@@ -209,7 +211,7 @@ exit:
     ProcessPendingPolls();
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::Frame &aFrame, otError aError, Child &aChild)
+void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild)
 {
     if (aChild.IsFramePurgePending())
     {

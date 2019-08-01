@@ -205,7 +205,7 @@ bool Mac::IsInTransmitState(void) const
     return retval;
 }
 
-otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
+otError Mac::ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScanResult &aResult)
 {
     otError        error = OT_ERROR_NONE;
     Address        address;
@@ -523,7 +523,7 @@ otError Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
     VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame),
                  error = OT_ERROR_ALREADY);
 
-    mOobFrame = static_cast<Frame *>(aOobFrame);
+    mOobFrame = static_cast<TxFrame *>(aOobFrame);
 
     StartOperation(kOperationTransmitOutOfBandFrame);
 
@@ -789,7 +789,7 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
     aNonce[0] = aSecurityLevel;
 }
 
-otError Mac::PrepareDataRequest(Frame &aFrame)
+otError Mac::PrepareDataRequest(TxFrame &aFrame)
 {
     otError  error = OT_ERROR_NONE;
     Address  src, dst;
@@ -822,7 +822,7 @@ exit:
     return error;
 }
 
-void Mac::PrepareBeaconRequest(Frame &aFrame)
+void Mac::PrepareBeaconRequest(TxFrame &aFrame)
 {
     uint16_t fcf = Frame::kFcfFrameMacCmd | Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrNone;
 
@@ -834,7 +834,7 @@ void Mac::PrepareBeaconRequest(Frame &aFrame)
     otLogInfoMac("Sending Beacon Request");
 }
 
-void Mac::PrepareBeacon(Frame &aFrame)
+void Mac::PrepareBeacon(TxFrame &aFrame)
 {
     uint8_t        numUnsecurePorts;
     uint8_t        beaconLength;
@@ -909,7 +909,7 @@ exit:
     return shouldSend;
 }
 
-void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
+void Mac::ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress)
 {
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
@@ -934,7 +934,7 @@ void Mac::ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress)
     aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
 }
 
-void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
+void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
 {
     KeyManager &      keyManager = Get<KeyManager>();
     uint8_t           keyIdMode;
@@ -1005,10 +1005,10 @@ exit:
 
 void Mac::BeginTransmit(void)
 {
-    otError error                 = OT_ERROR_NONE;
-    bool    applyTransmitSecurity = true;
-    bool    processTransmitAesCcm = true;
-    Frame & sendFrame             = mSubMac.GetTransmitFrame();
+    otError  error                 = OT_ERROR_NONE;
+    bool     applyTransmitSecurity = true;
+    bool     processTransmitAesCcm = true;
+    TxFrame &sendFrame             = mSubMac.GetTransmitFrame();
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t timeIeOffset = 0;
 #endif
@@ -1135,11 +1135,11 @@ void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
     }
 }
 
-void Mac::RecordFrameTransmitStatus(const Frame &aFrame,
-                                    const Frame *aAckFrame,
-                                    otError      aError,
-                                    uint8_t      aRetryCount,
-                                    bool         aWillRetx)
+void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                    const RxFrame *aAckFrame,
+                                    otError        aError,
+                                    uint8_t        aRetryCount,
+                                    bool           aWillRetx)
 {
     bool      ackRequested = aFrame.GetAckRequest();
     Address   dstAddr;
@@ -1245,7 +1245,7 @@ exit:
     return;
 }
 
-void Mac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
     Address dstAddr;
 
@@ -1373,7 +1373,7 @@ void Mac::HandleTimer(void)
     }
 }
 
-otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
+otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     KeyManager &      keyManager = Get<KeyManager>();
     otError           error      = OT_ERROR_NONE;
@@ -1514,7 +1514,7 @@ exit:
     return error;
 }
 
-void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
+void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 {
     Address   srcaddr;
     Address   dstaddr;
@@ -1807,7 +1807,7 @@ exit:
     }
 }
 
-bool Mac::HandleMacCommand(Frame &aFrame)
+bool Mac::HandleMacCommand(RxFrame &aFrame)
 {
     bool    didHandle = false;
     uint8_t commandId;
@@ -1919,7 +1919,7 @@ const char *Mac::OperationToString(Operation aOperation)
     return retval;
 }
 
-void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
+void Mac::LogFrameRxFailure(const RxFrame *aFrame, otError aError) const
 {
     otLogLevel logLevel;
 
@@ -1947,7 +1947,7 @@ void Mac::LogFrameRxFailure(const Frame *aFrame, otError aError) const
     }
 }
 
-void Mac::LogFrameTxFailure(const Frame &aFrame, otError aError, uint8_t aRetryCount) const
+void Mac::LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount) const
 {
     otLogInfoMac("Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError), aRetryCount,
                  aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
@@ -1960,7 +1960,7 @@ void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload
 
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Mac::LogFrameRxFailure(const Frame *, otError) const
+void Mac::LogFrameRxFailure(const RxFrame *, otError) const
 {
 }
 
@@ -1968,7 +1968,7 @@ void Mac::LogBeacon(const char *, const BeaconPayload &) const
 {
 }
 
-void Mac::LogFrameTxFailure(const Frame &, otError, uint8_t) const
+void Mac::LogFrameTxFailure(const TxFrame &, otError, uint8_t) const
 {
 }
 
@@ -1977,7 +1977,7 @@ void Mac::LogFrameTxFailure(const Frame &, otError, uint8_t) const
 // LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-uint8_t Mac::GetTimeIeOffset(Frame &aFrame)
+uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
 {
     uint8_t        offset = 0;
     const uint8_t *base   = aFrame.GetPsdu();

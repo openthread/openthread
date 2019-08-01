@@ -55,7 +55,7 @@ SubMac::SubMac(Instance &aInstance)
     , mRxOnWhenBackoff(true)
     , mEnergyScanMaxRssi(kInvalidRssiValue)
     , mEnergyScanEndTime(0)
-    , mTransmitFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
+    , mTransmitFrame(*static_cast<TxFrame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
     , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
@@ -186,7 +186,7 @@ exit:
     return error;
 }
 
-void SubMac::HandleReceiveDone(Frame *aFrame, otError aError)
+void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 {
     if (mPcapCallback && (aFrame != NULL) && (aError == OT_ERROR_NONE))
     {
@@ -300,7 +300,7 @@ exit:
     return;
 }
 
-void SubMac::HandleTransmitStarted(Frame &aFrame)
+void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
     if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
     {
@@ -312,7 +312,7 @@ void SubMac::HandleTransmitStarted(Frame &aFrame)
     }
 }
 
-void SubMac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
     bool ccaSuccess = true;
     bool shouldRetx;
@@ -559,7 +559,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void SubMac::HandleFrameUpdated(Frame &aFrame)
+void SubMac::HandleFrameUpdated(TxFrame &aFrame)
 {
     mCallbacks.FrameUpdated(aFrame);
 }
@@ -616,7 +616,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFra
 
     if (instance->IsInitialized())
     {
-        instance->Get<SubMac>().HandleReceiveDone(static_cast<Frame *>(aFrame), aError);
+        instance->Get<SubMac>().HandleReceiveDone(static_cast<RxFrame *>(aFrame), aError);
     }
 }
 
@@ -626,7 +626,7 @@ extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame
 
     if (instance->IsInitialized())
     {
-        instance->Get<SubMac>().HandleTransmitStarted(*static_cast<Frame *>(aFrame));
+        instance->Get<SubMac>().HandleTransmitStarted(*static_cast<TxFrame *>(aFrame));
     }
 }
 
@@ -636,7 +636,7 @@ extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, o
 
     if (instance->IsInitialized())
     {
-        instance->Get<SubMac>().HandleTransmitDone(*static_cast<Frame *>(aFrame), static_cast<Frame *>(aAckFrame),
+        instance->Get<SubMac>().HandleTransmitDone(*static_cast<TxFrame *>(aFrame), static_cast<RxFrame *>(aAckFrame),
                                                    aError);
     }
 }
@@ -658,7 +658,7 @@ extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFr
 
     if (instance->IsInitialized())
     {
-        instance->Get<SubMac>().HandleFrameUpdated(*static_cast<Frame *>(aFrame));
+        instance->Get<SubMac>().HandleFrameUpdated(*static_cast<TxFrame *>(aFrame));
     }
 }
 #endif

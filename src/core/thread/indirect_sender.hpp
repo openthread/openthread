@@ -207,15 +207,15 @@ private:
     };
 
     // Callbacks from DataPollHandler
-    otError PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild);
+    otError PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild);
+    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
     void    HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
     Message *FindIndirectMessage(Child &aChild);
     void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::Frame &aFrame, Child &aChild, Message &aMessage);
-    void     PrepareEmptyFrame(Mac::Frame &aFrame, Child &aChild, bool aAckRequest);
+    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
 
     bool                  mEnabled;
