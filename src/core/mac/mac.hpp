@@ -114,7 +114,7 @@ public:
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame or NULL to indicate end of Active Scan operation.
      *
      */
-    typedef void (*ActiveScanHandler)(Instance &aInstance, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(Instance &aInstance, RxFrame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -141,7 +141,7 @@ public:
      * @retval OT_ERROR_PARSE           Failed parsing the beacon frame.
      *
      */
-    otError ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult);
+    otError ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScanResult &aResult);
 
     /**
      * This function pointer is called during an Energy Scan when the result for a channel is ready or the scan
@@ -438,7 +438,7 @@ public:
      *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
      *
      */
-    void HandleReceivedFrame(Frame *aFrame, otError aError);
+    void HandleReceivedFrame(RxFrame *aFrame, otError aError);
 
     /**
      * This method records CCA status (success/failure) for a frame transmission attempt.
@@ -466,11 +466,11 @@ public:
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      *
      */
-    void RecordFrameTransmitStatus(const Frame &aFrame,
-                                   const Frame *aAckFrame,
-                                   otError      aError,
-                                   uint8_t      aRetryCount,
-                                   bool         aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                   const RxFrame *aAckFrame,
+                                   otError        aError,
+                                   uint8_t        aRetryCount,
+                                   bool           aWillRetx);
 
     /**
      * This method is called to handle transmit events.
@@ -483,7 +483,7 @@ public:
      *                         OT_ERROR_ABORT when transmission was aborted for other reasons.
      *
      */
-    void HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -607,7 +607,7 @@ public:
      *                          for AES CCM computation.
      *
      */
-    static void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
+    static void ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress);
 
 private:
     enum
@@ -643,24 +643,24 @@ private:
      * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
      *
      */
-    void ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm);
+    void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
 
     static void GenerateNonce(const ExtAddress &aAddress,
                               uint32_t          aFrameCounter,
                               uint8_t           aSecurityLevel,
                               uint8_t *         aNonce);
 
-    otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
     void    PerformNextOperation(void);
-    otError PrepareDataRequest(Frame &aFrame);
-    void    PrepareBeaconRequest(Frame &aFrame);
-    void    PrepareBeacon(Frame &aFrame);
+    otError PrepareDataRequest(TxFrame &aFrame);
+    void    PrepareBeaconRequest(TxFrame &aFrame);
+    void    PrepareBeacon(TxFrame &aFrame);
     bool    ShouldSendBeacon(void) const;
     void    BeginTransmit(void);
-    bool    HandleMacCommand(Frame &aFrame);
+    bool    HandleMacCommand(RxFrame &aFrame);
     Frame * GetOperationFrame(void);
 
     static void HandleTimer(Timer &aTimer);
@@ -673,13 +673,12 @@ private:
     void    PerformEnergyScan(void);
     void    ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
-    void LogFrameTxFailure(const Frame &aFrame, otError aError, uint8_t aRetryCount) const;
+    void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void    ProcessTimeIe(Frame &aFrame);
-    uint8_t GetTimeIeOffset(Frame &aFrame);
+    uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
     static const char *OperationToString(Operation aOperation);
@@ -727,7 +726,7 @@ private:
     SubMac             mSubMac;
     Tasklet            mOperationTask;
     TimerMilli         mTimer;
-    Frame *            mOobFrame;
+    TxFrame *          mOobFrame;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;

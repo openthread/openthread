@@ -42,7 +42,7 @@
 
 using namespace ot;
 
-static void HandleActiveScanResult(Instance &aInstance, Mac::Frame *aFrame);
+static void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
 static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
 
 uint8_t otLinkGetChannel(otInstance *aInstance)
@@ -372,7 +372,7 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     return instance.Get<Mac::Mac>().IsActiveScanInProgress();
 }
 
-void HandleActiveScanResult(Instance &aInstance, Mac::Frame *aFrame)
+void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame)
 {
     if (aFrame == NULL)
     {

@@ -196,7 +196,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
+void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -301,7 +301,7 @@ exit:
     return;
 }
 
-void DataPollSender::CheckFramePending(Mac::Frame &aFrame)
+void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
 {
     VerifyOrExit(mEnabled);
 

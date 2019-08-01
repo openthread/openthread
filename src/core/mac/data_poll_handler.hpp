@@ -151,7 +151,7 @@ public:
          * @retval OT_ERROR_ABORT  Indirect transmission to child should be aborted (no frame for the child).
          *
          */
-        otError PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild);
+        otError PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild);
 
         /**
          * This callback method notifies the end of indirect frame transmission to a child.
@@ -164,7 +164,7 @@ public:
          * @param[in]  aChild     The child to which the frame was transmitted.
          *
          */
-        void HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild);
+        void HandleSentFrameToChild(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
 
         /**
          * This callback method notifies that a requested frame change from `RequestFrameChange()` is processed.
@@ -242,11 +242,11 @@ public:
 
 private:
     // Callbacks from MAC
-    void    HandleDataPoll(Mac::Frame &aFrame);
-    otError HandleFrameRequest(Mac::Frame &aFrame);
-    void    HandleSentFrame(const Mac::Frame &aFrame, otError aError);
+    void    HandleDataPoll(Mac::RxFrame &aFrame);
+    otError HandleFrameRequest(Mac::TxFrame &aFrame);
+    void    HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
 
-    void HandleSentFrame(const Mac::Frame &aFrame, otError aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
     void ProcessPendingPolls(void);
 
     Child *   mIndirectTxChild;
