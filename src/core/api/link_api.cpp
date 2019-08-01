@@ -317,7 +317,7 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
-    VerifyOrExit(instance.Get<ThreadNetif>().IsUp() == false, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetPromiscuous(aPromiscuous);
 
@@ -331,7 +331,7 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     // cannot disable the link layer if the Thread interface is enabled
-    VerifyOrExit(instance.Get<ThreadNetif>().IsUp() == false, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetEnabled(aEnable);
 

@@ -940,10 +940,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm)
     uint8_t           keyIdMode;
     const ExtAddress *extAddress = NULL;
 
-    if (aFrame.GetSecurityEnabled() == false)
-    {
-        ExitNow();
-    }
+    VerifyOrExit(aFrame.GetSecurityEnabled());
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1392,10 +1389,7 @@ otError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neig
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
-    if (aFrame.GetSecurityEnabled() == false)
-    {
-        ExitNow();
-    }
+    VerifyOrExit(aFrame.GetSecurityEnabled());
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
@@ -1673,7 +1667,7 @@ void Mac::HandleReceivedFrame(Frame *aFrame, otError aError)
 
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
-        if (aFrame->GetSecurityEnabled() == true)
+        if (aFrame->GetSecurityEnabled())
         {
             switch (neighbor->GetState())
             {
