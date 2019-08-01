@@ -28,6 +28,7 @@
 #
 
 import unittest
+import time
 
 import node
 import config
@@ -95,6 +96,8 @@ class TestDiag(unittest.TestCase):
         for case in cases:
             self.node.send_command(case[0])
             self.simulator.go(1)
+            if type(self.simulator).__name__ == 'VirtualTime':
+                time.sleep(0.1)
             self.node._expect(case[1])
 
 
