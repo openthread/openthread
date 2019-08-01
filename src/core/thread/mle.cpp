@@ -240,7 +240,7 @@ otError Mle::Start(bool aAnnounceAttach)
     otError error = OT_ERROR_NONE;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous(&GetInstance()) == false, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!otPlatRadioGetPromiscuous(&GetInstance()), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 
     SetStateDetached();

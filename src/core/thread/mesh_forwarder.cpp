@@ -91,7 +91,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 
 void MeshForwarder::Start(void)
 {
-    if (mEnabled == false)
+    if (!mEnabled)
     {
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
 #if OPENTHREAD_FTD
@@ -106,7 +106,7 @@ void MeshForwarder::Stop(void)
 {
     Message *message;
 
-    VerifyOrExit(mEnabled == true);
+    VerifyOrExit(mEnabled);
 
     mDataPollSender.StopPolling();
     mUpdateTimer.Stop();
@@ -167,7 +167,7 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
-    VerifyOrExit(mSendBusy == false);
+    VerifyOrExit(!mSendBusy);
 
     mSendMessage = GetDirectTransmission();
     VerifyOrExit(mSendMessage != NULL);
@@ -213,7 +213,7 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        if (curMessage->GetDirectTransmission() == false)
+        if (!curMessage->GetDirectTransmission())
         {
             nextMessage = curMessage->GetNext();
             continue;
@@ -973,7 +973,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
         ExitNow();
     }
 
-    if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
+    if (!mSendMessage->GetDirectTransmission() && !mSendMessage->IsChildPending())
     {
         if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest && mSendMessage->IsLinkSecurityEnabled())
         {
@@ -1184,7 +1184,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         // any remaining fragments in reassembly list upon receiving of a new
         // (secure) first fragment.
 
-        if ((GetRxOnWhenIdle() == false) && message->IsLinkSecurityEnabled())
+        if (!GetRxOnWhenIdle() && message->IsLinkSecurityEnabled())
         {
             ClearReassemblyList();
         }
@@ -1217,7 +1217,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         // message with a new tag. In either case, we can safely clear any
         // remaining fragments stored in the reassembly list.
 
-        if (GetRxOnWhenIdle() == false)
+        if (!GetRxOnWhenIdle())
         {
             if ((message == NULL) && (aLinkInfo.mLinkSecurity))
             {

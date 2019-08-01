@@ -1312,7 +1312,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
                 {
                     for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
                     {
-                        if (route.IsRouterIdSet(i) == false)
+                        if (!route.IsRouterIdSet(i))
                         {
                             continue;
                         }
@@ -3785,7 +3785,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Ip6::MessageInfo       messageInfo;
     Coap::Message *        message = NULL;
 
-    VerifyOrExit(mAddressSolicitPending == false);
+    VerifyOrExit(!mAddressSolicitPending);
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -4497,7 +4497,7 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
             if (localLinkQuality >= 2)
             {
                 // check if this neighbor router is in peer Route64 TLV
-                if (aRoute.IsRouterIdSet(router.GetRouterId()) == false)
+                if (!aRoute.IsRouterIdSet(router.GetRouterId()))
                 {
                     ExitNow(rval = false);
                 }

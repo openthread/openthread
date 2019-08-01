@@ -385,7 +385,7 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
 
 void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag)
 {
-    if (mHostPowerStateInProgress == true)
+    if (mHostPowerStateInProgress)
     {
         if (aFrameTag == mHostPowerReplyFrameTag)
         {
