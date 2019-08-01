@@ -44,6 +44,7 @@ libopenthread_posix_a_SOURCES             = \
     entropy.c                               \
     hdlc_interface.cpp                      \
     logging.c                               \
+    message_pool.c                          \
     misc.c                                  \
     netif.cpp                               \
     radio_spinel.cpp                        \

@@ -138,7 +138,6 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
     {
         buffer       = mFreeBuffers;
         mFreeBuffers = mFreeBuffers->GetNextBuffer();
-        buffer->SetNextBuffer(NULL);
         mNumFreeBuffers--;
     }
 
@@ -147,6 +146,10 @@ Buffer *MessagePool::NewBuffer(uint8_t aPriority)
     if (buffer == NULL)
     {
         otLogInfoMem("No available message buffer");
+    }
+    else
+    {
+        buffer->SetNextBuffer(NULL);
     }
 
 exit:

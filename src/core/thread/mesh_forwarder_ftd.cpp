@@ -284,9 +284,12 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
     Ip6::Header ip6Header;
+    Message *   nextMessage;
 
-    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
     {
+        nextMessage = message->GetNext();
+
         if (message->GetSubType() != Message::kSubTypeMleDataResponse)
         {
             continue;

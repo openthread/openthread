@@ -43,6 +43,7 @@ PLATFORM_SOURCES                          = \
     entropy.c                               \
     flash.c                                 \
     logging.c                               \
+    message_pool.c                          \
     misc.c                                  \
     openthread-core-posix-config.h          \
     platform-posix.h                        \

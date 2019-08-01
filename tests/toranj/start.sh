@@ -94,11 +94,11 @@ case $TORANJ_POSIX_APP_RCP_MODEL in
 esac
 
 if [ "$use_posix_app_with_rcp" = "no" ]; then
-    ./build.sh ${coverage_option} ncp || die
+    ./build.sh ${coverage_option} ncp --enable-address-sanitizer || die
 
 else
-    ./build.sh ${coverage_option} rcp || die
-    ./build.sh ${coverage_option} posix-app || die
+    ./build.sh ${coverage_option} rcp --enable-address-sanitizer || die
+    ./build.sh ${coverage_option} posix-app --enable-address-sanitizer || die
 fi
 
 cleanup

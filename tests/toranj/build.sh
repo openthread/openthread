@@ -53,12 +53,17 @@ die() {
 
 coverage=no
 tests=no
+asan=no
 
 while [ $# -ge 2 ]
 do
     case $1 in
         -c|--enable-coverage)
             coverage=yes
+            shift
+            ;;
+        --enable-address-sanitizer)
+            asan=yes
             shift
             ;;
         -t|--enable-tests)
@@ -80,12 +85,13 @@ fi
 
 build_config=$1
 
-configure_options="                \
-    --disable-docs                 \
-    --enable-tests=$tests          \
-    --enable-coverage=$coverage    \
-    --enable-ftd                   \
-    --enable-ncp                   \
+configure_options="                   \
+    --disable-docs                    \
+    --enable-tests=$tests             \
+    --enable-coverage=$coverage       \
+    --enable-ftd                      \
+    --enable-ncp                      \
+    --enable-address-sanitizer=$asan  \
     "
 
 cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
@@ -111,6 +117,7 @@ case ${build_config} in
         ./configure                             \
             CPPFLAGS="$cppflags_config"         \
             --enable-coverage=${coverage}       \
+            --enable-address-sanitizer=${asan}  \
             --enable-ncp                        \
             --enable-radio-only                 \
             --with-examples=posix               \
