@@ -1225,7 +1225,7 @@ private:
 };
 
 /**
- * This class implements IEEE 802.15.4 MAC rx frame generation and parsing.
+ * This class supports received IEEE 802.15.4 MAC frame processing.
  *
  */
 class RxFrame : public Frame
@@ -1303,7 +1303,7 @@ public:
 };
 
 /**
- * This class implements IEEE 802.15.4 MAC tx frame generation and parsing.
+ * This class supports IEEE 802.15.4 MAC frame generation for transmission.
  *
  */
 class TxFrame : public Frame
