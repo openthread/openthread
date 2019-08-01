@@ -36,18 +36,16 @@
 
 #include "openthread-core-config.h"
 
-#include <stdarg.h>
-
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+
+#include "common/locator.hpp"
 
 namespace ot {
 namespace FactoryDiags {
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-class Diags
+class Diags : public InstanceLocator
 {
 public:
     /**
@@ -56,12 +54,11 @@ public:
      * @param[in]  aInstance  The OpenThread instance.
      *
      */
-    explicit Diags(otInstance &aInstance);
+    explicit Diags(Instance &aInstance);
 
     /**
-     * This function processes a factory diagnostics command line.
+     * This method processes a factory diagnostics command line.
      *
-     * @param[in]   aInstance      A pointer to an OpenThread instance.
      * @param[in]   aString        A NULL-terminated input string.
      * @param[out]  aOutput        The diagnostics execution result.
      * @param[in]   aOutputMaxLen  The output buffer size.
@@ -70,7 +67,7 @@ public:
     void ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen);
 
     /**
-     * This function processes a factory diagnostics command line.
+     * This method processes a factory diagnostics command line.
      *
      * @param[in]   aArgCount      The argument counter of diagnostics command line.
      * @param[in]   aArgVector     The argument vector of diagnostics command line.
@@ -81,9 +78,7 @@ public:
     void ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
 
     /**
-     * This function indicates whether or not the factory diagnostics mode is enabled.
-     *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     * This method indicates whether or not the factory diagnostics mode is enabled.
      *
      * @retval TRUE if factory diagnostics mode is enabled
      * @retval FALSE if factory diagnostics mode is disabled.
@@ -158,7 +153,6 @@ private:
     uint32_t      mTxPeriod;
     uint32_t      mTxPackets;
     otRadioFrame *mTxPacket;
-    otInstance *  mInstance;
     bool          mRepeatActive;
 };
 
