@@ -477,7 +477,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false);
+                 !responseHeader.IsTruncationFlagSet());
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();

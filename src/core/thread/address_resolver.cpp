@@ -340,7 +340,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
 exit:
 
-    if (mTimer.IsRunning() == false)
+    if (!mTimer.IsRunning())
     {
         mTimer.Start(kStateUpdatePeriod);
     }

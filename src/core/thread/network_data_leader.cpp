@@ -369,7 +369,7 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
         {
             entry = borderRouter->GetEntry(i);
 
-            if (entry->IsDefaultRoute() == false)
+            if (!entry->IsDefaultRoute())
             {
                 continue;
             }
