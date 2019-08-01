@@ -854,7 +854,7 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
     assert(aFrame == sTransmitPsdu);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
+    if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
         uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
         uint64_t time   = otPlatTimeGet() + sTransmitFrame.mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
