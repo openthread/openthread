@@ -122,18 +122,6 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     otPlatDiagAlarmCallback(aInstance);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    // notify OpenThread Diags module on host side
-    otPlatRadioTxDone(aInstance, aFrame, NULL, aError);
-}
-
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    // notify OpenThread Diags module on host side
-    otPlatRadioReceiveDone(aInstance, aFrame, aError);
-}
-
 #else // OPENTHREAD_RADIO
 
 const struct Diags::Command Diags::sCommands[] = {
@@ -408,13 +396,6 @@ void Diags::AlarmFired(void)
     }
 }
 
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    instance->Get<Diags>().ReceiveDone(aFrame, aError);
-}
-
 void Diags::ReceiveDone(otRadioFrame *aFrame, otError aError)
 {
     if (aError == OT_ERROR_NONE)
@@ -433,15 +414,6 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, otError aError)
     }
 
     otPlatDiagRadioReceived(&GetInstance(), aFrame, aError);
-}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    OT_UNUSED_VARIABLE(aFrame);
-
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    instance->Get<Diags>().TransmitDone(aError);
 }
 
 void Diags::TransmitDone(otError aError)

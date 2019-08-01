@@ -194,7 +194,8 @@ SOURCES_COMMON                             = \
     net/netif.cpp                            \
     net/sntp_client.cpp                      \
     net/udp6.cpp                             \
-    radio/radio_platform_defaults.cpp        \
+    radio/radio_callbacks.cpp                \
+    radio/radio_platform.cpp                 \
     thread/address_resolver.cpp              \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
@@ -255,7 +256,8 @@ libopenthread_radio_a_SOURCES              = \
     mac/mac_frame.cpp                        \
     mac/sub_mac.cpp                          \
     mac/sub_mac_callbacks.cpp                \
-    radio/radio_platform_defaults.cpp        \
+    radio/radio_callbacks.cpp                \
+    radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
     utils/missing_strlcat.c                  \
     utils/missing_strlcpy.c                  \

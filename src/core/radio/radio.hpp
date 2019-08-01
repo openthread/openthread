@@ -60,6 +60,8 @@ namespace ot {
  */
 class Radio : public InstanceLocator
 {
+    friend class Instance;
+
 public:
     /**
      * This enumeration defines the IEEE 802.15.4 channel related parameters.
@@ -93,6 +95,107 @@ public:
                      "must be set to 1 to specify the radio mode");
 
     /**
+     * This class defines the callbacks from `Radio`.
+     *
+     */
+    class Callbacks : public InstanceLocator
+    {
+        friend class Radio;
+
+    public:
+        /**
+         * This callback method handles a "Receive Done" event from radio platform.
+         *
+         * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+         * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
+         *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
+         *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+         *
+         */
+        void HandleReceiveDone(Mac::RxFrame *aFrame, otError aError);
+
+        /**
+         * This callback method handles a "Transmit Started" event from radio platform.
+         *
+         * @param[in]  aFrame     The frame that is being transmitted.
+         *
+         */
+        void HandleTransmitStarted(Mac::TxFrame &aFrame);
+
+        /**
+         * This callback method handles a "Transmit Done" event from radio platform.
+         *
+         * @param[in]  aFrame     The frame that was transmitted.
+         * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
+         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the
+         *                        channel, OT_ERROR_ABORT when transmission was aborted for other reasons.
+         *
+         */
+        void HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, otError aError);
+
+        /**
+         * This callback method handles "Energy Scan Done" event from radio platform.
+         *
+         * This method is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability. It is called from
+         * `otPlatRadioEnergyScanDone()`.
+         *
+         * @param[in]  aInstance           The OpenThread instance structure.
+         * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
+         *
+         */
+        void HandleEnergyScanDone(int8_t aMaxRssi);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+        /**
+         * This callback method handles a "Frame Updated" event from radio platform.
+         *
+         * This is called to notify OpenThread to process transmit security for the frame, this happens when the frame
+         * includes Header IE(s) that were updated before transmission. It is called from `otPlatRadioFrameUpdated()`.
+         *
+         * @note This method can be called from interrupt context and it would only read/write data passed in
+         *       via @p aFrame, but would not read/write any state within OpenThread.
+         *
+         * @param[in]  aFrame      The frame which needs to process transmit security.
+         *
+         */
+        void HandleFrameUpdated(Mac::TxFrame &aFrame);
+#endif
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+        /**
+         * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.
+         *
+         * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
+         * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
+         *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
+         *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+         *
+         */
+        void HandleDiagsReceiveDone(Mac::RxFrame *aFrame, otError aError);
+
+        /**
+         * This callback method handles a "Transmit Done" event from radio platform when diagnostics mode is enabled.
+         *
+         * @param[in]  aFrame     The frame that was transmitted.
+         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
+         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the
+         *                        channel, OT_ERROR_ABORT when transmission was aborted for other reasons.
+         *
+         */
+        void HandleDiagsTransmitDone(Mac::TxFrame &aFrame, otError aError);
+#endif
+
+    private:
+        explicit Callbacks(Instance &aInstance)
+            : InstanceLocator(aInstance)
+        {
+        }
+    };
+
+    /**
      * This constructor initializes the `Radio` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -100,6 +203,7 @@ public:
      */
     Radio(Instance &aInstance)
         : InstanceLocator(aInstance)
+        , mCallbacks(aInstance)
     {
     }
 
@@ -405,6 +509,8 @@ public:
 
 private:
     otInstance *GetInstance(void) { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
+
+    Callbacks mCallbacks;
 };
 
 } // namespace ot
