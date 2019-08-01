@@ -1542,7 +1542,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     {
         Router &router = *iter.GetRouter();
 
-        otLogInfoMle("\t%04x -> %04x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
+        otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
                      GetRloc16(router.GetNextHop()), router.GetCost(), mRouterTable.GetLinkCost(router),
                      router.GetLinkInfo().GetLinkQuality(), router.GetLinkQualityOut());
     }

@@ -1551,20 +1551,20 @@ void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
 {
     if (aSourcePort != 0)
     {
-        otLogMac(aLogLevel, "\tsrc:[%s]:%d", aIp6Header.GetSource().ToString().AsCString(), aSourcePort);
+        otLogMac(aLogLevel, "    src:[%s]:%d", aIp6Header.GetSource().ToString().AsCString(), aSourcePort);
     }
     else
     {
-        otLogMac(aLogLevel, "\tsrc:[%s]", aIp6Header.GetSource().ToString().AsCString());
+        otLogMac(aLogLevel, "    src:[%s]", aIp6Header.GetSource().ToString().AsCString());
     }
 
     if (aDestPort != 0)
     {
-        otLogMac(aLogLevel, "\tdst:[%s]:%d", aIp6Header.GetDestination().ToString().AsCString(), aDestPort);
+        otLogMac(aLogLevel, "    dst:[%s]:%d", aIp6Header.GetDestination().ToString().AsCString(), aDestPort);
     }
     else
     {
-        otLogMac(aLogLevel, "\tdst:[%s]", aIp6Header.GetDestination().ToString().AsCString());
+        otLogMac(aLogLevel, "    dst:[%s]", aIp6Header.GetDestination().ToString().AsCString());
     }
 }
 #else
