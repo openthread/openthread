@@ -388,6 +388,11 @@ template <> inline Radio &Instance::Get(void)
     return mRadio;
 }
 
+template <> inline Radio::Callbacks &Instance::Get(void)
+{
+    return mRadio.mCallbacks;
+}
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 template <> inline Notifier &Instance::Get(void)
 {
